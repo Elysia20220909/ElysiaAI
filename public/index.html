@@ -674,9 +674,11 @@
                     });
                     
                     try {
-                        // ----- JWT取得（なければ取得） -----
-                        let token = localStorage.getItem('elysia_jwt');
-                        if (!token) {
+                        // ----- アクセストークン取得（なければログイン） -----
+                        let accessToken = localStorage.getItem('elysia_access_token');
+                        let refreshToken = localStorage.getItem('elysia_refresh_token');
+
+                        if (!accessToken || !refreshToken) {
                             const pwd = prompt('🔐 パスワード入力してください (開発用)');
                             if (!pwd) throw new Error('認証がキャンセルされました');
                             const authRes = await fetch('/auth/token', {
@@ -686,15 +688,18 @@
                             });
                             if (!authRes.ok) throw new Error('認証失敗');
                             const authJson = await authRes.json();
-                            token = authJson.token;
-                            localStorage.setItem('elysia_jwt', token);
+                            accessToken = authJson.accessToken;
+                            refreshToken = authJson.refreshToken;
+                            localStorage.setItem('elysia_access_token', accessToken);
+                            localStorage.setItem('elysia_refresh_token', refreshToken);
                         }
 
-                        const response = await fetch('/elysia-love', {
+                        // ----- チャットリクエスト -----
+                        let response = await fetch('/elysia-love', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
+                                'Authorization': `Bearer ${accessToken}`
                             },
                             body: JSON.stringify({
                                 messages: this.messages.map(m => ({
@@ -703,11 +708,43 @@
                                 }))
                             })
                         });
-                        
+
+                        // ----- 401エラー時にリフレッシュトークンで再取得 -----
                         if (response.status === 401) {
-                            localStorage.removeItem('elysia_jwt');
-                            throw new Error('認証トークン失効。再ログインしてください');
+                            console.log('🔄 アクセストークン期限切れ。リフレッシュ中...');
+                            const refreshRes = await fetch('/auth/refresh', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ refreshToken })
+                            });
+
+                            if (!refreshRes.ok) {
+                                // リフレッシュトークンも無効 → 再ログイン要求
+                                localStorage.removeItem('elysia_access_token');
+                                localStorage.removeItem('elysia_refresh_token');
+                                throw new Error('セッション期限切れ。再ログインしてください');
+                            }
+
+                            const refreshJson = await refreshRes.json();
+                            accessToken = refreshJson.accessToken;
+                            localStorage.setItem('elysia_access_token', accessToken);
+
+                            // 新しいトークンで再リクエスト
+                            response = await fetch('/elysia-love', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${accessToken}`
+                                },
+                                body: JSON.stringify({
+                                    messages: this.messages.map(m => ({
+                                        role: m.role,
+                                        content: m.content
+                                    }))
+                                })
+                            });
                         }
+                        
                         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                         
                         const reader = response.body.getReader();
