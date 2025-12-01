@@ -279,19 +279,63 @@ app.listen({
 })
 ```
 
-### 2. JWT認証
+### 2. JWT認証（実装済）
+
+本番ではパスワードと `JWT_SECRET` を十分長い乱数（32byte以上）に変更し `.env` 管理。
+
+**JWT_SECRET 生成方法**:
 
 ```bash
-bun add jsonwebtoken
+# Linux/macOS/WSL/Git Bash
+openssl rand -hex 32
+
+# PowerShell (Windows)
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
 ```
 
-### 3. Helmet.js (セキュリティヘッダー)
+**リフレッシュトークン導入案** (将来的に推奨):
+
+- アクセストークン: 15分有効 → APIリクエストに使用
+- リフレッシュトークン: 7日有効 → 新しいアクセストークンを取得
+- データベース/Redisでリフレッシュトークンを管理し無効化機能を実装
+
+### 3. Redis統合レート制限 (推奨)
+
+現在はインメモリマップでレート制限しているため、サーバー再起動でリセットされ、負荷分散環境では不十分。
+
+**Redis統合手順**:
+
+```bash
+bun add ioredis
+```
+
+```typescript
+import Redis from 'ioredis';
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+
+async function checkRateLimitRedis(id: string): Promise<boolean> {
+  const key = `ratelimit:${id}`;
+  const current = await redis.incr(key);
+  if (current === 1) await redis.expire(key, 60); // 1分窓
+  return current <= CONFIG.MAX_REQUESTS_PER_MINUTE;
+}
+```
+
+**メリット**:
+
+- サーバー再起動・複数インスタンス間で共有
+- スライディングウィンドウ実装可能
+- IP単位 + ユーザー単位の併用可能
+
+### 4. Helmet.js (任意)
+
+現行は手動CSP/各種ヘッダー付与済。複雑な `nonce` / `report-to` 運用が必要な場合に導入検討。
 
 ```bash
 bun add helmet
 ```
 
-### 4. Milvus RBAC
+### 5. Milvus RBAC
 
 ```python
 client.create_role("elysia_user", permissions=[{
@@ -321,6 +365,20 @@ XSSも、SQLインジェクションも、DoS攻撃も、
 安心して使ってね♡
 だいすき！ ฅ(՞៸៸> ᗜ <៸៸՞)ฅ
 ```
+
+---
+
+## 本番デプロイチェックリスト
+
+- [ ] **JWT_SECRET**: 32バイト以上のランダム値に変更（デフォルトを絶対使わない）
+- [ ] **AUTH_PASSWORD**: 16文字以上の強固なパスワードに変更
+- [ ] **HTTPS/TLS**: 必ず有効化（Let's Encrypt / Cloudflareなど）
+- [ ] **ALLOWED_ORIGINS**: 必要なオリジンのみに制限（`*` 禁止）
+- [ ] **Redis統合**: 永続的レート制限のため ioredis 実装
+- [ ] **Milvus認証**: RBACトークンを環境変数管理
+- [ ] **ログ監視**: 不正アクセス・異常レートの検知システム構築
+- [ ] **WAF設定**: CloudflareまたはAWS WAFでSQLi/XSS防御層追加
+- [ ] **依存関係更新**: 定期的に `bun update` 実行しセキュリティパッチ適用
 
 ---
 
