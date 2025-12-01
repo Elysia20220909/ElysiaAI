@@ -91,8 +91,9 @@ describe("RAG API Tests (if available)", () => {
 					"⚠️  RAG API not available (this is OK if FastAPI is not running)",
 				);
 			}
-		} catch (error: any) {
-			if (error.code === "ECONNREFUSED") {
+		} catch (error: unknown) {
+			const err = error as { code?: string };
+			if (err.code === "ECONNREFUSED") {
 				console.warn("⚠️  RAG API not running (this is expected in some envs)");
 			} else {
 				console.error("❌ RAG API test failed:", error);
