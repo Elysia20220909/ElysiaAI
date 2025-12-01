@@ -2,11 +2,31 @@
 	"name": "elysia-ai",
 	"version": "1.0.50",
 	"license": "MIT",
+	"description": "Elysia(Bun) + FastAPI + Milvus Lite + Ollama によるRAG AIチャット",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/chloeamethyst/ElysiaJS.git"
+	},
+	"homepage": "https://github.com/chloeamethyst/ElysiaJS",
+	"bugs": {
+		"url": "https://github.com/chloeamethyst/ElysiaJS/issues"
+	},
+	"keywords": [
+		"Elysia",
+		"Bun",
+		"RAG",
+		"Ollama",
+		"Milvus",
+		"FastAPI",
+		"AI"
+	],
+	"author": "chloeamethyst",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "bun run --watch src/index.ts",
 		"build": "webpack --config webpack.config.js --mode=production",
 		"start": "node dist/index.js",
+		"pack:zip": "powershell -NoProfile -Command \"if(Test-Path dist.zip){Remove-Item dist.zip -Force}; Compress-Archive -Path dist/* -DestinationPath dist.zip -Force\"",
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"fix": "biome check --write ."
