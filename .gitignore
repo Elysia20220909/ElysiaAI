@@ -40,3 +40,12 @@ yarn-error.log*
 **/*.log
 package-lock.json
 **/*.bun
+
+# project extras to ignore and keep Biome quiet
+/network_simulation/
+/python/venv/
+/python/*.db
+/python/**/*.db
+/dist/
+/logs/
+/outputs/

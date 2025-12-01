@@ -1,7 +1,7 @@
-import { spawnSync } from "child_process";
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 import { Elysia } from "elysia";
-import fs from "fs";
-import path from "path";
 
 const app = new Elysia();
 
@@ -101,10 +101,9 @@ app.post("/ai", async (c) => {
 		});
 	} catch (e: unknown) {
 		const errorMsg = e instanceof Error ? e.message : String(e);
-		return new Response(
-			`Unexpected error running ollama: ${errorMsg}`,
-			{ status: 500 },
-		);
+		return new Response(`Unexpected error running ollama: ${errorMsg}`, {
+			status: 500,
+		});
 	}
 });
 

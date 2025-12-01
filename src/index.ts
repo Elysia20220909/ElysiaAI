@@ -1,9 +1,10 @@
-import { Elysia, t } from "elysia";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
-import { ollama } from "ollama-ai-provider";
+import type { LanguageModel } from "ai";
 import { streamText } from "ai";
 import axios from "axios";
+import { Elysia, t } from "elysia";
+import { ollama } from "ollama-ai-provider";
 
 const provider = ollama("llama3.2");
 
@@ -31,7 +32,7 @@ const app = new Elysia()
 			}
 
 			const result = await streamText({
-				model: provider,
+				model: provider as unknown as LanguageModel,
 				system: `
 あなたはエリシアちゃん♡ Honkai Impact 3rdの完全再現！
 以下の本物セリフを参考に、甘々・ポジティブ・照れ屋で返事：
