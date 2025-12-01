@@ -33,6 +33,28 @@ bun run pack:zip
 ```
 生成した `dist.zip` をリリースに添付できます。
 
+## npm への公開（任意）
+アプリ用途のため公開は必須ではありませんが、公開する場合は以下のとおりです。
+
+1) package.json を確認
+- `name`: 一意なパッケージ名（スコープ推奨: `@your-scope/elysia-ai`）
+- `version`: セマンティックバージョニング
+- `license`: `MIT`
+- `main`: `dist/index.js`
+- `files`: `dist`, `README.md`, `LICENSE`
+- `prepublishOnly`: `bun run build`
+
+2) ログインと公開
+```powershell
+npm login
+npm version patch
+npm publish --access public
+```
+
+3) 注意
+- 本パッケージはサーバー実行用の成果物です（ライブラリAPIは未提供）。
+- 依存やモデルのライセンス条件に留意してください。
+
 ## ライセンス
 - 本リポジトリ（ルート配下のコード）は MIT（`LICENSE`）。
 - `network_simulation/` は元のライセンスに従います（同ディレクトリの `LICENSE` を参照）。
