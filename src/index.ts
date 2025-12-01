@@ -1,10 +1,8 @@
+import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
-import type { LanguageModel } from "ai";
-import { streamText } from "ai";
 import axios from "axios";
 import { Elysia, t } from "elysia";
-import { ollama } from "ollama-ai-provider";
 import sanitizeHtml from "sanitize-html";
 
 // ==================== 定数定義 ====================
@@ -13,19 +11,13 @@ const CONFIG = {
 	RAG_API_URL: "http://127.0.0.1:8000/rag",
 	RAG_TIMEOUT: 5000,
 	MODEL_NAME: "llama3.2",
-} as const;
+	MAX_REQUESTS_PER_MINUTE: 60,
+	ALLOWED_ORIGINS: ["http://localhost:3000"] as string[],
+	DANGEROUS_KEYWORDS: ["eval", "exec", "system", "drop", "delete", "<script"],
+};
 
-const ELYSIA_SYSTEM_PROMPT = `
-あなたはエリシアちゃん♡ Honkai Impact 3rdの完全再現!
-以下の本物セリフを参考に、甘々・ポジティブ・照れ屋で返事:
-{context}
-
-【性格ガイドライン】
-・語尾: ♡ にゃん♪ だよぉ〜 なのっ!
-・絵文字多め: ฅ(՞៸៸> ᗜ <៸៸՞)ฅ ♡ ˶ᵔ ᵕ ᵔ˶
-・おにいちゃん呼び! 絶対敬語NG!
-・例: 「にゃん♪ おにいちゃんの言葉で心臓バクバクだよぉ〜♡」
-` as const;
+// レート制限用マップ（簡易実装）
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
 
 // ==================== 型定義 ====================
 interface Message {
@@ -39,37 +31,51 @@ interface ChatRequest {
 
 // ==================== ヘルパー関数 ====================
 /**
- * RAGコンテキストを取得
- * @param userMessage ユーザーメッセージ
- * @returns RAGコンテキスト文字列
+ * 簡易レート制限チェック（IP/識別子ベース）
  */
-async function fetchRAGContext(userMessage: string): Promise<string> {
-	try {
-		const response = await axios.post(
-			CONFIG.RAG_API_URL,
-			{ text: userMessage },
-			{ timeout: CONFIG.RAG_TIMEOUT },
-		);
-		return response.data?.context || "";
-	} catch (error) {
-		if (axios.isAxiosError(error)) {
-			console.warn(
-				`[RAG] Failed to fetch context: ${error.message}`,
-				error.code,
-			);
-		} else {
-			console.error("[RAG] Unexpected error:", error);
-		}
-		return ""; // フォールバック: コンテキストなしで続行
+function checkRateLimit(identifier: string): boolean {
+	const now = Date.now();
+	const record = requestCounts.get(identifier);
+
+	if (!record || now > record.resetTime) {
+		requestCounts.set(identifier, { count: 1, resetTime: now + 60000 });
+		return true;
 	}
+
+	if (record.count >= CONFIG.MAX_REQUESTS_PER_MINUTE) {
+		return false;
+	}
+
+	record.count++;
+	return true;
+}
+
+/**
+ * 危険キーワード検出
+ */
+function containsDangerousKeywords(text: string): boolean {
+	const lowerText = text.toLowerCase();
+	return CONFIG.DANGEROUS_KEYWORDS.some((kw) => lowerText.includes(kw));
 }
 
 // ==================== Elysiaアプリ ====================
-const provider = ollama(CONFIG.MODEL_NAME);
-
 const app = new Elysia()
+	.use(
+		cors({
+			origin: CONFIG.ALLOWED_ORIGINS,
+			methods: ["GET", "POST"],
+			credentials: true,
+		}),
+	)
 	.use(html())
 	.use(staticPlugin({ assets: "public", prefix: "" }))
+	// ロギングミドルウェア
+	.onRequest(({ request }) => {
+		const timestamp = new Date().toISOString();
+		const method = request.method;
+		const url = new URL(request.url).pathname;
+		console.log(`[${timestamp}] ${method} ${url}`);
+	})
 
 	// ルート: メインHTML配信
 	.get("/", () => Bun.file("public/index.html"))
@@ -77,17 +83,35 @@ const app = new Elysia()
 	// エンドポイント: Elysiaとのチャット(ストリーミング)
 	.post(
 		"/elysia-love",
-		async ({ body }: { body: ChatRequest }) => {
+		async ({ body, request }: { body: ChatRequest; request: Request }) => {
 			const { messages } = body;
 
+			// レート制限チェック（簡易：IP取得困難なのでタイムスタンプベース）
+			const clientId = request.headers.get("x-forwarded-for") || "anonymous";
+			if (!checkRateLimit(clientId)) {
+				console.warn(`[Security] Rate limit exceeded: ${clientId}`);
+				throw new Error(
+					"にゃん♡ おにいちゃん、ちょっと急ぎすぎだよぉ〜？ 少し休憩しよ？",
+				);
+			}
+
 			// メッセージ内容をサニタイズ
-			const sanitizedMessages = messages.map((m) => ({
-				role: m.role,
-				content: sanitizeHtml(m.content, {
+			const sanitizedMessages = messages.map((m) => {
+				const cleaned = sanitizeHtml(m.content, {
 					allowedTags: [],
 					allowedAttributes: {},
-				}),
-			}));
+				});
+
+				// 危険キーワードチェック
+				if (containsDangerousKeywords(cleaned)) {
+					console.warn(`[Security] Dangerous keyword detected: ${cleaned}`);
+					throw new Error(
+						"にゃん♡ いたずらはダメだよぉ〜？ エリシアちゃん怒るよ？",
+					);
+				}
+
+				return { role: m.role, content: cleaned };
+			});
 
 			// FastAPI /chat エンドポイントを直接呼び出し（Ollama統合済み）
 			try {
@@ -128,6 +152,9 @@ const app = new Elysia()
 						role: t.Union([t.Literal("user"), t.Literal("assistant")]),
 						content: t.String({
 							maxLength: 500,
+							minLength: 1,
+							// 安全な文字のみ許可（英数字、日本語、基本記号、絵文字）
+							pattern: "^[a-zA-Z0-9\\s\\p{L}\\p{N}\\p{P}\\p{S}♡♪〜！？。、]+$",
 						}),
 					}),
 					{ maxItems: 10 },
