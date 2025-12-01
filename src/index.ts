@@ -42,13 +42,13 @@ app.post('/ai', async (c) => {
       }
     }
   } catch (e) {
-    return app.json({ error: 'invalid request body' }, 400)
+    return new Response(JSON.stringify({ error: 'invalid request body' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } })
   }
 
   const lastUser = (messages.filter(m => m.role === 'user').pop() ?? messages.pop()) || { content: '' }
   const prompt = (lastUser.content || '').toString()
 
-  if (!prompt.trim()) return app.json({ error: 'empty prompt' }, 400)
+  if (!prompt.trim()) return new Response(JSON.stringify({ error: 'empty prompt' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } })
 
   // Ensure ollama CLI is available
   try {
@@ -81,59 +81,5 @@ app.post('/ai', async (c) => {
 
 const port = Number(process.env.PORT) || 3000
 app.listen(port)
-
-export default app
-import { Elysia, t } from 'elysia'
-import { html } from '@elysiajs/html'
-import { staticPlugin } from '@elysiajs/static'
-// Dynamically load ollama provider (handle different export shapes)
-let provider: any = null
-try {
-  const _mod = await import('ollama').catch(() => null)
-  if (_mod) {
-    // try named export, default, or module itself
-    const maker = _mod.ollama ?? _mod.default ?? _mod.createOllama ?? _mod
-    if (typeof maker === 'function') {
-      provider = maker('llama3.2')
-    } else {
-      provider = maker
-    }
-  }
-} catch (e) {
-  console.warn('Could not load ollama provider:', e)
-}
-
-import { streamText } from 'ai'
-
-const app = new Elysia()
-  .use(html())
-  .use(staticPlugin())
-
-  // エリシアが踊るトップページ
-  .get('/', () => Bun.file('public/index.html'))
-
-  // AIチャットAPI（ストリーミング対応）
-  .post('/ai', async ({ body }) => {
-    const { messages } = body
-
-    const result = await streamText({
-      model: provider,
-      system: `あなたは「Elysiaちゃん」という超絶可愛い女の子です。\n               語尾に「〜♪」「にゃ」「だよっ」を多用して、めちゃくちゃ甘えた感じで話してください。\n               絶対に真面目な口調にならないで！`,
-      messages,
-    })
-
-    return result.toDataStreamResponse()
-  }, {
-    body: t.Object({
-      messages: t.Array(t.Object({
-        role: t.Union([t.Literal('user'), t.Literal('assistant')]),
-        content: t.String()
-      }))
-    })
-  })
-
-  .listen(3000)
-
-console.log(`エリシアちゃんAIが起動したよ〜♪ http://localhost:3000`)
 
 export default app

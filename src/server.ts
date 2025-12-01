@@ -42,13 +42,13 @@ app.post('/ai', async (c) => {
       }
     }
   } catch (e) {
-    return app.json({ error: 'invalid request body' }, 400)
+    return new Response(JSON.stringify({ error: 'invalid request body' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } })
   }
 
   const lastUser = (messages.filter(m => m.role === 'user').pop() ?? messages.pop()) || { content: '' }
   const prompt = (lastUser.content || '').toString()
 
-  if (!prompt.trim()) return app.json({ error: 'empty prompt' }, 400)
+  if (!prompt.trim()) return new Response(JSON.stringify({ error: 'empty prompt' }), { status: 400, headers: { 'content-type': 'application/json; charset=utf-8' } })
 
   // Ensure ollama CLI is available
   try {
