@@ -5,6 +5,7 @@ iOS/macOSネイティブクライアント、Docker、AWS/GCP対応を追加し�
 ## 🌸 新機能
 
 ### Swift Native Client
+
 - **swift/** ディレクトリに完全なSwiftパッケージを実装
 - iOS 15+ / macOS 12+ サポート
 - Async/Await対応のストリーミングAPI
@@ -17,6 +18,7 @@ swift run ElysiaAICLI
 ```
 
 ### Docker対応強化
+
 - **Dockerfile.production**: マルチステージビルドで最適化
 - **docker-compose.yml**: フルスタック構成（Elysia + FastAPI + Ollama + Redis + Nginx）
 - 本番環境対応のヘルスチェック
@@ -30,6 +32,7 @@ docker-compose --profile with-ollama --profile with-nginx up -d
 ```
 
 ### AWS ECS Fargate
+
 - **cloud/aws/cloudformation.yaml**: インフラ自動構築
 - VPC、ALB、ECS、ECR、CloudWatch完全対応
 - オートスケーリング設定済み
@@ -42,6 +45,7 @@ export STACK_NAME=elysia-ai-prod
 ```
 
 ### Google Cloud Run
+
 - **cloud/gcp/cloudbuild.yaml**: CI/CDパイプライン
 - サーバーレスデプロイ
 - 自動スケーリング（1-10インスタンス）
@@ -54,7 +58,7 @@ export GCP_PROJECT_ID=your-project-id
 
 ## 📦 新しいファイル構造
 
-```
+```plaintext
 elysia-ai/
 ├── swift/                          # Swift統合
 │   ├── Package.swift              # Swift Package Manager
@@ -80,12 +84,14 @@ elysia-ai/
 ## 🚀 クイックスタート
 
 ### Swift CLIを試す
+
 ```bash
 cd swift
 swift run ElysiaAICLI
 ```
 
 ### Dockerで起動
+
 ```bash
 npm run docker:build
 npm run docker:up
@@ -93,11 +99,13 @@ npm run docker:logs
 ```
 
 ### AWSにデプロイ
+
 ```bash
 npm run aws:deploy
 ```
 
 ### GCPにデプロイ
+
 ```bash
 npm run gcp:deploy
 ```
@@ -112,21 +120,25 @@ npm run gcp:deploy
 ## ✨ 主な改善点
 
 1. **Swift Native Client**
+
    - AsyncHTTPClient使用
    - ストリーミング対応
    - iOS/macOSネイティブサポート
 
 2. **Docker最適化**
+
    - マルチステージビルドでサイズ削減
    - Bun + Python統合
    - ヘルスチェック実装
 
 3. **AWS対応**
+
    - CloudFormation自動化
    - ECS Fargate + Spot
    - ALB + Auto-scaling
 
 4. **GCP対応**
+
    - Cloud Build CI/CD
    - Cloud Run serverless
    - 自動スケーリング
