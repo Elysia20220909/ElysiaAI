@@ -13,7 +13,6 @@ module.exports = {
 	// tell webpack this is a Node build and don't bundle node_modules
 	externalsPresets: { node: true },
 	externals: [nodeExternals()],
-	filename: "bundle.js",
 	entry: path.resolve(__dirname, "src", "index.ts"),
 	output: {
 		path: path.resolve(__dirname, "dist"),
