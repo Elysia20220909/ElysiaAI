@@ -122,43 +122,42 @@ onAfterHandle(({ set }) => {
 #### 簡易実装 (IP/識別子ベース)
 
 ```typescript
-const MAX_REQUESTS_PER_MINUTE = 60
+const MAX_REQUESTS_PER_MINUTE = 60;
 
 function checkRateLimit(identifier: string): boolean {
-  const now = Date.now()
-  const record = requestCounts.get(identifier)
-  
+  const now = Date.now();
+  const record = requestCounts.get(identifier);
+
   if (!record || now > record.resetTime) {
-    requestCounts.set(identifier, { count: 1, resetTime: now + 60000 })
-    return true
+    requestCounts.set(identifier, { count: 1, resetTime: now + 60000 });
+    return true;
   }
-  
+
   if (record.count >= MAX_REQUESTS_PER_MINUTE) {
-    return false // 拒否
+    return false;
   }
-  
-  record.count++
-  return true
+
+  record.count++;
+  return true;
 }
 ```
 
 **効果**: DoS攻撃、スパム攻撃を防止
 
----
-
 ### 5. **CORS制限 (CORS Policy)**
 
 ```typescript
-.use(cors({
+app.use(cors({
   origin: ["http://localhost:3000"],  // 許可ドメインのみ
   methods: ["GET", "POST"],           // 許可メソッド
-  credentials: true
-}))
+}));
 ```
 
 **効果**: 不正なドメインからのリクエストをブロック
 
 ---
+
+## 運用チェックリスト
 
 ### 6. **出力フィルタリング (Output Filtering)**
 
@@ -185,13 +184,12 @@ def safe_filter(text: str) -> str:
 #### リクエストロギング
 
 ```typescript
-.onRequest(({ request }) => {
-  const timestamp = new Date().toISOString()
-  const method = request.method
-  const url = new URL(request.url).pathname
-  console.log(`[${timestamp}] ${method} ${url}`)
-  ### 9. **JWT認証 (Authentication)**
-})
+app.onRequest(({ request }) => {
+  const timestamp = new Date().toISOString();
+  const method = request.method;
+  const url = new URL(request.url).pathname;
+  console.log(`[${timestamp}] ${method} ${url}`);
+});
 ```
 
 #### 不審なクエリ検出
