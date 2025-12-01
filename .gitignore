@@ -49,3 +49,6 @@ package-lock.json
 /dist/
 /logs/
 /outputs/
+/mobile/node_modules/
+/mobile/.expo/
+/mobile/dist/
