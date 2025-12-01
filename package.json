@@ -14,11 +14,14 @@
 		"@ai-sdk/openai": "^2.0.74",
 		"@elysiajs/html": "^1.4.0",
 		"@elysiajs/static": "^1.4.7",
+		"@zilliz/milvus2-sdk-node": "^2.6.5",
 		"ai": "^5.0.104",
 		"alpinejs": "^3.15.2",
+		"axios": "^1.13.2",
 		"elysia": "latest",
 		"htmx.org": "^2.0.8",
-		"ollama": "^0.6.3"
+		"ollama": "^0.6.3",
+		"ollama-ai-provider": "^1.2.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.8",
