@@ -29,7 +29,7 @@
 		"build": "webpack --config webpack.config.js --mode=production",
 		"start": "node dist/index.js",
 		"pack:zip": "powershell -NoProfile -Command \"if(Test-Path dist.zip){Remove-Item dist.zip -Force}; Compress-Archive -Path dist/* -DestinationPath dist.zip -Force\"",
-		"prepublishOnly": "bun run build",
+		"prepublishOnly": "npm run build",
 		"lint": "biome check .",
 		"format": "biome format --write .",
 		"fix": "biome check --write .",
