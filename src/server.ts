@@ -100,8 +100,9 @@ app.post("/ai", async (c) => {
 			headers: { "content-type": "text/plain; charset=utf-8" },
 		});
 	} catch (e: unknown) {
+		const errorMsg = e instanceof Error ? e.message : String(e);
 		return new Response(
-			`Unexpected error running ollama: ${String(e?.message ?? e)}`,
+			`Unexpected error running ollama: ${errorMsg}`,
 			{ status: 500 },
 		);
 	}
