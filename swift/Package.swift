@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 // Elysia AI - Swift Integration
 // iOS/macOS Native Client for Elysia AI Chat
 
@@ -7,8 +7,8 @@ import PackageDescription
 let package = Package(
     name: "ElysiaAI",
     platforms: [
-        .iOS(.v15),
-        .macOS(.v12)
+        .iOS(.v16),
+        .macOS(.v13)
     ],
     products: [
         .library(
@@ -22,11 +22,11 @@ let package = Package(
     ],
     dependencies: [
         // Async HTTP client
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.19.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.23.0"),
         // JSON handling
         .package(url: "https://github.com/apple/swift-algorithms", from: "1.2.0"),
         // Logging
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0")
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.6.0")
     ],
     targets: [
         .target(
