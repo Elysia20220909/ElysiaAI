@@ -1,6 +1,6 @@
 {
 	"name": "elysia-ai",
-	"version": "1.0.50",
+	"version": "1.0.51",
 	"license": "MIT",
 	"description": "Elysia(Bun) + FastAPI + Milvus Lite + Ollama によるRAG AIチャット",
 	"private": false,
