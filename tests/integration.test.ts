@@ -71,7 +71,12 @@ describe("Configuration Validation", () => {
 		const tsconfigPath = path.join(process.cwd(), "tsconfig.json");
 		expect(fs.existsSync(tsconfigPath)).toBe(true);
 
-		const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, "utf-8"));
+		// tsconfig.jsonにはコメントが含まれるため、正規表現で削除してからパース
+		const tsconfigContent = fs
+			.readFileSync(tsconfigPath, "utf-8")
+			.replace(/\/\*[\s\S]*?\*\//g, "") // ブロックコメント削除
+			.replace(/\/\/.*/g, ""); // 行コメント削除
+		const tsconfig = JSON.parse(tsconfigContent);
 		expect(tsconfig.compilerOptions).toHaveProperty("target");
 		expect(tsconfig.compilerOptions).toHaveProperty("module");
 		console.log("✅ TypeScript configuration valid");
