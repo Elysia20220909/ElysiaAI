@@ -16,6 +16,7 @@
     "ollama": "^0.6.3"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.8",
     "@types/node": "^24.10.1",
     "bun-types": "latest",
     "ts-loader": "^9.5.4",
