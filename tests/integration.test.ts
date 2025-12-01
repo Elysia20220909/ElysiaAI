@@ -1,11 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { spawn } from "child_process";
-import axios from "axios";
 
 describe("Integration Tests - Full Stack", () => {
 	test("TypeScript build produces valid output", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const distPath = path.join(process.cwd(), "dist", "index.js");
 		expect(fs.existsSync(distPath)).toBe(true);
@@ -16,8 +14,8 @@ describe("Integration Tests - Full Stack", () => {
 	});
 
 	test("Package.json has all required scripts", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const pkgPath = path.join(process.cwd(), "package.json");
 		const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
@@ -33,7 +31,7 @@ describe("Integration Tests - Full Stack", () => {
 	});
 
 	test("Environment can handle TypeScript compilation", async () => {
-		const { execSync } = await import("child_process");
+		const { execSync } = await import("node:child_process");
 
 		try {
 			const output = execSync("bun --version", { encoding: "utf-8" });
@@ -46,8 +44,8 @@ describe("Integration Tests - Full Stack", () => {
 	});
 
 	test("Python FastAPI dependencies are documented", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const requirementsPath = path.join(
 			process.cwd(),
@@ -67,8 +65,8 @@ describe("Integration Tests - Full Stack", () => {
 
 describe("Configuration Validation", () => {
 	test("TypeScript config is valid", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const tsconfigPath = path.join(process.cwd(), "tsconfig.json");
 		expect(fs.existsSync(tsconfigPath)).toBe(true);
@@ -80,8 +78,8 @@ describe("Configuration Validation", () => {
 	});
 
 	test("Webpack config is valid", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const webpackPath = path.join(process.cwd(), "webpack.config.js");
 		expect(fs.existsSync(webpackPath)).toBe(true);
@@ -94,8 +92,8 @@ describe("Configuration Validation", () => {
 	});
 
 	test("Biome config exists", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const biomePath = path.join(process.cwd(), "biome.json");
 		expect(fs.existsSync(biomePath)).toBe(true);
@@ -105,8 +103,8 @@ describe("Configuration Validation", () => {
 
 describe("Deployment Files Validation", () => {
 	test("All deployment scripts are executable (on Unix)", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const scripts = [
 			path.join(process.cwd(), "cloud", "aws", "deploy.sh"),
@@ -123,8 +121,8 @@ describe("Deployment Files Validation", () => {
 	});
 
 	test("Documentation files exist", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const docs = [
 			path.join(process.cwd(), "README.md"),
