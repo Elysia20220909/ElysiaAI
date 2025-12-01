@@ -6,6 +6,7 @@ AI chat powered by Elysia (Bun). Integrates RAG via FastAPI + Milvus Lite and Ol
 - RAG: FastAPI + Milvus Lite (`all-MiniLM-L6-v2`)
 - LLM: Ollama (`llama3.2`) with streaming responses
 - Web: Elysia + Alpine.js UI (`/elysia-love` endpoint)
+- Mobile: React Native + Expo (iOS/Android app)
 - Extra: `network_simulation/` (AbyssGrid: Blackwall Simulation)
 
 ## Quick Start
@@ -25,6 +26,30 @@ bun run src/index.ts             # http://localhost:3000
 ```
 
 On Linux/macOS/WSL, use the `.sh` scripts instead.
+
+## Mobile App (iOS/Android)
+
+### Setup
+```bash
+./scripts/setup-mobile.ps1  # Windows
+# or
+./scripts/setup-mobile.sh   # Linux/macOS
+```
+
+### Run
+1. Start the Elysia server (see Quick Start above)
+2. Find your computer's local IP:
+   - Windows: `ipconfig`
+   - Mac/Linux: `ifconfig` or `ip addr`
+3. Launch mobile app:
+   ```bash
+   cd mobile
+   npm start  # or: bun start
+   ```
+4. Scan QR code with [Expo Go](https://expo.dev/client) app
+5. In the app, tap ⚙️ and set server URL to `http://YOUR_IP:3000`
+
+See `mobile/README.md` for details.
 
 ## Build & Distribution
 ```powershell

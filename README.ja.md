@@ -6,6 +6,7 @@ Elysia(Bun) で動くAIチャット。FastAPI + Milvus Lite によるRAG、Ollam
 - RAG: FastAPI + Milvus Lite（`all-MiniLM-L6-v2`）
 - LLM: Ollama（`llama3.2`）ストリーミング応答
 - Web: Elysia + Alpine.js UI（`/elysia-love` エンドポイント）
+- モバイル: React Native + Expo（iOS/Androidアプリ）
 - 追加: `network_simulation/`（AbyssGrid: Blackwall Simulation）
 
 ## クイックスタート
@@ -25,6 +26,30 @@ bun run src/index.ts             # http://localhost:3000
 ```
 
 Linux/macOS/WSL の場合は `.sh` スクリプトを使用してください。
+
+## モバイルアプリ（iOS/Android）
+
+### セットアップ
+```bash
+./scripts/setup-mobile.ps1  # Windows
+# または
+./scripts/setup-mobile.sh   # Linux/macOS
+```
+
+### 起動
+1. Elysiaサーバーを起動（上記クイックスタート参照）
+2. PCのローカルIPアドレスを確認:
+   - Windows: `ipconfig`
+   - Mac/Linux: `ifconfig` または `ip addr`
+3. モバイルアプリを起動:
+   ```bash
+   cd mobile
+   npm start  # または: bun start
+   ```
+4. [Expo Go](https://expo.dev/client)アプリでQRコードをスキャン
+5. アプリ内で⚙️をタップし、サーバーURLに`http://YOUR_IP:3000`を設定
+
+詳細は `mobile/README.md` を参照してください。
 
 ## ビルドと配布
 ```powershell
