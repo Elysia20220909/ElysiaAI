@@ -248,7 +248,7 @@
 
     <script>
         let apiUrl = 'http://localhost:3000';
-        let messages = [];
+        const messages = [];
         let isLoading = false;
 
         // Initialize
@@ -265,14 +265,14 @@
         });
 
         // Enter to send (Shift+Enter for new line)
-        messageInput.addEventListener('keydown', function(e) {
+        messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 sendMessage();
             }
         });
 
-        function openSettings() {
+        window.openSettings = function openSettings() {
             document.getElementById('settingsModal').classList.add('show');
         }
 
@@ -280,7 +280,7 @@
             document.getElementById('settingsModal').classList.remove('show');
         }
 
-        async function saveSettings() {
+        window.saveSettings = async function saveSettings() {
             const newUrl = document.getElementById('apiUrlInput').value.trim();
             if (newUrl) {
                 apiUrl = newUrl;
