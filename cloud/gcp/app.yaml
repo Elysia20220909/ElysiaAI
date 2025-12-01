@@ -1,0 +1,52 @@
+# Elysia AI - Google Cloud Run Configuration
+# Serverless deployment on GCP
+
+runtime: custom
+env: flex
+
+# Resource allocation
+resources:
+  cpu: 1
+  memory_gb: 2
+  disk_size_gb: 10
+
+# Automatic scaling
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 10
+  cool_down_period_sec: 180
+  cpu_utilization:
+    target_utilization: 0.6
+
+# Network
+network:
+  session_affinity: true
+  forwarded_ports:
+    - 3000
+    - 8000
+
+# Health checks
+liveness_check:
+  path: "/"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 1
+
+readiness_check:
+  path: "/"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 1
+  app_start_timeout_sec: 300
+
+# Environment variables
+env_variables:
+  NODE_ENV: 'production'
+  PORT: '3000'
+  PYTHON_PORT: '8000'
+
+# Beta features
+beta_settings:
+  cloud_sql_instances: "PROJECT_ID:REGION:INSTANCE_NAME"
