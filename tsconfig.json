@@ -103,5 +103,14 @@
 		"skipLibCheck": true /* Skip type checking all .d.ts files. */
 	},
 	"include": ["src/**/*"],
-	"exclude": ["node_modules", "dist", "mobile", "desktop", "native", "cuda", "python", "scripts"]
+	"exclude": [
+		"node_modules",
+		"dist",
+		"mobile",
+		"desktop",
+		"native",
+		"cuda",
+		"python",
+		"scripts"
+	]
 }

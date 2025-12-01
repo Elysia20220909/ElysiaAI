@@ -1,27 +1,30 @@
-const ffi = require('ffi-napi');
-const path = require('path');
-const fs = require('fs');
+const ffi = require("ffi-napi");
+const path = require("node:path");
+const fs = require("node:fs");
 
 let cudaLib = null;
 
 // Try to load CUDA library
-const libPath = path.join(__dirname, 'build', 'elysia_cuda.dll');
+const libPath = path.join(__dirname, "build", "elysia_cuda.dll");
 
 if (fs.existsSync(libPath)) {
 	try {
 		cudaLib = ffi.Library(libPath, {
-			'cudaComputeSimilarities': ['int', ['pointer', 'pointer', 'pointer', 'int', 'int', 'int']],
+			cudaComputeSimilarities: [
+				"int",
+				["pointer", "pointer", "pointer", "int", "int", "int"],
+			],
 		});
-		console.log('✅ CUDA acceleration enabled');
+		console.log("✅ CUDA acceleration enabled");
 	} catch (error) {
-		console.warn('⚠️  Failed to load CUDA library:', error.message);
+		console.warn("⚠️  Failed to load CUDA library:", error.message);
 	}
 }
 
 // Compute similarity matrix using CUDA (if available)
 function computeSimilarities(queries, database) {
 	if (!cudaLib) {
-		console.warn('CUDA not available, using CPU fallback');
+		console.warn("CUDA not available, using CPU fallback");
 		return computeSimilaritiesCPU(queries, database);
 	}
 
@@ -53,11 +56,11 @@ function computeSimilarities(queries, database) {
 		results,
 		numQueries,
 		numVectors,
-		dimension
+		dimension,
 	);
 
 	if (status !== 0) {
-		console.error('CUDA computation failed, using CPU fallback');
+		console.error("CUDA computation failed, using CPU fallback");
 		return computeSimilaritiesCPU(queries, database);
 	}
 
@@ -76,8 +79,8 @@ function computeSimilarities(queries, database) {
 
 // CPU fallback implementation
 function computeSimilaritiesCPU(queries, database) {
-	return queries.map(query => 
-		database.map(vector => cosineSimilarity(query, vector))
+	return queries.map((query) =>
+		database.map((vector) => cosineSimilarity(query, vector)),
 	);
 }
 

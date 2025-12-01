@@ -261,7 +261,7 @@
         const messageInput = document.getElementById('messageInput');
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            this.style.height = `${Math.min(this.scrollHeight, 100)}px`;
         });
 
         // Enter to send (Shift+Enter for new line)
