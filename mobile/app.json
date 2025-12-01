@@ -1,33 +1,29 @@
 {
-  "expo": {
-    "name": "Elysia AI",
-    "slug": "elysia-ai-mobile",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#FFB7D5"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.elysia.ai"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#FFB7D5"
-      },
-      "package": "com.elysia.ai"
-    },
-    "web": {
-      "bundler": "metro"
-    },
-    "scheme": "elysia-ai",
-    "plugins": [
-      "expo-router"
-    ]
-  }
+	"expo": {
+		"name": "Elysia AI",
+		"slug": "elysia-ai-mobile",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"userInterfaceStyle": "light",
+		"splash": {
+			"resizeMode": "contain",
+			"backgroundColor": "#FFB7D5"
+		},
+		"assetBundlePatterns": ["**/*"],
+		"ios": {
+			"supportsTablet": true,
+			"bundleIdentifier": "com.elysia.ai"
+		},
+		"android": {
+			"adaptiveIcon": {
+				"backgroundColor": "#FFB7D5"
+			},
+			"package": "com.elysia.ai"
+		},
+		"web": {
+			"bundler": "metro"
+		},
+		"scheme": "elysia-ai",
+		"plugins": ["expo-router"]
+	}
 }
