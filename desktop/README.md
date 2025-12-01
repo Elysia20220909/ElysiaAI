@@ -50,6 +50,7 @@ npm start  # または: bun start
 ```
 
 アプリが起動したら:
+
 1. 右上の⚙️をクリック
 2. サーバーURL を設定（デフォルト: `http://localhost:3000`）
 3. 設定を保存
@@ -87,6 +88,7 @@ npm run build:linux
 
 1. `assets/icon.png` (1024x1024) を作成
 2. [electron-icon-builder](https://www.npmjs.com/package/electron-icon-builder) でマルチフォーマット生成:
+
    ```bash
    npm install -g electron-icon-builder
    electron-icon-builder --input=./assets/icon.png --output=./assets
@@ -134,7 +136,7 @@ npm install
 
 ## アーキテクチャ
 
-```
+```text
 desktop/
 ├── main.js       # メインプロセス（Node.js）
 ├── preload.js    # プリロードスクリプト（コンテキストブリッジ）
