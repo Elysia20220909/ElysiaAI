@@ -71,6 +71,7 @@ if any(kw in user_message.lower() for kw in dangerous_keywords):
 **効果**: SQLインジェクション、コマンドインジェクション、Python コードインジェクション防止
 
 ---
+ 
 ### 9. **JWT認証 (Authentication)**
 
 Elysiaサーバーに簡易パスワード認証 + JWT (HS256) を導入。`/auth/token` にパスワードをPOSTすると2時間有効トークンを返却。

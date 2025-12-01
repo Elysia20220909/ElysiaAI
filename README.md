@@ -74,12 +74,4 @@ bun run pack:zip
 ./scripts/dev.sh
 ```
 
-<div align="center">
-
-# Elysia AI (RAG + Ollama + Milvus)
-
-Language / 言語: [English](./README.en.md) | [日本語](./README.ja.md)
-
-AI chat app with Elysia (Bun), FastAPI + Milvus Lite (RAG), and Ollama (LLM).
-
-</div>
+<!-- 末尾の紹介ブロックを削除（MD033/MD025対策） -->
