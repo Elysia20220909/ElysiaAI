@@ -29,6 +29,10 @@ CONFIG = {
     "OLLAMA_HOST": "http://127.0.0.1:11434",
     "OLLAMA_MODEL": "llama3.2",
     "OLLAMA_TIMEOUT": 60.0,
+    # Milvus接続設定（オプション）
+    "USE_MILVUS": os.getenv("USE_MILVUS", "false").lower() == "true",
+    "MILVUS_URI": os.getenv("MILVUS_URI", "http://localhost:19530"),
+    "MILVUS_TOKEN": os.getenv("MILVUS_TOKEN", "user:password"),
 }
 
 # ==================== ロギング設定 ====================
@@ -47,9 +51,26 @@ app = FastAPI(
 
 model = SentenceTransformer(CONFIG["MODEL_NAME"])
 
-# インメモリベクトルストア（Milvusの代わり）
+# ベクトルストア初期化（Milvusまたはインメモリ）
+milvus_client = None
 embeddings_store: List[np.ndarray] = []
 quotes_store: List[str] = []
+
+# Milvus接続（環境変数で有効化）
+if CONFIG["USE_MILVUS"]:
+    try:
+        from pymilvus import MilvusClient
+        milvus_client = MilvusClient(
+            uri=CONFIG["MILVUS_URI"],
+            token=CONFIG["MILVUS_TOKEN"]
+        )
+        logger.info(f"✅ Connected to Milvus at {CONFIG['MILVUS_URI']}")
+    except ImportError:
+        logger.warning("⚠️ pymilvus not installed. Using in-memory storage.")
+        CONFIG["USE_MILVUS"] = False
+    except Exception as e:
+        logger.warning(f"⚠️ Failed to connect to Milvus: {e}. Using in-memory storage.")
+        CONFIG["USE_MILVUS"] = False
 
 # ==================== データ定義 ====================
 # エリシア本物セリフ50選♡（Wiki/Reddit/公式から厳選）
