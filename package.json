@@ -42,6 +42,7 @@
 	},
 	"dependencies": {
 		"@ai-sdk/openai": "^2.0.74",
+		"@elysiajs/cors": "^1.4.0",
 		"@elysiajs/html": "^1.4.0",
 		"@elysiajs/static": "^1.4.7",
 		"@zilliz/milvus2-sdk-node": "^2.6.5",
