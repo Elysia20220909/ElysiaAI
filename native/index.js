@@ -1,7 +1,7 @@
 try {
-	module.exports = require('./build/Release/elysia_native.node');
+	module.exports = require("./build/Release/elysia_native.node");
 } catch {
-	console.warn('Native module not built. Run: npm install');
+	console.warn("Native module not built. Run: npm install");
 	// Fallback to JS implementations
 	module.exports = {
 		tokenize: (text) => text.toLowerCase().split(/\W+/).filter(Boolean),
@@ -11,6 +11,6 @@ try {
 			const mag2 = Math.sqrt(vec2.reduce((sum, a) => sum + a * a, 0));
 			return mag1 && mag2 ? dot / (mag1 * mag2) : 0;
 		},
-		normalize: (text) => text.trim().toLowerCase().replace(/\s+/g, ' '),
+		normalize: (text) => text.trim().toLowerCase().replace(/\s+/g, " "),
 	};
 }
