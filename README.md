@@ -28,13 +28,18 @@ bun install
 # 2) 環境変数を設定（初回のみ）
 cp .env.example .env
 # .env を編集して JWT_SECRET と AUTH_PASSWORD を強固な値に変更してください
-# 例: JWT_SECRET を生成 → openssl rand -hex 32 (Git Bash)
-#     PowerShell → [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+# 例: JWT_SECRET と JWT_REFRESH_SECRET を生成
+#     openssl rand -hex 32 (Git Bash) → 2つ生成して別々に設定
+#     PowerShell → [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 })) → 2回実行
 
 # 3) Python環境
 ./scripts/setup-python.ps1
 
-# 4) サーバー起動（別ターミナルで順に）
+# 4) Redis起動（Docker推奨）
+docker run -d --name elysia-redis -p 6379:6379 redis
+# ※ Redis未起動でも動作可能（インメモリレート制限にフォールバック）
+
+# 5) サーバー起動（別ターミナルで順に）
 ./scripts/start-fastapi.ps1      # RAG / 127.0.0.1:8000
 ./scripts/start-network-sim.ps1  # NetworkSim API / 127.0.0.1:8001
 
