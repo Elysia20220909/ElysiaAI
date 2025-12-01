@@ -1,0 +1,13 @@
+{
+	"name": "elysia-cuda",
+	"version": "1.0.0",
+	"description": "CUDA GPU acceleration for embedding and similarity search",
+	"main": "index.js",
+	"scripts": {
+		"build": "node build.js",
+		"test": "node test.js"
+	},
+	"dependencies": {
+		"@nvidia/cuda": "^1.0.0"
+	}
+}
