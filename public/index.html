@@ -3,41 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>エリシアちゃん♡ RAG Chat</title>
+    <title>エリシアちゃん♡ AI Chat</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.15.2/dist/cdn.min.js" defer></script>
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 8s ease infinite;
+        }
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .message-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .scroll-smooth {
+            scroll-behavior: smooth;
+        }
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(236, 72, 153, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #ec4899, #a855f7);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #db2777, #9333ea);
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden" x-data="_elysiaChat()">
-            <!-- Header -->
-            <div class="bg-gradient-to-r from-pink-400 via-pink-300 to-purple-300 p-6 text-center">
-                <h1 class="text-4xl font-bold text-white drop-shadow-lg">
-                    🌸 エリシアちゃん♡ RAG Chat 🌸
-                </h1>
-                <p class="text-white text-sm mt-2">Powered by Milvus RAG + Ollama</p>
+<body class="min-h-screen overflow-hidden animate-gradient bg-gradient-to-br from-pink-200 via-purple-200 via-blue-200 to-pink-200">
+    <div class="container mx-auto px-4 py-6 h-screen flex flex-col max-w-6xl">
+        <div class="glass-effect rounded-3xl shadow-2xl overflow-hidden flex flex-col h-full" x-data="_elysiaChat()">
+            <!-- Header with Avatar -->
+            <div class="relative bg-gradient-to-r from-pink-500 via-purple-400 to-pink-500 p-6 animate-gradient">
+                <div class="flex items-center justify-center space-x-4">
+                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg animate-float">
+                        <span class="text-4xl">🌸</span>
+                    </div>
+                    <div class="text-center">
+                        <h1 class="text-3xl font-bold text-white drop-shadow-lg">
+                            エリシアちゃん AI Chat ♡
+                        </h1>
+                        <p class="text-white text-sm mt-1 opacity-90">
+                            ฅ(՞៸៸> ᗜ <៸៸՞)ฅ おにいちゃん、お話ししよ〜♪
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Status Indicators -->
+                <div class="absolute top-4 right-4 flex space-x-2">
+                    <div class="glass-effect px-3 py-1 rounded-full text-xs text-white flex items-center space-x-1">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span>RAG</span>
+                    </div>
+                    <div class="glass-effect px-3 py-1 rounded-full text-xs text-white flex items-center space-x-1">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span>Ollama</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Chat Messages -->
-            <div class="h-96 overflow-y-auto p-6 space-y-4 bg-pink-50" id="chatContainer">
+            <div class="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth bg-gradient-to-b from-pink-50 to-purple-50" id="chatContainer">
+                <!-- Welcome Message -->
+                <div class="flex justify-center mb-6" x-show="messages.length === 0">
+                    <div class="glass-effect rounded-2xl px-6 py-4 max-w-md text-center shadow-lg">
+                        <p class="text-pink-600 font-semibold text-lg mb-2">にゃん♪ ようこそ〜♡</p>
+                        <p class="text-gray-600 text-sm">
+                            エリシアに何でも聞いてね！<br>
+                            優しく答えるから安心して♪
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Messages -->
                 <template x-for="msg in messages" :key="msg.id">
-                    <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                    <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'" class="message-enter">
                         <div :class="msg.role === 'user' 
-                            ? 'bg-blue-500 text-white rounded-2xl rounded-br-none px-4 py-3 max-w-xs shadow-md' 
-                            : 'bg-white text-gray-800 rounded-2xl rounded-bl-none px-4 py-3 max-w-md shadow-md border-2 border-pink-200'">
-                            <p class="text-sm whitespace-pre-wrap" x-text="msg.content"></p>
+                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl rounded-br-none px-5 py-3 max-w-md shadow-lg' 
+                            : 'glass-effect text-gray-800 rounded-2xl rounded-bl-none px-5 py-3 max-w-2xl shadow-lg border-2 border-pink-300'">
+                            
+                            <!-- User Message -->
+                            <template x-if="msg.role === 'user'">
+                                <div class="flex items-start space-x-2">
+                                    <span class="text-xl">👤</span>
+                                    <p class="text-sm whitespace-pre-wrap" x-text="msg.content"></p>
+                                </div>
+                            </template>
+                            
+                            <!-- Assistant Message -->
+                            <template x-if="msg.role === 'assistant'">
+                                <div class="flex items-start space-x-2">
+                                    <span class="text-xl">💕</span>
+                                    <p class="text-sm whitespace-pre-wrap leading-relaxed" x-text="msg.content"></p>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </template>
                 
                 <!-- Loading Indicator -->
                 <template x-if="loading">
-                    <div class="flex justify-start">
-                        <div class="bg-white text-gray-800 rounded-2xl rounded-bl-none px-4 py-3 shadow-md border-2 border-pink-200">
-                            <div class="flex space-x-2">
-                                <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div>
-                                <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                                <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                    <div class="flex justify-start message-enter">
+                        <div class="glass-effect rounded-2xl rounded-bl-none px-5 py-3 shadow-lg border-2 border-pink-300">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xl">💕</span>
+                                <div class="flex space-x-2">
+                                    <div class="w-2 h-2 bg-pink-500 rounded-full animate-bounce"></div>
+                                    <div class="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                    <div class="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                                </div>
+                                <span class="text-sm text-pink-600">考え中...</span>
                             </div>
                         </div>
                     </div>
@@ -46,33 +162,68 @@
 
             <!-- Input Form -->
             <form @submit.prevent="sendMessage" class="p-4 bg-white border-t-2 border-pink-200">
-                <div class="flex space-x-2">
-                    <input 
-                        type="text" 
-                        x-model="input"
-                        :disabled="loading"
-                        placeholder="エリシアちゃんに話しかけてね♡"
-                        class="flex-1 px-4 py-3 border-2 border-pink-300 rounded-full focus:outline-none focus:border-pink-500 disabled:opacity-50"
-                    />
+                <div class="flex space-x-3">
+                    <div class="flex-1 relative">
+                        <input 
+                            type="text" 
+                            x-model="input"
+                            :disabled="loading"
+                            @keydown.enter="sendMessage"
+                            placeholder="エリシアちゃんに話しかけてね♡ 何でも聞いて！"
+                            class="w-full px-6 py-4 border-2 border-pink-300 rounded-full focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-200 disabled:opacity-50 disabled:bg-gray-100 transition-all text-gray-700 placeholder-pink-300"
+                        />
+                        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-pink-400">
+                            <span x-show="!loading">✨</span>
+                        </div>
+                    </div>
                     <button 
                         type="submit"
                         :disabled="loading || !input.trim()"
-                        class="px-6 py-3 bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold rounded-full hover:from-pink-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                        class="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-full hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center space-x-2"
                     >
-                        送信 💌
+                        <span>送信</span>
+                        <span>💌</span>
+                    </button>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="flex flex-wrap gap-2 mt-3 justify-center">
+                    <button @click="setQuickMessage('こんにちは！')" type="button" class="px-4 py-2 bg-pink-100 text-pink-600 rounded-full text-xs hover:bg-pink-200 transition-all">
+                        👋 挨拶
+                    </button>
+                    <button @click="setQuickMessage('今日の調子はどう？')" type="button" class="px-4 py-2 bg-purple-100 text-purple-600 rounded-full text-xs hover:bg-purple-200 transition-all">
+                        💭 気分
+                    </button>
+                    <button @click="setQuickMessage('面白い話して！')" type="button" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-full text-xs hover:bg-blue-200 transition-all">
+                        🎭 面白話
+                    </button>
+                    <button @click="setQuickMessage('エリシアちゃんのこと教えて！')" type="button" class="px-4 py-2 bg-pink-100 text-pink-600 rounded-full text-xs hover:bg-pink-200 transition-all">
+                        ✨ 自己紹介
                     </button>
                 </div>
             </form>
         </div>
 
         <!-- Info Panel -->
-        <div class="mt-6 bg-white rounded-2xl shadow-lg p-4 text-sm text-gray-600">
-            <p class="font-bold text-pink-500">✨ システム情報</p>
-            <ul class="list-disc list-inside mt-2 space-y-1">
-                <li>RAG検索: FastAPI + Milvus Lite (http://127.0.0.1:8000)</li>
-                <li>LLM: Ollama llama3.2</li>
-                <li>エリシアの本物セリフ50選を学習済み♡</li>
-            </ul>
+        <div class="mt-4 glass-effect rounded-2xl shadow-lg p-4 text-sm text-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span class="text-pink-500 font-bold">💡 システム情報</span>
+                </div>
+                <div class="flex space-x-4 text-xs">
+                    <span class="flex items-center space-x-1">
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>RAG API</span>
+                    </span>
+                    <span class="flex items-center space-x-1">
+                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>Ollama llama3.2</span>
+                    </span>
+                    <span class="flex items-center space-x-1">
+                        <span>📊 50セリフ学習済み</span>
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -82,6 +233,15 @@
                 messages: [],
                 input: '',
                 loading: false,
+                
+                setQuickMessage(message) {
+                    if (!this.loading) {
+                        this.input = message;
+                        this.$nextTick(() => {
+                            this.sendMessage();
+                        });
+                    }
+                },
                 
                 async sendMessage() {
                     if (!this.input.trim() || this.loading) return;
@@ -134,7 +294,20 @@
                             if (done) break;
                             
                             const chunk = decoder.decode(value);
-                            assistantMessage.content += chunk;
+                            const lines = chunk.split('\n');
+                            
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    try {
+                                        const data = JSON.parse(line.slice(6));
+                                        if (data.content) {
+                                            assistantMessage.content += data.content;
+                                        }
+                                    } catch (e) {
+                                        // Skip invalid JSON
+                                    }
+                                }
+                            }
                             
                             // Auto-scroll
                             this.$nextTick(() => {
@@ -147,7 +320,7 @@
                         this.messages.push({
                             id: Date.now() + 1,
                             role: 'assistant',
-                            content: 'ごめんね〜♡ エラーが起きちゃった… FastAPIサーバー起動してる？'
+                            content: 'ごめんね〜♡ エラーが起きちゃった… \n\nFastAPIサーバーとOllamaが起動してるか確認してね！\n\n💡 確認方法:\n1. FastAPIサーバー: http://127.0.0.1:8000/health\n2. Ollama: ollama serve'
                         });
                     } finally {
                         this.loading = false;
