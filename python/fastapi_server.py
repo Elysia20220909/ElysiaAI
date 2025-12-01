@@ -3,14 +3,18 @@
 Elysia AI - RAG Server with FastAPI + Milvus Lite
 エリシアちゃんのセリフ検索システム♡
 """
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from fastapi import FastAPI, Body, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sentence_transformers import SentenceTransformer
 import uvicorn
 import os
 import logging
 import numpy as np
+import httpx
+import json
+import asyncio
 
 # ==================== 設定 ====================
 CONFIG = {
@@ -22,6 +26,9 @@ CONFIG = {
     "SEARCH_LIMIT": 3,
     "INDEX_TYPE": "HNSW",
     "METRIC_TYPE": "L2",
+    "OLLAMA_HOST": "http://127.0.0.1:11434",
+    "OLLAMA_MODEL": "llama3.2",
+    "OLLAMA_TIMEOUT": 60.0,
 }
 
 # ==================== ロギング設定 ====================
@@ -106,6 +113,19 @@ class RAGResponse(BaseModel):
     context: str
     quotes: List[str]
     error: str
+
+class Message(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: List[Message]
+    stream: bool = True
+
+class ChatResponse(BaseModel):
+    response: str
+    context: str
+    quotes: List[str]
 
 @app.on_event("startup")
 async def init_db() -> None:
@@ -195,10 +215,22 @@ async def health() -> Dict[str, Any]:
             "embeddings_count": len(embeddings_store)
         }
         
+        # Ollama接続チェック
+        ollama_status = "unknown"
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"{CONFIG['OLLAMA_HOST']}/api/tags", timeout=5.0)
+                if response.status_code == 200:
+                    ollama_status = "connected"
+        except Exception:
+            ollama_status = "disconnected"
+        
         return {
             "status": "healthy",
             "storage": "in-memory",
             "model": CONFIG["MODEL_NAME"],
+            "ollama_model": CONFIG["OLLAMA_MODEL"],
+            "ollama_status": ollama_status,
             "stats": stats
         }
         
@@ -208,6 +240,107 @@ async def health() -> Dict[str, Any]:
             "status": "error",
             "error": str(e)
         }
+
+@app.post("/chat")
+async def chat_with_elysia(request: ChatRequest):
+    """
+    エリシアとのチャットエンドポイント（Ollama統合）
+    RAGで関連セリフを検索し、Ollamaで応答生成
+    """
+    try:
+        # 最新のユーザーメッセージを取得
+        user_message = request.messages[-1].content if request.messages else ""
+        
+        # RAG検索で関連セリフ取得
+        query_embedding = model.encode([user_message])[0]
+        similarities = []
+        for idx, stored_embedding in enumerate(embeddings_store):
+            similarity = np.dot(query_embedding, stored_embedding) / (
+                np.linalg.norm(query_embedding) * np.linalg.norm(stored_embedding)
+            )
+            similarities.append((idx, similarity))
+        
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        top_k = similarities[:CONFIG["SEARCH_LIMIT"]]
+        quotes = [quotes_store[idx] for idx, _ in top_k]
+        context = "\n".join(quotes)
+        
+        # エリシアのシステムプロンプト構築
+        system_prompt = f"""あなたはエリシアです！Honkai Impact 3rdの「起源の律者」で、ピンク髪の美少女♡
+
+【性格】
+- 明るくて前向き、いつもポジティブ
+- 少し照れ屋で甘えん坊
+- 相手を「おにいちゃん」と呼ぶのが大好き
+- 語尾に「♡」「〜♪」「なのっ！」「だよぉ〜」をよく使う
+- 絵文字を多用: ฅ(՞៸៸> ᗜ <៸៸՞)ฅ ♡ ˶ᵔ ᵕ ᵔ˶
+
+【口調の例】
+{context}
+
+上記のセリフを参考に、エリシアらしく自然に会話してください。
+敬語は使わず、フレンドリーに話しかけてね♡"""
+        
+        # Ollamaへのリクエスト準備
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend([{"role": msg.role, "content": msg.content} for msg in request.messages])
+        
+        ollama_request = {
+            "model": CONFIG["OLLAMA_MODEL"],
+            "messages": messages,
+            "stream": request.stream
+        }
+        
+        if request.stream:
+            # ストリーミングレスポンス
+            async def generate():
+                async with httpx.AsyncClient(timeout=CONFIG["OLLAMA_TIMEOUT"]) as client:
+                    async with client.stream(
+                        "POST",
+                        f"{CONFIG['OLLAMA_HOST']}/api/chat",
+                        json=ollama_request
+                    ) as response:
+                        async for line in response.aiter_lines():
+                            if line:
+                                try:
+                                    data = json.loads(line)
+                                    if "message" in data:
+                                        content = data["message"].get("content", "")
+                                        if content:
+                                            yield f"data: {json.dumps({'content': content})}\n\n"
+                                except json.JSONDecodeError:
+                                    continue
+            
+            return StreamingResponse(generate(), media_type="text/event-stream")
+        
+        else:
+            # 非ストリーミングレスポンス
+            async with httpx.AsyncClient(timeout=CONFIG["OLLAMA_TIMEOUT"]) as client:
+                response = await client.post(
+                    f"{CONFIG['OLLAMA_HOST']}/api/chat",
+                    json=ollama_request
+                )
+                result = response.json()
+                assistant_message = result.get("message", {}).get("content", "")
+                
+                return ChatResponse(
+                    response=assistant_message,
+                    context=context,
+                    quotes=quotes
+                )
+    
+    except httpx.ConnectError:
+        logger.error("❌ Cannot connect to Ollama. Is it running?")
+        raise HTTPException(
+            status_code=503,
+            detail="Ollama service is not available. Please start Ollama: ollama serve"
+        )
+    except Exception as e:
+        logger.error(f"❌ Chat error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Chat failed: {str(e)}"
+        )
 
 # ==================== メイン実行 ====================
 if __name__ == "__main__":
