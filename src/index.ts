@@ -1,64 +1,76 @@
+// Secure Elysia AI Server with JWT and basic rate limiting
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
 import axios from "axios";
 import { Elysia, t } from "elysia";
+import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
 
-// ==================== 定数定義 ====================
+// ---------------- Config ----------------
 const CONFIG = {
-	PORT: 3000,
-	RAG_API_URL: "http://127.0.0.1:8000/rag",
-	RAG_TIMEOUT: 5000,
-	MODEL_NAME: "llama3.2",
-	MAX_REQUESTS_PER_MINUTE: 60,
-	ALLOWED_ORIGINS: ["http://localhost:3000"] as string[],
-	DANGEROUS_KEYWORDS: ["eval", "exec", "system", "drop", "delete", "<script"],
-};
+	PORT: Number(process.env.PORT) || 3000,
+	RAG_API_URL: process.env.RAG_API_URL || "http://127.0.0.1:8000/rag",
+	RAG_TIMEOUT: Number(process.env.RAG_TIMEOUT) || 5000,
+	MODEL_NAME: process.env.MODEL_NAME || "llama3.2",
+	MAX_REQUESTS_PER_MINUTE: Number(process.env.RATE_LIMIT_RPM) || 60,
+	ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS?.split(",") || [
+		"http://localhost:3000",
+	]) as string[],
+	DANGEROUS_KEYWORDS: [
+		"eval",
+		"exec",
+		"system",
+		"drop",
+		"delete",
+		"<script",
+		"onerror",
+		"onload",
+		"javascript:",
+		"--",
+		";--",
+		"union select",
+	],
+	JWT_SECRET: process.env.JWT_SECRET || "dev-secret-change-me",
+	AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysia-dev-password",
+} as const;
 
-// レート制限用マップ（簡易実装）
-const requestCounts = new Map<string, { count: number; resetTime: number }>();
-
-// ==================== 型定義 ====================
+// ---------------- Types ----------------
 interface Message {
 	role: "user" | "assistant";
 	content: string;
 }
-
 interface ChatRequest {
 	messages: Message[];
 }
 
-// ==================== ヘルパー関数 ====================
-/**
- * 簡易レート制限チェック（IP/識別子ベース）
- */
-function checkRateLimit(identifier: string): boolean {
-	const now = Date.now();
-	const record = requestCounts.get(identifier);
+// ---------------- State ----------------
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
 
-	if (!record || now > record.resetTime) {
-		requestCounts.set(identifier, { count: 1, resetTime: now + 60000 });
+// ---------------- Helpers ----------------
+function checkRateLimit(id: string): boolean {
+	const now = Date.now();
+	const rec = requestCounts.get(id);
+	if (!rec || now > rec.resetTime) {
+		requestCounts.set(id, { count: 1, resetTime: now + 60000 });
 		return true;
 	}
-
-	if (record.count >= CONFIG.MAX_REQUESTS_PER_MINUTE) {
-		return false;
-	}
-
-	record.count++;
+	if (rec.count >= CONFIG.MAX_REQUESTS_PER_MINUTE) return false;
+	rec.count++;
 	return true;
 }
-
-/**
- * 危険キーワード検出
- */
 function containsDangerousKeywords(text: string): boolean {
-	const lowerText = text.toLowerCase();
-	return CONFIG.DANGEROUS_KEYWORDS.some((kw) => lowerText.includes(kw));
+	const lower = text.toLowerCase();
+	return CONFIG.DANGEROUS_KEYWORDS.some((kw) => lower.includes(kw));
+}
+function jsonError(status: number, message: string) {
+	return new Response(JSON.stringify({ error: message }), {
+		status,
+		headers: { "content-type": "application/json" },
+	});
 }
 
-// ==================== Elysiaアプリ ====================
+// ---------------- App ----------------
 const app = new Elysia()
 	.use(
 		cors({
@@ -69,117 +81,125 @@ const app = new Elysia()
 	)
 	.use(html())
 	.use(staticPlugin({ assets: "public", prefix: "" }))
-	// ロギングミドルウェア
-	.onRequest(({ request }) => {
-		const timestamp = new Date().toISOString();
-		const method = request.method;
-		const url = new URL(request.url).pathname;
-		console.log(`[${timestamp}] ${method} ${url}`);
+	.onAfterHandle(({ set }) => {
+		set.headers["X-Frame-Options"] = "DENY";
+		set.headers["X-Content-Type-Options"] = "nosniff";
+		set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+		set.headers["Permissions-Policy"] =
+			"geolocation=(), microphone=(), camera=()";
+		const ragOrigin = (() => {
+			try { return new URL(CONFIG.RAG_API_URL).origin } catch { return CONFIG.RAG_API_URL }
+		})();
+		set.headers["Content-Security-Policy"] = [
+			"default-src 'self'",
+			"script-src 'self' 'unsafe-inline'",
+			"style-src 'self' 'unsafe-inline'",
+			"img-src 'self' data:",
+			`connect-src 'self' ${ragOrigin}`,
+			"font-src 'self'",
+			"object-src 'none'",
+			"frame-ancestors 'none'",
+		].join("; ");
 	})
-
-	// ルート: メインHTML配信
+	.onRequest(({ request }) => {
+		console.log(
+			`[${new Date().toISOString()}] ${request.method} ${
+				new URL(request.url).pathname
+			}`,
+		);
+	})
+	// Public: index page
 	.get("/", () => Bun.file("public/index.html"))
-
-	// エンドポイント: Elysiaとのチャット(ストリーミング)
+	// Public: token issuance
 	.post(
-		"/elysia-love",
-		async ({ body, request }: { body: ChatRequest; request: Request }) => {
-			const { messages } = body;
-
-			// レート制限チェック（簡易：IP取得困難なのでタイムスタンプベース）
-			const clientId = request.headers.get("x-forwarded-for") || "anonymous";
-			if (!checkRateLimit(clientId)) {
-				console.warn(`[Security] Rate limit exceeded: ${clientId}`);
-				throw new Error(
-					"にゃん♡ おにいちゃん、ちょっと急ぎすぎだよぉ〜？ 少し休憩しよ？",
-				);
-			}
-
-			// メッセージ内容をサニタイズ
-			const sanitizedMessages = messages.map((m) => {
-				const cleaned = sanitizeHtml(m.content, {
-					allowedTags: [],
-					allowedAttributes: {},
-				});
-
-				// 危険キーワードチェック
-				if (containsDangerousKeywords(cleaned)) {
-					console.warn(`[Security] Dangerous keyword detected: ${cleaned}`);
-					throw new Error(
-						"にゃん♡ いたずらはダメだよぉ〜？ エリシアちゃん怒るよ？",
-					);
-				}
-
-				return { role: m.role, content: cleaned };
+		"/auth/token",
+		({ body }) => {
+			if (body.password !== CONFIG.AUTH_PASSWORD)
+				return jsonError(401, "Invalid credentials");
+			const token = jwt.sign(
+				{ iss: "elysia-ai", iat: Math.floor(Date.now() / 1000) },
+				CONFIG.JWT_SECRET,
+				{ expiresIn: "2h" },
+			);
+			return new Response(JSON.stringify({ token }), {
+				headers: { "content-type": "application/json" },
 			});
-
-			// FastAPI /chat エンドポイントを直接呼び出し（Ollama統合済み）
-			try {
-				const response = await axios.post(
-					"http://127.0.0.1:8000/chat",
-					{
-						messages: sanitizedMessages,
-						stream: true,
-					},
-					{
-						responseType: "stream",
-						timeout: 60000,
-					},
-				);
-
-				// ストリーミングレスポンスをそのまま返す
-				return new Response(response.data, {
-					headers: {
-						"Content-Type": "text/event-stream",
-						"Cache-Control": "no-cache",
-						Connection: "keep-alive",
-					},
-				});
-			} catch (error) {
-				console.error("[Chat] Error:", error);
-				if (axios.isAxiosError(error) && error.response?.status === 503) {
-					throw new Error(
-						"Ollama service is not available. Please start Ollama: ollama serve",
-					);
-				}
-				throw error;
-			}
 		},
+		{ body: t.Object({ password: t.String({ minLength: 8, maxLength: 64 }) }) },
+	)
+	// Protected routes
+	.guard(
 		{
-			body: t.Object({
-				messages: t.Array(
-					t.Object({
-						role: t.Union([t.Literal("user"), t.Literal("assistant")]),
-						content: t.String({
-							maxLength: 500,
-							minLength: 1,
-							// 安全な文字のみ許可（英数字、日本語、基本記号、絵文字）
-							pattern: "^[a-zA-Z0-9\\s\\p{L}\\p{N}\\p{P}\\p{S}♡♪〜！？。、]+$",
-						}),
-					}),
-					{ maxItems: 10 },
-				),
-			}),
+			beforeHandle: ({ request }) => {
+				const auth = request.headers.get("authorization") || "";
+				if (!auth.startsWith("Bearer "))
+					throw new Error("Missing Bearer token");
+				try {
+					jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+				} catch {
+					throw new Error("Invalid or expired token");
+				}
+			},
 		},
+		(app) =>
+			app.post(
+				"/elysia-love",
+				async ({ body, request }: { body: ChatRequest; request: Request }) => {
+					const clientId = request.headers.get("x-forwarded-for") || "anon";
+					if (!checkRateLimit(clientId))
+						return jsonError(429, "Rate limit exceeded");
+					const sanitizedMessages = body.messages.map((m) => {
+						const cleaned = sanitizeHtml(m.content, {
+							allowedTags: [],
+							allowedAttributes: {},
+						});
+						if (containsDangerousKeywords(cleaned))
+							throw new Error("Dangerous content detected");
+						return { role: m.role, content: cleaned };
+					});
+					try {
+						const upstream = await axios.post(
+							CONFIG.RAG_API_URL,
+							{ messages: sanitizedMessages },
+							{ responseType: "stream", timeout: CONFIG.RAG_TIMEOUT },
+						);
+						return new Response(upstream.data, {
+							headers: {
+								"Content-Type": "text/event-stream",
+								"Cache-Control": "no-cache",
+								Connection: "keep-alive",
+							},
+						});
+					} catch (error) {
+						console.error("[Chat] Error", error);
+						if (axios.isAxiosError(error) && error.response?.status === 503)
+							return jsonError(503, "Upstream unavailable");
+						return jsonError(500, "Internal chat error");
+					}
+				},
+				{
+					body: t.Object({
+						messages: t.Array(
+							t.Object({
+								role: t.Union([t.Literal("user"), t.Literal("assistant")]),
+								content: t.String({
+									maxLength: 400,
+									minLength: 1,
+									pattern:
+										"^[a-zA-Z0-9\\s\\p{L}\\p{N}\\p{P}\\p{S}♡♪〜！？。、]{1,400}$",
+								}),
+							}),
+							{ maxItems: 8 },
+						),
+					}),
+				},
+			),
 	)
 	.listen(CONFIG.PORT);
 
-// ==================== サーバー起動メッセージ ====================
-console.log(`
-${"+".repeat(60)}
-✨ Elysia AI Server Started! ✨
-${"+".repeat(60)}
-🌸 ฅ(՞៸៸> ᗜ <៸៸՞)ฅ エリシアちゃんRAG-Milvus完成♡
-
-📡 Server: http://localhost:${CONFIG.PORT}
-🔮 RAG API: ${CONFIG.RAG_API_URL}
-🤖 LLM Model: ${CONFIG.MODEL_NAME}
-
-💡 Usage:
-   1. FastAPI起動 → python python/fastapi_server.py
-   2. このサーバー起動 → bun run src/index.ts
-   3. ブラウザアクセス → http://localhost:${CONFIG.PORT}
-${"+".repeat(60)}
-`);
+// ---------------- Startup Banner ----------------
+console.log(
+	`\n${"+".repeat(56)}\n✨ Secure Elysia AI Server Started ✨\n${"+".repeat(56)}\n📡 Server: http://localhost:${CONFIG.PORT}\n🔮 Upstream: ${CONFIG.RAG_API_URL}\n🛡️ RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}\n🔐 Auth: POST /auth/token (env AUTH_PASSWORD)\n${"+".repeat(56)}\n`,
+);
 
 export default app;
