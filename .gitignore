@@ -49,6 +49,25 @@ package-lock.json
 /dist/
 /logs/
 /outputs/
+
+# mobile
 /mobile/node_modules/
 /mobile/.expo/
 /mobile/dist/
+
+# desktop
+/desktop/node_modules/
+/desktop/dist/
+/desktop/bun.lock
+
+# native C++ modules
+/native/node_modules/
+/native/build/
+/native/bun.lock
+
+# CUDA modules
+/cuda/node_modules/
+/cuda/build/
+/cuda/*.dll
+/cuda/*.obj
+/cuda/bun.lock
