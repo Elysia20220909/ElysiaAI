@@ -1,0 +1,57 @@
+{
+	// Bun Test Runner Configuration
+	// 個別テストファイルのデバッグ用
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "🧪 Debug Current Test File",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "bun",
+			"runtimeArgs": [
+				"test",
+				"${relativeFile}"
+			],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"outputCapture": "std"
+		},
+		{
+			"name": "🧪 Debug Server Tests",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "bun",
+			"runtimeArgs": [
+				"test",
+				"tests/server.test.ts"
+			],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal"
+		},
+		{
+			"name": "🧪 Debug Integration Tests",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "bun",
+			"runtimeArgs": [
+				"test",
+				"tests/integration.test.ts"
+			],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal"
+		},
+		{
+			"name": "🧪 Debug Docker Tests",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "bun",
+			"runtimeArgs": [
+				"test",
+				"tests/docker.test.ts"
+			],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal"
+		}
+	]
+}

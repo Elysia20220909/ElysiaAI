@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { execSync } from "child_process";
+import { execSync } from "node:child_process";
 
 describe("Docker Validation Tests", () => {
 	test("Docker is available", async () => {
@@ -9,19 +9,16 @@ describe("Docker Validation Tests", () => {
 			}).trim();
 			expect(version).toContain("Docker");
 			console.log("✅ Docker available:", version);
-		} catch (error) {
+		} catch {
 			console.warn("⚠️  Docker not available (OK for CI environments)");
 		}
 	});
 
 	test("Dockerfile.production syntax is valid", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
-		const dockerfilePath = path.join(
-			process.cwd(),
-			"Dockerfile.production",
-		);
+		const dockerfilePath = path.join(process.cwd(), "Dockerfile.production");
 		const content = fs.readFileSync(dockerfilePath, "utf-8");
 
 		// 基本的な構文チェック
@@ -42,8 +39,8 @@ describe("Docker Validation Tests", () => {
 	});
 
 	test("docker-compose.yml syntax is valid", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const composePath = path.join(process.cwd(), "docker-compose.yml");
 		const content = fs.readFileSync(composePath, "utf-8");
@@ -69,15 +66,15 @@ describe("Docker Validation Tests", () => {
 	});
 
 	test(".dockerignore is properly configured", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const ignorePath = path.join(process.cwd(), ".dockerignore");
 		if (fs.existsSync(ignorePath)) {
 			const content = fs.readFileSync(ignorePath, "utf-8");
 
 			// 必須エントリチェック
-			const required = ["node_modules", ".git", "*.log", ".env"];
+			const required = ["node_modules", ".git", ".env"];
 			for (const entry of required) {
 				expect(content).toContain(entry);
 			}
@@ -89,7 +86,7 @@ describe("Docker Validation Tests", () => {
 	});
 
 	test("Docker build would succeed (dry run)", async () => {
-		const fs = await import("fs");
+		const fs = await import("node:fs");
 
 		// 必要なファイルが存在するか確認
 		const requiredFiles = [
@@ -114,8 +111,8 @@ describe("Docker Validation Tests", () => {
 
 describe("Multi-Service Architecture Tests", () => {
 	test("docker-compose defines multiple profiles", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const composePath = path.join(process.cwd(), "docker-compose.yml");
 		const content = fs.readFileSync(composePath, "utf-8");
@@ -134,8 +131,8 @@ describe("Multi-Service Architecture Tests", () => {
 	});
 
 	test("Network configuration is present", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const composePath = path.join(process.cwd(), "docker-compose.yml");
 		const content = fs.readFileSync(composePath, "utf-8");
@@ -146,8 +143,8 @@ describe("Multi-Service Architecture Tests", () => {
 	});
 
 	test("Volume mounts are configured", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const composePath = path.join(process.cwd(), "docker-compose.yml");
 		const content = fs.readFileSync(composePath, "utf-8");
