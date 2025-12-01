@@ -1,54 +1,166 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <title>Elysia-chan AI ♡</title>
-  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-  <script src="https://unpkg.com/alpinejs" defer></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>エリシアちゃん♡ RAG Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.15.2/dist/cdn.min.js" defer></script>
 </head>
-<body class="bg-pink-50 min-h-screen flex flex-col items-center justify-center">
-  <!-- エリシアが踊る動画（例のやつ） -->
-  <video autoplay loop muted class="w-96 rounded-2xl shadow-2xl">
-    <source src="https://files.catbox.moe/xxxxxx.mp4" type="video/mp4">
-    <!-- ↑ 例のTruE動画の直リンクに差し替え -->
-  </video>
+<body class="bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden" x-data="elysiaChat()">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-pink-400 via-pink-300 to-purple-300 p-6 text-center">
+                <h1 class="text-4xl font-bold text-white drop-shadow-lg">
+                    🌸 エリシアちゃん♡ RAG Chat 🌸
+                </h1>
+                <p class="text-white text-sm mt-2">Powered by Milvus RAG + Ollama</p>
+            </div>
 
-  <div class="mt-8 w-96 bg-white rounded-3xl shadow-xl p-6">
-    <div id="chat" class="h-96 overflow-y-auto mb-4 space-y-4"></div>
-    
-    <form hx-post="/ai" hx-target="#chat" hx-swap="beforeend" hx-on::after-request="this.reset()">
-      <input name="messages" type="hidden" x-ref="messages" />
-      <div class="flex gap-2">
-        <input type="text" placeholder="エリシアちゃんに話しかけて♪" 
-               class="flex-1 px-4 py-3 rounded-full border-2 border-pink-300 focus:outline-none focus:border-pink-500"
-               @keyup.enter="$event.target.closest('form').dispatchEvent(new Event('submit'))"
-               x-on:keyup="updateMessages($event.target.value)">
-        <button class="bg-pink-500 text-white px-8 py-3 rounded-full hover:bg-pink-600 transition">
-          送る♡
-        </button>
-      </div>
-    </form>
-  </div>
+            <!-- Chat Messages -->
+            <div class="h-96 overflow-y-auto p-6 space-y-4 bg-pink-50" id="chatContainer">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                        <div :class="msg.role === 'user' 
+                            ? 'bg-blue-500 text-white rounded-2xl rounded-br-none px-4 py-3 max-w-xs shadow-md' 
+                            : 'bg-white text-gray-800 rounded-2xl rounded-bl-none px-4 py-3 max-w-md shadow-md border-2 border-pink-200'">
+                            <p class="text-sm whitespace-pre-wrap" x-text="msg.content"></p>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- Loading Indicator -->
+                <template x-if="loading">
+                    <div class="flex justify-start">
+                        <div class="bg-white text-gray-800 rounded-2xl rounded-bl-none px-4 py-3 shadow-md border-2 border-pink-200">
+                            <div class="flex space-x-2">
+                                <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div>
+                                <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
 
-  <script>
-    const messages = [{ role: "assistant", content: "にゃん♪ エリシアだよ〜！今日もいっぱいお話しようね♡" }]
-    
-    function updateMessages(userInput) {
-      if (!userInput.trim()) return
-      messages.push({ role: "user", content: userInput })
-      document.querySelector('[x-ref="messages"]').value = JSON.stringify(messages)
-      setTimeout(() => {
-        const div = document.createElement('div')
-        div.className = "bg-pink-100 rounded-2xl p-4 text-right"
-        div.textContent = userInput
-        document.getElementById('chat').appendChild(div)
-      }, 100)
-    }
-    
-    // 初期メッセージ表示
-    document.getElementById('chat').innerHTML = 
-      `<div class="bg-purple-100 rounded-2xl p-4 animate-bounce"><span class="text-purple-800 font-bold">エリシアちゃん:</span> ${messages[0].content}</div>`
-  </script>
+            <!-- Input Form -->
+            <form @submit.prevent="sendMessage" class="p-4 bg-white border-t-2 border-pink-200">
+                <div class="flex space-x-2">
+                    <input 
+                        type="text" 
+                        x-model="input"
+                        :disabled="loading"
+                        placeholder="エリシアちゃんに話しかけてね♡"
+                        class="flex-1 px-4 py-3 border-2 border-pink-300 rounded-full focus:outline-none focus:border-pink-500 disabled:opacity-50"
+                    />
+                    <button 
+                        type="submit"
+                        :disabled="loading || !input.trim()"
+                        class="px-6 py-3 bg-gradient-to-r from-pink-400 to-purple-400 text-white font-bold rounded-full hover:from-pink-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                    >
+                        送信 💌
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="mt-6 bg-white rounded-2xl shadow-lg p-4 text-sm text-gray-600">
+            <p class="font-bold text-pink-500">✨ システム情報</p>
+            <ul class="list-disc list-inside mt-2 space-y-1">
+                <li>RAG検索: FastAPI + Milvus Lite (http://127.0.0.1:8000)</li>
+                <li>LLM: Ollama llama3.2</li>
+                <li>エリシアの本物セリフ50選を学習済み♡</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function elysiaChat() {
+            return {
+                messages: [],
+                input: '',
+                loading: false,
+                
+                async sendMessage() {
+                    if (!this.input.trim() || this.loading) return;
+                    
+                    const userMessage = this.input.trim();
+                    this.messages.push({
+                        id: Date.now(),
+                        role: 'user',
+                        content: userMessage
+                    });
+                    this.input = '';
+                    this.loading = true;
+                    
+                    // Auto-scroll
+                    this.$nextTick(() => {
+                        const container = document.getElementById('chatContainer');
+                        container.scrollTop = container.scrollHeight;
+                    });
+                    
+                    try {
+                        const response = await fetch('/elysia-love', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                messages: this.messages.map(m => ({
+                                    role: m.role,
+                                    content: m.content
+                                }))
+                            })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        
+                        const assistantMessage = {
+                            id: Date.now() + 1,
+                            role: 'assistant',
+                            content: ''
+                        };
+                        this.messages.push(assistantMessage);
+                        
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+                            
+                            const chunk = decoder.decode(value);
+                            assistantMessage.content += chunk;
+                            
+                            // Auto-scroll
+                            this.$nextTick(() => {
+                                const container = document.getElementById('chatContainer');
+                                container.scrollTop = container.scrollHeight;
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        this.messages.push({
+                            id: Date.now() + 1,
+                            role: 'assistant',
+                            content: 'ごめんね〜♡ エラーが起きちゃった… FastAPIサーバー起動してる？'
+                        });
+                    } finally {
+                        this.loading = false;
+                        
+                        // Final auto-scroll
+                        this.$nextTick(() => {
+                            const container = document.getElementById('chatContainer');
+                            container.scrollTop = container.scrollHeight;
+                        });
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 </html>
