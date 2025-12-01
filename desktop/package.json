@@ -17,15 +17,24 @@
 			"output": "dist"
 		},
 		"win": {
-			"target": ["nsis", "portable"],
+			"target": [
+				"nsis",
+				"portable"
+			],
 			"icon": "assets/icon.ico"
 		},
 		"mac": {
-			"target": ["dmg", "zip"],
+			"target": [
+				"dmg",
+				"zip"
+			],
 			"icon": "assets/icon.icns"
 		},
 		"linux": {
-			"target": ["AppImage", "deb"],
+			"target": [
+				"AppImage",
+				"deb"
+			],
 			"icon": "assets/icon.png"
 		}
 	},
