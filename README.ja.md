@@ -1,18 +1,20 @@
 # Elysia AI (RAG + Ollama + Milvus)
 
-Elysia(Bun) で動くAIチャット。FastAPI + Milvus Lite によるRAG、Ollama(LLM)を統合しています。追加で `network_simulation/`（別ライセンス）も同梱。
+Elysia(Bun) で動くAIチャット。FastAPI + Milvus Lite によるRAG、Ollama(LLM)を統合しています。追加で `network_simulation/`(別ライセンス)も同梱。
 
 ## 機能
-- RAG: FastAPI + Milvus Lite（`all-MiniLM-L6-v2`）
+
+- RAG: FastAPI + Milvus Lite(`all-MiniLM-L6-v2`)
 - LLM: Ollama（`llama3.2`）ストリーミング応答
 - Web: Elysia + Alpine.js UI（`/elysia-love` エンドポイント）
 - モバイル: React Native + Expo（iOS/Androidアプリ）
 - デスクトップ: Electron（Windows/Mac/Linuxネイティブアプリ）
 - パフォーマンス: C++ネイティブバインディング（高速テキスト処理、オプション）
 - GPU加速: CUDA対応（埋め込みベクトル類似度計算、オプション）
-- 追加: `network_simulation/`（AbyssGrid: Blackwall Simulation）
+- 追加: `network_simulation/`(AbyssGrid: Blackwall Simulation)
 
 ## クイックスタート
+
 ```powershell
 # 1) 依存を取得（Node/JS）
 bun install
@@ -30,9 +32,10 @@ bun run src/index.ts             # http://localhost:3000
 
 Linux/macOS/WSL の場合は `.sh` スクリプトを使用してください。
 
-## モバイルアプリ（iOS/Android）
+## モバイルアプリ(iOS/Android)
 
 ### セットアップ
+
 ```bash
 ./scripts/setup-mobile.ps1  # Windows
 # または
@@ -40,7 +43,8 @@ Linux/macOS/WSL の場合は `.sh` スクリプトを使用してください。
 ```
 
 ### 起動
-1. Elysiaサーバーを起動（上記クイックスタート参照）
+
+1. Elysiaサーバーを起動(上記クイックスタート参照)
 2. PCのローカルIPアドレスを確認:
    - Windows: `ipconfig`
    - Mac/Linux: `ifconfig` または `ip addr`
