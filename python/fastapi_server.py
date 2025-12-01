@@ -1,18 +1,50 @@
 #!/usr/bin/env python3
-from fastapi import FastAPI, Body
-from pydantic import BaseModel
+"""
+Elysia AI - RAG Server with FastAPI + Milvus Lite
+エリシアちゃんのセリフ検索システム♡
+"""
+from typing import Dict, List, Any
+from fastapi import FastAPI, Body, HTTPException
+from pydantic import BaseModel, Field
 from pymilvus import MilvusClient
 from sentence_transformers import SentenceTransformer
 import uvicorn
 import os
+import logging
 
-app = FastAPI()
-model = SentenceTransformer('all-MiniLM-L6-v2')  # 軽量エンベッド
+# ==================== 設定 ====================
+CONFIG = {
+    "HOST": "127.0.0.1",
+    "PORT": 8000,
+    "MODEL_NAME": "all-MiniLM-L6-v2",
+    "COLLECTION_NAME": "elysia_quotes",
+    "EMBEDDING_DIM": 384,
+    "SEARCH_LIMIT": 3,
+    "INDEX_TYPE": "HNSW",
+    "METRIC_TYPE": "L2",
+}
+
+# ==================== ロギング設定 ====================
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# ==================== 初期化 ====================
+app = FastAPI(
+    title="Elysia RAG API",
+    description="エリシアちゃんのセリフ検索システム ฅ(՞៸៸> ᗜ <៸៸՞)ฅ♡",
+    version="1.0.0"
+)
+
+model = SentenceTransformer(CONFIG["MODEL_NAME"])
 db_path = os.path.join(os.path.dirname(__file__), "elysia.db")
-client = MilvusClient(db_path)  # Lite DB
+client = MilvusClient(db_path)
 
-# エリシア本物セリフ100選♡（Wiki/Reddit/公式から厳選）
-elysia_quotes = [
+# ==================== データ定義 ====================
+# エリシア本物セリフ50選♡（Wiki/Reddit/公式から厳選）
+ELYSIA_QUOTES = [
     "私に会いたくなった？このエリシア、いつでも期待に応えるわ♡",
     "ごきげんよう。新しい一日わ、美しい出会いから始まるのよ~",
     "火を追う英傑第二位、エリシア。見ての通り花のように美しい少女よ",
@@ -69,91 +101,159 @@ class Query(BaseModel):
     text: str
 
 @app.on_event("startup")
-async def init_db():
-    """DBとコレクションを初期化"""
+async def init_db() -> None:
+    """
+    データベースとコレクションを初期化
+    起動時に自動実行される
+    """
     try:
-        if not client.has_collection("elysia_quotes"):
-            print("Creating collection: elysia_quotes")
+        collection_name = CONFIG["COLLECTION_NAME"]
+        
+        # コレクション作成
+        if not client.has_collection(collection_name):
+            logger.info(f"Creating collection: {collection_name}")
             client.create_collection(
-                collection_name="elysia_quotes",
-                dimension=384,  # MiniLM dim
+                collection_name=collection_name,
+                dimension=CONFIG["EMBEDDING_DIM"],
                 primary_field="id",
                 vector_field="embedding"
             )
             
             # インデックス作成
             client.create_index(
-                "elysia_quotes",
+                collection_name,
                 field_name="embedding",
                 index_params={
-                    "index_type": "HNSW",
-                    "metric_type": "L2",
+                    "index_type": CONFIG["INDEX_TYPE"],
+                    "metric_type": CONFIG["METRIC_TYPE"],
                     "params": {"M": 16, "efConstruction": 200}
                 }
             )
-            print("Index created")
+            logger.info("✅ Index created successfully")
         
         # 既存データ数チェック
-        stats = client.query("elysia_quotes", "", output_fields=["count(*)"])
+        stats = client.query(collection_name, "", output_fields=["count(*)"])
         count = stats[0].get("count(*)", 0) if stats else 0
         
+        # データ挿入
         if count == 0:
-            print(f"Inserting {len(elysia_quotes)} Elysia quotes...")
-            # セリフ挿入♡
-            embeddings = model.encode(elysia_quotes)
+            logger.info(f"📝 Inserting {len(ELYSIA_QUOTES)} Elysia quotes...")
+            embeddings = model.encode(ELYSIA_QUOTES)
             data = [
-                {"id": i, "text": q, "embedding": emb.tolist()}
-                for i, (q, emb) in enumerate(zip(elysia_quotes, embeddings))
+                {
+                    "id": i,
+                    "text": quote,
+                    "embedding": embedding.tolist()
+                }
+                for i, (quote, embedding) in enumerate(zip(ELYSIA_QUOTES, embeddings))
             ]
-            client.insert("elysia_quotes", data)
-            print("✅ Elysia quotes inserted!")
+            client.insert(collection_name, data)
+            logger.info("✅ Elysia quotes inserted successfully!")
         else:
-            print(f"✅ Collection already has {count} quotes")
+            logger.info(f"✅ Collection already has {count} quotes")
     
     except Exception as e:
-        print(f"Error initializing DB: {e}")
+        logger.error(f"❌ Error initializing DB: {e}")
+        raise
 
-@app.post("/rag")
-async def rag_search(query: Query = Body(...)):
-    """RAG検索：クエリに最も類似したエリシアのセリフを返す"""
+@app.post("/rag", response_model=RAGResponse)
+async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
+    """
+    RAG検索エンドポイント
+    クエリに最も類似したエリシアのセリフを返す
+    
+    Args:
+        query: 検索クエリ
+        
+    Returns:
+        コンテキストとセリフリスト
+    """
     try:
-        q_emb = model.encode([query.text])
+        # クエリをエンベディング化
+        query_embedding = model.encode([query.text])
+        
+        # Milvus検索
         results = client.search(
-            collection_name="elysia_quotes",
-            data=[q_emb[0].tolist()],
+            collection_name=CONFIG["COLLECTION_NAME"],
+            data=[query_embedding[0].tolist()],
             anns_field="embedding",
-            limit=3,
+            limit=CONFIG["SEARCH_LIMIT"],
             output_fields=["text"]
         )
         
-        quotes = [hit.get("entity", {}).get("text", "") for hit in results[0]]
+        # 結果抽出
+        quotes = [
+            hit.get("entity", {}).get("text", "")
+            for hit in results[0]
+        ]
+        
+        context = "\n".join(quotes)
+        logger.info(f"✅ RAG search successful: {len(quotes)} quotes found")
+        
         return {
-            "context": "\n".join(quotes),
-            "quotes": quotes
+            "context": context,
+            "quotes": quotes,
+            "error": ""
         }
+        
     except Exception as e:
-        return {"error": str(e), "context": "", "quotes": []}
+        logger.error(f"❌ RAG search error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"RAG search failed: {str(e)}"
+        )
 
 @app.get("/")
-async def root():
-    """ヘルスチェック"""
-    return {"status": "ok", "message": "Elysia RAG Server is running ♡"}
+async def root() -> Dict[str, str]:
+    """ルートエンドポイント - ヘルスチェック"""
+    return {
+        "status": "ok",
+        "message": "Elysia RAG Server is running ♡",
+        "version": "1.0.0"
+    }
 
 @app.get("/health")
-async def health():
-    """DB接続状態チェック"""
+async def health() -> Dict[str, Any]:
+    """詳細なヘルスチェック - DB接続状態確認"""
     try:
         collections = client.list_collections()
+        
+        # コレクション統計取得
+        stats = None
+        if CONFIG["COLLECTION_NAME"] in collections:
+            query_result = client.query(
+                CONFIG["COLLECTION_NAME"],
+                "",
+                output_fields=["count(*)"]
+            )
+            stats = {
+                "count": query_result[0].get("count(*)", 0) if query_result else 0
+            }
+        
         return {
             "status": "healthy",
             "collections": collections,
-            "model": "all-MiniLM-L6-v2"
+            "model": CONFIG["MODEL_NAME"],
+            "stats": stats
         }
+        
     except Exception as e:
-        return {"status": "error", "error": str(e)}
+        logger.error(f"❌ Health check failed: {e}")
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 
+# ==================== メイン実行 ====================
 if __name__ == "__main__":
-    print("🌸 Starting Elysia RAG Server...")
-    print("📍 Access at: http://127.0.0.1:8000")
-    print("📚 Docs at: http://127.0.0.1:8000/docs")
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    logger.info("🌸 Starting Elysia RAG Server...")
+    logger.info(f"📍 API: http://{CONFIG['HOST']}:{CONFIG['PORT']}")
+    logger.info(f"📚 Docs: http://{CONFIG['HOST']}:{CONFIG['PORT']}/docs")
+    logger.info(f"🤖 Model: {CONFIG['MODEL_NAME']}")
+    
+    uvicorn.run(
+        app,
+        host=CONFIG["HOST"],
+        port=CONFIG["PORT"],
+        log_level="info"
+    )

@@ -6,43 +6,90 @@ import axios from "axios";
 import { Elysia, t } from "elysia";
 import { ollama } from "ollama-ai-provider";
 
-const provider = ollama("llama3.2");
+// ==================== 定数定義 ====================
+const CONFIG = {
+	PORT: 3000,
+	RAG_API_URL: "http://127.0.0.1:8000/rag",
+	RAG_TIMEOUT: 5000,
+	MODEL_NAME: "llama3.2",
+} as const;
+
+const ELYSIA_SYSTEM_PROMPT = `
+あなたはエリシアちゃん♡ Honkai Impact 3rdの完全再現!
+以下の本物セリフを参考に、甘々・ポジティブ・照れ屋で返事:
+{context}
+
+【性格ガイドライン】
+・語尾: ♡ にゃん♪ だよぉ〜 なのっ!
+・絵文字多め: ฅ(՞៸៸> ᗜ <៸៸՞)ฅ ♡ ˶ᵔ ᵕ ᵔ˶
+・おにいちゃん呼び! 絶対敬語NG!
+・例: 「にゃん♪ おにいちゃんの言葉で心臓バクバクだよぉ〜♡」
+` as const;
+
+// ==================== 型定義 ====================
+interface Message {
+	role: "user" | "assistant";
+	content: string;
+}
+
+interface ChatRequest {
+	messages: Message[];
+}
+
+// ==================== ヘルパー関数 ====================
+/**
+ * RAGコンテキストを取得
+ * @param userMessage ユーザーメッセージ
+ * @returns RAGコンテキスト文字列
+ */
+async function fetchRAGContext(userMessage: string): Promise<string> {
+	try {
+		const response = await axios.post(
+			CONFIG.RAG_API_URL,
+			{ text: userMessage },
+			{ timeout: CONFIG.RAG_TIMEOUT },
+		);
+		return response.data?.context || "";
+	} catch (error) {
+		if (axios.isAxiosError(error)) {
+			console.warn(
+				`[RAG] Failed to fetch context: ${error.message}`,
+				error.code,
+			);
+		} else {
+			console.error("[RAG] Unexpected error:", error);
+		}
+		return ""; // フォールバック: コンテキストなしで続行
+	}
+}
+
+// ==================== Elysiaアプリ ====================
+const provider = ollama(CONFIG.MODEL_NAME);
 
 const app = new Elysia()
 	.use(html())
 	.use(staticPlugin({ assets: "public", prefix: "" }))
+
+	// ルート: メインHTML配信
 	.get("/", () => Bun.file("public/index.html"))
 
+	// エンドポイント: Elysiaとのチャット(ストリーミング)
 	.post(
 		"/elysia-love",
-		async ({ body }) => {
+		async ({ body }: { body: ChatRequest }) => {
 			const { messages } = body;
-			const userMsg = messages[messages.length - 1].content;
+			const userMsg = messages[messages.length - 1]?.content || "";
 
-			// Milvus RAG♡ セリフ検索！
-			let context = "";
-			try {
-				const ragRes = await axios.post("http://127.0.0.1:8000/rag", {
-					text: userMsg,
-				});
-				context = ragRes.data.context || "";
-			} catch (error) {
-				console.error("RAG error:", error);
-				// RAG失敗時はコンテキストなしで続行
-			}
+			// RAGコンテキスト取得
+			const context = await fetchRAGContext(userMsg);
 
+			// システムプロンプト構築
+			const systemPrompt = ELYSIA_SYSTEM_PROMPT.replace("{context}", context);
+
+			// LLMストリーミング応答
 			const result = await streamText({
 				model: provider as unknown as LanguageModel,
-				system: `
-あなたはエリシアちゃん♡ Honkai Impact 3rdの完全再現！
-以下の本物セリフを参考に、甘々・ポジティブ・照れ屋で返事：
-${context}
-
-・語尾: ♡ にゃん♪ だよぉ〜 なのっ！
-・絵文字多め: ฅ(՞៸៸> ᗜ <៸៸՞)ฅ ♡ ˶ᵔ ᵕ ᵔ˶
-・おにいちゃん呼び！ 絶対敬語NG！
-例: 「にゃん♪ おにいちゃんの言葉で心臓バクバクだよぉ〜♡」
-      `,
+				system: systemPrompt,
 				messages,
 			});
 
@@ -60,12 +107,24 @@ ${context}
 		},
 	)
 
-	.listen(3000);
+	.listen(CONFIG.PORT);
 
+// ==================== サーバー起動メッセージ ====================
 console.log(`
-ฅ(՞៸៸> ᗜ <៸៸՞)ฅ♡♡♡ エリシアちゃんRAG-Milvus完成♡ ♡♡♡
-Python: FastAPI起動 → Bun: bun run src/index.ts
-http://localhost:3000 で本物エリシアが喋るよぉ〜！！ ♡
+${"+".repeat(60)}
+✨ Elysia AI Server Started! ✨
+${"+".repeat(60)}
+🌸 ฅ(՞៸៸> ᗜ <៸៸՞)ฅ エリシアちゃんRAG-Milvus完成♡
+
+📡 Server: http://localhost:${CONFIG.PORT}
+🔮 RAG API: ${CONFIG.RAG_API_URL}
+🤖 LLM Model: ${CONFIG.MODEL_NAME}
+
+💡 Usage:
+   1. FastAPI起動 → python python/fastapi_server.py
+   2. このサーバー起動 → bun run src/index.ts
+   3. ブラウザアクセス → http://localhost:${CONFIG.PORT}
+${"+".repeat(60)}
 `);
 
 export default app;
