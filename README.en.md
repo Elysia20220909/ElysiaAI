@@ -7,6 +7,9 @@ AI chat powered by Elysia (Bun). Integrates RAG via FastAPI + Milvus Lite and Ol
 - LLM: Ollama (`llama3.2`) with streaming responses
 - Web: Elysia + Alpine.js UI (`/elysia-love` endpoint)
 - Mobile: React Native + Expo (iOS/Android app)
+- Desktop: Electron (Windows/Mac/Linux native app)
+- Performance: C++ native bindings (high-speed text processing, optional)
+- GPU Acceleration: CUDA support (embedding similarity computation, optional)
 - Extra: `network_simulation/` (AbyssGrid: Blackwall Simulation)
 
 ## Quick Start
@@ -50,6 +53,52 @@ On Linux/macOS/WSL, use the `.sh` scripts instead.
 5. In the app, tap ⚙️ and set server URL to `http://YOUR_IP:3000`
 
 See `mobile/README.md` for details.
+
+## Desktop App (Windows/Mac/Linux)
+
+### Setup
+```bash
+./scripts/setup-desktop.ps1  # Windows
+# or
+./scripts/setup-desktop.sh   # Linux/macOS
+```
+
+### Run
+1. Start the Elysia server (see Quick Start above)
+2. Launch desktop app:
+   ```bash
+   cd desktop
+   npm start  # or: bun start
+   ```
+3. In the app, click ⚙️ to configure server URL (default: `http://localhost:3000`)
+
+## Performance Optimization (Optional)
+
+### C++ Native Bindings
+For high-performance text processing, you can enable C++ modules:
+- Tokenization: Fast word splitting for large texts
+- Cosine similarity: Vector embedding comparison
+- Normalization: Text cleanup
+
+**Requirements**: Visual Studio 2017+ ("Desktop development with C++")
+
+```bash
+./scripts/setup-native.ps1  # Requires Visual Studio
+```
+
+### CUDA GPU Acceleration
+If you have an NVIDIA GPU, dramatically speed up embedding similarity computations (100x+ faster):
+
+**Requirements**:
+- NVIDIA GPU (CUDA Compute Capability 7.5+)
+- [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads) 11.0+
+- Visual Studio 2017+
+
+```bash
+./scripts/setup-cuda.ps1  # Requires CUDA Toolkit + Visual Studio
+```
+
+**Note**: C++/CUDA modules are optional. If builds fail, the app falls back to JavaScript implementations.
 
 ## Build & Distribution
 ```powershell

@@ -7,6 +7,9 @@ Elysia(Bun) で動くAIチャット。FastAPI + Milvus Lite によるRAG、Ollam
 - LLM: Ollama（`llama3.2`）ストリーミング応答
 - Web: Elysia + Alpine.js UI（`/elysia-love` エンドポイント）
 - モバイル: React Native + Expo（iOS/Androidアプリ）
+- デスクトップ: Electron（Windows/Mac/Linuxネイティブアプリ）
+- パフォーマンス: C++ネイティブバインディング（高速テキスト処理、オプション）
+- GPU加速: CUDA対応（埋め込みベクトル類似度計算、オプション）
 - 追加: `network_simulation/`（AbyssGrid: Blackwall Simulation）
 
 ## クイックスタート
@@ -50,6 +53,52 @@ Linux/macOS/WSL の場合は `.sh` スクリプトを使用してください。
 5. アプリ内で⚙️をタップし、サーバーURLに`http://YOUR_IP:3000`を設定
 
 詳細は `mobile/README.md` を参照してください。
+
+## デスクトップアプリ（Windows/Mac/Linux）
+
+### セットアップ
+```bash
+./scripts/setup-desktop.ps1  # Windows
+# または
+./scripts/setup-desktop.sh   # Linux/macOS
+```
+
+### 起動
+1. Elysiaサーバーを起動（上記クイックスタート参照）
+2. デスクトップアプリを起動:
+   ```bash
+   cd desktop
+   npm start  # または: bun start
+   ```
+3. アプリ内で⚙️をクリックし、サーバーURLを設定（デフォルト: `http://localhost:3000`）
+
+## パフォーマンス最適化（オプション）
+
+### C++ネイティブバインディング
+高速なテキスト処理が必要な場合、C++モジュールを有効化できます:
+- トークン化: 大量テキストの単語分割
+- コサイン類似度: ベクトル埋め込みの比較
+- 正規化: テキストのクリーンアップ
+
+**要件**: Visual Studio 2017以降（"Desktop development with C++"）
+
+```bash
+./scripts/setup-native.ps1  # Visual Studioが必要
+```
+
+### CUDA GPU加速
+NVIDIA GPUがある場合、埋め込みベクトルの類似度計算を劇的に高速化できます（100倍以上）:
+
+**要件**: 
+- NVIDIA GPU（CUDA Compute Capability 7.5以降）
+- [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads) 11.0以降
+- Visual Studio 2017以降
+
+```bash
+./scripts/setup-cuda.ps1  # CUDA Toolkit + Visual Studioが必要
+```
+
+**注意**: C++/CUDAモジュールはオプションです。ビルドに失敗してもJavaScriptフォールバックで動作します。
 
 ## ビルドと配布
 ```powershell

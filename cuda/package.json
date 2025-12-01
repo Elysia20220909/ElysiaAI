@@ -8,6 +8,7 @@
 		"test": "node test.js"
 	},
 	"dependencies": {
-		"@nvidia/cuda": "^1.0.0"
+		"ffi-napi": "^4.0.3",
+		"ref-napi": "^3.0.3"
 	}
 }
