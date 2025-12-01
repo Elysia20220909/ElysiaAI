@@ -202,6 +202,28 @@
                     </button>
                 </div>
             </form>
+
+            <!-- Self-Learning Panel -->
+            <div class="p-4 bg-white border-t-2 border-pink-200">
+                <details class="glass-effect rounded-2xl shadow-lg p-4">
+                    <summary class="cursor-pointer text-pink-600 font-bold">🧠 自己学習（Feedback & Knowledge）</summary>
+                    <div class="mt-3 flex flex-wrap gap-3">
+                        <button @click="sendFeedback('up')" type="button" class="px-4 py-2 bg-green-100 text-green-700 rounded-full text-xs hover:bg-green-200 transition-all">
+                            👍 フィードバック（良い）
+                        </button>
+                        <button @click="sendFeedback('down')" type="button" class="px-4 py-2 bg-red-100 text-red-700 rounded-full text-xs hover:bg-red-200 transition-all">
+                            👎 フィードバック（改善）
+                        </button>
+                        <button @click="upsertKnowledge()" type="button" class="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-xs hover:bg-purple-200 transition-all">
+                            ➕ ナレッジ登録
+                        </button>
+                        <button @click="loadKnowledgeReview()" type="button" class="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-xs hover:bg-blue-200 transition-all">
+                            📚 レビュー取得
+                        </button>
+                    </div>
+                    <pre x-text="reviewJson" class="mt-3 bg-gray-50 p-3 rounded-lg text-xs whitespace-pre-wrap"></pre>
+                </details>
+            </div>
         </div>
 
         <!-- Info Panel -->
@@ -645,6 +667,7 @@
                 messages: [],
                 input: '',
                 loading: false,
+            reviewJson: '',
                 
                 setQuickMessage(message) {
                     if (!this.loading) {
@@ -807,6 +830,95 @@
                             const container = document.getElementById('chatContainer');
                             container.scrollTop = container.scrollHeight;
                         });
+                    }
+                },
+
+                async ensureLogin() {
+                    let accessToken = localStorage.getItem('elysia_access_token');
+                    let refreshToken = localStorage.getItem('elysia_refresh_token');
+                    if (accessToken && refreshToken) return { accessToken, refreshToken };
+                    const username = prompt('👤 ユーザー名を入力してください');
+                    const pwd = prompt('🔐 パスワードを入力してください');
+                    if (!username || !pwd) throw new Error('認証がキャンセルされました');
+                    const authRes = await fetch('/auth/token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password: pwd })
+                    });
+                    if (!authRes.ok) throw new Error('認証失敗');
+                    const authJson = await authRes.json();
+                    accessToken = authJson.accessToken;
+                    refreshToken = authJson.refreshToken;
+                    localStorage.setItem('elysia_access_token', accessToken);
+                    localStorage.setItem('elysia_refresh_token', refreshToken);
+                    localStorage.setItem('elysia_user', username);
+                    return { accessToken, refreshToken };
+                },
+
+                async sendFeedback(rating) {
+                    try {
+                        const { accessToken } = await this.ensureLogin();
+                        const payload = {
+                            query: this.messages.filter(m=>m.role==='user').slice(-1)[0]?.content || '',
+                            answer: this.messages.filter(m=>m.role==='assistant').slice(-1)[0]?.content || '',
+                            rating,
+                            reason: rating === 'down' ? 'needs improvement' : 'good'
+                        };
+                        const resp = await fetch('/feedback', {
+                            method: 'POST',
+                            headers: {
+                                'content-type': 'application/json',
+                                'authorization': `Bearer ${accessToken}`,
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                        if (!resp.ok) throw new Error(`Feedback failed: ${resp.status}`);
+                        alert('✨ フィードバックを保存したよ！');
+                    } catch (e) {
+                        console.error(e);
+                        alert('⚠️ フィードバックでエラー');
+                    }
+                },
+
+                async upsertKnowledge() {
+                    try {
+                        const { accessToken } = await this.ensureLogin();
+                        const summary = prompt('登録する要約（summary）を入力してね♡', 'Elysia knowledge note');
+                        if (!summary) return;
+                        const payload = {
+                            summary,
+                            sourceUrl: location.href,
+                            tags: ['ui'],
+                            confidence: 0.9
+                        };
+                        const resp = await fetch('/knowledge/upsert', {
+                            method: 'POST',
+                            headers: {
+                                'content-type': 'application/json',
+                                'authorization': `Bearer ${accessToken}`,
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                        if (!resp.ok) throw new Error(`Upsert failed: ${resp.status}`);
+                        alert('✨ ナレッジを保存したよ！');
+                    } catch (e) {
+                        console.error(e);
+                        alert('⚠️ ナレッジ登録でエラー');
+                    }
+                },
+
+                async loadKnowledgeReview() {
+                    try {
+                        const { accessToken } = await this.ensureLogin();
+                        const resp = await fetch('/knowledge/review?n=10', {
+                            headers: { 'authorization': `Bearer ${accessToken}` }
+                        });
+                        if (!resp.ok) throw new Error(`Review failed: ${resp.status}`);
+                        const data = await resp.json();
+                        this.reviewJson = JSON.stringify(data, null, 2);
+                    } catch (e) {
+                        console.error(e);
+                        alert('⚠️ レビュー取得でエラー');
                     }
                 }
             }
