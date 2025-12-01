@@ -183,6 +183,14 @@ async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
         コンテキストとセリフリスト
     """
     try:
+        # セキュリティチェック
+        dangerous_keywords = ["drop", "delete", "exec", "eval", "system"]
+        if any(kw in query.text.lower() for kw in dangerous_keywords):
+            logger.warning(f"⚠️ Suspicious RAG query: {query.text[:50]}...")
+            raise HTTPException(400, "にゃん♡ 危ない言葉は使わないでね？")
+        
+        logger.info(f"🔍 RAG search: {query.text[:50]}...")
+        
         # クエリをエンベディング化
         query_embedding = model.encode([query.text])[0]
         
@@ -272,6 +280,14 @@ async def chat_with_elysia(request: ChatRequest):
         # 最新のユーザーメッセージを取得
         user_message = request.messages[-1].content if request.messages else ""
         
+        # セキュリティチェック：危険なクエリを検出
+        dangerous_keywords = ["drop", "delete", "exec", "eval", "system", "__import__"]
+        if any(kw in user_message.lower() for kw in dangerous_keywords):
+            logger.warning(f"⚠️ Suspicious query detected: {user_message[:50]}...")
+            raise HTTPException(400, "にゃん♡ いたずらはダメだよぉ〜？")
+        
+        logger.info(f"💬 Chat request: {user_message[:50]}...")
+        
         # RAG検索で関連セリフ取得
         query_embedding = model.encode([user_message])[0]
         similarities = []
@@ -312,6 +328,17 @@ async def chat_with_elysia(request: ChatRequest):
             "stream": request.stream
         }
         
+        # 出力フィルタリング関数（危険なコードブロック除去）
+        def safe_filter(text: str) -> str:
+            """危険なコンテンツを除去"""
+            import re
+            # コードブロック除去
+            text = re.sub(r'```[\s\S]*?```', '', text)
+            # 危険キーワード除去
+            for kw in ["eval", "exec", "system", "__import__", "subprocess"]:
+                text = text.replace(kw, "[安全性のため削除]");
+            return text
+        
         if request.stream:
             # ストリーミングレスポンス
             async def generate():
@@ -328,7 +355,9 @@ async def chat_with_elysia(request: ChatRequest):
                                     if "message" in data:
                                         content = data["message"].get("content", "")
                                         if content:
-                                            yield f"data: {json.dumps({'content': content})}\n\n"
+                                            # 出力フィルタリング適用
+                                            safe_content = safe_filter(content)
+                                            yield f"data: {json.dumps({'content': safe_content})}\n\n"
                                 except json.JSONDecodeError:
                                     continue
             
@@ -344,8 +373,11 @@ async def chat_with_elysia(request: ChatRequest):
                 result = response.json()
                 assistant_message = result.get("message", {}).get("content", "")
                 
+                # 出力フィルタリング適用
+                safe_message = safe_filter(assistant_message)
+                
                 return ChatResponse(
-                    response=assistant_message,
+                    response=safe_message,
                     context=context,
                     quotes=quotes
                 )
