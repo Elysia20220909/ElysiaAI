@@ -1,0 +1,123 @@
+{
+	"version": "0.2.1",
+	"tasks": [
+		{
+			"taskLabel": "🚀 Start Dev Server",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "bun",
+			"args": ["run", "dev"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🔨 Build Project",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "bun",
+			"args": ["run", "build"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🧪 Run Tests",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "bun",
+			"args": ["test"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🎨 Format Code",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "bun",
+			"args": ["run", "format"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🔍 Lint Code",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "bun",
+			"args": ["run", "lint"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🔧 Fix Issues",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "bun",
+			"args": ["run", "fix"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🐳 Docker Build",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "docker",
+			"args": [
+				"build",
+				"-f",
+				"Dockerfile.production",
+				"-t",
+				"elysia-ai:latest",
+				"."
+			],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🐳 Docker Compose Up",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "docker-compose",
+			"args": ["up", "-d"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🐳 Docker Compose Down",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "docker-compose",
+			"args": ["down"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🐍 Start FastAPI",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "python",
+			"args": ["python/fastapi_server.py"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "📦 Install Dependencies",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "bun",
+			"args": ["install"],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		},
+		{
+			"taskLabel": "🧹 Clean Build",
+			"appliesTo": "/",
+			"type": "launch",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"Remove-Item -Recurse -Force dist,node_modules -ErrorAction SilentlyContinue; bun install; bun run build"
+			],
+			"workingDirectory": "${workspaceRoot}",
+			"output": "terminal"
+		}
+	]
+}
