@@ -6,11 +6,11 @@ Elysia AI - RAG Server with FastAPI + Milvus Lite
 from typing import Dict, List, Any
 from fastapi import FastAPI, Body, HTTPException
 from pydantic import BaseModel, Field
-from pymilvus import MilvusClient
 from sentence_transformers import SentenceTransformer
 import uvicorn
 import os
 import logging
+import numpy as np
 
 # ==================== 設定 ====================
 CONFIG = {
@@ -39,8 +39,10 @@ app = FastAPI(
 )
 
 model = SentenceTransformer(CONFIG["MODEL_NAME"])
-db_path = os.path.join(os.path.dirname(__file__), "elysia.db")
-client = MilvusClient(db_path)
+
+# インメモリベクトルストア（Milvusの代わり）
+embeddings_store: List[np.ndarray] = []
+quotes_store: List[str] = []
 
 # ==================== データ定義 ====================
 # エリシア本物セリフ50選♡（Wiki/Reddit/公式から厳選）
@@ -100,57 +102,28 @@ ELYSIA_QUOTES = [
 class Query(BaseModel):
     text: str
 
+class RAGResponse(BaseModel):
+    context: str
+    quotes: List[str]
+    error: str
+
 @app.on_event("startup")
 async def init_db() -> None:
     """
-    データベースとコレクションを初期化
+    ベクトルストアを初期化（インメモリ）
     起動時に自動実行される
     """
     try:
-        collection_name = CONFIG["COLLECTION_NAME"]
+        global embeddings_store, quotes_store
         
-        # コレクション作成
-        if not client.has_collection(collection_name):
-            logger.info(f"Creating collection: {collection_name}")
-            client.create_collection(
-                collection_name=collection_name,
-                dimension=CONFIG["EMBEDDING_DIM"],
-                primary_field="id",
-                vector_field="embedding"
-            )
-            
-            # インデックス作成
-            client.create_index(
-                collection_name,
-                field_name="embedding",
-                index_params={
-                    "index_type": CONFIG["INDEX_TYPE"],
-                    "metric_type": CONFIG["METRIC_TYPE"],
-                    "params": {"M": 16, "efConstruction": 200}
-                }
-            )
-            logger.info("✅ Index created successfully")
-        
-        # 既存データ数チェック
-        stats = client.query(collection_name, "", output_fields=["count(*)"])
-        count = stats[0].get("count(*)", 0) if stats else 0
-        
-        # データ挿入
-        if count == 0:
-            logger.info(f"📝 Inserting {len(ELYSIA_QUOTES)} Elysia quotes...")
+        if len(quotes_store) == 0:
+            logger.info(f"📝 Embedding {len(ELYSIA_QUOTES)} Elysia quotes...")
+            quotes_store = ELYSIA_QUOTES.copy()
             embeddings = model.encode(ELYSIA_QUOTES)
-            data = [
-                {
-                    "id": i,
-                    "text": quote,
-                    "embedding": embedding.tolist()
-                }
-                for i, (quote, embedding) in enumerate(zip(ELYSIA_QUOTES, embeddings))
-            ]
-            client.insert(collection_name, data)
-            logger.info("✅ Elysia quotes inserted successfully!")
+            embeddings_store = [emb for emb in embeddings]
+            logger.info("✅ Elysia quotes embedded successfully!")
         else:
-            logger.info(f"✅ Collection already has {count} quotes")
+            logger.info(f"✅ Already have {len(quotes_store)} quotes in memory")
     
     except Exception as e:
         logger.error(f"❌ Error initializing DB: {e}")
@@ -170,22 +143,22 @@ async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
     """
     try:
         # クエリをエンベディング化
-        query_embedding = model.encode([query.text])
+        query_embedding = model.encode([query.text])[0]
         
-        # Milvus検索
-        results = client.search(
-            collection_name=CONFIG["COLLECTION_NAME"],
-            data=[query_embedding[0].tolist()],
-            anns_field="embedding",
-            limit=CONFIG["SEARCH_LIMIT"],
-            output_fields=["text"]
-        )
+        # コサイン類似度で検索（インメモリ）
+        similarities = []
+        for idx, stored_embedding in enumerate(embeddings_store):
+            similarity = np.dot(query_embedding, stored_embedding) / (
+                np.linalg.norm(query_embedding) * np.linalg.norm(stored_embedding)
+            )
+            similarities.append((idx, similarity))
+        
+        # トップK件を取得
+        similarities.sort(key=lambda x: x[1], reverse=True)
+        top_k = similarities[:CONFIG["SEARCH_LIMIT"]]
         
         # 結果抽出
-        quotes = [
-            hit.get("entity", {}).get("text", "")
-            for hit in results[0]
-        ]
+        quotes = [quotes_store[idx] for idx, _ in top_k]
         
         context = "\n".join(quotes)
         logger.info(f"✅ RAG search successful: {len(quotes)} quotes found")
@@ -214,25 +187,17 @@ async def root() -> Dict[str, str]:
 
 @app.get("/health")
 async def health() -> Dict[str, Any]:
-    """詳細なヘルスチェック - DB接続状態確認"""
+    """詳細なヘルスチェック - インメモリストア状態確認"""
     try:
-        collections = client.list_collections()
-        
-        # コレクション統計取得
-        stats = None
-        if CONFIG["COLLECTION_NAME"] in collections:
-            query_result = client.query(
-                CONFIG["COLLECTION_NAME"],
-                "",
-                output_fields=["count(*)"]
-            )
-            stats = {
-                "count": query_result[0].get("count(*)", 0) if query_result else 0
-            }
+        # インメモリストアの統計取得
+        stats = {
+            "quotes_count": len(quotes_store),
+            "embeddings_count": len(embeddings_store)
+        }
         
         return {
             "status": "healthy",
-            "collections": collections,
+            "storage": "in-memory",
             "model": CONFIG["MODEL_NAME"],
             "stats": stats
         }
