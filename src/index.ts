@@ -120,8 +120,11 @@ const app = new Elysia()
 				messages: t.Array(
 					t.Object({
 						role: t.Union([t.Literal("user"), t.Literal("assistant")]),
-						content: t.String(),
+						content: t.String({
+							maxLength: 500,
+						}),
 					}),
+					{ maxItems: 10 },
 				),
 			}),
 		},
