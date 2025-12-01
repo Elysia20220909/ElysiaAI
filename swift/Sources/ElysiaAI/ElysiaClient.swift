@@ -130,7 +130,17 @@ public class ElysiaClient {
         let request = RAGRequest(text: query)
         let requestBody = try JSONEncoder().encode(request)
         
-        var httpRequest = HTTPClientRequest(url: "\(baseURL.replacingOccurrences(of: "3000", with: "8000"))/rag")
+        // RAGエンドポイントはポート8000を使用
+        let ragURL: String
+        if let url = URL(string: baseURL), let host = url.host {
+            let scheme = url.scheme ?? "http"
+            let ragPort = 8000
+            ragURL = "\(scheme)://\(host):\(ragPort)/rag"
+        } else {
+            ragURL = "\(baseURL)/rag"
+        }
+        
+        var httpRequest = HTTPClientRequest(url: ragURL)
         httpRequest.method = .POST
         httpRequest.headers.add(name: "Content-Type", value: "application/json")
         httpRequest.body = .bytes(requestBody)
