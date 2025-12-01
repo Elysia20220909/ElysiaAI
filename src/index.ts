@@ -5,6 +5,7 @@ import { streamText } from "ai";
 import axios from "axios";
 import { Elysia, t } from "elysia";
 import { ollama } from "ollama-ai-provider";
+import sanitizeHtml from "sanitize-html";
 
 // ==================== 定数定義 ====================
 const CONFIG = {
@@ -78,17 +79,22 @@ const app = new Elysia()
 		"/elysia-love",
 		async ({ body }: { body: ChatRequest }) => {
 			const { messages } = body;
-			const userMsg = messages[messages.length - 1]?.content || "";
+
+			// メッセージ内容をサニタイズ
+			const sanitizedMessages = messages.map((m) => ({
+				role: m.role,
+				content: sanitizeHtml(m.content, {
+					allowedTags: [],
+					allowedAttributes: {},
+				}),
+			}));
 
 			// FastAPI /chat エンドポイントを直接呼び出し（Ollama統合済み）
 			try {
 				const response = await axios.post(
 					"http://127.0.0.1:8000/chat",
 					{
-						messages: messages.map((m) => ({
-							role: m.role,
-							content: m.content,
-						})),
+						messages: sanitizedMessages,
 						stream: true,
 					},
 					{
