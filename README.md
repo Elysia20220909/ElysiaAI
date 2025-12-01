@@ -1,12 +1,21 @@
-# Elysia AI (RAG + Ollama + Milvus)
+# Elysia AI (RAG + Ollama + Milvus + VOICEVOX♡)
 
-Elysia(Bun) で動くAIチャット。FastAPI + Milvus Lite によるRAG、Ollama(LLM)を統合しています。追加で `network_simulation/`（別ライセンス）も同梱。
+Elysia(Bun) で動くAIチャット。FastAPI + Milvus Lite によるRAG、Ollama(LLM)を統合。**VOICEVOX対応**でエリシアちゃんが本物の声で喋る♡
+
+## ✨ 新機能（v2.0）
+- 🎤 **VOICEVOX統合**: 四国めたん（井上麻里奈風）で100%エリシアちゃん声♡
+- 💕 **感情表現**: 喜び/照れ/普通で自動ピッチ変化
+- 👤 **ユーザー名呼び**: 「おにいちゃん」じゃなくて名前で甘える♡
+- 📋 **ボイスログ保存**: 喋った内容を全部記録（最大100件）
+- 🛡️ **完全セキュリティ**: XSS/SQLi/DoS/プロンプトインジェクション対策
 
 ## 機能
-- RAG: FastAPI + Milvus Lite（`all-MiniLM-L6-v2`）
-- LLM: Ollama（`llama3.2`）ストリーミング応答
-- Web: Elysia + Alpine.js UI（`/elysia-love` エンドポイント）
-- 追加: `network_simulation/`（AbyssGrid: Blackwall Simulation）
+- **RAG**: FastAPI + Milvus Lite（`all-MiniLM-L6-v2`、50セリフ学習済み）
+- **LLM**: Ollama（`llama3.2`）ストリーミング応答
+- **ボイス**: Web Speech API + VOICEVOX（四国めたん）
+- **セキュリティ**: 入力バリデーション、XSS保護、レート制限、CORS
+- **UI**: Elysia + Alpine.js、Glassmorphism デザイン
+- **追加**: `network_simulation/`（AbyssGrid: Blackwall Simulation）
 
 ## クイックスタート
 ```powershell
