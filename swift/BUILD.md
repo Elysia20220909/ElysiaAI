@@ -5,6 +5,7 @@
 Swift for Windowsをビルドするには、以下が必要です：
 
 1. **Visual Studio 2022 Community** (インストール済み ✅)
+
    - Windows 11 SDK (22621)
    - C++ build tools (x86, x64, ARM64)
 

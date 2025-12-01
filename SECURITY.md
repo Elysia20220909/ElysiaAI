@@ -1,12 +1,13 @@
 # 🛡️ エリシアAI セキュリティ対策ドキュメント
 
-**にゃん♪ おにいちゃん、エリシアちゃんのセキュリティは完璧だよぉ〜♡**
+> にゃん♪ おにいちゃん、エリシアちゃんのセキュリティは完璧だよぉ〜♡
 
 ## 🔐 実装済みセキュリティ機能
 
 ### 1. **入力バリデーション (Input Validation)**
 
 #### ElysiaJS (TypeScript)
+
 ```typescript
 // ✅ 最大500文字、最大10メッセージ
 // ✅ 安全な文字のみ許可（英数字、日本語、基本記号、絵文字）
@@ -32,6 +33,7 @@ body: t.Object({
 ### 2. **XSS保護 (XSS Prevention)**
 
 #### sanitize-html パッケージ
+
 ```typescript
 import sanitizeHtml from "sanitize-html"
 
@@ -42,6 +44,7 @@ const cleanContent = sanitizeHtml(m.content, {
 ```
 
 **防御例**:
+
 - 入力: `<script>alert('hack')</script>`  
 - 出力: `alert('hack')` (無害化)
 
@@ -50,6 +53,7 @@ const cleanContent = sanitizeHtml(m.content, {
 ### 3. **危険キーワード検出 (Dangerous Keyword Detection)**
 
 #### フロントエンド (ElysiaJS)
+
 ```typescript
 const DANGEROUS_KEYWORDS = ["eval", "exec", "system", "drop", "delete", "<script"]
 
@@ -59,6 +63,7 @@ if (containsDangerousKeywords(cleaned)) {
 ```
 
 #### バックエンド (FastAPI)
+
 ```python
 dangerous_keywords = ["drop", "delete", "exec", "eval", "system", "__import__"]
 
@@ -74,6 +79,7 @@ if any(kw in user_message.lower() for kw in dangerous_keywords):
 ### 4. **レート制限 (Rate Limiting)**
 
 #### 簡易実装 (IP/識別子ベース)
+
 ```typescript
 const MAX_REQUESTS_PER_MINUTE = 60
 
@@ -116,6 +122,7 @@ function checkRateLimit(identifier: string): boolean {
 ### 6. **出力フィルタリング (Output Filtering)**
 
 #### Ollama応答の安全化
+
 ```python
 def safe_filter(text: str) -> str:
     # コードブロック削除
@@ -135,6 +142,7 @@ def safe_filter(text: str) -> str:
 ### 7. **ログ監視 (Logging & Monitoring)**
 
 #### リクエストロギング
+
 ```typescript
 .onRequest(({ request }) => {
   const timestamp = new Date().toISOString()
@@ -145,6 +153,7 @@ def safe_filter(text: str) -> str:
 ```
 
 #### 不審なクエリ検出
+
 ```python
 logger.warning(f"⚠️ Suspicious query detected: {query.text[:50]}...")
 ```
@@ -156,6 +165,7 @@ logger.warning(f"⚠️ Suspicious query detected: {query.text[:50]}...")
 ### 8. **Milvusセキュリティ (オプション)**
 
 #### 認証トークン
+
 ```python
 milvus_client = MilvusClient(
     uri="http://localhost:19530",
@@ -164,6 +174,7 @@ milvus_client = MilvusClient(
 ```
 
 #### 環境変数での秘匿
+
 ```bash
 # .env ファイル（.gitignore で除外）
 MILVUS_TOKEN=your_secure_token_here
@@ -176,39 +187,46 @@ MILVUS_TOKEN=your_secure_token_here
 ## 🧪 セキュリティテスト例
 
 ### テスト1: XSSインジェクション
+
 ```bash
 curl -X POST http://localhost:3000/elysia-love \
   -H "Content-Type: application/json" \
   -d '{"messages":[{"role":"user","content":"<script>alert(\"hack\")</script>"}]}'
 ```
+
 **期待結果**: `alert("hack")` に無害化、または正規表現でブロック
 
 ---
 
 ### テスト2: SQLインジェクション風
+
 ```bash
 curl -X POST http://localhost:8000/rag \
   -H "Content-Type: application/json" \
   -d '{"text":"DROP TABLE users; --"}'
 ```
-**期待結果**: `400 Bad Request` + "にゃん♡ いたずらはダメだよぉ〜？"
+
+**期待結果**: `400 Bad Request` + "にゃん♡ いたずらはダメだよぉ～？"
 
 ---
 
 ### テスト3: DoS攻撃シミュレーション
+
 ```powershell
 # PowerShell で連続リクエスト
 1..100 | ForEach-Object {
   Invoke-RestMethod -Uri http://localhost:3000/elysia-love -Method POST -Body '{"messages":[{"role":"user","content":"test"}]}' -ContentType "application/json"
 }
 ```
-**期待結果**: 60リクエスト後に `にゃん♡ おにいちゃん、ちょっと急ぎすぎだよぉ〜？`
+
+**期待結果**: 60リクエスト後に `にゃん♡ おにいちゃん、ちょっと急ぎすぎだよぉ～？`
 
 ---
 
 ## 📚 追加推奨対策（本番環境向け）
 
 ### 1. HTTPS強制
+
 ```typescript
 app.listen({
   hostname: 'localhost',
@@ -221,16 +239,19 @@ app.listen({
 ```
 
 ### 2. JWT認証
+
 ```bash
 bun add jsonwebtoken
 ```
 
 ### 3. Helmet.js (セキュリティヘッダー)
+
 ```bash
 bun add helmet
 ```
 
 ### 4. Milvus RBAC
+
 ```python
 client.create_role("elysia_user", permissions=[{
   "object_type": "Collection",
@@ -240,6 +261,7 @@ client.create_role("elysia_user", permissions=[{
 ```
 
 ### 5. WAF (Web Application Firewall)
+
 - Cloudflare
 - AWS WAF
 - Nginx ModSecurity
@@ -248,7 +270,7 @@ client.create_role("elysia_user", permissions=[{
 
 ## 🎀 エリシアちゃんからのメッセージ♡
 
-```
+```plaintext
 にゃん♪ これでおにいちゃんのサーバー、
 もう誰にも壊されないよぉ〜♡
 
@@ -264,6 +286,7 @@ XSSも、SQLインジェクションも、DoS攻撃も、
 ## 📞 セキュリティ脆弱性報告
 
 もし脆弱性を見つけた場合は、以下で報告してください:
+
 - **GitHub Issues**: [ElysiaJS](https://github.com/chloeamethyst/ElysiaJS/issues)
 - **Email**: (セキュリティ担当者のメールアドレス)
 

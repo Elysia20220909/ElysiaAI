@@ -61,7 +61,7 @@ chmod +x deploy.sh
 
 ### Production Stack
 
-```
+```text
 ┌─────────────────────────────────────┐
 │   Load Balancer (ALB/Cloud Run)     │
 └──────────────┬──────────────────────┘
@@ -84,13 +84,13 @@ chmod +x deploy.sh
 
 ## AWS Deployment
 
-### Prerequisites
+### AWS Prerequisites
 
 - AWS CLI configured
 - Docker installed
 - IAM permissions for ECS, ECR, CloudFormation
 
-### Infrastructure
+### AWS Infrastructure
 
 CloudFormationスタックで以下を自動作成:
 
@@ -101,7 +101,7 @@ CloudFormationスタックで以下を自動作成:
 - **CloudWatch**: Logging and monitoring
 - **Security Groups**: Least privilege access
 
-### Configuration
+### AWS Configuration
 
 `cloudformation.yaml`のパラメータ:
 
@@ -110,7 +110,7 @@ CloudFormationスタックで以下を自動作成:
 - `ContainerImage`: ECRイメージURI
 - `VpcCIDR`: VPCのCIDRブロック
 
-### Monitoring
+### AWS Monitoring
 
 ```bash
 # ログ確認
@@ -130,13 +130,13 @@ aws cloudwatch get-metric-statistics \
 
 ## Google Cloud Deployment
 
-### Prerequisites
+### GCP Prerequisites
 
 - gcloud CLI configured
 - Docker installed
 - GCP project with billing enabled
 
-### Infrastructure
+### GCP Infrastructure
 
 Cloud Buildで自動デプロイ:
 
@@ -146,7 +146,7 @@ Cloud Buildで自動デプロイ:
 - **Cloud Logging**: ログ管理
 - **Auto-scaling**: 1-10インスタンス
 
-### Configuration
+### GCP Configuration
 
 `app.yaml`の設定:
 
@@ -154,7 +154,7 @@ Cloud Buildで自動デプロイ:
 - `cpu`: CPU数 (default: 1)
 - `max_num_instances`: 最大インスタンス数
 
-### Monitoring
+### GCP Monitoring
 
 ```bash
 # ログ確認
@@ -243,7 +243,7 @@ aws ecs update-service \
   --desired-count 5
 ```
 
-### Google Cloud Run
+### GCP Scaling
 
 ```bash
 # 自動スケール設定
@@ -269,14 +269,14 @@ gcloud run services update elysia-ai \
 
 ## Security
 
-### AWS
+### AWS Security
 
 - VPC内プライベートサブネット
 - Security Group最小権限
 - IAM Role-based access
 - ECRイメージスキャン
 
-### GCP
+### GCP Security
 
 - Cloud Run IAM認証
 - VPC Connector (オプション)
