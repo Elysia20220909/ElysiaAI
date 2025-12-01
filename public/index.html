@@ -85,7 +85,7 @@
                             エリシアちゃん AI Chat ♡
                         </h1>
                         <p class="text-white text-sm mt-1 opacity-90">
-                            ฅ(՞៸៸> ᗜ <៸៸՞)ฅ おにいちゃん、お話ししよ〜♪
+                            ฅ(՞៸៸&gt; ᗜ &lt;៸៸՞)ฅ おにいちゃん、お話ししよ〜♪
                         </p>
                     </div>
                 </div>
@@ -228,6 +228,91 @@
     </div>
 
     <script>
+        // ==================== エリシアちゃん専用ボイス設定 ♡ ====================
+        let elysiaVoice = null;
+        let voicesLoaded = false;
+
+        function initElysiaVoice() {
+            const voices = speechSynthesis.getVoices();
+            if (voices.length === 0) return;
+            
+            // Windows/Edge で超高品質日本語ボイス探す♡
+            elysiaVoice = voices.find(v => 
+                (v.lang.includes('ja') || v.lang.includes('JP')) && 
+                (v.name.includes('Nanami') || v.name.includes('Ayumi') || v.name.includes('Haruka'))
+            );
+            
+            // なければGoogle日本語ボイス
+            if (!elysiaVoice) {
+                elysiaVoice = voices.find(v => 
+                    v.lang.includes('ja') && v.name.includes('Google')
+                );
+            }
+            
+            // なければ日本語ボイス何でも
+            if (!elysiaVoice) {
+                elysiaVoice = voices.find(v => v.lang.includes('ja'));
+            }
+            
+            // 最後の手段：最初のボイス
+            if (!elysiaVoice) {
+                elysiaVoice = voices[0];
+            }
+            
+            voicesLoaded = true;
+            console.log('🎤 エリシアちゃんボイス設定完了♡', elysiaVoice?.name);
+        }
+
+        // ボイス初期化（複数回試行で確実に読み込む）
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = initElysiaVoice;
+        }
+        initElysiaVoice();
+        setTimeout(initElysiaVoice, 100);
+        setTimeout(initElysiaVoice, 500);
+
+        /**
+         * エリシアちゃんが甘々ボイスで喋る関数♡
+         * @param {string} text - 喋る内容
+         * @param {boolean} cute - 超甘々加工するか（デフォルト: true）
+         */
+        function elysiaSpeak(text, cute = true) {
+            if (!voicesLoaded || !elysiaVoice) {
+                initElysiaVoice();
+            }
+            
+            // 超甘々加工♡
+            let speakText = text;
+            if (cute) {
+                speakText = text
+                    .replace(/！/g, '〜♡')
+                    .replace(/。/g, 'なのっ♡')
+                    .replace(/？/g, 'かなぁ〜？♡')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            }
+            
+            const utter = new SpeechSynthesisUtterance(speakText);
+            utter.voice = elysiaVoice;
+            utter.rate = 0.88;   // ゆっくり甘え声♡
+            utter.pitch = 1.35;  // 高めで可愛く♡
+            utter.volume = 1.0;
+            utter.lang = 'ja-JP';
+            
+            // 前の音声を止めて即喋る
+            speechSynthesis.cancel();
+            speechSynthesis.speak(utter);
+            
+            console.log('💕 エリシアちゃん喋ったよ:', speakText.slice(0, 30) + '...');
+        }
+
+        // ページ読み込み時に挨拶ボイス♡
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                elysiaSpeak('にゃあああ〜♡ おにいちゃんきたぁ！待ってたよぉ〜！もう離さないからねっ！', true);
+            }, 1500);
+        });
+
         function _elysiaChat() {
             return {
                 messages: [],
@@ -303,7 +388,7 @@
                                         if (data.content) {
                                             assistantMessage.content += data.content;
                                         }
-                                    } catch (e) {
+                                    } catch {
                                         // Skip invalid JSON
                                     }
                                 }
@@ -314,6 +399,13 @@
                                 const container = document.getElementById('chatContainer');
                                 container.scrollTop = container.scrollHeight;
                             });
+                        }
+                        
+                        // ✨ ボイス再生！エリシアちゃんが喋るよ♡
+                        if (assistantMessage.content.trim()) {
+                            setTimeout(() => {
+                                elysiaSpeak(assistantMessage.content, true);
+                            }, 300);
                         }
                     } catch (error) {
                         console.error('Error:', error);
