@@ -679,12 +679,13 @@
                         let refreshToken = localStorage.getItem('elysia_refresh_token');
 
                         if (!accessToken || !refreshToken) {
-                            const pwd = prompt('🔐 パスワード入力してください (開発用)');
-                            if (!pwd) throw new Error('認証がキャンセルされました');
+                            const username = prompt('👤 ユーザー名を入力してください');
+                            const pwd = prompt('🔐 パスワードを入力してください');
+                            if (!username || !pwd) throw new Error('認証がキャンセルされました');
                             const authRes = await fetch('/auth/token', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ password: pwd })
+                                body: JSON.stringify({ username, password: pwd })
                             });
                             if (!authRes.ok) throw new Error('認証失敗');
                             const authJson = await authRes.json();
@@ -692,6 +693,7 @@
                             refreshToken = authJson.refreshToken;
                             localStorage.setItem('elysia_access_token', accessToken);
                             localStorage.setItem('elysia_refresh_token', refreshToken);
+                            localStorage.setItem('elysia_user', username);
                         }
 
                         // ----- チャットリクエスト -----
