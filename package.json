@@ -31,7 +31,13 @@
 		"prepublishOnly": "bun run build",
 		"lint": "biome check .",
 		"format": "biome format --write .",
-		"fix": "biome check --write ."
+		"fix": "biome check --write .",
+		"docker:build": "docker build -f Dockerfile.production -t elysia-ai:latest .",
+		"docker:up": "docker-compose up -d",
+		"docker:down": "docker-compose down",
+		"docker:logs": "docker-compose logs -f",
+		"aws:deploy": "cd cloud/aws && bash deploy.sh",
+		"gcp:deploy": "cd cloud/gcp && bash deploy.sh"
 	},
 	"dependencies": {
 		"@ai-sdk/openai": "^2.0.74",
