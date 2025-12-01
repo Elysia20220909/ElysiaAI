@@ -2,7 +2,8 @@
 // Sends a JSON body with `messages` (simple chat-style array)
 // and prints the response body and status.
 
-const url = 'http://localhost:3000/ai'
+// URL can be set via command-line argument, environment variable, or defaults to localhost
+const url = process.argv[2] || process.env.AI_URL || 'http://localhost:3000/ai'
 
 const body = {
   messages: [
