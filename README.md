@@ -105,6 +105,20 @@ bun run src/index.ts
 - リフレッシュトークンはRedisで検証/失効
 - JSONL保管のローテーション: `data/*.jsonl` が肥大化する場合、サイズ閾値でローテーション（例: 50MB超で `*.jsonl.1` へ移動）をタスク化
 
+### JSONLローテーション（PowerShell）
+
+```powershell
+# 既定: dataディレクトリ, 50MB超でローテート
+./scripts/rotate-jsonl.ps1
+
+# ディレクトリや閾値を指定
+./scripts/rotate-jsonl.ps1 -DataDir data -MaxSizeMB 100
+```
+
+### Nginx設定例（本番）
+
+`deploy/nginx.conf.example` を参照。TLS/セキュリティヘッダ/CSP/SSE対応の設定を含みます。
+
 ## 補助スクリプト（Windows）
 
 ## 補助スクリプト（Linux/macOS/WSL）
