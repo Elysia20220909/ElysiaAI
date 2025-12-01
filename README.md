@@ -45,48 +45,12 @@ bun run pack:zip
 # 例: デフォルトで起動
 ./scripts/dev.sh
 
-# 例: Network Simulation API も一緒に
-./scripts/dev.sh --network-sim
-```
+<div align="center">
 
-```powershell
-# 例: デフォルトポートで起動
-./scripts/dev.ps1
+# Elysia AI (RAG + Ollama + Milvus)
 
-# 例: ポートを変更して起動（Elysia=3100, FastAPI=8100）
-./scripts/dev.ps1 -ElysiaPort 3100 -FastApiPort 8100
+Language / 言語: [English](./README.en.md) | [日本語](./README.ja.md)
 
-# 例: Network Simulation API も一緒に
-./scripts/dev.ps1 -NetworkSim
-```
+AI chat app with Elysia (Bun), FastAPI + Milvus Lite (RAG), and Ollama (LLM).
 
-## npm への公開（任意）
-アプリ用途のため公開は必須ではありませんが、公開する場合は以下のとおりです。
-
-1) package.json を確認
-- `name`: 一意なパッケージ名（スコープ推奨: `@your-scope/elysia-ai`）
-- `version`: セマンティックバージョニング
-- `license`: `MIT`
-- `main`: `dist/index.js`
-- `files`: `dist`, `README.md`, `LICENSE`
-- `prepublishOnly`: `bun run build`
-
-2) ログインと公開
-```powershell
-npm login
-npm version patch
-npm publish --access public
-```
-
-3) 注意
-- 本パッケージはサーバー実行用の成果物です（ライブラリAPIは未提供）。
-- 依存やモデルのライセンス条件に留意してください。
-
-## ライセンス
-- 本リポジトリ（ルート配下のコード）は MIT（`LICENSE`）。
-- `network_simulation/` は元のライセンスに従います（同ディレクトリの `LICENSE` を参照）。
-- 依存やモデルのライセンスは各提供元に従ってください。詳細は `THIRD_PARTY_NOTICES.md`。
-
-## メタデータ
-- ホームページ: https://github.com/chloeamethyst/ElysiaJS
-- 問い合わせ: Issues または Discussions
+</div>
