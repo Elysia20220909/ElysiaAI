@@ -58,7 +58,7 @@ if (CONFIG.REDIS_ENABLED) {
 export async function checkRateLimitRedis(
 	id: string,
 	maxRequests: number,
-	windowSeconds: number = 60
+	windowSeconds: number = 60,
 ): Promise<boolean> {
 	if (!redis || !redisAvailable) {
 		// Redis未接続時はフォールバック（常に許可）
@@ -82,7 +82,7 @@ export async function checkRateLimitRedis(
 
 		return count <= maxRequests;
 	} catch (err) {
-		console.error('[Redis] レート制限チェックエラー:', err);
+		console.error("[Redis] レート制限チェックエラー:", err);
 		return true; // エラー時は許可（サービス継続優先）
 	}
 }
