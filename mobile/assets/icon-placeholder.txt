@@ -1,0 +1,3 @@
+# Placeholder for icon.png
+# Generate a 1024x1024 icon with Elysia theme (pink/white)
+# Or use: https://www.appicon.co/

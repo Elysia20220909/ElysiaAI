@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -30,17 +30,16 @@ export default function IndexScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
+    const loadApiUrl = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(API_URL_KEY);
+        if (saved) setApiUrl(saved);
+      } catch (e) {
+        console.error('Failed to load API URL', e);
+      }
+    };
     loadApiUrl();
   }, []);
-
-  const loadApiUrl = async () => {
-    try {
-      const saved = await AsyncStorage.getItem(API_URL_KEY);
-      if (saved) setApiUrl(saved);
-    } catch (e) {
-      console.error('Failed to load API URL', e);
-    }
-  };
 
   const saveApiUrl = async (url: string) => {
     try {
@@ -174,7 +173,7 @@ export default function IndexScreen() {
           )}
           {messages.map((msg, idx) => (
             <View
-              key={idx}
+              key={`${msg.role}-${idx}-${msg.content.slice(0, 20)}`}
               style={[
                 styles.messageBubble,
                 msg.role === 'user' ? styles.userBubble : styles.assistantBubble,
