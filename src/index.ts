@@ -9,9 +9,9 @@ import sanitizeHtml from "sanitize-html";
 import {
 	checkRateLimitRedis,
 	isRedisAvailable,
+	revokeRefreshToken,
 	storeRefreshToken,
 	verifyRefreshToken,
-	revokeRefreshToken,
 } from "./redis";
 
 // ---------------- Config ----------------
@@ -41,6 +41,7 @@ const CONFIG = {
 	JWT_SECRET: process.env.JWT_SECRET || "dev-secret-change-me",
 	JWT_REFRESH_SECRET:
 		process.env.JWT_REFRESH_SECRET || "dev-refresh-secret-change-me",
+	AUTH_USERNAME: process.env.AUTH_USERNAME || "elysia",
 	AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysia-dev-password",
 } as const;
 
@@ -132,11 +133,12 @@ const app = new Elysia()
 	.post(
 		"/auth/token",
 		async ({ body }) => {
-			if (body.password !== CONFIG.AUTH_PASSWORD)
+			const { username, password } = body as { username: string; password: string };
+			if (username !== CONFIG.AUTH_USERNAME || password !== CONFIG.AUTH_PASSWORD)
 				return jsonError(401, "Invalid credentials");
 
-			// ユーザーID（本番では実際のユーザー管理システムから取得）
-			const userId = "default-user";
+			// ユーザーID（本番ではDBのユーザーID等を使用）
+			const userId = username;
 
 			// アクセストークン: 15分有効
 			const accessToken = jwt.sign(
@@ -147,7 +149,11 @@ const app = new Elysia()
 
 			// リフレッシュトークン: 7日有効
 			const refreshToken = jwt.sign(
-				{ iss: "elysia-ai-refresh", userId, iat: Math.floor(Date.now() / 1000) },
+				{
+					iss: "elysia-ai-refresh",
+					userId,
+					iat: Math.floor(Date.now() / 1000),
+				},
 				CONFIG.JWT_REFRESH_SECRET,
 				{ expiresIn: "7d" },
 			);
@@ -166,7 +172,12 @@ const app = new Elysia()
 				},
 			);
 		},
-		{ body: t.Object({ password: t.String({ minLength: 8, maxLength: 64 }) }) },
+		{
+			body: t.Object({
+				username: t.String({ minLength: 3, maxLength: 64 }),
+				password: t.String({ minLength: 8, maxLength: 64 }),
+			}),
+		},
 	)
 	// Public: refresh access token
 	.post(
@@ -177,7 +188,10 @@ const app = new Elysia()
 			// リフレッシュトークンを検証
 			let payload: jwt.JwtPayload;
 			try {
-				payload = jwt.verify(refreshToken, CONFIG.JWT_REFRESH_SECRET) as jwt.JwtPayload;
+				payload = jwt.verify(
+					refreshToken,
+					CONFIG.JWT_REFRESH_SECRET,
+				) as jwt.JwtPayload;
 			} catch {
 				return jsonError(401, "Invalid or expired refresh token");
 			}
@@ -224,7 +238,8 @@ const app = new Elysia()
 					refreshToken,
 					CONFIG.JWT_REFRESH_SECRET,
 				) as jwt.JwtPayload;
-				const userId = (payload as { userId?: string }).userId || "default-user";
+				const userId =
+					(payload as { userId?: string }).userId || "default-user";
 				await revokeRefreshToken(userId);
 
 				return new Response(
@@ -261,9 +276,18 @@ const app = new Elysia()
 			app.post(
 				"/elysia-love",
 				async ({ body, request }: { body: ChatRequest; request: Request }) => {
-					const clientId = request.headers.get("x-forwarded-for") || "anon";
-					// Redis統合レート制限チェック（async）
-					const rateLimitOk = await checkRateLimit(clientId);
+					const ip = request.headers.get("x-forwarded-for") || "anon";
+					let userId = "anon";
+					const auth = request.headers.get("authorization") || "";
+					try {
+						if (auth.startsWith("Bearer ")) {
+							const payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as jwt.JwtPayload;
+							userId = (payload as { userId?: string }).userId || "anon";
+						}
+					} catch {}
+					const clientKey = `${userId}:${ip}`;
+					// Redis統合レート制限チェック（async, ユーザーID+IPでキー強化）
+					const rateLimitOk = await checkRateLimit(clientKey);
 					if (!rateLimitOk) return jsonError(429, "Rate limit exceeded");
 					const sanitizedMessages = body.messages.map((m) => {
 						const cleaned = sanitizeHtml(m.content, {
@@ -315,7 +339,9 @@ const app = new Elysia()
 	.listen(CONFIG.PORT);
 
 // ---------------- Startup Banner ----------------
-const redisStatus = isRedisAvailable() ? "✅ Connected" : "⚠️ Fallback to in-memory";
+const redisStatus = isRedisAvailable()
+	? "✅ Connected"
+	: "⚠️ Fallback to in-memory";
 console.log(
 	`\n${"+".repeat(56)}\n✨ Secure Elysia AI Server Started ✨\n${"+".repeat(56)}\n📡 Server: http://localhost:${CONFIG.PORT}\n🔮 Upstream: ${CONFIG.RAG_API_URL}\n🛡️ RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}\n🔴 Redis: ${redisStatus}\n🔐 Auth: POST /auth/token (env AUTH_PASSWORD)\n🔄 Refresh: POST /auth/refresh\n🚪 Logout: POST /auth/logout\n${"+".repeat(56)}\n`,
 );
