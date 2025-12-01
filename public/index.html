@@ -674,10 +674,27 @@
                     });
                     
                     try {
+                        // ----- JWT取得（なければ取得） -----
+                        let token = localStorage.getItem('elysia_jwt');
+                        if (!token) {
+                            const pwd = prompt('🔐 パスワード入力してください (開発用)');
+                            if (!pwd) throw new Error('認証がキャンセルされました');
+                            const authRes = await fetch('/auth/token', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ password: pwd })
+                            });
+                            if (!authRes.ok) throw new Error('認証失敗');
+                            const authJson = await authRes.json();
+                            token = authJson.token;
+                            localStorage.setItem('elysia_jwt', token);
+                        }
+
                         const response = await fetch('/elysia-love', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
                             },
                             body: JSON.stringify({
                                 messages: this.messages.map(m => ({
@@ -687,9 +704,11 @@
                             })
                         });
                         
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                        if (response.status === 401) {
+                            localStorage.removeItem('elysia_jwt');
+                            throw new Error('認証トークン失効。再ログインしてください');
                         }
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                         
                         const reader = response.body.getReader();
                         const decoder = new TextDecoder();

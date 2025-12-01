@@ -6,22 +6,20 @@
 
 ### 1. **入力バリデーション (Input Validation)**
 
-#### ElysiaJS (TypeScript)
+従来: 最大500文字 / 10メッセージ → 現在: 最大400文字 / 8メッセージ。
 
 ```typescript
-// ✅ 最大500文字、最大10メッセージ
-// ✅ 安全な文字のみ許可（英数字、日本語、基本記号、絵文字）
 body: t.Object({
   messages: t.Array(
     t.Object({
       role: t.Union([t.Literal("user"), t.Literal("assistant")]),
       content: t.String({
-        maxLength: 500,
+        maxLength: 400,
         minLength: 1,
         pattern: "^[a-zA-Z0-9\\s\\p{L}\\p{N}\\p{P}\\p{S}♡♪〜！？。、]+$"
       })
     }),
-    { maxItems: 10 }
+    { maxItems: 8 }
   )
 })
 ```
@@ -52,29 +50,71 @@ const cleanContent = sanitizeHtml(m.content, {
 
 ### 3. **危険キーワード検出 (Dangerous Keyword Detection)**
 
-#### フロントエンド (ElysiaJS)
+#### フロントエンド / サーバー (ElysiaJS)
 
 ```typescript
-const DANGEROUS_KEYWORDS = ["eval", "exec", "system", "drop", "delete", "<script"]
-
-if (containsDangerousKeywords(cleaned)) {
-  throw new Error("にゃん♡ いたずらはダメだよぉ〜？")
-}
+const DANGEROUS_KEYWORDS = [
+  "eval","exec","system","drop","delete","<script",
+  "onerror","onload","javascript:","--",";--","union select"
+];
+if (containsDangerousKeywords(cleaned)) throw new Error("Dangerous content detected");
 ```
 
-#### バックエンド (FastAPI)
+#### FastAPI バックエンド
 
 ```python
-dangerous_keywords = ["drop", "delete", "exec", "eval", "system", "__import__"]
-
+dangerous_keywords = ["drop","delete","exec","eval","system","__import__"]
 if any(kw in user_message.lower() for kw in dangerous_keywords):
-    logger.warning(f"⚠️ Suspicious query detected")
     raise HTTPException(400, "にゃん♡ いたずらはダメだよぉ〜？")
 ```
 
 **効果**: SQLインジェクション、コマンドインジェクション、Python コードインジェクション防止
 
 ---
+### 9. **JWT認証 (Authentication)**
+
+Elysiaサーバーに簡易パスワード認証 + JWT (HS256) を導入。`/auth/token` にパスワードをPOSTすると2時間有効トークンを返却。
+
+
+```typescript
+app.post('/auth/token', ({ body }) => {
+  if (body.password !== CONFIG.AUTH_PASSWORD) return jsonError(401,'Invalid credentials');
+  const token = jwt.sign({ iss:'elysia-ai', iat: Math.floor(Date.now()/1000) }, CONFIG.JWT_SECRET, { expiresIn:'2h' });
+  return new Response(JSON.stringify({ token }), { headers:{ 'content-type':'application/json' } });
+}, { body: t.Object({ password: t.String({ minLength:8, maxLength:64 }) }) });
+
+app.guard({ beforeHandle: ({ request }) => {
+  const auth = request.headers.get('authorization') || '';
+  if (!auth.startsWith('Bearer ')) throw new Error('Missing Bearer token');
+  jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+}});
+```
+
+フロント側は初回送信時、未保持ならパスワードを `prompt` 入力→ `/auth/token` 取得→ `localStorage` 保存→ 以後ヘッダー付与。
+
+### 10. **セキュリティヘッダー (Security Headers)**
+
+```typescript
+onAfterHandle(({ set }) => {
+  const ragOrigin = new URL(CONFIG.RAG_API_URL).origin;
+  set.headers['X-Frame-Options'] = 'DENY';
+  set.headers['X-Content-Type-Options'] = 'nosniff';
+  set.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin';
+  set.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()';
+  set.headers['Content-Security-Policy'] = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data:",
+    `connect-src 'self' ${ragOrigin}`,
+    "font-src 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+});
+```
+
+`connect-src` は環境変数変更で柔軟にAPI追加可能。
 
 ### 4. **レート制限 (Rate Limiting)**
 
@@ -149,6 +189,7 @@ def safe_filter(text: str) -> str:
   const method = request.method
   const url = new URL(request.url).pathname
   console.log(`[${timestamp}] ${method} ${url}`)
+  ### 9. **JWT認証 (Authentication)**
 })
 ```
 
