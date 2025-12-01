@@ -1,0 +1,95 @@
+version: '3.8'
+
+# Elysia AI - Docker Compose Configuration
+# フルスタック開発・本番環境対応
+
+services:
+  # ==================== Elysia Main Server ====================
+  elysia:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: elysia-ai-server
+    ports:
+      - "3000:3000"
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - PYTHON_PORT=8000
+      - RAG_API_URL=http://localhost:8000/rag
+    volumes:
+      - ./python/elysia.db:/app/python/elysia.db
+    networks:
+      - elysia-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==================== Ollama (Optional) ====================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: elysia-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - elysia-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    profiles:
+      - with-ollama
+
+  # ==================== Nginx Reverse Proxy (Optional) ====================
+  nginx:
+    image: nginx:alpine
+    container_name: elysia-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./cloud/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./cloud/nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - elysia-network
+    depends_on:
+      - elysia
+    restart: unless-stopped
+    profiles:
+      - with-nginx
+
+  # ==================== Redis Cache (Optional) ====================
+  redis:
+    image: redis:7-alpine
+    container_name: elysia-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - elysia-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    profiles:
+      - with-cache
+
+volumes:
+  ollama-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  elysia-network:
+    driver: bridge
