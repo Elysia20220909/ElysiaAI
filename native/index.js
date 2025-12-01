@@ -1,6 +1,6 @@
 try {
 	module.exports = require('./build/Release/elysia_native.node');
-} catch (err) {
+} catch {
 	console.warn('Native module not built. Run: npm install');
 	// Fallback to JS implementations
 	module.exports = {

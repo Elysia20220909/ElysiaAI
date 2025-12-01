@@ -7,7 +7,7 @@ console.log('🔧 Building CUDA module...');
 // Check if CUDA is installed
 try {
 	execSync('nvcc --version', { stdio: 'inherit' });
-} catch (e) {
+} catch {
 	console.warn('⚠️  CUDA toolkit not found. Skipping CUDA build.');
 	console.warn('   Install CUDA from: https://developer.nvidia.com/cuda-downloads');
 	process.exit(0);
@@ -16,7 +16,7 @@ try {
 // Check if Visual Studio is available
 try {
 	execSync('where cl', { stdio: 'pipe' });
-} catch (e) {
+} catch {
 	console.warn('⚠️  Visual Studio not found. Skipping CUDA build.');
 	console.warn('   Install Visual Studio with C++ tools.');
 	process.exit(0);
