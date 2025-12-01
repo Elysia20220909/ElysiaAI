@@ -1,4 +1,4 @@
-// Secure Elysia AI Server with JWT and basic rate limiting
+// Secure Elysia AI Server with JWT, Redis rate limiting, and refresh tokens
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
@@ -6,6 +6,13 @@ import axios from "axios";
 import { Elysia, t } from "elysia";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
+import {
+	checkRateLimitRedis,
+	isRedisAvailable,
+	storeRefreshToken,
+	verifyRefreshToken,
+	revokeRefreshToken,
+} from "./redis";
 
 // ---------------- Config ----------------
 const CONFIG = {
@@ -32,6 +39,8 @@ const CONFIG = {
 		"union select",
 	],
 	JWT_SECRET: process.env.JWT_SECRET || "dev-secret-change-me",
+	JWT_REFRESH_SECRET:
+		process.env.JWT_REFRESH_SECRET || "dev-refresh-secret-change-me",
 	AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysia-dev-password",
 } as const;
 
@@ -48,7 +57,12 @@ interface ChatRequest {
 const requestCounts = new Map<string, { count: number; resetTime: number }>();
 
 // ---------------- Helpers ----------------
-function checkRateLimit(id: string): boolean {
+async function checkRateLimit(id: string): Promise<boolean> {
+	// Redis統合レート制限（フォールバック付き）
+	if (isRedisAvailable()) {
+		return await checkRateLimitRedis(id, CONFIG.MAX_REQUESTS_PER_MINUTE, 60);
+	}
+	// フォールバック: インメモリレート制限
 	const now = Date.now();
 	const rec = requestCounts.get(id);
 	if (!rec || now > rec.resetTime) {
@@ -88,7 +102,11 @@ const app = new Elysia()
 		set.headers["Permissions-Policy"] =
 			"geolocation=(), microphone=(), camera=()";
 		const ragOrigin = (() => {
-			try { return new URL(CONFIG.RAG_API_URL).origin } catch { return CONFIG.RAG_API_URL }
+			try {
+				return new URL(CONFIG.RAG_API_URL).origin;
+			} catch {
+				return CONFIG.RAG_API_URL;
+			}
 		})();
 		set.headers["Content-Security-Policy"] = [
 			"default-src 'self'",
@@ -110,22 +128,120 @@ const app = new Elysia()
 	})
 	// Public: index page
 	.get("/", () => Bun.file("public/index.html"))
-	// Public: token issuance
+	// Public: token issuance (access token + refresh token)
 	.post(
 		"/auth/token",
-		({ body }) => {
+		async ({ body }) => {
 			if (body.password !== CONFIG.AUTH_PASSWORD)
 				return jsonError(401, "Invalid credentials");
-			const token = jwt.sign(
-				{ iss: "elysia-ai", iat: Math.floor(Date.now() / 1000) },
+
+			// ユーザーID（本番では実際のユーザー管理システムから取得）
+			const userId = "default-user";
+
+			// アクセストークン: 15分有効
+			const accessToken = jwt.sign(
+				{ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) },
 				CONFIG.JWT_SECRET,
-				{ expiresIn: "2h" },
+				{ expiresIn: "15m" },
 			);
-			return new Response(JSON.stringify({ token }), {
-				headers: { "content-type": "application/json" },
-			});
+
+			// リフレッシュトークン: 7日有効
+			const refreshToken = jwt.sign(
+				{ iss: "elysia-ai-refresh", userId, iat: Math.floor(Date.now() / 1000) },
+				CONFIG.JWT_REFRESH_SECRET,
+				{ expiresIn: "7d" },
+			);
+
+			// リフレッシュトークンをRedisに保存
+			await storeRefreshToken(userId, refreshToken, 7 * 24 * 60 * 60);
+
+			return new Response(
+				JSON.stringify({
+					accessToken,
+					refreshToken,
+					expiresIn: 900, // 15分（秒）
+				}),
+				{
+					headers: { "content-type": "application/json" },
+				},
+			);
 		},
 		{ body: t.Object({ password: t.String({ minLength: 8, maxLength: 64 }) }) },
+	)
+	// Public: refresh access token
+	.post(
+		"/auth/refresh",
+		async ({ body }) => {
+			const { refreshToken } = body;
+
+			// リフレッシュトークンを検証
+			let payload: jwt.JwtPayload;
+			try {
+				payload = jwt.verify(refreshToken, CONFIG.JWT_REFRESH_SECRET) as jwt.JwtPayload;
+			} catch {
+				return jsonError(401, "Invalid or expired refresh token");
+			}
+
+			const userId = (payload as { userId?: string }).userId || "default-user";
+
+			// Redisで保存されたトークンと一致するか確認
+			const isValid = await verifyRefreshToken(userId, refreshToken);
+			if (!isValid) {
+				return jsonError(401, "Refresh token not found or revoked");
+			}
+
+			// 新しいアクセストークンを発行
+			const newAccessToken = jwt.sign(
+				{ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) },
+				CONFIG.JWT_SECRET,
+				{ expiresIn: "15m" },
+			);
+
+			return new Response(
+				JSON.stringify({
+					accessToken: newAccessToken,
+					expiresIn: 900, // 15分（秒）
+				}),
+				{
+					headers: { "content-type": "application/json" },
+				},
+			);
+		},
+		{
+			body: t.Object({
+				refreshToken: t.String({ minLength: 20 }),
+			}),
+		},
+	)
+	// Public: logout (revoke refresh token)
+	.post(
+		"/auth/logout",
+		async ({ body }) => {
+			const { refreshToken } = body;
+
+			try {
+				const payload = jwt.verify(
+					refreshToken,
+					CONFIG.JWT_REFRESH_SECRET,
+				) as jwt.JwtPayload;
+				const userId = (payload as { userId?: string }).userId || "default-user";
+				await revokeRefreshToken(userId);
+
+				return new Response(
+					JSON.stringify({ message: "Logged out successfully" }),
+					{
+						headers: { "content-type": "application/json" },
+					},
+				);
+			} catch {
+				return jsonError(400, "Invalid refresh token");
+			}
+		},
+		{
+			body: t.Object({
+				refreshToken: t.String({ minLength: 20 }),
+			}),
+		},
 	)
 	// Protected routes
 	.guard(
@@ -146,8 +262,9 @@ const app = new Elysia()
 				"/elysia-love",
 				async ({ body, request }: { body: ChatRequest; request: Request }) => {
 					const clientId = request.headers.get("x-forwarded-for") || "anon";
-					if (!checkRateLimit(clientId))
-						return jsonError(429, "Rate limit exceeded");
+					// Redis統合レート制限チェック（async）
+					const rateLimitOk = await checkRateLimit(clientId);
+					if (!rateLimitOk) return jsonError(429, "Rate limit exceeded");
 					const sanitizedMessages = body.messages.map((m) => {
 						const cleaned = sanitizeHtml(m.content, {
 							allowedTags: [],
@@ -198,8 +315,9 @@ const app = new Elysia()
 	.listen(CONFIG.PORT);
 
 // ---------------- Startup Banner ----------------
+const redisStatus = isRedisAvailable() ? "✅ Connected" : "⚠️ Fallback to in-memory";
 console.log(
-	`\n${"+".repeat(56)}\n✨ Secure Elysia AI Server Started ✨\n${"+".repeat(56)}\n📡 Server: http://localhost:${CONFIG.PORT}\n🔮 Upstream: ${CONFIG.RAG_API_URL}\n🛡️ RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}\n🔐 Auth: POST /auth/token (env AUTH_PASSWORD)\n${"+".repeat(56)}\n`,
+	`\n${"+".repeat(56)}\n✨ Secure Elysia AI Server Started ✨\n${"+".repeat(56)}\n📡 Server: http://localhost:${CONFIG.PORT}\n🔮 Upstream: ${CONFIG.RAG_API_URL}\n🛡️ RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}\n🔴 Redis: ${redisStatus}\n🔐 Auth: POST /auth/token (env AUTH_PASSWORD)\n🔄 Refresh: POST /auth/refresh\n🚪 Logout: POST /auth/logout\n${"+".repeat(56)}\n`,
 );
 
 export default app;
