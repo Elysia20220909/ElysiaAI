@@ -4,6 +4,8 @@ import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
 import axios from "axios";
 import { Elysia, t } from "elysia";
+import { existsSync, mkdirSync } from "fs";
+import { appendFile } from "fs/promises";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
 import {
@@ -129,12 +131,142 @@ const app = new Elysia()
 	})
 	// Public: index page
 	.get("/", () => Bun.file("public/index.html"))
+	// ---------------- Self-Learning APIs ----------------
+	// Save user feedback (JSONL). Protected by JWT.
+	.post(
+		"/feedback",
+		async ({ body, request }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+			let payload: jwt.JwtPayload;
+			try {
+				payload = jwt.verify(
+					auth.substring(7),
+					CONFIG.JWT_SECRET,
+				) as jwt.JwtPayload;
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+			if (!existsSync("data")) mkdirSync("data", { recursive: true });
+			const ip = request.headers.get("x-forwarded-for") || "anon";
+			const userId = (payload as { userId?: string }).userId || "anon";
+			const rec = {
+				userId,
+				ip,
+				query: body.query,
+				answer: body.answer,
+				rating: body.rating,
+				reason: body.reason || null,
+				timestamp: new Date().toISOString(),
+			};
+			try {
+				await appendFile("data/feedback.jsonl", JSON.stringify(rec) + "\n");
+			} catch (err) {
+				console.error("[Feedback] write error", err);
+				return jsonError(500, "Failed to store feedback");
+			}
+			return new Response(JSON.stringify({ ok: true }), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			body: t.Object({
+				query: t.String({ minLength: 1, maxLength: 400 }),
+				answer: t.String({ minLength: 1, maxLength: 4000 }),
+				rating: t.Union([t.Literal("up"), t.Literal("down")]),
+				reason: t.Optional(t.String({ maxLength: 256 })),
+			}),
+		},
+	)
+
+	// Upsert knowledge (summary + optional source/tags). JWT required.
+	.post(
+		"/knowledge/upsert",
+		async ({ body, request }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+			try {
+				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+			if (!existsSync("data")) mkdirSync("data", { recursive: true });
+			const item = {
+				summary: body.summary,
+				sourceUrl: body.sourceUrl || null,
+				tags: body.tags || [],
+				confidence: body.confidence,
+				timestamp: new Date().toISOString(),
+			};
+			try {
+				await appendFile("data/knowledge.jsonl", JSON.stringify(item) + "\n");
+			} catch (err) {
+				console.error("[Knowledge] write error", err);
+				return jsonError(500, "Failed to store knowledge");
+			}
+			return new Response(JSON.stringify({ ok: true }), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			body: t.Object({
+				summary: t.String({ minLength: 10, maxLength: 2000 }),
+				sourceUrl: t.Optional(t.String()),
+				tags: t.Optional(t.Array(t.String({ maxLength: 32 }), { maxItems: 8 })),
+				confidence: t.Number({ minimum: 0, maximum: 1 }),
+			}),
+		},
+	)
+
+	// Review queue (returns last N items). JWT required.
+	.get(
+		"/knowledge/review",
+		async ({ request, query }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+			try {
+				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+			const n = Number(query?.n ?? 20) || 20;
+			try {
+				if (!existsSync("data/knowledge.jsonl"))
+					return new Response(JSON.stringify([]), {
+						headers: { "content-type": "application/json" },
+					});
+				const file = await Bun.file("data/knowledge.jsonl").text();
+				const lines = file.trim().split("\n").filter(Boolean);
+				const last = lines
+					.slice(Math.max(0, lines.length - n))
+					.map((l) => JSON.parse(l));
+				return new Response(JSON.stringify(last), {
+					headers: { "content-type": "application/json" },
+				});
+			} catch (err) {
+				console.error("[Knowledge] read error", err);
+				return jsonError(500, "Failed to read knowledge");
+			}
+		},
+		{
+			query: t.Object({ n: t.Optional(t.Number()) }),
+		},
+	)
 	// Public: token issuance (access token + refresh token)
 	.post(
 		"/auth/token",
 		async ({ body }) => {
-			const { username, password } = body as { username: string; password: string };
-			if (username !== CONFIG.AUTH_USERNAME || password !== CONFIG.AUTH_PASSWORD)
+			const { username, password } = body as {
+				username: string;
+				password: string;
+			};
+			if (
+				username !== CONFIG.AUTH_USERNAME ||
+				password !== CONFIG.AUTH_PASSWORD
+			)
 				return jsonError(401, "Invalid credentials");
 
 			// ユーザーID（本番ではDBのユーザーID等を使用）
@@ -281,7 +413,10 @@ const app = new Elysia()
 					const auth = request.headers.get("authorization") || "";
 					try {
 						if (auth.startsWith("Bearer ")) {
-							const payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as jwt.JwtPayload;
+							const payload = jwt.verify(
+								auth.substring(7),
+								CONFIG.JWT_SECRET,
+							) as jwt.JwtPayload;
 							userId = (payload as { userId?: string }).userId || "anon";
 						}
 					} catch {}
