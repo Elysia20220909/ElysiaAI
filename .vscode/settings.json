@@ -61,5 +61,6 @@
 
 	// Git
 	"git.enableSmartCommit": true,
-	"git.confirmSync": false
+	"git.confirmSync": false,
+	"markdown.validate.enabled": true
 }
