@@ -1,25 +1,14 @@
 {
 	"recommendations": [
-		// 必須
 		"biomejs.biome",
 		"oven.bun-vscode",
-
-		// TypeScript/JavaScript
 		"dbaeumer.vscode-eslint",
 		"ms-vscode.vscode-typescript-next",
-
-		// Python
 		"ms-python.python",
 		"ms-python.vscode-pylance",
 		"ms-python.debugpy",
-
-		// Docker
 		"ms-azuretools.vscode-docker",
-
-		// Git
 		"eamodio.gitlens",
-
-		// その他便利ツール
 		"esbenp.prettier-vscode",
 		"streetsidesoftware.code-spell-checker",
 		"wayou.vscode-todo-highlight",
