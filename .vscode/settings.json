@@ -1,6 +1,65 @@
 {
+	// Elysia AI - VS Code Settings
 	"C_Cpp.default.compilerPath": "c:\\Users\\hosih\\elysia-ai\\cuda\\src\\similarity.cu",
+
+	// Python
 	"python.testing.unittestArgs": ["-v", "-s", ".", "-p", "*test.py"],
 	"python.testing.pytestEnabled": false,
-	"python.testing.unittestEnabled": true
+	"python.testing.unittestEnabled": true,
+	"python.defaultInterpreterPath": "${workspaceFolder}/python/venv/bin/python",
+	"python.analysis.extraPaths": ["${workspaceFolder}/python"],
+
+	// Editor
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "biomejs.biome",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.biome": "explicit"
+	},
+
+	// TypeScript
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"typescript.enablePromptUseWorkspaceTsdk": true,
+
+	// Language Formatters
+	"[typescript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+
+	// Files
+	"files.exclude": {
+		"**/__pycache__": true,
+		"**/*.pyc": true,
+		"**/node_modules": false,
+		"**/.git": true,
+		"**/dist": false
+	},
+
+	// Search
+	"search.exclude": {
+		"**/node_modules": true,
+		"**/dist": true,
+		"**/__pycache__": true
+	},
+
+	// Docker
+	"docker.dockerComposeBuild": true,
+	"docker.dockerComposeDetached": true,
+
+	// Terminal
+	"terminal.integrated.env.windows": {
+		"NODE_ENV": "development"
+	},
+
+	// Git
+	"git.enableSmartCommit": true,
+	"git.confirmSync": false
 }

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration>Debug</Configuration>
+    <Platform>Any CPU</Platform>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Any CPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>dist\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Any CPU'">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>dist\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="src\" />
+    <Folder Include="tests\" />
+    <Folder Include="python\" />
+    <Folder Include="swift\" />
+    <Folder Include="cloud\" />
+    <Folder Include="cuda\" />
+    <Folder Include="desktop\" />
+    <Folder Include="mobile\" />
+    <Folder Include="native\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="package.json" />
+    <Content Include="tsconfig.json" />
+    <Content Include="webpack.config.js" />
+    <Content Include="biome.json" />
+    <Content Include="docker-compose.yml" />
+    <Content Include="Dockerfile.production" />
+  </ItemGroup>
+
+  <Target Name="Build">
+    <Exec Command="bun run build" />
+  </Target>
+
+  <Target Name="Clean">
+    <RemoveDir Directories="dist;node_modules" />
+  </Target>
+
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+
+  <Target Name="Test">
+    <Exec Command="bun test" />
+  </Target>
+
+  <Target Name="Docker">
+    <Exec Command="docker-compose up -d" />
+  </Target>
+</Project>

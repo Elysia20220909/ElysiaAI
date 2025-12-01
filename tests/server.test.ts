@@ -1,12 +1,10 @@
-import { describe, expect, test, beforeAll, afterAll } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import axios from "axios";
 
 const BASE_URL = "http://localhost:3000";
 const RAG_URL = "http://localhost:8000";
 
 describe("Elysia AI Server Tests", () => {
-	let serverProcess: any;
-
 	beforeAll(async () => {
 		// サーバーを起動
 		console.log("🚀 Starting test server...");
@@ -105,13 +103,10 @@ describe("RAG API Tests (if available)", () => {
 
 describe("Docker Configuration Tests", () => {
 	test("Dockerfile.production exists and is valid", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
-		const dockerfilePath = path.join(
-			process.cwd(),
-			"Dockerfile.production",
-		);
+		const dockerfilePath = path.join(process.cwd(), "Dockerfile.production");
 		expect(fs.existsSync(dockerfilePath)).toBe(true);
 
 		const content = fs.readFileSync(dockerfilePath, "utf-8");
@@ -121,8 +116,8 @@ describe("Docker Configuration Tests", () => {
 	});
 
 	test("docker-compose.yml exists and is valid", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const composePath = path.join(process.cwd(), "docker-compose.yml");
 		expect(fs.existsSync(composePath)).toBe(true);
@@ -136,8 +131,8 @@ describe("Docker Configuration Tests", () => {
 
 describe("Cloud Configuration Tests", () => {
 	test("AWS CloudFormation template exists", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const cfPath = path.join(
 			process.cwd(),
@@ -154,15 +149,10 @@ describe("Cloud Configuration Tests", () => {
 	});
 
 	test("GCP Cloud Build config exists", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
-		const cbPath = path.join(
-			process.cwd(),
-			"cloud",
-			"gcp",
-			"cloudbuild.yaml",
-		);
+		const cbPath = path.join(process.cwd(), "cloud", "gcp", "cloudbuild.yaml");
 		expect(fs.existsSync(cbPath)).toBe(true);
 
 		const content = fs.readFileSync(cbPath, "utf-8");
@@ -174,8 +164,8 @@ describe("Cloud Configuration Tests", () => {
 
 describe("Swift Integration Tests", () => {
 	test("Swift Package.swift exists", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const swiftPath = path.join(process.cwd(), "swift", "Package.swift");
 		expect(fs.existsSync(swiftPath)).toBe(true);
@@ -187,8 +177,8 @@ describe("Swift Integration Tests", () => {
 	});
 
 	test("Swift client source exists", async () => {
-		const fs = await import("fs");
-		const path = await import("path");
+		const fs = await import("node:fs");
+		const path = await import("node:path");
 
 		const clientPath = path.join(
 			process.cwd(),

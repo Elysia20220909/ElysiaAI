@@ -1,6 +1,69 @@
 {
 	"version": "2.0.0",
 	"tasks": [
+		// 🚀 Development Tasks
+		{
+			"label": "🚀 Dev Server",
+			"type": "shell",
+			"command": "bun run dev",
+			"problemMatcher": [],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			},
+			"isBackground": true
+		},
+		{
+			"label": "🔨 Build",
+			"type": "bun",
+			"script": "webpack --config webpack.config.js --mode=production",
+			"problemMatcher": ["$tsc"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "Production build with webpack"
+		},
+		// 🧪 Testing Tasks
+		{
+			"label": "🧪 Run Tests",
+			"type": "shell",
+			"command": "bun test",
+			"problemMatcher": [],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "🧪 Run Tests (Watch)",
+			"type": "shell",
+			"command": "bun test --watch",
+			"problemMatcher": [],
+			"isBackground": true,
+			"group": "test"
+		},
+		// 🎨 Code Quality
+		{
+			"label": "🎨 Format Code",
+			"type": "shell",
+			"command": "bun run format",
+			"problemMatcher": []
+		},
+		{
+			"label": "🔍 Lint Code",
+			"type": "shell",
+			"command": "bun run lint",
+			"problemMatcher": []
+		},
+		{
+			"label": "🔧 Fix Issues",
+			"type": "shell",
+			"command": "bun run fix",
+			"problemMatcher": []
+		},
+		// 🐳 Docker Tasks
 		{
 			"type": "docker-build",
 			"label": "docker-build",
@@ -30,6 +93,62 @@
 			"node": {
 				"enableDebugging": true
 			}
+		},
+		{
+			"label": "🐳 Docker Build Production",
+			"type": "shell",
+			"command": "docker build -f Dockerfile.production -t elysia-ai:latest .",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "🐳 Docker Compose Up",
+			"type": "shell",
+			"command": "docker-compose up -d",
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "🐳 Docker Compose Down",
+			"type": "shell",
+			"command": "docker-compose down",
+			"problemMatcher": []
+		},
+		{
+			"label": "🐳 Docker Logs",
+			"type": "shell",
+			"command": "docker-compose logs -f",
+			"problemMatcher": [],
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
+		},
+		// 🐍 Python Tasks
+		{
+			"label": "🐍 Python FastAPI Server",
+			"type": "shell",
+			"command": "python python/fastapi_server.py",
+			"problemMatcher": [],
+			"isBackground": true,
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
+		},
+		// 📦 Maintenance
+		{
+			"label": "📦 Install Dependencies",
+			"type": "shell",
+			"command": "bun install",
+			"problemMatcher": []
+		},
+		{
+			"label": "🧹 Clean Build",
+			"type": "shell",
+			"command": "Remove-Item -Recurse -Force dist,node_modules -ErrorAction SilentlyContinue; bun install; bun run build",
+			"problemMatcher": []
 		}
 	]
 }
