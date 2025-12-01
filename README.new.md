@@ -29,7 +29,7 @@ Linux/macOS/WSL の場合は `.sh` スクリプトを使用してください。
 ## ビルドと配布
 ```powershell
 bun run build
-bun run pack:zip
+Compress-Archive -Path dist/* -DestinationPath dist.zip -Force
 ```
 生成した `dist.zip` をリリースに添付できます。
 
