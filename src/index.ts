@@ -80,20 +80,40 @@ const app = new Elysia()
 			const { messages } = body;
 			const userMsg = messages[messages.length - 1]?.content || "";
 
-			// RAGコンテキスト取得
-			const context = await fetchRAGContext(userMsg);
+			// FastAPI /chat エンドポイントを直接呼び出し（Ollama統合済み）
+			try {
+				const response = await axios.post(
+					"http://127.0.0.1:8000/chat",
+					{
+						messages: messages.map((m) => ({
+							role: m.role,
+							content: m.content,
+						})),
+						stream: true,
+					},
+					{
+						responseType: "stream",
+						timeout: 60000,
+					},
+				);
 
-			// システムプロンプト構築
-			const systemPrompt = ELYSIA_SYSTEM_PROMPT.replace("{context}", context);
-
-			// LLMストリーミング応答
-			const result = await streamText({
-				model: provider as unknown as LanguageModel,
-				system: systemPrompt,
-				messages,
-			});
-
-			return result.toTextStreamResponse();
+				// ストリーミングレスポンスをそのまま返す
+				return new Response(response.data, {
+					headers: {
+						"Content-Type": "text/event-stream",
+						"Cache-Control": "no-cache",
+						Connection: "keep-alive",
+					},
+				});
+			} catch (error) {
+				console.error("[Chat] Error:", error);
+				if (axios.isAxiosError(error) && error.response?.status === 503) {
+					throw new Error(
+						"Ollama service is not available. Please start Ollama: ollama serve",
+					);
+				}
+				throw error;
+			}
 		},
 		{
 			body: t.Object({
