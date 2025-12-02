@@ -3,13 +3,14 @@ import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
 import { swagger } from "@elysiajs/swagger";
+import { Stream } from "@elysiajs/stream";
 import axios from "axios";
 import { Elysia, t } from "elysia";
 import { existsSync, mkdirSync } from "fs";
 import { appendFile } from "fs/promises";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-import { DEFAULT_MODE, ELYSIA_MODES, type ElysiaMode } from "./llm-config";
+import { DEFAULT_MODE, ELYSIA_MODES } from "./llm-config";
 import {
 	checkRateLimitRedis,
 	isRedisAvailable,
@@ -17,6 +18,12 @@ import {
 	storeRefreshToken,
 	verifyRefreshToken,
 } from "./redis";
+
+type Message = { role: "user" | "assistant" | "system"; content: string };
+type ChatRequest = {
+	messages: Message[];
+	mode?: "sweet" | "normal" | "professional";
+};
 
 // ---------------- Config ----------------
 const CONFIG = {
@@ -28,61 +35,13 @@ const CONFIG = {
 	ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS?.split(",") || [
 		"http://localhost:3000",
 	]) as string[],
-	DANGEROUS_KEYWORDS: [
-		"eval",
-		"exec",
-		"system",
-		"drop",
-		"delete",
-		"<script",
-		"onerror",
-		"onload",
-		"javascript:",
-		"--",
-		";--",
-		"union select",
-	],
-	JWT_SECRET: process.env.JWT_SECRET || "dev-secret-change-me",
-	JWT_REFRESH_SECRET:
-		process.env.JWT_REFRESH_SECRET || "dev-refresh-secret-change-me",
 	AUTH_USERNAME: process.env.AUTH_USERNAME || "elysia",
 	AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysia-dev-password",
-} as const;
-
-// ---------------- Types ----------------
-interface Message {
-	role: "user" | "assistant" | "system";
-	content: string;
-}
-interface ChatRequest {
-	messages: Message[];
-	mode?: "sweet" | "normal" | "professional";
-}
-
-// ---------------- State ----------------
-const requestCounts = new Map<string, { count: number; resetTime: number }>();
+	JWT_SECRET: process.env.JWT_SECRET || "dev-secret",
+	JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || "dev-refresh-secret",
+};
 
 // ---------------- Helpers ----------------
-async function checkRateLimit(id: string): Promise<boolean> {
-	// Redis統合レート制限（フォールバック付き）
-	if (isRedisAvailable()) {
-		return await checkRateLimitRedis(id, CONFIG.MAX_REQUESTS_PER_MINUTE, 60);
-	}
-	// フォールバック: インメモリレート制限
-	const now = Date.now();
-	const rec = requestCounts.get(id);
-	if (!rec || now > rec.resetTime) {
-		requestCounts.set(id, { count: 1, resetTime: now + 60000 });
-		return true;
-	}
-	if (rec.count >= CONFIG.MAX_REQUESTS_PER_MINUTE) return false;
-	rec.count++;
-	return true;
-}
-function containsDangerousKeywords(text: string): boolean {
-	const lower = text.toLowerCase();
-	return CONFIG.DANGEROUS_KEYWORDS.some((kw) => lower.includes(kw));
-}
 function jsonError(status: number, message: string) {
 	return new Response(JSON.stringify({ error: message }), {
 		status,
@@ -90,71 +49,63 @@ function jsonError(status: number, message: string) {
 	});
 }
 
+async function checkRateLimit(key: string) {
+	try {
+		return await checkRateLimitRedis(key, CONFIG.MAX_REQUESTS_PER_MINUTE);
+	} catch {
+		return true; // fallback: allow
+	}
+}
+
+function containsDangerousKeywords(text: string) {
+	const bad = [/\b(drop|delete)\b/i, /<script/i];
+	return bad.some((r) => r.test(text));
+}
+
 // ---------------- App ----------------
 const app = new Elysia()
-	.use(
-		cors({
-			origin: CONFIG.ALLOWED_ORIGINS,
-			methods: ["GET", "POST"],
-			credentials: true,
-		}),
-	)
-	.use(swagger())
+	.use(cors({ origin: CONFIG.ALLOWED_ORIGINS }))
 	.use(html())
-	.use(staticPlugin({ assets: "public", prefix: "/" }))
-	.onError(({ code, error }) => {
-		console.error(`[Error] code=${code}`, error);
-		return jsonError(500, "Unhandled server error");
+	.use(staticPlugin({ assets: "public" }))
+	.use(swagger({ path: "/swagger" }))
+	.use(Stream())
+	.onError(({ error }) => {
+		console.error("[Server Error]", error);
 	})
 	.onAfterHandle(({ set }) => {
-		set.headers["X-Frame-Options"] = "DENY";
 		set.headers["X-Content-Type-Options"] = "nosniff";
-		set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-		set.headers["Permissions-Policy"] =
-			"geolocation=(), microphone=(), camera=()";
-		const ragOrigin = (() => {
-			try {
-				return new URL(CONFIG.RAG_API_URL).origin;
-			} catch {
-				return CONFIG.RAG_API_URL;
-			}
-		})();
-		set.headers["Content-Security-Policy"] = [
-			"default-src 'self'",
-			"script-src 'self' 'unsafe-inline'",
-			"style-src 'self' 'unsafe-inline'",
-			"img-src 'self' data:",
-			`connect-src 'self' ${ragOrigin}`,
-			"font-src 'self'",
-			"object-src 'none'",
-			"frame-ancestors 'none'",
-		].join("; ");
+		set.headers["X-Frame-Options"] = "DENY";
 	})
-	.onRequest(({ request }) => {
-		console.log(
-			`[${new Date().toISOString()}] ${request.method} ${
-				new URL(request.url).pathname
-			}`,
-		);
+
+	// Health
+	.get("/ping", () => ({ ok: true }), {
+		detail: { tags: ["health"], summary: "Ping", description: "Health check" },
 	})
-	// Healthcheck & index
-	.get(
-		"/ping",
-		() =>
-			new Response(
-				JSON.stringify({ ok: true, time: new Date().toISOString() }),
-				{ headers: { "content-type": "application/json" } },
-			),
-	)
-	// Public: index page
-	.get("/", () => Bun.file("public/index.html"))
-	// Swagger UI
-	.get("/swagger", () => new Response(Bun.file("public/index.html")))
-	// ---------------- Self-Learning APIs ----------------
-	// Save user feedback (JSONL). Protected by JWT.
+
+	// Index page
+	.get("/", () => Bun.file("public/index.html"), {
+		detail: {
+			tags: ["ui"],
+			summary: "Index",
+			description: "Serves the static portfolio index page",
+		},
+	})
+
+	// Feedback (Protected)
 	.post(
 		"/feedback",
-		async ({ body, request }) => {
+		async ({
+			body,
+			request,
+		}: {
+			body: {
+				query: string;
+				answer: string;
+				rating: "up" | "down";
+				reason?: string;
+			};
+			request: Request;
+		}) => {
 			const auth = request.headers.get("authorization") || "";
 			if (!auth.startsWith("Bearer "))
 				return jsonError(401, "Missing Bearer token");
@@ -196,13 +147,25 @@ const app = new Elysia()
 				rating: t.Union([t.Literal("up"), t.Literal("down")]),
 				reason: t.Optional(t.String({ maxLength: 256 })),
 			}),
+			detail: { tags: ["feedback"], summary: "Submit feedback" },
 		},
 	)
 
-	// Upsert knowledge (summary + optional source/tags). JWT required.
+	// Knowledge upsert (Protected)
 	.post(
 		"/knowledge/upsert",
-		async ({ body, request }) => {
+		async ({
+			body,
+			request,
+		}: {
+			body: {
+				summary: string;
+				sourceUrl?: string;
+				tags?: string[];
+				confidence: number;
+			};
+			request: Request;
+		}) => {
 			const auth = request.headers.get("authorization") || "";
 			if (!auth.startsWith("Bearer "))
 				return jsonError(401, "Missing Bearer token");
@@ -236,13 +199,14 @@ const app = new Elysia()
 				tags: t.Optional(t.Array(t.String({ maxLength: 32 }), { maxItems: 8 })),
 				confidence: t.Number({ minimum: 0, maximum: 1 }),
 			}),
+			detail: { tags: ["knowledge"], summary: "Upsert knowledge" },
 		},
 	)
 
-	// Review queue (returns last N items). JWT required.
+	// Knowledge review (Protected)
 	.get(
 		"/knowledge/review",
-		async ({ request, query }) => {
+		async ({ request, query }: { request: Request; query: { n?: number } }) => {
 			const auth = request.headers.get("authorization") || "";
 			if (!auth.startsWith("Bearer "))
 				return jsonError(401, "Missing Bearer token");
@@ -272,57 +236,30 @@ const app = new Elysia()
 		},
 		{
 			query: t.Object({ n: t.Optional(t.Number()) }),
-			detail: {
-				tags: ["knowledge"],
-				summary: "Get recent knowledge entries",
-				description: "Retrieve the last N entries from the knowledge base",
-			},
+			detail: { tags: ["knowledge"], summary: "Get recent knowledge entries" },
 		},
 	)
-	// Public: token issuance (access token + refresh token)
+
+	// Auth: token issuance
 	.post(
 		"/auth/token",
 		async ({ body }) => {
-			console.log("[Auth] Received body:", JSON.stringify(body));
-			console.log(
-				"[Auth] Body keys:",
-				Object.keys(body as Record<string, unknown>),
-			);
-			console.log("[Auth] Expected credentials:", {
-				username: CONFIG.AUTH_USERNAME,
-				passwordLength: CONFIG.AUTH_PASSWORD.length,
-			});
-
 			const { username, password } = body as {
 				username: string;
 				password: string;
 			};
-			console.log(
-				`[Auth] Login attempt: username="${username}" (expected: "${CONFIG.AUTH_USERNAME}")`,
-			);
-			console.log(
-				`[Auth] Username match: ${username === CONFIG.AUTH_USERNAME}`,
-			);
-			console.log(
-				`[Auth] Password match: ${password === CONFIG.AUTH_PASSWORD}`,
-			);
 			if (
 				username !== CONFIG.AUTH_USERNAME ||
 				password !== CONFIG.AUTH_PASSWORD
 			)
 				return jsonError(401, "Invalid credentials");
 
-			// User ID (in production, use DB user ID)
 			const userId = username;
-
-			// Access token: 15 min validity
 			const accessToken = jwt.sign(
 				{ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) },
 				CONFIG.JWT_SECRET,
 				{ expiresIn: "15m" },
 			);
-
-			// Refresh token: 7 day validity
 			const refreshToken = jwt.sign(
 				{
 					iss: "elysia-ai-refresh",
@@ -332,19 +269,10 @@ const app = new Elysia()
 				CONFIG.JWT_REFRESH_SECRET,
 				{ expiresIn: "7d" },
 			);
-
-			// Store refresh token in Redis
 			await storeRefreshToken(userId, refreshToken, 7 * 24 * 60 * 60);
-
 			return new Response(
-				JSON.stringify({
-					accessToken,
-					refreshToken,
-					expiresIn: 900, // 15分（秒）
-				}),
-				{
-					headers: { "content-type": "application/json" },
-				},
+				JSON.stringify({ accessToken, refreshToken, expiresIn: 900 }),
+				{ headers: { "content-type": "application/json" } },
 			);
 		},
 		{
@@ -360,13 +288,12 @@ const app = new Elysia()
 			},
 		},
 	)
-	// Public: refresh access token
+
+	// Auth: refresh access token
 	.post(
 		"/auth/refresh",
 		async ({ body }) => {
-			const { refreshToken } = body;
-
-			// Verify refresh token
+			const { refreshToken } = body as { refreshToken: string };
 			let payload: jwt.JwtPayload;
 			try {
 				payload = jwt.verify(
@@ -376,49 +303,30 @@ const app = new Elysia()
 			} catch {
 				return jsonError(401, "Invalid or expired refresh token");
 			}
-
 			const userId = (payload as { userId?: string }).userId || "default-user";
-
-			// Verify token matches stored token in Redis
 			const isValid = await verifyRefreshToken(userId, refreshToken);
-			if (!isValid) {
-				return jsonError(401, "Refresh token not found or revoked");
-			}
-
-			// 新しいアクセストークンを発行
+			if (!isValid) return jsonError(401, "Refresh token not found or revoked");
 			const newAccessToken = jwt.sign(
 				{ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) },
 				CONFIG.JWT_SECRET,
 				{ expiresIn: "15m" },
 			);
-
 			return new Response(
-				JSON.stringify({
-					accessToken: newAccessToken,
-					expiresIn: 900, // 15 min (seconds)
-				}),
-				{
-					headers: { "content-type": "application/json" },
-				},
+				JSON.stringify({ accessToken: newAccessToken, expiresIn: 900 }),
+				{ headers: { "content-type": "application/json" } },
 			);
 		},
 		{
-			body: t.Object({
-				refreshToken: t.String({ minLength: 20 }),
-			}),
-			detail: {
-				tags: ["auth"],
-				summary: "Refresh access token",
-				description: "Exchange a valid refresh token for a new access token",
-			},
+			body: t.Object({ refreshToken: t.String({ minLength: 20 }) }),
+			detail: { tags: ["auth"], summary: "Refresh access token" },
 		},
 	)
-	// Public: logout (revoke refresh token)
+
+	// Auth: logout revoke refresh
 	.post(
 		"/auth/logout",
 		async ({ body }) => {
-			const { refreshToken } = body;
-
+			const { refreshToken } = body as { refreshToken: string };
 			try {
 				const payload = jwt.verify(
 					refreshToken,
@@ -427,7 +335,6 @@ const app = new Elysia()
 				const userId =
 					(payload as { userId?: string }).userId || "default-user";
 				await revokeRefreshToken(userId);
-
 				return new Response(
 					JSON.stringify({ message: "Logged out successfully" }),
 					{
@@ -439,12 +346,12 @@ const app = new Elysia()
 			}
 		},
 		{
-			body: t.Object({
-				refreshToken: t.String({ minLength: 20 }),
-			}),
+			body: t.Object({ refreshToken: t.String({ minLength: 20 }) }),
+			detail: { tags: ["auth"], summary: "Logout and revoke refresh token" },
 		},
 	)
-	// Protected routes
+
+	// Protected: chat
 	.guard(
 		{
 			beforeHandle: ({ request }) => {
@@ -475,11 +382,9 @@ const app = new Elysia()
 						}
 					} catch {}
 					const clientKey = `${userId}:${ip}`;
-					// Redis統合レート制限チェック（async, ユーザーID+IPでキー強化）
 					const rateLimitOk = await checkRateLimit(clientKey);
 					if (!rateLimitOk) return jsonError(429, "Rate limit exceeded");
 
-					// モード取得（デフォルトは甘々モード♡）
 					const mode = body.mode || DEFAULT_MODE;
 					const llmConfig = ELYSIA_MODES[mode];
 
@@ -490,10 +395,9 @@ const app = new Elysia()
 						});
 						if (containsDangerousKeywords(cleaned))
 							throw new Error("Dangerous content detected");
-						return { role: m.role, content: cleaned };
+						return { ...m, content: cleaned };
 					});
 
-					// システムプロンプトをメッセージの先頭に追加
 					const messagesWithSystem: Message[] = [
 						{ role: "system", content: llmConfig.systemPrompt },
 						...sanitizedMessages,
@@ -514,7 +418,7 @@ const app = new Elysia()
 								"Content-Type": "text/event-stream",
 								"Cache-Control": "no-cache",
 								Connection: "keep-alive",
-								"X-Elysia-Mode": mode, // モード情報をヘッダーに追加
+								"X-Elysia-Mode": mode,
 							},
 						});
 					} catch (error) {
@@ -553,9 +457,6 @@ const app = new Elysia()
 					detail: {
 						tags: ["chat"],
 						summary: "Chat with Elysia AI (Multi-LLM)",
-						description:
-							"Send messages to Elysia AI with selectable personality modes (sweet/normal/professional). Supports streaming responses with Server-Sent Events.",
-						security: [{ bearerAuth: [] }],
 					},
 				},
 			),
@@ -563,7 +464,6 @@ const app = new Elysia()
 
 // ---------------- Startup Banner ----------------
 const redisStatus = isRedisAvailable() ? "Connected" : "Fallback to in-memory";
-
 console.log("\n" + "=".repeat(60));
 console.log("Secure Elysia AI Server Started");
 console.log("=".repeat(60));
@@ -578,10 +478,5 @@ console.log("=".repeat(60) + "\n");
 
 // ---------------- Start Server ----------------
 app.listen(CONFIG.PORT);
-
 console.log(`Elysia-chan is now listening on port ${CONFIG.PORT}!\n`);
-
-// Keep process alive on Windows
-if (process.platform === "win32") {
-	setInterval(() => {}, 1000);
-}
+if (process.platform === "win32") setInterval(() => {}, 1000);
