@@ -15,9 +15,6 @@ if (CONFIG.REDIS_ENABLED) {
 			maxRetriesPerRequest: 3,
 			retryStrategy: (times) => {
 				if (times > 3) {
-					console.warn(
-						"[Redis] Connection failed: Fallback to in-memory rate limiting",
-					);
 					redisAvailable = false;
 					return null;
 				}
@@ -27,22 +24,18 @@ if (CONFIG.REDIS_ENABLED) {
 		});
 
 		redis.on("connect", () => {
-			console.log("[Redis] Connected successfully");
 			redisAvailable = true;
 		});
 
-		redis.on("error", (err) => {
-			console.error("[Redis] Error:", err.message);
+		redis.on("error", () => {
 			redisAvailable = false;
 		});
 
 		// Initial connection attempt
-		redis.connect().catch((err) => {
-			console.warn("[Redis] Initial connection failed:", err.message);
+		redis.connect().catch(() => {
 			redisAvailable = false;
 		});
-	} catch (err) {
-		console.error("[Redis] Initialization error:", err);
+	} catch {
 		redis = null;
 		redisAvailable = false;
 	}
@@ -81,8 +74,7 @@ export async function checkRateLimitRedis(
 		await redis.expire(key, windowSeconds);
 
 		return count <= maxRequests;
-	} catch (err) {
-		console.error("[Redis] Rate limit check error:", err);
+	} catch {
 		return true; // Allow on error to maintain service
 	}
 }
@@ -99,18 +91,13 @@ export async function storeRefreshToken(
 	expiresIn: number = 7 * 24 * 60 * 60, // 7日
 ): Promise<void> {
 	if (!redis || !redisAvailable) {
-		console.warn(
-			"[Redis] Skipping refresh token storage (Redis not connected)",
-		);
 		return;
 	}
 
 	try {
 		const key = `refresh:${userId}`;
 		await redis.setex(key, expiresIn, refreshToken);
-	} catch (err) {
-		console.error("[Redis] Refresh token storage error:", err);
-	}
+	} catch {}
 }
 
 /**
@@ -124,9 +111,6 @@ export async function verifyRefreshToken(
 	refreshToken: string,
 ): Promise<boolean> {
 	if (!redis || !redisAvailable) {
-		console.warn(
-			"[Redis] Skipping refresh token verification (Redis not connected)",
-		);
 		return false;
 	}
 
@@ -134,8 +118,7 @@ export async function verifyRefreshToken(
 		const key = `refresh:${userId}`;
 		const storedToken = await redis.get(key);
 		return storedToken === refreshToken;
-	} catch (err) {
-		console.error("[Redis] Refresh token verification error:", err);
+	} catch {
 		return false;
 	}
 }
@@ -152,9 +135,7 @@ export async function revokeRefreshToken(userId: string): Promise<void> {
 	try {
 		const key = `refresh:${userId}`;
 		await redis.del(key);
-	} catch (err) {
-		console.error("[Redis] Refresh token revocation error:", err);
-	}
+	} catch {}
 }
 
 /**
