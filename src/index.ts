@@ -9,6 +9,12 @@ import { appendFile } from "fs/promises";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
 import {
+	DEFAULT_MODE,
+	ELYSIA_MODES,
+	type ElysiaMode,
+	MODE_COMMANDS,
+} from "./llm-config";
+import {
 	checkRateLimitRedis,
 	isRedisAvailable,
 	revokeRefreshToken,
@@ -49,11 +55,12 @@ const CONFIG = {
 
 // ---------------- Types ----------------
 interface Message {
-	role: "user" | "assistant";
+	role: "user" | "assistant" | "system";
 	content: string;
 }
 interface ChatRequest {
 	messages: Message[];
+	mode?: "sweet" | "normal" | "professional";
 }
 
 // ---------------- State ----------------
@@ -437,6 +444,11 @@ const app = new Elysia()
 					// Redis統合レート制限チェック（async, ユーザーID+IPでキー強化）
 					const rateLimitOk = await checkRateLimit(clientKey);
 					if (!rateLimitOk) return jsonError(429, "Rate limit exceeded");
+
+					// モード取得（デフォルトは甘々モード♡）
+					const mode = body.mode || DEFAULT_MODE;
+					const llmConfig = ELYSIA_MODES[mode];
+
 					const sanitizedMessages = body.messages.map((m) => {
 						const cleaned = sanitizeHtml(m.content, {
 							allowedTags: [],
@@ -446,10 +458,21 @@ const app = new Elysia()
 							throw new Error("Dangerous content detected");
 						return { role: m.role, content: cleaned };
 					});
+
+					// システムプロンプトをメッセージの先頭に追加
+					const messagesWithSystem: Message[] = [
+						{ role: "system", content: llmConfig.systemPrompt },
+						...sanitizedMessages,
+					];
+
 					try {
 						const upstream = await axios.post(
 							CONFIG.RAG_API_URL,
-							{ messages: sanitizedMessages },
+							{
+								messages: messagesWithSystem,
+								temperature: llmConfig.temperature,
+								model: llmConfig.model,
+							},
 							{ responseType: "stream", timeout: CONFIG.RAG_TIMEOUT },
 						);
 						return new Response(upstream.data, {
@@ -457,6 +480,7 @@ const app = new Elysia()
 								"Content-Type": "text/event-stream",
 								"Cache-Control": "no-cache",
 								Connection: "keep-alive",
+								"X-Elysia-Mode": mode, // モード情報をヘッダーに追加
 							},
 						});
 					} catch (error) {
@@ -470,7 +494,11 @@ const app = new Elysia()
 					body: t.Object({
 						messages: t.Array(
 							t.Object({
-								role: t.Union([t.Literal("user"), t.Literal("assistant")]),
+								role: t.Union([
+									t.Literal("user"),
+									t.Literal("assistant"),
+									t.Literal("system"),
+								]),
 								content: t.String({
 									maxLength: 400,
 									minLength: 1,
@@ -479,6 +507,13 @@ const app = new Elysia()
 								}),
 							}),
 							{ maxItems: 8 },
+						),
+						mode: t.Optional(
+							t.Union([
+								t.Literal("sweet"),
+								t.Literal("normal"),
+								t.Literal("professional"),
+							]),
 						),
 					}),
 				},
