@@ -11,7 +11,6 @@
 	"bugs": {
 		"url": "https://github.com/chloeamethyst/ElysiaJS/issues"
 	},
-
 	"keywords": [
 		"Elysia",
 		"Bun",
@@ -56,6 +55,8 @@
 		"@elysiajs/cors": "^1.4.0",
 		"@elysiajs/html": "^1.4.0",
 		"@elysiajs/static": "^1.4.7",
+		"@elysiajs/stream": "^1.1.0",
+		"@elysiajs/swagger": "^1.3.1",
 		"@zilliz/milvus2-sdk-node": "^2.5.10",
 		"ai": "^5.0.104",
 		"alpinejs": "^3.15.2",

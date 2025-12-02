@@ -2,18 +2,14 @@
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
+import { swagger } from "@elysiajs/swagger";
 import axios from "axios";
 import { Elysia, t } from "elysia";
 import { existsSync, mkdirSync } from "fs";
 import { appendFile } from "fs/promises";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-import {
-	DEFAULT_MODE,
-	ELYSIA_MODES,
-	type ElysiaMode,
-	MODE_COMMANDS,
-} from "./llm-config";
+import { DEFAULT_MODE, ELYSIA_MODES, type ElysiaMode } from "./llm-config";
 import {
 	checkRateLimitRedis,
 	isRedisAvailable,
@@ -103,6 +99,7 @@ const app = new Elysia()
 			credentials: true,
 		}),
 	)
+	.use(swagger())
 	.use(html())
 	.use(staticPlugin({ assets: "public", prefix: "/" }))
 	.onError(({ code, error }) => {
@@ -151,6 +148,8 @@ const app = new Elysia()
 	)
 	// Public: index page
 	.get("/", () => Bun.file("public/index.html"))
+	// Swagger UI
+	.get("/swagger", () => new Response(Bun.file("public/index.html")))
 	// ---------------- Self-Learning APIs ----------------
 	// Save user feedback (JSONL). Protected by JWT.
 	.post(
@@ -273,33 +272,57 @@ const app = new Elysia()
 		},
 		{
 			query: t.Object({ n: t.Optional(t.Number()) }),
+			detail: {
+				tags: ["knowledge"],
+				summary: "Get recent knowledge entries",
+				description: "Retrieve the last N entries from the knowledge base",
+			},
 		},
 	)
 	// Public: token issuance (access token + refresh token)
 	.post(
 		"/auth/token",
 		async ({ body }) => {
+			console.log("[Auth] Received body:", JSON.stringify(body));
+			console.log(
+				"[Auth] Body keys:",
+				Object.keys(body as Record<string, unknown>),
+			);
+			console.log("[Auth] Expected credentials:", {
+				username: CONFIG.AUTH_USERNAME,
+				passwordLength: CONFIG.AUTH_PASSWORD.length,
+			});
+
 			const { username, password } = body as {
 				username: string;
 				password: string;
 			};
+			console.log(
+				`[Auth] Login attempt: username="${username}" (expected: "${CONFIG.AUTH_USERNAME}")`,
+			);
+			console.log(
+				`[Auth] Username match: ${username === CONFIG.AUTH_USERNAME}`,
+			);
+			console.log(
+				`[Auth] Password match: ${password === CONFIG.AUTH_PASSWORD}`,
+			);
 			if (
 				username !== CONFIG.AUTH_USERNAME ||
 				password !== CONFIG.AUTH_PASSWORD
 			)
 				return jsonError(401, "Invalid credentials");
 
-			// ユーザーID（本番ではDBのユーザーID等を使用）
+			// User ID (in production, use DB user ID)
 			const userId = username;
 
-			// アクセストークン: 15分有効
+			// Access token: 15 min validity
 			const accessToken = jwt.sign(
 				{ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) },
 				CONFIG.JWT_SECRET,
 				{ expiresIn: "15m" },
 			);
 
-			// リフレッシュトークン: 7日有効
+			// Refresh token: 7 day validity
 			const refreshToken = jwt.sign(
 				{
 					iss: "elysia-ai-refresh",
@@ -310,7 +333,7 @@ const app = new Elysia()
 				{ expiresIn: "7d" },
 			);
 
-			// リフレッシュトークンをRedisに保存
+			// Store refresh token in Redis
 			await storeRefreshToken(userId, refreshToken, 7 * 24 * 60 * 60);
 
 			return new Response(
@@ -326,9 +349,15 @@ const app = new Elysia()
 		},
 		{
 			body: t.Object({
-				username: t.String({ minLength: 3, maxLength: 64 }),
-				password: t.String({ minLength: 8, maxLength: 64 }),
+				username: t.String({ minLength: 1, maxLength: 128 }),
+				password: t.String({ minLength: 1, maxLength: 128 }),
 			}),
+			detail: {
+				tags: ["auth"],
+				summary: "Login and get JWT tokens",
+				description:
+					"Authenticate with username and password to receive access and refresh tokens",
+			},
 		},
 	)
 	// Public: refresh access token
@@ -337,7 +366,7 @@ const app = new Elysia()
 		async ({ body }) => {
 			const { refreshToken } = body;
 
-			// リフレッシュトークンを検証
+			// Verify refresh token
 			let payload: jwt.JwtPayload;
 			try {
 				payload = jwt.verify(
@@ -350,7 +379,7 @@ const app = new Elysia()
 
 			const userId = (payload as { userId?: string }).userId || "default-user";
 
-			// Redisで保存されたトークンと一致するか確認
+			// Verify token matches stored token in Redis
 			const isValid = await verifyRefreshToken(userId, refreshToken);
 			if (!isValid) {
 				return jsonError(401, "Refresh token not found or revoked");
@@ -366,7 +395,7 @@ const app = new Elysia()
 			return new Response(
 				JSON.stringify({
 					accessToken: newAccessToken,
-					expiresIn: 900, // 15分（秒）
+					expiresIn: 900, // 15 min (seconds)
 				}),
 				{
 					headers: { "content-type": "application/json" },
@@ -377,6 +406,11 @@ const app = new Elysia()
 			body: t.Object({
 				refreshToken: t.String({ minLength: 20 }),
 			}),
+			detail: {
+				tags: ["auth"],
+				summary: "Refresh access token",
+				description: "Exchange a valid refresh token for a new access token",
+			},
 		},
 	)
 	// Public: logout (revoke refresh token)
@@ -516,25 +550,36 @@ const app = new Elysia()
 							]),
 						),
 					}),
+					detail: {
+						tags: ["chat"],
+						summary: "Chat with Elysia AI (Multi-LLM)",
+						description:
+							"Send messages to Elysia AI with selectable personality modes (sweet/normal/professional). Supports streaming responses with Server-Sent Events.",
+						security: [{ bearerAuth: [] }],
+					},
 				},
 			),
 	);
 
 // ---------------- Startup Banner ----------------
-const redisStatus = isRedisAvailable()
-	? "✅ Connected"
-	: "⚠️ Fallback to in-memory";
+const redisStatus = isRedisAvailable() ? "Connected" : "Fallback to in-memory";
 
-console.log(
-	`\n${"+".repeat(56)}\n✨ Secure Elysia AI Server Started ✨\n${"+".repeat(56)}\n📡 Server: http://localhost:${CONFIG.PORT}\n🔮 Upstream: ${CONFIG.RAG_API_URL}\n🛡️ RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}\n🔴 Redis: ${redisStatus}\n🔐 Auth: POST /auth/token (env AUTH_PASSWORD)\n🔄 Refresh: POST /auth/refresh\n🚪 Logout: POST /auth/logout\n${"+".repeat(56)}\n`,
-);
+console.log("\n" + "=".repeat(60));
+console.log("Secure Elysia AI Server Started");
+console.log("=".repeat(60));
+console.log(`Server: http://localhost:${CONFIG.PORT}`);
+console.log(`Upstream: ${CONFIG.RAG_API_URL}`);
+console.log(`RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}`);
+console.log(`Redis: ${redisStatus}`);
+console.log("Auth: POST /auth/token");
+console.log("Refresh: POST /auth/refresh");
+console.log("Logout: POST /auth/logout");
+console.log("=".repeat(60) + "\n");
 
 // ---------------- Start Server ----------------
 app.listen(CONFIG.PORT);
 
-console.log(
-	`\n💕 Elysia-chan is now listening on port ${CONFIG.PORT}! にゃん♡\n`,
-);
+console.log(`Elysia-chan is now listening on port ${CONFIG.PORT}!\n`);
 
 // Keep process alive on Windows
 if (process.platform === "win32") {
