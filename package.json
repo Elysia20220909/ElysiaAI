@@ -3,7 +3,6 @@
 	"version": "1.0.51",
 	"license": "MIT",
 	"description": "Elysia(Bun) + FastAPI + Milvus Lite + Ollama によるRAG AIチャット",
-	"private": false,
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/chloeamethyst/ElysiaJS.git"
@@ -12,6 +11,7 @@
 	"bugs": {
 		"url": "https://github.com/chloeamethyst/ElysiaJS/issues"
 	},
+
 	"keywords": [
 		"Elysia",
 		"Bun",
@@ -25,9 +25,13 @@
 	"scripts": {
 		"test": "bun test",
 		"test:watch": "bun test --watch",
-		"dev": "bun run --watch src/index.ts",
+		"dev": "bash ./scripts/dev.sh",
 		"build": "webpack --config webpack.config.js --mode=production",
-		"start": "node dist/index.js",
+		"start": "bun run src/index.ts",
+		"setup:python": "bash ./scripts/setup-python.sh",
+		"start:fastapi": "bash ./scripts/start-fastapi.sh",
+		"start:server": "bash ./scripts/start-server.sh",
+		"rotate:jsonl": "bash ./scripts/rotate-jsonl.sh",
 		"pack:zip": "powershell -NoProfile -Command \"if(Test-Path dist.zip){Remove-Item dist.zip -Force}; Compress-Archive -Path dist/* -DestinationPath dist.zip -Force\"",
 		"prepublishOnly": "npm run build",
 		"lint": "biome check .",
