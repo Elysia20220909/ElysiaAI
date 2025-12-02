@@ -97,7 +97,11 @@ const app = new Elysia()
 		}),
 	)
 	.use(html())
-	.use(staticPlugin({ assets: "public", prefix: "" }))
+	.use(staticPlugin({ assets: "public", prefix: "/" }))
+	.onError(({ code, error }) => {
+		console.error(`[Error] code=${code}`, error);
+		return jsonError(500, "Unhandled server error");
+	})
 	.onAfterHandle(({ set }) => {
 		set.headers["X-Frame-Options"] = "DENY";
 		set.headers["X-Content-Type-Options"] = "nosniff";
@@ -129,6 +133,15 @@ const app = new Elysia()
 			}`,
 		);
 	})
+	// Healthcheck & index
+	.get(
+		"/ping",
+		() =>
+			new Response(
+				JSON.stringify({ ok: true, time: new Date().toISOString() }),
+				{ headers: { "content-type": "application/json" } },
+			),
+	)
 	// Public: index page
 	.get("/", () => Bun.file("public/index.html"))
 	// ---------------- Self-Learning APIs ----------------
@@ -470,15 +483,20 @@ const app = new Elysia()
 					}),
 				},
 			),
-	)
-	.listen(CONFIG.PORT);
+	);
 
 // ---------------- Startup Banner ----------------
 const redisStatus = isRedisAvailable()
 	? "✅ Connected"
 	: "⚠️ Fallback to in-memory";
+
 console.log(
 	`\n${"+".repeat(56)}\n✨ Secure Elysia AI Server Started ✨\n${"+".repeat(56)}\n📡 Server: http://localhost:${CONFIG.PORT}\n🔮 Upstream: ${CONFIG.RAG_API_URL}\n🛡️ RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}\n🔴 Redis: ${redisStatus}\n🔐 Auth: POST /auth/token (env AUTH_PASSWORD)\n🔄 Refresh: POST /auth/refresh\n🚪 Logout: POST /auth/logout\n${"+".repeat(56)}\n`,
 );
 
-export default app;
+// ---------------- Start Server ----------------
+app.listen(CONFIG.PORT);
+
+console.log(
+	`\n💕 Elysia-chan is now listening on port ${CONFIG.PORT}! にゃん♡\n`,
+);
