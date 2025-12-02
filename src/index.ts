@@ -66,7 +66,7 @@ const app = new Elysia()
 	.use(cors({ origin: CONFIG.ALLOWED_ORIGINS }))
 	.use(html())
 	.use(staticPlugin({ assets: "public" }))
-	// .use(swagger({ path: "/swagger" })) // Temporarily disabled for debugging
+	.use(swagger({ path: "/swagger" }))
 	.onError(({ error }) => {
 		console.error("[Server Error]", error);
 	})
@@ -77,15 +77,19 @@ const app = new Elysia()
 
 	// Health
 	.get("/ping", () => ({ ok: true }), {
-		detail: { tags: ["health"], summary: "Ping", description: "Health check" },
+		detail: {
+			tags: ["health"],
+			summary: "Health check endpoint",
+			description: "Returns a simple OK response to verify server is running",
+		},
 	})
 
 	// Index page
 	.get("/", () => Bun.file("public/index.html"), {
 		detail: {
 			tags: ["ui"],
-			summary: "Index",
-			description: "Serves the static portfolio index page",
+			summary: "Portfolio index page",
+			description: "Serves the main Elysia AI portfolio and chat interface",
 		},
 	})
 
@@ -145,7 +149,13 @@ const app = new Elysia()
 				rating: t.Union([t.Literal("up"), t.Literal("down")]),
 				reason: t.Optional(t.String({ maxLength: 256 })),
 			}),
-			detail: { tags: ["feedback"], summary: "Submit feedback" },
+			detail: {
+				tags: ["feedback"],
+				summary: "Submit user feedback",
+				description:
+					"Submit feedback for a query-answer pair. Requires JWT authentication.",
+				security: [{ bearerAuth: [] }],
+			},
 		},
 	)
 
@@ -197,7 +207,13 @@ const app = new Elysia()
 				tags: t.Optional(t.Array(t.String({ maxLength: 32 }), { maxItems: 8 })),
 				confidence: t.Number({ minimum: 0, maximum: 1 }),
 			}),
-			detail: { tags: ["knowledge"], summary: "Upsert knowledge" },
+			detail: {
+				tags: ["knowledge"],
+				summary: "Add or update knowledge entry",
+				description:
+					"Store a new knowledge entry with summary, source, tags, and confidence. Requires JWT.",
+				security: [{ bearerAuth: [] }],
+			},
 		},
 	)
 
@@ -234,7 +250,13 @@ const app = new Elysia()
 		},
 		{
 			query: t.Object({ n: t.Optional(t.Number()) }),
-			detail: { tags: ["knowledge"], summary: "Get recent knowledge entries" },
+			detail: {
+				tags: ["knowledge"],
+				summary: "Get recent knowledge entries",
+				description:
+					"Retrieve the last N knowledge entries from the knowledge base. Requires JWT.",
+				security: [{ bearerAuth: [] }],
+			},
 		},
 	)
 
@@ -282,7 +304,7 @@ const app = new Elysia()
 				tags: ["auth"],
 				summary: "Login and get JWT tokens",
 				description:
-					"Authenticate with username and password to receive access and refresh tokens",
+					"Authenticate with username and password to receive access token (15min) and refresh token (7 days)",
 			},
 		},
 	)
@@ -316,7 +338,12 @@ const app = new Elysia()
 		},
 		{
 			body: t.Object({ refreshToken: t.String({ minLength: 20 }) }),
-			detail: { tags: ["auth"], summary: "Refresh access token" },
+			detail: {
+				tags: ["auth"],
+				summary: "Refresh access token",
+				description:
+					"Exchange a valid refresh token for a new access token without re-authentication",
+			},
 		},
 	)
 
@@ -345,7 +372,12 @@ const app = new Elysia()
 		},
 		{
 			body: t.Object({ refreshToken: t.String({ minLength: 20 }) }),
-			detail: { tags: ["auth"], summary: "Logout and revoke refresh token" },
+			detail: {
+				tags: ["auth"],
+				summary: "Logout and revoke refresh token",
+				description:
+					"Revoke a refresh token to prevent future token refreshes. Effectively logs out the user.",
+			},
 		},
 	)
 
@@ -438,8 +470,6 @@ const app = new Elysia()
 								content: t.String({
 									maxLength: 400,
 									minLength: 1,
-									pattern:
-										"^[a-zA-Z0-9\\s\\p{L}\\p{N}\\p{P}\\p{S}♡♪〜！？。、]{1,400}$",
 								}),
 							}),
 							{ maxItems: 8 },
@@ -455,6 +485,9 @@ const app = new Elysia()
 					detail: {
 						tags: ["chat"],
 						summary: "Chat with Elysia AI (Multi-LLM)",
+						description:
+							"Send chat messages to Elysia AI with selectable personality modes (sweet/normal/professional). Returns streaming SSE response. Requires JWT.",
+						security: [{ bearerAuth: [] }],
 					},
 				},
 			),
