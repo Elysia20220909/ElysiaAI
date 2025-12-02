@@ -119,6 +119,17 @@ bun run src/index.ts
 
 `deploy/nginx.conf.example` を参照。TLS/セキュリティヘッダ/CSP/SSE対応の設定を含みます。
 
+### タスクスケジューラ登録（任意）
+
+JSONLローテーションを定期実行する場合:
+
+```powershell
+# タスクスケジューラに毎日実行を登録
+$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-File C:\path\to\elysia-ai\scripts\rotate-jsonl.ps1'
+$trigger = New-ScheduledTaskTrigger -Daily -At 3am
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName 'ElysiaJSONLRotation' -Description 'Rotate Elysia AI JSONL logs'
+```
+
 ## 補助スクリプト（Windows）
 
 ## 補助スクリプト（Linux/macOS/WSL）
