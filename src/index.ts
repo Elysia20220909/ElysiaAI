@@ -490,13 +490,17 @@ const app = new Elysia()
 	);
 
 // ---------------- Start Server ----------------
-console.log(`🚀 Starting Elysia server on port ${CONFIG.PORT}...`);
-
-// Use Bun.serve for Windows compatibility
-Bun.serve({
+const server = Bun.serve({
 	port: CONFIG.PORT,
-	fetch: app.fetch,
+	fetch: app.fetch.bind(app),
 });
 
-console.log(`✅ Server running at http://localhost:${CONFIG.PORT}`);
-console.log(`📚 Swagger docs: http://localhost:${CONFIG.PORT}/swagger`);
+console.log(`
+🚀 Elysia server is running!
+📡 Port: ${server.port}
+🌐 URL: http://${server.hostname}:${server.port}
+📚 Docs: http://${server.hostname}:${server.port}/swagger
+`);
+
+// Prevent process from exiting
+process.stdin.resume();
