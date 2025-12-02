@@ -66,8 +66,9 @@ const app = new Elysia()
 	.use(html())
 	.use(staticPlugin({ assets: "public" }))
 	.use(swagger({ path: "/swagger" }))
-	.onError(() => {
-		// Error logged internally
+	.onError(({ error, code }) => {
+		console.error(`[ERROR] ${code}:`, error);
+		return jsonError(500, error.message || "Internal server error");
 	})
 	.onAfterHandle(({ set }) => {
 		set.headers["X-Content-Type-Options"] = "nosniff";
@@ -489,9 +490,13 @@ const app = new Elysia()
 	);
 
 // ---------------- Start Server ----------------
-app.listen(CONFIG.PORT);
+console.log(`🚀 Starting Elysia server on port ${CONFIG.PORT}...`);
 
-// Keep process alive (Windows compatibility)
-if (process.platform === "win32") {
-	setInterval(() => {}, 1 << 30);
-}
+// Use Bun.serve for Windows compatibility
+Bun.serve({
+	port: CONFIG.PORT,
+	fetch: app.fetch,
+});
+
+console.log(`✅ Server running at http://localhost:${CONFIG.PORT}`);
+console.log(`📚 Swagger docs: http://localhost:${CONFIG.PORT}/swagger`);
