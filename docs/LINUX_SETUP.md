@@ -261,6 +261,36 @@ ulimit -n 65536
    - Nginx + Let's Encrypt使用
    - `DEPLOYMENT.md` 参照
 
+## SSHハードニング（推奨）
+
+鍵認証へ切替え、パスワードログインを無効化します。
+
+```bash
+# サーバー（root）で実行
+sudo bash ./scripts/ssh-setup.sh elysia
+
+# クライアント（WSL/Linux/macOS）で鍵生成
+ssh-keygen -t ed25519 -a 100 -f ~/.ssh/elysia_ai -C "elysia-ai"
+cat ~/.ssh/elysia_ai.pub  # 出力をサーバーのプロンプトへ貼り付け
+
+# 接続テスト
+ssh -i ~/.ssh/elysia_ai elysia@<server-ip>
+```
+
+`ssh-setup.sh` は次を設定します:
+
+- `PermitRootLogin prohibit-password`
+- `PasswordAuthentication no`
+- `PubkeyAuthentication yes`
+- `AllowUsers elysia`
+- `MaxAuthTries 3`, `ClientAliveInterval 300`
+
+追加対策（任意）:
+
+- `fail2ban` の導入
+- `Port 22` 変更と `ufw` で特定IPのみ許可
+- `/etc/ssh/sshd_config` で `KbdInteractiveAuthentication no`
+
 ## 次のステップ
 
 - **本番デプロイ**: `DEPLOYMENT.md` を参照
