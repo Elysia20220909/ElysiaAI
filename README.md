@@ -22,35 +22,61 @@ Elysia(Bun) で動くAIチャット。FastAPI + Milvus Lite によるRAG、Ollam
 
 ## クイックスタート
 
-```powershell
-# 1) 依存を取得（Node/JS）
+### Linux/macOS/WSL（推奨）
+
+```bash
+# 1) 依存を取得
 bun install
 
 # 2) 環境変数を設定（初回のみ）
 cp .env.example .env
 # .env を編集して JWT_SECRET と AUTH_PASSWORD を強固な値に変更してください
 # 例: JWT_SECRET と JWT_REFRESH_SECRET を生成
-#     openssl rand -hex 32 (Git Bash) → 2つ生成して別々に設定
-#     PowerShell → [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 })) → 2回実行
+openssl rand -hex 32  # これを2回実行して別々に設定
+
+# 3) Python環境
+./scripts/setup-python.sh
+
+# 4) Redis起動（Docker推奨）
+docker run -d --name elysia-redis -p 6379:6379 redis
+# ※ Redis未起動でも動作可能（インメモリレート制限にフォールバック）
+
+# 5) 開発環境起動（全サービス一括起動）
+./scripts/dev.sh
+
+# または個別起動
+./scripts/start-fastapi.sh       # RAG / 127.0.0.1:8000
+./scripts/start-network-sim.sh   # NetworkSim API / 127.0.0.1:8001
+bun run src/index.ts             # http://localhost:3000
+```
+
+### Windows（PowerShell）
+
+```powershell
+# 1) 依存を取得
+bun install
+
+# 2) 環境変数を設定（初回のみ）
+Copy-Item .env.example .env
+# .env を編集して JWT_SECRET と AUTH_PASSWORD を強固な値に変更してください
+# 例: JWT_SECRET と JWT_REFRESH_SECRET を生成
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))  # 2回実行
 
 # 3) Python環境
 ./scripts/setup-python.ps1
 
 # 4) Redis起動（Docker推奨）
 docker run -d --name elysia-redis -p 6379:6379 redis
-# ※ Redis未起動でも動作可能（インメモリレート制限にフォールバック）
 
 # 5) サーバー起動（別ターミナルで順に）
 ./scripts/start-fastapi.ps1      # RAG / 127.0.0.1:8000
 ./scripts/start-network-sim.ps1  # NetworkSim API / 127.0.0.1:8001
-
-# 5) Elysiaを起動
 bun run src/index.ts             # http://localhost:3000
 ```
 
 **重要**: `.env` の `JWT_SECRET` と `AUTH_PASSWORD` は必ず変更してください。デフォルト値のまま本番環境にデプロイすると重大なセキュリティリスクがあります。
 
-Linux/macOS/WSL の場合は `.sh` スクリプトを使用してください。
+**推奨**: Linux/macOS/WSL環境での実行を推奨します。Windows PowerShellは文字エンコーディングの問題が発生する場合があります。
 
 ## ビルドと配布
 
@@ -71,13 +97,41 @@ bun run pack:zip
 - `POST /knowledge/upsert`: JWT必須。`{ summary, sourceUrl?, tags?, confidence(0..1) }` を `data/knowledge.jsonl` に追記
 - `GET /knowledge/review?n=20`: JWT必須。最新N件のナレッジを返す
 
-### 動作確認例（PowerShell）
+### 動作確認例
+
+**Linux/macOS/WSL:**
+
+```bash
+# 認証
+RESP=$(curl -s -X POST http://localhost:3000/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"username":"elysia","password":"your-password"}')
+ACCESS_TOKEN=$(echo $RESP | jq -r '.accessToken')
+REFRESH_TOKEN=$(echo $RESP | jq -r '.refreshToken')
+
+# Feedback
+curl -s -X POST http://localhost:3000/feedback \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"テスト","answer":"OK","rating":"up"}'
+
+# Knowledge
+curl -s -X POST http://localhost:3000/knowledge/upsert \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"summary":"自己学習テスト","sourceUrl":"https://example.com","tags":["docs"],"confidence":0.9}'
+
+# Review
+curl -s "http://localhost:3000/knowledge/review?n=5" \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+**Windows PowerShell:**
 
 ```powershell
 # 認証
-$resp = curl.exe -s -X POST http://localhost:3000/auth/token -H "Content-Type: application/json" -d "{\"username\":\"$Env:AUTH_USERNAME\",\"password\":\"$Env:AUTH_PASSWORD\"}"
+$resp = curl.exe -s -X POST http://localhost:3000/auth/token -H "Content-Type: application/json" -d "{\"username\":\"elysia\",\"password\":\"your-password\"}"
 $accessToken = (ConvertFrom-Json $resp).accessToken
-$refreshToken = (ConvertFrom-Json $resp).refreshToken
 
 # Feedback
 curl.exe -s -X POST http://localhost:3000/feedback -H "Authorization: Bearer $accessToken" -H "Content-Type: application/json" -d "{\"query\":\"テスト\",\"answer\":\"OK\",\"rating\":\"up\"}"
@@ -86,7 +140,7 @@ curl.exe -s -X POST http://localhost:3000/feedback -H "Authorization: Bearer $ac
 curl.exe -s -X POST http://localhost:3000/knowledge/upsert -H "Authorization: Bearer $accessToken" -H "Content-Type: application/json" -d "{\"summary\":\"自己学習テスト\",\"sourceUrl\":\"https://example.com\",\"tags\":[\"docs\"],\"confidence\":0.9}"
 
 # Review
-curl.exe -s http://localhost:3000/knowledge/review?n=5 -H "Authorization: Bearer $accessToken"
+curl.exe -s "http://localhost:3000/knowledge/review?n=5" -H "Authorization: Bearer $accessToken"
 ```
 
 ## Redis（任意）
@@ -105,7 +159,19 @@ bun run src/index.ts
 - リフレッシュトークンはRedisで検証/失効
 - JSONL保管のローテーション: `data/*.jsonl` が肥大化する場合、サイズ閾値でローテーション（例: 50MB超で `*.jsonl.1` へ移動）をタスク化
 
-### JSONLローテーション（PowerShell）
+### JSONLローテーション
+
+**Linux/macOS/WSL:**
+
+```bash
+# 既定: dataディレクトリ, 50MB超でローテート
+./scripts/rotate-jsonl.sh
+
+# ディレクトリや閾値を指定
+./scripts/rotate-jsonl.sh data 100
+```
+
+**Windows PowerShell:**
 
 ```powershell
 # 既定: dataディレクトリ, 50MB超でローテート
@@ -119,29 +185,50 @@ bun run src/index.ts
 
 `deploy/nginx.conf.example` を参照。TLS/セキュリティヘッダ/CSP/SSE対応の設定を含みます。
 
-### タスクスケジューラ登録（任意）
+### 自動ローテーション設定（任意）
 
-JSONLローテーションを定期実行する場合:
+**Linux cron:**
+
+```bash
+# 毎日午前3時に実行
+crontab -e
+# 以下を追加
+0 3 * * * /path/to/elysia-ai/scripts/rotate-jsonl.sh
+```
+
+**Windows タスクスケジューラ:**
 
 ```powershell
-# タスクスケジューラに毎日実行を登録
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-File C:\path\to\elysia-ai\scripts\rotate-jsonl.ps1'
 $trigger = New-ScheduledTaskTrigger -Daily -At 3am
 Register-ScheduledTask -Action $action -Trigger $trigger -TaskName 'ElysiaJSONLRotation' -Description 'Rotate Elysia AI JSONL logs'
 ```
 
-## 補助スクリプト（Windows）
+## 補助スクリプト
 
-## 補助スクリプト（Linux/macOS/WSL）
+### Linux/macOS/WSL
 
+- `./scripts/setup-python.sh`: Python環境セットアップ
 - `./scripts/start-server.sh`: Elysiaサーバー起動
 - `./scripts/start-fastapi.sh`: FastAPI RAG起動
 - `./scripts/start-network-sim.sh`: Network Simulation API起動
-- `./scripts/dev.sh`: FastAPI → Elysia（+任意でNetworkSim）を一括起動。Ctrl+Cで一括停止。
+- `./scripts/dev.sh`: 全サービス一括起動（Ctrl+Cで一括停止）
+- `./scripts/rotate-jsonl.sh`: JSONLログローテーション
 
 ```bash
-# 例: デフォルトで起動
+# 開発環境一括起動
 ./scripts/dev.sh
+
+# ネットワークシミュレーション含む
+./scripts/dev.sh --with-network
 ```
+
+### Windows PowerShell
+
+- `./scripts/setup-python.ps1`: Python環境セットアップ
+- `./scripts/start-server.ps1`: Elysiaサーバー起動
+- `./scripts/start-fastapi.ps1`: FastAPI RAG起動
+- `./scripts/start-network-sim.ps1`: Network Simulation API起動
+- `./scripts/rotate-jsonl.ps1`: JSONLログローテーション
 
 <!-- 末尾の紹介ブロックを削除（MD033/MD025対策） -->
