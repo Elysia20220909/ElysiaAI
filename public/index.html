@@ -3,109 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elysia AI Chat</title>
+    <title>Elysia Portfolio - エリシアちゃんのポートフォリオ♡</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
     <style>
         /* レスポンシブ対応: モバイルファースト設計 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes sparkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .float-animation { animation: float 3s ease-in-out infinite; }
+        .sparkle-animation { animation: sparkle 2s ease-in-out infinite; }
+        .fade-in { animation: fade-in 0.6s ease-out; }
+        
         @media (max-width: 640px) {
             .chat-message { max-width: 85%; }
             .header-title { font-size: 1.125rem; }
+            .hero-title { font-size: 2rem; }
         }
         @media (min-width: 641px) and (max-width: 1024px) {
             .chat-message { max-width: 75%; }
+            .hero-title { font-size: 3rem; }
         }
         @media (min-width: 1025px) {
             .chat-message { max-width: 65%; }
+            .hero-title { font-size: 4rem; }
         }
+        
+        .gradient-pink { background: linear-gradient(135deg, #ffeef8 0%, #ffe0f0 100%); }
+        .text-gradient { 
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #fb7185 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .animation-delay-1 { animation-delay: 1s; }
+        .animation-delay-2 { animation-delay: 2s; }
+        .animation-delay-01 { animation-delay: 0.1s; }
+        .animation-delay-02 { animation-delay: 0.2s; }
+        .animation-delay-04 { animation-delay: 0.4s; }
+        .chat-container-height { height: 500px; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-7xl h-screen flex flex-col" x-data="elysiaChat()">
-        
-        <!-- Header (レスポンシブ: Flexbox + メディアクエリ) -->
-        <header class="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-3 sm:mb-4">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-500 flex items-center justify-center text-white text-lg sm:text-xl flex-shrink-0">
-                        💬
-                    </div>
-                    <div>
-                        <h1 class="header-title text-lg sm:text-xl font-bold text-gray-800">Elysia AI Chat</h1>
-                        <p class="text-xs sm:text-sm text-gray-500">Powered by Bun</p>
+<body class="bg-pink-50 min-h-screen relative overflow-x-hidden">
+    <!-- 背景エフェクト -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute top-20 left-10 w-32 h-32 bg-pink-300 rounded-full opacity-20 blur-3xl float-animation"></div>
+        <div class="absolute bottom-20 right-10 w-40 h-40 bg-purple-300 rounded-full opacity-20 blur-3xl float-animation animation-delay-1"></div>
+        <div class="absolute top-1/2 left-1/4 w-24 h-24 bg-pink-400 rounded-full opacity-10 blur-2xl float-animation animation-delay-2"></div>
+    </div>
+    
+    <div class="relative z-10" x-data="elysiaPortfolio()">
+        <!-- ヒーローセクション -->
+        <section class="min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12">
+            <div class="text-center max-w-4xl mx-auto fade-in">
+                <div class="mb-6 sm:mb-8">
+                    <div class="inline-block relative">
+                        <div class="text-6xl sm:text-7xl md:text-8xl mb-4 float-animation">💕</div>
+                        <div class="absolute -top-2 -right-2 text-2xl sparkle-animation">✨</div>
+                        <div class="absolute -bottom-2 -left-2 text-2xl sparkle-animation animation-delay-1">✨</div>
                     </div>
                 </div>
-                <div class="flex gap-2">
-                    <span class="px-2 py-1 rounded text-xs bg-green-100 text-green-700">● Online</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Chat Container (レスポンシブ: 可変幅 + スクロール最適化) -->
-        <main class="flex-1 bg-white rounded-lg shadow-sm overflow-hidden flex flex-col min-h-0">
-            <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3" id="chatContainer">
                 
-                <!-- Welcome (レスポンシブ: パディング調整) -->
-                <div class="text-center py-6 sm:py-8 px-4" x-show="messages.length === 0">
-                    <div class="text-3xl sm:text-4xl mb-2">👋</div>
-                    <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-1">Welcome to Elysia AI</h3>
-                    <p class="text-xs sm:text-sm text-gray-500">Start a conversation below</p>
-                </div>
-
-                <!-- Messages (レスポンシブ: 動的max-width) -->
-                <template x-for="msg in messages" :key="msg.id">
-                    <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
-                        <div :class="msg.role === 'user' ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-800'" class="chat-message rounded-lg px-3 sm:px-4 py-2 break-words">
-                            <p class="text-xs sm:text-sm whitespace-pre-wrap" x-text="msg.content"></p>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Loading (レスポンシブ: サイズ調整) -->
-                <div class="flex justify-start" x-show="loading">
-                    <div class="bg-gray-100 rounded-lg px-3 sm:px-4 py-2">
-                        <div class="flex items-center gap-1">
-                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Input Area (レスポンシブ: モバイルで縦配置も可) -->
-            <div class="border-t border-gray-200 p-3 sm:p-4">
-                <form @submit.prevent="sendMessage" class="flex flex-col sm:flex-row gap-2">
-                    <input 
-                        type="text" 
-                        x-model="input" 
-                        :disabled="loading" 
-                        placeholder="Type a message..." 
-                        class="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    />
-                    <button 
-                        type="submit" 
-                        :disabled="loading || !input.trim()" 
-                        class="px-4 sm:px-6 py-2 bg-purple-500 text-white rounded-lg font-medium text-sm sm:text-base hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-                    >
-                        Send
+                <h1 class="hero-title text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-gradient">
+                    にゃん♪ エリシアだよ〜♡
+                </h1>
+                
+                <p class="text-base sm:text-lg md:text-xl text-gray-700 mb-6 sm:mb-8 px-4">
+                    おにいちゃん、ようこそ〜！ エリシアちゃんのポートフォリオサイトだよ♡<br class="hidden sm:block">
+                    可愛いプロジェクトいっぱい見ててね ฅ(՞៸៸&gt; ᗜ &lt;៸៸՞)ฅ
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+                    <button @click="scrollToWorks" class="px-6 sm:px-8 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-full font-bold text-sm sm:text-base hover:from-pink-600 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
+                        💖 作品を見る
                     </button>
-                </form>
+                    <button @click="scrollToChat" class="px-6 sm:px-8 py-3 bg-white text-pink-600 rounded-full font-bold text-sm sm:text-base hover:bg-pink-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 border-2 border-pink-300">
+                        💬 チャットする
+                    </button>
+                </div>
             </div>
-        </main>
+        </section>
+        
+        <!-- 作品セクション -->
+        <section id="works" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8">
+            <div class="max-w-7xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gradient fade-in">
+                    ✨ エリシアちゃんの作品たち ✨
+                </h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+                    <!-- 作品カード1: ElysiaJS AIチャット -->
+                    <div class="gradient-pink rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 fade-in">
+                        <div class="aspect-video bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl mb-4 flex items-center justify-center text-white text-4xl sm:text-5xl">
+                            🤖
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-2">ElysiaJS AI Chat</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-4">Bun + ElysiaJS + Ollama でリアルタイムAIチャット♡ RAGで自己学習する可愛い子！</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-purple-200 text-purple-800 rounded-full text-xs font-medium">Bun</span>
+                            <span class="px-2 py-1 bg-pink-200 text-pink-800 rounded-full text-xs font-medium">ElysiaJS</span>
+                            <span class="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs font-medium">Ollama</span>
+                        </div>
+                        <button @click="scrollToChat" class="w-full py-2 bg-pink-500 text-white rounded-lg font-bold hover:bg-pink-600 transition-colors text-sm">
+                            試してみる ♡
+                        </button>
+                    </div>
+                    
+                    <!-- 作品カード2: レスポンシブポートフォリオ -->
+                    <div class="gradient-pink rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 fade-in animation-delay-01">
+                        <div class="aspect-video bg-gradient-to-br from-pink-400 to-rose-400 rounded-xl mb-4 flex items-center justify-center text-white text-4xl sm:text-5xl">
+                            🌸
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-2">完全レスポンシブUI</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-4">TailwindCSS + Flexbox でスマホからPCまで絶対崩れない設計♡ 妖精みたいに軽い！</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs font-medium">TailwindCSS</span>
+                            <span class="px-2 py-1 bg-green-200 text-green-800 rounded-full text-xs font-medium">Flexbox</span>
+                        </div>
+                        <button class="w-full py-2 bg-pink-500 text-white rounded-lg font-bold hover:bg-pink-600 transition-colors text-sm">
+                            デモを見る ♡
+                        </button>
+                    </div>
+                    
+                    <!-- 作品カード3: Alpine.js インタラクティブ -->
+                    <div class="gradient-pink rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 fade-in animation-delay-02">
+                        <div class="aspect-video bg-gradient-to-br from-indigo-400 to-purple-400 rounded-xl mb-4 flex items-center justify-center text-white text-4xl sm:text-5xl">
+                            ⚡
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-2">Alpine.js Magic</h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mb-4">軽量3KBのAlpine.jsで超サクサク！ エリシアちゃんみたいに反応速いの♡</p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-2 py-1 bg-indigo-200 text-indigo-800 rounded-full text-xs font-medium">Alpine.js</span>
+                            <span class="px-2 py-1 bg-purple-200 text-purple-800 rounded-full text-xs font-medium">Reactive</span>
+                        </div>
+                        <button class="w-full py-2 bg-pink-500 text-white rounded-lg font-bold hover:bg-pink-600 transition-colors text-sm">
+                            コード見る ♡
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-8 sm:mt-12">
+                    <p class="text-sm sm:text-base text-gray-600">もっと見たい？ GitHubに全部あるよ〜♡</p>
+                    <a href="https://github.com/chloeamethyst/ElysiaJS" target="_blank" rel="noopener noreferrer" class="inline-block mt-4 px-6 py-2 bg-gray-800 text-white rounded-full font-bold hover:bg-gray-900 transition-colors text-sm">
+                        🐙 GitHub
+                    </a>
+                </div>
+            </div>
+        </section>
+        
+        
+        <!-- チャットセクション -->
+        <section id="chat" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 gradient-pink">
+            <div class="max-w-7xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gradient fade-in">
+                    💬 エリシアちゃんとお話ししよ〜♡
+                </h2>
+                
+                <div class="max-w-4xl mx-auto">
+                    <!-- Header -->
+                    <header class="bg-white rounded-t-2xl shadow-sm p-3 sm:p-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div class="flex items-center gap-2 sm:gap-3">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white text-xl sm:text-2xl flex-shrink-0 float-animation">
+                                    💕
+                                </div>
+                                <div>
+                                    <h3 class="header-title text-base sm:text-lg font-bold text-gray-800">Elysia AI Chat</h3>
+                                    <p class="text-xs sm:text-sm text-gray-500">いつでも話聞くよ♡</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700 font-medium sparkle-animation">● Online</span>
+                        </div>
+                    </header>
 
-        <!-- Footer (レスポンシブ: テキストサイズ調整) -->
-        <footer class="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-gray-500">
-            Built with Elysia.js + Bun
+                    <!-- Chat Container -->
+                    <main class="bg-white shadow-lg overflow-hidden flex flex-col chat-container-height">
+                        <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3" id="chatContainer">
+                            
+                            <!-- Welcome -->
+                            <div class="text-center py-6 sm:py-8 px-4" x-show="messages.length === 0">
+                                <div class="text-4xl sm:text-5xl mb-3 float-animation">👋</div>
+                                <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-2">にゃん♪ おにいちゃん来た〜♡</h3>
+                                <p class="text-xs sm:text-sm text-gray-500">何でも聞いてね！ エリシアちゃんがお話し相手だよ〜</p>
+                            </div>
+
+                            <!-- Messages -->
+                            <template x-for="msg in messages" :key="msg.id">
+                                <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                                    <div :class="msg.role === 'user' ? 'bg-gradient-to-br from-pink-500 to-pink-600 text-white' : 'bg-pink-50 text-gray-800 border border-pink-200'" class="chat-message rounded-2xl px-3 sm:px-4 py-2 sm:py-3 break-words shadow-sm">
+                                        <p class="text-xs sm:text-sm whitespace-pre-wrap" x-text="msg.content"></p>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Loading -->
+                            <div class="flex justify-start" x-show="loading">
+                                <div class="bg-pink-50 border border-pink-200 rounded-2xl px-3 sm:px-4 py-2 sm:py-3 shadow-sm">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div>
+                                        <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce animation-delay-02"></div>
+                                        <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce animation-delay-04"></div>
+                                        <span class="text-xs text-gray-600 ml-1">考え中...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input Area -->
+                        <div class="border-t border-pink-200 p-3 sm:p-4 bg-pink-50">
+                            <form @submit.prevent="sendMessage" class="flex flex-col sm:flex-row gap-2">
+                                <input 
+                                    type="text" 
+                                    x-model="input" 
+                                    :disabled="loading" 
+                                    placeholder="メッセージを入力してね♡" 
+                                    class="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-pink-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
+                                />
+                                <button 
+                                    type="submit" 
+                                    :disabled="loading || !input.trim()" 
+                                    class="px-5 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl font-bold text-sm sm:text-base hover:from-pink-600 hover:to-pink-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg transform hover:scale-105 whitespace-nowrap"
+                                >
+                                    💌 送信
+                                </button>
+                            </form>
+                        </div>
+                    </main>
+                    
+                    <footer class="bg-white rounded-b-2xl shadow-sm p-3 sm:p-4 text-center">
+                        <p class="text-xs sm:text-sm text-gray-500">Powered by Elysia.js + Bun ⚡ だいすき♡</p>
+                    </footer>
+                </div>
+            </div>
+        </section>
+        
+        <!-- フッター -->
+        <footer class="py-8 sm:py-12 px-4 text-center">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-4xl sm:text-5xl mb-4 float-animation">💕</div>
+                <p class="text-sm sm:text-base text-gray-600 mb-2">またね、おにいちゃん♡ いつでも遊びに来てね〜！</p>
+                <p class="text-xs sm:text-sm text-gray-500">ฅ(՞៸៸&gt; ᗜ &lt;៸៸՞)ฅ だいすきなのっ！</p>
+            </div>
         </footer>
     </div>
 
     <script>
-        function elysiaChat() {
+        function elysiaPortfolio() {
             return {
                 messages: [], 
                 input: '', 
                 loading: false,
+                
+                scrollToWorks() {
+                    document.getElementById('works').scrollIntoView({ behavior: 'smooth' });
+                },
+                
+                scrollToChat() {
+                    document.getElementById('chat').scrollIntoView({ behavior: 'smooth' });
+                },
                 setQuickMessage(message) { 
                     if (!this.loading) { 
                         this.input = message; 
