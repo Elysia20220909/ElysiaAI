@@ -16,33 +16,33 @@ if (CONFIG.REDIS_ENABLED) {
 			retryStrategy: (times) => {
 				if (times > 3) {
 					console.warn(
-						"[Redis] 接続失敗: フォールバック to in-memory rate limiting",
+						"[Redis] Connection failed: Fallback to in-memory rate limiting",
 					);
 					redisAvailable = false;
-					return null; // 再試行停止
+					return null;
 				}
-				return Math.min(times * 100, 2000); // 100ms, 200ms, 300ms...
+				return Math.min(times * 100, 2000);
 			},
 			lazyConnect: true, // 遅延接続
 		});
 
 		redis.on("connect", () => {
-			console.log("[Redis] 接続成功 ✅");
+			console.log("[Redis] Connected successfully");
 			redisAvailable = true;
 		});
 
 		redis.on("error", (err) => {
-			console.error("[Redis] エラー:", err.message);
+			console.error("[Redis] Error:", err.message);
 			redisAvailable = false;
 		});
 
-		// 初回接続試行
+		// Initial connection attempt
 		redis.connect().catch((err) => {
-			console.warn("[Redis] 起動時接続失敗:", err.message);
+			console.warn("[Redis] Initial connection failed:", err.message);
 			redisAvailable = false;
 		});
 	} catch (err) {
-		console.error("[Redis] 初期化エラー:", err);
+		console.error("[Redis] Initialization error:", err);
 		redis = null;
 		redisAvailable = false;
 	}
@@ -82,8 +82,8 @@ export async function checkRateLimitRedis(
 
 		return count <= maxRequests;
 	} catch (err) {
-		console.error("[Redis] レート制限チェックエラー:", err);
-		return true; // エラー時は許可（サービス継続優先）
+		console.error("[Redis] Rate limit check error:", err);
+		return true; // Allow on error to maintain service
 	}
 }
 
@@ -99,7 +99,9 @@ export async function storeRefreshToken(
 	expiresIn: number = 7 * 24 * 60 * 60, // 7日
 ): Promise<void> {
 	if (!redis || !redisAvailable) {
-		console.warn("[Redis] リフレッシュトークン保存スキップ（Redis未接続）");
+		console.warn(
+			"[Redis] Skipping refresh token storage (Redis not connected)",
+		);
 		return;
 	}
 
@@ -107,7 +109,7 @@ export async function storeRefreshToken(
 		const key = `refresh:${userId}`;
 		await redis.setex(key, expiresIn, refreshToken);
 	} catch (err) {
-		console.error("[Redis] リフレッシュトークン保存エラー:", err);
+		console.error("[Redis] Refresh token storage error:", err);
 	}
 }
 
@@ -122,7 +124,9 @@ export async function verifyRefreshToken(
 	refreshToken: string,
 ): Promise<boolean> {
 	if (!redis || !redisAvailable) {
-		console.warn("[Redis] リフレッシュトークン検証スキップ（Redis未接続）");
+		console.warn(
+			"[Redis] Skipping refresh token verification (Redis not connected)",
+		);
 		return false;
 	}
 
@@ -131,7 +135,7 @@ export async function verifyRefreshToken(
 		const storedToken = await redis.get(key);
 		return storedToken === refreshToken;
 	} catch (err) {
-		console.error("[Redis] リフレッシュトークン検証エラー:", err);
+		console.error("[Redis] Refresh token verification error:", err);
 		return false;
 	}
 }
@@ -149,7 +153,7 @@ export async function revokeRefreshToken(userId: string): Promise<void> {
 		const key = `refresh:${userId}`;
 		await redis.del(key);
 	} catch (err) {
-		console.error("[Redis] リフレッシュトークン無効化エラー:", err);
+		console.error("[Redis] Refresh token revocation error:", err);
 	}
 }
 
