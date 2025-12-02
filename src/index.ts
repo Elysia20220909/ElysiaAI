@@ -494,13 +494,9 @@ console.log(
 	`\n${"+".repeat(56)}\n✨ Secure Elysia AI Server Started ✨\n${"+".repeat(56)}\n📡 Server: http://localhost:${CONFIG.PORT}\n🔮 Upstream: ${CONFIG.RAG_API_URL}\n🛡️ RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}\n🔴 Redis: ${redisStatus}\n🔐 Auth: POST /auth/token (env AUTH_PASSWORD)\n🔄 Refresh: POST /auth/refresh\n🚪 Logout: POST /auth/logout\n${"+".repeat(56)}\n`,
 );
 
-// ---------------- Start Server (Bun.serve for cross-platform stability) ----------------
-Bun.serve({
-	port: CONFIG.PORT,
-	fetch: app.fetch,
-	development: true,
-});
+// ---------------- Start Server ----------------
+app.listen(CONFIG.PORT);
 
 console.log(
-	`\n💕 Elysia-chan is now serving on port ${CONFIG.PORT}! にゃん♡\n`,
+	`\n💕 Elysia-chan is now listening on port ${CONFIG.PORT}! にゃん♡\n`,
 );
