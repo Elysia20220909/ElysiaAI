@@ -12,7 +12,6 @@ import sanitizeHtml from "sanitize-html";
 import { DEFAULT_MODE, ELYSIA_MODES } from "./llm-config";
 import {
 	checkRateLimitRedis,
-	isRedisAvailable,
 	revokeRefreshToken,
 	storeRefreshToken,
 	verifyRefreshToken,
@@ -67,8 +66,8 @@ const app = new Elysia()
 	.use(html())
 	.use(staticPlugin({ assets: "public" }))
 	.use(swagger({ path: "/swagger" }))
-	.onError(({ error }) => {
-		console.error("[Server Error]", error);
+	.onError(() => {
+		// Error logged internally
 	})
 	.onAfterHandle(({ set }) => {
 		set.headers["X-Content-Type-Options"] = "nosniff";
@@ -134,8 +133,7 @@ const app = new Elysia()
 			};
 			try {
 				await appendFile("data/feedback.jsonl", JSON.stringify(rec) + "\n");
-			} catch (err) {
-				console.error("[Feedback] write error", err);
+			} catch {
 				return jsonError(500, "Failed to store feedback");
 			}
 			return new Response(JSON.stringify({ ok: true }), {
@@ -192,8 +190,7 @@ const app = new Elysia()
 			};
 			try {
 				await appendFile("data/knowledge.jsonl", JSON.stringify(item) + "\n");
-			} catch (err) {
-				console.error("[Knowledge] write error", err);
+			} catch {
 				return jsonError(500, "Failed to store knowledge");
 			}
 			return new Response(JSON.stringify({ ok: true }), {
@@ -243,8 +240,7 @@ const app = new Elysia()
 				return new Response(JSON.stringify(last), {
 					headers: { "content-type": "application/json" },
 				});
-			} catch (err) {
-				console.error("[Knowledge] read error", err);
+			} catch {
 				return jsonError(500, "Failed to read knowledge");
 			}
 		},
@@ -452,7 +448,6 @@ const app = new Elysia()
 							},
 						});
 					} catch (error) {
-						console.error("[Chat] Error", error);
 						if (axios.isAxiosError(error) && error.response?.status === 503)
 							return jsonError(503, "Upstream unavailable");
 						return jsonError(500, "Internal chat error");
@@ -494,24 +489,7 @@ const app = new Elysia()
 	);
 
 // ---------------- Start Server ----------------
-const redisStatus = isRedisAvailable() ? "Connected" : "Fallback to in-memory";
-
-console.log("\n" + "=".repeat(60));
-console.log("Secure Elysia AI Server Started");
-console.log("=".repeat(60));
-console.log(`Server: http://localhost:${CONFIG.PORT}`);
-console.log(`Swagger: http://localhost:${CONFIG.PORT}/swagger`);
-console.log(`Upstream: ${CONFIG.RAG_API_URL}`);
-console.log(`RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}`);
-console.log(`Redis: ${redisStatus}`);
-console.log("Auth: POST /auth/token");
-console.log("Refresh: POST /auth/refresh");
-console.log("Logout: POST /auth/logout");
-console.log("=".repeat(60) + "\n");
-
-const server = app.listen(CONFIG.PORT);
-
-console.log(`✨ Elysia-chan is now listening on port ${CONFIG.PORT}!\n`);
+app.listen(CONFIG.PORT);
 
 // Keep process alive (Windows compatibility)
 if (process.platform === "win32") {
