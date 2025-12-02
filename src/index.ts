@@ -500,3 +500,8 @@ app.listen(CONFIG.PORT);
 console.log(
 	`\n💕 Elysia-chan is now listening on port ${CONFIG.PORT}! にゃん♡\n`,
 );
+
+// Keep process alive on Windows
+if (process.platform === "win32") {
+	setInterval(() => {}, 1000);
+}
