@@ -3,7 +3,6 @@ import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
 import { swagger } from "@elysiajs/swagger";
-import { Stream } from "@elysiajs/stream";
 import axios from "axios";
 import { Elysia, t } from "elysia";
 import { existsSync, mkdirSync } from "fs";
@@ -67,8 +66,7 @@ const app = new Elysia()
 	.use(cors({ origin: CONFIG.ALLOWED_ORIGINS }))
 	.use(html())
 	.use(staticPlugin({ assets: "public" }))
-	.use(swagger({ path: "/swagger" }))
-	.use(Stream())
+	// .use(swagger({ path: "/swagger" })) // Temporarily disabled for debugging
 	.onError(({ error }) => {
 		console.error("[Server Error]", error);
 	})
@@ -462,12 +460,14 @@ const app = new Elysia()
 			),
 	);
 
-// ---------------- Startup Banner ----------------
+// ---------------- Start Server ----------------
 const redisStatus = isRedisAvailable() ? "Connected" : "Fallback to in-memory";
+
 console.log("\n" + "=".repeat(60));
 console.log("Secure Elysia AI Server Started");
 console.log("=".repeat(60));
 console.log(`Server: http://localhost:${CONFIG.PORT}`);
+console.log(`Swagger: http://localhost:${CONFIG.PORT}/swagger`);
 console.log(`Upstream: ${CONFIG.RAG_API_URL}`);
 console.log(`RateLimit RPM: ${CONFIG.MAX_REQUESTS_PER_MINUTE}`);
 console.log(`Redis: ${redisStatus}`);
@@ -476,7 +476,11 @@ console.log("Refresh: POST /auth/refresh");
 console.log("Logout: POST /auth/logout");
 console.log("=".repeat(60) + "\n");
 
-// ---------------- Start Server ----------------
-app.listen(CONFIG.PORT);
-console.log(`Elysia-chan is now listening on port ${CONFIG.PORT}!\n`);
-if (process.platform === "win32") setInterval(() => {}, 1000);
+const server = app.listen(CONFIG.PORT);
+
+console.log(`✨ Elysia-chan is now listening on port ${CONFIG.PORT}!\n`);
+
+// Keep process alive (Windows compatibility)
+if (process.platform === "win32") {
+	setInterval(() => {}, 1 << 30);
+}
