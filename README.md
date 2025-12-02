@@ -22,7 +22,26 @@ Elysia(Bun) で動くAIチャット。FastAPI + Milvus Lite によるRAG、Ollam
 
 ## クイックスタート
 
-### Linux/macOS/WSL（推奨）
+### 🚀 自動セットアップ（推奨）
+
+**開発環境（1コマンド）:**
+
+```bash
+bash ./scripts/setup-dev.sh
+# 依存インストール + Python環境 + .env生成を自動実行
+
+# 起動
+bun run dev
+```
+
+**本番環境（Linux/Ubuntu）:**
+
+```bash
+# systemd + Nginx + TLS + Redis + Firewall を自動構築
+sudo DOMAIN=yourdomain.com bash ./scripts/setup-production.sh
+```
+
+### 手動セットアップ（Linux/macOS/WSL）
 
 ```bash
 # 1) 依存を取得
