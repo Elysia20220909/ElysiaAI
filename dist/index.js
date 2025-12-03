@@ -7,6 +7,358 @@
 
 module.exports = require("node:fs");
 
+/***/ }),
+
+/***/ 729:
+/***/ ((module) => {
+
+module.exports = require("bcryptjs");
+
+/***/ }),
+
+/***/ 800:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  Dn: () => (/* binding */ feedbackService),
+  ME: () => (/* binding */ knowledgeService),
+  Dv: () => (/* binding */ userService)
+});
+
+// UNUSED EXPORTS: chatService, prisma, tokenService, voiceService
+
+;// external "@prisma/client"
+const client_namespaceObject = require("@prisma/client");
+;// ./src/lib/database.ts
+
+const prisma = new client_namespaceObject.PrismaClient({
+    log:  true ? ["query", "error", "warn"] : 0,
+});
+process.on("beforeExit", async () => {
+    await prisma.$disconnect();
+});
+
+const userService = {
+    async create(data) {
+        return prisma.user.create({ data });
+    },
+    async findByUsername(username) {
+        return prisma.user.findUnique({ where: { username } });
+    },
+    async findById(id) {
+        return prisma.user.findUnique({ where: { id } });
+    },
+    async update(id, data) {
+        return prisma.user.update({ where: { id }, data });
+    },
+    async delete(id) {
+        return prisma.user.delete({ where: { id } });
+    },
+};
+const tokenService = {
+    async create(data) {
+        return prisma.refreshToken.create({ data });
+    },
+    async findByToken(token) {
+        return prisma.refreshToken.findUnique({
+            where: { token },
+            include: { user: true },
+        });
+    },
+    async revoke(token) {
+        return prisma.refreshToken.update({
+            where: { token },
+            data: { revoked: true },
+        });
+    },
+    async revokeAllByUser(userId) {
+        return prisma.refreshToken.updateMany({
+            where: { userId },
+            data: { revoked: true },
+        });
+    },
+    async deleteExpired() {
+        return prisma.refreshToken.deleteMany({
+            where: { expiresAt: { lt: new Date() } },
+        });
+    },
+};
+const chatService = {
+    async createSession(data) {
+        return prisma.chatSession.create({ data });
+    },
+    async getSession(id) {
+        return prisma.chatSession.findUnique({
+            where: { id },
+            include: { messages: { orderBy: { createdAt: "asc" } } },
+        });
+    },
+    async addMessage(data) {
+        return prisma.message.create({ data });
+    },
+    async getMessages(sessionId, limit = 50) {
+        return prisma.message.findMany({
+            where: { sessionId },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async deleteSession(id) {
+        return prisma.chatSession.delete({ where: { id } });
+    },
+};
+const feedbackService = {
+    async create(data) {
+        return prisma.feedback.create({ data });
+    },
+    async getRecent(limit = 100) {
+        return prisma.feedback.findMany({
+            orderBy: { createdAt: "desc" },
+            take: limit,
+            include: { user: { select: { username: true } } },
+        });
+    },
+    async getByRating(rating, limit = 50) {
+        return prisma.feedback.findMany({
+            where: { rating },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async getStats() {
+        const [total, upCount, downCount] = await Promise.all([
+            prisma.feedback.count(),
+            prisma.feedback.count({ where: { rating: "up" } }),
+            prisma.feedback.count({ where: { rating: "down" } }),
+        ]);
+        return {
+            total,
+            upCount,
+            downCount,
+            upRate: total > 0 ? (upCount / total) * 100 : 0,
+        };
+    },
+};
+const knowledgeService = {
+    async create(data) {
+        return prisma.knowledgeBase.create({ data });
+    },
+    async search(query, limit = 10) {
+        return prisma.knowledgeBase.findMany({
+            where: {
+                OR: [
+                    { question: { contains: query } },
+                    { answer: { contains: query } },
+                ],
+                verified: true,
+            },
+            orderBy: { updatedAt: "desc" },
+            take: limit,
+        });
+    },
+    async getAll(verified = true) {
+        return prisma.knowledgeBase.findMany({
+            where: verified ? { verified: true } : undefined,
+            orderBy: { updatedAt: "desc" },
+        });
+    },
+    async verify(id) {
+        return prisma.knowledgeBase.update({
+            where: { id },
+            data: { verified: true },
+        });
+    },
+    async delete(id) {
+        return prisma.knowledgeBase.delete({ where: { id } });
+    },
+};
+const voiceService = {
+    async create(data) {
+        return prisma.voiceLog.create({ data });
+    },
+    async getRecent(limit = 100) {
+        return prisma.voiceLog.findMany({
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async getByUser(username, limit = 50) {
+        return prisma.voiceLog.findMany({
+            where: { username },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async deleteOldLogs(daysOld = 30) {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+        return prisma.voiceLog.deleteMany({
+            where: { createdAt: { lt: cutoffDate } },
+        });
+    },
+};
+
+
+/***/ }),
+
+/***/ 911:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  v: () => (/* binding */ logger)
+});
+
+// EXTERNAL MODULE: external "node:fs"
+var external_node_fs_ = __webpack_require__(24);
+;// external "node:path"
+const external_node_path_namespaceObject = require("node:path");
+;// ./src/lib/logger.ts
+
+
+class Logger {
+    logDir;
+    logFile;
+    minLevel;
+    levelPriority = {
+        trace: 0,
+        debug: 1,
+        info: 2,
+        warn: 3,
+        error: 4,
+        fatal: 5,
+    };
+    constructor(logDir = "logs", minLevel = "info") {
+        this.logDir = logDir;
+        this.minLevel = minLevel;
+        this.logFile = (0,external_node_path_namespaceObject.join)(logDir, `app-${new Date().toISOString().split("T")[0]}.log`);
+        if (!(0,external_node_fs_.existsSync)(logDir)) {
+            (0,external_node_fs_.mkdirSync)(logDir, { recursive: true });
+        }
+    }
+    shouldLog(level) {
+        return this.levelPriority[level] >= this.levelPriority[this.minLevel];
+    }
+    formatLog(entry) {
+        return `${JSON.stringify(entry)}\n`;
+    }
+    writeLog(entry) {
+        if (!this.shouldLog(entry.level))
+            return;
+        const colors = {
+            trace: "\x1b[90m",
+            debug: "\x1b[36m",
+            info: "\x1b[32m",
+            warn: "\x1b[33m",
+            error: "\x1b[31m",
+            fatal: "\x1b[35m",
+        };
+        const reset = "\x1b[0m";
+        const color = colors[entry.level];
+        console.log(`${color}[${entry.level.toUpperCase()}]${reset} ${entry.timestamp} ${entry.message}`, entry.context ? entry.context : "");
+        try {
+            (0,external_node_fs_.appendFileSync)(this.logFile, this.formatLog(entry));
+        }
+        catch (error) {
+            console.error("Failed to write to log file:", error);
+        }
+    }
+    trace(message, context) {
+        this.writeLog({
+            level: "trace",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    debug(message, context) {
+        this.writeLog({
+            level: "debug",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    info(message, context) {
+        this.writeLog({
+            level: "info",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    warn(message, context) {
+        this.writeLog({
+            level: "warn",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    error(message, err, context) {
+        this.writeLog({
+            level: "error",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+            error: err
+                ? {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                }
+                : undefined,
+        });
+    }
+    fatal(message, err, context) {
+        this.writeLog({
+            level: "fatal",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+            error: err
+                ? {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                }
+                : undefined,
+        });
+    }
+    logRequest(method, path, status, duration, ip, userId) {
+        const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+        this.writeLog({
+            level,
+            timestamp: new Date().toISOString(),
+            message: `${method} ${path} ${status}`,
+            request: { method, path, ip, userId },
+            duration,
+        });
+    }
+    rotateLogs(retentionDays = 30) {
+        const now = Date.now();
+        const maxAge = retentionDays * 24 * 60 * 60 * 1000;
+        if (!(0,external_node_fs_.existsSync)(this.logDir))
+            return;
+        const fs = __webpack_require__(24);
+        const files = fs.readdirSync(this.logDir);
+        for (const file of files) {
+            const filePath = (0,external_node_path_namespaceObject.join)(this.logDir, file);
+            const stat = fs.statSync(filePath);
+            const age = now - stat.mtimeMs;
+            if (age > maxAge) {
+                fs.unlinkSync(filePath);
+                this.info(`Rotated old log file: ${file}`);
+            }
+        }
+    }
+}
+const logger = new Logger("logs", process.env.LOG_LEVEL || "info");
+
+
 /***/ })
 
 /******/ 	});
@@ -35,6 +387,9 @@ module.exports = require("node:fs");
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat get default export */
 /******/ 	(() => {
@@ -60,6 +415,28 @@ module.exports = require("node:fs");
 /******/ 		};
 /******/ 	})();
 /******/ 	
+/******/ 	/* webpack/runtime/ensure chunk */
+/******/ 	(() => {
+/******/ 		__webpack_require__.f = {};
+/******/ 		// This file contains only the entry chunk.
+/******/ 		// The chunk loading function for additional chunks
+/******/ 		__webpack_require__.e = (chunkId) => {
+/******/ 			return Promise.all(Object.keys(__webpack_require__.f).reduce((promises, key) => {
+/******/ 				__webpack_require__.f[key](chunkId, promises);
+/******/ 				return promises;
+/******/ 			}, []));
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/get javascript chunk filename */
+/******/ 	(() => {
+/******/ 		// This function allow to reference async chunks
+/******/ 		__webpack_require__.u = (chunkId) => {
+/******/ 			// return url for filenames based on template
+/******/ 			return "" + chunkId + ".index.js";
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
@@ -74,6 +451,51 @@ module.exports = require("node:fs");
 /******/ 			}
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/require chunk loading */
+/******/ 	(() => {
+/******/ 		// no baseURI
+/******/ 		
+/******/ 		// object to store loaded chunks
+/******/ 		// "1" means "loaded", otherwise not loaded yet
+/******/ 		var installedChunks = {
+/******/ 			792: 1
+/******/ 		};
+/******/ 		
+/******/ 		// no on chunks loaded
+/******/ 		
+/******/ 		var installChunk = (chunk) => {
+/******/ 			var moreModules = chunk.modules, chunkIds = chunk.ids, runtime = chunk.runtime;
+/******/ 			for(var moduleId in moreModules) {
+/******/ 				if(__webpack_require__.o(moreModules, moduleId)) {
+/******/ 					__webpack_require__.m[moduleId] = moreModules[moduleId];
+/******/ 				}
+/******/ 			}
+/******/ 			if(runtime) runtime(__webpack_require__);
+/******/ 			for(var i = 0; i < chunkIds.length; i++)
+/******/ 				installedChunks[chunkIds[i]] = 1;
+/******/ 		
+/******/ 		};
+/******/ 		
+/******/ 		// require() chunk loading for javascript
+/******/ 		__webpack_require__.f.require = (chunkId, promises) => {
+/******/ 			// "1" is the signal for "already loaded"
+/******/ 			if(!installedChunks[chunkId]) {
+/******/ 				if(true) { // all chunks have JS
+/******/ 					var installedChunk = require("./" + __webpack_require__.u(chunkId));
+/******/ 					if (!installedChunks[chunkId]) {
+/******/ 						installChunk(installedChunk);
+/******/ 					}
+/******/ 				} else installedChunks[chunkId] = 1;
+/******/ 			}
+/******/ 		};
+/******/ 		
+/******/ 		// no external install chunk
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
 /******/ 	})();
 /******/ 	
 /************************************************************************/
@@ -642,150 +1064,8 @@ class MetricsCollector {
 }
 const metricsCollector = new MetricsCollector();
 
-;// external "node:path"
-const external_node_path_namespaceObject = require("node:path");
-;// ./src/lib/logger.ts
-
-
-class Logger {
-    logDir;
-    logFile;
-    minLevel;
-    levelPriority = {
-        trace: 0,
-        debug: 1,
-        info: 2,
-        warn: 3,
-        error: 4,
-        fatal: 5,
-    };
-    constructor(logDir = "logs", minLevel = "info") {
-        this.logDir = logDir;
-        this.minLevel = minLevel;
-        this.logFile = (0,external_node_path_namespaceObject.join)(logDir, `app-${new Date().toISOString().split("T")[0]}.log`);
-        if (!(0,external_node_fs_.existsSync)(logDir)) {
-            (0,external_node_fs_.mkdirSync)(logDir, { recursive: true });
-        }
-    }
-    shouldLog(level) {
-        return this.levelPriority[level] >= this.levelPriority[this.minLevel];
-    }
-    formatLog(entry) {
-        return `${JSON.stringify(entry)}\n`;
-    }
-    writeLog(entry) {
-        if (!this.shouldLog(entry.level))
-            return;
-        const colors = {
-            trace: "\x1b[90m",
-            debug: "\x1b[36m",
-            info: "\x1b[32m",
-            warn: "\x1b[33m",
-            error: "\x1b[31m",
-            fatal: "\x1b[35m",
-        };
-        const reset = "\x1b[0m";
-        const color = colors[entry.level];
-        console.log(`${color}[${entry.level.toUpperCase()}]${reset} ${entry.timestamp} ${entry.message}`, entry.context ? entry.context : "");
-        try {
-            (0,external_node_fs_.appendFileSync)(this.logFile, this.formatLog(entry));
-        }
-        catch (error) {
-            console.error("Failed to write to log file:", error);
-        }
-    }
-    trace(message, context) {
-        this.writeLog({
-            level: "trace",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-        });
-    }
-    debug(message, context) {
-        this.writeLog({
-            level: "debug",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-        });
-    }
-    info(message, context) {
-        this.writeLog({
-            level: "info",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-        });
-    }
-    warn(message, context) {
-        this.writeLog({
-            level: "warn",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-        });
-    }
-    error(message, err, context) {
-        this.writeLog({
-            level: "error",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-            error: err
-                ? {
-                    name: err.name,
-                    message: err.message,
-                    stack: err.stack,
-                }
-                : undefined,
-        });
-    }
-    fatal(message, err, context) {
-        this.writeLog({
-            level: "fatal",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-            error: err
-                ? {
-                    name: err.name,
-                    message: err.message,
-                    stack: err.stack,
-                }
-                : undefined,
-        });
-    }
-    logRequest(method, path, status, duration, ip, userId) {
-        const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
-        this.writeLog({
-            level,
-            timestamp: new Date().toISOString(),
-            message: `${method} ${path} ${status}`,
-            request: { method, path, ip, userId },
-            duration,
-        });
-    }
-    rotateLogs(retentionDays = 30) {
-        const now = Date.now();
-        const maxAge = retentionDays * 24 * 60 * 60 * 1000;
-        if (!(0,external_node_fs_.existsSync)(this.logDir))
-            return;
-        const fs = __webpack_require__(24);
-        const files = fs.readdirSync(this.logDir);
-        for (const file of files) {
-            const filePath = (0,external_node_path_namespaceObject.join)(this.logDir, file);
-            const stat = fs.statSync(filePath);
-            const age = now - stat.mtimeMs;
-            if (age > maxAge) {
-                fs.unlinkSync(filePath);
-                this.info(`Rotated old log file: ${file}`);
-            }
-        }
-    }
-}
-const logger_logger = new Logger("logs", process.env.LOG_LEVEL || "info");
-
+// EXTERNAL MODULE: ./src/lib/logger.ts + 1 modules
+var lib_logger = __webpack_require__(911);
 ;// external "node:process"
 const external_node_process_namespaceObject = require("node:process");
 ;// ./src/lib/telemetry.ts
@@ -972,177 +1252,8 @@ function Trace(spanName) {
     };
 }
 
-;// external "@prisma/client"
-const client_namespaceObject = require("@prisma/client");
-;// ./src/lib/database.ts
-
-const prisma = new client_namespaceObject.PrismaClient({
-    log:  true ? ["query", "error", "warn"] : 0,
-});
-process.on("beforeExit", async () => {
-    await prisma.$disconnect();
-});
-
-const userService = {
-    async create(data) {
-        return prisma.user.create({ data });
-    },
-    async findByUsername(username) {
-        return prisma.user.findUnique({ where: { username } });
-    },
-    async findById(id) {
-        return prisma.user.findUnique({ where: { id } });
-    },
-    async update(id, data) {
-        return prisma.user.update({ where: { id }, data });
-    },
-    async delete(id) {
-        return prisma.user.delete({ where: { id } });
-    },
-};
-const tokenService = {
-    async create(data) {
-        return prisma.refreshToken.create({ data });
-    },
-    async findByToken(token) {
-        return prisma.refreshToken.findUnique({
-            where: { token },
-            include: { user: true },
-        });
-    },
-    async revoke(token) {
-        return prisma.refreshToken.update({
-            where: { token },
-            data: { revoked: true },
-        });
-    },
-    async revokeAllByUser(userId) {
-        return prisma.refreshToken.updateMany({
-            where: { userId },
-            data: { revoked: true },
-        });
-    },
-    async deleteExpired() {
-        return prisma.refreshToken.deleteMany({
-            where: { expiresAt: { lt: new Date() } },
-        });
-    },
-};
-const chatService = {
-    async createSession(data) {
-        return prisma.chatSession.create({ data });
-    },
-    async getSession(id) {
-        return prisma.chatSession.findUnique({
-            where: { id },
-            include: { messages: { orderBy: { createdAt: "asc" } } },
-        });
-    },
-    async addMessage(data) {
-        return prisma.message.create({ data });
-    },
-    async getMessages(sessionId, limit = 50) {
-        return prisma.message.findMany({
-            where: { sessionId },
-            orderBy: { createdAt: "desc" },
-            take: limit,
-        });
-    },
-    async deleteSession(id) {
-        return prisma.chatSession.delete({ where: { id } });
-    },
-};
-const feedbackService = {
-    async create(data) {
-        return prisma.feedback.create({ data });
-    },
-    async getRecent(limit = 100) {
-        return prisma.feedback.findMany({
-            orderBy: { createdAt: "desc" },
-            take: limit,
-            include: { user: { select: { username: true } } },
-        });
-    },
-    async getByRating(rating, limit = 50) {
-        return prisma.feedback.findMany({
-            where: { rating },
-            orderBy: { createdAt: "desc" },
-            take: limit,
-        });
-    },
-    async getStats() {
-        const [total, upCount, downCount] = await Promise.all([
-            prisma.feedback.count(),
-            prisma.feedback.count({ where: { rating: "up" } }),
-            prisma.feedback.count({ where: { rating: "down" } }),
-        ]);
-        return {
-            total,
-            upCount,
-            downCount,
-            upRate: total > 0 ? (upCount / total) * 100 : 0,
-        };
-    },
-};
-const knowledgeService = {
-    async create(data) {
-        return prisma.knowledgeBase.create({ data });
-    },
-    async search(query, limit = 10) {
-        return prisma.knowledgeBase.findMany({
-            where: {
-                OR: [
-                    { question: { contains: query } },
-                    { answer: { contains: query } },
-                ],
-                verified: true,
-            },
-            orderBy: { updatedAt: "desc" },
-            take: limit,
-        });
-    },
-    async getAll(verified = true) {
-        return prisma.knowledgeBase.findMany({
-            where: verified ? { verified: true } : undefined,
-            orderBy: { updatedAt: "desc" },
-        });
-    },
-    async verify(id) {
-        return prisma.knowledgeBase.update({
-            where: { id },
-            data: { verified: true },
-        });
-    },
-    async delete(id) {
-        return prisma.knowledgeBase.delete({ where: { id } });
-    },
-};
-const voiceService = {
-    async create(data) {
-        return prisma.voiceLog.create({ data });
-    },
-    async getRecent(limit = 100) {
-        return prisma.voiceLog.findMany({
-            orderBy: { createdAt: "desc" },
-            take: limit,
-        });
-    },
-    async getByUser(username, limit = 50) {
-        return prisma.voiceLog.findMany({
-            where: { username },
-            orderBy: { createdAt: "desc" },
-            take: limit,
-        });
-    },
-    async deleteOldLogs(daysOld = 30) {
-        const cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
-        return prisma.voiceLog.deleteMany({
-            where: { createdAt: { lt: cutoffDate } },
-        });
-    },
-};
-
+// EXTERNAL MODULE: ./src/lib/database.ts + 1 modules
+var database = __webpack_require__(800);
 ;// ./src/lib/env-validator.ts
 
 const ENV_SCHEMA = [
@@ -1244,26 +1355,26 @@ function validateEnvironment() {
     };
 }
 function checkEnvironmentOrExit() {
-    logger_logger.info("🔍 環境変数を検証中...");
+    lib_logger/* logger */.v.info("🔍 環境変数を検証中...");
     const result = validateEnvironment();
     if (result.warnings.length > 0) {
-        logger_logger.warn("⚠️  環境変数の警告:");
+        lib_logger/* logger */.v.warn("⚠️  環境変数の警告:");
         for (const warning of result.warnings) {
-            logger_logger.warn(`  ${warning}`);
+            lib_logger/* logger */.v.warn(`  ${warning}`);
         }
     }
     if (!result.valid) {
-        logger_logger.error("❌ 環境変数の検証に失敗しました:");
+        lib_logger/* logger */.v.error("❌ 環境変数の検証に失敗しました:");
         for (const error of result.errors) {
-            logger_logger.error(`  ${error}`);
+            lib_logger/* logger */.v.error(`  ${error}`);
         }
-        logger_logger.error("\n💡 修正方法:");
-        logger_logger.error("  1. .env ファイルを開く");
-        logger_logger.error("  2. 上記の必須項目を設定");
-        logger_logger.error("  3. サーバーを再起動\n");
+        lib_logger/* logger */.v.error("\n💡 修正方法:");
+        lib_logger/* logger */.v.error("  1. .env ファイルを開く");
+        lib_logger/* logger */.v.error("  2. 上記の必須項目を設定");
+        lib_logger/* logger */.v.error("  3. サーバーを再起動\n");
         process.exit(1);
     }
-    logger_logger.info("✅ 環境変数の検証完了");
+    lib_logger/* logger */.v.info("✅ 環境変数の検証完了");
 }
 function printEnvironmentSummary() {
     logger.info("\n📋 環境変数サマリー:");
@@ -1351,7 +1462,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     const url = new URL(request.url);
     const errorMsg = error instanceof Error ? error.message : String(error);
     const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname}`;
-    logger_logger.error(errorLog);
+    lib_logger/* logger */.v.error(errorLog);
     metricsCollector.incrementError(request.method, url.pathname, String(code));
     const span = request.__span;
     if (span) {
@@ -1398,7 +1509,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     }
     catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        logger_logger.error(`Health check failed: ${errorMsg}`);
+        lib_logger/* logger */.v.error(`Health check failed: ${errorMsg}`);
         return jsonError(503, "Health check failed");
     }
 }, {
@@ -1443,7 +1554,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     const ip = request.headers.get("x-forwarded-for") || "anon";
     const userId = payload.userId || undefined;
     try {
-        await feedbackService.create({
+        await database/* feedbackService */.Dn.create({
             userId,
             query: body.query,
             answer: body.answer,
@@ -1452,7 +1563,7 @@ const app = new external_elysia_namespaceObject.Elysia()
         });
     }
     catch (err) {
-        logger_logger.error("Failed to store feedback", err instanceof Error ? err : undefined);
+        lib_logger/* logger */.v.error("Failed to store feedback", err instanceof Error ? err : undefined);
         return jsonError(500, "Failed to store feedback");
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -1483,7 +1594,7 @@ const app = new external_elysia_namespaceObject.Elysia()
         return jsonError(401, "Invalid token");
     }
     try {
-        await knowledgeService.create({
+        await database/* knowledgeService */.ME.create({
             question: body.summary,
             answer: body.sourceUrl || "No source provided",
             source: "api",
@@ -1491,7 +1602,7 @@ const app = new external_elysia_namespaceObject.Elysia()
         });
     }
     catch (err) {
-        logger_logger.error("Failed to store knowledge", err instanceof Error ? err : undefined);
+        lib_logger/* logger */.v.error("Failed to store knowledge", err instanceof Error ? err : undefined);
         return jsonError(500, "Failed to store knowledge");
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -1715,7 +1826,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    const stats = await feedbackService.getStats();
+    const stats = await database/* feedbackService */.Dn.getStats();
     return new Response(JSON.stringify(stats), {
         headers: { "content-type": "application/json" },
     });
@@ -1736,7 +1847,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    const feedbacks = await feedbackService.getRecent(100);
+    const feedbacks = await database/* feedbackService */.Dn.getRecent(100);
     return new Response(JSON.stringify(feedbacks), {
         headers: { "content-type": "application/json" },
     });
@@ -1757,7 +1868,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    const knowledge = await knowledgeService.getAll(false);
+    const knowledge = await database/* knowledgeService */.ME.getAll(false);
     return new Response(JSON.stringify(knowledge), {
         headers: { "content-type": "application/json" },
     });
@@ -1778,7 +1889,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    await knowledgeService.verify(params.id);
+    await database/* knowledgeService */.ME.verify(params.id);
     return new Response(JSON.stringify({ ok: true }), {
         headers: { "content-type": "application/json" },
     });
@@ -1799,7 +1910,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    await knowledgeService.delete(params.id);
+    await database/* knowledgeService */.ME.delete(params.id);
     return new Response(JSON.stringify({ ok: true }), {
         headers: { "content-type": "application/json" },
     });
@@ -1809,6 +1920,92 @@ const app = new external_elysia_namespaceObject.Elysia()
         summary: "Delete knowledge entry",
         security: [{ bearerAuth: [] }],
     },
+});
+app.post("/auth/register", async ({ body }) => {
+    const { username, password } = body;
+    const existing = await database/* userService */.Dv.findByUsername(username);
+    if (existing) {
+        return jsonError(400, "Username already exists");
+    }
+    if (password.length < 8) {
+        return jsonError(400, "Password must be at least 8 characters");
+    }
+    try {
+        const { createUser } = await __webpack_require__.e(/* import() */ 615).then(__webpack_require__.bind(__webpack_require__, 615));
+        const user = await createUser(username, password, "user");
+        return new Response(JSON.stringify({
+            success: true,
+            userId: user.id,
+            username: user.username,
+        }), { headers: { "content-type": "application/json" } });
+    }
+    catch (error) {
+        lib_logger/* logger */.v.error("Registration failed", error instanceof Error ? error : undefined);
+        return jsonError(500, "Registration failed");
+    }
+}, {
+    body: external_elysia_namespaceObject.t.Object({
+        username: external_elysia_namespaceObject.t.String({ minLength: 3, maxLength: 32 }),
+        password: external_elysia_namespaceObject.t.String({ minLength: 8, maxLength: 128 }),
+    }),
+    detail: {
+        tags: ["auth"],
+        summary: "Register new user",
+    },
+});
+app.get("/admin/export/feedback", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const { exportFeedbackToCSV } = await __webpack_require__.e(/* import() */ 508).then(__webpack_require__.bind(__webpack_require__, 508));
+    const csv = await exportFeedbackToCSV();
+    return new Response(csv, {
+        headers: {
+            "content-type": "text/csv; charset=utf-8",
+            "content-disposition": `attachment; filename="feedback_${new Date().toISOString().split("T")[0]}.csv"`,
+        },
+    });
+});
+app.get("/admin/export/knowledge/json", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const { exportKnowledgeToJSON } = await __webpack_require__.e(/* import() */ 508).then(__webpack_require__.bind(__webpack_require__, 508));
+    const json = await exportKnowledgeToJSON();
+    return new Response(json, {
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+            "content-disposition": `attachment; filename="knowledge_${new Date().toISOString().split("T")[0]}.json"`,
+        },
+    });
+});
+app.get("/admin/analytics", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const { apiAnalytics } = await __webpack_require__.e(/* import() */ 404).then(__webpack_require__.bind(__webpack_require__, 404));
+    const data = apiAnalytics.exportJSON();
+    return new Response(JSON.stringify(data), {
+        headers: { "content-type": "application/json" },
+    });
 });
 if (false) // removed by dead control flow
 {}
