@@ -297,15 +297,18 @@ class ElysiaChat {
 					this.log("ฅ(՞៸៸> ᗜ <៸៸՞)ฅ だいすきなのっ！", "pink");
 					this.rl.close();
 					return;
-				} else if (message === "/help") {
+				}
+				if (message === "/help") {
 					this.showHelp();
 					prompt();
 					return;
-				} else if (message === "/history") {
+				}
+				if (message === "/history") {
 					this.showHistory();
 					prompt();
 					return;
-				} else if (message === "/clear") {
+				}
+				if (message === "/clear") {
 					this.clearHistory();
 					prompt();
 					return;

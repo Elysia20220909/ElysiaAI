@@ -1,13 +1,13 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**"],
-		"experimentalScannerIgnores": [
+		"include": ["src/**/*.ts", "*.ts", "tests/**/*.ts"],
+		"ignore": [
 			"node_modules",
 			"dist",
 			".venv",
@@ -17,7 +17,9 @@
 			"native",
 			"cuda",
 			"python",
-			"temp"
+			"temp",
+			"src/**/*.d.ts",
+			"*.d.ts"
 		]
 	},
 	"formatter": {
@@ -35,12 +37,7 @@
 			"quoteStyle": "double"
 		}
 	},
-	"assist": {
-		"enabled": true,
-		"actions": {
-			"source": {
-				"organizeImports": "on"
-			}
-		}
+	"organizeImports": {
+		"enabled": true
 	}
 }

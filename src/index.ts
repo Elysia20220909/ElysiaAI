@@ -1,3 +1,5 @@
+import { existsSync, mkdirSync } from "node:fs";
+import { appendFile } from "node:fs/promises";
 // Secure Elysia AI Server with JWT, Redis rate limiting, and refresh tokens
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
@@ -5,8 +7,6 @@ import { staticPlugin } from "@elysiajs/static";
 import { swagger } from "@elysiajs/swagger";
 import axios from "axios";
 import { Elysia, t } from "elysia";
-import { existsSync, mkdirSync } from "fs";
-import { appendFile } from "fs/promises";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
 import { DEFAULT_MODE, ELYSIA_MODES } from "./config/internal/llm-config";
@@ -136,7 +136,7 @@ const app = new Elysia()
 				timestamp: new Date().toISOString(),
 			};
 			try {
-				await appendFile("data/feedback.jsonl", JSON.stringify(rec) + "\n");
+				await appendFile("data/feedback.jsonl", `${JSON.stringify(rec)}\n`);
 			} catch {
 				return jsonError(500, "Failed to store feedback");
 			}
@@ -193,7 +193,7 @@ const app = new Elysia()
 				timestamp: new Date().toISOString(),
 			};
 			try {
-				await appendFile("data/knowledge.jsonl", JSON.stringify(item) + "\n");
+				await appendFile("data/knowledge.jsonl", `${JSON.stringify(item)}\n`);
 			} catch {
 				return jsonError(500, "Failed to store knowledge");
 			}
