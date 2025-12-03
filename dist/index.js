@@ -9,6 +9,181 @@ module.exports = require("node:fs");
 
 /***/ }),
 
+/***/ 330:
+/***/ ((module) => {
+
+module.exports = require("@prisma/client");
+
+/***/ }),
+
+/***/ 522:
+/***/ ((module) => {
+
+module.exports = require("node:zlib");
+
+/***/ }),
+
+/***/ 629:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   v: () => (/* binding */ logger)
+/* harmony export */ });
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(760);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_1__);
+
+
+class Logger {
+    logDir;
+    logFile;
+    minLevel;
+    levelPriority = {
+        trace: 0,
+        debug: 1,
+        info: 2,
+        warn: 3,
+        error: 4,
+        fatal: 5,
+    };
+    constructor(logDir = "logs", minLevel = "info") {
+        this.logDir = logDir;
+        this.minLevel = minLevel;
+        this.logFile = (0,node_path__WEBPACK_IMPORTED_MODULE_1__.join)(logDir, `app-${new Date().toISOString().split("T")[0]}.log`);
+        if (!(0,node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync)(logDir)) {
+            (0,node_fs__WEBPACK_IMPORTED_MODULE_0__.mkdirSync)(logDir, { recursive: true });
+        }
+    }
+    shouldLog(level) {
+        return this.levelPriority[level] >= this.levelPriority[this.minLevel];
+    }
+    formatLog(entry) {
+        return `${JSON.stringify(entry)}\n`;
+    }
+    writeLog(entry) {
+        if (!this.shouldLog(entry.level))
+            return;
+        const colors = {
+            trace: "\x1b[90m",
+            debug: "\x1b[36m",
+            info: "\x1b[32m",
+            warn: "\x1b[33m",
+            error: "\x1b[31m",
+            fatal: "\x1b[35m",
+        };
+        const reset = "\x1b[0m";
+        const color = colors[entry.level];
+        console.log(`${color}[${entry.level.toUpperCase()}]${reset} ${entry.timestamp} ${entry.message}`, entry.context ? entry.context : "");
+        try {
+            (0,node_fs__WEBPACK_IMPORTED_MODULE_0__.appendFileSync)(this.logFile, this.formatLog(entry));
+        }
+        catch (error) {
+            console.error("Failed to write to log file:", error);
+        }
+    }
+    trace(message, context) {
+        this.writeLog({
+            level: "trace",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    debug(message, context) {
+        this.writeLog({
+            level: "debug",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    info(message, context) {
+        this.writeLog({
+            level: "info",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    warn(message, context) {
+        this.writeLog({
+            level: "warn",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    error(message, err, context) {
+        this.writeLog({
+            level: "error",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+            error: err
+                ? {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                }
+                : undefined,
+        });
+    }
+    fatal(message, err, context) {
+        this.writeLog({
+            level: "fatal",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+            error: err
+                ? {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                }
+                : undefined,
+        });
+    }
+    logRequest(method, path, status, duration, ip, userId) {
+        const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+        this.writeLog({
+            level,
+            timestamp: new Date().toISOString(),
+            message: `${method} ${path} ${status}`,
+            request: { method, path, ip, userId },
+            duration,
+        });
+    }
+    rotateLogs(retentionDays = 30) {
+        const now = Date.now();
+        const maxAge = retentionDays * 24 * 60 * 60 * 1000;
+        if (!(0,node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync)(this.logDir))
+            return;
+        const fs = __webpack_require__(24);
+        const files = fs.readdirSync(this.logDir);
+        for (const file of files) {
+            const filePath = (0,node_path__WEBPACK_IMPORTED_MODULE_1__.join)(this.logDir, file);
+            const stat = fs.statSync(filePath);
+            const age = now - stat.mtimeMs;
+            if (age > maxAge) {
+                fs.unlinkSync(filePath);
+                this.info(`Rotated old log file: ${file}`);
+            }
+        }
+    }
+}
+const logger = new Logger("logs", process.env.LOG_LEVEL || "info");
+
+
+/***/ }),
+
+/***/ 659:
+/***/ ((module) => {
+
+module.exports = require("ioredis");
+
+/***/ }),
+
 /***/ 729:
 /***/ ((module) => {
 
@@ -16,24 +191,26 @@ module.exports = require("bcryptjs");
 
 /***/ }),
 
-/***/ 800:
+/***/ 760:
+/***/ ((module) => {
+
+module.exports = require("node:path");
+
+/***/ }),
+
+/***/ 828:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Dn: () => (/* binding */ feedbackService),
+/* harmony export */   Dv: () => (/* binding */ userService),
+/* harmony export */   ME: () => (/* binding */ knowledgeService)
+/* harmony export */ });
+/* unused harmony exports prisma, tokenService, chatService, voiceService */
+/* harmony import */ var _prisma_client__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(330);
+/* harmony import */ var _prisma_client__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_prisma_client__WEBPACK_IMPORTED_MODULE_0__);
 
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  Dn: () => (/* binding */ feedbackService),
-  ME: () => (/* binding */ knowledgeService),
-  Dv: () => (/* binding */ userService)
-});
-
-// UNUSED EXPORTS: chatService, prisma, tokenService, voiceService
-
-;// external "@prisma/client"
-const client_namespaceObject = require("@prisma/client");
-;// ./src/lib/database.ts
-
-const prisma = new client_namespaceObject.PrismaClient({
+const prisma = new _prisma_client__WEBPACK_IMPORTED_MODULE_0__.PrismaClient({
     log:  true ? ["query", "error", "warn"] : 0,
 });
 process.on("beforeExit", async () => {
@@ -201,164 +378,6 @@ const voiceService = {
 };
 
 
-/***/ }),
-
-/***/ 911:
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-
-// EXPORTS
-__webpack_require__.d(__webpack_exports__, {
-  v: () => (/* binding */ logger)
-});
-
-// EXTERNAL MODULE: external "node:fs"
-var external_node_fs_ = __webpack_require__(24);
-;// external "node:path"
-const external_node_path_namespaceObject = require("node:path");
-;// ./src/lib/logger.ts
-
-
-class Logger {
-    logDir;
-    logFile;
-    minLevel;
-    levelPriority = {
-        trace: 0,
-        debug: 1,
-        info: 2,
-        warn: 3,
-        error: 4,
-        fatal: 5,
-    };
-    constructor(logDir = "logs", minLevel = "info") {
-        this.logDir = logDir;
-        this.minLevel = minLevel;
-        this.logFile = (0,external_node_path_namespaceObject.join)(logDir, `app-${new Date().toISOString().split("T")[0]}.log`);
-        if (!(0,external_node_fs_.existsSync)(logDir)) {
-            (0,external_node_fs_.mkdirSync)(logDir, { recursive: true });
-        }
-    }
-    shouldLog(level) {
-        return this.levelPriority[level] >= this.levelPriority[this.minLevel];
-    }
-    formatLog(entry) {
-        return `${JSON.stringify(entry)}\n`;
-    }
-    writeLog(entry) {
-        if (!this.shouldLog(entry.level))
-            return;
-        const colors = {
-            trace: "\x1b[90m",
-            debug: "\x1b[36m",
-            info: "\x1b[32m",
-            warn: "\x1b[33m",
-            error: "\x1b[31m",
-            fatal: "\x1b[35m",
-        };
-        const reset = "\x1b[0m";
-        const color = colors[entry.level];
-        console.log(`${color}[${entry.level.toUpperCase()}]${reset} ${entry.timestamp} ${entry.message}`, entry.context ? entry.context : "");
-        try {
-            (0,external_node_fs_.appendFileSync)(this.logFile, this.formatLog(entry));
-        }
-        catch (error) {
-            console.error("Failed to write to log file:", error);
-        }
-    }
-    trace(message, context) {
-        this.writeLog({
-            level: "trace",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-        });
-    }
-    debug(message, context) {
-        this.writeLog({
-            level: "debug",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-        });
-    }
-    info(message, context) {
-        this.writeLog({
-            level: "info",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-        });
-    }
-    warn(message, context) {
-        this.writeLog({
-            level: "warn",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-        });
-    }
-    error(message, err, context) {
-        this.writeLog({
-            level: "error",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-            error: err
-                ? {
-                    name: err.name,
-                    message: err.message,
-                    stack: err.stack,
-                }
-                : undefined,
-        });
-    }
-    fatal(message, err, context) {
-        this.writeLog({
-            level: "fatal",
-            timestamp: new Date().toISOString(),
-            message,
-            context,
-            error: err
-                ? {
-                    name: err.name,
-                    message: err.message,
-                    stack: err.stack,
-                }
-                : undefined,
-        });
-    }
-    logRequest(method, path, status, duration, ip, userId) {
-        const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
-        this.writeLog({
-            level,
-            timestamp: new Date().toISOString(),
-            message: `${method} ${path} ${status}`,
-            request: { method, path, ip, userId },
-            duration,
-        });
-    }
-    rotateLogs(retentionDays = 30) {
-        const now = Date.now();
-        const maxAge = retentionDays * 24 * 60 * 60 * 1000;
-        if (!(0,external_node_fs_.existsSync)(this.logDir))
-            return;
-        const fs = __webpack_require__(24);
-        const files = fs.readdirSync(this.logDir);
-        for (const file of files) {
-            const filePath = (0,external_node_path_namespaceObject.join)(this.logDir, file);
-            const stat = fs.statSync(filePath);
-            const age = now - stat.mtimeMs;
-            if (age > maxAge) {
-                fs.unlinkSync(filePath);
-                this.info(`Rotated old log file: ${file}`);
-            }
-        }
-    }
-}
-const logger = new Logger("logs", process.env.LOG_LEVEL || "info");
-
-
 /***/ })
 
 /******/ 	});
@@ -400,6 +419,36 @@ const logger = new Logger("logs", process.env.LOG_LEVEL || "info");
 /******/ 				() => (module);
 /******/ 			__webpack_require__.d(getter, { a: getter });
 /******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/create fake namespace object */
+/******/ 	(() => {
+/******/ 		var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
+/******/ 		var leafPrototypes;
+/******/ 		// create a fake namespace object
+/******/ 		// mode & 1: value is a module id, require it
+/******/ 		// mode & 2: merge all properties of value into the ns
+/******/ 		// mode & 4: return value when already ns object
+/******/ 		// mode & 16: return value when it's Promise-like
+/******/ 		// mode & 8|1: behave like require
+/******/ 		__webpack_require__.t = function(value, mode) {
+/******/ 			if(mode & 1) value = this(value);
+/******/ 			if(mode & 8) return value;
+/******/ 			if(typeof value === 'object' && value) {
+/******/ 				if((mode & 4) && value.__esModule) return value;
+/******/ 				if((mode & 16) && typeof value.then === 'function') return value;
+/******/ 			}
+/******/ 			var ns = Object.create(null);
+/******/ 			__webpack_require__.r(ns);
+/******/ 			var def = {};
+/******/ 			leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
+/******/ 			for(var current = mode & 2 && value; (typeof current == 'object' || typeof current == 'function') && !~leafPrototypes.indexOf(current); current = getProto(current)) {
+/******/ 				Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
+/******/ 			}
+/******/ 			def['default'] = () => (value);
+/******/ 			__webpack_require__.d(ns, def);
+/******/ 			return ns;
 /******/ 		};
 /******/ 	})();
 /******/ 	
@@ -693,9 +742,9 @@ function extractBearerToken(authHeader) {
     return authHeader.substring(7);
 }
 
-;// external "ioredis"
-const external_ioredis_namespaceObject = require("ioredis");
-var external_ioredis_default = /*#__PURE__*/__webpack_require__.n(external_ioredis_namespaceObject);
+// EXTERNAL MODULE: external "ioredis"
+var external_ioredis_ = __webpack_require__(659);
+var external_ioredis_default = /*#__PURE__*/__webpack_require__.n(external_ioredis_);
 ;// ./.internal/secure/auth/redis.ts
 
 const redis_CONFIG = {
@@ -1064,8 +1113,8 @@ class MetricsCollector {
 }
 const metricsCollector = new MetricsCollector();
 
-// EXTERNAL MODULE: ./src/lib/logger.ts + 1 modules
-var lib_logger = __webpack_require__(911);
+// EXTERNAL MODULE: ./src/lib/logger.ts
+var lib_logger = __webpack_require__(629);
 ;// external "node:process"
 const external_node_process_namespaceObject = require("node:process");
 ;// ./src/lib/telemetry.ts
@@ -1252,8 +1301,8 @@ function Trace(spanName) {
     };
 }
 
-// EXTERNAL MODULE: ./src/lib/database.ts + 1 modules
-var database = __webpack_require__(800);
+// EXTERNAL MODULE: ./src/lib/database.ts
+var database = __webpack_require__(828);
 ;// ./src/lib/env-validator.ts
 
 const ENV_SCHEMA = [
@@ -1385,6 +1434,1348 @@ function printEnvironmentSummary() {
     logger.info(`  - モデル: ${process.env.OLLAMA_MODEL || "llama3.2"}\n`);
 }
 
+;// ./src/lib/webhook-events.ts
+
+class WebhookManager {
+    subscriptions;
+    constructor() {
+        this.subscriptions = new Map();
+        this.loadSubscriptionsFromEnv();
+    }
+    loadSubscriptionsFromEnv() {
+        const discordUrl = process.env.DISCORD_WEBHOOK_URL;
+        const slackUrl = process.env.SLACK_WEBHOOK_URL;
+        const customUrl = process.env.CUSTOM_WEBHOOK_URL;
+        if (discordUrl) {
+            this.subscribe("discord", {
+                url: discordUrl,
+                events: [
+                    "error.critical",
+                    "system.health_check_failed",
+                    "rate_limit.exceeded",
+                ],
+                enabled: true,
+            });
+        }
+        if (slackUrl) {
+            this.subscribe("slack", {
+                url: slackUrl,
+                events: ["user.registered", "backup.completed", "error.critical"],
+                enabled: true,
+            });
+        }
+        if (customUrl) {
+            this.subscribe("custom", {
+                url: customUrl,
+                events: ["chat.message", "feedback.created"],
+                secret: process.env.CUSTOM_WEBHOOK_SECRET,
+                enabled: true,
+            });
+        }
+    }
+    subscribe(name, subscription) {
+        this.subscriptions.set(name, subscription);
+        lib_logger/* logger */.v.info(`Webhook subscribed: ${name}`, { events: subscription.events });
+    }
+    unsubscribe(name) {
+        this.subscriptions.delete(name);
+        lib_logger/* logger */.v.info(`Webhook unsubscribed: ${name}`);
+    }
+    async emit(event, data) {
+        const payload = {
+            event,
+            timestamp: new Date(),
+            data,
+        };
+        const promises = [];
+        for (const [name, subscription] of this.subscriptions.entries()) {
+            if (!subscription.enabled)
+                continue;
+            if (!subscription.events.includes(event))
+                continue;
+            promises.push(this.sendWebhook(name, subscription, payload));
+        }
+        await Promise.allSettled(promises);
+    }
+    async sendWebhook(name, subscription, payload) {
+        try {
+            const headers = {
+                "Content-Type": "application/json",
+            };
+            if (subscription.secret) {
+                const signature = await this.generateSignature(JSON.stringify(payload), subscription.secret);
+                headers["X-Webhook-Signature"] = signature;
+            }
+            const response = await fetch(subscription.url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) {
+                lib_logger/* logger */.v.warn(`Webhook delivery failed: ${name}`, {
+                    status: response.status,
+                });
+            }
+            else {
+                lib_logger/* logger */.v.debug(`Webhook delivered: ${name}`, { event: payload.event });
+            }
+        }
+        catch (error) {
+            lib_logger/* logger */.v.error(`Webhook error: ${name}`, error);
+        }
+    }
+    async generateSignature(payload, secret) {
+        const encoder = new TextEncoder();
+        const keyData = encoder.encode(secret);
+        const data = encoder.encode(payload);
+        const key = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+        const signature = await crypto.subtle.sign("HMAC", key, data);
+        return Array.from(new Uint8Array(signature))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+    }
+    getSubscriptions() {
+        return Array.from(this.subscriptions.entries()).map(([name, sub]) => ({
+            name,
+            events: sub.events,
+            enabled: sub.enabled,
+        }));
+    }
+    toggleSubscription(name, enabled) {
+        const subscription = this.subscriptions.get(name);
+        if (subscription) {
+            subscription.enabled = enabled;
+            lib_logger/* logger */.v.info(`Webhook ${enabled ? "enabled" : "disabled"}: ${name}`);
+        }
+    }
+}
+const webhookManager = new WebhookManager();
+
+// EXTERNAL MODULE: external "node:path"
+var external_node_path_ = __webpack_require__(760);
+;// ./src/lib/backup-scheduler.ts
+
+
+
+
+class BackupScheduler {
+    config;
+    intervalId;
+    isRunning = false;
+    constructor() {
+        this.config = {
+            enabled: process.env.AUTO_BACKUP_ENABLED === "true",
+            interval: Number(process.env.BACKUP_INTERVAL_MINUTES) || 60,
+            maxBackups: Number(process.env.MAX_BACKUP_GENERATIONS) || 7,
+            backupDir: process.env.BACKUP_DIR || "./backups",
+        };
+        if (!external_node_fs_.existsSync(this.config.backupDir)) {
+            external_node_fs_.mkdirSync(this.config.backupDir, { recursive: true });
+        }
+    }
+    start() {
+        if (!this.config.enabled) {
+            lib_logger/* logger */.v.info("Backup scheduler is disabled");
+            return;
+        }
+        if (this.isRunning) {
+            lib_logger/* logger */.v.warn("Backup scheduler is already running");
+            return;
+        }
+        this.isRunning = true;
+        this.performBackup();
+        this.intervalId = setInterval(() => {
+            this.performBackup();
+        }, this.config.interval * 60 * 1000);
+        lib_logger/* logger */.v.info("Backup scheduler started", {
+            interval: `${this.config.interval} minutes`,
+            maxBackups: this.config.maxBackups,
+        });
+    }
+    stop() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = undefined;
+            this.isRunning = false;
+            lib_logger/* logger */.v.info("Backup scheduler stopped");
+        }
+    }
+    async performBackup() {
+        const startTime = Date.now();
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const backupFileName = `elysia-backup-${timestamp}.db`;
+        const backupPath = external_node_path_.join(this.config.backupDir, backupFileName);
+        try {
+            lib_logger/* logger */.v.info("Starting automatic backup", { file: backupFileName });
+            const dbPath = process.env.DATABASE_URL?.replace("file:", "") || "./data/elysia.db";
+            if (!external_node_fs_.existsSync(dbPath)) {
+                throw new Error(`Database file not found: ${dbPath}`);
+            }
+            external_node_fs_.copyFileSync(dbPath, backupPath);
+            const fileSize = external_node_fs_.statSync(backupPath).size;
+            const duration = Date.now() - startTime;
+            lib_logger/* logger */.v.info("Backup completed", {
+                file: backupFileName,
+                size: `${(fileSize / 1024 / 1024).toFixed(2)} MB`,
+                duration: `${duration}ms`,
+            });
+            await webhookManager.emit("backup.completed", {
+                file: backupFileName,
+                size: fileSize,
+                duration,
+            });
+            await this.cleanupOldBackups();
+        }
+        catch (error) {
+            lib_logger/* logger */.v.error("Backup failed", error);
+            await webhookManager.emit("error.critical", {
+                message: "Automatic backup failed",
+                error: error.message,
+            });
+        }
+    }
+    async cleanupOldBackups() {
+        try {
+            const files = external_node_fs_.readdirSync(this.config.backupDir)
+                .filter((f) => f.startsWith("elysia-backup-") && f.endsWith(".db"))
+                .map((f) => ({
+                name: f,
+                path: external_node_path_.join(this.config.backupDir, f),
+                mtime: external_node_fs_.statSync(external_node_path_.join(this.config.backupDir, f)).mtime,
+            }))
+                .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+            if (files.length > this.config.maxBackups) {
+                const toDelete = files.slice(this.config.maxBackups);
+                for (const file of toDelete) {
+                    external_node_fs_.unlinkSync(file.path);
+                    lib_logger/* logger */.v.info("Old backup deleted", { file: file.name });
+                }
+            }
+        }
+        catch (error) {
+            lib_logger/* logger */.v.error("Cleanup failed", error);
+        }
+    }
+    getBackupHistory() {
+        try {
+            const files = external_node_fs_.readdirSync(this.config.backupDir)
+                .filter((f) => f.startsWith("elysia-backup-") && f.endsWith(".db"))
+                .map((f) => {
+                const fullPath = external_node_path_.join(this.config.backupDir, f);
+                const stats = external_node_fs_.statSync(fullPath);
+                return {
+                    name: f,
+                    size: stats.size,
+                    createdAt: stats.mtime,
+                };
+            })
+                .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+            return files;
+        }
+        catch {
+            return [];
+        }
+    }
+    async triggerManualBackup() {
+        await this.performBackup();
+    }
+    getStatus() {
+        return {
+            enabled: this.config.enabled,
+            running: this.isRunning,
+            interval: this.config.interval,
+            maxBackups: this.config.maxBackups,
+            backupDir: this.config.backupDir,
+            backupCount: this.getBackupHistory().length,
+        };
+    }
+}
+const backupScheduler = new BackupScheduler();
+
+;// external "node:crypto"
+const external_node_crypto_namespaceObject = require("node:crypto");
+;// ./src/lib/api-key-manager.ts
+
+
+class APIKeyManager {
+    keys;
+    KEY_PREFIX = "elysia_";
+    constructor() {
+        this.keys = new Map();
+        this.loadKeysFromEnv();
+    }
+    loadKeysFromEnv() {
+        const masterKey = process.env.MASTER_API_KEY;
+        if (masterKey) {
+            this.keys.set(masterKey, {
+                key: masterKey,
+                name: "Master Key",
+                createdAt: new Date(),
+                enabled: true,
+                rateLimit: 10000,
+                usage: {
+                    totalRequests: 0,
+                    requestsThisHour: 0,
+                    hourStart: new Date(),
+                },
+            });
+        }
+    }
+    generateKey(options) {
+        const randomBytes = external_node_crypto_namespaceObject.randomBytes(32);
+        const key = `${this.KEY_PREFIX}${randomBytes.toString("base64url")}`;
+        const expiresAt = options.expiresInDays
+            ? new Date(Date.now() + options.expiresInDays * 24 * 60 * 60 * 1000)
+            : undefined;
+        const apiKey = {
+            key,
+            name: options.name,
+            userId: options.userId,
+            createdAt: new Date(),
+            expiresAt,
+            enabled: true,
+            rateLimit: options.rateLimit || 1000,
+            usage: {
+                totalRequests: 0,
+                requestsThisHour: 0,
+                hourStart: new Date(),
+            },
+        };
+        this.keys.set(key, apiKey);
+        lib_logger/* logger */.v.info("API key generated", {
+            name: options.name,
+            userId: options.userId,
+            rateLimit: apiKey.rateLimit,
+        });
+        return apiKey;
+    }
+    validateKey(key) {
+        const apiKey = this.keys.get(key);
+        if (!apiKey) {
+            return { valid: false, reason: "Invalid API key" };
+        }
+        if (!apiKey.enabled) {
+            return { valid: false, reason: "API key is disabled" };
+        }
+        if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
+            return { valid: false, reason: "API key has expired" };
+        }
+        const now = new Date();
+        const hoursSince = (now.getTime() - apiKey.usage.hourStart.getTime()) / (1000 * 60 * 60);
+        if (hoursSince >= 1) {
+            apiKey.usage.requestsThisHour = 0;
+            apiKey.usage.hourStart = now;
+        }
+        if (apiKey.usage.requestsThisHour >= apiKey.rateLimit) {
+            return {
+                valid: false,
+                reason: `Rate limit exceeded (${apiKey.rateLimit} requests/hour)`,
+            };
+        }
+        return { valid: true, apiKey };
+    }
+    recordUsage(key) {
+        const apiKey = this.keys.get(key);
+        if (apiKey) {
+            apiKey.usage.totalRequests++;
+            apiKey.usage.requestsThisHour++;
+            apiKey.usage.lastUsed = new Date();
+        }
+    }
+    revokeKey(key) {
+        const apiKey = this.keys.get(key);
+        if (apiKey) {
+            apiKey.enabled = false;
+            lib_logger/* logger */.v.info("API key revoked", { name: apiKey.name });
+            return true;
+        }
+        return false;
+    }
+    deleteKey(key) {
+        const apiKey = this.keys.get(key);
+        if (apiKey) {
+            this.keys.delete(key);
+            lib_logger/* logger */.v.info("API key deleted", { name: apiKey.name });
+            return true;
+        }
+        return false;
+    }
+    listKeys() {
+        return Array.from(this.keys.values()).map((key) => ({
+            name: key.name,
+            userId: key.userId,
+            createdAt: key.createdAt,
+            expiresAt: key.expiresAt,
+            enabled: key.enabled,
+            rateLimit: key.rateLimit,
+            usage: {
+                totalRequests: key.usage.totalRequests,
+                lastUsed: key.usage.lastUsed,
+                requestsThisHour: key.usage.requestsThisHour,
+            },
+            keyPreview: `${key.key.substring(0, 16)}...`,
+        }));
+    }
+    getUserKeys(userId) {
+        return Array.from(this.keys.values())
+            .filter((key) => key.userId === userId)
+            .map((key) => ({
+            name: key.name,
+            createdAt: key.createdAt,
+            expiresAt: key.expiresAt,
+            enabled: key.enabled,
+            rateLimit: key.rateLimit,
+            usage: key.usage,
+            keyPreview: `${key.key.substring(0, 16)}...`,
+        }));
+    }
+    getUsageStats() {
+        const keys = Array.from(this.keys.values());
+        return {
+            totalKeys: keys.length,
+            activeKeys: keys.filter((k) => k.enabled).length,
+            expiredKeys: keys.filter((k) => k.expiresAt && k.expiresAt < new Date())
+                .length,
+            totalRequests: keys.reduce((sum, k) => sum + k.usage.totalRequests, 0),
+            topKeys: keys
+                .sort((a, b) => b.usage.totalRequests - a.usage.totalRequests)
+                .slice(0, 5)
+                .map((k) => ({
+                name: k.name,
+                requests: k.usage.totalRequests,
+            })),
+        };
+    }
+}
+const apiKeyManager = new APIKeyManager();
+
+;// ./src/lib/ab-testing.ts
+
+class ABTestManager {
+    tests;
+    userAssignments;
+    constructor() {
+        this.tests = new Map();
+        this.userAssignments = new Map();
+        this.initializeDefaultTests();
+    }
+    initializeDefaultTests() {
+        this.createTest({
+            id: "prompt-style",
+            name: "プロンプトスタイルテスト",
+            description: "異なるプロンプトスタイルの効果を測定",
+            variants: [
+                {
+                    id: "original",
+                    name: "オリジナル",
+                    weight: 50,
+                    config: { style: "original" },
+                },
+                {
+                    id: "detailed",
+                    name: "詳細指示",
+                    weight: 50,
+                    config: { style: "detailed" },
+                },
+            ],
+        });
+        this.createTest({
+            id: "response-length",
+            name: "レスポンス長テスト",
+            description: "短い回答 vs 長い回答",
+            variants: [
+                {
+                    id: "short",
+                    name: "短い回答",
+                    weight: 50,
+                    config: { maxTokens: 150 },
+                },
+                {
+                    id: "long",
+                    name: "長い回答",
+                    weight: 50,
+                    config: { maxTokens: 500 },
+                },
+            ],
+        });
+    }
+    createTest(options) {
+        const test = {
+            id: options.id,
+            name: options.name,
+            description: options.description,
+            variants: options.variants,
+            active: true,
+            startDate: new Date(),
+            endDate: options.endDate,
+            metrics: {
+                impressions: new Map(),
+                conversions: new Map(),
+                averageRating: new Map(),
+            },
+        };
+        for (const variant of test.variants) {
+            test.metrics.impressions.set(variant.id, 0);
+            test.metrics.conversions.set(variant.id, 0);
+            test.metrics.averageRating.set(variant.id, []);
+        }
+        this.tests.set(test.id, test);
+        lib_logger/* logger */.v.info("A/B test created", {
+            id: test.id,
+            name: test.name,
+            variants: test.variants.length,
+        });
+        return test;
+    }
+    assignVariant(testId, userId) {
+        const test = this.tests.get(testId);
+        if (!test || !test.active)
+            return null;
+        if (!this.userAssignments.has(userId)) {
+            this.userAssignments.set(userId, new Map());
+        }
+        const userTests = this.userAssignments.get(userId);
+        if (userTests?.has(testId)) {
+            const variantId = userTests.get(testId);
+            return test.variants.find((v) => v.id === variantId) || null;
+        }
+        const totalWeight = test.variants.reduce((sum, v) => sum + v.weight, 0);
+        let random = Math.random() * totalWeight;
+        let selectedVariant = null;
+        for (const variant of test.variants) {
+            random -= variant.weight;
+            if (random <= 0) {
+                selectedVariant = variant;
+                break;
+            }
+        }
+        if (selectedVariant) {
+            userTests?.set(testId, selectedVariant.id);
+            const currentImpressions = test.metrics.impressions.get(selectedVariant.id) || 0;
+            test.metrics.impressions.set(selectedVariant.id, currentImpressions + 1);
+        }
+        return selectedVariant;
+    }
+    recordConversion(testId, userId) {
+        const test = this.tests.get(testId);
+        if (!test)
+            return;
+        const variantId = this.userAssignments.get(userId)?.get(testId);
+        if (!variantId)
+            return;
+        const currentConversions = test.metrics.conversions.get(variantId) || 0;
+        test.metrics.conversions.set(variantId, currentConversions + 1);
+        lib_logger/* logger */.v.debug("A/B test conversion recorded", {
+            testId,
+            variantId,
+            userId,
+        });
+    }
+    recordRating(testId, userId, rating) {
+        const test = this.tests.get(testId);
+        if (!test)
+            return;
+        const variantId = this.userAssignments.get(userId)?.get(testId);
+        if (!variantId)
+            return;
+        const ratings = test.metrics.averageRating.get(variantId) || [];
+        ratings.push(rating);
+        test.metrics.averageRating.set(variantId, ratings);
+    }
+    getTestResults(testId) {
+        const test = this.tests.get(testId);
+        if (!test)
+            return null;
+        const results = test.variants.map((variant) => {
+            const impressions = test.metrics.impressions.get(variant.id) || 0;
+            const conversions = test.metrics.conversions.get(variant.id) || 0;
+            const ratings = test.metrics.averageRating.get(variant.id) || [];
+            const avgRating = ratings.length > 0
+                ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+                : 0;
+            return {
+                variantId: variant.id,
+                name: variant.name,
+                impressions,
+                conversions,
+                conversionRate: impressions > 0 ? (conversions / impressions) * 100 : 0,
+                averageRating: avgRating,
+                sampleSize: ratings.length,
+            };
+        });
+        return {
+            testId: test.id,
+            name: test.name,
+            description: test.description,
+            active: test.active,
+            startDate: test.startDate,
+            endDate: test.endDate,
+            results,
+        };
+    }
+    endTest(testId) {
+        const test = this.tests.get(testId);
+        if (test) {
+            test.active = false;
+            test.endDate = new Date();
+            lib_logger/* logger */.v.info("A/B test ended", { testId, name: test.name });
+        }
+    }
+    listTests() {
+        return Array.from(this.tests.values()).map((test) => ({
+            id: test.id,
+            name: test.name,
+            description: test.description,
+            active: test.active,
+            startDate: test.startDate,
+            endDate: test.endDate,
+            variantCount: test.variants.length,
+        }));
+    }
+}
+const abTestManager = new ABTestManager();
+
+;// ./src/lib/session-manager.ts
+
+class SessionManager {
+    sessions;
+    userSessions;
+    SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
+    MAX_SESSIONS_PER_USER = 5;
+    constructor() {
+        this.sessions = new Map();
+        this.userSessions = new Map();
+        setInterval(() => {
+            this.cleanupExpiredSessions();
+        }, 60 * 60 * 1000);
+    }
+    createSession(userId, userAgent, ip) {
+        const existingSessions = this.userSessions.get(userId);
+        if (existingSessions &&
+            existingSessions.size >= this.MAX_SESSIONS_PER_USER) {
+            const oldestSession = this.getOldestSession(userId);
+            if (oldestSession) {
+                this.terminateSession(oldestSession.sessionId);
+            }
+        }
+        const sessionId = this.generateSessionId();
+        const now = new Date();
+        const session = {
+            sessionId,
+            userId,
+            deviceInfo: {
+                userAgent,
+                ip,
+                deviceType: this.detectDeviceType(userAgent),
+            },
+            createdAt: now,
+            lastActivity: now,
+            expiresAt: new Date(now.getTime() + this.SESSION_TIMEOUT),
+            active: true,
+            activityLog: [
+                {
+                    type: "login",
+                    timestamp: now,
+                },
+            ],
+        };
+        this.sessions.set(sessionId, session);
+        if (!this.userSessions.has(userId)) {
+            this.userSessions.set(userId, new Set());
+        }
+        this.userSessions.get(userId)?.add(sessionId);
+        lib_logger/* logger */.v.info("Session created", {
+            sessionId,
+            userId,
+            deviceType: session.deviceInfo.deviceType,
+        });
+        return session;
+    }
+    generateSessionId() {
+        return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    }
+    detectDeviceType(userAgent) {
+        const ua = userAgent.toLowerCase();
+        if (/mobile|android|iphone/i.test(ua))
+            return "mobile";
+        if (/tablet|ipad/i.test(ua))
+            return "tablet";
+        if (/windows|macintosh|linux/i.test(ua))
+            return "desktop";
+        return "unknown";
+    }
+    validateSession(sessionId) {
+        const session = this.sessions.get(sessionId);
+        if (!session)
+            return null;
+        if (!session.active)
+            return null;
+        if (session.expiresAt < new Date()) {
+            this.terminateSession(sessionId);
+            return null;
+        }
+        session.lastActivity = new Date();
+        return session;
+    }
+    recordActivity(sessionId, type, details) {
+        const session = this.sessions.get(sessionId);
+        if (!session)
+            return;
+        session.activityLog.push({
+            type,
+            timestamp: new Date(),
+            details,
+        });
+        session.lastActivity = new Date();
+        if (session.activityLog.length > 100) {
+            session.activityLog = session.activityLog.slice(-100);
+        }
+    }
+    terminateSession(sessionId) {
+        const session = this.sessions.get(sessionId);
+        if (!session)
+            return;
+        session.active = false;
+        this.recordActivity(sessionId, "logout");
+        const userSessions = this.userSessions.get(session.userId);
+        userSessions?.delete(sessionId);
+        lib_logger/* logger */.v.info("Session terminated", { sessionId, userId: session.userId });
+    }
+    getUserSessions(userId) {
+        const sessionIds = this.userSessions.get(userId);
+        if (!sessionIds)
+            return [];
+        return Array.from(sessionIds)
+            .map((id) => this.sessions.get(id))
+            .filter((s) => s !== undefined)
+            .map((session) => ({
+            sessionId: session.sessionId,
+            deviceType: session.deviceInfo.deviceType,
+            ip: session.deviceInfo.ip,
+            createdAt: session.createdAt,
+            lastActivity: session.lastActivity,
+            active: session.active,
+            activityCount: session.activityLog.length,
+        }));
+    }
+    getSessionDetails(sessionId) {
+        const session = this.sessions.get(sessionId);
+        if (!session)
+            return null;
+        return {
+            sessionId: session.sessionId,
+            userId: session.userId,
+            deviceInfo: session.deviceInfo,
+            createdAt: session.createdAt,
+            lastActivity: session.lastActivity,
+            expiresAt: session.expiresAt,
+            active: session.active,
+            activityLog: session.activityLog.slice(-20),
+        };
+    }
+    getOldestSession(userId) {
+        const sessionIds = this.userSessions.get(userId);
+        if (!sessionIds)
+            return undefined;
+        let oldest;
+        for (const id of sessionIds) {
+            const session = this.sessions.get(id);
+            if (!session)
+                continue;
+            if (!oldest || session.createdAt < oldest.createdAt) {
+                oldest = session;
+            }
+        }
+        return oldest;
+    }
+    cleanupExpiredSessions() {
+        const now = new Date();
+        let cleanedCount = 0;
+        for (const [sessionId, session] of this.sessions.entries()) {
+            if (session.expiresAt < now || !session.active) {
+                this.sessions.delete(sessionId);
+                this.userSessions.get(session.userId)?.delete(sessionId);
+                cleanedCount++;
+            }
+        }
+        if (cleanedCount > 0) {
+            lib_logger/* logger */.v.info("Expired sessions cleaned up", { count: cleanedCount });
+        }
+    }
+    getStats() {
+        const allSessions = Array.from(this.sessions.values());
+        const activeSessions = allSessions.filter((s) => s.active);
+        return {
+            totalSessions: allSessions.length,
+            activeSessions: activeSessions.length,
+            uniqueUsers: this.userSessions.size,
+            deviceBreakdown: {
+                mobile: activeSessions.filter((s) => s.deviceInfo.deviceType === "mobile").length,
+                tablet: activeSessions.filter((s) => s.deviceInfo.deviceType === "tablet").length,
+                desktop: activeSessions.filter((s) => s.deviceInfo.deviceType === "desktop").length,
+            },
+        };
+    }
+}
+const sessionManager = new SessionManager();
+
+;// external "nodemailer"
+const external_nodemailer_namespaceObject = require("nodemailer");
+var external_nodemailer_default = /*#__PURE__*/__webpack_require__.n(external_nodemailer_namespaceObject);
+;// ./src/lib/email-notifier.ts
+
+
+class EmailNotifier {
+    transporter;
+    config;
+    constructor() {
+        this.config = {
+            enabled: process.env.EMAIL_NOTIFICATIONS_ENABLED === "true",
+            host: process.env.SMTP_HOST || "smtp.gmail.com",
+            port: Number(process.env.SMTP_PORT) || 587,
+            secure: process.env.SMTP_SECURE === "true",
+            auth: {
+                user: process.env.SMTP_USER || "",
+                pass: process.env.SMTP_PASS || "",
+            },
+            from: process.env.EMAIL_FROM || "noreply@elysia-ai.com",
+        };
+        if (this.config.enabled && this.config.auth.user && this.config.auth.pass) {
+            this.initializeTransporter();
+        }
+    }
+    initializeTransporter() {
+        try {
+            this.transporter = external_nodemailer_default().createTransport({
+                host: this.config.host,
+                port: this.config.port,
+                secure: this.config.secure,
+                auth: this.config.auth,
+            });
+            lib_logger/* logger */.v.info("Email transporter initialized", {
+                host: this.config.host,
+                port: this.config.port,
+            });
+        }
+        catch (error) {
+            lib_logger/* logger */.v.error("Failed to initialize email transporter", error);
+        }
+    }
+    async send(options) {
+        if (!this.config.enabled) {
+            lib_logger/* logger */.v.debug("Email notifications are disabled");
+            return false;
+        }
+        if (!this.transporter) {
+            lib_logger/* logger */.v.warn("Email transporter not initialized");
+            return false;
+        }
+        try {
+            const info = await this.transporter.sendMail({
+                from: this.config.from,
+                to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
+                subject: options.subject,
+                text: options.text,
+                html: options.html,
+            });
+            lib_logger/* logger */.v.info("Email sent", {
+                messageId: info.messageId,
+                to: options.to,
+                subject: options.subject,
+            });
+            return true;
+        }
+        catch (error) {
+            lib_logger/* logger */.v.error("Failed to send email", error);
+            return false;
+        }
+    }
+    async sendErrorNotification(error, context) {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (!adminEmail)
+            return;
+        const html = `
+			<h2>🚨 エリシアAI - エラー発生</h2>
+			<p><strong>エラーメッセージ:</strong> ${error.message}</p>
+			<p><strong>発生時刻:</strong> ${new Date().toLocaleString("ja-JP")}</p>
+			${context ? `<p><strong>コンテキスト:</strong> <pre>${JSON.stringify(context, null, 2)}</pre></p>` : ""}
+			${error.stack ? `<p><strong>スタックトレース:</strong> <pre>${error.stack}</pre></p>` : ""}
+		`;
+        await this.send({
+            to: adminEmail,
+            subject: `[エリシアAI] エラー通知: ${error.message}`,
+            html,
+        });
+    }
+    async sendWelcomeEmail(userEmail, userName) {
+        const html = `
+			<h2>🎉 エリシアAIへようこそ！</h2>
+			<p>こんにちは、${userName}さん♡</p>
+			<p>エリシアAIのアカウント登録が完了しました！</p>
+			<p>さっそくチャットを始めてみましょう！</p>
+			<hr>
+			<p><small>このメールに心当たりがない場合は、無視してください。</small></p>
+		`;
+        await this.send({
+            to: userEmail,
+            subject: "エリシアAIへようこそ！",
+            html,
+        });
+    }
+    async sendBackupNotification(backupInfo) {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (!adminEmail)
+            return;
+        const html = `
+			<h2>✅ 自動バックアップ完了</h2>
+			<p><strong>ファイル:</strong> ${backupInfo.file}</p>
+			<p><strong>サイズ:</strong> ${(backupInfo.size / 1024 / 1024).toFixed(2)} MB</p>
+			<p><strong>処理時間:</strong> ${backupInfo.duration}ms</p>
+			<p><strong>完了時刻:</strong> ${new Date().toLocaleString("ja-JP")}</p>
+		`;
+        await this.send({
+            to: adminEmail,
+            subject: "[エリシアAI] 自動バックアップ完了",
+            html,
+        });
+    }
+    async sendHealthCheckFailure(service, details) {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (!adminEmail)
+            return;
+        const html = `
+			<h2>⚠️ ヘルスチェック失敗</h2>
+			<p><strong>サービス:</strong> ${service}</p>
+			<p><strong>詳細:</strong> ${details}</p>
+			<p><strong>発生時刻:</strong> ${new Date().toLocaleString("ja-JP")}</p>
+			<p>早急に確認してください。</p>
+		`;
+        await this.send({
+            to: adminEmail,
+            subject: `[エリシアAI] ヘルスチェック失敗: ${service}`,
+            html,
+        });
+    }
+    getStatus() {
+        return {
+            enabled: this.config.enabled,
+            configured: !!this.transporter,
+            host: this.config.host,
+            port: this.config.port,
+            from: this.config.from,
+        };
+    }
+}
+const emailNotifier = new EmailNotifier();
+
+;// ./src/lib/health-monitor.ts
+
+
+
+class HealthMonitor {
+    checks;
+    statuses;
+    intervals;
+    enabled;
+    constructor() {
+        this.checks = new Map();
+        this.statuses = new Map();
+        this.intervals = new Map();
+        this.enabled = process.env.HEALTH_MONITORING_ENABLED !== "false";
+        this.initializeDefaultChecks();
+    }
+    initializeDefaultChecks() {
+        this.addCheck({
+            name: "database",
+            check: async () => {
+                try {
+                    const { PrismaClient } = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 330, 23));
+                    const prisma = new PrismaClient();
+                    await prisma.$queryRaw `SELECT 1`;
+                    await prisma.$disconnect();
+                    return true;
+                }
+                catch {
+                    return false;
+                }
+            },
+            interval: 60000,
+            timeout: 5000,
+            failureThreshold: 3,
+        });
+        this.addCheck({
+            name: "ollama",
+            check: async () => {
+                try {
+                    const ollamaUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+                    const response = await fetch(`${ollamaUrl}/api/tags`, {
+                        signal: AbortSignal.timeout(5000),
+                    });
+                    return response.ok;
+                }
+                catch {
+                    return false;
+                }
+            },
+            interval: 120000,
+            timeout: 5000,
+            failureThreshold: 3,
+        });
+        if (process.env.REDIS_ENABLED === "true") {
+            this.addCheck({
+                name: "redis",
+                check: async () => {
+                    try {
+                        const Redis = (await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 659, 23))).default;
+                        const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+                        await redis.ping();
+                        redis.disconnect();
+                        return true;
+                    }
+                    catch {
+                        return false;
+                    }
+                },
+                interval: 60000,
+                timeout: 5000,
+                failureThreshold: 3,
+            });
+        }
+        this.addCheck({
+            name: "disk_space",
+            check: async () => {
+                try {
+                    const fs = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 24, 23));
+                    const path = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 760, 23));
+                    const stats = fs.statfsSync(path.resolve("./"));
+                    const freeSpaceGB = (stats.bavail * stats.bsize) / 1024 ** 3;
+                    return freeSpaceGB > 1;
+                }
+                catch {
+                    return false;
+                }
+            },
+            interval: 300000,
+            timeout: 5000,
+            failureThreshold: 2,
+        });
+    }
+    addCheck(check) {
+        this.checks.set(check.name, check);
+        this.statuses.set(check.name, {
+            name: check.name,
+            status: "unknown",
+            lastCheck: new Date(),
+            consecutiveFailures: 0,
+        });
+        lib_logger/* logger */.v.info(`Health check added: ${check.name}`, {
+            interval: `${check.interval}ms`,
+        });
+    }
+    start() {
+        if (!this.enabled) {
+            lib_logger/* logger */.v.info("Health monitoring is disabled");
+            return;
+        }
+        for (const [name, check] of this.checks.entries()) {
+            this.performCheck(name, check);
+            const intervalId = setInterval(() => {
+                this.performCheck(name, check);
+            }, check.interval);
+            this.intervals.set(name, intervalId);
+        }
+        lib_logger/* logger */.v.info("Health monitoring started", {
+            checks: this.checks.size,
+        });
+    }
+    stop() {
+        for (const intervalId of this.intervals.values()) {
+            clearInterval(intervalId);
+        }
+        this.intervals.clear();
+        lib_logger/* logger */.v.info("Health monitoring stopped");
+    }
+    async performCheck(name, check) {
+        const status = this.statuses.get(name);
+        if (!status)
+            return;
+        try {
+            const result = await Promise.race([
+                check.check(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), check.timeout)),
+            ]);
+            status.lastCheck = new Date();
+            if (result) {
+                if (status.status === "unhealthy") {
+                    lib_logger/* logger */.v.info(`Health check recovered: ${name}`);
+                    await this.notifyRecovery(name);
+                }
+                status.status = "healthy";
+                status.consecutiveFailures = 0;
+                delete status.lastError;
+            }
+            else {
+                this.handleCheckFailure(status, check, "Check returned false");
+            }
+        }
+        catch (error) {
+            this.handleCheckFailure(status, check, error instanceof Error ? error.message : "Unknown error");
+        }
+    }
+    async handleCheckFailure(status, check, errorMessage) {
+        status.consecutiveFailures++;
+        status.lastError = errorMessage;
+        lib_logger/* logger */.v.warn(`Health check failed: ${status.name}`, {
+            failures: status.consecutiveFailures,
+            error: errorMessage,
+        });
+        if (status.consecutiveFailures >= check.failureThreshold) {
+            status.status = "unhealthy";
+            await this.notifyFailure(status.name, errorMessage);
+        }
+    }
+    async notifyFailure(name, error) {
+        lib_logger/* logger */.v.error(`Health check CRITICAL: ${name}`, new Error(error));
+        await webhookManager.emit("system.health_check_failed", {
+            service: name,
+            error,
+        });
+        await emailNotifier.sendHealthCheckFailure(name, error);
+    }
+    async notifyRecovery(name) {
+        await webhookManager.emit("system.health_check_failed", {
+            service: name,
+            recovered: true,
+        });
+    }
+    getStatus() {
+        const statuses = Array.from(this.statuses.values());
+        return {
+            overall: statuses.every((s) => s.status === "healthy")
+                ? "healthy"
+                : statuses.some((s) => s.status === "unhealthy")
+                    ? "unhealthy"
+                    : "degraded",
+            checks: statuses.map((s) => ({
+                name: s.name,
+                status: s.status,
+                lastCheck: s.lastCheck,
+                consecutiveFailures: s.consecutiveFailures,
+                lastError: s.lastError,
+            })),
+        };
+    }
+    async runCheck(name) {
+        const check = this.checks.get(name);
+        if (!check)
+            return false;
+        await this.performCheck(name, check);
+        const status = this.statuses.get(name);
+        return status?.status === "healthy" || false;
+    }
+}
+const healthMonitor = new HealthMonitor();
+
+;// ./src/lib/log-cleanup.ts
+
+
+
+class LogCleanupManager {
+    config;
+    intervalId;
+    isRunning = false;
+    constructor() {
+        this.config = {
+            enabled: process.env.LOG_CLEANUP_ENABLED !== "false",
+            logDir: process.env.LOG_DIR || "./logs",
+            maxAgeDays: Number(process.env.LOG_MAX_AGE_DAYS) || 30,
+            maxSizeMB: Number(process.env.LOG_MAX_SIZE_MB) || 500,
+            checkInterval: Number(process.env.LOG_CLEANUP_INTERVAL_HOURS) || 24,
+            compressionEnabled: process.env.LOG_COMPRESSION_ENABLED === "true",
+        };
+    }
+    start() {
+        if (!this.config.enabled) {
+            lib_logger/* logger */.v.info("Log cleanup is disabled");
+            return;
+        }
+        if (this.isRunning) {
+            lib_logger/* logger */.v.warn("Log cleanup is already running");
+            return;
+        }
+        this.isRunning = true;
+        this.performCleanup();
+        this.intervalId = setInterval(() => {
+            this.performCleanup();
+        }, this.config.checkInterval * 60 * 60 * 1000);
+        lib_logger/* logger */.v.info("Log cleanup started", {
+            interval: `${this.config.checkInterval} hours`,
+            maxAge: `${this.config.maxAgeDays} days`,
+            maxSize: `${this.config.maxSizeMB} MB`,
+        });
+    }
+    stop() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = undefined;
+            this.isRunning = false;
+            lib_logger/* logger */.v.info("Log cleanup stopped");
+        }
+    }
+    async performCleanup() {
+        const startTime = Date.now();
+        try {
+            lib_logger/* logger */.v.info("Starting log cleanup");
+            if (!external_node_fs_.existsSync(this.config.logDir)) {
+                lib_logger/* logger */.v.warn(`Log directory not found: ${this.config.logDir}`);
+                return;
+            }
+            const stats = await this.analyzeLogDirectory();
+            const deletedByAge = await this.deleteOldLogs();
+            let deletedBySize = 0;
+            if (stats.totalSizeMB > this.config.maxSizeMB) {
+                deletedBySize = await this.deleteBySize(stats.totalSizeMB - this.config.maxSizeMB);
+            }
+            const duration = Date.now() - startTime;
+            lib_logger/* logger */.v.info("Log cleanup completed", {
+                deletedByAge,
+                deletedBySize,
+                duration: `${duration}ms`,
+            });
+        }
+        catch (error) {
+            lib_logger/* logger */.v.error("Log cleanup failed", error);
+        }
+    }
+    async analyzeLogDirectory() {
+        const files = external_node_fs_.readdirSync(this.config.logDir);
+        let totalSize = 0;
+        let fileCount = 0;
+        for (const file of files) {
+            if (file.endsWith(".log") || file.endsWith(".log.gz")) {
+                const filePath = external_node_path_.join(this.config.logDir, file);
+                const stats = external_node_fs_.statSync(filePath);
+                totalSize += stats.size;
+                fileCount++;
+            }
+        }
+        return {
+            totalSizeMB: totalSize / (1024 * 1024),
+            fileCount,
+        };
+    }
+    async deleteOldLogs() {
+        const files = external_node_fs_.readdirSync(this.config.logDir);
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - this.config.maxAgeDays);
+        let deletedCount = 0;
+        for (const file of files) {
+            if (file.endsWith(".log") || file.endsWith(".log.gz")) {
+                const filePath = external_node_path_.join(this.config.logDir, file);
+                const stats = external_node_fs_.statSync(filePath);
+                if (stats.mtime < cutoffDate) {
+                    external_node_fs_.unlinkSync(filePath);
+                    deletedCount++;
+                    lib_logger/* logger */.v.debug("Old log deleted", { file });
+                }
+            }
+        }
+        return deletedCount;
+    }
+    async deleteBySize(targetSizeMB) {
+        const files = external_node_fs_.readdirSync(this.config.logDir)
+            .filter((f) => f.endsWith(".log") || f.endsWith(".log.gz"))
+            .map((f) => {
+            const filePath = external_node_path_.join(this.config.logDir, f);
+            const stats = external_node_fs_.statSync(filePath);
+            return {
+                path: filePath,
+                name: f,
+                size: stats.size,
+                mtime: stats.mtime,
+            };
+        })
+            .sort((a, b) => a.mtime.getTime() - b.mtime.getTime());
+        let deletedSize = 0;
+        let deletedCount = 0;
+        const targetSize = targetSizeMB * 1024 * 1024;
+        for (const file of files) {
+            if (deletedSize >= targetSize)
+                break;
+            external_node_fs_.unlinkSync(file.path);
+            deletedSize += file.size;
+            deletedCount++;
+            lib_logger/* logger */.v.debug("Log deleted due to size limit", { file: file.name });
+        }
+        return deletedCount;
+    }
+    async rotateLog(logFile) {
+        const filePath = external_node_path_.join(this.config.logDir, logFile);
+        if (!external_node_fs_.existsSync(filePath)) {
+            lib_logger/* logger */.v.warn(`Log file not found: ${logFile}`);
+            return;
+        }
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const archiveName = `${logFile}.${timestamp}`;
+        const archivePath = external_node_path_.join(this.config.logDir, archiveName);
+        try {
+            external_node_fs_.renameSync(filePath, archivePath);
+            if (this.config.compressionEnabled) {
+                await this.compressLog(archivePath);
+            }
+            lib_logger/* logger */.v.info("Log rotated", { file: logFile, archive: archiveName });
+        }
+        catch (error) {
+            lib_logger/* logger */.v.error("Log rotation failed", error);
+        }
+    }
+    async compressLog(filePath) {
+        try {
+            const zlib = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 522, 23));
+            const { createReadStream, createWriteStream } = external_node_fs_;
+            const gzip = zlib.createGzip();
+            const source = createReadStream(filePath);
+            const destination = createWriteStream(`${filePath}.gz`);
+            await new Promise((resolve, reject) => {
+                source
+                    .pipe(gzip)
+                    .pipe(destination)
+                    .on("finish", () => resolve())
+                    .on("error", reject);
+            });
+            external_node_fs_.unlinkSync(filePath);
+            lib_logger/* logger */.v.debug("Log compressed", { file: external_node_path_.basename(filePath) });
+        }
+        catch (error) {
+            lib_logger/* logger */.v.error("Log compression failed", error);
+        }
+    }
+    getStats() {
+        try {
+            const stats = this.analyzeLogDirectory();
+            return {
+                enabled: this.config.enabled,
+                running: this.isRunning,
+                logDir: this.config.logDir,
+                maxAgeDays: this.config.maxAgeDays,
+                maxSizeMB: this.config.maxSizeMB,
+                ...stats,
+            };
+        }
+        catch {
+            return {
+                enabled: this.config.enabled,
+                running: this.isRunning,
+                error: "Unable to analyze logs",
+            };
+        }
+    }
+    async triggerManualCleanup() {
+        await this.performCleanup();
+    }
+}
+const logCleanupManager = new LogCleanupManager();
+
 ;// ./src/index.ts
 
 
@@ -1404,7 +2795,17 @@ function printEnvironmentSummary() {
 
 
 
+
+
+
+
+
+
+
 checkEnvironmentOrExit();
+backupScheduler.start();
+healthMonitor.start();
+logCleanupManager.start();
 const src_CONFIG = {
     PORT: Number(process.env.PORT) || 3000,
     RAG_API_URL: DATABASE_CONFIG.RAG_API_URL,
@@ -2006,6 +3407,154 @@ app.get("/admin/analytics", async ({ request }) => {
     return new Response(JSON.stringify(data), {
         headers: { "content-type": "application/json" },
     });
+});
+app.get("/admin/webhooks", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return { webhooks: webhookManager.getSubscriptions() };
+});
+app.post("/admin/api-keys", async ({ request, body }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const { name, rateLimit, expiresInDays } = body;
+    const apiKey = apiKeyManager.generateKey({ name, rateLimit, expiresInDays });
+    return { success: true, key: apiKey.key };
+}, {
+    body: external_elysia_namespaceObject.t.Object({
+        name: external_elysia_namespaceObject.t.String({ minLength: 1 }),
+        rateLimit: external_elysia_namespaceObject.t.Optional(external_elysia_namespaceObject.t.Number()),
+        expiresInDays: external_elysia_namespaceObject.t.Optional(external_elysia_namespaceObject.t.Number()),
+    }),
+});
+app.get("/admin/api-keys", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return { keys: apiKeyManager.listKeys(), stats: apiKeyManager.getUsageStats() };
+});
+app.get("/admin/backups", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return {
+        status: backupScheduler.getStatus(),
+        history: backupScheduler.getBackupHistory()
+    };
+});
+app.post("/admin/backups/trigger", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    await backupScheduler.triggerManualBackup();
+    return { success: true, message: "Backup triggered" };
+});
+app.get("/admin/health-monitor", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return healthMonitor.getStatus();
+});
+app.get("/admin/sessions", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        const payload = external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+        return { sessions: sessionManager.getUserSessions(payload.userId), stats: sessionManager.getStats() };
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+});
+app.get("/admin/ab-tests", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return { tests: abTestManager.listTests() };
+});
+app.get("/admin/ab-tests/:testId", async ({ request, params }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const results = abTestManager.getTestResults(params.testId);
+    if (!results)
+        return jsonError(404, "Test not found");
+    return results;
+});
+app.get("/admin/logs/cleanup", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return logCleanupManager.getStats();
+});
+app.post("/admin/logs/cleanup/trigger", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    await logCleanupManager.triggerManualCleanup();
+    return { success: true, message: "Log cleanup triggered" };
 });
 if (false) // removed by dead control flow
 {}
