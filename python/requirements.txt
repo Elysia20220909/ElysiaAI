@@ -1,10 +1,10 @@
-pymilvus[lite]>=2.5.0
-openai>=1.59.0
-fastapi>=0.115.0
+pymilvus[lite]>=2.5.10
+openai>=1.59.6
+fastapi>=0.115.6
 uvicorn[standard]>=0.34.0
-sentence-transformers>=3.3.0
+sentence-transformers>=3.3.1
 # network_simulation dependencies
 inputimeout==1.0.4
-networkx==3.2.1
-matplotlib==3.7.1
-numpy==2.0.2
+networkx==3.4.2
+matplotlib==3.10.0
+numpy==2.2.1

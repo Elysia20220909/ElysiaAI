@@ -36,6 +36,10 @@
 /************************************************************************/
 var __webpack_exports__ = {};
 
+;// external "node:fs"
+const external_node_fs_namespaceObject = require("node:fs");
+;// external "node:fs/promises"
+const promises_namespaceObject = require("node:fs/promises");
 ;// external "@elysiajs/cors"
 const cors_namespaceObject = require("@elysiajs/cors");
 ;// external "@elysiajs/html"
@@ -49,10 +53,6 @@ const external_axios_namespaceObject = require("axios");
 var external_axios_default = /*#__PURE__*/__webpack_require__.n(external_axios_namespaceObject);
 ;// external "elysia"
 const external_elysia_namespaceObject = require("elysia");
-;// external "fs"
-const external_fs_namespaceObject = require("fs");
-;// external "fs/promises"
-const promises_namespaceObject = require("fs/promises");
 ;// external "jsonwebtoken"
 const external_jsonwebtoken_namespaceObject = require("jsonwebtoken");
 var external_jsonwebtoken_default = /*#__PURE__*/__webpack_require__.n(external_jsonwebtoken_namespaceObject);
@@ -419,8 +419,8 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    if (!(0,external_fs_namespaceObject.existsSync)("data"))
-        (0,external_fs_namespaceObject.mkdirSync)("data", { recursive: true });
+    if (!(0,external_node_fs_namespaceObject.existsSync)("data"))
+        (0,external_node_fs_namespaceObject.mkdirSync)("data", { recursive: true });
     const ip = request.headers.get("x-forwarded-for") || "anon";
     const userId = payload.userId || "anon";
     const rec = {
@@ -433,7 +433,7 @@ const app = new external_elysia_namespaceObject.Elysia()
         timestamp: new Date().toISOString(),
     };
     try {
-        await (0,promises_namespaceObject.appendFile)("data/feedback.jsonl", JSON.stringify(rec) + "\n");
+        await (0,promises_namespaceObject.appendFile)("data/feedback.jsonl", `${JSON.stringify(rec)}\n`);
     }
     catch {
         return jsonError(500, "Failed to store feedback");
@@ -465,8 +465,8 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    if (!(0,external_fs_namespaceObject.existsSync)("data"))
-        (0,external_fs_namespaceObject.mkdirSync)("data", { recursive: true });
+    if (!(0,external_node_fs_namespaceObject.existsSync)("data"))
+        (0,external_node_fs_namespaceObject.mkdirSync)("data", { recursive: true });
     const item = {
         summary: body.summary,
         sourceUrl: body.sourceUrl || null,
@@ -475,7 +475,7 @@ const app = new external_elysia_namespaceObject.Elysia()
         timestamp: new Date().toISOString(),
     };
     try {
-        await (0,promises_namespaceObject.appendFile)("data/knowledge.jsonl", JSON.stringify(item) + "\n");
+        await (0,promises_namespaceObject.appendFile)("data/knowledge.jsonl", `${JSON.stringify(item)}\n`);
     }
     catch {
         return jsonError(500, "Failed to store knowledge");
@@ -509,7 +509,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     }
     const n = Number(query?.n ?? 20) || 20;
     try {
-        if (!(0,external_fs_namespaceObject.existsSync)("data/knowledge.jsonl"))
+        if (!(0,external_node_fs_namespaceObject.existsSync)("data/knowledge.jsonl"))
             return new Response(JSON.stringify([]), {
                 headers: { "content-type": "application/json" },
             });
