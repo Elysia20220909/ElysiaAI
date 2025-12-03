@@ -784,7 +784,7 @@ class Logger {
         }
     }
 }
-const logger = new Logger("logs", process.env.LOG_LEVEL || "info");
+const logger_logger = new Logger("logs", process.env.LOG_LEVEL || "info");
 
 ;// external "node:process"
 const external_node_process_namespaceObject = require("node:process");
@@ -1143,6 +1143,137 @@ const voiceService = {
     },
 };
 
+;// ./src/lib/env-validator.ts
+
+const ENV_SCHEMA = [
+    {
+        name: "JWT_SECRET",
+        required: true,
+        description: "JWT署名用シークレットキー (32文字以上推奨)",
+        validator: (v) => v.length >= 32,
+    },
+    {
+        name: "JWT_REFRESH_SECRET",
+        required: true,
+        description: "リフレッシュトークン用シークレットキー (32文字以上推奨)",
+        validator: (v) => v.length >= 32,
+    },
+    {
+        name: "AUTH_PASSWORD",
+        required: true,
+        description: "デフォルトユーザー(elysia)のパスワード",
+        validator: (v) => v !== "your-strong-password-here" && v.length >= 8,
+    },
+    {
+        name: "PORT",
+        required: false,
+        default: "3000",
+        description: "サーバーポート番号",
+        validator: (v) => !isNaN(Number(v)) && Number(v) > 0 && Number(v) < 65536,
+    },
+    {
+        name: "ALLOWED_ORIGINS",
+        required: false,
+        default: "http://localhost:3000",
+        description: "CORS許可オリジン (カンマ区切り)",
+    },
+    {
+        name: "DATABASE_URL",
+        required: true,
+        description: "Prisma データベース接続URL",
+    },
+    {
+        name: "OLLAMA_BASE_URL",
+        required: false,
+        default: "http://localhost:11434",
+        description: "Ollama API URL",
+    },
+    {
+        name: "OLLAMA_MODEL",
+        required: false,
+        default: "llama3.2",
+        description: "使用するLLMモデル名",
+    },
+    {
+        name: "REDIS_ENABLED",
+        required: false,
+        default: "false",
+        description: "Redisレート制限を有効化",
+    },
+    {
+        name: "FASTAPI_BASE_URL",
+        required: false,
+        default: "http://localhost:8000",
+        description: "FastAPI RAGサービスURL",
+    },
+    {
+        name: "VOICEVOX_BASE_URL",
+        required: false,
+        default: "http://localhost:50021",
+        description: "VOICEVOX エンジンURL",
+    },
+];
+function validateEnvironment() {
+    const errors = [];
+    const warnings = [];
+    const missing = [];
+    const invalid = [];
+    for (const config of ENV_SCHEMA) {
+        const value = process.env[config.name];
+        if (config.required && !value) {
+            missing.push(config.name);
+            errors.push(`❌ [必須] ${config.name}: ${config.description}${config.default ? ` (デフォルト: ${config.default})` : ""}`);
+            continue;
+        }
+        if (!value && config.default) {
+            process.env[config.name] = config.default;
+            warnings.push(`⚠️  ${config.name}: デフォルト値を使用 (${config.default})`);
+            continue;
+        }
+        if (value && config.validator && !config.validator(value)) {
+            invalid.push(config.name);
+            errors.push(`❌ [無効] ${config.name}: ${config.description} (現在の値: ${value.substring(0, 20)}...)`);
+        }
+    }
+    return {
+        valid: errors.length === 0,
+        errors,
+        warnings,
+        missing,
+        invalid,
+    };
+}
+function checkEnvironmentOrExit() {
+    logger_logger.info("🔍 環境変数を検証中...");
+    const result = validateEnvironment();
+    if (result.warnings.length > 0) {
+        logger_logger.warn("⚠️  環境変数の警告:");
+        for (const warning of result.warnings) {
+            logger_logger.warn(`  ${warning}`);
+        }
+    }
+    if (!result.valid) {
+        logger_logger.error("❌ 環境変数の検証に失敗しました:");
+        for (const error of result.errors) {
+            logger_logger.error(`  ${error}`);
+        }
+        logger_logger.error("\n💡 修正方法:");
+        logger_logger.error("  1. .env ファイルを開く");
+        logger_logger.error("  2. 上記の必須項目を設定");
+        logger_logger.error("  3. サーバーを再起動\n");
+        process.exit(1);
+    }
+    logger_logger.info("✅ 環境変数の検証完了");
+}
+function printEnvironmentSummary() {
+    logger.info("\n📋 環境変数サマリー:");
+    logger.info(`  - ポート: ${process.env.PORT || 3000}`);
+    logger.info(`  - データベース: ${process.env.DATABASE_URL || "未設定"}`);
+    logger.info(`  - Redis: ${process.env.REDIS_ENABLED === "true" ? "有効" : "無効"}`);
+    logger.info(`  - Ollama: ${process.env.OLLAMA_BASE_URL || "http://localhost:11434"}`);
+    logger.info(`  - モデル: ${process.env.OLLAMA_MODEL || "llama3.2"}\n`);
+}
+
 ;// ./src/index.ts
 
 
@@ -1161,6 +1292,8 @@ const voiceService = {
 
 
 
+
+checkEnvironmentOrExit();
 const src_CONFIG = {
     PORT: Number(process.env.PORT) || 3000,
     RAG_API_URL: DATABASE_CONFIG.RAG_API_URL,
@@ -1218,7 +1351,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     const url = new URL(request.url);
     const errorMsg = error instanceof Error ? error.message : String(error);
     const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname}`;
-    logger.error(errorLog);
+    logger_logger.error(errorLog);
     metricsCollector.incrementError(request.method, url.pathname, String(code));
     const span = request.__span;
     if (span) {
@@ -1265,7 +1398,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     }
     catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        logger.error(`Health check failed: ${errorMsg}`);
+        logger_logger.error(`Health check failed: ${errorMsg}`);
         return jsonError(503, "Health check failed");
     }
 }, {
@@ -1319,7 +1452,7 @@ const app = new external_elysia_namespaceObject.Elysia()
         });
     }
     catch (err) {
-        logger.error("Failed to store feedback", err instanceof Error ? err : undefined);
+        logger_logger.error("Failed to store feedback", err instanceof Error ? err : undefined);
         return jsonError(500, "Failed to store feedback");
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -1358,7 +1491,7 @@ const app = new external_elysia_namespaceObject.Elysia()
         });
     }
     catch (err) {
-        logger.error("Failed to store knowledge", err instanceof Error ? err : undefined);
+        logger_logger.error("Failed to store knowledge", err instanceof Error ? err : undefined);
         return jsonError(500, "Failed to store knowledge");
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -1571,7 +1704,112 @@ const app = new external_elysia_namespaceObject.Elysia()
         description: "Send chat messages to Elysia AI with selectable personality modes (sweet/normal/professional). Returns streaming SSE response. Requires JWT.",
         security: [{ bearerAuth: [] }],
     },
-}));
+}))
+    .get("/admin/feedback/stats", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const stats = await feedbackService.getStats();
+    return new Response(JSON.stringify(stats), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Get feedback statistics",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .get("/admin/feedback", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const feedbacks = await feedbackService.getRecent(100);
+    return new Response(JSON.stringify(feedbacks), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Get recent feedback",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .get("/admin/knowledge", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const knowledge = await knowledgeService.getAll(false);
+    return new Response(JSON.stringify(knowledge), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Get all knowledge entries",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .post("/admin/knowledge/:id/verify", async ({ params, request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    await knowledgeService.verify(params.id);
+    return new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Verify knowledge entry",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .delete("/admin/knowledge/:id", async ({ params, request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        external_jsonwebtoken_default().verify(auth.substring(7), src_CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    await knowledgeService.delete(params.id);
+    return new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Delete knowledge entry",
+        security: [{ bearerAuth: [] }],
+    },
+});
 if (false) // removed by dead control flow
 {}
 /* harmony default export */ const src = (app);

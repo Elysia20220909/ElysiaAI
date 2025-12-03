@@ -23,6 +23,10 @@ import { CacheManager } from "./lib/cache";
 import { i18n, getLocaleFromRequest } from "./lib/i18n";
 import { telemetry, getTraceContextFromRequest } from "./lib/telemetry";
 import { feedbackService, knowledgeService } from "./lib/database";
+import { checkEnvironmentOrExit, printEnvironmentSummary } from "./lib/env-validator";
+
+// 環境変数検証（起動時）
+checkEnvironmentOrExit();
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
 type ChatRequest = {
@@ -598,6 +602,141 @@ const app = new Elysia()
 					},
 				},
 			),
+	)
+
+	// Admin API: Feedback Stats
+	.get(
+		"/admin/feedback/stats",
+		async ({ request }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+			try {
+				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+
+			const stats = await feedbackService.getStats();
+			return new Response(JSON.stringify(stats), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			detail: {
+				tags: ["admin"],
+				summary: "Get feedback statistics",
+				security: [{ bearerAuth: [] }],
+			},
+		},
+	)
+
+	// Admin API: List Feedback
+	.get(
+		"/admin/feedback",
+		async ({ request }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+			try {
+				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+
+			const feedbacks = await feedbackService.getRecent(100);
+			return new Response(JSON.stringify(feedbacks), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			detail: {
+				tags: ["admin"],
+				summary: "Get recent feedback",
+				security: [{ bearerAuth: [] }],
+			},
+		},
+	)
+
+	// Admin API: List Knowledge
+	.get(
+		"/admin/knowledge",
+		async ({ request }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+			try {
+				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+
+			const knowledge = await knowledgeService.getAll(false);
+			return new Response(JSON.stringify(knowledge), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			detail: {
+				tags: ["admin"],
+				summary: "Get all knowledge entries",
+				security: [{ bearerAuth: [] }],
+			},
+		},
+	)
+
+	// Admin API: Verify Knowledge
+	.post(
+		"/admin/knowledge/:id/verify",
+		async ({ params, request }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+			try {
+				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+
+			await knowledgeService.verify(params.id);
+			return new Response(JSON.stringify({ ok: true }), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			detail: {
+				tags: ["admin"],
+				summary: "Verify knowledge entry",
+				security: [{ bearerAuth: [] }],
+			},
+		},
+	)
+
+	// Admin API: Delete Knowledge
+	.delete(
+		"/admin/knowledge/:id",
+		async ({ params, request }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+			try {
+				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+
+			await knowledgeService.delete(params.id);
+			return new Response(JSON.stringify({ ok: true }), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			detail: {
+				tags: ["admin"],
+				summary: "Delete knowledge entry",
+				security: [{ bearerAuth: [] }],
+			},
+		},
 	);
 
 // ---------------- Start Server ----------------
