@@ -1,5 +1,4 @@
 import { existsSync, mkdirSync } from "node:fs";
-import { appendFile } from "node:fs/promises";
 // Secure Elysia AI Server with JWT, Redis rate limiting, and refresh tokens
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
@@ -23,6 +22,7 @@ import { logger } from "./lib/logger";
 import { CacheManager } from "./lib/cache";
 import { i18n, getLocaleFromRequest } from "./lib/i18n";
 import { telemetry, getTraceContextFromRequest } from "./lib/telemetry";
+import { feedbackService, knowledgeService } from "./lib/database";
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
 type ChatRequest = {
@@ -237,19 +237,17 @@ const app = new Elysia()
 			}
 			if (!existsSync("data")) mkdirSync("data", { recursive: true });
 			const ip = request.headers.get("x-forwarded-for") || "anon";
-			const userId = (payload as { userId?: string }).userId || "anon";
-			const rec = {
-				userId,
-				ip,
-				query: body.query,
-				answer: body.answer,
-				rating: body.rating,
-				reason: body.reason || null,
-				timestamp: new Date().toISOString(),
-			};
+			const userId = (payload as { userId?: string }).userId || undefined;
 			try {
-				await appendFile("data/feedback.jsonl", `${JSON.stringify(rec)}\n`);
-			} catch {
+				await feedbackService.create({
+					userId,
+					query: body.query,
+					answer: body.answer,
+					rating: body.rating,
+					reason: body.reason || undefined,
+				});
+			} catch (err) {
+				logger.error("Failed to store feedback", err instanceof Error ? err : undefined);
 				return jsonError(500, "Failed to store feedback");
 			}
 			return new Response(JSON.stringify({ ok: true }), {
@@ -296,17 +294,15 @@ const app = new Elysia()
 			} catch {
 				return jsonError(401, "Invalid token");
 			}
-			if (!existsSync("data")) mkdirSync("data", { recursive: true });
-			const item = {
-				summary: body.summary,
-				sourceUrl: body.sourceUrl || null,
-				tags: body.tags || [],
-				confidence: body.confidence,
-				timestamp: new Date().toISOString(),
-			};
 			try {
-				await appendFile("data/knowledge.jsonl", `${JSON.stringify(item)}\n`);
-			} catch {
+				await knowledgeService.create({
+					question: body.summary,
+					answer: body.sourceUrl || "No source provided",
+					source: "api",
+					verified: body.confidence > 0.8,
+				});
+			} catch (err) {
+				logger.error("Failed to store knowledge", err instanceof Error ? err : undefined);
 				return jsonError(500, "Failed to store knowledge");
 			}
 			return new Response(JSON.stringify({ ok: true }), {

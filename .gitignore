@@ -112,3 +112,4 @@ bun.log
 /cuda/*.dll
 /cuda/*.obj
 /cuda/bun.lock
+/src/generated/prisma
