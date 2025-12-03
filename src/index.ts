@@ -27,9 +27,22 @@ import {
 	checkEnvironmentOrExit,
 	printEnvironmentSummary,
 } from "./lib/env-validator";
+import { webhookManager } from "./lib/webhook-events";
+import { backupScheduler } from "./lib/backup-scheduler";
+import { apiKeyManager } from "./lib/api-key-manager";
+import { emailNotifier } from "./lib/email-notifier";
+import { abTestManager } from "./lib/ab-testing";
+import { sessionManager } from "./lib/session-manager";
+import { healthMonitor } from "./lib/health-monitor";
+import { logCleanupManager } from "./lib/log-cleanup";
 
 // 環境変数検証（起動時）
 checkEnvironmentOrExit();
+
+// 自動化機能を開始
+backupScheduler.start();
+healthMonitor.start();
+logCleanupManager.start();
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
 type ChatRequest = {
@@ -856,6 +869,192 @@ app.get("/admin/analytics", async ({ request }) => {
 	return new Response(JSON.stringify(data), {
 		headers: { "content-type": "application/json" },
 	});
+});
+
+// Webhook Management APIs
+app.get("/admin/webhooks", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return { webhooks: webhookManager.getSubscriptions() };
+});
+
+// API Key Management APIs
+app.post(
+	"/admin/api-keys",
+	async ({ request, body }) => {
+		const auth = request.headers.get("authorization") || "";
+		if (!auth.startsWith("Bearer "))
+			return jsonError(401, "Missing Bearer token");
+		try {
+			jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+		} catch {
+			return jsonError(401, "Invalid token");
+		}
+
+		const { name, rateLimit, expiresInDays } = body as {
+			name: string;
+			rateLimit?: number;
+			expiresInDays?: number;
+		};
+		const apiKey = apiKeyManager.generateKey({
+			name,
+			rateLimit,
+			expiresInDays,
+		});
+
+		return { success: true, key: apiKey.key };
+	},
+	{
+		body: t.Object({
+			name: t.String({ minLength: 1 }),
+			rateLimit: t.Optional(t.Number()),
+			expiresInDays: t.Optional(t.Number()),
+		}),
+	},
+);
+
+app.get("/admin/api-keys", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return {
+		keys: apiKeyManager.listKeys(),
+		stats: apiKeyManager.getUsageStats(),
+	};
+});
+
+// Backup Management APIs
+app.get("/admin/backups", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return {
+		status: backupScheduler.getStatus(),
+		history: backupScheduler.getBackupHistory(),
+	};
+});
+
+app.post("/admin/backups/trigger", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	await backupScheduler.triggerManualBackup();
+	return { success: true, message: "Backup triggered" };
+});
+
+// Health Monitoring APIs
+app.get("/admin/health-monitor", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return healthMonitor.getStatus();
+});
+
+// Session Management APIs
+app.get("/admin/sessions", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		const payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as {
+			userId: string;
+		};
+		return {
+			sessions: sessionManager.getUserSessions(payload.userId),
+			stats: sessionManager.getStats(),
+		};
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+});
+
+// A/B Testing APIs
+app.get("/admin/ab-tests", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return { tests: abTestManager.listTests() };
+});
+
+app.get("/admin/ab-tests/:testId", async ({ request, params }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const results = abTestManager.getTestResults(params.testId);
+	if (!results) return jsonError(404, "Test not found");
+
+	return results;
+});
+
+// Log Cleanup APIs
+app.get("/admin/logs/cleanup", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return logCleanupManager.getStats();
+});
+
+app.post("/admin/logs/cleanup/trigger", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	await logCleanupManager.triggerManualCleanup();
+	return { success: true, message: "Log cleanup triggered" };
 });
 
 // ---------------- Start Server ----------------

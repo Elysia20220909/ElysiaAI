@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 declare const prisma: PrismaClient<{
-    log: ("error" | "query" | "warn")[];
-}, "error" | "query" | "warn", import("@prisma/client/runtime/client").DefaultArgs>;
+    log: ("error" | "warn" | "query")[];
+}, "error" | "warn" | "query", import("@prisma/client/runtime/client").DefaultArgs>;
 export { prisma };
 export declare const userService: {
     create(data: {
@@ -58,9 +58,9 @@ export declare const tokenService: {
         userId: string;
         expiresAt: Date;
     }): Promise<{
+        token: string;
         id: string;
         userId: string;
-        token: string;
         createdAt: Date;
         expiresAt: Date;
         revoked: boolean;
@@ -75,17 +75,17 @@ export declare const tokenService: {
             updatedAt: Date;
         };
     } & {
+        token: string;
         id: string;
         userId: string;
-        token: string;
         createdAt: Date;
         expiresAt: Date;
         revoked: boolean;
     }) | null>;
     revoke(token: string): Promise<{
+        token: string;
         id: string;
         userId: string;
-        token: string;
         createdAt: Date;
         expiresAt: Date;
         revoked: boolean;
@@ -255,24 +255,24 @@ export declare const voiceService: {
         emotion: string;
         audioUrl?: string;
     }): Promise<{
-        id: string;
         text: string;
+        id: string;
         username: string | null;
         createdAt: Date;
         emotion: string;
         audioUrl: string | null;
     }>;
     getRecent(limit?: number): Promise<{
-        id: string;
         text: string;
+        id: string;
         username: string | null;
         createdAt: Date;
         emotion: string;
         audioUrl: string | null;
     }[]>;
     getByUser(username: string, limit?: number): Promise<{
-        id: string;
         text: string;
+        id: string;
         username: string | null;
         createdAt: Date;
         emotion: string;
