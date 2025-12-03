@@ -493,17 +493,11 @@ const app = new Elysia()
 	);
 
 // ---------------- Start Server ----------------
-const server = Bun.serve({
-	port: CONFIG.PORT,
-	fetch: app.fetch.bind(app),
-});
+app.listen(CONFIG.PORT);
 
 console.log(`
 🚀 Elysia server is running!
-📡 Port: ${server.port}
-🌐 URL: http://${server.hostname}:${server.port}
-📚 Docs: http://${server.hostname}:${server.port}/swagger
+📡 Port: ${CONFIG.PORT}
+🌐 URL: http://localhost:${CONFIG.PORT}
+📚 Docs: http://localhost:${CONFIG.PORT}/swagger
 `);
-
-// Prevent process from exiting
-process.stdin.resume();
