@@ -323,17 +323,14 @@ export function getTraceContextFromRequest(
  * Decorator for tracing methods
  */
 export function Trace(spanName?: string) {
-	return (
-		target: unknown,
-		propertyKey: string,
-		descriptor: PropertyDescriptor,
-	) => {
+	return (target: any, propertyKey: string, descriptor: PropertyDescriptor) => {
 		const originalMethod = descriptor.value;
 
 		descriptor.value = async function (...args: unknown[]) {
-			const name = spanName || `${target.constructor.name}.${propertyKey}`;
+			const name =
+				spanName || `${(target as any).constructor.name}.${propertyKey}`;
 			return telemetry.trace(name, async (span) => {
-				span.attributes["method"] = propertyKey;
+				span.attributes.method = propertyKey;
 				return originalMethod.apply(this, args);
 			});
 		};

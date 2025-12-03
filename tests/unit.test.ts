@@ -1,5 +1,5 @@
 // Unit Tests for Library Modules
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, beforeAll, afterAll } from "bun:test";
 import { metricsCollector } from "../src/lib/metrics";
 import { logger } from "../src/lib/logger";
 import { CacheManager } from "../src/lib/cache";
@@ -16,7 +16,9 @@ describe("Metrics Collector", () => {
 		const metrics = metricsCollector.getMetrics();
 		const durations = metrics.http_request_duration_seconds.get("GET:/test");
 		expect(durations).toBeDefined();
-		expect(durations!.length).toBeGreaterThan(0);
+		if (durations) {
+			expect(durations.length).toBeGreaterThan(0);
+		}
 	});
 
 	it("should increment error counter", () => {

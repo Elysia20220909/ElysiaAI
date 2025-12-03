@@ -17,12 +17,27 @@ import {
 	verifyStoredRefreshToken,
 } from "../.internal/secure/auth";
 import { DATABASE_CONFIG } from "../.internal/secure/db";
+import { performHealthCheck } from "./lib/health";
+import { metricsCollector } from "./lib/metrics";
+import { logger } from "./lib/logger";
+import { CacheManager } from "./lib/cache";
+import { i18n, getLocaleFromRequest } from "./lib/i18n";
+import { telemetry, getTraceContextFromRequest } from "./lib/telemetry";
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
 type ChatRequest = {
 	messages: Message[];
 	mode?: "sweet" | "normal" | "professional";
 };
+
+// Extended Request type for middleware data
+interface ExtendedRequest extends Request {
+	__span?: {
+		spanId: string;
+		traceId: string;
+	};
+	__startTime?: number;
+}
 
 // ---------------- Config ----------------
 const CONFIG = {
@@ -67,15 +82,62 @@ const app = new Elysia()
 	.use(html())
 	.use(staticPlugin({ assets: "public" }))
 	.use(swagger({ path: "/swagger" }))
-	.onError(({ error, code }) => {
-		console.error(`[ERROR] ${code}:`, error);
+	// Telemetry and metrics middleware
+	.onBeforeHandle(({ request }) => {
+		const url = new URL(request.url);
+		const path = url.pathname;
+		const traceContext = getTraceContextFromRequest(request);
+		const span = telemetry.startSpan(`HTTP ${request.method} ${path}`, {
+			parentContext: traceContext || undefined,
+			attributes: {
+				"http.method": request.method,
+				"http.url": request.url,
+				"http.route": path,
+			},
+		});
+		(request as unknown as ExtendedRequest).__span = span;
+		(request as unknown as ExtendedRequest).__startTime = Date.now();
+		metricsCollector.incrementRequest(request.method, path, 200);
+	})
+	.onError(({ error, code, request }) => {
+		const url = new URL(request.url);
+		const errorMsg = error instanceof Error ? error.message : String(error);
+		const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname}`;
+		logger.error(errorLog);
+		metricsCollector.incrementError(request.method, url.pathname, String(code));
+		const span = (request as unknown as ExtendedRequest).__span;
+		if (span) {
+			telemetry.endSpan(span.spanId, {
+				code: "ERROR",
+				message: errorMsg,
+			});
+		}
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
 		return jsonError(500, message);
 	})
-	.onAfterHandle(({ set }) => {
+	.onAfterHandle(({ set, request }) => {
 		set.headers["X-Content-Type-Options"] = "nosniff";
 		set.headers["X-Frame-Options"] = "DENY";
+		const extReq = request as unknown as ExtendedRequest;
+		const span = extReq.__span;
+		if (span) {
+			set.headers.traceparent = telemetry.createTraceContext(
+				span.traceId,
+				span.spanId,
+			);
+			telemetry.endSpan(span.spanId);
+		}
+		const startTime = extReq.__startTime;
+		if (startTime) {
+			const duration = (Date.now() - startTime) / 1000;
+			const url = new URL(request.url);
+			metricsCollector.recordRequestDuration(
+				request.method,
+				url.pathname,
+				duration,
+			);
+		}
 	})
 
 	// Health
@@ -86,6 +148,56 @@ const app = new Elysia()
 			description: "Returns a simple OK response to verify server is running",
 		},
 	})
+
+	// Detailed health check
+	.get(
+		"/health",
+		async () => {
+			try {
+				const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+				const health = await performHealthCheck(
+					redisUrl,
+					CONFIG.RAG_API_URL,
+					CONFIG.MODEL_NAME,
+				);
+				const status = health.status === "healthy" ? 200 : 503;
+				return new Response(JSON.stringify(health), {
+					status,
+					headers: { "content-type": "application/json" },
+				});
+			} catch (err) {
+				const errorMsg = err instanceof Error ? err.message : String(err);
+				logger.error(`Health check failed: ${errorMsg}`);
+				return jsonError(503, "Health check failed");
+			}
+		},
+		{
+			detail: {
+				tags: ["health"],
+				summary: "Detailed health check",
+				description:
+					"Check status of Redis, FastAPI, Ollama, and system metrics",
+			},
+		},
+	)
+
+	// Prometheus metrics
+	.get(
+		"/metrics",
+		() => {
+			const metrics = metricsCollector.toPrometheusFormat();
+			return new Response(metrics, {
+				headers: { "content-type": "text/plain; version=0.0.4" },
+			});
+		},
+		{
+			detail: {
+				tags: ["monitoring"],
+				summary: "Prometheus metrics",
+				description: "Expose metrics in Prometheus format",
+			},
+		},
+	)
 
 	// Index page
 	.get("/", () => Bun.file("public/index.html"), {
@@ -497,11 +609,32 @@ app.listen({
 	hostname: "0.0.0.0",
 	port: CONFIG.PORT,
 	reusePort: true,
-} as any);
+});
+
+logger.info("Elysia server started", {
+	port: CONFIG.PORT,
+	url: `http://localhost:${CONFIG.PORT}`,
+	docs: `http://localhost:${CONFIG.PORT}/swagger`,
+	health: `http://localhost:${CONFIG.PORT}/health`,
+	metrics: `http://localhost:${CONFIG.PORT}/metrics`,
+});
 
 console.log(`
 🚀 Elysia server is running!
 📡 Port: ${CONFIG.PORT}
 🌐 URL: http://localhost:${CONFIG.PORT}
 📚 Docs: http://localhost:${CONFIG.PORT}/swagger
+🏥 Health: http://localhost:${CONFIG.PORT}/health
+📊 Metrics: http://localhost:${CONFIG.PORT}/metrics
 `);
+
+// Export spans periodically
+setInterval(() => {
+	const spans = telemetry.exportSpans();
+	if (spans.length > 0) {
+		logger.debug("Telemetry spans exported", { count: spans.length });
+	}
+}, 30000); // Every 30 seconds
+
+export default app;
+export type App = typeof app;
