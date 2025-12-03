@@ -88,8 +88,6 @@ __webpack_require__.d(__webpack_exports__, {
 
 // EXTERNAL MODULE: external "node:fs"
 var external_node_fs_ = __webpack_require__(24);
-;// external "node:fs/promises"
-const promises_namespaceObject = require("node:fs/promises");
 ;// external "@elysiajs/cors"
 const cors_namespaceObject = require("@elysiajs/cors");
 ;// external "@elysiajs/html"
@@ -974,6 +972,177 @@ function Trace(spanName) {
     };
 }
 
+;// external "@prisma/client"
+const client_namespaceObject = require("@prisma/client");
+;// ./src/lib/database.ts
+
+const prisma = new client_namespaceObject.PrismaClient({
+    log:  true ? ["query", "error", "warn"] : 0,
+});
+process.on("beforeExit", async () => {
+    await prisma.$disconnect();
+});
+
+const userService = {
+    async create(data) {
+        return prisma.user.create({ data });
+    },
+    async findByUsername(username) {
+        return prisma.user.findUnique({ where: { username } });
+    },
+    async findById(id) {
+        return prisma.user.findUnique({ where: { id } });
+    },
+    async update(id, data) {
+        return prisma.user.update({ where: { id }, data });
+    },
+    async delete(id) {
+        return prisma.user.delete({ where: { id } });
+    },
+};
+const tokenService = {
+    async create(data) {
+        return prisma.refreshToken.create({ data });
+    },
+    async findByToken(token) {
+        return prisma.refreshToken.findUnique({
+            where: { token },
+            include: { user: true },
+        });
+    },
+    async revoke(token) {
+        return prisma.refreshToken.update({
+            where: { token },
+            data: { revoked: true },
+        });
+    },
+    async revokeAllByUser(userId) {
+        return prisma.refreshToken.updateMany({
+            where: { userId },
+            data: { revoked: true },
+        });
+    },
+    async deleteExpired() {
+        return prisma.refreshToken.deleteMany({
+            where: { expiresAt: { lt: new Date() } },
+        });
+    },
+};
+const chatService = {
+    async createSession(data) {
+        return prisma.chatSession.create({ data });
+    },
+    async getSession(id) {
+        return prisma.chatSession.findUnique({
+            where: { id },
+            include: { messages: { orderBy: { createdAt: "asc" } } },
+        });
+    },
+    async addMessage(data) {
+        return prisma.message.create({ data });
+    },
+    async getMessages(sessionId, limit = 50) {
+        return prisma.message.findMany({
+            where: { sessionId },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async deleteSession(id) {
+        return prisma.chatSession.delete({ where: { id } });
+    },
+};
+const feedbackService = {
+    async create(data) {
+        return prisma.feedback.create({ data });
+    },
+    async getRecent(limit = 100) {
+        return prisma.feedback.findMany({
+            orderBy: { createdAt: "desc" },
+            take: limit,
+            include: { user: { select: { username: true } } },
+        });
+    },
+    async getByRating(rating, limit = 50) {
+        return prisma.feedback.findMany({
+            where: { rating },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async getStats() {
+        const [total, upCount, downCount] = await Promise.all([
+            prisma.feedback.count(),
+            prisma.feedback.count({ where: { rating: "up" } }),
+            prisma.feedback.count({ where: { rating: "down" } }),
+        ]);
+        return {
+            total,
+            upCount,
+            downCount,
+            upRate: total > 0 ? (upCount / total) * 100 : 0,
+        };
+    },
+};
+const knowledgeService = {
+    async create(data) {
+        return prisma.knowledgeBase.create({ data });
+    },
+    async search(query, limit = 10) {
+        return prisma.knowledgeBase.findMany({
+            where: {
+                OR: [
+                    { question: { contains: query } },
+                    { answer: { contains: query } },
+                ],
+                verified: true,
+            },
+            orderBy: { updatedAt: "desc" },
+            take: limit,
+        });
+    },
+    async getAll(verified = true) {
+        return prisma.knowledgeBase.findMany({
+            where: verified ? { verified: true } : undefined,
+            orderBy: { updatedAt: "desc" },
+        });
+    },
+    async verify(id) {
+        return prisma.knowledgeBase.update({
+            where: { id },
+            data: { verified: true },
+        });
+    },
+    async delete(id) {
+        return prisma.knowledgeBase.delete({ where: { id } });
+    },
+};
+const voiceService = {
+    async create(data) {
+        return prisma.voiceLog.create({ data });
+    },
+    async getRecent(limit = 100) {
+        return prisma.voiceLog.findMany({
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async getByUser(username, limit = 50) {
+        return prisma.voiceLog.findMany({
+            where: { username },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async deleteOldLogs(daysOld = 30) {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+        return prisma.voiceLog.deleteMany({
+            where: { createdAt: { lt: cutoffDate } },
+        });
+    },
+};
+
 ;// ./src/index.ts
 
 
@@ -1139,20 +1308,18 @@ const app = new external_elysia_namespaceObject.Elysia()
     if (!(0,external_node_fs_.existsSync)("data"))
         (0,external_node_fs_.mkdirSync)("data", { recursive: true });
     const ip = request.headers.get("x-forwarded-for") || "anon";
-    const userId = payload.userId || "anon";
-    const rec = {
-        userId,
-        ip,
-        query: body.query,
-        answer: body.answer,
-        rating: body.rating,
-        reason: body.reason || null,
-        timestamp: new Date().toISOString(),
-    };
+    const userId = payload.userId || undefined;
     try {
-        await (0,promises_namespaceObject.appendFile)("data/feedback.jsonl", `${JSON.stringify(rec)}\n`);
+        await feedbackService.create({
+            userId,
+            query: body.query,
+            answer: body.answer,
+            rating: body.rating,
+            reason: body.reason || undefined,
+        });
     }
-    catch {
+    catch (err) {
+        logger.error("Failed to store feedback", err instanceof Error ? err : undefined);
         return jsonError(500, "Failed to store feedback");
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -1182,19 +1349,16 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    if (!(0,external_node_fs_.existsSync)("data"))
-        (0,external_node_fs_.mkdirSync)("data", { recursive: true });
-    const item = {
-        summary: body.summary,
-        sourceUrl: body.sourceUrl || null,
-        tags: body.tags || [],
-        confidence: body.confidence,
-        timestamp: new Date().toISOString(),
-    };
     try {
-        await (0,promises_namespaceObject.appendFile)("data/knowledge.jsonl", `${JSON.stringify(item)}\n`);
+        await knowledgeService.create({
+            question: body.summary,
+            answer: body.sourceUrl || "No source provided",
+            source: "api",
+            verified: body.confidence > 0.8,
+        });
     }
-    catch {
+    catch (err) {
+        logger.error("Failed to store knowledge", err instanceof Error ? err : undefined);
         return jsonError(500, "Failed to store knowledge");
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -1408,32 +1572,8 @@ const app = new external_elysia_namespaceObject.Elysia()
         security: [{ bearerAuth: [] }],
     },
 }));
-app.listen({
-    hostname: "0.0.0.0",
-    port: src_CONFIG.PORT,
-    reusePort: true,
-});
-logger.info("Elysia server started", {
-    port: src_CONFIG.PORT,
-    url: `http://localhost:${src_CONFIG.PORT}`,
-    docs: `http://localhost:${src_CONFIG.PORT}/swagger`,
-    health: `http://localhost:${src_CONFIG.PORT}/health`,
-    metrics: `http://localhost:${src_CONFIG.PORT}/metrics`,
-});
-console.log(`
-🚀 Elysia server is running!
-📡 Port: ${src_CONFIG.PORT}
-🌐 URL: http://localhost:${src_CONFIG.PORT}
-📚 Docs: http://localhost:${src_CONFIG.PORT}/swagger
-🏥 Health: http://localhost:${src_CONFIG.PORT}/health
-📊 Metrics: http://localhost:${src_CONFIG.PORT}/metrics
-`);
-setInterval(() => {
-    const spans = telemetry.exportSpans();
-    if (spans.length > 0) {
-        logger.debug("Telemetry spans exported", { count: spans.length });
-    }
-}, 30000);
+if (false) // removed by dead control flow
+{}
 /* harmony default export */ const src = (app);
 
 module.exports = __webpack_exports__;
