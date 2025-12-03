@@ -493,7 +493,11 @@ const app = new Elysia()
 	);
 
 // ---------------- Start Server ----------------
-app.listen(CONFIG.PORT);
+app.listen({
+	hostname: "0.0.0.0",
+	port: CONFIG.PORT,
+	reusePort: true,
+} as any);
 
 console.log(`
 🚀 Elysia server is running!
