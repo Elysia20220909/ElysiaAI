@@ -240,6 +240,98 @@ declare const app: Elysia<"", {
             };
         };
     };
+} & {
+    admin: {
+        feedback: {
+            stats: {
+                get: {
+                    body: unknown;
+                    params: {};
+                    query: unknown;
+                    headers: unknown;
+                    response: {
+                        [x: string]: any;
+                        [x: number]: any;
+                        [x: symbol]: any;
+                    };
+                };
+            };
+        };
+    };
+} & {
+    admin: {
+        feedback: {
+            get: {
+                body: unknown;
+                params: {};
+                query: unknown;
+                headers: unknown;
+                response: {
+                    [x: string]: any;
+                    [x: number]: any;
+                    [x: symbol]: any;
+                };
+            };
+        };
+    };
+} & {
+    admin: {
+        knowledge: {
+            get: {
+                body: unknown;
+                params: {};
+                query: unknown;
+                headers: unknown;
+                response: {
+                    [x: string]: any;
+                    [x: number]: any;
+                    [x: symbol]: any;
+                };
+            };
+        };
+    };
+} & {
+    admin: {
+        knowledge: {
+            ":id": {
+                verify: {
+                    post: {
+                        body: unknown;
+                        params: {
+                            id: string;
+                        } & {};
+                        query: unknown;
+                        headers: unknown;
+                        response: {
+                            [x: string]: any;
+                            [x: number]: any;
+                            [x: symbol]: any;
+                        };
+                    };
+                };
+            };
+        };
+    };
+} & {
+    admin: {
+        knowledge: {
+            ":id": {
+                delete: {
+                    body: unknown;
+                    params: {
+                        id: string;
+                    } & {};
+                    query: unknown;
+                    headers: unknown;
+                    response: {
+                        [x: string]: any;
+                        [x: number]: any;
+                        [x: symbol]: any;
+                    };
+                };
+            };
+        };
+    };
 }, {
     derive: {};
     resolve: {};
