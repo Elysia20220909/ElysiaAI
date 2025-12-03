@@ -1,7 +1,39 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	// The require scope
-/******/ 	var __webpack_require__ = {};
+/******/ 	var __webpack_modules__ = ({
+
+/***/ 24:
+/***/ ((module) => {
+
+module.exports = require("node:fs");
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat get default export */
@@ -33,11 +65,29 @@
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ 	})();
 /******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
+// ESM COMPAT FLAG
+__webpack_require__.r(__webpack_exports__);
 
-;// external "node:fs"
-const external_node_fs_namespaceObject = require("node:fs");
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  "default": () => (/* binding */ src)
+});
+
+// EXTERNAL MODULE: external "node:fs"
+var external_node_fs_ = __webpack_require__(24);
 ;// external "node:fs/promises"
 const promises_namespaceObject = require("node:fs/promises");
 ;// external "@elysiajs/cors"
@@ -334,7 +384,601 @@ const DATABASE_CONFIG = {
 };
 /* harmony default export */ const db = ((/* unused pure expression or super */ null && (DATABASE_CONFIG)));
 
+;// ./src/lib/health.ts
+
+
+async function checkRedis(redisUrl) {
+    const startTime = Date.now();
+    try {
+        const redis = new (external_ioredis_default())(redisUrl, {
+            connectTimeout: 5000,
+            maxRetriesPerRequest: 1,
+        });
+        await redis.ping();
+        const responseTime = Date.now() - startTime;
+        const info = await redis.info("server");
+        const version = info.match(/redis_version:(.+)/)?.[1]?.trim();
+        redis.disconnect();
+        return {
+            status: responseTime < 100 ? "up" : "degraded",
+            responseTime,
+            lastCheck: new Date().toISOString(),
+        };
+    }
+    catch (error) {
+        return {
+            status: "down",
+            error: error instanceof Error ? error.message : "Unknown error",
+            lastCheck: new Date().toISOString(),
+        };
+    }
+}
+async function checkFastAPI(fastAPIUrl) {
+    const startTime = Date.now();
+    try {
+        const response = await external_axios_default().get(`${fastAPIUrl}/health`, {
+            timeout: 5000,
+            validateStatus: (status) => status < 500,
+        });
+        const responseTime = Date.now() - startTime;
+        if (response.status === 200) {
+            return {
+                status: responseTime < 200 ? "up" : "degraded",
+                responseTime,
+                lastCheck: new Date().toISOString(),
+            };
+        }
+        return {
+            status: "degraded",
+            responseTime,
+            error: `HTTP ${response.status}`,
+            lastCheck: new Date().toISOString(),
+        };
+    }
+    catch (error) {
+        return {
+            status: "down",
+            error: error instanceof Error ? error.message : "Connection failed",
+            lastCheck: new Date().toISOString(),
+        };
+    }
+}
+async function checkOllama(ollamaUrl) {
+    const startTime = Date.now();
+    try {
+        const response = await external_axios_default().get(`${ollamaUrl}/api/tags`, {
+            timeout: 5000,
+        });
+        const responseTime = Date.now() - startTime;
+        if (response.status === 200) {
+            return {
+                status: responseTime < 500 ? "up" : "degraded",
+                responseTime,
+                lastCheck: new Date().toISOString(),
+            };
+        }
+        return {
+            status: "degraded",
+            responseTime,
+            lastCheck: new Date().toISOString(),
+        };
+    }
+    catch (error) {
+        return {
+            status: "down",
+            error: error instanceof Error ? error.message : "Connection failed",
+            lastCheck: new Date().toISOString(),
+        };
+    }
+}
+function getSystemMetrics() {
+    const memory = process.memoryUsage();
+    const totalMemory = memory.heapTotal;
+    const usedMemory = memory.heapUsed;
+    return {
+        memory: {
+            used: Math.round(usedMemory / 1024 / 1024),
+            total: Math.round(totalMemory / 1024 / 1024),
+            percentage: Math.round((usedMemory / totalMemory) * 100),
+        },
+        cpu: {
+            usage: process.cpuUsage().user / 1000000,
+        },
+    };
+}
+async function performHealthCheck(redisUrl, fastAPIUrl, ollamaUrl) {
+    const [redis, fastapi, ollama] = await Promise.all([
+        checkRedis(redisUrl),
+        checkFastAPI(fastAPIUrl),
+        checkOllama(ollamaUrl),
+    ]);
+    const system = getSystemMetrics();
+    const allUp = [redis, fastapi, ollama].every((s) => s.status === "up");
+    const anyDown = [redis, fastapi, ollama].some((s) => s.status === "down");
+    const status = allUp ? "healthy" : anyDown ? "unhealthy" : "degraded";
+    return {
+        status,
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        services: { redis, fastapi, ollama },
+        system,
+    };
+}
+
+;// ./src/lib/metrics.ts
+class MetricsCollector {
+    metrics = {
+        http_requests_total: new Map(),
+        http_request_duration_seconds: new Map(),
+        http_errors_total: new Map(),
+        active_connections: 0,
+        chat_requests_total: 0,
+        feedback_submissions_total: 0,
+        auth_attempts_total: new Map(),
+        rate_limit_exceeded_total: 0,
+        rag_queries_total: 0,
+        rag_query_duration_seconds: [],
+    };
+    incrementRequest(method, path, status) {
+        const key = `${method}:${path}:${status}`;
+        const current = this.metrics.http_requests_total.get(key) || 0;
+        this.metrics.http_requests_total.set(key, current + 1);
+    }
+    recordRequestDuration(method, path, duration) {
+        const key = `${method}:${path}`;
+        const durations = this.metrics.http_request_duration_seconds.get(key) || [];
+        durations.push(duration);
+        if (durations.length > 1000)
+            durations.shift();
+        this.metrics.http_request_duration_seconds.set(key, durations);
+    }
+    incrementError(method, path, errorType) {
+        const key = `${method}:${path}:${errorType}`;
+        const current = this.metrics.http_errors_total.get(key) || 0;
+        this.metrics.http_errors_total.set(key, current + 1);
+    }
+    incrementConnections() {
+        this.metrics.active_connections++;
+    }
+    decrementConnections() {
+        this.metrics.active_connections = Math.max(0, this.metrics.active_connections - 1);
+    }
+    incrementChatRequests() {
+        this.metrics.chat_requests_total++;
+    }
+    incrementFeedback() {
+        this.metrics.feedback_submissions_total++;
+    }
+    incrementAuthAttempt(success) {
+        const key = success ? "success" : "failure";
+        const current = this.metrics.auth_attempts_total.get(key) || 0;
+        this.metrics.auth_attempts_total.set(key, current + 1);
+    }
+    incrementRateLimit() {
+        this.metrics.rate_limit_exceeded_total++;
+    }
+    incrementRAGQuery() {
+        this.metrics.rag_queries_total++;
+    }
+    recordRAGDuration(duration) {
+        this.metrics.rag_query_duration_seconds.push(duration);
+        if (this.metrics.rag_query_duration_seconds.length > 1000) {
+            this.metrics.rag_query_duration_seconds.shift();
+        }
+    }
+    getMetrics() {
+        return { ...this.metrics };
+    }
+    toPrometheusFormat() {
+        const lines = [];
+        lines.push("# HELP http_requests_total Total HTTP requests");
+        lines.push("# TYPE http_requests_total counter");
+        for (const [key, value] of this.metrics.http_requests_total) {
+            const [method, path, status] = key.split(":");
+            lines.push(`http_requests_total{method="${method}",path="${path}",status="${status}"} ${value}`);
+        }
+        lines.push("# HELP http_request_duration_seconds HTTP request duration in seconds");
+        lines.push("# TYPE http_request_duration_seconds histogram");
+        for (const [key, durations] of this.metrics.http_request_duration_seconds) {
+            const [method, path] = key.split(":");
+            const sorted = [...durations].sort((a, b) => a - b);
+            const avg = sorted.reduce((a, b) => a + b, 0) / sorted.length;
+            const p50 = sorted[Math.floor(sorted.length * 0.5)] || 0;
+            const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0;
+            const p99 = sorted[Math.floor(sorted.length * 0.99)] || 0;
+            lines.push(`http_request_duration_seconds_avg{method="${method}",path="${path}"} ${avg.toFixed(4)}`);
+            lines.push(`http_request_duration_seconds{method="${method}",path="${path}",quantile="0.5"} ${p50.toFixed(4)}`);
+            lines.push(`http_request_duration_seconds{method="${method}",path="${path}",quantile="0.95"} ${p95.toFixed(4)}`);
+            lines.push(`http_request_duration_seconds{method="${method}",path="${path}",quantile="0.99"} ${p99.toFixed(4)}`);
+        }
+        lines.push("# HELP http_errors_total Total HTTP errors");
+        lines.push("# TYPE http_errors_total counter");
+        for (const [key, value] of this.metrics.http_errors_total) {
+            const [method, path, errorType] = key.split(":");
+            lines.push(`http_errors_total{method="${method}",path="${path}",type="${errorType}"} ${value}`);
+        }
+        lines.push("# HELP active_connections Current active connections");
+        lines.push("# TYPE active_connections gauge");
+        lines.push(`active_connections ${this.metrics.active_connections}`);
+        lines.push("# HELP chat_requests_total Total chat requests");
+        lines.push("# TYPE chat_requests_total counter");
+        lines.push(`chat_requests_total ${this.metrics.chat_requests_total}`);
+        lines.push("# HELP feedback_submissions_total Total feedback submissions");
+        lines.push("# TYPE feedback_submissions_total counter");
+        lines.push(`feedback_submissions_total ${this.metrics.feedback_submissions_total}`);
+        lines.push("# HELP auth_attempts_total Total authentication attempts");
+        lines.push("# TYPE auth_attempts_total counter");
+        for (const [result, value] of this.metrics.auth_attempts_total) {
+            lines.push(`auth_attempts_total{result="${result}"} ${value}`);
+        }
+        lines.push("# HELP rate_limit_exceeded_total Total rate limit exceeded");
+        lines.push("# TYPE rate_limit_exceeded_total counter");
+        lines.push(`rate_limit_exceeded_total ${this.metrics.rate_limit_exceeded_total}`);
+        lines.push("# HELP rag_queries_total Total RAG queries");
+        lines.push("# TYPE rag_queries_total counter");
+        lines.push(`rag_queries_total ${this.metrics.rag_queries_total}`);
+        if (this.metrics.rag_query_duration_seconds.length > 0) {
+            lines.push("# HELP rag_query_duration_seconds RAG query duration");
+            lines.push("# TYPE rag_query_duration_seconds histogram");
+            const sorted = [...this.metrics.rag_query_duration_seconds].sort((a, b) => a - b);
+            const avg = sorted.reduce((a, b) => a + b, 0) / sorted.length;
+            const p50 = sorted[Math.floor(sorted.length * 0.5)] || 0;
+            const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0;
+            const p99 = sorted[Math.floor(sorted.length * 0.99)] || 0;
+            lines.push(`rag_query_duration_seconds_avg ${avg.toFixed(4)}`);
+            lines.push(`rag_query_duration_seconds{quantile="0.5"} ${p50.toFixed(4)}`);
+            lines.push(`rag_query_duration_seconds{quantile="0.95"} ${p95.toFixed(4)}`);
+            lines.push(`rag_query_duration_seconds{quantile="0.99"} ${p99.toFixed(4)}`);
+        }
+        const memUsage = process.memoryUsage();
+        lines.push("# HELP process_memory_bytes Process memory usage");
+        lines.push("# TYPE process_memory_bytes gauge");
+        lines.push(`process_memory_bytes{type="heap_used"} ${memUsage.heapUsed}`);
+        lines.push(`process_memory_bytes{type="heap_total"} ${memUsage.heapTotal}`);
+        lines.push(`process_memory_bytes{type="rss"} ${memUsage.rss}`);
+        lines.push("# HELP process_uptime_seconds Process uptime in seconds");
+        lines.push("# TYPE process_uptime_seconds gauge");
+        lines.push(`process_uptime_seconds ${process.uptime()}`);
+        return `${lines.join("\n")}\n`;
+    }
+}
+const metricsCollector = new MetricsCollector();
+
+;// external "node:path"
+const external_node_path_namespaceObject = require("node:path");
+;// ./src/lib/logger.ts
+
+
+class Logger {
+    logDir;
+    logFile;
+    minLevel;
+    levelPriority = {
+        trace: 0,
+        debug: 1,
+        info: 2,
+        warn: 3,
+        error: 4,
+        fatal: 5,
+    };
+    constructor(logDir = "logs", minLevel = "info") {
+        this.logDir = logDir;
+        this.minLevel = minLevel;
+        this.logFile = (0,external_node_path_namespaceObject.join)(logDir, `app-${new Date().toISOString().split("T")[0]}.log`);
+        if (!(0,external_node_fs_.existsSync)(logDir)) {
+            (0,external_node_fs_.mkdirSync)(logDir, { recursive: true });
+        }
+    }
+    shouldLog(level) {
+        return this.levelPriority[level] >= this.levelPriority[this.minLevel];
+    }
+    formatLog(entry) {
+        return `${JSON.stringify(entry)}\n`;
+    }
+    writeLog(entry) {
+        if (!this.shouldLog(entry.level))
+            return;
+        const colors = {
+            trace: "\x1b[90m",
+            debug: "\x1b[36m",
+            info: "\x1b[32m",
+            warn: "\x1b[33m",
+            error: "\x1b[31m",
+            fatal: "\x1b[35m",
+        };
+        const reset = "\x1b[0m";
+        const color = colors[entry.level];
+        console.log(`${color}[${entry.level.toUpperCase()}]${reset} ${entry.timestamp} ${entry.message}`, entry.context ? entry.context : "");
+        try {
+            (0,external_node_fs_.appendFileSync)(this.logFile, this.formatLog(entry));
+        }
+        catch (error) {
+            console.error("Failed to write to log file:", error);
+        }
+    }
+    trace(message, context) {
+        this.writeLog({
+            level: "trace",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    debug(message, context) {
+        this.writeLog({
+            level: "debug",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    info(message, context) {
+        this.writeLog({
+            level: "info",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    warn(message, context) {
+        this.writeLog({
+            level: "warn",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    error(message, err, context) {
+        this.writeLog({
+            level: "error",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+            error: err
+                ? {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                }
+                : undefined,
+        });
+    }
+    fatal(message, err, context) {
+        this.writeLog({
+            level: "fatal",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+            error: err
+                ? {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                }
+                : undefined,
+        });
+    }
+    logRequest(method, path, status, duration, ip, userId) {
+        const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+        this.writeLog({
+            level,
+            timestamp: new Date().toISOString(),
+            message: `${method} ${path} ${status}`,
+            request: { method, path, ip, userId },
+            duration,
+        });
+    }
+    rotateLogs(retentionDays = 30) {
+        const now = Date.now();
+        const maxAge = retentionDays * 24 * 60 * 60 * 1000;
+        if (!(0,external_node_fs_.existsSync)(this.logDir))
+            return;
+        const fs = __webpack_require__(24);
+        const files = fs.readdirSync(this.logDir);
+        for (const file of files) {
+            const filePath = (0,external_node_path_namespaceObject.join)(this.logDir, file);
+            const stat = fs.statSync(filePath);
+            const age = now - stat.mtimeMs;
+            if (age > maxAge) {
+                fs.unlinkSync(filePath);
+                this.info(`Rotated old log file: ${file}`);
+            }
+        }
+    }
+}
+const logger = new Logger("logs", process.env.LOG_LEVEL || "info");
+
+;// external "node:process"
+const external_node_process_namespaceObject = require("node:process");
+;// ./src/lib/telemetry.ts
+
+class Telemetry {
+    spans = new Map();
+    activeSpans = new Map();
+    enabled;
+    constructor(enabled = true) {
+        this.enabled = enabled;
+    }
+    generateTraceId() {
+        const randomBytes = new Uint8Array(16);
+        crypto.getRandomValues(randomBytes);
+        return Array.from(randomBytes)
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+    }
+    generateSpanId() {
+        const randomBytes = new Uint8Array(8);
+        crypto.getRandomValues(randomBytes);
+        return Array.from(randomBytes)
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+    }
+    parseTraceContext(traceparent) {
+        if (!traceparent)
+            return null;
+        const parts = traceparent.split("-");
+        if (parts.length !== 4)
+            return null;
+        const [version, traceId, spanId, traceFlags] = parts;
+        if (version !== "00")
+            return null;
+        return {
+            traceId,
+            spanId,
+            traceFlags: Number.parseInt(traceFlags, 16),
+        };
+    }
+    createTraceContext(traceId, spanId, sampled = true) {
+        const flags = sampled ? "01" : "00";
+        return `00-${traceId}-${spanId}-${flags}`;
+    }
+    startSpan(name, options) {
+        if (!this.enabled) {
+            return this.createDummySpan(name);
+        }
+        const traceId = options?.parentContext?.traceId || this.generateTraceId();
+        const spanId = this.generateSpanId();
+        const parentSpanId = options?.parentContext?.spanId;
+        const span = {
+            traceId,
+            spanId,
+            parentSpanId,
+            name,
+            startTime: external_node_process_namespaceObject.hrtime.bigint(),
+            attributes: options?.attributes || {},
+            events: [],
+            status: { code: "UNSET" },
+        };
+        this.spans.set(spanId, span);
+        if (options?.contextId) {
+            this.activeSpans.set(options.contextId, spanId);
+        }
+        return span;
+    }
+    endSpan(spanId, status) {
+        const span = this.spans.get(spanId);
+        if (!span)
+            return;
+        span.endTime = external_node_process_namespaceObject.hrtime.bigint();
+        span.duration = Number(span.endTime - span.startTime) / 1_000_000;
+        span.status = status || { code: "OK" };
+        for (const [contextId, activeSpanId] of this.activeSpans.entries()) {
+            if (activeSpanId === spanId) {
+                this.activeSpans.delete(contextId);
+            }
+        }
+    }
+    addEvent(spanId, name, attributes) {
+        const span = this.spans.get(spanId);
+        if (!span)
+            return;
+        span.events.push({
+            name,
+            timestamp: external_node_process_namespaceObject.hrtime.bigint(),
+            attributes,
+        });
+    }
+    setAttribute(spanId, key, value) {
+        const span = this.spans.get(spanId);
+        if (!span)
+            return;
+        span.attributes[key] = value;
+    }
+    setStatus(spanId, status) {
+        const span = this.spans.get(spanId);
+        if (!span)
+            return;
+        span.status = status;
+    }
+    getSpan(spanId) {
+        return this.spans.get(spanId);
+    }
+    getActiveSpan(contextId) {
+        const spanId = this.activeSpans.get(contextId);
+        return spanId ? this.spans.get(spanId) : undefined;
+    }
+    getTrace(traceId) {
+        return Array.from(this.spans.values()).filter((span) => span.traceId === traceId);
+    }
+    exportSpans() {
+        const completed = Array.from(this.spans.values()).filter((span) => span.endTime !== undefined);
+        for (const span of completed) {
+            this.spans.delete(span.spanId);
+        }
+        return completed;
+    }
+    createDummySpan(name) {
+        return {
+            traceId: "",
+            spanId: "",
+            name,
+            startTime: external_node_process_namespaceObject.hrtime.bigint(),
+            attributes: {},
+            events: [],
+            status: { code: "UNSET" },
+        };
+    }
+    async trace(name, fn, options) {
+        const span = this.startSpan(name, options);
+        try {
+            const result = await fn(span);
+            this.endSpan(span.spanId, { code: "OK" });
+            return result;
+        }
+        catch (error) {
+            this.endSpan(span.spanId, {
+                code: "ERROR",
+                message: error instanceof Error ? error.message : "Unknown error",
+            });
+            throw error;
+        }
+    }
+    getStats() {
+        const spans = Array.from(this.spans.values());
+        const completed = spans.filter((s) => s.endTime !== undefined);
+        const active = spans.filter((s) => s.endTime === undefined);
+        const avgDuration = completed.reduce((sum, s) => sum + (s.duration || 0), 0) /
+            completed.length || 0;
+        return {
+            totalSpans: spans.length,
+            activeSpans: active.length,
+            completedSpans: completed.length,
+            averageDuration: avgDuration,
+            traces: new Set(spans.map((s) => s.traceId)).size,
+        };
+    }
+    clear() {
+        this.spans.clear();
+        this.activeSpans.clear();
+    }
+    setEnabled(enabled) {
+        this.enabled = enabled;
+    }
+}
+const telemetry = new Telemetry(process.env.TELEMETRY_ENABLED !== "false");
+function getTraceContextFromRequest(request) {
+    const traceparent = request.headers.get("traceparent");
+    return telemetry.parseTraceContext(traceparent || undefined);
+}
+function Trace(spanName) {
+    return (target, propertyKey, descriptor) => {
+        const originalMethod = descriptor.value;
+        descriptor.value = async function (...args) {
+            const name = spanName || `${target.constructor.name}.${propertyKey}`;
+            return telemetry.trace(name, async (span) => {
+                span.attributes.method = propertyKey;
+                return originalMethod.apply(this, args);
+            });
+        };
+        return descriptor;
+    };
+}
+
 ;// ./src/index.ts
+
+
+
+
 
 
 
@@ -385,20 +1029,93 @@ const app = new external_elysia_namespaceObject.Elysia()
     .use((0,html_namespaceObject.html)())
     .use((0,static_namespaceObject.staticPlugin)({ assets: "public" }))
     .use((0,swagger_namespaceObject.swagger)({ path: "/swagger" }))
-    .onError(({ error, code }) => {
-    console.error(`[ERROR] ${code}:`, error);
+    .onBeforeHandle(({ request }) => {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const traceContext = getTraceContextFromRequest(request);
+    const span = telemetry.startSpan(`HTTP ${request.method} ${path}`, {
+        parentContext: traceContext || undefined,
+        attributes: {
+            "http.method": request.method,
+            "http.url": request.url,
+            "http.route": path,
+        },
+    });
+    request.__span = span;
+    request.__startTime = Date.now();
+    metricsCollector.incrementRequest(request.method, path, 200);
+})
+    .onError(({ error, code, request }) => {
+    const url = new URL(request.url);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname}`;
+    logger.error(errorLog);
+    metricsCollector.incrementError(request.method, url.pathname, String(code));
+    const span = request.__span;
+    if (span) {
+        telemetry.endSpan(span.spanId, {
+            code: "ERROR",
+            message: errorMsg,
+        });
+    }
     const message = error instanceof Error ? error.message : "Internal server error";
     return jsonError(500, message);
 })
-    .onAfterHandle(({ set }) => {
+    .onAfterHandle(({ set, request }) => {
     set.headers["X-Content-Type-Options"] = "nosniff";
     set.headers["X-Frame-Options"] = "DENY";
+    const extReq = request;
+    const span = extReq.__span;
+    if (span) {
+        set.headers.traceparent = telemetry.createTraceContext(span.traceId, span.spanId);
+        telemetry.endSpan(span.spanId);
+    }
+    const startTime = extReq.__startTime;
+    if (startTime) {
+        const duration = (Date.now() - startTime) / 1000;
+        const url = new URL(request.url);
+        metricsCollector.recordRequestDuration(request.method, url.pathname, duration);
+    }
 })
     .get("/ping", () => ({ ok: true }), {
     detail: {
         tags: ["health"],
         summary: "Health check endpoint",
         description: "Returns a simple OK response to verify server is running",
+    },
+})
+    .get("/health", async () => {
+    try {
+        const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+        const health = await performHealthCheck(redisUrl, src_CONFIG.RAG_API_URL, src_CONFIG.MODEL_NAME);
+        const status = health.status === "healthy" ? 200 : 503;
+        return new Response(JSON.stringify(health), {
+            status,
+            headers: { "content-type": "application/json" },
+        });
+    }
+    catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        logger.error(`Health check failed: ${errorMsg}`);
+        return jsonError(503, "Health check failed");
+    }
+}, {
+    detail: {
+        tags: ["health"],
+        summary: "Detailed health check",
+        description: "Check status of Redis, FastAPI, Ollama, and system metrics",
+    },
+})
+    .get("/metrics", () => {
+    const metrics = metricsCollector.toPrometheusFormat();
+    return new Response(metrics, {
+        headers: { "content-type": "text/plain; version=0.0.4" },
+    });
+}, {
+    detail: {
+        tags: ["monitoring"],
+        summary: "Prometheus metrics",
+        description: "Expose metrics in Prometheus format",
     },
 })
     .get("/", () => Bun.file("public/index.html"), {
@@ -419,8 +1136,8 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    if (!(0,external_node_fs_namespaceObject.existsSync)("data"))
-        (0,external_node_fs_namespaceObject.mkdirSync)("data", { recursive: true });
+    if (!(0,external_node_fs_.existsSync)("data"))
+        (0,external_node_fs_.mkdirSync)("data", { recursive: true });
     const ip = request.headers.get("x-forwarded-for") || "anon";
     const userId = payload.userId || "anon";
     const rec = {
@@ -465,8 +1182,8 @@ const app = new external_elysia_namespaceObject.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    if (!(0,external_node_fs_namespaceObject.existsSync)("data"))
-        (0,external_node_fs_namespaceObject.mkdirSync)("data", { recursive: true });
+    if (!(0,external_node_fs_.existsSync)("data"))
+        (0,external_node_fs_.mkdirSync)("data", { recursive: true });
     const item = {
         summary: body.summary,
         sourceUrl: body.sourceUrl || null,
@@ -509,7 +1226,7 @@ const app = new external_elysia_namespaceObject.Elysia()
     }
     const n = Number(query?.n ?? 20) || 20;
     try {
-        if (!(0,external_node_fs_namespaceObject.existsSync)("data/knowledge.jsonl"))
+        if (!(0,external_node_fs_.existsSync)("data/knowledge.jsonl"))
             return new Response(JSON.stringify([]), {
                 headers: { "content-type": "application/json" },
             });
@@ -696,12 +1413,28 @@ app.listen({
     port: src_CONFIG.PORT,
     reusePort: true,
 });
+logger.info("Elysia server started", {
+    port: src_CONFIG.PORT,
+    url: `http://localhost:${src_CONFIG.PORT}`,
+    docs: `http://localhost:${src_CONFIG.PORT}/swagger`,
+    health: `http://localhost:${src_CONFIG.PORT}/health`,
+    metrics: `http://localhost:${src_CONFIG.PORT}/metrics`,
+});
 console.log(`
 🚀 Elysia server is running!
 📡 Port: ${src_CONFIG.PORT}
 🌐 URL: http://localhost:${src_CONFIG.PORT}
 📚 Docs: http://localhost:${src_CONFIG.PORT}/swagger
+🏥 Health: http://localhost:${src_CONFIG.PORT}/health
+📊 Metrics: http://localhost:${src_CONFIG.PORT}/metrics
 `);
+setInterval(() => {
+    const spans = telemetry.exportSpans();
+    if (spans.length > 0) {
+        logger.debug("Telemetry spans exported", { count: spans.length });
+    }
+}, 30000);
+/* harmony default export */ const src = (app);
 
 module.exports = __webpack_exports__;
 /******/ })()
