@@ -9,14 +9,14 @@ import axios from "axios";
 import { Elysia, t } from "elysia";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-import { DEFAULT_MODE, ELYSIA_MODES } from "./config/internal/llm-config";
+import { DEFAULT_MODE, ELYSIA_MODES } from "../.internal/app/llm/llm-config";
 import {
 	checkRateLimitRedis,
 	revokeRefreshToken,
 	storeRefreshToken,
 	verifyStoredRefreshToken,
-} from "./core/security";
-import { DATABASE_CONFIG } from "./database/config";
+} from "../.internal/secure/auth";
+import { DATABASE_CONFIG } from "../.internal/secure/db";
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
 type ChatRequest = {
