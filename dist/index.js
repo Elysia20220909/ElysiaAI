@@ -59,7 +59,7 @@ var external_jsonwebtoken_default = /*#__PURE__*/__webpack_require__.n(external_
 ;// external "sanitize-html"
 const external_sanitize_html_namespaceObject = require("sanitize-html");
 var external_sanitize_html_default = /*#__PURE__*/__webpack_require__.n(external_sanitize_html_namespaceObject);
-;// ./src/config/internal/llm-config.ts
+;// ./.internal/app/llm/llm-config.ts
 const ELYSIA_MODES = {
     sweet: {
         model: "llama3.2",
@@ -174,7 +174,7 @@ const MODE_COMMANDS = {
     "/formal": "professional",
 };
 
-;// ./src/core/security/jwt.ts
+;// ./.internal/secure/auth/jwt.ts
 
 const CONFIG = {
     JWT_SECRET: process.env.JWT_SECRET || "dev-secret",
@@ -226,7 +226,7 @@ function extractBearerToken(authHeader) {
 ;// external "ioredis"
 const external_ioredis_namespaceObject = require("ioredis");
 var external_ioredis_default = /*#__PURE__*/__webpack_require__.n(external_ioredis_namespaceObject);
-;// ./src/core/security/redis.ts
+;// ./.internal/secure/auth/redis.ts
 
 const redis_CONFIG = {
     REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
@@ -316,13 +316,13 @@ async function revokeRefreshToken(userId) {
 function isRedisAvailable() {
     return redisAvailable;
 }
-/* harmony default export */ const security_redis = ((/* unused pure expression or super */ null && (redis)));
+/* harmony default export */ const auth_redis = ((/* unused pure expression or super */ null && (redis)));
 
-;// ./src/core/security/index.ts
+;// ./.internal/secure/auth/index.ts
 
 
 
-;// ./src/database/config/index.ts
+;// ./.internal/secure/db/index.ts
 const DATABASE_CONFIG = {
     RAG_API_URL: process.env.RAG_API_URL || "http://127.0.0.1:8000/rag",
     RAG_TIMEOUT: Number(process.env.RAG_TIMEOUT) || 5000,
@@ -332,7 +332,7 @@ const DATABASE_CONFIG = {
     REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
     REDIS_ENABLED: process.env.REDIS_ENABLED !== "false",
 };
-/* harmony default export */ const config = ((/* unused pure expression or super */ null && (DATABASE_CONFIG)));
+/* harmony default export */ const db = ((/* unused pure expression or super */ null && (DATABASE_CONFIG)));
 
 ;// ./src/index.ts
 
@@ -691,17 +691,17 @@ const app = new external_elysia_namespaceObject.Elysia()
         security: [{ bearerAuth: [] }],
     },
 }));
-const server = Bun.serve({
+app.listen({
+    hostname: "0.0.0.0",
     port: src_CONFIG.PORT,
-    fetch: app.fetch.bind(app),
+    reusePort: true,
 });
 console.log(`
 🚀 Elysia server is running!
-📡 Port: ${server.port}
-🌐 URL: http://${server.hostname}:${server.port}
-📚 Docs: http://${server.hostname}:${server.port}/swagger
+📡 Port: ${src_CONFIG.PORT}
+🌐 URL: http://localhost:${src_CONFIG.PORT}
+📚 Docs: http://localhost:${src_CONFIG.PORT}/swagger
 `);
-process.stdin.resume();
 
 module.exports = __webpack_exports__;
 /******/ })()
