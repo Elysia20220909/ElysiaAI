@@ -1,0 +1,118 @@
+{
+	"common": {
+		"hello": "Hello",
+		"welcome": "Welcome to Elysia AI",
+		"loading": "Loading...",
+		"error": "An error occurred",
+		"success": "Success",
+		"submit": "Submit",
+		"cancel": "Cancel",
+		"confirm": "Confirm",
+		"back": "Back",
+		"next": "Next",
+		"save": "Save",
+		"delete": "Delete",
+		"edit": "Edit",
+		"search": "Search",
+		"filter": "Filter",
+		"sort": "Sort",
+		"refresh": "Refresh"
+	},
+	"auth": {
+		"login": "Login",
+		"logout": "Logout",
+		"register": "Register",
+		"username": "Username",
+		"password": "Password",
+		"forgotPassword": "Forgot Password?",
+		"rememberMe": "Remember Me",
+		"loginSuccess": "Login successful",
+		"loginFailed": "Login failed",
+		"invalidCredentials": "Invalid username or password",
+		"tokenExpired": "Your session has expired. Please login again.",
+		"unauthorized": "You are not authorized to access this resource"
+	},
+	"chat": {
+		"title": "Chat with Elysia",
+		"placeholder": "Type your message here...",
+		"send": "Send",
+		"clear": "Clear Chat",
+		"mode": {
+			"sweet": "Sweet Mode",
+			"normal": "Normal Mode",
+			"professional": "Professional Mode"
+		},
+		"thinking": "Elysia is thinking...",
+		"error": "Failed to send message",
+		"empty": "Message cannot be empty",
+		"tooLong": "Message is too long (max {{max}} characters)",
+		"rateLimited": "You're sending messages too quickly. Please wait a moment."
+	},
+	"feedback": {
+		"title": "Feedback",
+		"positive": "This was helpful",
+		"negative": "This wasn't helpful",
+		"reason": "Please tell us why",
+		"submit": "Submit Feedback",
+		"thanks": "Thank you for your feedback!",
+		"error": "Failed to submit feedback"
+	},
+	"health": {
+		"title": "System Health",
+		"healthy": "All systems operational",
+		"degraded": "Some systems degraded",
+		"unhealthy": "System unhealthy",
+		"services": {
+			"redis": "Redis",
+			"fastapi": "FastAPI",
+			"ollama": "Ollama"
+		},
+		"status": {
+			"up": "Up",
+			"down": "Down",
+			"degraded": "Degraded"
+		}
+	},
+	"errors": {
+		"notFound": "Resource not found",
+		"serverError": "Internal server error",
+		"badRequest": "Invalid request",
+		"forbidden": "Access forbidden",
+		"validation": "Validation failed",
+		"network": "Network error",
+		"timeout": "Request timeout",
+		"unknown": "An unknown error occurred"
+	},
+	"validation": {
+		"required": "{{field}} is required",
+		"minLength": "{{field}} must be at least {{min}} characters",
+		"maxLength": "{{field}} must not exceed {{max}} characters",
+		"email": "Invalid email address",
+		"url": "Invalid URL",
+		"number": "{{field}} must be a number",
+		"min": "{{field}} must be at least {{min}}",
+		"max": "{{field}} must not exceed {{max}}"
+	},
+	"messages": {
+		"one": "{{count}} message",
+		"other": "{{count}} messages"
+	},
+	"time": {
+		"second": {
+			"one": "{{count}} second",
+			"other": "{{count}} seconds"
+		},
+		"minute": {
+			"one": "{{count}} minute",
+			"other": "{{count}} minutes"
+		},
+		"hour": {
+			"one": "{{count}} hour",
+			"other": "{{count}} hours"
+		},
+		"day": {
+			"one": "{{count}} day",
+			"other": "{{count}} days"
+		}
+	}
+}
