@@ -24,9 +24,13 @@
 	"scripts": {
 		"test": "bun test",
 		"test:watch": "bun test --watch",
+		"test:coverage": "bun test --coverage",
 		"dev": "node -e \"process.platform==='win32'?require('child_process').exec('powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1'):require('child_process').exec('bash ./scripts/dev.sh')\"",
 		"dev:win": "powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1",
 		"dev:unix": "bash ./scripts/dev.sh",
+		"clean": "powershell -Command \"Remove-Item -Recurse -Force dist, .tsbuildinfo, *.log -ErrorAction SilentlyContinue\"",
+		"clean:deep": "powershell -ExecutionPolicy Bypass -File ./scripts/clean.ps1 -Deep",
+		"clean:check": "powershell -ExecutionPolicy Bypass -File ./scripts/clean.ps1 -WhatIf",
 		"build": "webpack --config webpack.config.js --mode=production",
 		"start": "bun run src/index.ts",
 		"chat": "bun run chat.ts",
