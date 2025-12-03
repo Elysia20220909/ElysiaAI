@@ -9,13 +9,14 @@ import { existsSync, mkdirSync } from "fs";
 import { appendFile } from "fs/promises";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-import { DEFAULT_MODE, ELYSIA_MODES } from "./llm-config";
+import { DEFAULT_MODE, ELYSIA_MODES } from "./config/internal/llm-config";
 import {
 	checkRateLimitRedis,
 	revokeRefreshToken,
 	storeRefreshToken,
-	verifyRefreshToken,
-} from "./redis";
+	verifyStoredRefreshToken,
+} from "./core/security";
+import { DATABASE_CONFIG } from "./database/config";
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
 type ChatRequest = {
@@ -26,8 +27,8 @@ type ChatRequest = {
 // ---------------- Config ----------------
 const CONFIG = {
 	PORT: Number(process.env.PORT) || 3000,
-	RAG_API_URL: process.env.RAG_API_URL || "http://127.0.0.1:8000/rag",
-	RAG_TIMEOUT: Number(process.env.RAG_TIMEOUT) || 5000,
+	RAG_API_URL: DATABASE_CONFIG.RAG_API_URL,
+	RAG_TIMEOUT: DATABASE_CONFIG.RAG_TIMEOUT,
 	MODEL_NAME: process.env.MODEL_NAME || "llama3.2",
 	MAX_REQUESTS_PER_MINUTE: Number(process.env.RATE_LIMIT_RPM) || 60,
 	ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS?.split(",") || [
@@ -321,7 +322,7 @@ const app = new Elysia()
 				return jsonError(401, "Invalid or expired refresh token");
 			}
 			const userId = (payload as { userId?: string }).userId || "default-user";
-			const isValid = await verifyRefreshToken(userId, refreshToken);
+			const isValid = await verifyStoredRefreshToken(userId, refreshToken);
 			if (!isValid) return jsonError(401, "Refresh token not found or revoked");
 			const newAccessToken = jwt.sign(
 				{ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) },

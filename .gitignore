@@ -32,6 +32,14 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Protected configuration directory
+/config/private/
+
+# Secure internal configurations
+/src/config/internal/
+/src/core/security/
+/src/database/config/
+
 # vercel
 .vercel
 
