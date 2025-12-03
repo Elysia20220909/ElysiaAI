@@ -13,24 +13,24 @@ export declare const userService: {
         username: string;
         role: string;
         createdAt: Date;
-        updatedAt: Date;
         passwordHash: string;
+        updatedAt: Date;
     }>;
     findByUsername(username: string): Promise<{
         id: string;
         username: string;
         role: string;
         createdAt: Date;
-        updatedAt: Date;
         passwordHash: string;
+        updatedAt: Date;
     } | null>;
     findById(id: string): Promise<{
         id: string;
         username: string;
         role: string;
         createdAt: Date;
-        updatedAt: Date;
         passwordHash: string;
+        updatedAt: Date;
     } | null>;
     update(id: string, data: Partial<{
         passwordHash: string;
@@ -40,16 +40,16 @@ export declare const userService: {
         username: string;
         role: string;
         createdAt: Date;
-        updatedAt: Date;
         passwordHash: string;
+        updatedAt: Date;
     }>;
     delete(id: string): Promise<{
         id: string;
         username: string;
         role: string;
         createdAt: Date;
-        updatedAt: Date;
         passwordHash: string;
+        updatedAt: Date;
     }>;
 };
 export declare const tokenService: {
@@ -71,8 +71,8 @@ export declare const tokenService: {
             username: string;
             role: string;
             createdAt: Date;
-            updatedAt: Date;
             passwordHash: string;
+            updatedAt: Date;
         };
     } & {
         id: string;
@@ -202,50 +202,50 @@ export declare const knowledgeService: {
         answer: string;
         userId: string | null;
         createdAt: Date;
+        updatedAt: Date;
         question: string;
         source: string | null;
         verified: boolean;
-        updatedAt: Date;
     }>;
     search(query: string, limit?: number): Promise<{
         id: string;
         answer: string;
         userId: string | null;
         createdAt: Date;
+        updatedAt: Date;
         question: string;
         source: string | null;
         verified: boolean;
-        updatedAt: Date;
     }[]>;
     getAll(verified?: boolean): Promise<{
         id: string;
         answer: string;
         userId: string | null;
         createdAt: Date;
+        updatedAt: Date;
         question: string;
         source: string | null;
         verified: boolean;
-        updatedAt: Date;
     }[]>;
     verify(id: string): Promise<{
         id: string;
         answer: string;
         userId: string | null;
         createdAt: Date;
+        updatedAt: Date;
         question: string;
         source: string | null;
         verified: boolean;
-        updatedAt: Date;
     }>;
     delete(id: string): Promise<{
         id: string;
         answer: string;
         userId: string | null;
         createdAt: Date;
+        updatedAt: Date;
         question: string;
         source: string | null;
         verified: boolean;
-        updatedAt: Date;
     }>;
 };
 export declare const voiceService: {
