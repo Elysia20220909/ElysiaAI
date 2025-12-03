@@ -40,8 +40,24 @@ yarn-error.log*
 /src/core/security/
 /src/database/config/
 
-# Deep-hidden secure files (NEW)
+# Deep-hidden secure files - CRITICAL SECURITY
 /.internal/
+/.internal/**
+.internal/secrets/
+.internal/security/
+.internal/private/
+
+# Security-sensitive files
+**/secrets/
+**/private/
+**/.env.secrets
+**/*.pem
+**/*.key
+**/*.crt
+**/*.p12
+**/*.pfx
+**/service-account*.json
+**/credentials*.json
 
 # vercel
 .vercel
