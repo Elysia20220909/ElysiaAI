@@ -605,21 +605,23 @@ const app = new Elysia()
 	);
 
 // ---------------- Start Server ----------------
-app.listen({
-	hostname: "0.0.0.0",
-	port: CONFIG.PORT,
-	reusePort: true,
-});
+// Only start server if this is the main module
+if (import.meta.main) {
+	app.listen({
+		hostname: "0.0.0.0",
+		port: CONFIG.PORT,
+		reusePort: true,
+	});
 
-logger.info("Elysia server started", {
-	port: CONFIG.PORT,
-	url: `http://localhost:${CONFIG.PORT}`,
-	docs: `http://localhost:${CONFIG.PORT}/swagger`,
-	health: `http://localhost:${CONFIG.PORT}/health`,
-	metrics: `http://localhost:${CONFIG.PORT}/metrics`,
-});
+	logger.info("Elysia server started", {
+		port: CONFIG.PORT,
+		url: `http://localhost:${CONFIG.PORT}`,
+		docs: `http://localhost:${CONFIG.PORT}/swagger`,
+		health: `http://localhost:${CONFIG.PORT}/health`,
+		metrics: `http://localhost:${CONFIG.PORT}/metrics`,
+	});
 
-console.log(`
+	console.log(`
 🚀 Elysia server is running!
 📡 Port: ${CONFIG.PORT}
 🌐 URL: http://localhost:${CONFIG.PORT}
@@ -628,13 +630,14 @@ console.log(`
 📊 Metrics: http://localhost:${CONFIG.PORT}/metrics
 `);
 
-// Export spans periodically
-setInterval(() => {
-	const spans = telemetry.exportSpans();
-	if (spans.length > 0) {
-		logger.debug("Telemetry spans exported", { count: spans.length });
-	}
-}, 30000); // Every 30 seconds
+	// Export spans periodically
+	setInterval(() => {
+		const spans = telemetry.exportSpans();
+		if (spans.length > 0) {
+			logger.debug("Telemetry spans exported", { count: spans.length });
+		}
+	}, 30000); // Every 30 seconds
+}
 
 export default app;
 export type App = typeof app;
