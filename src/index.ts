@@ -69,7 +69,9 @@ const app = new Elysia()
 	.use(swagger({ path: "/swagger" }))
 	.onError(({ error, code }) => {
 		console.error(`[ERROR] ${code}:`, error);
-		return jsonError(500, error.message || "Internal server error");
+		const message =
+			error instanceof Error ? error.message : "Internal server error";
+		return jsonError(500, message);
 	})
 	.onAfterHandle(({ set }) => {
 		set.headers["X-Content-Type-Options"] = "nosniff";

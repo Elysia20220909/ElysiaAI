@@ -6,7 +6,19 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**"]
+		"includes": ["**"],
+		"experimentalScannerIgnores": [
+			"node_modules",
+			"dist",
+			".venv",
+			"*.log",
+			"mobile",
+			"desktop",
+			"native",
+			"cuda",
+			"python",
+			"temp"
+		]
 	},
 	"formatter": {
 		"enabled": true,
