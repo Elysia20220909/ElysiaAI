@@ -1,0 +1,118 @@
+{
+	"common": {
+		"hello": "こんにちは",
+		"welcome": "Elysia AIへようこそ",
+		"loading": "読み込み中...",
+		"error": "エラーが発生しました",
+		"success": "成功",
+		"submit": "送信",
+		"cancel": "キャンセル",
+		"confirm": "確認",
+		"back": "戻る",
+		"next": "次へ",
+		"save": "保存",
+		"delete": "削除",
+		"edit": "編集",
+		"search": "検索",
+		"filter": "フィルター",
+		"sort": "並び替え",
+		"refresh": "更新"
+	},
+	"auth": {
+		"login": "ログイン",
+		"logout": "ログアウト",
+		"register": "登録",
+		"username": "ユーザー名",
+		"password": "パスワード",
+		"forgotPassword": "パスワードをお忘れですか？",
+		"rememberMe": "ログイン状態を保持",
+		"loginSuccess": "ログインに成功しました",
+		"loginFailed": "ログインに失敗しました",
+		"invalidCredentials": "ユーザー名またはパスワードが正しくありません",
+		"tokenExpired": "セッションの有効期限が切れました。再度ログインしてください。",
+		"unauthorized": "このリソースへのアクセス権限がありません"
+	},
+	"chat": {
+		"title": "Elysiaとチャット",
+		"placeholder": "メッセージを入力してください...",
+		"send": "送信",
+		"clear": "チャットをクリア",
+		"mode": {
+			"sweet": "甘えモード",
+			"normal": "通常モード",
+			"professional": "プロフェッショナルモード"
+		},
+		"thinking": "Elysiaが考え中...",
+		"error": "メッセージの送信に失敗しました",
+		"empty": "メッセージが空です",
+		"tooLong": "メッセージが長すぎます（最大{{max}}文字）",
+		"rateLimited": "メッセージの送信が早すぎます。少しお待ちください。"
+	},
+	"feedback": {
+		"title": "フィードバック",
+		"positive": "役に立った",
+		"negative": "役に立たなかった",
+		"reason": "理由を教えてください",
+		"submit": "フィードバックを送信",
+		"thanks": "フィードバックをありがとうございます！",
+		"error": "フィードバックの送信に失敗しました"
+	},
+	"health": {
+		"title": "システムヘルス",
+		"healthy": "すべてのシステムが正常に稼働中",
+		"degraded": "一部のシステムが低下しています",
+		"unhealthy": "システムが異常です",
+		"services": {
+			"redis": "Redis",
+			"fastapi": "FastAPI",
+			"ollama": "Ollama"
+		},
+		"status": {
+			"up": "稼働中",
+			"down": "停止中",
+			"degraded": "低下"
+		}
+	},
+	"errors": {
+		"notFound": "リソースが見つかりません",
+		"serverError": "内部サーバーエラー",
+		"badRequest": "無効なリクエスト",
+		"forbidden": "アクセスが禁止されています",
+		"validation": "検証に失敗しました",
+		"network": "ネットワークエラー",
+		"timeout": "リクエストタイムアウト",
+		"unknown": "不明なエラーが発生しました"
+	},
+	"validation": {
+		"required": "{{field}}は必須です",
+		"minLength": "{{field}}は{{min}}文字以上である必要があります",
+		"maxLength": "{{field}}は{{max}}文字以下である必要があります",
+		"email": "無効なメールアドレス",
+		"url": "無効なURL",
+		"number": "{{field}}は数値である必要があります",
+		"min": "{{field}}は{{min}}以上である必要があります",
+		"max": "{{field}}は{{max}}以下である必要があります"
+	},
+	"messages": {
+		"one": "{{count}}件のメッセージ",
+		"other": "{{count}}件のメッセージ"
+	},
+	"time": {
+		"second": {
+			"one": "{{count}}秒",
+			"other": "{{count}}秒"
+		},
+		"minute": {
+			"one": "{{count}}分",
+			"other": "{{count}}分"
+		},
+		"hour": {
+			"one": "{{count}}時間",
+			"other": "{{count}}時間"
+		},
+		"day": {
+			"one": "{{count}}日",
+			"other": "{{count}}日"
+		}
+	}
+}
