@@ -243,11 +243,11 @@ class LogCleanupManager {
 			const source = createReadStream(filePath);
 			const destination = createWriteStream(`${filePath}.gz`);
 
-			await new Promise((resolve, reject) => {
+			await new Promise<void>((resolve, reject) => {
 				source
 					.pipe(gzip)
 					.pipe(destination)
-					.on("finish", resolve)
+					.on("finish", () => resolve())
 					.on("error", reject);
 			});
 
