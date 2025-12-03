@@ -22,8 +22,11 @@ import { logger } from "./lib/logger";
 import { CacheManager } from "./lib/cache";
 import { i18n, getLocaleFromRequest } from "./lib/i18n";
 import { telemetry, getTraceContextFromRequest } from "./lib/telemetry";
-import { feedbackService, knowledgeService } from "./lib/database";
-import { checkEnvironmentOrExit, printEnvironmentSummary } from "./lib/env-validator";
+import { feedbackService, knowledgeService, userService } from "./lib/database";
+import {
+	checkEnvironmentOrExit,
+	printEnvironmentSummary,
+} from "./lib/env-validator";
 
 // 環境変数検証（起動時）
 checkEnvironmentOrExit();
@@ -251,7 +254,10 @@ const app = new Elysia()
 					reason: body.reason || undefined,
 				});
 			} catch (err) {
-				logger.error("Failed to store feedback", err instanceof Error ? err : undefined);
+				logger.error(
+					"Failed to store feedback",
+					err instanceof Error ? err : undefined,
+				);
 				return jsonError(500, "Failed to store feedback");
 			}
 			return new Response(JSON.stringify({ ok: true }), {
@@ -306,7 +312,10 @@ const app = new Elysia()
 					verified: body.confidence > 0.8,
 				});
 			} catch (err) {
-				logger.error("Failed to store knowledge", err instanceof Error ? err : undefined);
+				logger.error(
+					"Failed to store knowledge",
+					err instanceof Error ? err : undefined,
+				);
 				return jsonError(500, "Failed to store knowledge");
 			}
 			return new Response(JSON.stringify({ ok: true }), {
@@ -738,6 +747,116 @@ const app = new Elysia()
 			},
 		},
 	);
+
+// ==================== Additional APIs ====================
+
+// User Registration
+app.post(
+	"/auth/register",
+	async ({ body }: { body: { username: string; password: string } }) => {
+		const { username, password } = body;
+
+		const existing = await userService.findByUsername(username);
+		if (existing) {
+			return jsonError(400, "Username already exists");
+		}
+
+		if (password.length < 8) {
+			return jsonError(400, "Password must be at least 8 characters");
+		}
+
+		try {
+			const { createUser } = await import("./lib/security");
+			const user = await createUser(username, password, "user");
+
+			return new Response(
+				JSON.stringify({
+					success: true,
+					userId: user.id,
+					username: user.username,
+				}),
+				{ headers: { "content-type": "application/json" } },
+			);
+		} catch (error) {
+			logger.error(
+				"Registration failed",
+				error instanceof Error ? error : undefined,
+			);
+			return jsonError(500, "Registration failed");
+		}
+	},
+	{
+		body: t.Object({
+			username: t.String({ minLength: 3, maxLength: 32 }),
+			password: t.String({ minLength: 8, maxLength: 128 }),
+		}),
+		detail: {
+			tags: ["auth"],
+			summary: "Register new user",
+		},
+	},
+);
+
+// Data Export APIs
+app.get("/admin/export/feedback", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const { exportFeedbackToCSV } = await import("./lib/data-export");
+	const csv = await exportFeedbackToCSV();
+
+	return new Response(csv, {
+		headers: {
+			"content-type": "text/csv; charset=utf-8",
+			"content-disposition": `attachment; filename="feedback_${new Date().toISOString().split("T")[0]}.csv"`,
+		},
+	});
+});
+
+app.get("/admin/export/knowledge/json", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const { exportKnowledgeToJSON } = await import("./lib/data-export");
+	const json = await exportKnowledgeToJSON();
+
+	return new Response(json, {
+		headers: {
+			"content-type": "application/json; charset=utf-8",
+			"content-disposition": `attachment; filename="knowledge_${new Date().toISOString().split("T")[0]}.json"`,
+		},
+	});
+});
+
+app.get("/admin/analytics", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const { apiAnalytics } = await import("./lib/api-analytics");
+	const data = apiAnalytics.exportJSON();
+
+	return new Response(JSON.stringify(data), {
+		headers: { "content-type": "application/json" },
+	});
+});
 
 // ---------------- Start Server ----------------
 // Only start server if this is the main module
