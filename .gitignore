@@ -60,6 +60,18 @@ package-lock.json
 /logs/
 /outputs/
 
+# Temporary and log files
+*.log
+*.tmp
+*.cache
+*-debug.log
+auth-debug.log
+server-swagger.log
+server.log
+node.log
+detailed.log
+bun.log
+
 # mobile
 /mobile/node_modules/
 /mobile/.expo/
