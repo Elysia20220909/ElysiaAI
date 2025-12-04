@@ -43,6 +43,7 @@
 		"fix": "biome check --write . --config-path=config/internal",
 		"db:init": "bun run scripts/init-prisma.ts",
 		"db:migrate": "bun run scripts/prisma-migrate.ts",
+		"db:setup": "bun scripts/setup-database.ts",
 		"db:seed": "bun run scripts/seed.ts",
 		"db:reset": "bunx prisma migrate reset --force",
 		"db:studio": "bunx prisma studio",
