@@ -68,7 +68,10 @@ describe("Configuration Validation", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const tsconfigPath = path.join(process.cwd(), "tsconfig.json");
+		const tsconfigPath = path.join(
+			process.cwd(),
+			"config/internal/tsconfig.json",
+		);
 		expect(fs.existsSync(tsconfigPath)).toBe(true);
 
 		// tsconfig.jsonにはコメントが含まれるため、正規表現で削除してからパース

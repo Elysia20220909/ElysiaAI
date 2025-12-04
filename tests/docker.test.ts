@@ -91,10 +91,10 @@ describe("Docker Validation Tests", () => {
 		// 必要なファイルが存在するか確認
 		const requiredFiles = [
 			"package.json",
-			"tsconfig.json",
-			"webpack.config.js",
+			"config/internal/tsconfig.json",
+			"config/internal/webpack.config.js",
 			"src/index.ts",
-			"Dockerfile.production",
+			"config/docker/Dockerfile.production",
 		];
 
 		for (const file of requiredFiles) {
