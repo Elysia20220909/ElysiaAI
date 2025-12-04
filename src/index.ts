@@ -1342,32 +1342,31 @@ app.get("/admin/audit/export", async ({ request }) => {
 // ---------------- Start Server ----------------
 // Only start server if this is the main module
 if (import.meta.main) {
-	const server = app.listen({
-		hostname: "0.0.0.0",
-		port: CONFIG.PORT,
-		reusePort: true,
-	});
+	try {
+		const server = app.listen({
+			port: CONFIG.PORT,
+		});
 
-	// WebSocketの初期化（HTTPサーバー取得後） - 一時的に無効化
-	// @ts-expect-error - Elysia internal server property
-	const httpServer = server.server;
-	// biome-ignore lint/correctness/noConstantCondition: WebSocket一時無効化中
-	if (false && httpServer) {
-		const { wsManager } = await import("./lib/websocket-manager");
-		wsManager.initialize(httpServer);
-		logger.info("WebSocket server initialized");
-	}
+		// WebSocketの初期化（HTTPサーバー取得後） - 一時的に無効化
+		// Elysia internal server property
+		const httpServer = server.server;
+		// biome-ignore lint/correctness/noConstantCondition: WebSocket一時無効化中
+		if (false && httpServer) {
+			const { wsManager } = await import("./lib/websocket-manager");
+			wsManager.initialize(httpServer);
+			logger.info("WebSocket server initialized");
+		}
 
-	logger.info("Elysia server started", {
-		port: CONFIG.PORT,
-		url: `http://localhost:${CONFIG.PORT}`,
-		docs: `http://localhost:${CONFIG.PORT}/swagger`,
-		health: `http://localhost:${CONFIG.PORT}/health`,
-		metrics: `http://localhost:${CONFIG.PORT}/metrics`,
-		websocket: `ws://localhost:${CONFIG.PORT}/ws`,
-	});
+		logger.info("Elysia server started", {
+			port: CONFIG.PORT,
+			url: `http://localhost:${CONFIG.PORT}`,
+			docs: `http://localhost:${CONFIG.PORT}/swagger`,
+			health: `http://localhost:${CONFIG.PORT}/health`,
+			metrics: `http://localhost:${CONFIG.PORT}/metrics`,
+			websocket: `ws://localhost:${CONFIG.PORT}/ws`,
+		});
 
-	console.log(`
+		console.log(`
 🚀 Elysia server is running!
 📡 Port: ${CONFIG.PORT}
 🌐 URL: http://localhost:${CONFIG.PORT}
@@ -1377,13 +1376,21 @@ if (import.meta.main) {
 🔌 WebSocket: ws://localhost:${CONFIG.PORT}/ws
 `);
 
-	// Export spans periodically
-	setInterval(() => {
-		const spans = telemetry.exportSpans();
-		if (spans.length > 0) {
-			logger.debug("Telemetry spans exported", { count: spans.length });
-		}
-	}, 30000); // Every 30 seconds
+		// Export spans periodically
+		setInterval(() => {
+			const spans = telemetry.exportSpans();
+			if (spans.length > 0) {
+				logger.debug("Telemetry spans exported", { count: spans.length });
+			}
+		}, 30000); // Every 30 seconds
+	} catch (error) {
+		logger.error(
+			"Failed to start server",
+			error instanceof Error ? error : new Error(String(error)),
+		);
+		console.error("❌ Server startup failed:", error);
+		process.exit(1);
+	}
 }
 
 export default app;
