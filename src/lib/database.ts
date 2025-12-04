@@ -9,11 +9,17 @@ import { PrismaClient } from "@prisma/client";
 let prisma: PrismaClient;
 
 try {
+	// Prisma 7: データベース URL をコンストラクタで指定
+	const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
+
+	// SQLite の場合は直接ファイルを使用
 	prisma = new PrismaClient({
 		log:
 			process.env.NODE_ENV === "development"
 				? ["query", "error", "warn"]
 				: ["error"],
+		// Prisma 7: datasourceUrl を指定
+		datasourceUrl: dbUrl,
 	});
 	console.log("✅ Prisma database connected");
 } catch (error) {
