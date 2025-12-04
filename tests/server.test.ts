@@ -107,7 +107,10 @@ describe("Docker Configuration Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const dockerfilePath = path.join(process.cwd(), "Dockerfile.production");
+		const dockerfilePath = path.join(
+			process.cwd(),
+			"config/docker/Dockerfile.production",
+		);
 		expect(fs.existsSync(dockerfilePath)).toBe(true);
 
 		const content = fs.readFileSync(dockerfilePath, "utf-8");
@@ -120,7 +123,10 @@ describe("Docker Configuration Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const composePath = path.join(process.cwd(), "docker-compose.yml");
+		const composePath = path.join(
+			process.cwd(),
+			"config/docker/docker-compose.yml",
+		);
 		expect(fs.existsSync(composePath)).toBe(true);
 
 		const content = fs.readFileSync(composePath, "utf-8");
