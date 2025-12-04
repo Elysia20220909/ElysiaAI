@@ -192,7 +192,7 @@ const fullLog = accessControl.exportAccessLog();
 
 ### ドキュメント
 
-- 📘 **SECURITY_HARDENING.md** - セキュリティ強化ガイド
+- 📘 **docs/SECURITY.md** - 統合セキュリティガイド
 - 📗 **.internal/security/README.md** - セキュリティモジュール詳細
 - 📕 **.internal/private/README.md** - プライベート設定ガイド
 
@@ -291,7 +291,7 @@ npm audit
 
 - **セキュリティ問題**: security@your-domain.com
 - **緊急**: インシデント対応手順に従う
-- **ドキュメント**: `docs/SECURITY_HARDENING.md`
+- **ドキュメント**: `docs/SECURITY.md`
 
 ---
 
