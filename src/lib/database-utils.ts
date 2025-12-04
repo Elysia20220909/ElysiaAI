@@ -3,11 +3,34 @@
  * ユーザー、チャットセッション、フィードバック管理
  */
 
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import type { ChatSession, User, Feedback } from "@prisma/client";
 import bcryptjs from "bcryptjs";
 
-const prisma = new PrismaClient();
+declare global {
+  // eslint-disable-next-line no-var
+  var prismaInstance: PrismaClient | undefined;
+}
+
+// DATABASE_URL から SQLite パスを取得
+const databaseUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
+// file:// プレフィックスを削除
+const sqlitePath = databaseUrl.replace("file:", "");
+
+const prisma =
+  global.prismaInstance ||
+  new PrismaClient({
+    datasources: {
+      db: {
+        url: databaseUrl,
+      },
+    },
+  });
+
+if (process.env.NODE_ENV === "development") {
+  global.prismaInstance = prisma;
+}
 
 // ============ ユーザー操作 ============
 
