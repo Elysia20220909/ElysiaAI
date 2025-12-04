@@ -387,4 +387,6 @@ print(response.json())
 
 ## WebSocket Support
 
-Currently not implemented. All real-time communication uses Server-Sent Events (SSE).
+WebSocket support has been integrated in Phase 5 via the WebSocketManager (`src/lib/websocket-manager.ts`).
+Real-time communication is available for chat notifications, dashboard updates, and room-based broadcasting.
+For simpler use cases, Server-Sent Events (SSE) are still available.

@@ -12,6 +12,15 @@ interface AuditMiddlewareOptions {
 	includeBody?: boolean;
 }
 
+interface AuditData {
+	startTime: number;
+	url: string;
+	method: string;
+}
+
+// WeakMapで型安全にリクエストデータを保存
+const auditDataMap = new WeakMap<Request, AuditData>();
+
 export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 	const {
 		excludePaths = ["/health", "/metrics", "/swagger"],
@@ -34,20 +43,23 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 				return;
 			}
 
-			// リクエスト情報を一時保存
-			(request as any).__auditStart = Date.now();
-			(request as any).__auditUrl = url.pathname;
-			(request as any).__auditMethod = request.method;
+			// リクエスト情報を一時保存（型安全なWeakMap使用）
+			auditDataMap.set(request, {
+				startTime: Date.now(),
+				url: url.pathname,
+				method: request.method,
+			});
 		},
 
 		afterHandle: async (
 			context: Context & { request: Request; set: { status?: number } },
-			response: Response | void,
+			response?: Response,
 		) => {
 			const { request, set } = context;
 
 			// 監査対象外の場合はスキップ
-			if (!(request as any).__auditStart) {
+			const auditData = auditDataMap.get(request);
+			if (!auditData) {
 				return;
 			}
 
@@ -91,17 +103,16 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 				statusCode,
 			});
 
-			// 一時データをクリア
-			delete (request as any).__auditStart;
-			delete (request as any).__auditUrl;
-			delete (request as any).__auditMethod;
+			// 一時データをクリア（WeakMapから削除）
+			auditDataMap.delete(request);
 		},
 
 		onError: async (context: Context & { request: Request }, error: Error) => {
 			const { request } = context;
 
 			// 監査対象外の場合はスキップ
-			if (!(request as any).__auditStart) {
+			const auditData = auditDataMap.get(request);
+			if (!auditData) {
 				return;
 			}
 

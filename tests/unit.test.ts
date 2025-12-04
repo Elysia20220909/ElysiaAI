@@ -1,8 +1,8 @@
 // Unit Tests for Library Modules
-import { describe, expect, it, beforeAll, afterAll } from "bun:test";
-import { metricsCollector } from "../src/lib/metrics";
-import { logger } from "../src/lib/logger";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { CacheManager } from "../src/lib/cache";
+import { logger } from "../src/lib/logger";
+import { metricsCollector } from "../src/lib/metrics";
 
 describe("Metrics Collector", () => {
 	it("should increment request counter", () => {

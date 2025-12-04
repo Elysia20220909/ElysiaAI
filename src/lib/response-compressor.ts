@@ -3,7 +3,7 @@
  * gzip/brotli圧縮でレスポンスサイズを削減
  */
 
-import { gzipSync, brotliCompressSync } from "node:zlib";
+import { brotliCompressSync, gzipSync } from "node:zlib";
 import { logger } from "./logger";
 
 interface CompressionOptions {
@@ -104,8 +104,7 @@ class ResponseCompressor {
 				logger.debug("Brotli compression", {
 					original: originalSize,
 					compressed: compressed.length,
-					ratio:
-						((1 - compressed.length / originalSize) * 100).toFixed(1) + "%",
+					ratio: `${((1 - compressed.length / originalSize) * 100).toFixed(1)}%`,
 				});
 				return {
 					compressed,
@@ -123,8 +122,7 @@ class ResponseCompressor {
 				logger.debug("gzip compression", {
 					original: originalSize,
 					compressed: compressed.length,
-					ratio:
-						((1 - compressed.length / originalSize) * 100).toFixed(1) + "%",
+					ratio: `${((1 - compressed.length / originalSize) * 100).toFixed(1)}%`,
 				});
 				return {
 					compressed,
@@ -182,11 +180,11 @@ class ResponseCompressor {
 		return {
 			totalRequests: this.stats.totalRequests,
 			compressedRequests: this.stats.compressedRequests,
-			compressionRate: compressionRate + "%",
+			compressionRate: `${compressionRate}%`,
 			originalBytes: this.stats.originalBytes,
 			compressedBytes: this.stats.compressedBytes,
 			savedBytes,
-			savingsRate: savingsRate + "%",
+			savingsRate: `${savingsRate}%`,
 		};
 	}
 
@@ -262,7 +260,7 @@ export function createCompressionMiddleware(options?: CompressionOptions) {
 
 			if (result.encoding !== "identity") {
 				set.headers["content-encoding"] = result.encoding;
-				set.headers["vary"] = "Accept-Encoding";
+				set.headers.vary = "Accept-Encoding";
 				return result.compressed;
 			}
 		},
