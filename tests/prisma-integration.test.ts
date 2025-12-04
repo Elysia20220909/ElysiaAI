@@ -81,7 +81,7 @@ describe("Prisma Database Integration Tests", () => {
 		const feedback = await saveFeedback(
 			"エリシアって？",
 			"AIキャラクターです",
-			"up"
+			"up",
 		);
 		expect(feedback.rating).toBe("up");
 	});
@@ -92,7 +92,7 @@ describe("Prisma Database Integration Tests", () => {
 			"回答",
 			"down",
 			undefined,
-			"不正確"
+			"不正確",
 		);
 		expect(feedback.rating).toBe("down");
 		expect(feedback.reason).toBe("不正確");
@@ -119,7 +119,7 @@ describe("Database Health Checks", () => {
 
 	it("テーブル存在確認", async () => {
 		const tables = await prisma.$queryRaw<Array<{ name: string }>>`
-      SELECT name FROM sqlite_master 
+      SELECT name FROM sqlite_master
       WHERE type='table' AND name NOT LIKE 'sqlite_%'
     `;
 
