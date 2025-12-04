@@ -32,11 +32,11 @@ module.exports = {
 	externals: [nodeExternals()],
 
 	// エントリーポイント
-	entry: path.resolve(__dirname, "src", "index.ts"),
+	entry: path.resolve(__dirname, "..", "..", "src", "index.ts"),
 
 	// 出力設定
 	output: {
-		path: path.resolve(__dirname, "dist"),
+		path: path.resolve(__dirname, "..", "..", "dist"),
 		filename: "index.js",
 		library: {
 			type: "commonjs2",
@@ -59,10 +59,8 @@ module.exports = {
 				use: {
 					loader: "ts-loader",
 					options: {
-						transpileOnly: false, // 型チェック有効
-						compilerOptions: {
-							module: "esnext",
-						},
+						transpileOnly: true, // 高速化
+						configFile: path.resolve(__dirname, "tsconfig.json"),
 					},
 				},
 				exclude: EXCLUDE_DIRS,
