@@ -8,8 +8,8 @@ FROM oven/bun:1-alpine AS typescript-builder
 WORKDIR /build
 
 # Copy package files
-COPY package.json bun.lock* ./
-COPY tsconfig.json webpack.config.js ./
+COPY package.json bun.lockb ./
+COPY config/internal ./config/internal
 
 # Install dependencies
 RUN bun install --frozen-lockfile --production=false
