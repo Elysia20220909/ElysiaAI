@@ -3,9 +3,9 @@
  * 非同期バックグラウンドタスク処理
  */
 
-import { Queue, Worker, type Job } from "bullmq";
-import { logger } from "./logger";
+import { type Job, Queue, Worker } from "bullmq";
 import { emailNotifier } from "./email-notifier";
+import { logger } from "./logger";
 import { webhookManager } from "./webhook-events";
 
 interface JobData {

@@ -3,9 +3,9 @@
  * サービス稼働監視と自動アラート
  */
 
+import { emailNotifier } from "./email-notifier";
 import { logger } from "./logger";
 import { webhookManager } from "./webhook-events";
-import { emailNotifier } from "./email-notifier";
 
 interface HealthCheck {
 	name: string;
@@ -204,7 +204,7 @@ class HealthMonitor {
 
 				status.status = "healthy";
 				status.consecutiveFailures = 0;
-				delete status.lastError;
+				status.lastError = undefined;
 			} else {
 				// チェック失敗
 				this.handleCheckFailure(status, check, "Check returned false");

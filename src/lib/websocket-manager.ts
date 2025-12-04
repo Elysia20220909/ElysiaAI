@@ -3,8 +3,8 @@
  * リアルタイム通信（チャット、通知、ダッシュボード更新）
  */
 
-import { WebSocketServer, WebSocket, type WebSocket as WSType } from "ws";
 import type { Server } from "node:http";
+import { type WebSocket as WSType, WebSocket, WebSocketServer } from "ws";
 import { logger } from "./logger";
 
 interface WSClient {
