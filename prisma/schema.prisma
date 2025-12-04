@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 // ==================== ユーザー管理 ====================
@@ -18,13 +17,13 @@ model User {
   role          String   @default("user")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   // リレーション
   refreshTokens RefreshToken[]
   feedbacks     Feedback[]
   knowledgeBase KnowledgeBase[]
   chatSessions  ChatSession[]
-  
+
   @@map("users")
 }
 
@@ -36,10 +35,10 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
   revoked   Boolean  @default(false)
-  
+
   // リレーション
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([token])
   @@map("refresh_tokens")
@@ -52,11 +51,11 @@ model ChatSession {
   mode      String   @default("normal") // sweet, normal, professional
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // リレーション
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   messages  Message[]
-  
+
   @@index([userId])
   @@map("chat_sessions")
 }
@@ -67,10 +66,10 @@ model Message {
   role      String      // user, assistant, system
   content   String
   createdAt DateTime    @default(now())
-  
+
   // リレーション
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  
+
   @@index([sessionId])
   @@map("messages")
 }
@@ -84,10 +83,10 @@ model Feedback {
   rating    String   // up, down
   reason    String?
   createdAt DateTime @default(now())
-  
+
   // リレーション
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+
   @@index([userId])
   @@index([rating])
   @@index([createdAt])
@@ -104,10 +103,10 @@ model KnowledgeBase {
   verified  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // リレーション
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+
   @@index([userId])
   @@index([verified])
   @@map("knowledge_base")
@@ -121,7 +120,7 @@ model VoiceLog {
   emotion   String   // joy, shy, normal
   audioUrl  String?
   createdAt DateTime @default(now())
-  
+
   @@index([username])
   @@index([createdAt])
   @@map("voice_logs")

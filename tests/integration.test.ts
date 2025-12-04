@@ -89,7 +89,10 @@ describe("Configuration Validation", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const webpackPath = path.join(process.cwd(), "webpack.config.js");
+		const webpackPath = path.join(
+			process.cwd(),
+			"config/internal/webpack.config.js",
+		);
 		expect(fs.existsSync(webpackPath)).toBe(true);
 
 		const content = fs.readFileSync(webpackPath, "utf-8");
@@ -103,7 +106,7 @@ describe("Configuration Validation", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const biomePath = path.join(process.cwd(), "biome.json");
+		const biomePath = path.join(process.cwd(), "config/internal/biome.json");
 		expect(fs.existsSync(biomePath)).toBe(true);
 		console.log("✅ Biome configuration present");
 	});
