@@ -35,6 +35,11 @@ import { abTestManager } from "./lib/ab-testing";
 import { sessionManager } from "./lib/session-manager";
 import { healthMonitor } from "./lib/health-monitor";
 import { logCleanupManager } from "./lib/log-cleanup";
+import { jobQueue } from "./lib/job-queue";
+import { fileUploadManager } from "./lib/file-upload";
+import { cronScheduler } from "./lib/cron-scheduler";
+import { auditLogger } from "./lib/audit-logger";
+import { createAuditMiddleware } from "./lib/audit-middleware";
 
 // 環境変数検証（起動時）
 checkEnvironmentOrExit();
@@ -43,6 +48,10 @@ checkEnvironmentOrExit();
 backupScheduler.start();
 healthMonitor.start();
 logCleanupManager.start();
+
+// ジョブキューとCronスケジューラーを初期化
+await jobQueue.initialize();
+cronScheduler.initializeDefaultTasks();
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
 type ChatRequest = {
@@ -97,6 +106,13 @@ function containsDangerousKeywords(text: string) {
 }
 
 // ---------------- App ----------------
+// Create audit middleware
+const auditMiddleware = createAuditMiddleware({
+	excludePaths: ["/ping", "/health", "/metrics", "/swagger"],
+	excludeMethods: ["OPTIONS"],
+	includeBody: false,
+});
+
 const app = new Elysia()
 	.use(cors({ origin: CONFIG.ALLOWED_ORIGINS }))
 	.use(html())
@@ -119,7 +135,9 @@ const app = new Elysia()
 		(request as unknown as ExtendedRequest).__startTime = Date.now();
 		metricsCollector.incrementRequest(request.method, path, 200);
 	})
-	.onError(({ error, code, request }) => {
+	// Audit middleware - track all requests
+	.onBeforeHandle(auditMiddleware.beforeHandle)
+	.onError(({ error, code, request, set }) => {
 		const url = new URL(request.url);
 		const errorMsg = error instanceof Error ? error.message : String(error);
 		const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname}`;
@@ -132,11 +150,13 @@ const app = new Elysia()
 				message: errorMsg,
 			});
 		}
+		// Audit middleware - log failed requests
+		auditMiddleware.onError({ request, error, set });
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
 		return jsonError(500, message);
 	})
-	.onAfterHandle(({ set, request }) => {
+	.onAfterHandle(({ set, request, response }) => {
 		set.headers["X-Content-Type-Options"] = "nosniff";
 		set.headers["X-Frame-Options"] = "DENY";
 		const extReq = request as unknown as ExtendedRequest;
@@ -158,6 +178,8 @@ const app = new Elysia()
 				duration,
 			);
 		}
+		// Audit middleware - log successful requests
+		auditMiddleware.afterHandle({ request, set, response });
 	})
 
 	// Health
@@ -1057,14 +1079,283 @@ app.post("/admin/logs/cleanup/trigger", async ({ request }) => {
 	return { success: true, message: "Log cleanup triggered" };
 });
 
+// ---------------- Job Queue API ----------------
+app.get("/admin/jobs/stats", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return await jobQueue.getStats();
+});
+
+app.post("/admin/jobs/email", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const body = (await request.json()) as {
+		to: string;
+		subject: string;
+		html: string;
+	};
+	const job = (await jobQueue.sendEmail(body.to, body.subject, body.html)) as {
+		id: string;
+	};
+	return { success: true, jobId: job.id };
+});
+
+app.post("/admin/jobs/report", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const body = (await request.json()) as {
+		reportType: "daily" | "weekly" | "monthly";
+		startDate: string;
+		endDate: string;
+	};
+	const job = (await jobQueue.generateReport(
+		body.reportType,
+		new Date(body.startDate),
+		new Date(body.endDate),
+	)) as { id: string };
+	return { success: true, jobId: job.id };
+});
+
+// ---------------- File Upload API ----------------
+app.post("/upload", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	let userId: string;
+	try {
+		const decoded = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as {
+			username: string;
+		};
+		userId = decoded.username;
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const formData = await request.formData();
+	const file = formData.get("file") as File;
+	if (!file) {
+		return jsonError(400, "No file provided");
+	}
+
+	const buffer = Buffer.from(await file.arrayBuffer());
+	const uploadedFile = await fileUploadManager.upload(
+		buffer,
+		file.name,
+		file.type,
+		{ userId },
+	);
+
+	return {
+		success: true,
+		file: {
+			id: uploadedFile.id,
+			originalName: uploadedFile.originalName,
+			size: uploadedFile.size,
+			mimeType: uploadedFile.mimeType,
+		},
+	};
+});
+
+app.get("/files/:fileId", async ({ request, params }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const { fileId } = params;
+	const file = fileUploadManager.getFile(fileId);
+	if (!file) {
+		return jsonError(404, "File not found");
+	}
+
+	const buffer = fileUploadManager.readFile(fileId);
+	if (!buffer) {
+		return jsonError(404, "File not found");
+	}
+
+	return new Response(new Uint8Array(buffer), {
+		headers: {
+			"content-type": file.mimeType,
+			"content-disposition": `attachment; filename="${file.originalName}"`,
+		},
+	});
+});
+
+app.get("/files", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	let userId: string;
+	try {
+		const decoded = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as {
+			username: string;
+		};
+		userId = decoded.username;
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const files = fileUploadManager.getUserFiles(userId);
+	return {
+		files: files.map((f) => ({
+			id: f.id,
+			originalName: f.originalName,
+			size: f.size,
+			mimeType: f.mimeType,
+			uploadedAt: f.uploadedAt,
+		})),
+	};
+});
+
+// ---------------- Cron Scheduler API ----------------
+app.get("/admin/cron/tasks", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return { tasks: cronScheduler.listTasks() };
+});
+
+app.get("/admin/cron/stats", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return cronScheduler.getStats();
+});
+
+app.post("/admin/cron/tasks/:name/run", async ({ request, params }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	try {
+		await cronScheduler.runTask(params.name);
+		return { success: true, message: `Task ${params.name} executed` };
+	} catch (error) {
+		return jsonError(400, (error as Error).message);
+	}
+});
+
+// ---------------- Audit Log API ----------------
+app.get("/admin/audit/logs", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const url = new URL(request.url);
+	const result = auditLogger.search({
+		userId: url.searchParams.get("userId") || undefined,
+		action: url.searchParams.get("action") || undefined,
+		resource: url.searchParams.get("resource") || undefined,
+		limit: Number(url.searchParams.get("limit")) || 100,
+		offset: Number(url.searchParams.get("offset")) || 0,
+	});
+
+	return result;
+});
+
+app.get("/admin/audit/stats", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	return auditLogger.getStats();
+});
+
+app.get("/admin/audit/export", async ({ request }) => {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
+	try {
+		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+
+	const url = new URL(request.url);
+	const format = (url.searchParams.get("format") as "json" | "csv") || "json";
+	const content = auditLogger.export(format);
+
+	if (!content) {
+		return jsonError(400, "Invalid format");
+	}
+
+	return new Response(content, {
+		headers: {
+			"content-type": format === "json" ? "application/json" : "text/csv",
+			"content-disposition": `attachment; filename="audit-logs.${format}"`,
+		},
+	});
+});
+
 // ---------------- Start Server ----------------
 // Only start server if this is the main module
 if (import.meta.main) {
-	app.listen({
+	const server = app.listen({
 		hostname: "0.0.0.0",
 		port: CONFIG.PORT,
 		reusePort: true,
 	});
+
+	// WebSocketの初期化（HTTPサーバー取得後）
+	// @ts-expect-error - Elysia internal server property
+	const httpServer = server.server;
+	if (httpServer) {
+		const { wsManager } = await import("./lib/websocket-manager");
+		wsManager.initialize(httpServer);
+		logger.info("WebSocket server initialized");
+	}
 
 	logger.info("Elysia server started", {
 		port: CONFIG.PORT,
@@ -1072,6 +1363,7 @@ if (import.meta.main) {
 		docs: `http://localhost:${CONFIG.PORT}/swagger`,
 		health: `http://localhost:${CONFIG.PORT}/health`,
 		metrics: `http://localhost:${CONFIG.PORT}/metrics`,
+		websocket: `ws://localhost:${CONFIG.PORT}/ws`,
 	});
 
 	console.log(`
@@ -1081,6 +1373,7 @@ if (import.meta.main) {
 📚 Docs: http://localhost:${CONFIG.PORT}/swagger
 🏥 Health: http://localhost:${CONFIG.PORT}/health
 📊 Metrics: http://localhost:${CONFIG.PORT}/metrics
+🔌 WebSocket: ws://localhost:${CONFIG.PORT}/ws
 `);
 
 	// Export spans periodically

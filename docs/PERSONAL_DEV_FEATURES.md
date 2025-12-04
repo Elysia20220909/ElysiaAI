@@ -6,7 +6,103 @@
 
 ---
 
-## ✅ 実装した5つの機能
+## ✅ フェーズ4: 実用的な個人開発機能 (2025/12/4 NEW)
+
+### 1. ジョブキュー (Job Queue)
+**ファイル:** `src/lib/job-queue.ts`
+
+**機能:**
+- BullMQを使用した非同期タスク処理
+- メール送信、レポート生成、データクリーンアップ、Webhook送信
+- Redis対応 (オプション、インメモリフォールバック付き)
+
+**API:**
+```bash
+GET /admin/jobs/stats           # ジョブ統計
+POST /admin/jobs/email          # メール送信ジョブ
+POST /admin/jobs/report         # レポート生成ジョブ
+```
+
+---
+
+### 2. ファイルアップロード (File Upload)
+**ファイル:** `src/lib/file-upload.ts`
+
+**機能:**
+- 画像・PDF・テキストファイルのアップロード
+- サイズ制限 (デフォルト10MB)
+- ユーザー別ファイル管理
+- 自動クリーンアップ (30日経過)
+
+**API:**
+```bash
+POST /upload                    # ファイルアップロード
+GET /files                      # ファイル一覧
+GET /files/:fileId              # ファイルダウンロード
+```
+
+---
+
+### 3. Cronスケジューラー (Cron Scheduler)
+**ファイル:** `src/lib/cron-scheduler.ts`
+
+**機能:**
+- 定期タスクのスケジューリング
+- 7つのデフォルトタスク (日次/週次/月次レポート、バックアップ、クリーンアップ等)
+- タスクの有効化/無効化
+
+**API:**
+```bash
+GET /admin/cron/tasks           # タスク一覧
+GET /admin/cron/stats           # Cron統計
+POST /admin/cron/tasks/:name/run # タスク手動実行
+```
+
+**デフォルトタスク:**
+- daily-report: 毎日 9:00 AM
+- weekly-report: 毎週月曜 10:00 AM
+- monthly-report: 毎月1日 10:00 AM
+- db-backup: 毎日 3:00 AM
+- log-cleanup: 毎日 4:00 AM
+- file-cleanup: 毎週日曜 5:00 AM
+- health-check: 10分ごと
+
+---
+
+### 4. 監査ログ (Audit Log)
+**ファイル:** `src/lib/audit-logger.ts`
+
+**機能:**
+- 全ユーザー操作の記録
+- IPアドレス、タイムスタンプ、変更前後の値を保存
+- 検索・フィルタリング機能
+- JSON/CSV形式でのエクスポート
+
+**API:**
+```bash
+GET /admin/audit/logs           # ログ検索
+GET /admin/audit/stats          # ログ統計
+GET /admin/audit/export         # ログエクスポート (JSON/CSV)
+```
+
+---
+
+### 5. WebSocketマネージャー (実装済み、統合保留)
+**ファイル:** `src/lib/websocket-manager.ts`
+
+**機能:**
+- リアルタイム通信システム
+- チャット、通知、ダッシュボード更新
+- ルームベースのブロードキャスト
+- ハートビート機能 (30秒間隔)
+
+**注:** HTTP サーバーインスタンスへのアクセスが必要なため、統合は保留中
+
+---
+
+## フェーズ1-3: 既存実装機能 (以前完了)
+
+---
 
 ### 1. 環境変数の検証・バリデーション
 **ファイル:** `src/lib/env-validator.ts`
