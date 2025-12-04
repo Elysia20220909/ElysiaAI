@@ -20,16 +20,16 @@ __webpack_require__.d(__webpack_exports__, {
 
 ;// external "cron"
 const external_cron_namespaceObject = require("cron");
-// EXTERNAL MODULE: ./src/lib/logger.ts
-var logger = __webpack_require__(629);
-// EXTERNAL MODULE: ./src/lib/job-queue.ts + 1 modules
-var job_queue = __webpack_require__(654);
 // EXTERNAL MODULE: ./src/lib/backup-scheduler.ts
 var backup_scheduler = __webpack_require__(935);
-// EXTERNAL MODULE: ./src/lib/log-cleanup.ts
-var log_cleanup = __webpack_require__(922);
 // EXTERNAL MODULE: ./src/lib/file-upload.ts
 var file_upload = __webpack_require__(121);
+// EXTERNAL MODULE: ./src/lib/job-queue.ts + 1 modules
+var job_queue = __webpack_require__(654);
+// EXTERNAL MODULE: ./src/lib/log-cleanup.ts
+var log_cleanup = __webpack_require__(922);
+// EXTERNAL MODULE: ./src/lib/logger.ts
+var logger = __webpack_require__(629);
 ;// ./src/lib/cron-scheduler.ts
 
 
@@ -118,7 +118,7 @@ class CronScheduler {
     }
     disableTask(name) {
         const task = this.tasks.get(name);
-        if (task && task.enabled) {
+        if (task?.enabled) {
             task.job.stop();
             task.enabled = false;
             logger/* logger */.v.info("Cron task disabled", { name });
@@ -557,7 +557,8 @@ function Trace(spanName) {
     return (target, propertyKey, descriptor) => {
         const originalMethod = descriptor.value;
         descriptor.value = async function (...args) {
-            const name = spanName || `${target.constructor.name}.${propertyKey}`;
+            const name = spanName ||
+                `${target.constructor.name}.${propertyKey}`;
             return telemetry.trace(name, async (span) => {
                 span.attributes.method = propertyKey;
                 return originalMethod.apply(this, args);
@@ -576,12 +577,12 @@ function Trace(spanName) {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   r: () => (/* binding */ fileUploadManager)
 /* harmony export */ });
-/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24);
-/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(760);
-/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(598);
-/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(node_crypto__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(598);
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_crypto__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(24);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(760);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(629);
 
 
@@ -605,8 +606,8 @@ class FileUploadManager {
             "text/markdown",
         ];
         this.files = new Map();
-        if (!node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(this.UPLOAD_DIR)) {
-            node_fs__WEBPACK_IMPORTED_MODULE_0__.mkdirSync(this.UPLOAD_DIR, { recursive: true });
+        if (!node_fs__WEBPACK_IMPORTED_MODULE_1__.existsSync(this.UPLOAD_DIR)) {
+            node_fs__WEBPACK_IMPORTED_MODULE_1__.mkdirSync(this.UPLOAD_DIR, { recursive: true });
         }
     }
     async upload(fileBuffer, originalName, mimeType, options = {}) {
@@ -618,11 +619,11 @@ class FileUploadManager {
         if (!allowedTypes.includes(mimeType)) {
             throw new Error(`File type ${mimeType} is not allowed`);
         }
-        const fileId = node_crypto__WEBPACK_IMPORTED_MODULE_2__.randomBytes(16).toString("hex");
-        const ext = node_path__WEBPACK_IMPORTED_MODULE_1__.extname(originalName);
+        const fileId = node_crypto__WEBPACK_IMPORTED_MODULE_0__.randomBytes(16).toString("hex");
+        const ext = node_path__WEBPACK_IMPORTED_MODULE_2__.extname(originalName);
         const filename = `${fileId}${ext}`;
-        const filePath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.UPLOAD_DIR, filename);
-        node_fs__WEBPACK_IMPORTED_MODULE_0__.writeFileSync(filePath, fileBuffer);
+        const filePath = node_path__WEBPACK_IMPORTED_MODULE_2__.join(this.UPLOAD_DIR, filename);
+        node_fs__WEBPACK_IMPORTED_MODULE_1__.writeFileSync(filePath, fileBuffer);
         const uploadedFile = {
             id: fileId,
             originalName,
@@ -649,7 +650,7 @@ class FileUploadManager {
         if (!file)
             return null;
         try {
-            return node_fs__WEBPACK_IMPORTED_MODULE_0__.readFileSync(file.path);
+            return node_fs__WEBPACK_IMPORTED_MODULE_1__.readFileSync(file.path);
         }
         catch (error) {
             _logger__WEBPACK_IMPORTED_MODULE_3__/* .logger */ .v.error("Failed to read file", error);
@@ -665,7 +666,7 @@ class FileUploadManager {
             return false;
         }
         try {
-            node_fs__WEBPACK_IMPORTED_MODULE_0__.unlinkSync(file.path);
+            node_fs__WEBPACK_IMPORTED_MODULE_1__.unlinkSync(file.path);
             this.files.delete(fileId);
             _logger__WEBPACK_IMPORTED_MODULE_3__/* .logger */ .v.info("File deleted", { fileId });
             return true;
@@ -1035,23 +1036,24 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _internal_app_llm_llm_config__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(970);
 /* harmony import */ var _internal_secure_auth__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(237);
 /* harmony import */ var _internal_secure_db__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(807);
-/* harmony import */ var _lib_health__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(703);
-/* harmony import */ var _lib_metrics__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(644);
-/* harmony import */ var _lib_logger__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(629);
-/* harmony import */ var _lib_telemetry__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(112);
-/* harmony import */ var _lib_database__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(828);
-/* harmony import */ var _lib_env_validator__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(709);
-/* harmony import */ var _lib_webhook_events__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(132);
-/* harmony import */ var _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(935);
-/* harmony import */ var _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(257);
-/* harmony import */ var _lib_ab_testing__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(95);
-/* harmony import */ var _lib_session_manager__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(619);
-/* harmony import */ var _lib_health_monitor__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(732);
+/* harmony import */ var _lib_ab_testing__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(95);
+/* harmony import */ var _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(257);
+/* harmony import */ var _lib_audit_logger__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(371);
+/* harmony import */ var _lib_audit_middleware__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(695);
+/* harmony import */ var _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(935);
+/* harmony import */ var _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(74);
+/* harmony import */ var _lib_database__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(828);
+/* harmony import */ var _lib_env_validator__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(709);
+/* harmony import */ var _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(121);
+/* harmony import */ var _lib_health__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(703);
+/* harmony import */ var _lib_health_monitor__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(732);
+/* harmony import */ var _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(654);
 /* harmony import */ var _lib_log_cleanup__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(922);
-/* harmony import */ var _lib_job_queue__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(654);
-/* harmony import */ var _lib_file_upload__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(121);
-/* harmony import */ var _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(74);
-/* harmony import */ var _lib_audit_logger__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(371);
+/* harmony import */ var _lib_logger__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(629);
+/* harmony import */ var _lib_metrics__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(644);
+/* harmony import */ var _lib_session_manager__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(619);
+/* harmony import */ var _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(112);
+/* harmony import */ var _lib_webhook_events__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(132);
 
 
 
@@ -1081,12 +1083,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-(0,_lib_env_validator__WEBPACK_IMPORTED_MODULE_17__/* .checkEnvironmentOrExit */ .x)();
-_lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_19__/* .backupScheduler */ .m.start();
-_lib_health_monitor__WEBPACK_IMPORTED_MODULE_23__.healthMonitor.start();
+
+(0,_lib_env_validator__WEBPACK_IMPORTED_MODULE_19__/* .checkEnvironmentOrExit */ .x)();
+_lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__/* .backupScheduler */ .m.start();
+_lib_health_monitor__WEBPACK_IMPORTED_MODULE_22__.healthMonitor.start();
 _lib_log_cleanup__WEBPACK_IMPORTED_MODULE_24__.logCleanupManager.start();
-await _lib_job_queue__WEBPACK_IMPORTED_MODULE_25__/* .jobQueue */ .f.initialize();
-_lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_27__/* .cronScheduler */ .m.initializeDefaultTasks();
+await _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__/* .jobQueue */ .f.initialize();
+_lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__/* .cronScheduler */ .m.initializeDefaultTasks();
 const CONFIG = {
     PORT: Number(process.env.PORT) || 3000,
     RAG_API_URL: _internal_secure_db__WEBPACK_IMPORTED_MODULE_11__/* .DATABASE_CONFIG */ .r.RAG_API_URL,
@@ -1119,6 +1122,11 @@ function containsDangerousKeywords(text) {
     const bad = [/\b(drop|delete)\b/i, /<script/i];
     return bad.some((r) => r.test(text));
 }
+const auditMiddleware = (0,_lib_audit_middleware__WEBPACK_IMPORTED_MODULE_15__/* .createAuditMiddleware */ .W)({
+    excludePaths: ["/ping", "/health", "/metrics", "/swagger"],
+    excludeMethods: ["OPTIONS"],
+    includeBody: false,
+});
 const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     .use((0,_elysiajs_cors__WEBPACK_IMPORTED_MODULE_1__.cors)({ origin: CONFIG.ALLOWED_ORIGINS }))
     .use((0,_elysiajs_html__WEBPACK_IMPORTED_MODULE_2__.html)())
@@ -1127,8 +1135,8 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     .onBeforeHandle(({ request }) => {
     const url = new URL(request.url);
     const path = url.pathname;
-    const traceContext = (0,_lib_telemetry__WEBPACK_IMPORTED_MODULE_15__/* .getTraceContextFromRequest */ .Ql)(request);
-    const span = _lib_telemetry__WEBPACK_IMPORTED_MODULE_15__/* .telemetry */ .Y9.startSpan(`HTTP ${request.method} ${path}`, {
+    const traceContext = (0,_lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .getTraceContextFromRequest */ .Ql)(request);
+    const span = _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .telemetry */ .Y9.startSpan(`HTTP ${request.method} ${path}`, {
         parentContext: traceContext || undefined,
         attributes: {
             "http.method": request.method,
@@ -1138,39 +1146,42 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     });
     request.__span = span;
     request.__startTime = Date.now();
-    _lib_metrics__WEBPACK_IMPORTED_MODULE_13__/* .metricsCollector */ .D.incrementRequest(request.method, path, 200);
+    _lib_metrics__WEBPACK_IMPORTED_MODULE_26__/* .metricsCollector */ .D.incrementRequest(request.method, path, 200);
 })
-    .onError(({ error, code, request }) => {
+    .onBeforeHandle(auditMiddleware.beforeHandle)
+    .onError(({ error, code, request, set }) => {
     const url = new URL(request.url);
     const errorMsg = error instanceof Error ? error.message : String(error);
     const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname}`;
-    _lib_logger__WEBPACK_IMPORTED_MODULE_14__/* .logger */ .v.error(errorLog);
-    _lib_metrics__WEBPACK_IMPORTED_MODULE_13__/* .metricsCollector */ .D.incrementError(request.method, url.pathname, String(code));
+    _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error(errorLog);
+    _lib_metrics__WEBPACK_IMPORTED_MODULE_26__/* .metricsCollector */ .D.incrementError(request.method, url.pathname, String(code));
     const span = request.__span;
     if (span) {
-        _lib_telemetry__WEBPACK_IMPORTED_MODULE_15__/* .telemetry */ .Y9.endSpan(span.spanId, {
+        _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .telemetry */ .Y9.endSpan(span.spanId, {
             code: "ERROR",
             message: errorMsg,
         });
     }
+    auditMiddleware.onError({ request, error, set });
     const message = error instanceof Error ? error.message : "Internal server error";
     return jsonError(500, message);
 })
-    .onAfterHandle(({ set, request }) => {
+    .onAfterHandle(({ set, request, response }) => {
     set.headers["X-Content-Type-Options"] = "nosniff";
     set.headers["X-Frame-Options"] = "DENY";
     const extReq = request;
     const span = extReq.__span;
     if (span) {
-        set.headers.traceparent = _lib_telemetry__WEBPACK_IMPORTED_MODULE_15__/* .telemetry */ .Y9.createTraceContext(span.traceId, span.spanId);
-        _lib_telemetry__WEBPACK_IMPORTED_MODULE_15__/* .telemetry */ .Y9.endSpan(span.spanId);
+        set.headers.traceparent = _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .telemetry */ .Y9.createTraceContext(span.traceId, span.spanId);
+        _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .telemetry */ .Y9.endSpan(span.spanId);
     }
     const startTime = extReq.__startTime;
     if (startTime) {
         const duration = (Date.now() - startTime) / 1000;
         const url = new URL(request.url);
-        _lib_metrics__WEBPACK_IMPORTED_MODULE_13__/* .metricsCollector */ .D.recordRequestDuration(request.method, url.pathname, duration);
+        _lib_metrics__WEBPACK_IMPORTED_MODULE_26__/* .metricsCollector */ .D.recordRequestDuration(request.method, url.pathname, duration);
     }
+    auditMiddleware.afterHandle({ request, set, response });
 })
     .get("/ping", () => ({ ok: true }), {
     detail: {
@@ -1182,7 +1193,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     .get("/health", async () => {
     try {
         const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-        const health = await (0,_lib_health__WEBPACK_IMPORTED_MODULE_12__/* .performHealthCheck */ .uY)(redisUrl, CONFIG.RAG_API_URL, CONFIG.MODEL_NAME);
+        const health = await (0,_lib_health__WEBPACK_IMPORTED_MODULE_21__/* .performHealthCheck */ .uY)(redisUrl, CONFIG.RAG_API_URL, CONFIG.MODEL_NAME);
         const status = health.status === "healthy" ? 200 : 503;
         return new Response(JSON.stringify(health), {
             status,
@@ -1191,7 +1202,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     }
     catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
-        _lib_logger__WEBPACK_IMPORTED_MODULE_14__/* .logger */ .v.error(`Health check failed: ${errorMsg}`);
+        _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error(`Health check failed: ${errorMsg}`);
         return jsonError(503, "Health check failed");
     }
 }, {
@@ -1202,7 +1213,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     },
 })
     .get("/metrics", () => {
-    const metrics = _lib_metrics__WEBPACK_IMPORTED_MODULE_13__/* .metricsCollector */ .D.toPrometheusFormat();
+    const metrics = _lib_metrics__WEBPACK_IMPORTED_MODULE_26__/* .metricsCollector */ .D.toPrometheusFormat();
     return new Response(metrics, {
         headers: { "content-type": "text/plain; version=0.0.4" },
     });
@@ -1236,7 +1247,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     const ip = request.headers.get("x-forwarded-for") || "anon";
     const userId = payload.userId || undefined;
     try {
-        await _lib_database__WEBPACK_IMPORTED_MODULE_16__.feedbackService.create({
+        await _lib_database__WEBPACK_IMPORTED_MODULE_18__.feedbackService.create({
             userId,
             query: body.query,
             answer: body.answer,
@@ -1245,7 +1256,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
         });
     }
     catch (err) {
-        _lib_logger__WEBPACK_IMPORTED_MODULE_14__/* .logger */ .v.error("Failed to store feedback", err instanceof Error ? err : undefined);
+        _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error("Failed to store feedback", err instanceof Error ? err : undefined);
         return jsonError(500, "Failed to store feedback");
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -1276,7 +1287,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
         return jsonError(401, "Invalid token");
     }
     try {
-        await _lib_database__WEBPACK_IMPORTED_MODULE_16__.knowledgeService.create({
+        await _lib_database__WEBPACK_IMPORTED_MODULE_18__.knowledgeService.create({
             question: body.summary,
             answer: body.sourceUrl || "No source provided",
             source: "api",
@@ -1284,7 +1295,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
         });
     }
     catch (err) {
-        _lib_logger__WEBPACK_IMPORTED_MODULE_14__/* .logger */ .v.error("Failed to store knowledge", err instanceof Error ? err : undefined);
+        _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error("Failed to store knowledge", err instanceof Error ? err : undefined);
         return jsonError(500, "Failed to store knowledge");
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -1508,7 +1519,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    const stats = await _lib_database__WEBPACK_IMPORTED_MODULE_16__.feedbackService.getStats();
+    const stats = await _lib_database__WEBPACK_IMPORTED_MODULE_18__.feedbackService.getStats();
     return new Response(JSON.stringify(stats), {
         headers: { "content-type": "application/json" },
     });
@@ -1529,7 +1540,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    const feedbacks = await _lib_database__WEBPACK_IMPORTED_MODULE_16__.feedbackService.getRecent(100);
+    const feedbacks = await _lib_database__WEBPACK_IMPORTED_MODULE_18__.feedbackService.getRecent(100);
     return new Response(JSON.stringify(feedbacks), {
         headers: { "content-type": "application/json" },
     });
@@ -1550,7 +1561,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    const knowledge = await _lib_database__WEBPACK_IMPORTED_MODULE_16__.knowledgeService.getAll(false);
+    const knowledge = await _lib_database__WEBPACK_IMPORTED_MODULE_18__.knowledgeService.getAll(false);
     return new Response(JSON.stringify(knowledge), {
         headers: { "content-type": "application/json" },
     });
@@ -1571,7 +1582,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    await _lib_database__WEBPACK_IMPORTED_MODULE_16__.knowledgeService.verify(params.id);
+    await _lib_database__WEBPACK_IMPORTED_MODULE_18__.knowledgeService.verify(params.id);
     return new Response(JSON.stringify({ ok: true }), {
         headers: { "content-type": "application/json" },
     });
@@ -1592,7 +1603,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
     catch {
         return jsonError(401, "Invalid token");
     }
-    await _lib_database__WEBPACK_IMPORTED_MODULE_16__.knowledgeService.delete(params.id);
+    await _lib_database__WEBPACK_IMPORTED_MODULE_18__.knowledgeService.delete(params.id);
     return new Response(JSON.stringify({ ok: true }), {
         headers: { "content-type": "application/json" },
     });
@@ -1605,7 +1616,7 @@ const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
 });
 app.post("/auth/register", async ({ body }) => {
     const { username, password } = body;
-    const existing = await _lib_database__WEBPACK_IMPORTED_MODULE_16__/* .userService */ .Dv.findByUsername(username);
+    const existing = await _lib_database__WEBPACK_IMPORTED_MODULE_18__/* .userService */ .Dv.findByUsername(username);
     if (existing) {
         return jsonError(400, "Username already exists");
     }
@@ -1622,7 +1633,7 @@ app.post("/auth/register", async ({ body }) => {
         }), { headers: { "content-type": "application/json" } });
     }
     catch (error) {
-        _lib_logger__WEBPACK_IMPORTED_MODULE_14__/* .logger */ .v.error("Registration failed", error instanceof Error ? error : undefined);
+        _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error("Registration failed", error instanceof Error ? error : undefined);
         return jsonError(500, "Registration failed");
     }
 }, {
@@ -1699,7 +1710,7 @@ app.get("/admin/webhooks", async ({ request }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    return { webhooks: _lib_webhook_events__WEBPACK_IMPORTED_MODULE_18__/* .webhookManager */ .$.getSubscriptions() };
+    return { webhooks: _lib_webhook_events__WEBPACK_IMPORTED_MODULE_29__/* .webhookManager */ .$.getSubscriptions() };
 });
 app.post("/admin/api-keys", async ({ request, body }) => {
     const auth = request.headers.get("authorization") || "";
@@ -1712,7 +1723,7 @@ app.post("/admin/api-keys", async ({ request, body }) => {
         return jsonError(401, "Invalid token");
     }
     const { name, rateLimit, expiresInDays } = body;
-    const apiKey = _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_20__/* .apiKeyManager */ .X.generateKey({
+    const apiKey = _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_13__/* .apiKeyManager */ .X.generateKey({
         name,
         rateLimit,
         expiresInDays,
@@ -1736,8 +1747,8 @@ app.get("/admin/api-keys", async ({ request }) => {
         return jsonError(401, "Invalid token");
     }
     return {
-        keys: _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_20__/* .apiKeyManager */ .X.listKeys(),
-        stats: _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_20__/* .apiKeyManager */ .X.getUsageStats(),
+        keys: _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_13__/* .apiKeyManager */ .X.listKeys(),
+        stats: _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_13__/* .apiKeyManager */ .X.getUsageStats(),
     };
 });
 app.get("/admin/backups", async ({ request }) => {
@@ -1751,8 +1762,8 @@ app.get("/admin/backups", async ({ request }) => {
         return jsonError(401, "Invalid token");
     }
     return {
-        status: _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_19__/* .backupScheduler */ .m.getStatus(),
-        history: _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_19__/* .backupScheduler */ .m.getBackupHistory(),
+        status: _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__/* .backupScheduler */ .m.getStatus(),
+        history: _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__/* .backupScheduler */ .m.getBackupHistory(),
     };
 });
 app.post("/admin/backups/trigger", async ({ request }) => {
@@ -1765,7 +1776,7 @@ app.post("/admin/backups/trigger", async ({ request }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    await _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_19__/* .backupScheduler */ .m.triggerManualBackup();
+    await _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__/* .backupScheduler */ .m.triggerManualBackup();
     return { success: true, message: "Backup triggered" };
 });
 app.get("/admin/health-monitor", async ({ request }) => {
@@ -1778,7 +1789,7 @@ app.get("/admin/health-monitor", async ({ request }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    return _lib_health_monitor__WEBPACK_IMPORTED_MODULE_23__.healthMonitor.getStatus();
+    return _lib_health_monitor__WEBPACK_IMPORTED_MODULE_22__.healthMonitor.getStatus();
 });
 app.get("/admin/sessions", async ({ request }) => {
     const auth = request.headers.get("authorization") || "";
@@ -1787,8 +1798,8 @@ app.get("/admin/sessions", async ({ request }) => {
     try {
         const payload = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
         return {
-            sessions: _lib_session_manager__WEBPACK_IMPORTED_MODULE_22__/* .sessionManager */ .i.getUserSessions(payload.userId),
-            stats: _lib_session_manager__WEBPACK_IMPORTED_MODULE_22__/* .sessionManager */ .i.getStats(),
+            sessions: _lib_session_manager__WEBPACK_IMPORTED_MODULE_27__/* .sessionManager */ .i.getUserSessions(payload.userId),
+            stats: _lib_session_manager__WEBPACK_IMPORTED_MODULE_27__/* .sessionManager */ .i.getStats(),
         };
     }
     catch {
@@ -1805,7 +1816,7 @@ app.get("/admin/ab-tests", async ({ request }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    return { tests: _lib_ab_testing__WEBPACK_IMPORTED_MODULE_21__/* .abTestManager */ .n.listTests() };
+    return { tests: _lib_ab_testing__WEBPACK_IMPORTED_MODULE_12__/* .abTestManager */ .n.listTests() };
 });
 app.get("/admin/ab-tests/:testId", async ({ request, params }) => {
     const auth = request.headers.get("authorization") || "";
@@ -1817,7 +1828,7 @@ app.get("/admin/ab-tests/:testId", async ({ request, params }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    const results = _lib_ab_testing__WEBPACK_IMPORTED_MODULE_21__/* .abTestManager */ .n.getTestResults(params.testId);
+    const results = _lib_ab_testing__WEBPACK_IMPORTED_MODULE_12__/* .abTestManager */ .n.getTestResults(params.testId);
     if (!results)
         return jsonError(404, "Test not found");
     return results;
@@ -1857,7 +1868,7 @@ app.get("/admin/jobs/stats", async ({ request }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    return await _lib_job_queue__WEBPACK_IMPORTED_MODULE_25__/* .jobQueue */ .f.getStats();
+    return await _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__/* .jobQueue */ .f.getStats();
 });
 app.post("/admin/jobs/email", async ({ request }) => {
     const auth = request.headers.get("authorization") || "";
@@ -1870,7 +1881,7 @@ app.post("/admin/jobs/email", async ({ request }) => {
         return jsonError(401, "Invalid token");
     }
     const body = (await request.json());
-    const job = (await _lib_job_queue__WEBPACK_IMPORTED_MODULE_25__/* .jobQueue */ .f.sendEmail(body.to, body.subject, body.html));
+    const job = (await _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__/* .jobQueue */ .f.sendEmail(body.to, body.subject, body.html));
     return { success: true, jobId: job.id };
 });
 app.post("/admin/jobs/report", async ({ request }) => {
@@ -1884,7 +1895,7 @@ app.post("/admin/jobs/report", async ({ request }) => {
         return jsonError(401, "Invalid token");
     }
     const body = (await request.json());
-    const job = (await _lib_job_queue__WEBPACK_IMPORTED_MODULE_25__/* .jobQueue */ .f.generateReport(body.reportType, new Date(body.startDate), new Date(body.endDate)));
+    const job = (await _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__/* .jobQueue */ .f.generateReport(body.reportType, new Date(body.startDate), new Date(body.endDate)));
     return { success: true, jobId: job.id };
 });
 app.post("/upload", async ({ request }) => {
@@ -1905,7 +1916,7 @@ app.post("/upload", async ({ request }) => {
         return jsonError(400, "No file provided");
     }
     const buffer = Buffer.from(await file.arrayBuffer());
-    const uploadedFile = await _lib_file_upload__WEBPACK_IMPORTED_MODULE_26__/* .fileUploadManager */ .r.upload(buffer, file.name, file.type, { userId });
+    const uploadedFile = await _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__/* .fileUploadManager */ .r.upload(buffer, file.name, file.type, { userId });
     return {
         success: true,
         file: {
@@ -1927,11 +1938,11 @@ app.get("/files/:fileId", async ({ request, params }) => {
         return jsonError(401, "Invalid token");
     }
     const { fileId } = params;
-    const file = _lib_file_upload__WEBPACK_IMPORTED_MODULE_26__/* .fileUploadManager */ .r.getFile(fileId);
+    const file = _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__/* .fileUploadManager */ .r.getFile(fileId);
     if (!file) {
         return jsonError(404, "File not found");
     }
-    const buffer = _lib_file_upload__WEBPACK_IMPORTED_MODULE_26__/* .fileUploadManager */ .r.readFile(fileId);
+    const buffer = _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__/* .fileUploadManager */ .r.readFile(fileId);
     if (!buffer) {
         return jsonError(404, "File not found");
     }
@@ -1954,7 +1965,7 @@ app.get("/files", async ({ request }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    const files = _lib_file_upload__WEBPACK_IMPORTED_MODULE_26__/* .fileUploadManager */ .r.getUserFiles(userId);
+    const files = _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__/* .fileUploadManager */ .r.getUserFiles(userId);
     return {
         files: files.map((f) => ({
             id: f.id,
@@ -1975,7 +1986,7 @@ app.get("/admin/cron/tasks", async ({ request }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    return { tasks: _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_27__/* .cronScheduler */ .m.listTasks() };
+    return { tasks: _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__/* .cronScheduler */ .m.listTasks() };
 });
 app.get("/admin/cron/stats", async ({ request }) => {
     const auth = request.headers.get("authorization") || "";
@@ -1987,7 +1998,7 @@ app.get("/admin/cron/stats", async ({ request }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    return _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_27__/* .cronScheduler */ .m.getStats();
+    return _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__/* .cronScheduler */ .m.getStats();
 });
 app.post("/admin/cron/tasks/:name/run", async ({ request, params }) => {
     const auth = request.headers.get("authorization") || "";
@@ -2000,7 +2011,7 @@ app.post("/admin/cron/tasks/:name/run", async ({ request, params }) => {
         return jsonError(401, "Invalid token");
     }
     try {
-        await _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_27__/* .cronScheduler */ .m.runTask(params.name);
+        await _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__/* .cronScheduler */ .m.runTask(params.name);
         return { success: true, message: `Task ${params.name} executed` };
     }
     catch (error) {
@@ -2018,7 +2029,7 @@ app.get("/admin/audit/logs", async ({ request }) => {
         return jsonError(401, "Invalid token");
     }
     const url = new URL(request.url);
-    const result = _lib_audit_logger__WEBPACK_IMPORTED_MODULE_28__/* .auditLogger */ ._.search({
+    const result = _lib_audit_logger__WEBPACK_IMPORTED_MODULE_14__/* .auditLogger */ ._.search({
         userId: url.searchParams.get("userId") || undefined,
         action: url.searchParams.get("action") || undefined,
         resource: url.searchParams.get("resource") || undefined,
@@ -2037,7 +2048,7 @@ app.get("/admin/audit/stats", async ({ request }) => {
     catch {
         return jsonError(401, "Invalid token");
     }
-    return _lib_audit_logger__WEBPACK_IMPORTED_MODULE_28__/* .auditLogger */ ._.getStats();
+    return _lib_audit_logger__WEBPACK_IMPORTED_MODULE_14__/* .auditLogger */ ._.getStats();
 });
 app.get("/admin/audit/export", async ({ request }) => {
     const auth = request.headers.get("authorization") || "";
@@ -2051,7 +2062,7 @@ app.get("/admin/audit/export", async ({ request }) => {
     }
     const url = new URL(request.url);
     const format = url.searchParams.get("format") || "json";
-    const content = _lib_audit_logger__WEBPACK_IMPORTED_MODULE_28__/* .auditLogger */ ._.export(format);
+    const content = _lib_audit_logger__WEBPACK_IMPORTED_MODULE_14__/* .auditLogger */ ._.export(format);
     if (!content) {
         return jsonError(400, "Invalid format");
     }
@@ -2244,9 +2255,9 @@ function isRedisAvailable() {
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   X: () => (/* binding */ apiKeyManager)
 /* harmony export */ });
-/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(629);
-/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(598);
-/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_crypto__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(598);
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_crypto__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(629);
 
 
 class APIKeyManager {
@@ -2274,7 +2285,7 @@ class APIKeyManager {
         }
     }
     generateKey(options) {
-        const randomBytes = node_crypto__WEBPACK_IMPORTED_MODULE_1__.randomBytes(32);
+        const randomBytes = node_crypto__WEBPACK_IMPORTED_MODULE_0__.randomBytes(32);
         const key = `${this.KEY_PREFIX}${randomBytes.toString("base64url")}`;
         const expiresAt = options.expiresInDays
             ? new Date(Date.now() + options.expiresInDays * 24 * 60 * 60 * 1000)
@@ -2294,7 +2305,7 @@ class APIKeyManager {
             },
         };
         this.keys.set(key, apiKey);
-        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("API key generated", {
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("API key generated", {
             name: options.name,
             userId: options.userId,
             rateLimit: apiKey.rateLimit,
@@ -2338,7 +2349,7 @@ class APIKeyManager {
         const apiKey = this.keys.get(key);
         if (apiKey) {
             apiKey.enabled = false;
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("API key revoked", { name: apiKey.name });
+            _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("API key revoked", { name: apiKey.name });
             return true;
         }
         return false;
@@ -2347,7 +2358,7 @@ class APIKeyManager {
         const apiKey = this.keys.get(key);
         if (apiKey) {
             this.keys.delete(key);
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("API key deleted", { name: apiKey.name });
+            _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("API key deleted", { name: apiKey.name });
             return true;
         }
         return false;
@@ -3132,10 +3143,10 @@ __webpack_require__.d(__webpack_exports__, {
 
 ;// external "bullmq"
 const external_bullmq_namespaceObject = require("bullmq");
-// EXTERNAL MODULE: ./src/lib/logger.ts
-var logger = __webpack_require__(629);
 // EXTERNAL MODULE: ./src/lib/email-notifier.ts + 1 modules
 var email_notifier = __webpack_require__(172);
+// EXTERNAL MODULE: ./src/lib/logger.ts
+var logger = __webpack_require__(629);
 // EXTERNAL MODULE: ./src/lib/webhook-events.ts
 var webhook_events = __webpack_require__(132);
 ;// ./src/lib/job-queue.ts
@@ -3306,6 +3317,149 @@ const jobQueue = new JobQueueManager();
 /***/ ((module) => {
 
 module.exports = require("ioredis");
+
+/***/ }),
+
+/***/ 695:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   W: () => (/* binding */ createAuditMiddleware)
+/* harmony export */ });
+/* harmony import */ var _audit_logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(371);
+
+const auditDataMap = new WeakMap();
+function createAuditMiddleware(options = {}) {
+    const { excludePaths = ["/health", "/metrics", "/swagger"], excludeMethods = ["OPTIONS"], includeBody = false, } = options;
+    return {
+        beforeHandle: async (context) => {
+            const { request } = context;
+            const url = new URL(request.url);
+            if (excludePaths.some((path) => url.pathname.startsWith(path))) {
+                return;
+            }
+            if (excludeMethods.includes(request.method)) {
+                return;
+            }
+            auditDataMap.set(request, {
+                startTime: Date.now(),
+                url: url.pathname,
+                method: request.method,
+            });
+        },
+        afterHandle: async (context, response) => {
+            const { request, set } = context;
+            const auditData = auditDataMap.get(request);
+            if (!auditData) {
+                return;
+            }
+            const url = new URL(request.url);
+            const statusCode = set.status || 200;
+            const auth = request.headers.get("authorization") || "";
+            let userId;
+            if (auth.startsWith("Bearer ")) {
+                try {
+                    const jwt = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 829, 23));
+                    const decoded = jwt.verify(auth.substring(7), process.env.JWT_SECRET || "dev-secret");
+                    userId = decoded.username;
+                }
+                catch {
+                }
+            }
+            const action = determineAction(request.method, url.pathname);
+            const resource = determineResource(url.pathname);
+            const resourceId = extractResourceId(url.pathname);
+            _audit_logger__WEBPACK_IMPORTED_MODULE_0__/* .auditLogger */ ._.log({
+                userId,
+                action,
+                resource,
+                resourceId,
+                method: request.method,
+                path: url.pathname,
+                ipAddress: request.headers.get("x-forwarded-for") ||
+                    request.headers.get("x-real-ip") ||
+                    "127.0.0.1",
+                userAgent: request.headers.get("user-agent") || "unknown",
+                statusCode,
+            });
+            auditDataMap.delete(request);
+        },
+        onError: async (context, error) => {
+            const { request } = context;
+            const auditData = auditDataMap.get(request);
+            if (!auditData) {
+                return;
+            }
+            const url = new URL(request.url);
+            _audit_logger__WEBPACK_IMPORTED_MODULE_0__/* .auditLogger */ ._.log({
+                action: "ERROR",
+                resource: determineResource(url.pathname),
+                method: request.method,
+                path: url.pathname,
+                ipAddress: request.headers.get("x-forwarded-for") ||
+                    request.headers.get("x-real-ip") ||
+                    "127.0.0.1",
+                userAgent: request.headers.get("user-agent") || "unknown",
+                statusCode: 500,
+                error: error.message,
+            });
+        },
+    };
+}
+function determineAction(method, path) {
+    if (path.includes("/login") || path.includes("/auth"))
+        return "AUTH";
+    if (path.includes("/register"))
+        return "REGISTER";
+    if (path.includes("/logout"))
+        return "LOGOUT";
+    switch (method) {
+        case "GET":
+            return "READ";
+        case "POST":
+            return "CREATE";
+        case "PUT":
+        case "PATCH":
+            return "UPDATE";
+        case "DELETE":
+            return "DELETE";
+        default:
+            return method;
+    }
+}
+function determineResource(path) {
+    if (path.includes("/feedback"))
+        return "feedback";
+    if (path.includes("/knowledge"))
+        return "knowledge";
+    if (path.includes("/user"))
+        return "user";
+    if (path.includes("/chat"))
+        return "chat";
+    if (path.includes("/upload") || path.includes("/files"))
+        return "file";
+    if (path.includes("/jobs"))
+        return "job";
+    if (path.includes("/cron"))
+        return "cron";
+    if (path.includes("/audit"))
+        return "audit";
+    if (path.includes("/admin"))
+        return "admin";
+    if (path.includes("/session"))
+        return "session";
+    if (path.includes("/api-key"))
+        return "api-key";
+    return "unknown";
+}
+function extractResourceId(path) {
+    const matches = path.match(/\/([^/]+)\/([a-zA-Z0-9-]+)$/);
+    if (matches?.[2]) {
+        return matches[2];
+    }
+    return undefined;
+}
+
 
 /***/ }),
 
@@ -3483,7 +3637,7 @@ const ENV_SCHEMA = [
         required: false,
         default: "3000",
         description: "サーバーポート番号",
-        validator: (v) => !isNaN(Number(v)) && Number(v) > 0 && Number(v) < 65536,
+        validator: (v) => !Number.isNaN(Number(v)) && Number(v) > 0 && Number(v) < 65536,
     },
     {
         name: "ALLOWED_ORIGINS",
@@ -3604,9 +3758,9 @@ module.exports = require("bcryptjs");
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   healthMonitor: () => (/* binding */ healthMonitor)
 /* harmony export */ });
-/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(629);
-/* harmony import */ var _webhook_events__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(132);
-/* harmony import */ var _email_notifier__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(172);
+/* harmony import */ var _email_notifier__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(172);
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(629);
+/* harmony import */ var _webhook_events__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(132);
 
 
 
@@ -3706,13 +3860,13 @@ class HealthMonitor {
             lastCheck: new Date(),
             consecutiveFailures: 0,
         });
-        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info(`Health check added: ${check.name}`, {
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info(`Health check added: ${check.name}`, {
             interval: `${check.interval}ms`,
         });
     }
     start() {
         if (!this.enabled) {
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Health monitoring is disabled");
+            _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("Health monitoring is disabled");
             return;
         }
         for (const [name, check] of this.checks.entries()) {
@@ -3722,7 +3876,7 @@ class HealthMonitor {
             }, check.interval);
             this.intervals.set(name, intervalId);
         }
-        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Health monitoring started", {
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("Health monitoring started", {
             checks: this.checks.size,
         });
     }
@@ -3731,7 +3885,7 @@ class HealthMonitor {
             clearInterval(intervalId);
         }
         this.intervals.clear();
-        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Health monitoring stopped");
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("Health monitoring stopped");
     }
     async performCheck(name, check) {
         const status = this.statuses.get(name);
@@ -3745,12 +3899,12 @@ class HealthMonitor {
             status.lastCheck = new Date();
             if (result) {
                 if (status.status === "unhealthy") {
-                    _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info(`Health check recovered: ${name}`);
+                    _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info(`Health check recovered: ${name}`);
                     await this.notifyRecovery(name);
                 }
                 status.status = "healthy";
                 status.consecutiveFailures = 0;
-                delete status.lastError;
+                status.lastError = undefined;
             }
             else {
                 this.handleCheckFailure(status, check, "Check returned false");
@@ -3763,7 +3917,7 @@ class HealthMonitor {
     async handleCheckFailure(status, check, errorMessage) {
         status.consecutiveFailures++;
         status.lastError = errorMessage;
-        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.warn(`Health check failed: ${status.name}`, {
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.warn(`Health check failed: ${status.name}`, {
             failures: status.consecutiveFailures,
             error: errorMessage,
         });
@@ -3773,15 +3927,15 @@ class HealthMonitor {
         }
     }
     async notifyFailure(name, error) {
-        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error(`Health check CRITICAL: ${name}`, new Error(error));
-        await _webhook_events__WEBPACK_IMPORTED_MODULE_1__/* .webhookManager */ .$.emit("system.health_check_failed", {
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.error(`Health check CRITICAL: ${name}`, new Error(error));
+        await _webhook_events__WEBPACK_IMPORTED_MODULE_2__/* .webhookManager */ .$.emit("system.health_check_failed", {
             service: name,
             error,
         });
-        await _email_notifier__WEBPACK_IMPORTED_MODULE_2__/* .emailNotifier */ .x.sendHealthCheckFailure(name, error);
+        await _email_notifier__WEBPACK_IMPORTED_MODULE_0__/* .emailNotifier */ .x.sendHealthCheckFailure(name, error);
     }
     async notifyRecovery(name) {
-        await _webhook_events__WEBPACK_IMPORTED_MODULE_1__/* .webhookManager */ .$.emit("system.health_check_failed", {
+        await _webhook_events__WEBPACK_IMPORTED_MODULE_2__/* .webhookManager */ .$.emit("system.health_check_failed", {
             service: name,
             recovered: true,
         });
@@ -3863,11 +4017,24 @@ module.exports = require("@elysiajs/swagger");
 /* harmony import */ var _prisma_client__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(330);
 /* harmony import */ var _prisma_client__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_prisma_client__WEBPACK_IMPORTED_MODULE_0__);
 
-const prisma = new _prisma_client__WEBPACK_IMPORTED_MODULE_0__.PrismaClient({
-    log:  true ? ["query", "error", "warn"] : 0,
-});
+let prisma;
+try {
+    const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
+    prisma = new _prisma_client__WEBPACK_IMPORTED_MODULE_0__.PrismaClient({
+        log:  true
+            ? ["query", "error", "warn"]
+            : 0,
+        datasourceUrl: dbUrl,
+    });
+    console.log("✅ Prisma database connected");
+}
+catch (error) {
+    console.warn("⚠️ Prisma database not configured, using in-memory fallback");
+    prisma = null;
+}
 process.on("beforeExit", async () => {
-    await prisma.$disconnect();
+    if (prisma)
+        await prisma.$disconnect();
 });
 
 const userService = {
@@ -4280,11 +4447,11 @@ module.exports = require("elysia");
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   m: () => (/* binding */ backupScheduler)
 /* harmony export */ });
-/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(629);
-/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(24);
-/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(760);
-/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(760);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(629);
 /* harmony import */ var _webhook_events__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(132);
 
 
@@ -4301,17 +4468,17 @@ class BackupScheduler {
             maxBackups: Number(process.env.MAX_BACKUP_GENERATIONS) || 7,
             backupDir: process.env.BACKUP_DIR || "./backups",
         };
-        if (!node_fs__WEBPACK_IMPORTED_MODULE_1__.existsSync(this.config.backupDir)) {
-            node_fs__WEBPACK_IMPORTED_MODULE_1__.mkdirSync(this.config.backupDir, { recursive: true });
+        if (!node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(this.config.backupDir)) {
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.mkdirSync(this.config.backupDir, { recursive: true });
         }
     }
     start() {
         if (!this.config.enabled) {
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Backup scheduler is disabled");
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Backup scheduler is disabled");
             return;
         }
         if (this.isRunning) {
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.warn("Backup scheduler is already running");
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.warn("Backup scheduler is already running");
             return;
         }
         this.isRunning = true;
@@ -4319,7 +4486,7 @@ class BackupScheduler {
         this.intervalId = setInterval(() => {
             this.performBackup();
         }, this.config.interval * 60 * 1000);
-        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Backup scheduler started", {
+        _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Backup scheduler started", {
             interval: `${this.config.interval} minutes`,
             maxBackups: this.config.maxBackups,
         });
@@ -4329,24 +4496,24 @@ class BackupScheduler {
             clearInterval(this.intervalId);
             this.intervalId = undefined;
             this.isRunning = false;
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Backup scheduler stopped");
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Backup scheduler stopped");
         }
     }
     async performBackup() {
         const startTime = Date.now();
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const backupFileName = `elysia-backup-${timestamp}.db`;
-        const backupPath = node_path__WEBPACK_IMPORTED_MODULE_2__.join(this.config.backupDir, backupFileName);
+        const backupPath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.backupDir, backupFileName);
         try {
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Starting automatic backup", { file: backupFileName });
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Starting automatic backup", { file: backupFileName });
             const dbPath = process.env.DATABASE_URL?.replace("file:", "") || "./data/elysia.db";
-            if (!node_fs__WEBPACK_IMPORTED_MODULE_1__.existsSync(dbPath)) {
+            if (!node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(dbPath)) {
                 throw new Error(`Database file not found: ${dbPath}`);
             }
-            node_fs__WEBPACK_IMPORTED_MODULE_1__.copyFileSync(dbPath, backupPath);
-            const fileSize = node_fs__WEBPACK_IMPORTED_MODULE_1__.statSync(backupPath).size;
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.copyFileSync(dbPath, backupPath);
+            const fileSize = node_fs__WEBPACK_IMPORTED_MODULE_0__.statSync(backupPath).size;
             const duration = Date.now() - startTime;
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Backup completed", {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Backup completed", {
                 file: backupFileName,
                 size: `${(fileSize / 1024 / 1024).toFixed(2)} MB`,
                 duration: `${duration}ms`,
@@ -4359,7 +4526,7 @@ class BackupScheduler {
             await this.cleanupOldBackups();
         }
         catch (error) {
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error("Backup failed", error);
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Backup failed", error);
             await _webhook_events__WEBPACK_IMPORTED_MODULE_3__/* .webhookManager */ .$.emit("error.critical", {
                 message: "Automatic backup failed",
                 error: error.message,
@@ -4368,33 +4535,33 @@ class BackupScheduler {
     }
     async cleanupOldBackups() {
         try {
-            const files = node_fs__WEBPACK_IMPORTED_MODULE_1__.readdirSync(this.config.backupDir)
+            const files = node_fs__WEBPACK_IMPORTED_MODULE_0__.readdirSync(this.config.backupDir)
                 .filter((f) => f.startsWith("elysia-backup-") && f.endsWith(".db"))
                 .map((f) => ({
                 name: f,
-                path: node_path__WEBPACK_IMPORTED_MODULE_2__.join(this.config.backupDir, f),
-                mtime: node_fs__WEBPACK_IMPORTED_MODULE_1__.statSync(node_path__WEBPACK_IMPORTED_MODULE_2__.join(this.config.backupDir, f)).mtime,
+                path: node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.backupDir, f),
+                mtime: node_fs__WEBPACK_IMPORTED_MODULE_0__.statSync(node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.backupDir, f)).mtime,
             }))
                 .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
             if (files.length > this.config.maxBackups) {
                 const toDelete = files.slice(this.config.maxBackups);
                 for (const file of toDelete) {
-                    node_fs__WEBPACK_IMPORTED_MODULE_1__.unlinkSync(file.path);
-                    _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Old backup deleted", { file: file.name });
+                    node_fs__WEBPACK_IMPORTED_MODULE_0__.unlinkSync(file.path);
+                    _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Old backup deleted", { file: file.name });
                 }
             }
         }
         catch (error) {
-            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error("Cleanup failed", error);
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Cleanup failed", error);
         }
     }
     getBackupHistory() {
         try {
-            const files = node_fs__WEBPACK_IMPORTED_MODULE_1__.readdirSync(this.config.backupDir)
+            const files = node_fs__WEBPACK_IMPORTED_MODULE_0__.readdirSync(this.config.backupDir)
                 .filter((f) => f.startsWith("elysia-backup-") && f.endsWith(".db"))
                 .map((f) => {
-                const fullPath = node_path__WEBPACK_IMPORTED_MODULE_2__.join(this.config.backupDir, f);
-                const stats = node_fs__WEBPACK_IMPORTED_MODULE_1__.statSync(fullPath);
+                const fullPath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.backupDir, f);
+                const stats = node_fs__WEBPACK_IMPORTED_MODULE_0__.statSync(fullPath);
                 return {
                     name: f,
                     size: stats.size,

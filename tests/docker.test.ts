@@ -18,7 +18,7 @@ describe("Docker Validation Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const dockerfilePath = path.join(process.cwd(), "Dockerfile.production");
+		const dockerfilePath = path.join(process.cwd(), "config/docker/Dockerfile.production");
 		const content = fs.readFileSync(dockerfilePath, "utf-8");
 
 		// 基本的な構文チェック
@@ -42,7 +42,7 @@ describe("Docker Validation Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const composePath = path.join(process.cwd(), "docker-compose.yml");
+		const composePath = path.join(process.cwd(), "config/docker/docker-compose.yml");
 		const content = fs.readFileSync(composePath, "utf-8");
 
 		// YAML基本構造チェック
@@ -114,7 +114,7 @@ describe("Multi-Service Architecture Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const composePath = path.join(process.cwd(), "docker-compose.yml");
+		const composePath = path.join(process.cwd(), "config/docker/docker-compose.yml");
 		const content = fs.readFileSync(composePath, "utf-8");
 
 		// プロファイル定義チェック
@@ -134,7 +134,7 @@ describe("Multi-Service Architecture Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const composePath = path.join(process.cwd(), "docker-compose.yml");
+		const composePath = path.join(process.cwd(), "config/docker/docker-compose.yml");
 		const content = fs.readFileSync(composePath, "utf-8");
 
 		expect(content).toContain("networks:");
@@ -146,7 +146,7 @@ describe("Multi-Service Architecture Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const composePath = path.join(process.cwd(), "docker-compose.yml");
+		const composePath = path.join(process.cwd(), "config/docker/docker-compose.yml");
 		const content = fs.readFileSync(composePath, "utf-8");
 
 		expect(content).toContain("volumes:");
