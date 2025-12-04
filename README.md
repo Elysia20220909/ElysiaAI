@@ -132,7 +132,7 @@ docker-compose up -d
 
 - [Architecture](docs/ARCHITECTURE.md) - System design
 - [API Reference](docs/API.md) - Complete endpoints
-- [Security Guide](docs/SECURITY_HARDENING.md) - Best practices
+- [Security Guide](docs/SECURITY.md) - Best practices
 - [Deployment](DEPLOYMENT.md) - Production setup
 - [Contributing](CONTRIBUTING.md) - How to contribute
 - [Changelog](CHANGELOG.md) - Version history
@@ -159,7 +159,7 @@ See [LICENSE](LICENSE) for full text.
 
 - **Issues**: [GitHub Issues](https://github.com/chloeamethyst/ElysiaJS/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/chloeamethyst/ElysiaJS/discussions)
-- **Security**: See [SECURITY.md](SECURITY.md)
+- **Security**: See [SECURITY.md](docs/SECURITY.md)
 
 ---
 
