@@ -1,10 +1,11 @@
-import { createClient, type RedisClientType } from "redis";
 import { logger } from "./logger";
 
 interface CacheOptions {
 	ttl?: number; // Time to live in seconds
 	prefix?: string;
 }
+
+type RedisClientType = any; // Dynamic import type
 
 class CacheService {
 	private client: RedisClientType | null = null;
@@ -14,11 +15,20 @@ class CacheService {
 
 	async initialize(): Promise<void> {
 		try {
-			this.client = createClient({
+			// Dynamic import to avoid compile-time dependency
+			const redis = await import("redis").catch(() => null);
+			if (!redis) {
+				logger.warn(
+					"Redis package not installed. Cache service disabled. Install with: bun add redis",
+				);
+				return;
+			}
+
+			this.client = redis.createClient({
 				url: process.env.REDIS_URL || "redis://localhost:6379",
 			});
 
-			this.client.on("error", (err) => {
+			this.client.on("error", (err: Error) => {
 				logger.error(`Redis cache error: ${err.message}`);
 				this.isConnected = false;
 			});
