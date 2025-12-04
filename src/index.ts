@@ -1348,10 +1348,11 @@ if (import.meta.main) {
 		reusePort: true,
 	});
 
-	// WebSocketの初期化（HTTPサーバー取得後）
+	// WebSocketの初期化（HTTPサーバー取得後） - 一時的に無効化
 	// @ts-expect-error - Elysia internal server property
 	const httpServer = server.server;
-	if (httpServer) {
+	// biome-ignore lint/correctness/noConstantCondition: WebSocket一時無効化中
+	if (false && httpServer) {
 		const { wsManager } = await import("./lib/websocket-manager");
 		wsManager.initialize(httpServer);
 		logger.info("WebSocket server initialized");
