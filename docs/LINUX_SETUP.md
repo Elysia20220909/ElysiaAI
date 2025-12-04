@@ -294,7 +294,7 @@ ssh -i ~/.ssh/elysia_ai elysia@<server-ip>
 ## 次のステップ
 
 - **本番デプロイ**: `DEPLOYMENT.md` を参照
-- **セキュリティ強化**: `SECURITY.md` を参照
+- **セキュリティ強化**: `docs/SECURITY.md` を参照
 - **API使用方法**: `README.md` のAPI概要セクション
 - **音声機能**: `docs/VOICEVOX_SETUP.md` を参照
 

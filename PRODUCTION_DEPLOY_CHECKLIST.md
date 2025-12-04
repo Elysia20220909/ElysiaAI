@@ -514,4 +514,4 @@ gcloud run revisions list --service elysia-ai --region us-central1
 - [cloud/README.md](./cloud/README.md) - クラウドデプロイ詳細
 - [monitoring/docker-compose.yml](./monitoring/docker-compose.yml) - 監視スタック構成
 - [scripts/load-test.ps1](./scripts/load-test.ps1) - 負荷テストスクリプト
-- [SECURITY.md](./SECURITY.md) - セキュリティポリシー
+- [SECURITY.md](./docs/SECURITY.md) - セキュリティポリシー

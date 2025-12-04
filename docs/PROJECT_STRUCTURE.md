@@ -35,7 +35,7 @@ elysia-ai/
 │   └── index-old.html              # Legacy interface
 │
 ├── docs/                           # Documentation
-│   ├── SECURITY_ARCHITECTURE.md    # Security architecture details
+│   ├── SECURITY.md                 # Integrated security guide
 │   ├── STRUCTURE_UPDATE.md         # Structure change log
 │   ├── LINUX_SETUP.md              # Linux setup guide
 │   ├── VOICE_GUIDE.md              # Voice feature guide
@@ -123,7 +123,7 @@ bun run start
 - [README.md](../README.md) - Project overview
 - [README.ja.md](../README.ja.md) - 日本語版README
 - [DEPLOYMENT.md](../DEPLOYMENT.md) - Deployment guide
-- [SECURITY.md](../SECURITY.md) - Security policy
+- [SECURITY.md](./SECURITY.md) - Integrated security guide
 
 ## 🔍 Key Features
 
