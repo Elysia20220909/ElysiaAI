@@ -1,5 +1,5 @@
 // E2E Tests with Playwright
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Homepage", () => {
 	test("should load the homepage", async ({ page }) => {

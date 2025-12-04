@@ -218,10 +218,22 @@ class QueryOptimizer {
 		// Process all queries in the batch
 		for (const item of queue) {
 			try {
-				// Execute query (implementation depends on database driver)
-				// item.resolve(result);
-				item.reject(new Error("Batch processing not implemented"));
+				const startTime = Date.now();
+
+				// Dynamic import to avoid circular dependencies
+				const { prisma } = await import("./database");
+
+				// Execute the query using Prisma's raw query capability
+				const result = await prisma.$queryRawUnsafe(item.query, ...item.params);
+
+				const executionTime = Date.now() - startTime;
+				this.recordQueryExecution(item.query, executionTime);
+
+				item.resolve(result);
 			} catch (error) {
+				logger.error(
+					`Batch query failed: ${error instanceof Error ? error.message : String(error)}`,
+				);
 				item.reject(error);
 			}
 		}

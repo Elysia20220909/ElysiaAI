@@ -1,5 +1,5 @@
 // Structured Logging System
-import { existsSync, mkdirSync, appendFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";

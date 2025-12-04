@@ -4,11 +4,11 @@
  */
 
 import { CronJob } from "cron";
-import { logger } from "./logger";
-import { jobQueue } from "./job-queue";
 import { backupScheduler } from "./backup-scheduler";
-import { logCleanupManager } from "./log-cleanup";
 import { fileUploadManager } from "./file-upload";
+import { jobQueue } from "./job-queue";
+import { logCleanupManager } from "./log-cleanup";
+import { logger } from "./logger";
 
 interface ScheduledTask {
 	name: string;
@@ -182,7 +182,7 @@ class CronScheduler {
 	 */
 	disableTask(name: string) {
 		const task = this.tasks.get(name);
-		if (task && task.enabled) {
+		if (task?.enabled) {
 			task.job.stop();
 			task.enabled = false;
 			logger.info("Cron task disabled", { name });

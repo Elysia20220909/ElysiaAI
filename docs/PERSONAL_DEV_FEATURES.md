@@ -87,7 +87,7 @@ GET /admin/audit/export         # ログエクスポート (JSON/CSV)
 
 ---
 
-### 5. WebSocketマネージャー (実装済み、統合保留)
+### 5. WebSocketマネージャー (実装済み、統合完了)
 **ファイル:** `src/lib/websocket-manager.ts`
 
 **機能:**
@@ -96,7 +96,7 @@ GET /admin/audit/export         # ログエクスポート (JSON/CSV)
 - ルームベースのブロードキャスト
 - ハートビート機能 (30秒間隔)
 
-**注:** HTTP サーバーインスタンスへのアクセスが必要なため、統合は保留中
+**状況:** Phase 5で統合完了。管理ダッシュボードで使用可能。
 
 ---
 

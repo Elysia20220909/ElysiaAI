@@ -16,30 +16,30 @@ import {
 	verifyStoredRefreshToken,
 } from "../.internal/secure/auth";
 import { DATABASE_CONFIG } from "../.internal/secure/db";
-import { performHealthCheck } from "./lib/health";
-import { metricsCollector } from "./lib/metrics";
-import { logger } from "./lib/logger";
+import { abTestManager } from "./lib/ab-testing";
+import { apiKeyManager } from "./lib/api-key-manager";
+import { auditLogger } from "./lib/audit-logger";
+import { createAuditMiddleware } from "./lib/audit-middleware";
+import { backupScheduler } from "./lib/backup-scheduler";
 import { CacheManager } from "./lib/cache";
-import { i18n, getLocaleFromRequest } from "./lib/i18n";
-import { telemetry, getTraceContextFromRequest } from "./lib/telemetry";
+import { cronScheduler } from "./lib/cron-scheduler";
 import { feedbackService, knowledgeService, userService } from "./lib/database";
+import { emailNotifier } from "./lib/email-notifier";
 import {
 	checkEnvironmentOrExit,
 	printEnvironmentSummary,
 } from "./lib/env-validator";
-import { webhookManager } from "./lib/webhook-events";
-import { backupScheduler } from "./lib/backup-scheduler";
-import { apiKeyManager } from "./lib/api-key-manager";
-import { emailNotifier } from "./lib/email-notifier";
-import { abTestManager } from "./lib/ab-testing";
-import { sessionManager } from "./lib/session-manager";
-import { healthMonitor } from "./lib/health-monitor";
-import { logCleanupManager } from "./lib/log-cleanup";
-import { jobQueue } from "./lib/job-queue";
 import { fileUploadManager } from "./lib/file-upload";
-import { cronScheduler } from "./lib/cron-scheduler";
-import { auditLogger } from "./lib/audit-logger";
-import { createAuditMiddleware } from "./lib/audit-middleware";
+import { performHealthCheck } from "./lib/health";
+import { healthMonitor } from "./lib/health-monitor";
+import { getLocaleFromRequest, i18n } from "./lib/i18n";
+import { jobQueue } from "./lib/job-queue";
+import { logCleanupManager } from "./lib/log-cleanup";
+import { logger } from "./lib/logger";
+import { metricsCollector } from "./lib/metrics";
+import { sessionManager } from "./lib/session-manager";
+import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
+import { webhookManager } from "./lib/webhook-events";
 
 // 環境変数検証（起動時）
 checkEnvironmentOrExit();

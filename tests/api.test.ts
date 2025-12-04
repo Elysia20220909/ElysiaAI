@@ -1,5 +1,5 @@
 // Comprehensive Test Suite - Unit Tests
-import { describe, expect, it, beforeAll, afterAll } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import type app from "../src/index";
 
