@@ -47,6 +47,8 @@
 		"db:seed": "bun run scripts/seed.ts",
 		"db:reset": "bunx prisma migrate reset --force",
 		"db:studio": "bunx prisma studio",
+		"dev:server": "bun scripts/dev-server.ts",
+		"dev:test": "bun scripts/dev-test-simple.ts",
 		"docker:build": "docker build -f config/docker/Dockerfile.production -t elysia-ai:latest .",
 		"docker:up": "docker-compose -f config/docker/docker-compose.yml up -d",
 		"docker:down": "docker-compose -f config/docker/docker-compose.yml down",

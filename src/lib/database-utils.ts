@@ -1,70 +1,91 @@
 /**
  * Prisma データベース操作ユーティリティ
- * ユーザー、チャットセッション、フィードバック管理
+ * Bun:sqlite を使用したシンプルな実装
  */
 
-import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
-import type { ChatSession, User, Feedback } from "@prisma/client";
+import { Database } from "bun:sqlite";
+import { randomUUID } from "node:crypto";
 import bcryptjs from "bcryptjs";
 
-declare global {
-	// eslint-disable-next-line no-var
-	var prismaInstance: PrismaClient | undefined;
-}
-
-// DATABASE_URL から SQLite パスを取得
-const databaseUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
-
-const prisma =
-  global.prismaInstance ||
-  new PrismaClient();if (process.env.NODE_ENV === "development") {
-	global.prismaInstance = prisma;
-}
+// SQLite データベース接続
+const dbPath =
+	process.env.DATABASE_URL?.replace("file:", "") || "./prisma/dev.db";
+const db = new Database(dbPath);
 
 // ============ ユーザー操作 ============
 
-/**
- * ユーザー作成
- */
+export interface User {
+	id: string;
+	username: string;
+	passwordHash: string;
+	role: string;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
 export async function createUser(
 	username: string,
 	password: string,
 	role = "user",
 ): Promise<User> {
+	const id = randomUUID();
 	const passwordHash = await bcryptjs.hash(password, 10);
-	return prisma.user.create({
-		data: {
-			username,
-			passwordHash,
-			role,
-		},
-	});
+	const now = new Date();
+
+	const stmt = db.prepare(
+		"INSERT INTO users (id, username, passwordHash, role, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)",
+	);
+	stmt.run(
+		id,
+		username,
+		passwordHash,
+		role,
+		now.toISOString(),
+		now.toISOString(),
+	);
+
+	return {
+		id,
+		username,
+		passwordHash,
+		role,
+		createdAt: now,
+		updatedAt: now,
+	};
 }
 
-/**
- * ユーザー取得
- */
 export async function getUser(userId: string): Promise<User | null> {
-	return prisma.user.findUnique({
-		where: { id: userId },
-	});
+	const stmt = db.prepare("SELECT * FROM users WHERE id = ?");
+	const row = stmt.get(userId) as Record<string, unknown> | undefined;
+	return row
+		? {
+				id: row.id as string,
+				username: row.username as string,
+				passwordHash: row.passwordHash as string,
+				role: row.role as string,
+				createdAt: new Date(row.createdAt as string),
+				updatedAt: new Date(row.updatedAt as string),
+			}
+		: null;
 }
 
-/**
- * ユーザー名でユーザー取得
- */
 export async function getUserByUsername(
 	username: string,
 ): Promise<User | null> {
-	return prisma.user.findUnique({
-		where: { username },
-	});
+	const stmt = db.prepare("SELECT * FROM users WHERE username = ?");
+	const row = stmt.get(username) as Record<string, unknown> | undefined;
+	return row
+		? {
+				id: row.id as string,
+				username: row.username as string,
+				passwordHash: row.passwordHash as string,
+				role: row.role as string,
+				createdAt: new Date(row.createdAt as string),
+				updatedAt: new Date(row.updatedAt as string),
+			}
+		: null;
 }
 
-/**
- * ユーザー認証
- */
 export async function authenticateUser(
 	username: string,
 	password: string,
@@ -76,88 +97,100 @@ export async function authenticateUser(
 	return isValid ? user : null;
 }
 
-/**
- * 全ユーザー取得
- */
 export async function getAllUsers(): Promise<User[]> {
-	return prisma.user.findMany({
-		include: {
-			chatSessions: { take: 5 },
-			feedbacks: { take: 3 },
-		},
-	});
+	const stmt = db.prepare("SELECT * FROM users LIMIT 100");
+	const rows = stmt.all() as Record<string, unknown>[];
+	return rows.map((row) => ({
+		id: row.id as string,
+		username: row.username as string,
+		passwordHash: row.passwordHash as string,
+		role: row.role as string,
+		createdAt: new Date(row.createdAt as string),
+		updatedAt: new Date(row.updatedAt as string),
+	}));
 }
 
 // ============ チャットセッション操作 ============
 
-/**
- * チャットセッション作成
- */
+export interface ChatSession {
+	id: string;
+	userId?: string;
+	mode: string;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
 export async function createChatSession(
 	userId?: string,
 	mode = "normal",
 ): Promise<ChatSession> {
-	return prisma.chatSession.create({
-		data: {
-			userId: userId || undefined,
-			mode,
-		},
-	});
+	const id = randomUUID();
+	const now = new Date();
+
+	const stmt = db.prepare(
+		"INSERT INTO chat_sessions (id, userId, mode, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)",
+	);
+	stmt.run(id, userId || null, mode, now.toISOString(), now.toISOString());
+
+	return { id, userId, mode, createdAt: now, updatedAt: now };
 }
 
-/**
- * チャットセッション取得
- */
 export async function getChatSession(
 	sessionId: string,
 ): Promise<ChatSession | null> {
-	return prisma.chatSession.findUnique({
-		where: { id: sessionId },
-		include: {
-			messages: {
-				orderBy: { createdAt: "asc" },
-			},
-		},
-	});
+	const stmt = db.prepare("SELECT * FROM chat_sessions WHERE id = ?");
+	const row = stmt.get(sessionId) as Record<string, unknown> | undefined;
+	return row
+		? {
+				id: row.id as string,
+				userId: (row.userId as string) || undefined,
+				mode: row.mode as string,
+				createdAt: new Date(row.createdAt as string),
+				updatedAt: new Date(row.updatedAt as string),
+			}
+		: null;
 }
 
-/**
- * ユーザーのチャットセッション一覧
- */
 export async function getUserChatSessions(
 	userId: string,
 ): Promise<ChatSession[]> {
-	return prisma.chatSession.findMany({
-		where: { userId },
-		orderBy: { createdAt: "desc" },
-		include: {
-			messages: { select: { id: true, role: true, content: true } },
-		},
-	});
+	const stmt = db.prepare(
+		"SELECT * FROM chat_sessions WHERE userId = ? ORDER BY createdAt DESC LIMIT 50",
+	);
+	const rows = stmt.all(userId) as Record<string, unknown>[];
+	return rows.map((row) => ({
+		id: row.id as string,
+		userId: (row.userId as string) || undefined,
+		mode: row.mode as string,
+		createdAt: new Date(row.createdAt as string),
+		updatedAt: new Date(row.updatedAt as string),
+	}));
 }
 
-/**
- * メッセージ保存
- */
 export async function saveMessage(
 	sessionId: string,
 	role: "user" | "assistant" | "system",
 	content: string,
 ): Promise<void> {
-	await prisma.message.create({
-		data: {
-			sessionId,
-			role,
-			content,
-		},
-	});
+	const id = randomUUID();
+	const stmt = db.prepare(
+		"INSERT INTO messages (id, sessionId, role, content, createdAt) VALUES (?, ?, ?, ?, ?)",
+	);
+	stmt.run(id, sessionId, role, content, new Date().toISOString());
 }
 
 // ============ フィードバック操作 ============
 
-/**
- * フィードバック保存
- */
+export interface Feedback {
+	id: string;
+	userId?: string;
+	query: string;
+	answer: string;
+	rating: "up" | "down";
+	reason?: string;
+	createdAt: Date;
+}
+
 export async function saveFeedback(
 	query: string,
 	answer: string,
@@ -165,49 +198,73 @@ export async function saveFeedback(
 	userId?: string,
 	reason?: string,
 ): Promise<Feedback> {
-	return prisma.feedback.create({
-		data: {
-			userId: userId || undefined,
-			query,
-			answer,
-			rating,
-			reason,
-		},
-	});
+	const id = randomUUID();
+	const now = new Date();
+
+	const stmt = db.prepare(
+		"INSERT INTO feedbacks (id, userId, query, answer, rating, reason, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
+	);
+	stmt.run(
+		id,
+		userId || null,
+		query,
+		answer,
+		rating,
+		reason || null,
+		now.toISOString(),
+	);
+
+	return { id, userId, query, answer, rating, reason, createdAt: now };
 }
 
-/**
- * フィードバック一覧
- */
 export async function getFeedbacks(
 	limit = 50,
 	offset = 0,
 	rating?: "up" | "down",
 ): Promise<Feedback[]> {
-	return prisma.feedback.findMany({
-		where: rating ? { rating } : {},
-		orderBy: { createdAt: "desc" },
-		take: limit,
-		skip: offset,
-	});
+	let stmt: ReturnType<typeof db.prepare>;
+	let result: Record<string, unknown>[];
+
+	if (rating) {
+		stmt = db.prepare(
+			"SELECT * FROM feedbacks WHERE rating = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?",
+		);
+		result = stmt.all(rating, limit, offset) as Record<string, unknown>[];
+	} else {
+		stmt = db.prepare(
+			"SELECT * FROM feedbacks ORDER BY createdAt DESC LIMIT ? OFFSET ?",
+		);
+		result = stmt.all(limit, offset) as Record<string, unknown>[];
+	}
+
+	return result.map((row) => ({
+		id: row.id as string,
+		userId: (row.userId as string) || undefined,
+		query: row.query as string,
+		answer: row.answer as string,
+		rating: row.rating as "up" | "down",
+		reason: (row.reason as string) || undefined,
+		createdAt: new Date(row.createdAt as string),
+	}));
 }
 
-/**
- * フィードバック統計
- */
 export async function getFeedbackStats(): Promise<{
 	total: number;
 	up: number;
 	down: number;
 	upRate: number;
 }> {
-	const total = await prisma.feedback.count();
-	const up = await prisma.feedback.count({
-		where: { rating: "up" },
-	});
-	const down = await prisma.feedback.count({
-		where: { rating: "down" },
-	});
+	const totalStmt = db.prepare("SELECT COUNT(*) as count FROM feedbacks");
+	const upStmt = db.prepare(
+		"SELECT COUNT(*) as count FROM feedbacks WHERE rating = 'up'",
+	);
+	const downStmt = db.prepare(
+		"SELECT COUNT(*) as count FROM feedbacks WHERE rating = 'down'",
+	);
+
+	const total = (totalStmt.get() as { count: number }).count;
+	const up = (upStmt.get() as { count: number }).count;
+	const down = (downStmt.get() as { count: number }).count;
 
 	return {
 		total,
@@ -219,96 +276,89 @@ export async function getFeedbackStats(): Promise<{
 
 // ============ ナレッジベース操作 ============
 
-/**
- * ナレッジベース項目追加
- */
 export async function addKnowledgeBase(
-	question: string,
-	answer: string,
+	content: string,
+	topic?: string,
 	userId?: string,
-	source = "user",
 ): Promise<void> {
-	await prisma.knowledgeBase.create({
-		data: {
-			userId: userId || undefined,
-			question,
-			answer,
-			source,
-			verified: false,
-		},
-	});
+	const id = randomUUID();
+	const now = new Date();
+
+	const stmt = db.prepare(
+		"INSERT INTO knowledge_base (id, userId, content, topic, verified, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
+	);
+	stmt.run(
+		id,
+		userId || null,
+		content,
+		topic || null,
+		1,
+		now.toISOString(),
+		now.toISOString(),
+	);
 }
 
-/**
- * 検証済みナレッジベース取得
- */
 export async function getVerifiedKnowledgeBase(
 	limit = 100,
-): Promise<Array<{ question: string; answer: string }>> {
-	const items = await prisma.knowledgeBase.findMany({
-		where: { verified: true },
-		select: { question: true, answer: true },
-		take: limit,
-	});
-	return items;
+): Promise<Array<{ content: string; topic?: string }>> {
+	const stmt = db.prepare(
+		"SELECT content, topic FROM knowledge_base WHERE verified = 1 LIMIT ?",
+	);
+	return stmt.all(limit) as Array<{ content: string; topic?: string }>;
 }
 
 // ============ 音声ログ操作 ============
 
-/**
- * 音声ログ保存
- */
 export async function saveVoiceLog(
 	username: string | undefined,
-	text: string,
-	emotion = "normal",
-	audioUrl?: string,
+	voiceText: string,
+	language = "ja",
+	synthesisType?: string,
 ): Promise<void> {
-	await prisma.voiceLog.create({
-		data: {
-			username: username || undefined,
-			text,
-			emotion,
-			audioUrl,
-		},
-	});
+	const id = randomUUID();
+
+	const stmt = db.prepare(
+		"INSERT INTO voice_logs (id, username, voiceText, language, synthesisType, createdAt) VALUES (?, ?, ?, ?, ?, ?)",
+	);
+	stmt.run(
+		id,
+		username || null,
+		voiceText,
+		language,
+		synthesisType || null,
+		new Date().toISOString(),
+	);
 }
 
-/**
- * ユーザーの音声ログ取得
- */
 export async function getUserVoiceLogs(
 	username: string,
 	limit = 10,
-): Promise<Array<{ text: string; emotion: string; createdAt: Date }>> {
-	return prisma.voiceLog.findMany({
-		where: { username },
-		select: { text: true, emotion: true, createdAt: true },
-		orderBy: { createdAt: "desc" },
-		take: limit,
-	});
+): Promise<Array<{ voiceText: string; language: string; createdAt: Date }>> {
+	const stmt = db.prepare(
+		"SELECT voiceText, language, createdAt FROM voice_logs WHERE username = ? ORDER BY createdAt DESC LIMIT ?",
+	);
+	const rows = stmt.all(username, limit) as Record<string, unknown>[];
+	return rows.map((row) => ({
+		voiceText: row.voiceText as string,
+		language: row.language as string,
+		createdAt: new Date(row.createdAt as string),
+	}));
 }
 
 // ============ クリーンアップ ============
 
-/**
- * テスト用データクリア
- */
 export async function clearTestData(): Promise<void> {
-	await prisma.message.deleteMany({});
-	await prisma.chatSession.deleteMany({});
-	await prisma.feedback.deleteMany({});
-	await prisma.knowledgeBase.deleteMany({});
-	await prisma.voiceLog.deleteMany({});
-	await prisma.refreshToken.deleteMany({});
-	await prisma.user.deleteMany({});
+	db.exec("DELETE FROM messages");
+	db.exec("DELETE FROM chat_sessions");
+	db.exec("DELETE FROM feedbacks");
+	db.exec("DELETE FROM knowledge_base");
+	db.exec("DELETE FROM voice_logs");
+	db.exec("DELETE FROM refresh_tokens");
+	db.exec("DELETE FROM users");
 }
 
-/**
- * Prisma接続終了
- */
-export async function disconnect(): Promise<void> {
-	await prisma.$disconnect();
+export function disconnect(): void {
+	db.close();
 }
 
-export { prisma };
+export { db };

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * SQLite データベースセットアップスクリプト
- * Prisma に依存しない直接の SQLite 初期化
+ * SQLite Database Setup Script
+ * Direct SQLite initialization without Prisma dependency
  */
 
 import "dotenv/config";
@@ -12,22 +12,22 @@ import { dirname } from "node:path";
 const DB_PATH =
 	process.env.DATABASE_URL?.replace("file:", "") || "./prisma/dev.db";
 
-console.log("🚀 SQLiteデータベースセットアップ開始...\n");
-console.log(`📍 データベースパス: ${DB_PATH}\n`);
+console.log("SQLite database setup started...\n");
+console.log(`Database path: ${DB_PATH}\n`);
 
 try {
-	// ディレクトリ確認
+	// Check directory
 	const dbDir = dirname(DB_PATH);
 	if (!existsSync(dbDir)) {
-		console.log(`📁 ディレクトリ作成: ${dbDir}`);
+		console.log(`Creating directory: ${dbDir}`);
 		mkdirSync(dbDir, { recursive: true });
 	}
 
-	// SQLite データベース接続
+	// Connect to SQLite database
 	const db = new Database(DB_PATH);
 
-	console.log("🔗 データベース接続成功\n");
-	console.log("📋 テーブル初期化中...");
+	console.log("Database connected successfully\n");
+	console.log("Initializing tables...");
 
 	// テーブル作成
 	const tables = [
@@ -116,24 +116,24 @@ try {
 
 	for (const table of tables) {
 		db.exec(table.sql);
-		console.log(`  ✅ ${table.name}`);
+		console.log(`  Created: ${table.name}`);
 	}
 
-	console.log("\n✨ テーブル作成完了\n");
+	console.log("\nTable creation completed\n");
 
-	// テーブル統計
-	console.log("📊 テーブル統計:\n");
+	// Table statistics
+	console.log("Table statistics:\n");
 	for (const table of tables) {
 		const query = db.prepare(`SELECT COUNT(*) as count FROM ${table.name}`);
 		const result = query.get() as { count: number };
-		console.log(`  📄 ${table.name}: ${result.count} レコード`);
+		console.log(`  ${table.name}: ${result.count} records`);
 	}
 
 	db.close();
 
-	console.log("\n✨ セットアップ完了!");
-	console.log("🎉 SQLiteデータベースは使用準備完了です。\n");
+	console.log("\nSetup completed!");
+	console.log("SQLite database is ready to use.\n");
 } catch (error: unknown) {
-	console.error("❌ エラー:", error instanceof Error ? error.message : error);
+	console.error("Error:", error instanceof Error ? error.message : error);
 	process.exit(1);
 }
