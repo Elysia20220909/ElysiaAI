@@ -48,11 +48,17 @@ class HealthMonitor {
 			check: async () => {
 				try {
 					const { PrismaClient } = await import("@prisma/client");
-					const prisma = new PrismaClient();
+					const prisma = new PrismaClient({
+						datasourceUrl: process.env.DATABASE_URL || "file:./dev.db",
+					});
 					await prisma.$queryRaw`SELECT 1`;
 					await prisma.$disconnect();
 					return true;
-				} catch {
+				} catch (error) {
+					// データベースエラーをログに出力
+					logger.debug(
+						`Database health check error: ${error instanceof Error ? error.message : String(error)}`,
+					);
 					return false;
 				}
 			},
@@ -110,12 +116,28 @@ class HealthMonitor {
 			name: "disk_space",
 			check: async () => {
 				try {
+					// Windows対応: PowerShell経由でディスク容量を確認
+					if (process.platform === "win32") {
+						const { execSync } = await import("node:child_process");
+						const output = execSync(
+							'powershell -Command "Get-PSDrive C | Select-Object -ExpandProperty Free"',
+							{ encoding: "utf-8" },
+						);
+						const freeSpaceBytes = Number.parseInt(output.trim(), 10);
+						const freeSpaceGB = freeSpaceBytes / 1024 ** 3;
+						return freeSpaceGB > 1; // 1GB以上の空き容量が必要
+					}
+					// Linux/Mac対応
 					const fs = await import("node:fs");
 					const path = await import("node:path");
 					const stats = fs.statfsSync(path.resolve("./"));
 					const freeSpaceGB = (stats.bavail * stats.bsize) / 1024 ** 3;
 					return freeSpaceGB > 1; // 1GB以上の空き容量が必要
-				} catch {
+				} catch (error) {
+					// ディスクチェックエラーをログに出力
+					logger.debug(
+						`Disk space health check error: ${error instanceof Error ? error.message : String(error)}`,
+					);
 					return false;
 				}
 			},
