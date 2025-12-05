@@ -3,17 +3,17 @@
  * データベース操作の確認テスト
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import {
-	createUser,
 	authenticateUser,
-	createChatSession,
-	saveMessage,
-	saveFeedback,
-	getFeedbackStats,
 	clearTestData,
+	createChatSession,
+	createUser,
 	disconnect,
+	getFeedbackStats,
 	prisma,
+	saveFeedback,
+	saveMessage,
 } from "../lib/database-utils";
 
 // ========== テストスイート ==========

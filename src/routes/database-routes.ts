@@ -3,8 +3,8 @@
  * ユーザー認証、チャット、フィードバックのエンドポイント
  */
 
-import type { Elysia } from "elysia";
 import * as db from "@/lib/database-utils";
+import type { Elysia } from "elysia";
 
 export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 	return (

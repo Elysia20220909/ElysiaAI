@@ -1,113 +1,94 @@
 #!/usr/bin/env bun
 /**
- * Prisma Client 動作確認テスト
- * データベース操作の実装検証
+ * Prisma Client Operation Test
+ * Database operation implementation verification
  */
 
 import "dotenv/config";
 import * as db from "../src/lib/database-utils";
 
 async function runTests() {
-	console.log("🧪 Prisma Client 動作テスト開始...\n");
+	console.log("Prisma Client operation test started...\n");
 
 	try {
-		// テスト 1: ユーザー作成
-		console.log("📝 テスト 1: ユーザー作成");
+		// Test 1: User creation
+		console.log("Test 1: User creation");
 		const user = await db.createUser("testuser", "password123");
-		console.log(`✅ ユーザー作成成功: ${user.username} (ID: ${user.id})\n`);
+		console.log(`User created: ${user.username} (ID: ${user.id})\n`);
 
-		// テスト 2: ユーザー認証
-		console.log("🔐 テスト 2: ユーザー認証");
+		// Test 2: User authentication
+		console.log("Test 2: User authentication");
 		const authenticated = await db.authenticateUser("testuser", "password123");
 		if (authenticated) {
-			console.log(`✅ 認証成功\n`);
+			console.log("Authentication successful\n");
 		} else {
-			console.log(`❌ 認証失敗\n`);
+			console.log("Authentication failed\n");
 		}
 
-		// テスト 3: チャットセッション作成
-		console.log("💬 テスト 3: チャットセッション作成");
+		// Test 3: Chat session creation
+		console.log("Test 3: Chat session creation");
 		const session = await db.createChatSession(user.id, "normal");
-		console.log(`✅ セッション作成成功: ${session.id}\n`);
+		console.log(`Session created: ${session.id}\n`);
 
-		// テスト 4: メッセージ保存
-		console.log("💭 テスト 4: メッセージ保存");
-		await db.saveMessage(session.id, "user", "こんにちは");
-		await db.saveMessage(
-			session.id,
-			"assistant",
-			"こんにちは。何かお手伝いできることはありますか？",
-		);
-		console.log(`✅ メッセージ保存成功\n`);
+		// Test 4: Message save
+		console.log("Test 4: Message save");
+		await db.saveMessage(session.id, "user", "Hello");
+		await db.saveMessage(session.id, "assistant", "Hello. How can I help you?");
+		console.log("Messages saved\n");
 
-		// テスト 5: セッション取得
-		console.log("🔍 テスト 5: セッション取得");
+		// Test 5: Session retrieval
+		console.log("Test 5: Session retrieval");
 		const retrievedSession = await db.getChatSession(session.id);
 		if (retrievedSession) {
-			// messages フィールドはオプショナルなため型安全で処理
-			console.log("✅ セッション取得成功\n");
+			console.log("Session retrieved\n");
 		}
 
-		// テスト 6: フィードバック保存
-		console.log("⭐ テスト 6: フィードバック保存");
+		// Test 6: Feedback save
+		console.log("Test 6: Feedback save");
 		await db.saveFeedback(
-			"テストクエリ",
-			"テスト回答",
+			"Test query",
+			"Test answer",
 			"up",
 			user.id,
-			"素晴らしい回答でした",
+			"Good answer",
 		);
-		console.log("✅ フィードバック保存成功\n");
+		console.log("Feedback saved\n");
 
-		// テスト 7: フィードバック統計
-		console.log("📊 テスト 7: フィードバック統計");
+		// Test 7: Feedback statistics
+		console.log("Test 7: Feedback statistics");
 		const stats = await db.getFeedbackStats();
-		console.log("✅ 統計取得成功:");
-		console.log(`   - 総数: ${stats.total}`);
-		console.log(`   - ポジティブ: ${stats.up}`);
-		console.log(`   - ネガティブ: ${stats.down}`);
-		console.log(`   - ポジティブ率: ${stats.upRate.toFixed(1)}%\n`);
+		console.log("Statistics retrieved:");
+		console.log(`   - Total: ${stats.total}`);
+		console.log(`   - Positive: ${stats.up}`);
+		console.log(`   - Negative: ${stats.down}`);
+		console.log(`   - Positive rate: ${stats.upRate.toFixed(1)}%\n`);
 
-		// テスト 8: ナレッジベース追加
-		console.log("📚 テスト 8: ナレッジベース追加");
-		await db.addKnowledgeBase(
-			"Elysia とは?",
-			"Elysia は Bun 用の高速 Web フレームワークです",
-			user.id,
-			"documentation",
-		);
-		console.log("✅ ナレッジベース追加成功\n");
+		// Test 8: Knowledge base add
+		console.log("Test 8: Knowledge base add");
+		await db.addKnowledgeBase("Test content", "test-topic", user.id);
+		console.log("Knowledge base added\n");
 
-		// テスト 9: 音声ログ保存
-		console.log("🎤 テスト 9: 音声ログ保存");
-		await db.saveVoiceLog(
-			user.username,
-			"これはテスト音声です",
-			"normal",
-			"https://example.com/audio.mp3",
-		);
-		console.log("✅ 音声ログ保存成功\n");
+		// Test 9: Voice log save
+		console.log("Test 9: Voice log save");
+		await db.saveVoiceLog(user.username, "This is test voice", "en");
+		console.log("Voice log saved\n");
 
-		// テスト 10: 全ユーザー取得
-		console.log("👥 テスト 10: 全ユーザー取得");
-		const allUsers = await db.getAllUsers();
-		console.log(`✅ ユーザー取得成功: ${allUsers.length} ユーザー\n`);
+		// Test 10: Get all users
+		console.log("Test 10: Get all users");
+		const users = await db.getAllUsers();
+		console.log(`Users retrieved: ${users.length} users\n`);
 
-		// クリーンアップ
-		console.log("🧹 クリーンアップ: テストデータ削除");
+		// Cleanup: Delete test data
+		console.log("Cleanup: Delete test data");
 		await db.clearTestData();
-		console.log("✅ クリーンアップ完了\n");
+		console.log("Cleanup completed\n");
 
-		console.log("🎉 すべてのテスト成功!\n");
-		console.log("✨ Prisma Client は正常に動作しています。");
-	} catch (error: unknown) {
-		console.error(
-			"❌ テストエラー:",
-			error instanceof Error ? error.message : error,
-		);
+		console.log("All tests successful!\n");
+
+		console.log("Prisma Client is working correctly.\n");
+	} catch (error) {
+		console.error("Test error:", error);
 		process.exit(1);
-	} finally {
-		await db.disconnect();
 	}
 }
 
