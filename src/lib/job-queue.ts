@@ -39,11 +39,33 @@ class JobQueueManager {
 	 */
 	async initialize() {
 		try {
-			// Redis接続設定
-			const connection = {
-				host: new URL(this.REDIS_URL).hostname,
-				port: Number(new URL(this.REDIS_URL).port) || 6379,
+			// Redis接続設定（TLS対応）
+			const redisHost = process.env.REDIS_HOST || new URL(this.REDIS_URL).hostname;
+			const redisPort = Number(process.env.REDIS_PORT) || Number(new URL(this.REDIS_URL).port) || 6379;
+			const redisPassword = process.env.REDIS_PASSWORD || new URL(this.REDIS_URL).password;
+			const redisUsername = process.env.REDIS_USERNAME || new URL(this.REDIS_URL).username || 'default';
+			const useTLS = process.env.REDIS_TLS === 'true';
+
+			const connection: Record<string, unknown> = {
+				host: redisHost,
+				port: redisPort,
+				password: redisPassword,
+				username: redisUsername,
+				maxRetriesPerRequest: Number(process.env.REDIS_MAX_RETRIES) || 5,
+				connectTimeout: Number(process.env.REDIS_CONNECT_TIMEOUT) || 10000,
+				retryStrategy: (times: number) => {
+					const delay = Math.min(times * Number(process.env.REDIS_RETRY_DELAY_MS || 2000), 10000);
+					logger.warn(`Redis reconnect attempt ${times}, retry in ${delay}ms`);
+					return delay;
+				},
 			};
+
+			// TLS有効化（redis.cloudで必須）
+			if (useTLS) {
+				connection.tls = {
+					rejectUnauthorized: false,
+				};
+			}
 
 			// キュー作成
 			this.queue = new Queue("elysia-jobs", { connection });
@@ -66,7 +88,11 @@ class JobQueueManager {
 				logger.error("Job failed", err as Error);
 			});
 
-			logger.info("Job queue initialized", { connection: this.REDIS_URL });
+			logger.info("Job queue initialized", {
+				host: redisHost,
+				port: redisPort,
+				tls: useTLS
+			});
 		} catch (error) {
 			logger.warn("Job queue unavailable, using in-memory fallback", {
 				error: (error as Error).message,

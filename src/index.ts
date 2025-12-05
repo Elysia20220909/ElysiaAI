@@ -50,12 +50,20 @@ healthMonitor.start();
 logCleanupManager.start();
 
 // ジョブキューとCronスケジューラーを初期化
-try {
-	await jobQueue.initialize();
-} catch (error) {
-	logger.warn("Job queue initialization failed, continuing without job queue", {
-		error: error instanceof Error ? error.message : String(error),
-	});
+if (process.env.REDIS_ENABLED === "true") {
+	try {
+		await jobQueue.initialize();
+		logger.info("Job queue enabled with Redis");
+	} catch (error) {
+		logger.warn(
+			"Job queue initialization failed, continuing without job queue",
+			{
+				error: error instanceof Error ? error.message : String(error),
+			},
+		);
+	}
+} else {
+	logger.info("Job queue disabled (REDIS_ENABLED=false)");
 }
 cronScheduler.initializeDefaultTasks();
 
