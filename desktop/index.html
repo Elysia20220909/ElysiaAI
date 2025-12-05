@@ -218,7 +218,7 @@
         <h1>💕 Elysia AI ♡</h1>
         <button class="settings-btn" onclick="openSettings()">⚙️ Settings</button>
     </div>
-    
+
     <div class="chat-container">
         <div class="messages" id="messages">
             <div class="welcome">
@@ -227,7 +227,7 @@
                 何でも話してね〜！
             </div>
         </div>
-        
+
         <div class="input-area">
             <textarea id="messageInput" placeholder="メッセージを入力…♡" rows="1"></textarea>
             <button id="sendBtn" onclick="sendMessage()">💌</button>
@@ -236,12 +236,12 @@
 
     <div class="modal" id="settingsModal">
         <div class="modal-content">
-            <h2>⚙️ Settings</h2>
-            <label>Server URL:</label>
+            <h2>⚙️ 設定</h2>
+            <label>サーバーURL:</label>
             <input type="text" id="apiUrlInput" placeholder="http://localhost:3000">
             <div class="modal-buttons">
-                <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
-                <button class="btn-primary" onclick="saveSettings()">Save</button>
+                <button class="btn-secondary" onclick="closeSettings()">キャンセル</button>
+                <button class="btn-primary" onclick="saveSettings()">保存</button>
             </div>
         </div>
     </div>
@@ -291,7 +291,7 @@
 
         async function sendMessage() {
             if (isLoading) return;
-            
+
             const input = messageInput.value.trim();
             if (!input) return;
 
@@ -353,7 +353,7 @@
 
         function addMessageToUI(role, content) {
             const messagesDiv = document.getElementById('messages');
-            
+
             // Remove welcome message if exists
             const welcome = messagesDiv.querySelector('.welcome');
             if (welcome) welcome.remove();
@@ -362,7 +362,7 @@
             msgEl.className = `message ${role}`;
             msgEl.textContent = content;
             messagesDiv.appendChild(msgEl);
-            
+
             scrollToBottom();
             return msgEl;
         }

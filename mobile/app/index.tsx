@@ -96,7 +96,7 @@ export default function IndexScreen() {
 
 			setMessages([
 				...newMessages,
-				{ role: "assistant", content: assistantContent || "No response" },
+				{ role: "assistant", content: assistantContent || "応答がありません" },
 			]);
 		} catch (error) {
 			console.error("API Error:", error);
@@ -117,8 +117,8 @@ export default function IndexScreen() {
 			<View style={styles.container}>
 				<LinearGradient colors={["#FFB7D5", "#FF8AC6"]} style={styles.gradient}>
 					<View style={styles.settingsContainer}>
-						<Text style={styles.settingsTitle}>API Settings</Text>
-						<Text style={styles.settingsLabel}>Server URL:</Text>
+						<Text style={styles.settingsTitle}>API設定</Text>
+						<Text style={styles.settingsLabel}>サーバーURL:</Text>
 						<TextInput
 							style={styles.settingsInput}
 							value={apiUrl}
@@ -128,20 +128,22 @@ export default function IndexScreen() {
 							autoCorrect={false}
 						/>
 						<Text style={styles.settingsHint}>
-							Tip: Use your computer's local IP address.{"\n"}
-							Run `ipconfig` (Windows) or `ifconfig` (Mac/Linux) to find it.
+							ヒント: コンピューターのローカルIPアドレスを使用してください。
+							{"\n"}
+							`ipconfig` (Windows) または `ifconfig` (Mac/Linux)
+							で確認できます。
 						</Text>
 						<TouchableOpacity
 							style={styles.saveButton}
 							onPress={() => saveApiUrl(apiUrl)}
 						>
-							<Text style={styles.saveButtonText}>Save & Close</Text>
+							<Text style={styles.saveButtonText}>保存して閉じる</Text>
 						</TouchableOpacity>
 						<TouchableOpacity
 							style={styles.cancelButton}
 							onPress={() => setShowSettings(false)}
 						>
-							<Text style={styles.cancelButtonText}>Cancel</Text>
+							<Text style={styles.cancelButtonText}>キャンセル</Text>
 						</TouchableOpacity>
 					</View>
 				</LinearGradient>
