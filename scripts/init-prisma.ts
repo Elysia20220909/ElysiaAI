@@ -1,14 +1,14 @@
 #!/usr/bin/env bun
 
 /**
- * Prisma SQLite初期化スクリプト
- * データベース作成、テーブル作成、マイグレーション実行
+ * Prisma SQLite Initialization Script
+ * Database creation, table creation, migration execution
  */
 
-import { PrismaClient } from "@prisma/client";
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -19,68 +19,60 @@ function log(level: string, message: string): void {
 
 async function main(): Promise<void> {
 	try {
-		log("INFO", "🚀 Prisma SQLite初期化開始");
+		log("INFO", "Prisma SQLite initialization started");
 
-		// 環境変数確認
+		// Check environment variables
 		const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
-		log("INFO", `📁 データベース: ${dbUrl}`);
+		log("INFO", `Database: ${dbUrl}`);
 
-		// Prismaディレクトリ確認
+		// Check Prisma directory
 		const prismaDir = path.join(process.cwd(), "prisma");
 		if (!existsSync(prismaDir)) {
+			log("WARN", "Prisma directory not found, creating...");
 			mkdirSync(prismaDir, { recursive: true });
-			log("INFO", "📁 Prismaディレクトリ作成");
 		}
 
-		// マイグレーションディレクトリ確認
-		const migrationsDir = path.join(prismaDir, "migrations");
-		if (!existsSync(migrationsDir)) {
-			mkdirSync(migrationsDir, { recursive: true });
-			log("INFO", "📁 マイグレーションディレクトリ作成");
+		// Check database file
+		const dbPath = dbUrl.replace("file:", "");
+		if (existsSync(dbPath)) {
+			log("INFO", "Database file exists, skipping creation");
+		} else {
+			log("INFO", "Database file does not exist, creating...");
 		}
 
-		// Prisma Client生成
-		log("INFO", "🔄 Prisma Client生成");
-		execSync("bunx prisma generate", { stdio: "inherit" });
+		// Generate Prisma Client
+		log("INFO", "Generating Prisma Client...");
+		execSync("bun prisma generate", { stdio: "inherit" });
 
-		// データベース初期化 (開発環境)
-		log("INFO", "📝 マイグレーション実行");
-		try {
-			execSync("bunx prisma migrate deploy", { stdio: "inherit" });
-		} catch {
-			// 初回の場合はresetが必要な場合がある
-			log("WARN", "マイグレーションデプロイ失敗。リセットを試みます");
-			// execSync("bunx prisma migrate reset --force", { stdio: "inherit" });
-		}
+		// Create/update database schema
+		log("INFO", "Applying database schema...");
+		execSync("bun prisma db push --skip-generate", { stdio: "inherit" });
 
-		// DB接続確認
-		log("INFO", "✅ データベース接続確認");
-		await prisma.$queryRaw`SELECT 1`;
+		// Connection test
+		log("INFO", "Testing database connection...");
+		await prisma.$connect();
+		log("INFO", "Database connection succeeded");
 
-		// テーブル確認
-		const tables = await prisma.$queryRaw<Array<{ name: string }>>`
-    SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'
-  `;
+		// Check tables
+		const tables = await prisma.$queryRaw<
+			Array<{ name: string }>
+		>`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`;
+		log("INFO", `Tables: ${tables.map((t) => t.name).join(", ")}`);
 
-		log("INFO", `✅ テーブル作成確認: ${tables.length}個`);
-		for (const table of tables) {
-			log("INFO", `   - ${table.name}`);
-		}
-
-		// 初期データ投入 (オプション)
-		log("INFO", "📊 初期データ確認");
+		// Verify record counts
 		const userCount = await prisma.user.count();
 		const sessionCount = await prisma.chatSession.count();
 		const messageCount = await prisma.message.count();
 
-		log("INFO", `   - Users: ${userCount}件`);
-		log("INFO", `   - Chat Sessions: ${sessionCount}件`);
-		log("INFO", `   - Messages: ${messageCount}件`);
+		log("INFO", "=== Database Statistics ===");
+		log("INFO", `Users: ${userCount}`);
+		log("INFO", `Sessions: ${sessionCount}`);
+		log("INFO", `Messages: ${messageCount}`);
 
-		log("SUCCESS", "✅ Prisma初期化完了");
+		log("INFO", "Prisma SQLite initialization completed");
 		process.exit(0);
 	} catch (error) {
-		log("ERROR", `初期化エラー: ${error}`);
+		log("ERROR", `Initialization failed: ${String(error)}`);
 		process.exit(1);
 	} finally {
 		await prisma.$disconnect();

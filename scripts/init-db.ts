@@ -1,6 +1,6 @@
 /**
- * データベース初期化スクリプト
- * Prisma スキーマに基づいてテーブルを作成
+ * Database Initialization Script
+ * Create tables based on Prisma schema
  */
 import { PrismaClient } from "@prisma/client";
 
@@ -8,15 +8,15 @@ const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
 
 const prisma = new PrismaClient({
 	log: ["query", "error", "warn"],
-	// @ts-ignore - Prisma 7 datasourceUrl オプション
+	// @ts-ignore - Prisma 7 datasourceUrl option
 	datasourceUrl: dbUrl,
 });
 
 async function main() {
-	console.log("🔧 データベース初期化中...");
+	console.log("Initializing database...");
 
 	try {
-		// テーブル作成（Prisma Client の $executeRaw を使用）
+		// Create tables using Prisma Client $executeRaw
 		await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -31,11 +31,10 @@ async function main() {
 		await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS refresh_tokens (
         id TEXT PRIMARY KEY,
-        token TEXT UNIQUE NOT NULL,
         userId TEXT NOT NULL,
+        token TEXT UNIQUE NOT NULL,
         expiresAt DATETIME NOT NULL,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        revoked INTEGER DEFAULT 0,
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
       );
     `);
@@ -43,11 +42,11 @@ async function main() {
 		await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS chat_sessions (
         id TEXT PRIMARY KEY,
-        userId TEXT,
+        userId TEXT NOT NULL,
         mode TEXT DEFAULT 'normal',
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
       );
     `);
 
@@ -65,11 +64,11 @@ async function main() {
 		await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS feedbacks (
         id TEXT PRIMARY KEY,
-        userId TEXT,
         query TEXT NOT NULL,
         answer TEXT NOT NULL,
         rating TEXT NOT NULL,
-        reason TEXT,
+        userId TEXT,
+        comment TEXT,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
       );
@@ -78,81 +77,77 @@ async function main() {
 		await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS knowledge_base (
         id TEXT PRIMARY KEY,
-        userId TEXT,
-        question TEXT NOT NULL,
-        answer TEXT NOT NULL,
-        source TEXT,
-        verified INTEGER DEFAULT 0,
+        content TEXT NOT NULL,
+        embedding TEXT,
+        metadata TEXT,
+        verified INTEGER DEFAULT 1,
+        createdBy TEXT,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+        FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE SET NULL
       );
     `);
 
 		await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS voice_logs (
         id TEXT PRIMARY KEY,
-        username TEXT,
+        username TEXT NOT NULL,
         text TEXT NOT NULL,
-        emotion TEXT NOT NULL,
-        audioUrl TEXT,
+        language TEXT DEFAULT 'ja',
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-		// インデックス作成
+		console.log("Table creation completed");
+
+		// Create indexes
 		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_userId ON refresh_tokens(userId);`,
+			"CREATE INDEX IF NOT EXISTS idx_refresh_tokens_userId ON refresh_tokens(userId);",
 		);
 		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);`,
+			"CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);",
 		);
 		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_chat_sessions_userId ON chat_sessions(userId);`,
+			"CREATE INDEX IF NOT EXISTS idx_chat_sessions_userId ON chat_sessions(userId);",
 		);
 		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_messages_sessionId ON messages(sessionId);`,
+			"CREATE INDEX IF NOT EXISTS idx_messages_sessionId ON messages(sessionId);",
 		);
 		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_feedbacks_userId ON feedbacks(userId);`,
-		);
-		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_feedbacks_rating ON feedbacks(rating);`,
-		);
-		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_feedbacks_createdAt ON feedbacks(createdAt);`,
-		);
-		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_knowledge_base_userId ON knowledge_base(userId);`,
-		);
-		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_knowledge_base_verified ON knowledge_base(verified);`,
-		);
-		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_voice_logs_username ON voice_logs(username);`,
-		);
-		await prisma.$executeRawUnsafe(
-			`CREATE INDEX IF NOT EXISTS idx_voice_logs_createdAt ON voice_logs(createdAt);`,
+			"CREATE INDEX IF NOT EXISTS idx_feedbacks_userId ON feedbacks(userId);",
 		);
 
-		console.log("✅ データベース初期化完了");
-		console.log("📊 作成されたテーブル:");
-		console.log("  - users");
-		console.log("  - refresh_tokens");
-		console.log("  - chat_sessions");
-		console.log("  - messages");
-		console.log("  - feedbacks");
-		console.log("  - knowledge_base");
-		console.log("  - voice_logs");
+		console.log("Index creation completed");
+
+		// Verify table count
+		const tables = await prisma.$queryRawUnsafe<Array<{ name: string }>>(
+			"SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';",
+		);
+
+		console.log(`Created tables: ${tables.map((t) => t.name).join(", ")}`);
+		console.log(`Total: ${tables.length} tables`);
+
+		// Verify data count
+		const userCount = await prisma.user.count();
+		const sessionCount = await prisma.chatSession.count();
+		const messageCount = await prisma.message.count();
+		const feedbackCount = await prisma.feedback.count();
+		const knowledgeCount = await prisma.knowledgeBase.count();
+
+		console.log("\n=== Database Statistics ===");
+		console.log(`Users: ${userCount}`);
+		console.log(`Chat Sessions: ${sessionCount}`);
+		console.log(`Messages: ${messageCount}`);
+		console.log(`Feedbacks: ${feedbackCount}`);
+		console.log(`Knowledge Base: ${knowledgeCount}`);
+
+		console.log("\nDatabase setup completed successfully!");
 	} catch (error) {
-		console.error("❌ データベース初期化エラー:", error);
-		throw error;
+		console.error("Error during initialization:", error);
+		process.exit(1);
 	} finally {
 		await prisma.$disconnect();
 	}
 }
 
-main().catch((e) => {
-	console.error(e);
-	process.exit(1);
-});
+main();
