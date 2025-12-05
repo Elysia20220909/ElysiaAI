@@ -1,49 +1,64 @@
-# 🚀 Elysia AI - Enterprise-Grade RAG Chat System
+<div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
-[![Bun](https://img.shields.io/badge/Bun-1.0+-orange)](https://bun.sh/)
-[![Elysia](https://img.shields.io/badge/Elysia-1.4-purple)](https://elysiajs.com/)
-[![CI/CD](https://github.com/chloeamethyst/ElysiaJS/workflows/CI%2FCD/badge.svg)](https://github.com/chloeamethyst/ElysiaJS/actions)
+# Elysia AI (RAG + Ollama + Milvus)
 
-**Production-ready AI chat system** with comprehensive RAG, security, monitoring, and multi-platform support.
+Language / 言語: [English](./README.en.md) | [日本語](./README.ja.md)
 
-[English](README.en.md) | [日本語](README.ja.md)
+AI chat app with Elysia (Bun), FastAPI + Milvus Lite (RAG), and Ollama (LLM).
+
+</div>
 
 ---
 
-## ✨ Core Features
+Elysia(Bun) で動くAIチャット。FastAPI + Milvus Lite によるRAG、Ollama(LLM)を統合しています。追加で `network_simulation/`（別ライセンス）も同梱。
 
-🤖 **AI & RAG**: Multi-personality LLM • Vector search • Ollama integration • Streaming SSE  
-🔒 **Security**: JWT auth • Rate limiting • Encryption (AES-256-GCM) • 5-level RBAC  
-📊 **Monitoring**: Prometheus metrics • Grafana dashboards • Structured logging • Health checks  
-⚡ **Performance**: Redis caching • Async operations • Load balancing ready • 10k req/s  
-🧪 **Testing**: 80%+ coverage • Unit/Integration/E2E • Load testing • CI/CD automation  
-📦 **Multi-Platform**: Web (Alpine.js) • Mobile (React Native) • Desktop (Electron) • CLI  
-🌍 **Deployment**: Docker • AWS • GCP • Kubernetes-ready
+## 機能
+- RAG: FastAPI + Milvus Lite（`all-MiniLM-L6-v2`）
+- LLM: Ollama（`llama3.2`）ストリーミング応答
+- Web: Elysia + Alpine.js UI（`/elysia-love` エンドポイント）
+- 追加: `network_simulation/`（AbyssGrid: Blackwall Simulation）
 
----
+## クイックスタート
+```powershell
+# 1) 依存を取得（Node/JS）
+bun install
 
-## 🚀 Quick Start
+# 2) Python環境
+./scripts/setup-python.ps1
 
-```bash
-# Install
-git clone https://github.com/chloeamethyst/ElysiaJS.git && cd ElysiaJS
-bun install && pip install -r python/requirements.txt
+# 3) サーバー起動（別ターミナルで順に）
+./scripts/start-fastapi.ps1      # RAG / 127.0.0.1:8000
+./scripts/start-network-sim.ps1  # NetworkSim API / 127.0.0.1:8001
 
-# Configure
-cp .env.example .env  # Edit with your settings
-
-# Start services
-redis-server &
-python python/fastapi_server.py &
-ollama pull llama3.2 &
-
-# Run
-bun run dev
+# 4) Elysiaを起動
+bun run src/index.ts             # http://localhost:3000
 ```
 
-**Access**: http://localhost:3000 | [Swagger](http://localhost:3000/swagger) | [Health](http://localhost:3000/health)
+Linux/macOS/WSL の場合は `.sh` スクリプトを使用してください。
+
+## ビルドと配布
+```powershell
+bun run build
+bun run pack:zip
+```
+生成した `dist.zip` をリリースに添付できます。
+
+## 補助スクリプト（Windows）
+- `./scripts/start-server.ps1`: Elysiaサーバー起動
+- `./scripts/start-fastapi.ps1`: FastAPI RAG起動
+- `./scripts/start-network-sim.ps1`: Network Simulation API起動
+- `./scripts/dev.ps1`: FastAPI → Elysia（+任意でNetworkSim）を一括起動。Ctrl+Cで一括停止。
+
+## 補助スクリプト（Linux/macOS/WSL）
+- `./scripts/start-server.sh`: Elysiaサーバー起動
+- `./scripts/start-fastapi.sh`: FastAPI RAG起動
+- `./scripts/start-network-sim.sh`: Network Simulation API起動
+- `./scripts/dev.sh`: FastAPI → Elysia（+任意でNetworkSim）を一括起動。Ctrl+Cで一括停止。
+
+```bash
+# 例: デフォルトで起動
+./scripts/dev.sh
+```
 
 ---
 
