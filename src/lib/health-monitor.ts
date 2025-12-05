@@ -68,7 +68,8 @@ class HealthMonitor {
 				try {
 					const ollamaUrl =
 						process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-					const response = await fetch(`${ollamaUrl}/api/tags`, {
+					// Use the correct endpoint for Ollama health check
+					const response = await fetch(`${ollamaUrl}/api/version`, {
 						signal: AbortSignal.timeout(5000),
 					});
 					return response.ok;

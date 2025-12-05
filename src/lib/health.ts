@@ -99,7 +99,7 @@ export async function checkFastAPI(fastAPIUrl: string): Promise<ServiceHealth> {
 export async function checkOllama(ollamaUrl: string): Promise<ServiceHealth> {
 	const startTime = Date.now();
 	try {
-		const response = await axios.get(`${ollamaUrl}/api/tags`, {
+		const response = await axios.get(`${ollamaUrl}/api/version`, {
 			timeout: 5000,
 		});
 
