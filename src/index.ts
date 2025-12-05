@@ -50,7 +50,13 @@ healthMonitor.start();
 logCleanupManager.start();
 
 // ジョブキューとCronスケジューラーを初期化
-await jobQueue.initialize();
+try {
+	await jobQueue.initialize();
+} catch (error) {
+	logger.warn("Job queue initialization failed, continuing without job queue", {
+		error: error instanceof Error ? error.message : String(error),
+	});
+}
 cronScheduler.initializeDefaultTasks();
 
 type Message = { role: "user" | "assistant" | "system"; content: string };
@@ -74,6 +80,7 @@ const CONFIG = {
 	RAG_API_URL: DATABASE_CONFIG.RAG_API_URL,
 	RAG_TIMEOUT: DATABASE_CONFIG.RAG_TIMEOUT,
 	MODEL_NAME: process.env.MODEL_NAME || "llama3.2",
+	OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
 	MAX_REQUESTS_PER_MINUTE: Number(process.env.RATE_LIMIT_RPM) || 60,
 	ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS?.split(",") || [
 		"http://localhost:3000",
@@ -200,7 +207,7 @@ const app = new Elysia()
 				const health = await performHealthCheck(
 					redisUrl,
 					CONFIG.RAG_API_URL,
-					CONFIG.MODEL_NAME,
+					CONFIG.OLLAMA_BASE_URL,
 				);
 				const status = health.status === "healthy" ? 200 : 503;
 				return new Response(JSON.stringify(health), {
