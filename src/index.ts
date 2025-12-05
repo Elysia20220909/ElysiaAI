@@ -677,11 +677,12 @@ const app = new Elysia()
 										"X-Elysia-Provider": "openai",
 									},
 								});
-							} catch (error) {
-								logger.error("OpenAI API error", {
-									message:
-										error instanceof Error ? error.message : String(error),
-								});
+							} catch (openaiError) {
+								const errorMsg =
+									openaiError instanceof Error
+										? openaiError.message
+										: String(openaiError);
+								logger.error(`OpenAI API error: ${errorMsg}`);
 								return jsonError(500, "OpenAI API error");
 							}
 						}
