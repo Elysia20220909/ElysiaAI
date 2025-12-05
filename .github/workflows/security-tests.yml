@@ -13,33 +13,33 @@ jobs:
   # ============================================================================
   # Job 1: 脆弱性スキャン
   # ============================================================================
-  
+
   security-scan:
     name: Security & Vulnerability Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: npm audit
         run: npm audit --audit-level=moderate
         continue-on-error: true
-      
+
       - name: Snyk vulnerability scan
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
-      
+
       - name: OWASP Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
@@ -49,7 +49,7 @@ jobs:
           args: >
             --enableExperimental
         continue-on-error: true
-      
+
       - name: Upload dependency-check results
         uses: actions/upload-artifact@v3
         with:
@@ -60,30 +60,30 @@ jobs:
   # ============================================================================
   # Job 2: ユニット&統合テスト
   # ============================================================================
-  
+
   unit-tests:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
-      
+
       - name: Install dependencies
         run: bun install
-      
+
       - name: Run unit tests
         run: bun test
         continue-on-error: true
-      
+
       - name: Upload test results
         uses: actions/upload-artifact@v3
         with:
@@ -94,31 +94,31 @@ jobs:
   # ============================================================================
   # Job 3: コード品質分析
   # ============================================================================
-  
+
   code-quality:
     name: Code Quality Analysis
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: ESLint
         run: npm run lint
         continue-on-error: true
-      
+
       - name: TypeScript strict check
         run: npx tsc --noEmit --strict
         continue-on-error: true
-      
+
       - name: SonarQube scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -129,12 +129,12 @@ jobs:
   # ============================================================================
   # Job 4: 負荷テスト
   # ============================================================================
-  
+
   load-tests:
     name: Load Testing
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[load-test]')
-    
+
     services:
       elysia:
         image: node:20-alpine
@@ -145,20 +145,20 @@ jobs:
           --health-retries=3
         ports:
           - 5001:5001
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
-      
+
       - name: Install Apache Bench
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq apache2-utils
-      
+
       - name: Wait for service
         run: |
           for i in {1..30}; do
@@ -170,13 +170,13 @@ jobs:
             sleep 1
           done
           exit 1
-      
+
       - name: Run Apache Bench load tests
         run: |
           echo "=== Load Test Results ==="
           ab -n 1000 -c 50 -q http://localhost:5001/ping | tee ab-results.txt
           ab -n 500 -c 25 -q http://localhost:5001/health | tee -a ab-results.txt
-      
+
       - name: Upload load test results
         uses: actions/upload-artifact@v3
         with:
@@ -187,15 +187,15 @@ jobs:
   # ============================================================================
   # Job 5: セキュリティテスト (OWASP ZAP)
   # ============================================================================
-  
+
   security-tests:
     name: OWASP ZAP Security Tests
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[security]')
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Run OWASP ZAP scan
         uses: zaproxy/action-baseline@v0.7.0
         with:
@@ -203,7 +203,7 @@ jobs:
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
         continue-on-error: true
-      
+
       - name: Upload ZAP report
         uses: actions/upload-artifact@v3
         with:
@@ -214,50 +214,50 @@ jobs:
   # ============================================================================
   # Job 6: Build & Deploy
   # ============================================================================
-  
+
   build:
     name: Build & Deploy
     runs-on: ubuntu-latest
     needs: [security-scan, unit-tests, code-quality]
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
-      
+
       - name: Install dependencies
         run: bun install
-      
+
       - name: Build project
         run: bun run build
-      
+
       - name: Create summary report
         run: |
           cat > SECURITY_REPORT.md << 'EOF'
           # Security & Test Report
-          
+
           Generated: $(date)
-          
+
           ## Jobs Status
           - ✅ Security Scan
           - ✅ Unit Tests
           - ✅ Code Quality
           - ✅ Build
-          
+
           ## Recommendations
           - Monitor npm audit regularly
           - Keep dependencies updated
           - Run security scans weekly
           - Implement API rate limiting
           EOF
-      
+
       - name: Upload security report
         uses: actions/upload-artifact@v3
         with:
@@ -267,17 +267,17 @@ jobs:
   # ============================================================================
   # Job 7: テスト結果レポート
   # ============================================================================
-  
+
   report:
     name: Test Results Summary
     runs-on: ubuntu-latest
     if: always()
     needs: [security-scan, unit-tests, code-quality]
-    
+
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
-      
+
       - name: Create summary
         run: |
           echo "# Elysia AI - CI/CD Test Report" > summary.md
@@ -287,7 +287,7 @@ jobs:
           echo "- Security Scan: ${{ needs.security-scan.result }}" >> summary.md
           echo "- Unit Tests: ${{ needs.unit-tests.result }}" >> summary.md
           echo "- Code Quality: ${{ needs.code-quality.result }}" >> summary.md
-      
+
       - name: Post comment on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v6

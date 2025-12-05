@@ -13,22 +13,22 @@ class ElysiaAIUser(HttpUser):
     エリシアAI の典型的なユーザー行動をシミュレート
     """
     wait_time = between(1, 3)  # 1〜3秒の待機時間
-    
+
     @task(weight=5)
     def ping(self):
         """ヘルスチェック (最頻)"""
         self.client.get("/ping")
-    
+
     @task(weight=3)
     def health_check(self):
         """ヘルスチェック詳細"""
         self.client.get("/health")
-    
+
     @task(weight=2)
     def api_docs(self):
         """API ドキュメント"""
         self.client.get("/swagger")
-    
+
     @task(weight=1)
     def chat_api(self):
         """チャットAPI (模擬)"""
@@ -43,11 +43,11 @@ class ElysiaAIUser(HttpUser):
             json=payload,
             name="/chat"
         )
-    
+
     def on_start(self):
         """テスト開始時"""
         print(f"\n[{datetime.now().strftime('%H:%M:%S')}] ユーザー開始")
-    
+
     def on_stop(self):
         """テスト終了時"""
         print(f"\n[{datetime.now().strftime('%H:%M:%S')}] ユーザー終了")
@@ -58,7 +58,7 @@ class StressTestUser(HttpUser):
     ストレステスト: 集中的にリクエスト送信
     """
     wait_time = between(0.1, 0.5)  # 高速リクエスト
-    
+
     @task
     def stress_ping(self):
         """ストレステスト用 Ping"""
@@ -70,7 +70,7 @@ class APIEndpointUser(HttpUser):
     個別API エンドポイント用テストユーザー
     """
     wait_time = between(2, 5)
-    
+
     @task
     def test_endpoints(self):
         """様々なエンドポイントのテスト"""
@@ -79,7 +79,7 @@ class APIEndpointUser(HttpUser):
             ("/health", "GET", None),
             ("/metrics", "GET", None),
         ]
-        
+
         for endpoint, method, payload in endpoints:
             if method == "GET":
                 self.client.get(endpoint, name=endpoint)
@@ -117,7 +117,7 @@ def on_quitting(environment, **kwargs):
         print("\n✅ すべてのテスト成功")
     else:
         print(f"\n⚠️  失敗: {environment.stats.total.num_failures}件")
-    
+
     print("\n📊 テスト統計:")
     print(f"   総リクエスト: {environment.stats.total.num_requests}")
     print(f"   成功: {environment.stats.total.num_requests - environment.stats.total.num_failures}")

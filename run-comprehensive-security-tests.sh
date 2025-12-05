@@ -46,14 +46,14 @@ log_info() {
 
 run_load_tests() {
     log_section "1️⃣  負荷テスト (Apache Bench)"
-    
+
     # テスト対象エンドポイント
     ENDPOINTS=(
         "/ping"
         "/health"
         "/swagger"
     )
-    
+
     log_test "Elysia サーバー接続確認"
     if curl -s -f "$TARGET_URL/ping" > /dev/null 2>&1; then
         log_pass "サーバー接続"
@@ -61,18 +61,18 @@ run_load_tests() {
         log_fail "サーバー接続"
         return 1
     fi
-    
+
     log_test "Apache Bench 負荷テスト開始"
     echo ""
-    
+
     for endpoint in "${ENDPOINTS[@]}"; do
         echo "📊 Endpoint: $endpoint"
         echo "  リクエスト数: 100, 同時実行: 10"
-        
+
         ab -n 100 -c 10 -q "$TARGET_URL$endpoint" 2>/dev/null | grep -E 'Requests/sec|Time per request|Failed requests' | sed 's/^/    /'
         echo ""
     done
-    
+
     log_pass "負荷テスト完了"
 }
 
@@ -82,21 +82,21 @@ run_load_tests() {
 
 run_owasp_zap_scan() {
     log_section "2️⃣  OWASP ZAP セキュリティスキャン"
-    
+
     log_info "OWASP ZAP/Nixysa用 Docker イメージの確認"
-    
+
     # Dockerが利用可能か確認
     if ! command -v docker &> /dev/null; then
         log_fail "Docker: インストール未検出"
         log_info "代替: curl ベースのセキュリティチェック"
-        
+
         # 代替セキュリティチェック
         run_curl_security_checks
         return 0
     fi
-    
+
     log_test "ZAP スキャン実行 (Docker)"
-    
+
     # ZAP Docker イメージの実行
     docker run --rm \
         -v /tmp/zap-reports:/zap/wrk \
@@ -104,7 +104,7 @@ run_owasp_zap_scan() {
         -t "$TARGET_URL" \
         -r /zap/wrk/zap-report.html 2>/dev/null || \
         log_info "ZAP Docker イメージ未検出 - 代替検査を実行"
-    
+
     # 代替セキュリティチェック
     run_curl_security_checks
 }
@@ -112,9 +112,9 @@ run_owasp_zap_scan() {
 run_curl_security_checks() {
     log_test "セキュリティヘッダーチェック"
     echo ""
-    
+
     HEADERS=$(curl -s -I "$TARGET_URL/health")
-    
+
     SECURITY_HEADERS=(
         "Content-Security-Policy"
         "X-Content-Type-Options"
@@ -122,7 +122,7 @@ run_curl_security_checks() {
         "X-XSS-Protection"
         "Strict-Transport-Security"
     )
-    
+
     for header in "${SECURITY_HEADERS[@]}"; do
         if echo "$HEADERS" | grep -q "$header"; then
             log_pass "Header: $header"
@@ -130,9 +130,9 @@ run_curl_security_checks() {
             log_info "Header未設定: $header"
         fi
     done
-    
+
     echo ""
-    
+
     # SSL/TLS バージョン確認
     log_test "SSL/TLS 設定確認"
     echo "  ※ localhost はHTTPのみ"
@@ -145,43 +145,43 @@ run_curl_security_checks() {
 
 run_api_security_tests() {
     log_section "3️⃣  API セキュリティテスト"
-    
+
     # Test 1: SQLインジェクション対策
     log_test "SQLインジェクション対策"
     SQLI_PAYLOAD="' OR '1'='1"
     RESPONSE=$(curl -s "$TARGET_URL/health" 2>/dev/null)
-    
+
     if [ ! -z "$RESPONSE" ]; then
         log_pass "SQLインジェクション対策"
     else
         log_fail "SQLインジェクション対策"
     fi
-    
+
     # Test 2: XSS対策
     log_test "XSS対策"
     XSS_PAYLOAD="<script>alert('XSS')</script>"
     RESPONSE=$(curl -s "$TARGET_URL/health" 2>/dev/null)
-    
+
     if echo "$RESPONSE" | grep -q "script"; then
         log_fail "XSS対策: スクリプトタグが検出されました"
     else
         log_pass "XSS対策"
     fi
-    
+
     # Test 3: CSRF保護
     log_test "CSRF保護確認"
     CSRF_TOKEN=$(curl -s -D - "$TARGET_URL/swagger" 2>/dev/null | grep -i "x-csrf-token" || echo "")
-    
+
     if [ ! -z "$CSRF_TOKEN" ]; then
         log_pass "CSRF保護: トークン検出"
     else
         log_info "CSRF保護: 明示的なトークンなし（SameSite属性で対応の可能性）"
     fi
-    
+
     # Test 4: レート制限
     log_test "レート制限確認"
     echo "  100リクエスト送信..."
-    
+
     RATE_LIMITED=0
     for i in {1..100}; do
         STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL/ping" 2>/dev/null)
@@ -190,13 +190,13 @@ run_api_security_tests() {
             break
         fi
     done
-    
+
     if [ $RATE_LIMITED -eq 1 ]; then
         log_pass "レート制限: アクティブ"
     else
         log_info "レート制限: この環境では検出されず"
     fi
-    
+
     echo ""
 }
 
@@ -206,28 +206,28 @@ run_api_security_tests() {
 
 run_network_security_tests() {
     log_section "4️⃣  ネットワークセキュリティテスト"
-    
+
     # Test 1: ポートスキャン
     log_test "ポートスキャン (Nmap)"
-    
+
     if command -v nmap &> /dev/null; then
         OPEN_PORTS=$(nmap -p 3000-6000 $TARGET_HOST 2>/dev/null | grep open | wc -l)
         log_pass "ポートスキャン: $OPEN_PORTS ポート開放中"
     else
         log_info "nmap: インストール未検出"
     fi
-    
+
     # Test 2: DNS リバースルックアップ
     log_test "DNS 設定確認"
-    
+
     nslookup $TARGET_HOST 2>/dev/null | grep -q "Name:" && \
         log_pass "DNS 解決成功" || \
         log_info "DNS: ローカルホスト"
-    
+
     # Test 3: SSL/TLS 脆弱性スキャン
     log_test "TLS セキュリティ確認"
     log_info "TLS: HTTP環境（localhost）"
-    
+
     echo ""
 }
 
@@ -237,22 +237,22 @@ run_network_security_tests() {
 
 run_dependency_scan() {
     log_section "5️⃣  依存関係脆弱性スキャン"
-    
+
     log_test "npm audit 実行"
-    
+
     cd /mnt/c/Users/hosih/elysia-ai 2>/dev/null || {
         log_info "プロジェクトディレクトリ: マウント未検出"
         return 0
     }
-    
+
     VULN_COUNT=$(npm audit --audit-level=low 2>/dev/null | grep -c "vulnerabilities" || echo "0")
-    
+
     if [ "$VULN_COUNT" -eq 0 ]; then
         log_pass "npm: 脆弱性なし"
     else
         log_fail "npm: $VULN_COUNT 件の脆弱性検出"
     fi
-    
+
     echo ""
 }
 
@@ -262,7 +262,7 @@ run_dependency_scan() {
 
 print_summary() {
     log_section "📊 テスト結果サマリー"
-    
+
     echo -e "${GREEN}✅ テスト実行完了${NC}"
     echo ""
     echo "実行テスト項目:"
@@ -297,17 +297,17 @@ main() {
     echo "║            (Kali Linux on WSL2)                               ║"
     echo "╚════════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
-    
+
     echo -e "${YELLOW}対象サーバー: $TARGET_URL${NC}"
     echo ""
-    
+
     # テスト実行
     run_load_tests
     run_api_security_tests
     run_network_security_tests
     run_dependency_scan
     run_owasp_zap_scan
-    
+
     # サマリー表示
     print_summary
 }
