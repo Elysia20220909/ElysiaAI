@@ -40,6 +40,13 @@ import { metricsCollector } from "./lib/metrics";
 import { sessionManager } from "./lib/session-manager";
 import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
 import { webhookManager } from "./lib/webhook-events";
+import * as chatSessionService from "./lib/chat-session";
+import * as customization from "./lib/customization";
+import {
+	escapeHtml,
+	checkRateLimit as checkRateLimitMemory,
+	getSecurityHeaders,
+} from "./lib/security";
 
 // 環境変数検証（起動時）
 checkEnvironmentOrExit();
@@ -796,7 +803,269 @@ const app = new Elysia()
 				security: [{ bearerAuth: [] }],
 			},
 		},
+	)
+
+	// ==================== チャットセッション管理 ====================
+	// セッション作成
+	.post(
+		"/sessions",
+		async ({ body, request }) => {
+			const auth = request.headers.get("authorization") || "";
+			let userId: string | undefined;
+
+			try {
+				if (auth.startsWith("Bearer ")) {
+					const payload = jwt.verify(
+						auth.substring(7),
+						CONFIG.JWT_SECRET,
+					) as jwt.JwtPayload;
+					userId = (payload as { userId?: string }).userId;
+				}
+			} catch {}
+
+			const mode = (body as { mode?: string }).mode || "normal";
+			const sessionId = await chatSessionService.createChatSession(
+				userId,
+				mode as "sweet" | "normal" | "professional",
+			);
+
+			return new Response(JSON.stringify({ sessionId }), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			body: t.Object({
+				mode: t.Optional(
+					t.Union([
+						t.Literal("sweet"),
+						t.Literal("normal"),
+						t.Literal("professional"),
+					]),
+				),
+			}),
+			detail: {
+				tags: ["sessions"],
+				summary: "新しいチャットセッションを作成",
+			},
+		},
+	)
+
+	// セッション取得
+	.get(
+		"/sessions/:id",
+		async ({ params }) => {
+			const session = await chatSessionService.getSession(params.id);
+			if (!session) return jsonError(404, "Session not found");
+
+			return new Response(JSON.stringify(session), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			detail: {
+				tags: ["sessions"],
+				summary: "セッション詳細を取得",
+			},
+		},
+	)
+
+	// ユーザーのセッション一覧
+	.get(
+		"/sessions",
+		async ({ request, query }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+
+			try {
+				const payload = jwt.verify(
+					auth.substring(7),
+					CONFIG.JWT_SECRET,
+				) as jwt.JwtPayload;
+				const userId = (payload as { userId?: string }).userId;
+				if (!userId) return jsonError(401, "Invalid token");
+
+				const limit = Number(query?.limit ?? 20) || 20;
+				const sessions = await chatSessionService.getUserSessions(
+					userId,
+					limit,
+				);
+
+				return new Response(JSON.stringify(sessions), {
+					headers: { "content-type": "application/json" },
+				});
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+		},
+		{
+			query: t.Object({ limit: t.Optional(t.Number()) }),
+			detail: {
+				tags: ["sessions"],
+				summary: "ユーザーのセッション一覧を取得",
+				security: [{ bearerAuth: [] }],
+			},
+		},
+	)
+
+	// セッション削除
+	.delete(
+		"/sessions/:id",
+		async ({ params, request }) => {
+			const auth = request.headers.get("authorization") || "";
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
+
+			try {
+				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+				const success = await chatSessionService.deleteSession(params.id);
+				if (!success) return jsonError(404, "Session not found");
+
+				return new Response(JSON.stringify({ success: true }), {
+					headers: { "content-type": "application/json" },
+				});
+			} catch {
+				return jsonError(401, "Invalid token");
+			}
+		},
+		{
+			detail: {
+				tags: ["sessions"],
+				summary: "セッションを削除",
+				security: [{ bearerAuth: [] }],
+			},
+		},
+	)
+
+	// セッションエクスポート（JSON/Markdown）
+	.get(
+		"/sessions/:id/export",
+		async ({ params, query }) => {
+			const format = (query?.format as string) || "json";
+			const sessionId = params.id;
+
+			if (format === "json") {
+				const data = await chatSessionService.exportSessionAsJSON(sessionId);
+				if (!data) return jsonError(404, "Session not found");
+
+				return new Response(data, {
+					headers: {
+						"content-type": "application/json",
+						"content-disposition": `attachment; filename="session-${sessionId}.json"`,
+					},
+				});
+			}
+
+			if (format === "markdown") {
+				const data =
+					await chatSessionService.exportSessionAsMarkdown(sessionId);
+				if (!data) return jsonError(404, "Session not found");
+
+				return new Response(data, {
+					headers: {
+						"content-type": "text/markdown",
+						"content-disposition": `attachment; filename="session-${sessionId}.md"`,
+					},
+				});
+			}
+
+			return jsonError(400, "Invalid format. Use 'json' or 'markdown'");
+		},
+		{
+			query: t.Object({
+				format: t.Optional(t.Union([t.Literal("json"), t.Literal("markdown")])),
+			}),
+			detail: {
+				tags: ["sessions"],
+				summary: "セッションをエクスポート（JSON/Markdown）",
+			},
+		},
+	)
+
+	// セッション統計
+	.get(
+		"/sessions/:id/stats",
+		async ({ params }) => {
+			const stats = await chatSessionService.getSessionStats(params.id);
+			if (!stats) return jsonError(404, "Session not found");
+
+			return new Response(JSON.stringify(stats), {
+				headers: { "content-type": "application/json" },
+			});
+		},
+		{
+			detail: {
+				tags: ["sessions"],
+				summary: "セッション統計を取得",
+			},
+		},
 	);
+
+// ==================== カスタマイズAPI ====================
+
+// プロンプトテンプレート一覧
+app.get(
+	"/customization/templates",
+	async () => {
+		return new Response(JSON.stringify(customization.defaultPromptTemplates), {
+			headers: { "content-type": "application/json" },
+		});
+	},
+	{
+		detail: {
+			tags: ["customization"],
+			summary: "プロンプトテンプレート一覧を取得",
+		},
+	},
+);
+
+// テーマ一覧
+app.get(
+	"/customization/themes",
+	async () => {
+		return new Response(JSON.stringify(customization.defaultThemes), {
+			headers: { "content-type": "application/json" },
+		});
+	},
+	{
+		detail: {
+			tags: ["customization"],
+			summary: "テーマ一覧を取得",
+		},
+	},
+);
+
+// チャットモード一覧
+app.get(
+	"/customization/modes",
+	async () => {
+		return new Response(JSON.stringify(customization.chatModes), {
+			headers: { "content-type": "application/json" },
+		});
+	},
+	{
+		detail: {
+			tags: ["customization"],
+			summary: "チャットモード一覧を取得",
+		},
+	},
+);
+
+// エクスポート形式一覧
+app.get(
+	"/customization/export-formats",
+	async () => {
+		return new Response(JSON.stringify(customization.exportFormats), {
+			headers: { "content-type": "application/json" },
+		});
+	},
+	{
+		detail: {
+			tags: ["customization"],
+			summary: "エクスポート形式一覧を取得",
+		},
+	},
+);
 
 // ==================== Additional APIs ====================
 
