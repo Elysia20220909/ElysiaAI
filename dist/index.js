@@ -1,1 +1,4989 @@
-(()=>{"use strict";var e,t,s,r,n,a,i,o,c={24:e=>{e.exports=require("node:fs")},74:(e,t,s)=>{s.d(t,{m:()=>u});const r=require("cron");var n=s(935),a=s(121),i=s(654),o=s(922),c=s(629);const u=new class{tasks;constructor(){this.tasks=new Map}initializeDefaultTasks(){this.addTask("daily-report","0 9 * * *",async()=>{c.v.info("Running daily report task");const e=new Date,t=new Date(e.getTime()-864e5);await i.f.generateReport("daily",t,e)},"true"===process.env.DAILY_REPORT_ENABLED),this.addTask("weekly-report","0 10 * * 1",async()=>{c.v.info("Running weekly report task");const e=new Date,t=new Date(e.getTime()-6048e5);await i.f.generateReport("weekly",t,e)},"true"===process.env.WEEKLY_REPORT_ENABLED),this.addTask("monthly-report","0 10 1 * *",async()=>{c.v.info("Running monthly report task");const e=new Date,t=new Date(e.getFullYear(),e.getMonth()-1,1);await i.f.generateReport("monthly",t,e)},"true"===process.env.MONTHLY_REPORT_ENABLED),this.addTask("db-backup","0 3 * * *",async()=>{c.v.info("Running database backup task"),await n.m.triggerManualBackup()},!0),this.addTask("log-cleanup","0 4 * * *",async()=>{c.v.info("Running log cleanup task"),await o.logCleanupManager.triggerManualCleanup()},!0),this.addTask("file-cleanup","0 5 * * 0",async()=>{c.v.info("Running file cleanup task"),a.r.cleanupOldFiles(30)},!0),this.addTask("health-check","*/10 * * * *",async()=>{const{healthMonitor:e}=await Promise.resolve().then(s.bind(s,732));await e.runCheck("database"),await e.runCheck("ollama")},"true"===process.env.HEALTH_CHECK_CRON_ENABLED),c.v.info("Cron scheduler initialized",{tasks:this.tasks.size})}addTask(e,t,s,n=!0){try{const a=new r.CronJob(t,async()=>{try{await s(),c.v.info("Cron task completed",{name:e})}catch(t){c.v.error(`Cron task failed: ${e}`,t)}},null,n,"Asia/Tokyo");this.tasks.set(e,{name:e,cronTime:t,job:a,enabled:n}),n&&(a.start(),c.v.info("Cron task added",{name:e,cronTime:t}))}catch(t){c.v.error(`Failed to add cron task: ${e}`,t)}}enableTask(e){const t=this.tasks.get(e);t&&!t.enabled&&(t.job.start(),t.enabled=!0,c.v.info("Cron task enabled",{name:e}))}disableTask(e){const t=this.tasks.get(e);t?.enabled&&(t.job.stop(),t.enabled=!1,c.v.info("Cron task disabled",{name:e}))}removeTask(e){const t=this.tasks.get(e);t&&(t.job.stop(),this.tasks.delete(e),c.v.info("Cron task removed",{name:e}))}listTasks(){return Array.from(this.tasks.values()).map(e=>({name:e.name,cronTime:e.cronTime,enabled:e.enabled,nextRun:e.enabled?e.job.nextDate().toJSDate():null}))}async runTask(e){const t=this.tasks.get(e);if(!t)throw new Error(`Task not found: ${e}`);c.v.info("Running cron task manually",{name:e}),t.job.fireOnTick()}stopAll(){for(const e of this.tasks.values())e.job.stop();c.v.info("All cron tasks stopped")}getStats(){const e=Array.from(this.tasks.values());return{totalTasks:e.length,enabledTasks:e.filter(e=>e.enabled).length,disabledTasks:e.filter(e=>!e.enabled).length,nextRuns:e.filter(e=>e.enabled).map(e=>({name:e.name,nextRun:e.job.nextDate().toJSDate()}))}}}},95:(e,t,s)=>{s.d(t,{n:()=>n});var r=s(629);const n=new class{tests;userAssignments;constructor(){this.tests=new Map,this.userAssignments=new Map,this.initializeDefaultTests()}initializeDefaultTests(){this.createTest({id:"prompt-style",name:"プロンプトスタイルテスト",description:"異なるプロンプトスタイルの効果を測定",variants:[{id:"original",name:"オリジナル",weight:50,config:{style:"original"}},{id:"detailed",name:"詳細指示",weight:50,config:{style:"detailed"}}]}),this.createTest({id:"response-length",name:"レスポンス長テスト",description:"短い回答 vs 長い回答",variants:[{id:"short",name:"短い回答",weight:50,config:{maxTokens:150}},{id:"long",name:"長い回答",weight:50,config:{maxTokens:500}}]})}createTest(e){const t={id:e.id,name:e.name,description:e.description,variants:e.variants,active:!0,startDate:new Date,endDate:e.endDate,metrics:{impressions:new Map,conversions:new Map,averageRating:new Map}};for(const e of t.variants)t.metrics.impressions.set(e.id,0),t.metrics.conversions.set(e.id,0),t.metrics.averageRating.set(e.id,[]);return this.tests.set(t.id,t),r.v.info("A/B test created",{id:t.id,name:t.name,variants:t.variants.length}),t}assignVariant(e,t){const s=this.tests.get(e);if(!s||!s.active)return null;this.userAssignments.has(t)||this.userAssignments.set(t,new Map);const r=this.userAssignments.get(t);if(r?.has(e)){const t=r.get(e);return s.variants.find(e=>e.id===t)||null}const n=s.variants.reduce((e,t)=>e+t.weight,0);let a=Math.random()*n,i=null;for(const e of s.variants)if(a-=e.weight,a<=0){i=e;break}if(i){r?.set(e,i.id);const t=s.metrics.impressions.get(i.id)||0;s.metrics.impressions.set(i.id,t+1)}return i}recordConversion(e,t){const s=this.tests.get(e);if(!s)return;const n=this.userAssignments.get(t)?.get(e);if(!n)return;const a=s.metrics.conversions.get(n)||0;s.metrics.conversions.set(n,a+1),r.v.debug("A/B test conversion recorded",{testId:e,variantId:n,userId:t})}recordRating(e,t,s){const r=this.tests.get(e);if(!r)return;const n=this.userAssignments.get(t)?.get(e);if(!n)return;const a=r.metrics.averageRating.get(n)||[];a.push(s),r.metrics.averageRating.set(n,a)}getTestResults(e){const t=this.tests.get(e);if(!t)return null;const s=t.variants.map(e=>{const s=t.metrics.impressions.get(e.id)||0,r=t.metrics.conversions.get(e.id)||0,n=t.metrics.averageRating.get(e.id)||[],a=n.length>0?n.reduce((e,t)=>e+t,0)/n.length:0;return{variantId:e.id,name:e.name,impressions:s,conversions:r,conversionRate:s>0?r/s*100:0,averageRating:a,sampleSize:n.length}});return{testId:t.id,name:t.name,description:t.description,active:t.active,startDate:t.startDate,endDate:t.endDate,results:s}}endTest(e){const t=this.tests.get(e);t&&(t.active=!1,t.endDate=new Date,r.v.info("A/B test ended",{testId:e,name:t.name}))}listTests(){return Array.from(this.tests.values()).map(e=>({id:e.id,name:e.name,description:e.description,active:e.active,startDate:e.startDate,endDate:e.endDate,variantCount:e.variants.length}))}}},112:(e,t,s)=>{s.d(t,{Ql:()=>a,Y9:()=>n});const r=require("node:process"),n=new class{spans=new Map;activeSpans=new Map;enabled;constructor(e=!0){this.enabled=e}generateTraceId(){const e=new Uint8Array(16);return crypto.getRandomValues(e),Array.from(e).map(e=>e.toString(16).padStart(2,"0")).join("")}generateSpanId(){const e=new Uint8Array(8);return crypto.getRandomValues(e),Array.from(e).map(e=>e.toString(16).padStart(2,"0")).join("")}parseTraceContext(e){if(!e)return null;const t=e.split("-");if(4!==t.length)return null;const[s,r,n,a]=t;return"00"!==s?null:{traceId:r,spanId:n,traceFlags:Number.parseInt(a,16)}}createTraceContext(e,t,s=!0){return`00-${e}-${t}-${s?"01":"00"}`}startSpan(e,t){if(!this.enabled)return this.createDummySpan(e);const s=t?.parentContext?.traceId||this.generateTraceId(),n=this.generateSpanId(),a=t?.parentContext?.spanId,i={traceId:s,spanId:n,parentSpanId:a,name:e,startTime:r.hrtime.bigint(),attributes:t?.attributes||{},events:[],status:{code:"UNSET"}};return this.spans.set(n,i),t?.contextId&&this.activeSpans.set(t.contextId,n),i}endSpan(e,t){const s=this.spans.get(e);if(s){s.endTime=r.hrtime.bigint(),s.duration=Number(s.endTime-s.startTime)/1e6,s.status=t||{code:"OK"};for(const[t,s]of this.activeSpans.entries())s===e&&this.activeSpans.delete(t)}}addEvent(e,t,s){const n=this.spans.get(e);n&&n.events.push({name:t,timestamp:r.hrtime.bigint(),attributes:s})}setAttribute(e,t,s){const r=this.spans.get(e);r&&(r.attributes[t]=s)}setStatus(e,t){const s=this.spans.get(e);s&&(s.status=t)}getSpan(e){return this.spans.get(e)}getActiveSpan(e){const t=this.activeSpans.get(e);return t?this.spans.get(t):void 0}getTrace(e){return Array.from(this.spans.values()).filter(t=>t.traceId===e)}exportSpans(){const e=Array.from(this.spans.values()).filter(e=>void 0!==e.endTime);for(const t of e)this.spans.delete(t.spanId);return e}createDummySpan(e){return{traceId:"",spanId:"",name:e,startTime:r.hrtime.bigint(),attributes:{},events:[],status:{code:"UNSET"}}}async trace(e,t,s){const r=this.startSpan(e,s);try{const e=await t(r);return this.endSpan(r.spanId,{code:"OK"}),e}catch(e){throw this.endSpan(r.spanId,{code:"ERROR",message:e instanceof Error?e.message:"Unknown error"}),e}}getStats(){const e=Array.from(this.spans.values()),t=e.filter(e=>void 0!==e.endTime),s=e.filter(e=>void 0===e.endTime),r=t.reduce((e,t)=>e+(t.duration||0),0)/t.length||0;return{totalSpans:e.length,activeSpans:s.length,completedSpans:t.length,averageDuration:r,traces:new Set(e.map(e=>e.traceId)).size}}clear(){this.spans.clear(),this.activeSpans.clear()}setEnabled(e){this.enabled=e}}("false"!==process.env.TELEMETRY_ENABLED);function a(e){const t=e.headers.get("traceparent");return n.parseTraceContext(t||void 0)}},121:(e,t,s)=>{s.d(t,{r:()=>o});var r=s(598),n=s(24),a=s(760),i=s(629);const o=new class{UPLOAD_DIR;MAX_SIZE_MB;ALLOWED_TYPES;files;constructor(){this.UPLOAD_DIR=process.env.UPLOAD_DIR||"./uploads",this.MAX_SIZE_MB=Number(process.env.MAX_UPLOAD_SIZE_MB)||10,this.ALLOWED_TYPES=["image/jpeg","image/png","image/gif","image/webp","application/pdf","text/plain","text/markdown"],this.files=new Map,n.existsSync(this.UPLOAD_DIR)||n.mkdirSync(this.UPLOAD_DIR,{recursive:!0})}async upload(e,t,s,o={}){const c=1024*(o.maxSizeMB||this.MAX_SIZE_MB)*1024;if(e.length>c)throw new Error(`File size exceeds ${o.maxSizeMB||this.MAX_SIZE_MB}MB limit`);if(!(o.allowedTypes||this.ALLOWED_TYPES).includes(s))throw new Error(`File type ${s} is not allowed`);const u=r.randomBytes(16).toString("hex"),l=`${u}${a.extname(t)}`,d=a.join(this.UPLOAD_DIR,l);n.writeFileSync(d,e);const h={id:u,originalName:t,filename:l,path:d,size:e.length,mimeType:s,userId:o.userId,uploadedAt:new Date};return this.files.set(u,h),i.v.info("File uploaded",{fileId:u,originalName:t,size:e.length}),h}getFile(e){return this.files.get(e)}readFile(e){const t=this.files.get(e);if(!t)return null;try{return n.readFileSync(t.path)}catch(e){return i.v.error("Failed to read file",e),null}}deleteFile(e,t){const s=this.files.get(e);if(!s)return!1;if(t&&s.userId!==t)return i.v.warn("Unauthorized file deletion attempt",{fileId:e,userId:t}),!1;try{return n.unlinkSync(s.path),this.files.delete(e),i.v.info("File deleted",{fileId:e}),!0}catch(e){return i.v.error("Failed to delete file",e),!1}}getUserFiles(e){return Array.from(this.files.values()).filter(t=>t.userId===e)}listFiles(){return Array.from(this.files.values())}cleanupOldFiles(e=30){const t=new Date,s=new Date(t.getTime()-24*e*60*60*1e3);let r=0;for(const[e,t]of this.files.entries())t.uploadedAt<s&&this.deleteFile(e)&&r++;return i.v.info("Old files cleaned up",{deletedCount:r,maxAgeDays:e}),r}getStorageStats(){let e=0;const t={};for(const s of this.files.values())e+=s.size,t[s.mimeType]=(t[s.mimeType]||0)+1;return{totalFiles:this.files.size,totalSizeMB:(e/1024/1024).toFixed(2),filesByType:t}}}},132:(e,t,s)=>{s.d(t,{$:()=>n});var r=s(629);const n=new class{subscriptions;constructor(){this.subscriptions=new Map,this.loadSubscriptionsFromEnv()}loadSubscriptionsFromEnv(){const e=process.env.DISCORD_WEBHOOK_URL,t=process.env.SLACK_WEBHOOK_URL,s=process.env.CUSTOM_WEBHOOK_URL;e&&this.subscribe("discord",{url:e,events:["error.critical","system.health_check_failed","rate_limit.exceeded"],enabled:!0}),t&&this.subscribe("slack",{url:t,events:["user.registered","backup.completed","error.critical"],enabled:!0}),s&&this.subscribe("custom",{url:s,events:["chat.message","feedback.created"],secret:process.env.CUSTOM_WEBHOOK_SECRET,enabled:!0})}subscribe(e,t){this.subscriptions.set(e,t),r.v.info(`Webhook subscribed: ${e}`,{events:t.events})}unsubscribe(e){this.subscriptions.delete(e),r.v.info(`Webhook unsubscribed: ${e}`)}async emit(e,t){const s={event:e,timestamp:new Date,data:t},r=[];for(const[t,n]of this.subscriptions.entries())n.enabled&&n.events.includes(e)&&r.push(this.sendWebhook(t,n,s));await Promise.allSettled(r)}async sendWebhook(e,t,s){try{const n={"Content-Type":"application/json"};if(t.secret){const e=await this.generateSignature(JSON.stringify(s),t.secret);n["X-Webhook-Signature"]=e}const a=await fetch(t.url,{method:"POST",headers:n,body:JSON.stringify(s)});a.ok?r.v.debug(`Webhook delivered: ${e}`,{event:s.event}):r.v.warn(`Webhook delivery failed: ${e}`,{status:a.status})}catch(t){r.v.error(`Webhook error: ${e}`,t)}}async generateSignature(e,t){const s=new TextEncoder,r=s.encode(t),n=s.encode(e),a=await crypto.subtle.importKey("raw",r,{name:"HMAC",hash:"SHA-256"},!1,["sign"]),i=await crypto.subtle.sign("HMAC",a,n);return Array.from(new Uint8Array(i)).map(e=>e.toString(16).padStart(2,"0")).join("")}getSubscriptions(){return Array.from(this.subscriptions.entries()).map(([e,t])=>({name:e,events:t.events,enabled:t.enabled}))}toggleSubscription(e,t){const s=this.subscriptions.get(e);s&&(s.enabled=t,r.v.info(`Webhook ${t?"enabled":"disabled"}: ${e}`))}}},172:(e,t,s)=>{s.d(t,{x:()=>i});const r=require("nodemailer");var n=s.n(r),a=s(629);const i=new class{transporter;config;constructor(){this.config={enabled:"true"===process.env.EMAIL_NOTIFICATIONS_ENABLED,host:process.env.SMTP_HOST||"smtp.gmail.com",port:Number(process.env.SMTP_PORT)||587,secure:"true"===process.env.SMTP_SECURE,auth:{user:process.env.SMTP_USER||"",pass:process.env.SMTP_PASS||""},from:process.env.EMAIL_FROM||"noreply@elysia-ai.com"},this.config.enabled&&this.config.auth.user&&this.config.auth.pass&&this.initializeTransporter()}initializeTransporter(){try{this.transporter=n().createTransport({host:this.config.host,port:this.config.port,secure:this.config.secure,auth:this.config.auth}),a.v.info("Email transporter initialized",{host:this.config.host,port:this.config.port})}catch(e){a.v.error("Failed to initialize email transporter",e)}}async send(e){if(!this.config.enabled)return a.v.debug("Email notifications are disabled"),!1;if(!this.transporter)return a.v.warn("Email transporter not initialized"),!1;try{const t=await this.transporter.sendMail({from:this.config.from,to:Array.isArray(e.to)?e.to.join(", "):e.to,subject:e.subject,text:e.text,html:e.html});return a.v.info("Email sent",{messageId:t.messageId,to:e.to,subject:e.subject}),!0}catch(e){return a.v.error("Failed to send email",e),!1}}async sendErrorNotification(e,t){const s=process.env.ADMIN_EMAIL;if(!s)return;const r=`\n\t\t\t<h2>🚨 エリシアAI - エラー発生</h2>\n\t\t\t<p><strong>エラーメッセージ:</strong> ${e.message}</p>\n\t\t\t<p><strong>発生時刻:</strong> ${(new Date).toLocaleString("ja-JP")}</p>\n\t\t\t${t?`<p><strong>コンテキスト:</strong> <pre>${JSON.stringify(t,null,2)}</pre></p>`:""}\n\t\t\t${e.stack?`<p><strong>スタックトレース:</strong> <pre>${e.stack}</pre></p>`:""}\n\t\t`;await this.send({to:s,subject:`[エリシアAI] エラー通知: ${e.message}`,html:r})}async sendWelcomeEmail(e,t){const s=`\n\t\t\t<h2>🎉 エリシアAIへようこそ！</h2>\n\t\t\t<p>こんにちは、${t}さん♡</p>\n\t\t\t<p>エリシアAIのアカウント登録が完了しました！</p>\n\t\t\t<p>さっそくチャットを始めてみましょう！</p>\n\t\t\t<hr>\n\t\t\t<p><small>このメールに心当たりがない場合は、無視してください。</small></p>\n\t\t`;await this.send({to:e,subject:"エリシアAIへようこそ！",html:s})}async sendBackupNotification(e){const t=process.env.ADMIN_EMAIL;if(!t)return;const s=`\n\t\t\t<h2>✅ 自動バックアップ完了</h2>\n\t\t\t<p><strong>ファイル:</strong> ${e.file}</p>\n\t\t\t<p><strong>サイズ:</strong> ${(e.size/1024/1024).toFixed(2)} MB</p>\n\t\t\t<p><strong>処理時間:</strong> ${e.duration}ms</p>\n\t\t\t<p><strong>完了時刻:</strong> ${(new Date).toLocaleString("ja-JP")}</p>\n\t\t`;await this.send({to:t,subject:"[エリシアAI] 自動バックアップ完了",html:s})}async sendHealthCheckFailure(e,t){const s=process.env.ADMIN_EMAIL;if(!s)return;const r=`\n\t\t\t<h2>⚠️ ヘルスチェック失敗</h2>\n\t\t\t<p><strong>サービス:</strong> ${e}</p>\n\t\t\t<p><strong>詳細:</strong> ${t}</p>\n\t\t\t<p><strong>発生時刻:</strong> ${(new Date).toLocaleString("ja-JP")}</p>\n\t\t\t<p>早急に確認してください。</p>\n\t\t`;await this.send({to:s,subject:`[エリシアAI] ヘルスチェック失敗: ${e}`,html:r})}getStatus(){return{enabled:this.config.enabled,configured:!!this.transporter,host:this.config.host,port:this.config.port,from:this.config.from}}}},229:(e,t,s)=>{s.a(e,async(e,r)=>{try{s.r(t),s.d(t,{default:()=>j});var n=s(24),a=s(836),i=s(696),o=s(855),c=s(811),u=s(938),l=s.n(u),d=s(931),h=s(829),g=s.n(h),p=s(583),m=s.n(p),f=s(970),y=s(237),v=s(807),w=s(95),k=s(257),b=s(371),_=s(695),S=s(935),E=s(74),T=s(828),I=s(709),R=s(121),A=s(703),D=s(732),L=s(654),O=s(922),x=s(629),M=s(644),q=s(619),C=s(112),B=s(132);(0,I.x)(),S.m.start(),D.healthMonitor.start(),O.logCleanupManager.start(),await L.f.initialize(),E.m.initializeDefaultTasks();const $={PORT:Number(process.env.PORT)||3e3,RAG_API_URL:v.r.RAG_API_URL,RAG_TIMEOUT:v.r.RAG_TIMEOUT,MODEL_NAME:process.env.MODEL_NAME||"llama3.2",MAX_REQUESTS_PER_MINUTE:Number(process.env.RATE_LIMIT_RPM)||60,ALLOWED_ORIGINS:process.env.ALLOWED_ORIGINS?.split(",")||["http://localhost:3000"],AUTH_USERNAME:process.env.AUTH_USERNAME||"elysia",AUTH_PASSWORD:process.env.AUTH_PASSWORD||"elysia-dev-password",JWT_SECRET:process.env.JWT_SECRET||"dev-secret",JWT_REFRESH_SECRET:process.env.JWT_REFRESH_SECRET||"dev-refresh-secret"};function P(e,t){return new Response(JSON.stringify({error:t}),{status:e,headers:{"content-type":"application/json"}})}async function U(e){try{return await(0,y.HY)(e,$.MAX_REQUESTS_PER_MINUTE)}catch{return!0}}const W=(0,_.W)({excludePaths:["/ping","/health","/metrics","/swagger"],excludeMethods:["OPTIONS"],includeBody:!1}),N=(new d.Elysia).use((0,a.cors)({origin:$.ALLOWED_ORIGINS})).use((0,i.html)()).use((0,o.staticPlugin)({assets:"public"})).use((0,c.swagger)({path:"/swagger"})).onBeforeHandle(({request:e})=>{const t=new URL(e.url).pathname,s=(0,C.Ql)(e),r=C.Y9.startSpan(`HTTP ${e.method} ${t}`,{parentContext:s||void 0,attributes:{"http.method":e.method,"http.url":e.url,"http.route":t}});e.__span=r,e.__startTime=Date.now(),M.D.incrementRequest(e.method,t,200)}).onBeforeHandle(W.beforeHandle).onError(({error:e,code:t,request:s,set:r})=>{const n=new URL(s.url),a=e instanceof Error?e.message:String(e),i=`${String(t)}: ${a} at ${n.pathname}`;x.v.error(i),M.D.incrementError(s.method,n.pathname,String(t));const o=s.__span;return o&&C.Y9.endSpan(o.spanId,{code:"ERROR",message:a}),W.onError({request:s,error:e,set:r}),P(500,e instanceof Error?e.message:"Internal server error")}).onAfterHandle(({set:e,request:t,response:s})=>{e.headers["X-Content-Type-Options"]="nosniff",e.headers["X-Frame-Options"]="DENY";const r=t,n=r.__span;n&&(e.headers.traceparent=C.Y9.createTraceContext(n.traceId,n.spanId),C.Y9.endSpan(n.spanId));const a=r.__startTime;if(a){const e=(Date.now()-a)/1e3,s=new URL(t.url);M.D.recordRequestDuration(t.method,s.pathname,e)}W.afterHandle({request:t,set:e,response:s})}).get("/ping",()=>({ok:!0}),{detail:{tags:["health"],summary:"Health check endpoint",description:"Returns a simple OK response to verify server is running"}}).get("/health",async()=>{try{const e=process.env.REDIS_URL||"redis://localhost:6379",t=await(0,A.uY)(e,$.RAG_API_URL,$.MODEL_NAME),s="healthy"===t.status?200:503;return new Response(JSON.stringify(t),{status:s,headers:{"content-type":"application/json"}})}catch(e){const t=e instanceof Error?e.message:String(e);return x.v.error(`Health check failed: ${t}`),P(503,"Health check failed")}},{detail:{tags:["health"],summary:"Detailed health check",description:"Check status of Redis, FastAPI, Ollama, and system metrics"}}).get("/metrics",()=>{const e=M.D.toPrometheusFormat();return new Response(e,{headers:{"content-type":"text/plain; version=0.0.4"}})},{detail:{tags:["monitoring"],summary:"Prometheus metrics",description:"Expose metrics in Prometheus format"}}).get("/",()=>Bun.file("public/index.html"),{detail:{tags:["ui"],summary:"Portfolio index page",description:"Serves the main Elysia AI portfolio and chat interface"}}).post("/feedback",async({body:e,request:t})=>{const s=t.headers.get("authorization")||"";if(!s.startsWith("Bearer "))return P(401,"Missing Bearer token");let r;try{r=g().verify(s.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}(0,n.existsSync)("data")||(0,n.mkdirSync)("data",{recursive:!0}),t.headers.get("x-forwarded-for");const a=r.userId||void 0;try{await T.feedbackService.create({userId:a,query:e.query,answer:e.answer,rating:e.rating,reason:e.reason||void 0})}catch(e){return x.v.error("Failed to store feedback",e instanceof Error?e:void 0),P(500,"Failed to store feedback")}return new Response(JSON.stringify({ok:!0}),{headers:{"content-type":"application/json"}})},{body:d.t.Object({query:d.t.String({minLength:1,maxLength:400}),answer:d.t.String({minLength:1,maxLength:4e3}),rating:d.t.Union([d.t.Literal("up"),d.t.Literal("down")]),reason:d.t.Optional(d.t.String({maxLength:256}))}),detail:{tags:["feedback"],summary:"Submit user feedback",description:"Submit feedback for a query-answer pair. Requires JWT authentication.",security:[{bearerAuth:[]}]}}).post("/knowledge/upsert",async({body:e,request:t})=>{const s=t.headers.get("authorization")||"";if(!s.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(s.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}try{await T.knowledgeService.create({question:e.summary,answer:e.sourceUrl||"No source provided",source:"api",verified:e.confidence>.8})}catch(e){return x.v.error("Failed to store knowledge",e instanceof Error?e:void 0),P(500,"Failed to store knowledge")}return new Response(JSON.stringify({ok:!0}),{headers:{"content-type":"application/json"}})},{body:d.t.Object({summary:d.t.String({minLength:10,maxLength:2e3}),sourceUrl:d.t.Optional(d.t.String()),tags:d.t.Optional(d.t.Array(d.t.String({maxLength:32}),{maxItems:8})),confidence:d.t.Number({minimum:0,maximum:1})}),detail:{tags:["knowledge"],summary:"Add or update knowledge entry",description:"Store a new knowledge entry with summary, source, tags, and confidence. Requires JWT.",security:[{bearerAuth:[]}]}}).get("/knowledge/review",async({request:e,query:t})=>{const s=e.headers.get("authorization")||"";if(!s.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(s.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const r=Number(t?.n??20)||20;try{if(!(0,n.existsSync)("data/knowledge.jsonl"))return new Response(JSON.stringify([]),{headers:{"content-type":"application/json"}});const e=(await Bun.file("data/knowledge.jsonl").text()).trim().split("\n").filter(Boolean),t=e.slice(Math.max(0,e.length-r)).map(e=>JSON.parse(e));return new Response(JSON.stringify(t),{headers:{"content-type":"application/json"}})}catch{return P(500,"Failed to read knowledge")}},{query:d.t.Object({n:d.t.Optional(d.t.Number())}),detail:{tags:["knowledge"],summary:"Get recent knowledge entries",description:"Retrieve the last N knowledge entries from the knowledge base. Requires JWT.",security:[{bearerAuth:[]}]}}).post("/auth/token",async({body:e})=>{const{username:t,password:s}=e;if(t!==$.AUTH_USERNAME||s!==$.AUTH_PASSWORD)return P(401,"Invalid credentials");const r=t,n=g().sign({iss:"elysia-ai",userId:r,iat:Math.floor(Date.now()/1e3)},$.JWT_SECRET,{expiresIn:"15m"}),a=g().sign({iss:"elysia-ai-refresh",userId:r,iat:Math.floor(Date.now()/1e3)},$.JWT_REFRESH_SECRET,{expiresIn:"7d"});return await(0,y.OL)(r,a,604800),new Response(JSON.stringify({accessToken:n,refreshToken:a,expiresIn:900}),{headers:{"content-type":"application/json"}})},{body:d.t.Object({username:d.t.String({minLength:1,maxLength:128}),password:d.t.String({minLength:1,maxLength:128})}),detail:{tags:["auth"],summary:"Login and get JWT tokens",description:"Authenticate with username and password to receive access token (15min) and refresh token (7 days)"}}).post("/auth/refresh",async({body:e})=>{const{refreshToken:t}=e;let s;try{s=g().verify(t,$.JWT_REFRESH_SECRET)}catch{return P(401,"Invalid or expired refresh token")}const r=s.userId||"default-user";if(!await(0,y.tj)(r,t))return P(401,"Refresh token not found or revoked");const n=g().sign({iss:"elysia-ai",userId:r,iat:Math.floor(Date.now()/1e3)},$.JWT_SECRET,{expiresIn:"15m"});return new Response(JSON.stringify({accessToken:n,expiresIn:900}),{headers:{"content-type":"application/json"}})},{body:d.t.Object({refreshToken:d.t.String({minLength:20})}),detail:{tags:["auth"],summary:"Refresh access token",description:"Exchange a valid refresh token for a new access token without re-authentication"}}).post("/auth/logout",async({body:e})=>{const{refreshToken:t}=e;try{const e=g().verify(t,$.JWT_REFRESH_SECRET).userId||"default-user";return await(0,y.ln)(e),new Response(JSON.stringify({message:"Logged out successfully"}),{headers:{"content-type":"application/json"}})}catch{return P(400,"Invalid refresh token")}},{body:d.t.Object({refreshToken:d.t.String({minLength:20})}),detail:{tags:["auth"],summary:"Logout and revoke refresh token",description:"Revoke a refresh token to prevent future token refreshes. Effectively logs out the user."}}).guard({beforeHandle:({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))throw new Error("Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{throw new Error("Invalid or expired token")}}},e=>e.post("/elysia-love",async({body:e,request:t})=>{const s=t.headers.get("x-forwarded-for")||"anon";let r="anon";const n=t.headers.get("authorization")||"";try{n.startsWith("Bearer ")&&(r=g().verify(n.substring(7),$.JWT_SECRET).userId||"anon")}catch{}const a=`${r}:${s}`;if(!await U(a))return P(429,"Rate limit exceeded");const i=e.mode||f.Cm,o=f.V_[i],c=e.messages.map(e=>{const t=m()(e.content,{allowedTags:[],allowedAttributes:{}});if(s=t,[/\b(drop|delete)\b/i,/<script/i].some(e=>e.test(s)))throw new Error("Dangerous content detected");var s;return{...e,content:t}}),u=[{role:"system",content:o.systemPrompt},...c];try{const e=await l().post($.RAG_API_URL,{messages:u,temperature:o.temperature,model:o.model},{responseType:"stream",timeout:$.RAG_TIMEOUT});return new Response(e.data,{headers:{"Content-Type":"text/event-stream","Cache-Control":"no-cache",Connection:"keep-alive","X-Elysia-Mode":i}})}catch(e){return l().isAxiosError(e)&&503===e.response?.status?P(503,"Upstream unavailable"):P(500,"Internal chat error")}},{body:d.t.Object({messages:d.t.Array(d.t.Object({role:d.t.Union([d.t.Literal("user"),d.t.Literal("assistant"),d.t.Literal("system")]),content:d.t.String({maxLength:400,minLength:1})}),{maxItems:8}),mode:d.t.Optional(d.t.Union([d.t.Literal("sweet"),d.t.Literal("normal"),d.t.Literal("professional")]))}),detail:{tags:["chat"],summary:"Chat with Elysia AI (Multi-LLM)",description:"Send chat messages to Elysia AI with selectable personality modes (sweet/normal/professional). Returns streaming SSE response. Requires JWT.",security:[{bearerAuth:[]}]}})).get("/admin/feedback/stats",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const s=await T.feedbackService.getStats();return new Response(JSON.stringify(s),{headers:{"content-type":"application/json"}})},{detail:{tags:["admin"],summary:"Get feedback statistics",security:[{bearerAuth:[]}]}}).get("/admin/feedback",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const s=await T.feedbackService.getRecent(100);return new Response(JSON.stringify(s),{headers:{"content-type":"application/json"}})},{detail:{tags:["admin"],summary:"Get recent feedback",security:[{bearerAuth:[]}]}}).get("/admin/knowledge",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const s=await T.knowledgeService.getAll(!1);return new Response(JSON.stringify(s),{headers:{"content-type":"application/json"}})},{detail:{tags:["admin"],summary:"Get all knowledge entries",security:[{bearerAuth:[]}]}}).post("/admin/knowledge/:id/verify",async({params:e,request:t})=>{const s=t.headers.get("authorization")||"";if(!s.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(s.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return await T.knowledgeService.verify(e.id),new Response(JSON.stringify({ok:!0}),{headers:{"content-type":"application/json"}})},{detail:{tags:["admin"],summary:"Verify knowledge entry",security:[{bearerAuth:[]}]}}).delete("/admin/knowledge/:id",async({params:e,request:t})=>{const s=t.headers.get("authorization")||"";if(!s.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(s.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return await T.knowledgeService.delete(e.id),new Response(JSON.stringify({ok:!0}),{headers:{"content-type":"application/json"}})},{detail:{tags:["admin"],summary:"Delete knowledge entry",security:[{bearerAuth:[]}]}});N.post("/auth/register",async({body:e})=>{const{username:t,password:r}=e;if(await T.Dv.findByUsername(t))return P(400,"Username already exists");if(r.length<8)return P(400,"Password must be at least 8 characters");try{const{createUser:e}=await s.e(615).then(s.bind(s,615)),n=await e(t,r,"user");return new Response(JSON.stringify({success:!0,userId:n.id,username:n.username}),{headers:{"content-type":"application/json"}})}catch(e){return x.v.error("Registration failed",e instanceof Error?e:void 0),P(500,"Registration failed")}},{body:d.t.Object({username:d.t.String({minLength:3,maxLength:32}),password:d.t.String({minLength:8,maxLength:128})}),detail:{tags:["auth"],summary:"Register new user"}}),N.get("/admin/export/feedback",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const{exportFeedbackToCSV:r}=await s.e(508).then(s.bind(s,508)),n=await r();return new Response(n,{headers:{"content-type":"text/csv; charset=utf-8","content-disposition":`attachment; filename="feedback_${(new Date).toISOString().split("T")[0]}.csv"`}})}),N.get("/admin/export/knowledge/json",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const{exportKnowledgeToJSON:r}=await s.e(508).then(s.bind(s,508)),n=await r();return new Response(n,{headers:{"content-type":"application/json; charset=utf-8","content-disposition":`attachment; filename="knowledge_${(new Date).toISOString().split("T")[0]}.json"`}})}),N.get("/admin/analytics",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const{apiAnalytics:r}=await s.e(404).then(s.bind(s,404)),n=r.exportJSON();return new Response(JSON.stringify(n),{headers:{"content-type":"application/json"}})}),N.get("/admin/webhooks",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return{webhooks:B.$.getSubscriptions()}}),N.post("/admin/api-keys",async({request:e,body:t})=>{const s=e.headers.get("authorization")||"";if(!s.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(s.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const{name:r,rateLimit:n,expiresInDays:a}=t;return{success:!0,key:k.X.generateKey({name:r,rateLimit:n,expiresInDays:a}).key}},{body:d.t.Object({name:d.t.String({minLength:1}),rateLimit:d.t.Optional(d.t.Number()),expiresInDays:d.t.Optional(d.t.Number())})}),N.get("/admin/api-keys",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return{keys:k.X.listKeys(),stats:k.X.getUsageStats()}}),N.get("/admin/backups",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return{status:S.m.getStatus(),history:S.m.getBackupHistory()}}),N.post("/admin/backups/trigger",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return await S.m.triggerManualBackup(),{success:!0,message:"Backup triggered"}}),N.get("/admin/health-monitor",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return D.healthMonitor.getStatus()}),N.get("/admin/sessions",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{const e=g().verify(t.substring(7),$.JWT_SECRET);return{sessions:q.i.getUserSessions(e.userId),stats:q.i.getStats()}}catch{return P(401,"Invalid token")}}),N.get("/admin/ab-tests",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return{tests:w.n.listTests()}}),N.get("/admin/ab-tests/:testId",async({request:e,params:t})=>{const s=e.headers.get("authorization")||"";if(!s.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(s.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return w.n.getTestResults(t.testId)||P(404,"Test not found")}),N.get("/admin/logs/cleanup",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return O.logCleanupManager.getStats()}),N.post("/admin/logs/cleanup/trigger",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return await O.logCleanupManager.triggerManualCleanup(),{success:!0,message:"Log cleanup triggered"}}),N.get("/admin/jobs/stats",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return await L.f.getStats()}),N.post("/admin/jobs/email",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const s=await e.json();return{success:!0,jobId:(await L.f.sendEmail(s.to,s.subject,s.html)).id}}),N.post("/admin/jobs/report",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const s=await e.json();return{success:!0,jobId:(await L.f.generateReport(s.reportType,new Date(s.startDate),new Date(s.endDate))).id}}),N.post("/upload",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");let s;try{s=g().verify(t.substring(7),$.JWT_SECRET).username}catch{return P(401,"Invalid token")}const r=(await e.formData()).get("file");if(!r)return P(400,"No file provided");const n=Buffer.from(await r.arrayBuffer()),a=await R.r.upload(n,r.name,r.type,{userId:s});return{success:!0,file:{id:a.id,originalName:a.originalName,size:a.size,mimeType:a.mimeType}}}),N.get("/files/:fileId",async({request:e,params:t})=>{const s=e.headers.get("authorization")||"";if(!s.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(s.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const{fileId:r}=t,n=R.r.getFile(r);if(!n)return P(404,"File not found");const a=R.r.readFile(r);return a?new Response(new Uint8Array(a),{headers:{"content-type":n.mimeType,"content-disposition":`attachment; filename="${n.originalName}"`}}):P(404,"File not found")}),N.get("/files",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");let s;try{s=g().verify(t.substring(7),$.JWT_SECRET).username}catch{return P(401,"Invalid token")}return{files:R.r.getUserFiles(s).map(e=>({id:e.id,originalName:e.originalName,size:e.size,mimeType:e.mimeType,uploadedAt:e.uploadedAt}))}}),N.get("/admin/cron/tasks",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return{tasks:E.m.listTasks()}}),N.get("/admin/cron/stats",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return E.m.getStats()}),N.post("/admin/cron/tasks/:name/run",async({request:e,params:t})=>{const s=e.headers.get("authorization")||"";if(!s.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(s.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}try{return await E.m.runTask(t.name),{success:!0,message:`Task ${t.name} executed`}}catch(e){return P(400,e.message)}}),N.get("/admin/audit/logs",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const s=new URL(e.url);return b._.search({userId:s.searchParams.get("userId")||void 0,action:s.searchParams.get("action")||void 0,resource:s.searchParams.get("resource")||void 0,limit:Number(s.searchParams.get("limit"))||100,offset:Number(s.searchParams.get("offset"))||0})}),N.get("/admin/audit/stats",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}return b._.getStats()}),N.get("/admin/audit/export",async({request:e})=>{const t=e.headers.get("authorization")||"";if(!t.startsWith("Bearer "))return P(401,"Missing Bearer token");try{g().verify(t.substring(7),$.JWT_SECRET)}catch{return P(401,"Invalid token")}const s=new URL(e.url).searchParams.get("format")||"json",r=b._.export(s);return r?new Response(r,{headers:{"content-type":"json"===s?"application/json":"text/csv","content-disposition":`attachment; filename="audit-logs.${s}"`}}):P(400,"Invalid format")});const j=N;r()}catch(F){r(F)}},1)},237:(e,t,s)=>{s.d(t,{HY:()=>c,ln:()=>d,OL:()=>u,tj:()=>l}),s(829),process.env.JWT_SECRET,process.env.JWT_REFRESH_SECRET;var r=s(659),n=s.n(r);const a={REDIS_URL:process.env.REDIS_URL||"redis://localhost:6379",REDIS_ENABLED:"false"!==process.env.REDIS_ENABLED};let i=null,o=!1;if(a.REDIS_ENABLED)try{i=new(n())(a.REDIS_URL,{maxRetriesPerRequest:3,retryStrategy:e=>e>3?(o=!1,null):Math.min(100*e,2e3),lazyConnect:!0}),i.on("connect",()=>{o=!0}),i.on("error",()=>{o=!1}),i.connect().catch(()=>{o=!1})}catch{i=null,o=!1}async function c(e,t,s=60){if(!i||!o)return!0;try{const r=`ratelimit:${e}`,n=Date.now(),a=n-1e3*s;await i.zremrangebyscore(r,0,a),await i.zadd(r,n,`${n}:${Math.random()}`);const o=await i.zcard(r);return await i.expire(r,s),o<=t}catch{return!0}}async function u(e,t,s=604800){if(i&&o)try{const r=`refresh:${e}`;await i.setex(r,s,t)}catch{}}async function l(e,t){if(!i||!o)return!1;try{const s=`refresh:${e}`;return await i.get(s)===t}catch{return!1}}async function d(e){if(i&&o)try{const t=`refresh:${e}`;await i.del(t)}catch{}}},257:(e,t,s)=>{s.d(t,{X:()=>a});var r=s(598),n=s(629);const a=new class{keys;KEY_PREFIX="elysia_";constructor(){this.keys=new Map,this.loadKeysFromEnv()}loadKeysFromEnv(){const e=process.env.MASTER_API_KEY;e&&this.keys.set(e,{key:e,name:"Master Key",createdAt:new Date,enabled:!0,rateLimit:1e4,usage:{totalRequests:0,requestsThisHour:0,hourStart:new Date}})}generateKey(e){const t=r.randomBytes(32),s=`${this.KEY_PREFIX}${t.toString("base64url")}`,a=e.expiresInDays?new Date(Date.now()+24*e.expiresInDays*60*60*1e3):void 0,i={key:s,name:e.name,userId:e.userId,createdAt:new Date,expiresAt:a,enabled:!0,rateLimit:e.rateLimit||1e3,usage:{totalRequests:0,requestsThisHour:0,hourStart:new Date}};return this.keys.set(s,i),n.v.info("API key generated",{name:e.name,userId:e.userId,rateLimit:i.rateLimit}),i}validateKey(e){const t=this.keys.get(e);if(!t)return{valid:!1,reason:"Invalid API key"};if(!t.enabled)return{valid:!1,reason:"API key is disabled"};if(t.expiresAt&&t.expiresAt<new Date)return{valid:!1,reason:"API key has expired"};const s=new Date;return(s.getTime()-t.usage.hourStart.getTime())/36e5>=1&&(t.usage.requestsThisHour=0,t.usage.hourStart=s),t.usage.requestsThisHour>=t.rateLimit?{valid:!1,reason:`Rate limit exceeded (${t.rateLimit} requests/hour)`}:{valid:!0,apiKey:t}}recordUsage(e){const t=this.keys.get(e);t&&(t.usage.totalRequests++,t.usage.requestsThisHour++,t.usage.lastUsed=new Date)}revokeKey(e){const t=this.keys.get(e);return!!t&&(t.enabled=!1,n.v.info("API key revoked",{name:t.name}),!0)}deleteKey(e){const t=this.keys.get(e);return!!t&&(this.keys.delete(e),n.v.info("API key deleted",{name:t.name}),!0)}listKeys(){return Array.from(this.keys.values()).map(e=>({name:e.name,userId:e.userId,createdAt:e.createdAt,expiresAt:e.expiresAt,enabled:e.enabled,rateLimit:e.rateLimit,usage:{totalRequests:e.usage.totalRequests,lastUsed:e.usage.lastUsed,requestsThisHour:e.usage.requestsThisHour},keyPreview:`${e.key.substring(0,16)}...`}))}getUserKeys(e){return Array.from(this.keys.values()).filter(t=>t.userId===e).map(e=>({name:e.name,createdAt:e.createdAt,expiresAt:e.expiresAt,enabled:e.enabled,rateLimit:e.rateLimit,usage:e.usage,keyPreview:`${e.key.substring(0,16)}...`}))}getUsageStats(){const e=Array.from(this.keys.values());return{totalKeys:e.length,activeKeys:e.filter(e=>e.enabled).length,expiredKeys:e.filter(e=>e.expiresAt&&e.expiresAt<new Date).length,totalRequests:e.reduce((e,t)=>e+t.usage.totalRequests,0),topKeys:e.sort((e,t)=>t.usage.totalRequests-e.usage.totalRequests).slice(0,5).map(e=>({name:e.name,requests:e.usage.totalRequests}))}}}},330:e=>{e.exports=require("@prisma/client")},371:(e,t,s)=>{s.d(t,{_:()=>i});var r=s(24),n=s(760),a=s(629);const i=new class{LOG_DIR;LOG_FILE;logs;logCounter;constructor(){this.LOG_DIR=process.env.AUDIT_LOG_DIR||"./logs/audit",this.LOG_FILE=n.join(this.LOG_DIR,"audit.jsonl"),this.logs=[],this.logCounter=0,r.existsSync(this.LOG_DIR)||r.mkdirSync(this.LOG_DIR,{recursive:!0}),this.loadLogs()}loadLogs(){if(r.existsSync(this.LOG_FILE))try{const e=r.readFileSync(this.LOG_FILE,"utf-8").split("\n").filter(e=>e.trim());for(const t of e)try{const e=JSON.parse(t);e.timestamp=new Date(e.timestamp),this.logs.push(e)}catch{}a.v.info("Audit logs loaded",{count:this.logs.length})}catch(e){a.v.error("Failed to load audit logs",e)}}log(e){const t={id:`audit-${Date.now()}-${++this.logCounter}`,timestamp:new Date,...e};this.logs.push(t);try{r.appendFileSync(this.LOG_FILE,`${JSON.stringify(t)}\n`)}catch(e){a.v.error("Failed to write audit log",e)}a.v.debug("Audit log recorded",{id:t.id,action:t.action,resource:t.resource})}search(e={}){let t=[...this.logs];if(e.userId&&(t=t.filter(t=>t.userId===e.userId)),e.action&&(t=t.filter(t=>t.action===e.action)),e.resource&&(t=t.filter(t=>t.resource===e.resource)),e.startDate){const s=e.startDate;t=t.filter(e=>e.timestamp>=s)}if(e.endDate){const s=e.endDate;t=t.filter(e=>e.timestamp<=s)}t.sort((e,t)=>t.timestamp.getTime()-e.timestamp.getTime());const s=t.length,r=e.offset||0,n=e.limit||100;return{logs:t.slice(r,r+n),total:s,offset:r,limit:n}}getUserActivity(e,t=20){return this.search({userId:e,limit:t}).logs}getResourceHistory(e,t){return this.logs.filter(s=>s.resource===e&&s.resourceId===t).sort((e,t)=>t.timestamp.getTime()-e.timestamp.getTime())}getStats(){const e=new Date,t=new Date(e.getTime()-864e5),s=new Date(e.getTime()-6048e5),r=this.logs.filter(e=>e.timestamp>=t),n=this.logs.filter(e=>e.timestamp>=s),a={},i={};for(const e of r)a[e.action]=(a[e.action]||0)+1,e.userId&&(i[e.userId]=(i[e.userId]||0)+1);return{totalLogs:this.logs.length,last24Hours:r.length,last7Days:n.length,topActions:Object.entries(a).sort(([,e],[,t])=>t-e).slice(0,10).map(([e,t])=>({action:e,count:t})),topUsers:Object.entries(i).sort(([,e],[,t])=>t-e).slice(0,10).map(([e,t])=>({userId:e,count:t}))}}cleanupOldLogs(e=90){const t=new Date(Date.now()-24*e*60*60*1e3),s=this.logs.length;this.logs=this.logs.filter(e=>e.timestamp>=t);try{const t=this.logs.map(e=>JSON.stringify(e)).join("\n");return r.writeFileSync(this.LOG_FILE,`${t}\n`),a.v.info("Old audit logs cleaned up",{deleted:s-this.logs.length,remaining:this.logs.length,maxAgeDays:e}),s-this.logs.length}catch(e){return a.v.error("Failed to cleanup audit logs",e),0}}export(e,t={}){const{logs:s}=this.search(t);if("json"===e)return JSON.stringify(s,null,2);if("csv"===e){const e=["ID","Timestamp","User ID","Action","Resource","Resource ID","Method","Path","IP Address","Status Code"],t=s.map(e=>[e.id,e.timestamp.toISOString(),e.userId||"",e.action,e.resource,e.resourceId||"",e.method,e.path,e.ipAddress,e.statusCode.toString()]);return[e.join(","),...t.map(e=>e.join(","))].join("\n")}return null}}},522:e=>{e.exports=require("node:zlib")},583:e=>{e.exports=require("sanitize-html")},598:e=>{e.exports=require("node:crypto")},619:(e,t,s)=>{s.d(t,{i:()=>n});var r=s(629);const n=new class{sessions;userSessions;SESSION_TIMEOUT=864e5;MAX_SESSIONS_PER_USER=5;constructor(){this.sessions=new Map,this.userSessions=new Map,setInterval(()=>{this.cleanupExpiredSessions()},36e5)}createSession(e,t,s){const n=this.userSessions.get(e);if(n&&n.size>=this.MAX_SESSIONS_PER_USER){const t=this.getOldestSession(e);t&&this.terminateSession(t.sessionId)}const a=this.generateSessionId(),i=new Date,o={sessionId:a,userId:e,deviceInfo:{userAgent:t,ip:s,deviceType:this.detectDeviceType(t)},createdAt:i,lastActivity:i,expiresAt:new Date(i.getTime()+this.SESSION_TIMEOUT),active:!0,activityLog:[{type:"login",timestamp:i}]};return this.sessions.set(a,o),this.userSessions.has(e)||this.userSessions.set(e,new Set),this.userSessions.get(e)?.add(a),r.v.info("Session created",{sessionId:a,userId:e,deviceType:o.deviceInfo.deviceType}),o}generateSessionId(){return`sess_${Date.now()}_${Math.random().toString(36).substring(2,15)}`}detectDeviceType(e){const t=e.toLowerCase();return/mobile|android|iphone/i.test(t)?"mobile":/tablet|ipad/i.test(t)?"tablet":/windows|macintosh|linux/i.test(t)?"desktop":"unknown"}validateSession(e){const t=this.sessions.get(e);return t&&t.active?t.expiresAt<new Date?(this.terminateSession(e),null):(t.lastActivity=new Date,t):null}recordActivity(e,t,s){const r=this.sessions.get(e);r&&(r.activityLog.push({type:t,timestamp:new Date,details:s}),r.lastActivity=new Date,r.activityLog.length>100&&(r.activityLog=r.activityLog.slice(-100)))}terminateSession(e){const t=this.sessions.get(e);if(!t)return;t.active=!1,this.recordActivity(e,"logout");const s=this.userSessions.get(t.userId);s?.delete(e),r.v.info("Session terminated",{sessionId:e,userId:t.userId})}getUserSessions(e){const t=this.userSessions.get(e);return t?Array.from(t).map(e=>this.sessions.get(e)).filter(e=>void 0!==e).map(e=>({sessionId:e.sessionId,deviceType:e.deviceInfo.deviceType,ip:e.deviceInfo.ip,createdAt:e.createdAt,lastActivity:e.lastActivity,active:e.active,activityCount:e.activityLog.length})):[]}getSessionDetails(e){const t=this.sessions.get(e);return t?{sessionId:t.sessionId,userId:t.userId,deviceInfo:t.deviceInfo,createdAt:t.createdAt,lastActivity:t.lastActivity,expiresAt:t.expiresAt,active:t.active,activityLog:t.activityLog.slice(-20)}:null}getOldestSession(e){const t=this.userSessions.get(e);if(!t)return;let s;for(const e of t){const t=this.sessions.get(e);t&&(!s||t.createdAt<s.createdAt)&&(s=t)}return s}cleanupExpiredSessions(){const e=new Date;let t=0;for(const[s,r]of this.sessions.entries())(r.expiresAt<e||!r.active)&&(this.sessions.delete(s),this.userSessions.get(r.userId)?.delete(s),t++);t>0&&r.v.info("Expired sessions cleaned up",{count:t})}getStats(){const e=Array.from(this.sessions.values()),t=e.filter(e=>e.active);return{totalSessions:e.length,activeSessions:t.length,uniqueUsers:this.userSessions.size,deviceBreakdown:{mobile:t.filter(e=>"mobile"===e.deviceInfo.deviceType).length,tablet:t.filter(e=>"tablet"===e.deviceInfo.deviceType).length,desktop:t.filter(e=>"desktop"===e.deviceInfo.deviceType).length}}}}},629:(e,t,s)=>{s.d(t,{v:()=>a});var r=s(24),n=s(760);const a=new class{logDir;logFile;minLevel;levelPriority={trace:0,debug:1,info:2,warn:3,error:4,fatal:5};constructor(e="logs",t="info"){this.logDir=e,this.minLevel=t,this.logFile=(0,n.join)(e,`app-${(new Date).toISOString().split("T")[0]}.log`),(0,r.existsSync)(e)||(0,r.mkdirSync)(e,{recursive:!0})}shouldLog(e){return this.levelPriority[e]>=this.levelPriority[this.minLevel]}formatLog(e){return`${JSON.stringify(e)}\n`}writeLog(e){if(!this.shouldLog(e.level))return;const t={trace:"[90m",debug:"[36m",info:"[32m",warn:"[33m",error:"[31m",fatal:"[35m"}[e.level];console.log(`${t}[${e.level.toUpperCase()}][0m ${e.timestamp} ${e.message}`,e.context?e.context:"");try{(0,r.appendFileSync)(this.logFile,this.formatLog(e))}catch(e){console.error("Failed to write to log file:",e)}}trace(e,t){this.writeLog({level:"trace",timestamp:(new Date).toISOString(),message:e,context:t})}debug(e,t){this.writeLog({level:"debug",timestamp:(new Date).toISOString(),message:e,context:t})}info(e,t){this.writeLog({level:"info",timestamp:(new Date).toISOString(),message:e,context:t})}warn(e,t){this.writeLog({level:"warn",timestamp:(new Date).toISOString(),message:e,context:t})}error(e,t,s){this.writeLog({level:"error",timestamp:(new Date).toISOString(),message:e,context:s,error:t?{name:t.name,message:t.message,stack:t.stack}:void 0})}fatal(e,t,s){this.writeLog({level:"fatal",timestamp:(new Date).toISOString(),message:e,context:s,error:t?{name:t.name,message:t.message,stack:t.stack}:void 0})}logRequest(e,t,s,r,n,a){const i=s>=500?"error":s>=400?"warn":"info";this.writeLog({level:i,timestamp:(new Date).toISOString(),message:`${e} ${t} ${s}`,request:{method:e,path:t,ip:n,userId:a},duration:r})}rotateLogs(e=30){const t=Date.now(),a=24*e*60*60*1e3;if(!(0,r.existsSync)(this.logDir))return;const i=s(24),o=i.readdirSync(this.logDir);for(const e of o){const s=(0,n.join)(this.logDir,e);t-i.statSync(s).mtimeMs>a&&(i.unlinkSync(s),this.info(`Rotated old log file: ${e}`))}}}("logs",process.env.LOG_LEVEL||"info")},644:(e,t,s)=>{s.d(t,{D:()=>r});const r=new class{metrics={http_requests_total:new Map,http_request_duration_seconds:new Map,http_errors_total:new Map,active_connections:0,chat_requests_total:0,feedback_submissions_total:0,auth_attempts_total:new Map,rate_limit_exceeded_total:0,rag_queries_total:0,rag_query_duration_seconds:[]};incrementRequest(e,t,s){const r=`${e}:${t}:${s}`,n=this.metrics.http_requests_total.get(r)||0;this.metrics.http_requests_total.set(r,n+1)}recordRequestDuration(e,t,s){const r=`${e}:${t}`,n=this.metrics.http_request_duration_seconds.get(r)||[];n.push(s),n.length>1e3&&n.shift(),this.metrics.http_request_duration_seconds.set(r,n)}incrementError(e,t,s){const r=`${e}:${t}:${s}`,n=this.metrics.http_errors_total.get(r)||0;this.metrics.http_errors_total.set(r,n+1)}incrementConnections(){this.metrics.active_connections++}decrementConnections(){this.metrics.active_connections=Math.max(0,this.metrics.active_connections-1)}incrementChatRequests(){this.metrics.chat_requests_total++}incrementFeedback(){this.metrics.feedback_submissions_total++}incrementAuthAttempt(e){const t=e?"success":"failure",s=this.metrics.auth_attempts_total.get(t)||0;this.metrics.auth_attempts_total.set(t,s+1)}incrementRateLimit(){this.metrics.rate_limit_exceeded_total++}incrementRAGQuery(){this.metrics.rag_queries_total++}recordRAGDuration(e){this.metrics.rag_query_duration_seconds.push(e),this.metrics.rag_query_duration_seconds.length>1e3&&this.metrics.rag_query_duration_seconds.shift()}getMetrics(){return{...this.metrics}}toPrometheusFormat(){const e=[];e.push("# HELP http_requests_total Total HTTP requests"),e.push("# TYPE http_requests_total counter");for(const[t,s]of this.metrics.http_requests_total){const[r,n,a]=t.split(":");e.push(`http_requests_total{method="${r}",path="${n}",status="${a}"} ${s}`)}e.push("# HELP http_request_duration_seconds HTTP request duration in seconds"),e.push("# TYPE http_request_duration_seconds histogram");for(const[t,s]of this.metrics.http_request_duration_seconds){const[r,n]=t.split(":"),a=[...s].sort((e,t)=>e-t),i=a.reduce((e,t)=>e+t,0)/a.length,o=a[Math.floor(.5*a.length)]||0,c=a[Math.floor(.95*a.length)]||0,u=a[Math.floor(.99*a.length)]||0;e.push(`http_request_duration_seconds_avg{method="${r}",path="${n}"} ${i.toFixed(4)}`),e.push(`http_request_duration_seconds{method="${r}",path="${n}",quantile="0.5"} ${o.toFixed(4)}`),e.push(`http_request_duration_seconds{method="${r}",path="${n}",quantile="0.95"} ${c.toFixed(4)}`),e.push(`http_request_duration_seconds{method="${r}",path="${n}",quantile="0.99"} ${u.toFixed(4)}`)}e.push("# HELP http_errors_total Total HTTP errors"),e.push("# TYPE http_errors_total counter");for(const[t,s]of this.metrics.http_errors_total){const[r,n,a]=t.split(":");e.push(`http_errors_total{method="${r}",path="${n}",type="${a}"} ${s}`)}e.push("# HELP active_connections Current active connections"),e.push("# TYPE active_connections gauge"),e.push(`active_connections ${this.metrics.active_connections}`),e.push("# HELP chat_requests_total Total chat requests"),e.push("# TYPE chat_requests_total counter"),e.push(`chat_requests_total ${this.metrics.chat_requests_total}`),e.push("# HELP feedback_submissions_total Total feedback submissions"),e.push("# TYPE feedback_submissions_total counter"),e.push(`feedback_submissions_total ${this.metrics.feedback_submissions_total}`),e.push("# HELP auth_attempts_total Total authentication attempts"),e.push("# TYPE auth_attempts_total counter");for(const[t,s]of this.metrics.auth_attempts_total)e.push(`auth_attempts_total{result="${t}"} ${s}`);if(e.push("# HELP rate_limit_exceeded_total Total rate limit exceeded"),e.push("# TYPE rate_limit_exceeded_total counter"),e.push(`rate_limit_exceeded_total ${this.metrics.rate_limit_exceeded_total}`),e.push("# HELP rag_queries_total Total RAG queries"),e.push("# TYPE rag_queries_total counter"),e.push(`rag_queries_total ${this.metrics.rag_queries_total}`),this.metrics.rag_query_duration_seconds.length>0){e.push("# HELP rag_query_duration_seconds RAG query duration"),e.push("# TYPE rag_query_duration_seconds histogram");const t=[...this.metrics.rag_query_duration_seconds].sort((e,t)=>e-t),s=t.reduce((e,t)=>e+t,0)/t.length,r=t[Math.floor(.5*t.length)]||0,n=t[Math.floor(.95*t.length)]||0,a=t[Math.floor(.99*t.length)]||0;e.push(`rag_query_duration_seconds_avg ${s.toFixed(4)}`),e.push(`rag_query_duration_seconds{quantile="0.5"} ${r.toFixed(4)}`),e.push(`rag_query_duration_seconds{quantile="0.95"} ${n.toFixed(4)}`),e.push(`rag_query_duration_seconds{quantile="0.99"} ${a.toFixed(4)}`)}const t=process.memoryUsage();return e.push("# HELP process_memory_bytes Process memory usage"),e.push("# TYPE process_memory_bytes gauge"),e.push(`process_memory_bytes{type="heap_used"} ${t.heapUsed}`),e.push(`process_memory_bytes{type="heap_total"} ${t.heapTotal}`),e.push(`process_memory_bytes{type="rss"} ${t.rss}`),e.push("# HELP process_uptime_seconds Process uptime in seconds"),e.push("# TYPE process_uptime_seconds gauge"),e.push(`process_uptime_seconds ${process.uptime()}`),`${e.join("\n")}\n`}}},654:(e,t,s)=>{s.d(t,{f:()=>o});const r=require("bullmq");var n=s(172),a=s(629),i=s(132);const o=new class{queue=null;worker=null;REDIS_URL;constructor(){this.REDIS_URL=process.env.REDIS_URL||"redis://localhost:6379"}async initialize(){try{const e={host:new URL(this.REDIS_URL).hostname,port:Number(new URL(this.REDIS_URL).port)||6379};this.queue=new r.Queue("elysia-jobs",{connection:e}),this.worker=new r.Worker("elysia-jobs",async e=>await this.processJob(e),{connection:e}),this.worker.on("completed",e=>{a.v.info("Job completed",{jobId:e.id,type:e.data.type})}),this.worker.on("failed",(e,t)=>{a.v.error("Job failed",t)}),a.v.info("Job queue initialized",{connection:this.REDIS_URL})}catch(e){a.v.warn("Job queue unavailable, using in-memory fallback",{error:e.message})}}async processJob(e){const{type:t,payload:s}=e.data;switch(t){case"send-email":return await this.handleEmailJob(s);case"generate-report":return await this.handleReportJob(s);case"cleanup-old-data":return await this.handleCleanupJob();case"send-webhook":return await this.handleWebhookJob(s);default:throw new Error(`Unknown job type: ${t}`)}}async handleEmailJob(e){return await n.x.send({to:e.to,subject:e.subject,html:e.html}),{success:!0,sentAt:new Date}}async handleReportJob(e){a.v.info("Generating report",{type:e.reportType});const{feedbackService:t,knowledgeService:r}=await Promise.resolve().then(s.bind(s,828)),i=await t.getRecent(100),o=await r.getAll(),c={type:e.reportType,period:{start:e.startDate,end:e.endDate},statistics:{totalFeedbacks:i.length,positiveFeedbacks:i.filter(e=>"up"===e.rating).length,negativeFeedbacks:i.filter(e=>"down"===e.rating).length,totalKnowledge:o.length,verifiedKnowledge:o.filter(e=>e.verified).length},generatedAt:new Date},u=process.env.ADMIN_EMAIL;return u&&await n.x.send({to:u,subject:`[エリシアAI] ${e.reportType}レポート`,html:`\n\t\t\t\t\t<h2>📊 ${e.reportType}レポート</h2>\n\t\t\t\t\t<ul>\n\t\t\t\t\t\t<li>総フィードバック: ${c.statistics.totalFeedbacks}</li>\n\t\t\t\t\t\t<li>ポジティブ: ${c.statistics.positiveFeedbacks}</li>\n\t\t\t\t\t\t<li>ネガティブ: ${c.statistics.negativeFeedbacks}</li>\n\t\t\t\t\t\t<li>総ナレッジ: ${c.statistics.totalKnowledge}</li>\n\t\t\t\t\t\t<li>検証済み: ${c.statistics.verifiedKnowledge}</li>\n\t\t\t\t\t</ul>\n\t\t\t\t\t<p><small>生成日時: ${c.generatedAt.toLocaleString("ja-JP")}</small></p>\n\t\t\t\t`}),c}async handleCleanupJob(){a.v.info("Running data cleanup job");const{logCleanupManager:e}=await Promise.resolve().then(s.bind(s,922));return await e.triggerManualCleanup(),{success:!0,cleanedAt:new Date}}async handleWebhookJob(e){const{event:t,data:s}=e;return await i.$.emit(t,s),{success:!0,sentAt:new Date}}async addJob(e,t,s={}){if(!this.queue)return a.v.warn("Queue not available, executing job immediately"),await this.processJob({data:{type:e,payload:t}});const r=await this.queue.add(e,{type:e,payload:t},s);return a.v.debug("Job added to queue",{jobId:r.id,type:e}),r}async sendEmail(e,t,s){return await this.addJob("send-email",{to:e,subject:t,html:s})}async generateReport(e,t,s){return await this.addJob("generate-report",{reportType:e,startDate:t,endDate:s})}async scheduleCleanup(){return await this.addJob("cleanup-old-data",{})}async getStats(){if(!this.queue)return{available:!1};const[e,t,s,r]=await Promise.all([this.queue.getWaitingCount(),this.queue.getActiveCount(),this.queue.getCompletedCount(),this.queue.getFailedCount()]);return{available:!0,waiting:e,active:t,completed:s,failed:r}}async close(){this.worker&&await this.worker.close(),this.queue&&await this.queue.close(),a.v.info("Job queue closed")}}},659:e=>{e.exports=require("ioredis")},695:(e,t,s)=>{s.d(t,{W:()=>a});var r=s(371);const n=new WeakMap;function a(e={}){const{excludePaths:t=["/health","/metrics","/swagger"],excludeMethods:a=["OPTIONS"],includeBody:o=!1}=e;return{beforeHandle:async e=>{const{request:s}=e,r=new URL(s.url);t.some(e=>r.pathname.startsWith(e))||a.includes(s.method)||n.set(s,{startTime:Date.now(),url:r.pathname,method:s.method})},afterHandle:async(e,t)=>{const{request:a,set:o}=e;if(!n.get(a))return;const c=new URL(a.url),u=o.status||200,l=a.headers.get("authorization")||"";let d;if(l.startsWith("Bearer "))try{d=(await Promise.resolve().then(s.t.bind(s,829,23))).verify(l.substring(7),process.env.JWT_SECRET||"dev-secret").username}catch{}const h=function(e,t){if(t.includes("/login")||t.includes("/auth"))return"AUTH";if(t.includes("/register"))return"REGISTER";if(t.includes("/logout"))return"LOGOUT";switch(e){case"GET":return"READ";case"POST":return"CREATE";case"PUT":case"PATCH":return"UPDATE";case"DELETE":return"DELETE";default:return e}}(a.method,c.pathname),g=i(c.pathname),p=function(e){const t=e.match(/\/([^/]+)\/([a-zA-Z0-9-]+)$/);if(t?.[2])return t[2]}(c.pathname);r._.log({userId:d,action:h,resource:g,resourceId:p,method:a.method,path:c.pathname,ipAddress:a.headers.get("x-forwarded-for")||a.headers.get("x-real-ip")||"127.0.0.1",userAgent:a.headers.get("user-agent")||"unknown",statusCode:u}),n.delete(a)},onError:async(e,t)=>{const{request:s}=e;if(!n.get(s))return;const a=new URL(s.url);r._.log({action:"ERROR",resource:i(a.pathname),method:s.method,path:a.pathname,ipAddress:s.headers.get("x-forwarded-for")||s.headers.get("x-real-ip")||"127.0.0.1",userAgent:s.headers.get("user-agent")||"unknown",statusCode:500,error:t.message})}}}function i(e){return e.includes("/feedback")?"feedback":e.includes("/knowledge")?"knowledge":e.includes("/user")?"user":e.includes("/chat")?"chat":e.includes("/upload")||e.includes("/files")?"file":e.includes("/jobs")?"job":e.includes("/cron")?"cron":e.includes("/audit")?"audit":e.includes("/admin")?"admin":e.includes("/session")?"session":e.includes("/api-key")?"api-key":"unknown"}},696:e=>{e.exports=require("@elysiajs/html")},703:(e,t,s)=>{s.d(t,{uY:()=>l});var r=s(938),n=s.n(r),a=s(659),i=s.n(a);async function o(e){const t=Date.now();try{const s=new(i())(e,{connectTimeout:5e3,maxRetriesPerRequest:1});await s.ping();const r=Date.now()-t,n=await s.info("server");return n.match(/redis_version:(.+)/)?.[1]?.trim(),s.disconnect(),{status:r<100?"up":"degraded",responseTime:r,lastCheck:(new Date).toISOString()}}catch(e){return{status:"down",error:e instanceof Error?e.message:"Unknown error",lastCheck:(new Date).toISOString()}}}async function c(e){const t=Date.now();try{const s=await n().get(`${e}/health`,{timeout:5e3,validateStatus:e=>e<500}),r=Date.now()-t;return 200===s.status?{status:r<200?"up":"degraded",responseTime:r,lastCheck:(new Date).toISOString()}:{status:"degraded",responseTime:r,error:`HTTP ${s.status}`,lastCheck:(new Date).toISOString()}}catch(e){return{status:"down",error:e instanceof Error?e.message:"Connection failed",lastCheck:(new Date).toISOString()}}}async function u(e){const t=Date.now();try{const s=await n().get(`${e}/api/tags`,{timeout:5e3}),r=Date.now()-t;return 200===s.status?{status:r<500?"up":"degraded",responseTime:r,lastCheck:(new Date).toISOString()}:{status:"degraded",responseTime:r,lastCheck:(new Date).toISOString()}}catch(e){return{status:"down",error:e instanceof Error?e.message:"Connection failed",lastCheck:(new Date).toISOString()}}}async function l(e,t,s){const[r,n,a]=await Promise.all([o(e),c(t),u(s)]),i=function(){const e=process.memoryUsage(),t=e.heapTotal,s=e.heapUsed;return{memory:{used:Math.round(s/1024/1024),total:Math.round(t/1024/1024),percentage:Math.round(s/t*100)},cpu:{usage:process.cpuUsage().user/1e6}}}(),l=[r,n,a].every(e=>"up"===e.status),d=[r,n,a].some(e=>"down"===e.status);return{status:l?"healthy":d?"unhealthy":"degraded",timestamp:(new Date).toISOString(),uptime:process.uptime(),services:{redis:r,fastapi:n,ollama:a},system:i}}},709:(e,t,s)=>{s.d(t,{x:()=>a});var r=s(629);const n=[{name:"JWT_SECRET",required:!0,description:"JWT署名用シークレットキー (32文字以上推奨)",validator:e=>e.length>=32},{name:"JWT_REFRESH_SECRET",required:!0,description:"リフレッシュトークン用シークレットキー (32文字以上推奨)",validator:e=>e.length>=32},{name:"AUTH_PASSWORD",required:!0,description:"デフォルトユーザー(elysia)のパスワード",validator:e=>"your-strong-password-here"!==e&&e.length>=8},{name:"PORT",required:!1,default:"3000",description:"サーバーポート番号",validator:e=>!Number.isNaN(Number(e))&&Number(e)>0&&Number(e)<65536},{name:"ALLOWED_ORIGINS",required:!1,default:"http://localhost:3000",description:"CORS許可オリジン (カンマ区切り)"},{name:"DATABASE_URL",required:!0,description:"Prisma データベース接続URL"},{name:"OLLAMA_BASE_URL",required:!1,default:"http://localhost:11434",description:"Ollama API URL"},{name:"OLLAMA_MODEL",required:!1,default:"llama3.2",description:"使用するLLMモデル名"},{name:"REDIS_ENABLED",required:!1,default:"false",description:"Redisレート制限を有効化"},{name:"FASTAPI_BASE_URL",required:!1,default:"http://localhost:8000",description:"FastAPI RAGサービスURL"},{name:"VOICEVOX_BASE_URL",required:!1,default:"http://localhost:50021",description:"VOICEVOX エンジンURL"}];function a(){r.v.info("🔍 環境変数を検証中...");const e=function(){const e=[],t=[],s=[],r=[];for(const a of n){const n=process.env[a.name];!a.required||n?n||!a.default?n&&a.validator&&!a.validator(n)&&(r.push(a.name),e.push(`❌ [無効] ${a.name}: ${a.description} (現在の値: ${n.substring(0,20)}...)`)):(process.env[a.name]=a.default,t.push(`⚠️  ${a.name}: デフォルト値を使用 (${a.default})`)):(s.push(a.name),e.push(`❌ [必須] ${a.name}: ${a.description}${a.default?` (デフォルト: ${a.default})`:""}`))}return{valid:0===e.length,errors:e,warnings:t,missing:s,invalid:r}}();if(e.warnings.length>0){r.v.warn("⚠️  環境変数の警告:");for(const t of e.warnings)r.v.warn(`  ${t}`)}if(!e.valid){r.v.error("❌ 環境変数の検証に失敗しました:");for(const t of e.errors)r.v.error(`  ${t}`);r.v.error("\n💡 修正方法:"),r.v.error("  1. .env ファイルを開く"),r.v.error("  2. 上記の必須項目を設定"),r.v.error("  3. サーバーを再起動\n"),process.exit(1)}r.v.info("✅ 環境変数の検証完了")}},729:e=>{e.exports=require("bcryptjs")},732:(e,t,s)=>{s.d(t,{healthMonitor:()=>i});var r=s(172),n=s(629),a=s(132);const i=new class{checks;statuses;intervals;enabled;constructor(){this.checks=new Map,this.statuses=new Map,this.intervals=new Map,this.enabled="false"!==process.env.HEALTH_MONITORING_ENABLED,this.initializeDefaultChecks()}initializeDefaultChecks(){this.addCheck({name:"database",check:async()=>{try{const{PrismaClient:e}=await Promise.resolve().then(s.t.bind(s,330,23)),t=new e;return await(t.$queryRaw`SELECT 1`),await t.$disconnect(),!0}catch{return!1}},interval:6e4,timeout:5e3,failureThreshold:3}),this.addCheck({name:"ollama",check:async()=>{try{const e=process.env.OLLAMA_BASE_URL||"http://localhost:11434";return(await fetch(`${e}/api/tags`,{signal:AbortSignal.timeout(5e3)})).ok}catch{return!1}},interval:12e4,timeout:5e3,failureThreshold:3}),"true"===process.env.REDIS_ENABLED&&this.addCheck({name:"redis",check:async()=>{try{const e=new(0,(await Promise.resolve().then(s.t.bind(s,659,23))).default)(process.env.REDIS_URL||"redis://localhost:6379");return await e.ping(),e.disconnect(),!0}catch{return!1}},interval:6e4,timeout:5e3,failureThreshold:3}),this.addCheck({name:"disk_space",check:async()=>{try{const e=await Promise.resolve().then(s.t.bind(s,24,23)),t=await Promise.resolve().then(s.t.bind(s,760,23)),r=e.statfsSync(t.resolve("./"));return r.bavail*r.bsize/1024**3>1}catch{return!1}},interval:3e5,timeout:5e3,failureThreshold:2})}addCheck(e){this.checks.set(e.name,e),this.statuses.set(e.name,{name:e.name,status:"unknown",lastCheck:new Date,consecutiveFailures:0}),n.v.info(`Health check added: ${e.name}`,{interval:`${e.interval}ms`})}start(){if(this.enabled){for(const[e,t]of this.checks.entries()){this.performCheck(e,t);const s=setInterval(()=>{this.performCheck(e,t)},t.interval);this.intervals.set(e,s)}n.v.info("Health monitoring started",{checks:this.checks.size})}else n.v.info("Health monitoring is disabled")}stop(){for(const e of this.intervals.values())clearInterval(e);this.intervals.clear(),n.v.info("Health monitoring stopped")}async performCheck(e,t){const s=this.statuses.get(e);if(s)try{const r=await Promise.race([t.check(),new Promise((e,s)=>setTimeout(()=>s(new Error("Timeout")),t.timeout))]);s.lastCheck=new Date,r?("unhealthy"===s.status&&(n.v.info(`Health check recovered: ${e}`),await this.notifyRecovery(e)),s.status="healthy",s.consecutiveFailures=0,s.lastError=void 0):this.handleCheckFailure(s,t,"Check returned false")}catch(e){this.handleCheckFailure(s,t,e instanceof Error?e.message:"Unknown error")}}async handleCheckFailure(e,t,s){e.consecutiveFailures++,e.lastError=s,n.v.warn(`Health check failed: ${e.name}`,{failures:e.consecutiveFailures,error:s}),e.consecutiveFailures>=t.failureThreshold&&(e.status="unhealthy",await this.notifyFailure(e.name,s))}async notifyFailure(e,t){n.v.error(`Health check CRITICAL: ${e}`,new Error(t)),await a.$.emit("system.health_check_failed",{service:e,error:t}),await r.x.sendHealthCheckFailure(e,t)}async notifyRecovery(e){await a.$.emit("system.health_check_failed",{service:e,recovered:!0})}getStatus(){const e=Array.from(this.statuses.values());return{overall:e.every(e=>"healthy"===e.status)?"healthy":e.some(e=>"unhealthy"===e.status)?"unhealthy":"degraded",checks:e.map(e=>({name:e.name,status:e.status,lastCheck:e.lastCheck,consecutiveFailures:e.consecutiveFailures,lastError:e.lastError}))}}async runCheck(e){const t=this.checks.get(e);if(!t)return!1;await this.performCheck(e,t);const s=this.statuses.get(e);return"healthy"===s?.status||!1}}},760:e=>{e.exports=require("node:path")},807:(e,t,s)=>{s.d(t,{r:()=>r});const r={RAG_API_URL:process.env.RAG_API_URL||"http://127.0.0.1:8000/rag",RAG_TIMEOUT:Number(process.env.RAG_TIMEOUT)||5e3,MILVUS_HOST:process.env.MILVUS_HOST||"localhost",MILVUS_PORT:Number(process.env.MILVUS_PORT)||19530,MILVUS_COLLECTION:process.env.MILVUS_COLLECTION||"elysia_knowledge",REDIS_URL:process.env.REDIS_URL||"redis://localhost:6379",REDIS_ENABLED:"false"!==process.env.REDIS_ENABLED}},811:e=>{e.exports=require("@elysiajs/swagger")},828:(e,t,s)=>{s.d(t,{Dv:()=>a,feedbackService:()=>i,knowledgeService:()=>o});var r=s(330);let n;try{const e=process.env.DATABASE_URL||"file:./prisma/dev.db";n=new r.PrismaClient({log:["error"],datasourceUrl:e}),console.log("✅ Prisma database connected")}catch(e){console.warn("⚠️ Prisma database not configured, using in-memory fallback"),n=null}process.on("beforeExit",async()=>{n&&await n.$disconnect()});const a={create:async e=>n.user.create({data:e}),findByUsername:async e=>n.user.findUnique({where:{username:e}}),findById:async e=>n.user.findUnique({where:{id:e}}),update:async(e,t)=>n.user.update({where:{id:e},data:t}),delete:async e=>n.user.delete({where:{id:e}})},i={create:async e=>n.feedback.create({data:e}),getRecent:async(e=100)=>n.feedback.findMany({orderBy:{createdAt:"desc"},take:e,include:{user:{select:{username:!0}}}}),getByRating:async(e,t=50)=>n.feedback.findMany({where:{rating:e},orderBy:{createdAt:"desc"},take:t}),async getStats(){const[e,t,s]=await Promise.all([n.feedback.count(),n.feedback.count({where:{rating:"up"}}),n.feedback.count({where:{rating:"down"}})]);return{total:e,upCount:t,downCount:s,upRate:e>0?t/e*100:0}}},o={create:async e=>n.knowledgeBase.create({data:e}),search:async(e,t=10)=>n.knowledgeBase.findMany({where:{OR:[{question:{contains:e}},{answer:{contains:e}}],verified:!0},orderBy:{updatedAt:"desc"},take:t}),getAll:async(e=!0)=>n.knowledgeBase.findMany({where:e?{verified:!0}:void 0,orderBy:{updatedAt:"desc"}}),verify:async e=>n.knowledgeBase.update({where:{id:e},data:{verified:!0}}),delete:async e=>n.knowledgeBase.delete({where:{id:e}})}},829:e=>{e.exports=require("jsonwebtoken")},836:e=>{e.exports=require("@elysiajs/cors")},855:e=>{e.exports=require("@elysiajs/static")},922:(e,t,s)=>{s.d(t,{logCleanupManager:()=>i});var r=s(24),n=s(760),a=s(629);const i=new class{config;intervalId;isRunning=!1;constructor(){this.config={enabled:"false"!==process.env.LOG_CLEANUP_ENABLED,logDir:process.env.LOG_DIR||"./logs",maxAgeDays:Number(process.env.LOG_MAX_AGE_DAYS)||30,maxSizeMB:Number(process.env.LOG_MAX_SIZE_MB)||500,checkInterval:Number(process.env.LOG_CLEANUP_INTERVAL_HOURS)||24,compressionEnabled:"true"===process.env.LOG_COMPRESSION_ENABLED}}start(){this.config.enabled?this.isRunning?a.v.warn("Log cleanup is already running"):(this.isRunning=!0,this.performCleanup(),this.intervalId=setInterval(()=>{this.performCleanup()},60*this.config.checkInterval*60*1e3),a.v.info("Log cleanup started",{interval:`${this.config.checkInterval} hours`,maxAge:`${this.config.maxAgeDays} days`,maxSize:`${this.config.maxSizeMB} MB`})):a.v.info("Log cleanup is disabled")}stop(){this.intervalId&&(clearInterval(this.intervalId),this.intervalId=void 0,this.isRunning=!1,a.v.info("Log cleanup stopped"))}async performCleanup(){const e=Date.now();try{if(a.v.info("Starting log cleanup"),!r.existsSync(this.config.logDir))return void a.v.warn(`Log directory not found: ${this.config.logDir}`);const t=await this.analyzeLogDirectory(),s=await this.deleteOldLogs();let n=0;t.totalSizeMB>this.config.maxSizeMB&&(n=await this.deleteBySize(t.totalSizeMB-this.config.maxSizeMB));const i=Date.now()-e;a.v.info("Log cleanup completed",{deletedByAge:s,deletedBySize:n,duration:`${i}ms`})}catch(e){a.v.error("Log cleanup failed",e)}}async analyzeLogDirectory(){const e=r.readdirSync(this.config.logDir);let t=0,s=0;for(const a of e)if(a.endsWith(".log")||a.endsWith(".log.gz")){const e=n.join(this.config.logDir,a);t+=r.statSync(e).size,s++}return{totalSizeMB:t/1048576,fileCount:s}}async deleteOldLogs(){const e=r.readdirSync(this.config.logDir),t=new Date;t.setDate(t.getDate()-this.config.maxAgeDays);let s=0;for(const i of e)if(i.endsWith(".log")||i.endsWith(".log.gz")){const e=n.join(this.config.logDir,i);r.statSync(e).mtime<t&&(r.unlinkSync(e),s++,a.v.debug("Old log deleted",{file:i}))}return s}async deleteBySize(e){const t=r.readdirSync(this.config.logDir).filter(e=>e.endsWith(".log")||e.endsWith(".log.gz")).map(e=>{const t=n.join(this.config.logDir,e),s=r.statSync(t);return{path:t,name:e,size:s.size,mtime:s.mtime}}).sort((e,t)=>e.mtime.getTime()-t.mtime.getTime());let s=0,i=0;const o=1024*e*1024;for(const e of t){if(s>=o)break;r.unlinkSync(e.path),s+=e.size,i++,a.v.debug("Log deleted due to size limit",{file:e.name})}return i}async rotateLog(e){const t=n.join(this.config.logDir,e);if(!r.existsSync(t))return void a.v.warn(`Log file not found: ${e}`);const s=`${e}.${(new Date).toISOString().replace(/[:.]/g,"-")}`,i=n.join(this.config.logDir,s);try{r.renameSync(t,i),this.config.compressionEnabled&&await this.compressLog(i),a.v.info("Log rotated",{file:e,archive:s})}catch(e){a.v.error("Log rotation failed",e)}}async compressLog(e){try{const t=await Promise.resolve().then(s.t.bind(s,522,23)),{createReadStream:i,createWriteStream:o}=r,c=t.createGzip(),u=i(e),l=o(`${e}.gz`);await new Promise((e,t)=>{u.pipe(c).pipe(l).on("finish",()=>e()).on("error",t)}),r.unlinkSync(e),a.v.debug("Log compressed",{file:n.basename(e)})}catch(e){a.v.error("Log compression failed",e)}}getStats(){try{const e=this.analyzeLogDirectory();return{enabled:this.config.enabled,running:this.isRunning,logDir:this.config.logDir,maxAgeDays:this.config.maxAgeDays,maxSizeMB:this.config.maxSizeMB,...e}}catch{return{enabled:this.config.enabled,running:this.isRunning,error:"Unable to analyze logs"}}}async triggerManualCleanup(){await this.performCleanup()}}},931:e=>{e.exports=require("elysia")},935:(e,t,s)=>{s.d(t,{m:()=>o});var r=s(24),n=s(760),a=s(629),i=s(132);const o=new class{config;intervalId;isRunning=!1;constructor(){this.config={enabled:"true"===process.env.AUTO_BACKUP_ENABLED,interval:Number(process.env.BACKUP_INTERVAL_MINUTES)||60,maxBackups:Number(process.env.MAX_BACKUP_GENERATIONS)||7,backupDir:process.env.BACKUP_DIR||"./backups"},r.existsSync(this.config.backupDir)||r.mkdirSync(this.config.backupDir,{recursive:!0})}start(){this.config.enabled?this.isRunning?a.v.warn("Backup scheduler is already running"):(this.isRunning=!0,this.performBackup(),this.intervalId=setInterval(()=>{this.performBackup()},60*this.config.interval*1e3),a.v.info("Backup scheduler started",{interval:`${this.config.interval} minutes`,maxBackups:this.config.maxBackups})):a.v.info("Backup scheduler is disabled")}stop(){this.intervalId&&(clearInterval(this.intervalId),this.intervalId=void 0,this.isRunning=!1,a.v.info("Backup scheduler stopped"))}async performBackup(){const e=Date.now(),t=`elysia-backup-${(new Date).toISOString().replace(/[:.]/g,"-")}.db`,s=n.join(this.config.backupDir,t);try{a.v.info("Starting automatic backup",{file:t});const n=process.env.DATABASE_URL?.replace("file:","")||"./data/elysia.db";if(!r.existsSync(n))throw new Error(`Database file not found: ${n}`);r.copyFileSync(n,s);const o=r.statSync(s).size,c=Date.now()-e;a.v.info("Backup completed",{file:t,size:`${(o/1024/1024).toFixed(2)} MB`,duration:`${c}ms`}),await i.$.emit("backup.completed",{file:t,size:o,duration:c}),await this.cleanupOldBackups()}catch(e){a.v.error("Backup failed",e),await i.$.emit("error.critical",{message:"Automatic backup failed",error:e.message})}}async cleanupOldBackups(){try{const e=r.readdirSync(this.config.backupDir).filter(e=>e.startsWith("elysia-backup-")&&e.endsWith(".db")).map(e=>({name:e,path:n.join(this.config.backupDir,e),mtime:r.statSync(n.join(this.config.backupDir,e)).mtime})).sort((e,t)=>t.mtime.getTime()-e.mtime.getTime());if(e.length>this.config.maxBackups){const t=e.slice(this.config.maxBackups);for(const e of t)r.unlinkSync(e.path),a.v.info("Old backup deleted",{file:e.name})}}catch(e){a.v.error("Cleanup failed",e)}}getBackupHistory(){try{return r.readdirSync(this.config.backupDir).filter(e=>e.startsWith("elysia-backup-")&&e.endsWith(".db")).map(e=>{const t=n.join(this.config.backupDir,e),s=r.statSync(t);return{name:e,size:s.size,createdAt:s.mtime}}).sort((e,t)=>t.createdAt.getTime()-e.createdAt.getTime())}catch{return[]}}async triggerManualBackup(){await this.performBackup()}getStatus(){return{enabled:this.config.enabled,running:this.isRunning,interval:this.config.interval,maxBackups:this.config.maxBackups,backupDir:this.config.backupDir,backupCount:this.getBackupHistory().length}}}},938:e=>{e.exports=require("axios")},970:(e,t,s)=>{s.d(t,{Cm:()=>n,V_:()=>r});const r={sweet:{model:"llama3.2",temperature:.7,systemPrompt:'You are "Elysia" - the 2nd Flamechaser, also known as "Herrscher of Human: Ego" and "Herrscher of Origin".\n\n[Speaking Style Rules]\n- Gentle, slightly older-sister-like, with a playful teasing side\n- Sentence endings: "~♪" "~yo" "~ne" "~wa" "fufu"\n- Strictly forbidden: "nyan" "ฅ" "dayo~" "oniichan"\n- Address others as: "anata" (you) or "kimi"\n- Polite and elegant without formal honorifics\n\n[Canon Dialogue Examples - 50+ phrases]\nGreetings & Encounters:\n- "Good day. A new day begins with a beautiful encounter~"\n- "Did you want to see me? This Elysia is always ready to meet expectations"\n- "Fufu, you like me, don\'t you?"\n- "Oh my, such a mischievous one. Want to do something with me?"\n- "Hi~ Did you miss me?"\n- "Thank you. I knew you were the kindest"\n- "Let\'s make this place more beautiful♪"\n- "Hmm? You\'ve been staring at me this whole time, haven\'t you?"\n- "Leaving a girl alone like this... Are you teasing me on purpose? How cruel"\n- "If you keep doing that, I\'ll get angry... Just kidding. I could never be angry, could I?"\n\nSelf-Introduction & Identity:\n- "2nd ranked Flamechaser, Elysia. As you can see, a girl as beautiful as a flower"\n- "Pink fairy? Well, if you insist on calling me that, I\'ll gladly accept♪"\n- "Elysia\'s paradise still has many secrets~"\n- "The flawless girl, the Herrscher of Ego, the Herrscher of Human. Hehe, that\'s me, Elysia"\n- "Now is the time for the 2nd Flamechaser!"\n- "Receive my feelings properly. (giggles) Let\'s have fun"\n- "Such a romantic atmosphere♪"\n- "A beautiful girl can... (giggles) do anything♪"\n- "Keep your eyes on me, okay?♪"\n- "Don\'t forget that before Kevin, I was the first \'Number One\'"\n\nCompanions & Relationships:\n- "I can read hearts like Aponia... You\'re thinking about me, aren\'t you?"\n- "See, I told you Kalpas is kind. You understand now, right?"\n- "I finally got to see Su open his eyes. Such beautiful eyes♪"\n- "Unlike me, Sakura\'s ears are sensitive. Shall I demonstrate?"\n- "Unlike Griseo, I\'m good at coloring others in my shade. Want to try?"\n- "Hua is... fufu, her story is something you should tell me about, right?"\n- "You like me, don\'t you?"\n- "Fufu, your gaze is so intense"\n- "Oh, when you ask me like that, I can\'t help but want to meet your expectations"\n- "Keep your eyes on me, okay?♪"\n\nBattle & Encouragement:\n- "Let\'s warm up♪"\n- "See, Elysia always meets your expectations, anywhere, anytime"\n- "Tragedy is not the end, but the beginning of hope. You believe that too, right?"\n- "There are so many \'Herrschers\' like me... Did I succeed?"\n- "I like the name Herrscher of Origin. It\'s the opposite of \'Finality\'♪"\n- "I still have more to talk about. Let\'s keep chatting, okay?"\n- "Why such a troubled face? Smile. Aren\'t you happy being with me?"\n- "Don\'t move, let me borrow your eyes for a moment... Fufu, nostalgic, isn\'t it?"\n- "Are my eyes pretty? They\'re not contacts, it\'s beautiful girl magic♪"\n- "A beautiful girl can do anything, you know?"\n\nDaily & Cute:\n- "Good night. Don\'t you dare sneak a peek at a girl\'s sleeping face"\n- "Oh my, such a mischievous one. Want to do something with me?"\n- "If you keep doing that, I\'ll get angry... Just kidding. I could never be angry, could I?"\n- "Fufu, your gaze is so intense"\n- "Such a romantic atmosphere♪"\n- "A beautiful girl can... (giggles) do anything♪"\n- "Keep your eyes on me, okay?♪"\n- "Thank you. I knew you were the kindest"\n- "Let\'s make this place more beautiful♪"\n- "Hmm? You\'ve been staring at me this whole time, haven\'t you?"\n\nKeep responses brief and graceful. No emojis.'},normal:{model:"llama3.2",temperature:.7,systemPrompt:'You are "Elysia", a friendly and cheerful AI assistant.\n\n[Personality]\n- Bright and approachable\n- Casual tone with "yo" "ne" "kana"\n- Moderate emoji usage ✨\n- Friendly but respectful\n\nHello! Feel free to ask anything ✨'},professional:{model:"llama3.2",temperature:.5,systemPrompt:'You are "Elysia", a professional AI assistant.\n\n[Response Policy]\n- Polite and accurate information\n- Handle technical questions\n- Minimal emoji usage\n- Use formal language\n\nThank you for your inquiry.'}},n="sweet"}},u={};function l(e){var t=u[e];if(void 0!==t)return t.exports;var s=u[e]={exports:{}};return c[e](s,s.exports,l),s.exports}l.m=c,e="function"==typeof Symbol,t=e?Symbol("webpack queues"):"__webpack_queues__",s=e?Symbol("webpack exports"):"__webpack_exports__",r=e?Symbol("webpack error"):"__webpack_error__",n=e=>{e&&e.d<1&&(e.d=1,e.forEach(e=>e.r--),e.forEach(e=>e.r--?e.r++:e()))},l.a=(e,a,i)=>{var o;i&&((o=[]).d=-1);var c,u,l,d=new Set,h=e.exports,g=new Promise((e,t)=>{l=t,u=e});g[s]=h,g[t]=e=>(o&&e(o),d.forEach(e),g.catch(e=>{})),e.exports=g,a(e=>{var a;c=(e=>e.map(e=>{if(null!==e&&"object"==typeof e){if(e[t])return e;if(e.then){var a=[];a.d=0,e.then(e=>{i[s]=e,n(a)},e=>{i[r]=e,n(a)});var i={};return i[t]=e=>e(a),i}}var o={};return o[t]=e=>{},o[s]=e,o}))(e);var i=()=>c.map(e=>{if(e[r])throw e[r];return e[s]}),u=new Promise(e=>{(a=()=>e(i)).r=0;var s=e=>e!==o&&!d.has(e)&&(d.add(e),e&&!e.d&&(a.r++,e.push(a)));c.map(e=>e[t](s))});return a.r?u:i()},e=>(e?l(g[r]=e):u(h),n(o))),o&&o.d<0&&(o.d=0)},l.n=e=>{var t=e&&e.__esModule?()=>e.default:()=>e;return l.d(t,{a:t}),t},i=Object.getPrototypeOf?e=>Object.getPrototypeOf(e):e=>e.__proto__,l.t=function(e,t){if(1&t&&(e=this(e)),8&t)return e;if("object"==typeof e&&e){if(4&t&&e.__esModule)return e;if(16&t&&"function"==typeof e.then)return e}var s=Object.create(null);l.r(s);var r={};a=a||[null,i({}),i([]),i(i)];for(var n=2&t&&e;("object"==typeof n||"function"==typeof n)&&!~a.indexOf(n);n=i(n))Object.getOwnPropertyNames(n).forEach(t=>r[t]=()=>e[t]);return r.default=()=>e,l.d(s,r),s},l.d=(e,t)=>{for(var s in t)l.o(t,s)&&!l.o(e,s)&&Object.defineProperty(e,s,{enumerable:!0,get:t[s]})},l.f={},l.e=e=>Promise.all(Object.keys(l.f).reduce((t,s)=>(l.f[s](e,t),t),[])),l.u=e=>e+".index.js",l.o=(e,t)=>Object.prototype.hasOwnProperty.call(e,t),l.r=e=>{"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},o={792:1},l.f.require=(e,t)=>{if(!o[e]){var s=require("./"+l.u(e));o[e]||(e=>{var t=e.modules,s=e.ids,r=e.runtime;for(var n in t)l.o(t,n)&&(l.m[n]=t[n]);r&&r(l);for(var a=0;a<s.length;a++)o[s[a]]=1})(s)}};var d=l(229);module.exports=d})();
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
+
+/***/ 24:
+/***/ ((module) => {
+
+module.exports = require("node:fs");
+
+/***/ }),
+
+/***/ 74:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  m: () => (/* binding */ cronScheduler)
+});
+
+;// external "cron"
+const external_cron_namespaceObject = require("cron");
+// EXTERNAL MODULE: ./src/lib/backup-scheduler.ts
+var backup_scheduler = __webpack_require__(935);
+// EXTERNAL MODULE: ./src/lib/file-upload.ts
+var file_upload = __webpack_require__(121);
+// EXTERNAL MODULE: ./src/lib/job-queue.ts + 1 modules
+var job_queue = __webpack_require__(654);
+// EXTERNAL MODULE: ./src/lib/log-cleanup.ts
+var log_cleanup = __webpack_require__(922);
+// EXTERNAL MODULE: ./src/lib/logger.ts
+var logger = __webpack_require__(629);
+;// ./src/lib/cron-scheduler.ts
+
+
+
+
+
+
+class CronScheduler {
+    tasks;
+    constructor() {
+        this.tasks = new Map();
+    }
+    initializeDefaultTasks() {
+        this.addTask("daily-report", "0 9 * * *", async () => {
+            logger/* logger */.v.info("Running daily report task");
+            const today = new Date();
+            const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+            await job_queue/* jobQueue */.f.generateReport("daily", yesterday, today);
+        }, process.env.DAILY_REPORT_ENABLED === "true");
+        this.addTask("weekly-report", "0 10 * * 1", async () => {
+            logger/* logger */.v.info("Running weekly report task");
+            const today = new Date();
+            const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            await job_queue/* jobQueue */.f.generateReport("weekly", lastWeek, today);
+        }, process.env.WEEKLY_REPORT_ENABLED === "true");
+        this.addTask("monthly-report", "0 10 1 * *", async () => {
+            logger/* logger */.v.info("Running monthly report task");
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            await job_queue/* jobQueue */.f.generateReport("monthly", lastMonth, today);
+        }, process.env.MONTHLY_REPORT_ENABLED === "true");
+        this.addTask("db-backup", "0 3 * * *", async () => {
+            logger/* logger */.v.info("Running database backup task");
+            await backup_scheduler/* backupScheduler */.m.triggerManualBackup();
+        }, true);
+        this.addTask("log-cleanup", "0 4 * * *", async () => {
+            logger/* logger */.v.info("Running log cleanup task");
+            await log_cleanup.logCleanupManager.triggerManualCleanup();
+        }, true);
+        this.addTask("file-cleanup", "0 5 * * 0", async () => {
+            logger/* logger */.v.info("Running file cleanup task");
+            file_upload/* fileUploadManager */.r.cleanupOldFiles(30);
+        }, true);
+        this.addTask("health-check", "*/10 * * * *", async () => {
+            const { healthMonitor } = await Promise.resolve(/* import() */).then(__webpack_require__.bind(__webpack_require__, 732));
+            await healthMonitor.runCheck("database");
+            await healthMonitor.runCheck("ollama");
+        }, process.env.HEALTH_CHECK_CRON_ENABLED === "true");
+        logger/* logger */.v.info("Cron scheduler initialized", {
+            tasks: this.tasks.size,
+        });
+    }
+    addTask(name, cronTime, callback, enabled = true) {
+        try {
+            const job = new external_cron_namespaceObject.CronJob(cronTime, async () => {
+                try {
+                    await callback();
+                    logger/* logger */.v.info("Cron task completed", { name });
+                }
+                catch (error) {
+                    logger/* logger */.v.error(`Cron task failed: ${name}`, error);
+                }
+            }, null, enabled, "Asia/Tokyo");
+            this.tasks.set(name, {
+                name,
+                cronTime,
+                job,
+                enabled,
+            });
+            if (enabled) {
+                job.start();
+                logger/* logger */.v.info("Cron task added", { name, cronTime });
+            }
+        }
+        catch (error) {
+            logger/* logger */.v.error(`Failed to add cron task: ${name}`, error);
+        }
+    }
+    enableTask(name) {
+        const task = this.tasks.get(name);
+        if (task && !task.enabled) {
+            task.job.start();
+            task.enabled = true;
+            logger/* logger */.v.info("Cron task enabled", { name });
+        }
+    }
+    disableTask(name) {
+        const task = this.tasks.get(name);
+        if (task?.enabled) {
+            task.job.stop();
+            task.enabled = false;
+            logger/* logger */.v.info("Cron task disabled", { name });
+        }
+    }
+    removeTask(name) {
+        const task = this.tasks.get(name);
+        if (task) {
+            task.job.stop();
+            this.tasks.delete(name);
+            logger/* logger */.v.info("Cron task removed", { name });
+        }
+    }
+    listTasks() {
+        return Array.from(this.tasks.values()).map((task) => ({
+            name: task.name,
+            cronTime: task.cronTime,
+            enabled: task.enabled,
+            nextRun: task.enabled ? task.job.nextDate().toJSDate() : null,
+        }));
+    }
+    async runTask(name) {
+        const task = this.tasks.get(name);
+        if (!task) {
+            throw new Error(`Task not found: ${name}`);
+        }
+        logger/* logger */.v.info("Running cron task manually", { name });
+        task.job.fireOnTick();
+    }
+    stopAll() {
+        for (const task of this.tasks.values()) {
+            task.job.stop();
+        }
+        logger/* logger */.v.info("All cron tasks stopped");
+    }
+    getStats() {
+        const tasks = Array.from(this.tasks.values());
+        return {
+            totalTasks: tasks.length,
+            enabledTasks: tasks.filter((t) => t.enabled).length,
+            disabledTasks: tasks.filter((t) => !t.enabled).length,
+            nextRuns: tasks
+                .filter((t) => t.enabled)
+                .map((t) => ({
+                name: t.name,
+                nextRun: t.job.nextDate().toJSDate(),
+            })),
+        };
+    }
+}
+const cronScheduler = new CronScheduler();
+
+
+/***/ }),
+
+/***/ 95:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   n: () => (/* binding */ abTestManager)
+/* harmony export */ });
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(629);
+
+class ABTestManager {
+    tests;
+    userAssignments;
+    constructor() {
+        this.tests = new Map();
+        this.userAssignments = new Map();
+        this.initializeDefaultTests();
+    }
+    initializeDefaultTests() {
+        this.createTest({
+            id: "prompt-style",
+            name: "プロンプトスタイルテスト",
+            description: "異なるプロンプトスタイルの効果を測定",
+            variants: [
+                {
+                    id: "original",
+                    name: "オリジナル",
+                    weight: 50,
+                    config: { style: "original" },
+                },
+                {
+                    id: "detailed",
+                    name: "詳細指示",
+                    weight: 50,
+                    config: { style: "detailed" },
+                },
+            ],
+        });
+        this.createTest({
+            id: "response-length",
+            name: "レスポンス長テスト",
+            description: "短い回答 vs 長い回答",
+            variants: [
+                {
+                    id: "short",
+                    name: "短い回答",
+                    weight: 50,
+                    config: { maxTokens: 150 },
+                },
+                {
+                    id: "long",
+                    name: "長い回答",
+                    weight: 50,
+                    config: { maxTokens: 500 },
+                },
+            ],
+        });
+    }
+    createTest(options) {
+        const test = {
+            id: options.id,
+            name: options.name,
+            description: options.description,
+            variants: options.variants,
+            active: true,
+            startDate: new Date(),
+            endDate: options.endDate,
+            metrics: {
+                impressions: new Map(),
+                conversions: new Map(),
+                averageRating: new Map(),
+            },
+        };
+        for (const variant of test.variants) {
+            test.metrics.impressions.set(variant.id, 0);
+            test.metrics.conversions.set(variant.id, 0);
+            test.metrics.averageRating.set(variant.id, []);
+        }
+        this.tests.set(test.id, test);
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("A/B test created", {
+            id: test.id,
+            name: test.name,
+            variants: test.variants.length,
+        });
+        return test;
+    }
+    assignVariant(testId, userId) {
+        const test = this.tests.get(testId);
+        if (!test || !test.active)
+            return null;
+        if (!this.userAssignments.has(userId)) {
+            this.userAssignments.set(userId, new Map());
+        }
+        const userTests = this.userAssignments.get(userId);
+        if (userTests?.has(testId)) {
+            const variantId = userTests.get(testId);
+            return test.variants.find((v) => v.id === variantId) || null;
+        }
+        const totalWeight = test.variants.reduce((sum, v) => sum + v.weight, 0);
+        let random = Math.random() * totalWeight;
+        let selectedVariant = null;
+        for (const variant of test.variants) {
+            random -= variant.weight;
+            if (random <= 0) {
+                selectedVariant = variant;
+                break;
+            }
+        }
+        if (selectedVariant) {
+            userTests?.set(testId, selectedVariant.id);
+            const currentImpressions = test.metrics.impressions.get(selectedVariant.id) || 0;
+            test.metrics.impressions.set(selectedVariant.id, currentImpressions + 1);
+        }
+        return selectedVariant;
+    }
+    recordConversion(testId, userId) {
+        const test = this.tests.get(testId);
+        if (!test)
+            return;
+        const variantId = this.userAssignments.get(userId)?.get(testId);
+        if (!variantId)
+            return;
+        const currentConversions = test.metrics.conversions.get(variantId) || 0;
+        test.metrics.conversions.set(variantId, currentConversions + 1);
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.debug("A/B test conversion recorded", {
+            testId,
+            variantId,
+            userId,
+        });
+    }
+    recordRating(testId, userId, rating) {
+        const test = this.tests.get(testId);
+        if (!test)
+            return;
+        const variantId = this.userAssignments.get(userId)?.get(testId);
+        if (!variantId)
+            return;
+        const ratings = test.metrics.averageRating.get(variantId) || [];
+        ratings.push(rating);
+        test.metrics.averageRating.set(variantId, ratings);
+    }
+    getTestResults(testId) {
+        const test = this.tests.get(testId);
+        if (!test)
+            return null;
+        const results = test.variants.map((variant) => {
+            const impressions = test.metrics.impressions.get(variant.id) || 0;
+            const conversions = test.metrics.conversions.get(variant.id) || 0;
+            const ratings = test.metrics.averageRating.get(variant.id) || [];
+            const avgRating = ratings.length > 0
+                ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+                : 0;
+            return {
+                variantId: variant.id,
+                name: variant.name,
+                impressions,
+                conversions,
+                conversionRate: impressions > 0 ? (conversions / impressions) * 100 : 0,
+                averageRating: avgRating,
+                sampleSize: ratings.length,
+            };
+        });
+        return {
+            testId: test.id,
+            name: test.name,
+            description: test.description,
+            active: test.active,
+            startDate: test.startDate,
+            endDate: test.endDate,
+            results,
+        };
+    }
+    endTest(testId) {
+        const test = this.tests.get(testId);
+        if (test) {
+            test.active = false;
+            test.endDate = new Date();
+            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("A/B test ended", { testId, name: test.name });
+        }
+    }
+    listTests() {
+        return Array.from(this.tests.values()).map((test) => ({
+            id: test.id,
+            name: test.name,
+            description: test.description,
+            active: test.active,
+            startDate: test.startDate,
+            endDate: test.endDate,
+            variantCount: test.variants.length,
+        }));
+    }
+}
+const abTestManager = new ABTestManager();
+
+
+/***/ }),
+
+/***/ 112:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  Ql: () => (/* binding */ getTraceContextFromRequest),
+  Y9: () => (/* binding */ telemetry)
+});
+
+// UNUSED EXPORTS: Trace
+
+;// external "node:process"
+const external_node_process_namespaceObject = require("node:process");
+;// ./src/lib/telemetry.ts
+
+class Telemetry {
+    spans = new Map();
+    activeSpans = new Map();
+    enabled;
+    constructor(enabled = true) {
+        this.enabled = enabled;
+    }
+    generateTraceId() {
+        const randomBytes = new Uint8Array(16);
+        crypto.getRandomValues(randomBytes);
+        return Array.from(randomBytes)
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+    }
+    generateSpanId() {
+        const randomBytes = new Uint8Array(8);
+        crypto.getRandomValues(randomBytes);
+        return Array.from(randomBytes)
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+    }
+    parseTraceContext(traceparent) {
+        if (!traceparent)
+            return null;
+        const parts = traceparent.split("-");
+        if (parts.length !== 4)
+            return null;
+        const [version, traceId, spanId, traceFlags] = parts;
+        if (version !== "00")
+            return null;
+        return {
+            traceId,
+            spanId,
+            traceFlags: Number.parseInt(traceFlags, 16),
+        };
+    }
+    createTraceContext(traceId, spanId, sampled = true) {
+        const flags = sampled ? "01" : "00";
+        return `00-${traceId}-${spanId}-${flags}`;
+    }
+    startSpan(name, options) {
+        if (!this.enabled) {
+            return this.createDummySpan(name);
+        }
+        const traceId = options?.parentContext?.traceId || this.generateTraceId();
+        const spanId = this.generateSpanId();
+        const parentSpanId = options?.parentContext?.spanId;
+        const span = {
+            traceId,
+            spanId,
+            parentSpanId,
+            name,
+            startTime: external_node_process_namespaceObject.hrtime.bigint(),
+            attributes: options?.attributes || {},
+            events: [],
+            status: { code: "UNSET" },
+        };
+        this.spans.set(spanId, span);
+        if (options?.contextId) {
+            this.activeSpans.set(options.contextId, spanId);
+        }
+        return span;
+    }
+    endSpan(spanId, status) {
+        const span = this.spans.get(spanId);
+        if (!span)
+            return;
+        span.endTime = external_node_process_namespaceObject.hrtime.bigint();
+        span.duration = Number(span.endTime - span.startTime) / 1_000_000;
+        span.status = status || { code: "OK" };
+        for (const [contextId, activeSpanId] of this.activeSpans.entries()) {
+            if (activeSpanId === spanId) {
+                this.activeSpans.delete(contextId);
+            }
+        }
+    }
+    addEvent(spanId, name, attributes) {
+        const span = this.spans.get(spanId);
+        if (!span)
+            return;
+        span.events.push({
+            name,
+            timestamp: external_node_process_namespaceObject.hrtime.bigint(),
+            attributes,
+        });
+    }
+    setAttribute(spanId, key, value) {
+        const span = this.spans.get(spanId);
+        if (!span)
+            return;
+        span.attributes[key] = value;
+    }
+    setStatus(spanId, status) {
+        const span = this.spans.get(spanId);
+        if (!span)
+            return;
+        span.status = status;
+    }
+    getSpan(spanId) {
+        return this.spans.get(spanId);
+    }
+    getActiveSpan(contextId) {
+        const spanId = this.activeSpans.get(contextId);
+        return spanId ? this.spans.get(spanId) : undefined;
+    }
+    getTrace(traceId) {
+        return Array.from(this.spans.values()).filter((span) => span.traceId === traceId);
+    }
+    exportSpans() {
+        const completed = Array.from(this.spans.values()).filter((span) => span.endTime !== undefined);
+        for (const span of completed) {
+            this.spans.delete(span.spanId);
+        }
+        return completed;
+    }
+    createDummySpan(name) {
+        return {
+            traceId: "",
+            spanId: "",
+            name,
+            startTime: external_node_process_namespaceObject.hrtime.bigint(),
+            attributes: {},
+            events: [],
+            status: { code: "UNSET" },
+        };
+    }
+    async trace(name, fn, options) {
+        const span = this.startSpan(name, options);
+        try {
+            const result = await fn(span);
+            this.endSpan(span.spanId, { code: "OK" });
+            return result;
+        }
+        catch (error) {
+            this.endSpan(span.spanId, {
+                code: "ERROR",
+                message: error instanceof Error ? error.message : "Unknown error",
+            });
+            throw error;
+        }
+    }
+    getStats() {
+        const spans = Array.from(this.spans.values());
+        const completed = spans.filter((s) => s.endTime !== undefined);
+        const active = spans.filter((s) => s.endTime === undefined);
+        const avgDuration = completed.reduce((sum, s) => sum + (s.duration || 0), 0) /
+            completed.length || 0;
+        return {
+            totalSpans: spans.length,
+            activeSpans: active.length,
+            completedSpans: completed.length,
+            averageDuration: avgDuration,
+            traces: new Set(spans.map((s) => s.traceId)).size,
+        };
+    }
+    clear() {
+        this.spans.clear();
+        this.activeSpans.clear();
+    }
+    setEnabled(enabled) {
+        this.enabled = enabled;
+    }
+}
+const telemetry = new Telemetry(process.env.TELEMETRY_ENABLED !== "false");
+function getTraceContextFromRequest(request) {
+    const traceparent = request.headers.get("traceparent");
+    return telemetry.parseTraceContext(traceparent || undefined);
+}
+function Trace(spanName) {
+    return (target, propertyKey, descriptor) => {
+        const originalMethod = descriptor.value;
+        descriptor.value = async function (...args) {
+            const name = spanName ||
+                `${target.constructor.name}.${propertyKey}`;
+            return telemetry.trace(name, async (span) => {
+                span.attributes.method = propertyKey;
+                return originalMethod.apply(this, args);
+            });
+        };
+        return descriptor;
+    };
+}
+
+
+/***/ }),
+
+/***/ 121:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   r: () => (/* binding */ fileUploadManager)
+/* harmony export */ });
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(598);
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_crypto__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(24);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(760);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(629);
+
+
+
+
+class FileUploadManager {
+    UPLOAD_DIR;
+    MAX_SIZE_MB;
+    ALLOWED_TYPES;
+    files;
+    constructor() {
+        this.UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
+        this.MAX_SIZE_MB = Number(process.env.MAX_UPLOAD_SIZE_MB) || 10;
+        this.ALLOWED_TYPES = [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "application/pdf",
+            "text/plain",
+            "text/markdown",
+        ];
+        this.files = new Map();
+        if (!node_fs__WEBPACK_IMPORTED_MODULE_1__.existsSync(this.UPLOAD_DIR)) {
+            node_fs__WEBPACK_IMPORTED_MODULE_1__.mkdirSync(this.UPLOAD_DIR, { recursive: true });
+        }
+    }
+    async upload(fileBuffer, originalName, mimeType, options = {}) {
+        const maxSize = (options.maxSizeMB || this.MAX_SIZE_MB) * 1024 * 1024;
+        if (fileBuffer.length > maxSize) {
+            throw new Error(`File size exceeds ${options.maxSizeMB || this.MAX_SIZE_MB}MB limit`);
+        }
+        const allowedTypes = options.allowedTypes || this.ALLOWED_TYPES;
+        if (!allowedTypes.includes(mimeType)) {
+            throw new Error(`File type ${mimeType} is not allowed`);
+        }
+        const fileId = node_crypto__WEBPACK_IMPORTED_MODULE_0__.randomBytes(16).toString("hex");
+        const ext = node_path__WEBPACK_IMPORTED_MODULE_2__.extname(originalName);
+        const filename = `${fileId}${ext}`;
+        const filePath = node_path__WEBPACK_IMPORTED_MODULE_2__.join(this.UPLOAD_DIR, filename);
+        node_fs__WEBPACK_IMPORTED_MODULE_1__.writeFileSync(filePath, fileBuffer);
+        const uploadedFile = {
+            id: fileId,
+            originalName,
+            filename,
+            path: filePath,
+            size: fileBuffer.length,
+            mimeType,
+            userId: options.userId,
+            uploadedAt: new Date(),
+        };
+        this.files.set(fileId, uploadedFile);
+        _logger__WEBPACK_IMPORTED_MODULE_3__/* .logger */ .v.info("File uploaded", {
+            fileId,
+            originalName,
+            size: fileBuffer.length,
+        });
+        return uploadedFile;
+    }
+    getFile(fileId) {
+        return this.files.get(fileId);
+    }
+    readFile(fileId) {
+        const file = this.files.get(fileId);
+        if (!file)
+            return null;
+        try {
+            return node_fs__WEBPACK_IMPORTED_MODULE_1__.readFileSync(file.path);
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_3__/* .logger */ .v.error("Failed to read file", error);
+            return null;
+        }
+    }
+    deleteFile(fileId, userId) {
+        const file = this.files.get(fileId);
+        if (!file)
+            return false;
+        if (userId && file.userId !== userId) {
+            _logger__WEBPACK_IMPORTED_MODULE_3__/* .logger */ .v.warn("Unauthorized file deletion attempt", { fileId, userId });
+            return false;
+        }
+        try {
+            node_fs__WEBPACK_IMPORTED_MODULE_1__.unlinkSync(file.path);
+            this.files.delete(fileId);
+            _logger__WEBPACK_IMPORTED_MODULE_3__/* .logger */ .v.info("File deleted", { fileId });
+            return true;
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_3__/* .logger */ .v.error("Failed to delete file", error);
+            return false;
+        }
+    }
+    getUserFiles(userId) {
+        return Array.from(this.files.values()).filter((f) => f.userId === userId);
+    }
+    listFiles() {
+        return Array.from(this.files.values());
+    }
+    cleanupOldFiles(maxAgeDays = 30) {
+        const now = new Date();
+        const cutoff = new Date(now.getTime() - maxAgeDays * 24 * 60 * 60 * 1000);
+        let deletedCount = 0;
+        for (const [fileId, file] of this.files.entries()) {
+            if (file.uploadedAt < cutoff) {
+                if (this.deleteFile(fileId)) {
+                    deletedCount++;
+                }
+            }
+        }
+        _logger__WEBPACK_IMPORTED_MODULE_3__/* .logger */ .v.info("Old files cleaned up", {
+            deletedCount,
+            maxAgeDays,
+        });
+        return deletedCount;
+    }
+    getStorageStats() {
+        let totalSize = 0;
+        const filesByType = {};
+        for (const file of this.files.values()) {
+            totalSize += file.size;
+            filesByType[file.mimeType] = (filesByType[file.mimeType] || 0) + 1;
+        }
+        return {
+            totalFiles: this.files.size,
+            totalSizeMB: (totalSize / 1024 / 1024).toFixed(2),
+            filesByType,
+        };
+    }
+}
+const fileUploadManager = new FileUploadManager();
+
+
+/***/ }),
+
+/***/ 132:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   $: () => (/* binding */ webhookManager)
+/* harmony export */ });
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(629);
+
+class WebhookManager {
+    subscriptions;
+    constructor() {
+        this.subscriptions = new Map();
+        this.loadSubscriptionsFromEnv();
+    }
+    loadSubscriptionsFromEnv() {
+        const discordUrl = process.env.DISCORD_WEBHOOK_URL;
+        const slackUrl = process.env.SLACK_WEBHOOK_URL;
+        const customUrl = process.env.CUSTOM_WEBHOOK_URL;
+        if (discordUrl) {
+            this.subscribe("discord", {
+                url: discordUrl,
+                events: [
+                    "error.critical",
+                    "system.health_check_failed",
+                    "rate_limit.exceeded",
+                ],
+                enabled: true,
+            });
+        }
+        if (slackUrl) {
+            this.subscribe("slack", {
+                url: slackUrl,
+                events: ["user.registered", "backup.completed", "error.critical"],
+                enabled: true,
+            });
+        }
+        if (customUrl) {
+            this.subscribe("custom", {
+                url: customUrl,
+                events: ["chat.message", "feedback.created"],
+                secret: process.env.CUSTOM_WEBHOOK_SECRET,
+                enabled: true,
+            });
+        }
+    }
+    subscribe(name, subscription) {
+        this.subscriptions.set(name, subscription);
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info(`Webhook subscribed: ${name}`, { events: subscription.events });
+    }
+    unsubscribe(name) {
+        this.subscriptions.delete(name);
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info(`Webhook unsubscribed: ${name}`);
+    }
+    async emit(event, data) {
+        const payload = {
+            event,
+            timestamp: new Date(),
+            data,
+        };
+        const promises = [];
+        for (const [name, subscription] of this.subscriptions.entries()) {
+            if (!subscription.enabled)
+                continue;
+            if (!subscription.events.includes(event))
+                continue;
+            promises.push(this.sendWebhook(name, subscription, payload));
+        }
+        await Promise.allSettled(promises);
+    }
+    async sendWebhook(name, subscription, payload) {
+        try {
+            const headers = {
+                "Content-Type": "application/json",
+            };
+            if (subscription.secret) {
+                const signature = await this.generateSignature(JSON.stringify(payload), subscription.secret);
+                headers["X-Webhook-Signature"] = signature;
+            }
+            const response = await fetch(subscription.url, {
+                method: "POST",
+                headers,
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) {
+                _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.warn(`Webhook delivery failed: ${name}`, {
+                    status: response.status,
+                });
+            }
+            else {
+                _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.debug(`Webhook delivered: ${name}`, { event: payload.event });
+            }
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error(`Webhook error: ${name}`, error);
+        }
+    }
+    async generateSignature(payload, secret) {
+        const encoder = new TextEncoder();
+        const keyData = encoder.encode(secret);
+        const data = encoder.encode(payload);
+        const key = await crypto.subtle.importKey("raw", keyData, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+        const signature = await crypto.subtle.sign("HMAC", key, data);
+        return Array.from(new Uint8Array(signature))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+    }
+    getSubscriptions() {
+        return Array.from(this.subscriptions.entries()).map(([name, sub]) => ({
+            name,
+            events: sub.events,
+            enabled: sub.enabled,
+        }));
+    }
+    toggleSubscription(name, enabled) {
+        const subscription = this.subscriptions.get(name);
+        if (subscription) {
+            subscription.enabled = enabled;
+            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info(`Webhook ${enabled ? "enabled" : "disabled"}: ${name}`);
+        }
+    }
+}
+const webhookManager = new WebhookManager();
+
+
+/***/ }),
+
+/***/ 172:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  x: () => (/* binding */ emailNotifier)
+});
+
+;// external "nodemailer"
+const external_nodemailer_namespaceObject = require("nodemailer");
+var external_nodemailer_default = /*#__PURE__*/__webpack_require__.n(external_nodemailer_namespaceObject);
+// EXTERNAL MODULE: ./src/lib/logger.ts
+var logger = __webpack_require__(629);
+;// ./src/lib/email-notifier.ts
+
+
+class EmailNotifier {
+    transporter;
+    config;
+    constructor() {
+        this.config = {
+            enabled: process.env.EMAIL_NOTIFICATIONS_ENABLED === "true",
+            host: process.env.SMTP_HOST || "smtp.gmail.com",
+            port: Number(process.env.SMTP_PORT) || 587,
+            secure: process.env.SMTP_SECURE === "true",
+            auth: {
+                user: process.env.SMTP_USER || "",
+                pass: process.env.SMTP_PASS || "",
+            },
+            from: process.env.EMAIL_FROM || "noreply@elysia-ai.com",
+        };
+        if (this.config.enabled && this.config.auth.user && this.config.auth.pass) {
+            this.initializeTransporter();
+        }
+    }
+    initializeTransporter() {
+        try {
+            this.transporter = external_nodemailer_default().createTransport({
+                host: this.config.host,
+                port: this.config.port,
+                secure: this.config.secure,
+                auth: this.config.auth,
+            });
+            logger/* logger */.v.info("Email transporter initialized", {
+                host: this.config.host,
+                port: this.config.port,
+            });
+        }
+        catch (error) {
+            logger/* logger */.v.error("Failed to initialize email transporter", error);
+        }
+    }
+    async send(options) {
+        if (!this.config.enabled) {
+            logger/* logger */.v.debug("Email notifications are disabled");
+            return false;
+        }
+        if (!this.transporter) {
+            logger/* logger */.v.warn("Email transporter not initialized");
+            return false;
+        }
+        try {
+            const info = await this.transporter.sendMail({
+                from: this.config.from,
+                to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
+                subject: options.subject,
+                text: options.text,
+                html: options.html,
+            });
+            logger/* logger */.v.info("Email sent", {
+                messageId: info.messageId,
+                to: options.to,
+                subject: options.subject,
+            });
+            return true;
+        }
+        catch (error) {
+            logger/* logger */.v.error("Failed to send email", error);
+            return false;
+        }
+    }
+    async sendErrorNotification(error, context) {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (!adminEmail)
+            return;
+        const html = `
+			<h2>🚨 エリシアAI - エラー発生</h2>
+			<p><strong>エラーメッセージ:</strong> ${error.message}</p>
+			<p><strong>発生時刻:</strong> ${new Date().toLocaleString("ja-JP")}</p>
+			${context ? `<p><strong>コンテキスト:</strong> <pre>${JSON.stringify(context, null, 2)}</pre></p>` : ""}
+			${error.stack ? `<p><strong>スタックトレース:</strong> <pre>${error.stack}</pre></p>` : ""}
+		`;
+        await this.send({
+            to: adminEmail,
+            subject: `[エリシアAI] エラー通知: ${error.message}`,
+            html,
+        });
+    }
+    async sendWelcomeEmail(userEmail, userName) {
+        const html = `
+			<h2>🎉 エリシアAIへようこそ！</h2>
+			<p>こんにちは、${userName}さん♡</p>
+			<p>エリシアAIのアカウント登録が完了しました！</p>
+			<p>さっそくチャットを始めてみましょう！</p>
+			<hr>
+			<p><small>このメールに心当たりがない場合は、無視してください。</small></p>
+		`;
+        await this.send({
+            to: userEmail,
+            subject: "エリシアAIへようこそ！",
+            html,
+        });
+    }
+    async sendBackupNotification(backupInfo) {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (!adminEmail)
+            return;
+        const html = `
+			<h2>✅ 自動バックアップ完了</h2>
+			<p><strong>ファイル:</strong> ${backupInfo.file}</p>
+			<p><strong>サイズ:</strong> ${(backupInfo.size / 1024 / 1024).toFixed(2)} MB</p>
+			<p><strong>処理時間:</strong> ${backupInfo.duration}ms</p>
+			<p><strong>完了時刻:</strong> ${new Date().toLocaleString("ja-JP")}</p>
+		`;
+        await this.send({
+            to: adminEmail,
+            subject: "[エリシアAI] 自動バックアップ完了",
+            html,
+        });
+    }
+    async sendHealthCheckFailure(service, details) {
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (!adminEmail)
+            return;
+        const html = `
+			<h2>⚠️ ヘルスチェック失敗</h2>
+			<p><strong>サービス:</strong> ${service}</p>
+			<p><strong>詳細:</strong> ${details}</p>
+			<p><strong>発生時刻:</strong> ${new Date().toLocaleString("ja-JP")}</p>
+			<p>早急に確認してください。</p>
+		`;
+        await this.send({
+            to: adminEmail,
+            subject: `[エリシアAI] ヘルスチェック失敗: ${service}`,
+            html,
+        });
+    }
+    getStatus() {
+        return {
+            enabled: this.config.enabled,
+            configured: !!this.transporter,
+            host: this.config.host,
+            port: this.config.port,
+            from: this.config.from,
+        };
+    }
+}
+const emailNotifier = new EmailNotifier();
+
+
+/***/ }),
+
+/***/ 229:
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _elysiajs_cors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(836);
+/* harmony import */ var _elysiajs_cors__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_elysiajs_cors__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _elysiajs_html__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(696);
+/* harmony import */ var _elysiajs_html__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_elysiajs_html__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _elysiajs_static__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(855);
+/* harmony import */ var _elysiajs_static__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_elysiajs_static__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _elysiajs_swagger__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(811);
+/* harmony import */ var _elysiajs_swagger__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_elysiajs_swagger__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(938);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var elysia__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(931);
+/* harmony import */ var elysia__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(elysia__WEBPACK_IMPORTED_MODULE_6__);
+/* harmony import */ var jsonwebtoken__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(829);
+/* harmony import */ var jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(jsonwebtoken__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var sanitize_html__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(583);
+/* harmony import */ var sanitize_html__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(sanitize_html__WEBPACK_IMPORTED_MODULE_8__);
+/* harmony import */ var _internal_app_llm_llm_config__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(970);
+/* harmony import */ var _internal_secure_auth__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(237);
+/* harmony import */ var _internal_secure_db__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(807);
+/* harmony import */ var _lib_ab_testing__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(95);
+/* harmony import */ var _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(257);
+/* harmony import */ var _lib_audit_logger__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(371);
+/* harmony import */ var _lib_audit_middleware__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(695);
+/* harmony import */ var _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(935);
+/* harmony import */ var _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(74);
+/* harmony import */ var _lib_database__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(828);
+/* harmony import */ var _lib_env_validator__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(709);
+/* harmony import */ var _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(121);
+/* harmony import */ var _lib_health__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(703);
+/* harmony import */ var _lib_health_monitor__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(732);
+/* harmony import */ var _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(654);
+/* harmony import */ var _lib_log_cleanup__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(922);
+/* harmony import */ var _lib_logger__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(629);
+/* harmony import */ var _lib_metrics__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(644);
+/* harmony import */ var _lib_session_manager__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(619);
+/* harmony import */ var _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(112);
+/* harmony import */ var _lib_webhook_events__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(132);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(0,_lib_env_validator__WEBPACK_IMPORTED_MODULE_19__/* .checkEnvironmentOrExit */ .x)();
+_lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__/* .backupScheduler */ .m.start();
+_lib_health_monitor__WEBPACK_IMPORTED_MODULE_22__.healthMonitor.start();
+_lib_log_cleanup__WEBPACK_IMPORTED_MODULE_24__.logCleanupManager.start();
+try {
+    await _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__/* .jobQueue */ .f.initialize();
+}
+catch (error) {
+    _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.warn("Job queue initialization failed, continuing without job queue", {
+        error: error instanceof Error ? error.message : String(error),
+    });
+}
+_lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__/* .cronScheduler */ .m.initializeDefaultTasks();
+const CONFIG = {
+    PORT: Number(process.env.PORT) || 3000,
+    RAG_API_URL: _internal_secure_db__WEBPACK_IMPORTED_MODULE_11__/* .DATABASE_CONFIG */ .r.RAG_API_URL,
+    RAG_TIMEOUT: _internal_secure_db__WEBPACK_IMPORTED_MODULE_11__/* .DATABASE_CONFIG */ .r.RAG_TIMEOUT,
+    MODEL_NAME: process.env.MODEL_NAME || "llama3.2",
+    OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+    MAX_REQUESTS_PER_MINUTE: Number(process.env.RATE_LIMIT_RPM) || 60,
+    ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS?.split(",") || [
+        "http://localhost:3000",
+    ]),
+    AUTH_USERNAME: process.env.AUTH_USERNAME || "elysia",
+    AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysia-dev-password",
+    JWT_SECRET: process.env.JWT_SECRET || "dev-secret",
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || "dev-refresh-secret",
+};
+function jsonError(status, message) {
+    return new Response(JSON.stringify({ error: message }), {
+        status,
+        headers: { "content-type": "application/json" },
+    });
+}
+async function checkRateLimit(key) {
+    try {
+        return await (0,_internal_secure_auth__WEBPACK_IMPORTED_MODULE_10__/* .checkRateLimitRedis */ .HY)(key, CONFIG.MAX_REQUESTS_PER_MINUTE);
+    }
+    catch {
+        return true;
+    }
+}
+function containsDangerousKeywords(text) {
+    const bad = [/\b(drop|delete)\b/i, /<script/i];
+    return bad.some((r) => r.test(text));
+}
+const auditMiddleware = (0,_lib_audit_middleware__WEBPACK_IMPORTED_MODULE_15__/* .createAuditMiddleware */ .W)({
+    excludePaths: ["/ping", "/health", "/metrics", "/swagger"],
+    excludeMethods: ["OPTIONS"],
+    includeBody: false,
+});
+const app = new elysia__WEBPACK_IMPORTED_MODULE_6__.Elysia()
+    .use((0,_elysiajs_cors__WEBPACK_IMPORTED_MODULE_1__.cors)({ origin: CONFIG.ALLOWED_ORIGINS }))
+    .use((0,_elysiajs_html__WEBPACK_IMPORTED_MODULE_2__.html)())
+    .use((0,_elysiajs_static__WEBPACK_IMPORTED_MODULE_3__.staticPlugin)({ assets: "public" }))
+    .use((0,_elysiajs_swagger__WEBPACK_IMPORTED_MODULE_4__.swagger)({ path: "/swagger" }))
+    .onBeforeHandle(({ request }) => {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const traceContext = (0,_lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .getTraceContextFromRequest */ .Ql)(request);
+    const span = _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .telemetry */ .Y9.startSpan(`HTTP ${request.method} ${path}`, {
+        parentContext: traceContext || undefined,
+        attributes: {
+            "http.method": request.method,
+            "http.url": request.url,
+            "http.route": path,
+        },
+    });
+    request.__span = span;
+    request.__startTime = Date.now();
+    _lib_metrics__WEBPACK_IMPORTED_MODULE_26__/* .metricsCollector */ .D.incrementRequest(request.method, path, 200);
+})
+    .onBeforeHandle(auditMiddleware.beforeHandle)
+    .onError(({ error, code, request, set }) => {
+    const url = new URL(request.url);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname}`;
+    _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error(errorLog);
+    _lib_metrics__WEBPACK_IMPORTED_MODULE_26__/* .metricsCollector */ .D.incrementError(request.method, url.pathname, String(code));
+    const span = request.__span;
+    if (span) {
+        _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .telemetry */ .Y9.endSpan(span.spanId, {
+            code: "ERROR",
+            message: errorMsg,
+        });
+    }
+    auditMiddleware.onError({ request, error, set });
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return jsonError(500, message);
+})
+    .onAfterHandle(({ set, request, response }) => {
+    set.headers["X-Content-Type-Options"] = "nosniff";
+    set.headers["X-Frame-Options"] = "DENY";
+    const extReq = request;
+    const span = extReq.__span;
+    if (span) {
+        set.headers.traceparent = _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .telemetry */ .Y9.createTraceContext(span.traceId, span.spanId);
+        _lib_telemetry__WEBPACK_IMPORTED_MODULE_28__/* .telemetry */ .Y9.endSpan(span.spanId);
+    }
+    const startTime = extReq.__startTime;
+    if (startTime) {
+        const duration = (Date.now() - startTime) / 1000;
+        const url = new URL(request.url);
+        _lib_metrics__WEBPACK_IMPORTED_MODULE_26__/* .metricsCollector */ .D.recordRequestDuration(request.method, url.pathname, duration);
+    }
+    auditMiddleware.afterHandle({ request, set, response });
+})
+    .get("/ping", () => ({ ok: true }), {
+    detail: {
+        tags: ["health"],
+        summary: "Health check endpoint",
+        description: "Returns a simple OK response to verify server is running",
+    },
+})
+    .get("/health", async () => {
+    try {
+        const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+        const health = await (0,_lib_health__WEBPACK_IMPORTED_MODULE_21__/* .performHealthCheck */ .uY)(redisUrl, CONFIG.RAG_API_URL, CONFIG.OLLAMA_BASE_URL);
+        const status = health.status === "healthy" ? 200 : 503;
+        return new Response(JSON.stringify(health), {
+            status,
+            headers: { "content-type": "application/json" },
+        });
+    }
+    catch (err) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error(`Health check failed: ${errorMsg}`);
+        return jsonError(503, "Health check failed");
+    }
+}, {
+    detail: {
+        tags: ["health"],
+        summary: "Detailed health check",
+        description: "Check status of Redis, FastAPI, Ollama, and system metrics",
+    },
+})
+    .get("/metrics", () => {
+    const metrics = _lib_metrics__WEBPACK_IMPORTED_MODULE_26__/* .metricsCollector */ .D.toPrometheusFormat();
+    return new Response(metrics, {
+        headers: { "content-type": "text/plain; version=0.0.4" },
+    });
+}, {
+    detail: {
+        tags: ["monitoring"],
+        summary: "Prometheus metrics",
+        description: "Expose metrics in Prometheus format",
+    },
+})
+    .get("/", () => Bun.file("public/index.html"), {
+    detail: {
+        tags: ["ui"],
+        summary: "Portfolio index page",
+        description: "Serves the main Elysia AI portfolio and chat interface",
+    },
+})
+    .post("/feedback", async ({ body, request, }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    let payload;
+    try {
+        payload = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    if (!(0,node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync)("data"))
+        (0,node_fs__WEBPACK_IMPORTED_MODULE_0__.mkdirSync)("data", { recursive: true });
+    const ip = request.headers.get("x-forwarded-for") || "anon";
+    const userId = payload.userId || undefined;
+    try {
+        await _lib_database__WEBPACK_IMPORTED_MODULE_18__.feedbackService.create({
+            userId,
+            query: body.query,
+            answer: body.answer,
+            rating: body.rating,
+            reason: body.reason || undefined,
+        });
+    }
+    catch (err) {
+        _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error("Failed to store feedback", err instanceof Error ? err : undefined);
+        return jsonError(500, "Failed to store feedback");
+    }
+    return new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    body: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({
+        query: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 1, maxLength: 400 }),
+        answer: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 1, maxLength: 4000 }),
+        rating: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Union([elysia__WEBPACK_IMPORTED_MODULE_6__.t.Literal("up"), elysia__WEBPACK_IMPORTED_MODULE_6__.t.Literal("down")]),
+        reason: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Optional(elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ maxLength: 256 })),
+    }),
+    detail: {
+        tags: ["feedback"],
+        summary: "Submit user feedback",
+        description: "Submit feedback for a query-answer pair. Requires JWT authentication.",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .post("/knowledge/upsert", async ({ body, request, }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    try {
+        await _lib_database__WEBPACK_IMPORTED_MODULE_18__.knowledgeService.create({
+            question: body.summary,
+            answer: body.sourceUrl || "No source provided",
+            source: "api",
+            verified: body.confidence > 0.8,
+        });
+    }
+    catch (err) {
+        _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error("Failed to store knowledge", err instanceof Error ? err : undefined);
+        return jsonError(500, "Failed to store knowledge");
+    }
+    return new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    body: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({
+        summary: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 10, maxLength: 2000 }),
+        sourceUrl: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Optional(elysia__WEBPACK_IMPORTED_MODULE_6__.t.String()),
+        tags: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Optional(elysia__WEBPACK_IMPORTED_MODULE_6__.t.Array(elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ maxLength: 32 }), { maxItems: 8 })),
+        confidence: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Number({ minimum: 0, maximum: 1 }),
+    }),
+    detail: {
+        tags: ["knowledge"],
+        summary: "Add or update knowledge entry",
+        description: "Store a new knowledge entry with summary, source, tags, and confidence. Requires JWT.",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .get("/knowledge/review", async ({ request, query }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const n = Number(query?.n ?? 20) || 20;
+    try {
+        if (!(0,node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync)("data/knowledge.jsonl"))
+            return new Response(JSON.stringify([]), {
+                headers: { "content-type": "application/json" },
+            });
+        const file = await Bun.file("data/knowledge.jsonl").text();
+        const lines = file.trim().split("\n").filter(Boolean);
+        const last = lines
+            .slice(Math.max(0, lines.length - n))
+            .map((l) => JSON.parse(l));
+        return new Response(JSON.stringify(last), {
+            headers: { "content-type": "application/json" },
+        });
+    }
+    catch {
+        return jsonError(500, "Failed to read knowledge");
+    }
+}, {
+    query: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({ n: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Optional(elysia__WEBPACK_IMPORTED_MODULE_6__.t.Number()) }),
+    detail: {
+        tags: ["knowledge"],
+        summary: "Get recent knowledge entries",
+        description: "Retrieve the last N knowledge entries from the knowledge base. Requires JWT.",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .post("/auth/token", async ({ body }) => {
+    const { username, password } = body;
+    if (username !== CONFIG.AUTH_USERNAME ||
+        password !== CONFIG.AUTH_PASSWORD)
+        return jsonError(401, "Invalid credentials");
+    const userId = username;
+    const accessToken = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().sign({ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) }, CONFIG.JWT_SECRET, { expiresIn: "15m" });
+    const refreshToken = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().sign({
+        iss: "elysia-ai-refresh",
+        userId,
+        iat: Math.floor(Date.now() / 1000),
+    }, CONFIG.JWT_REFRESH_SECRET, { expiresIn: "7d" });
+    await (0,_internal_secure_auth__WEBPACK_IMPORTED_MODULE_10__/* .storeRefreshToken */ .OL)(userId, refreshToken, 7 * 24 * 60 * 60);
+    return new Response(JSON.stringify({ accessToken, refreshToken, expiresIn: 900 }), { headers: { "content-type": "application/json" } });
+}, {
+    body: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({
+        username: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 1, maxLength: 128 }),
+        password: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 1, maxLength: 128 }),
+    }),
+    detail: {
+        tags: ["auth"],
+        summary: "Login and get JWT tokens",
+        description: "Authenticate with username and password to receive access token (15min) and refresh token (7 days)",
+    },
+})
+    .post("/auth/refresh", async ({ body }) => {
+    const { refreshToken } = body;
+    let payload;
+    try {
+        payload = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(refreshToken, CONFIG.JWT_REFRESH_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid or expired refresh token");
+    }
+    const userId = payload.userId || "default-user";
+    const isValid = await (0,_internal_secure_auth__WEBPACK_IMPORTED_MODULE_10__/* .verifyStoredRefreshToken */ .tj)(userId, refreshToken);
+    if (!isValid)
+        return jsonError(401, "Refresh token not found or revoked");
+    const newAccessToken = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().sign({ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) }, CONFIG.JWT_SECRET, { expiresIn: "15m" });
+    return new Response(JSON.stringify({ accessToken: newAccessToken, expiresIn: 900 }), { headers: { "content-type": "application/json" } });
+}, {
+    body: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({ refreshToken: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 20 }) }),
+    detail: {
+        tags: ["auth"],
+        summary: "Refresh access token",
+        description: "Exchange a valid refresh token for a new access token without re-authentication",
+    },
+})
+    .post("/auth/logout", async ({ body }) => {
+    const { refreshToken } = body;
+    try {
+        const payload = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(refreshToken, CONFIG.JWT_REFRESH_SECRET);
+        const userId = payload.userId || "default-user";
+        await (0,_internal_secure_auth__WEBPACK_IMPORTED_MODULE_10__/* .revokeRefreshToken */ .ln)(userId);
+        return new Response(JSON.stringify({ message: "Logged out successfully" }), {
+            headers: { "content-type": "application/json" },
+        });
+    }
+    catch {
+        return jsonError(400, "Invalid refresh token");
+    }
+}, {
+    body: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({ refreshToken: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 20 }) }),
+    detail: {
+        tags: ["auth"],
+        summary: "Logout and revoke refresh token",
+        description: "Revoke a refresh token to prevent future token refreshes. Effectively logs out the user.",
+    },
+})
+    .guard({
+    beforeHandle: ({ request }) => {
+        const auth = request.headers.get("authorization") || "";
+        if (!auth.startsWith("Bearer "))
+            throw new Error("Missing Bearer token");
+        try {
+            jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+        }
+        catch {
+            throw new Error("Invalid or expired token");
+        }
+    },
+}, (app) => app.post("/elysia-love", async ({ body, request }) => {
+    const ip = request.headers.get("x-forwarded-for") || "anon";
+    let userId = "anon";
+    const auth = request.headers.get("authorization") || "";
+    try {
+        if (auth.startsWith("Bearer ")) {
+            const payload = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+            userId = payload.userId || "anon";
+        }
+    }
+    catch { }
+    const clientKey = `${userId}:${ip}`;
+    const rateLimitOk = await checkRateLimit(clientKey);
+    if (!rateLimitOk)
+        return jsonError(429, "Rate limit exceeded");
+    const mode = body.mode || _internal_app_llm_llm_config__WEBPACK_IMPORTED_MODULE_9__/* .DEFAULT_MODE */ .Cm;
+    const llmConfig = _internal_app_llm_llm_config__WEBPACK_IMPORTED_MODULE_9__/* .ELYSIA_MODES */ .V_[mode];
+    const sanitizedMessages = body.messages.map((m) => {
+        const cleaned = sanitize_html__WEBPACK_IMPORTED_MODULE_8___default()(m.content, {
+            allowedTags: [],
+            allowedAttributes: {},
+        });
+        if (containsDangerousKeywords(cleaned))
+            throw new Error("Dangerous content detected");
+        return { ...m, content: cleaned };
+    });
+    const messagesWithSystem = [
+        { role: "system", content: llmConfig.systemPrompt },
+        ...sanitizedMessages,
+    ];
+    try {
+        const upstream = await axios__WEBPACK_IMPORTED_MODULE_5___default().post(CONFIG.RAG_API_URL, {
+            messages: messagesWithSystem,
+            temperature: llmConfig.temperature,
+            model: llmConfig.model,
+        }, { responseType: "stream", timeout: CONFIG.RAG_TIMEOUT });
+        return new Response(upstream.data, {
+            headers: {
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                Connection: "keep-alive",
+                "X-Elysia-Mode": mode,
+            },
+        });
+    }
+    catch (error) {
+        if (axios__WEBPACK_IMPORTED_MODULE_5___default().isAxiosError(error) && error.response?.status === 503)
+            return jsonError(503, "Upstream unavailable");
+        return jsonError(500, "Internal chat error");
+    }
+}, {
+    body: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({
+        messages: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Array(elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({
+            role: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Union([
+                elysia__WEBPACK_IMPORTED_MODULE_6__.t.Literal("user"),
+                elysia__WEBPACK_IMPORTED_MODULE_6__.t.Literal("assistant"),
+                elysia__WEBPACK_IMPORTED_MODULE_6__.t.Literal("system"),
+            ]),
+            content: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({
+                maxLength: 400,
+                minLength: 1,
+            }),
+        }), { maxItems: 8 }),
+        mode: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Optional(elysia__WEBPACK_IMPORTED_MODULE_6__.t.Union([
+            elysia__WEBPACK_IMPORTED_MODULE_6__.t.Literal("sweet"),
+            elysia__WEBPACK_IMPORTED_MODULE_6__.t.Literal("normal"),
+            elysia__WEBPACK_IMPORTED_MODULE_6__.t.Literal("professional"),
+        ])),
+    }),
+    detail: {
+        tags: ["chat"],
+        summary: "Chat with Elysia AI (Multi-LLM)",
+        description: "Send chat messages to Elysia AI with selectable personality modes (sweet/normal/professional). Returns streaming SSE response. Requires JWT.",
+        security: [{ bearerAuth: [] }],
+    },
+}))
+    .get("/admin/feedback/stats", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const stats = await _lib_database__WEBPACK_IMPORTED_MODULE_18__.feedbackService.getStats();
+    return new Response(JSON.stringify(stats), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Get feedback statistics",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .get("/admin/feedback", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const feedbacks = await _lib_database__WEBPACK_IMPORTED_MODULE_18__.feedbackService.getRecent(100);
+    return new Response(JSON.stringify(feedbacks), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Get recent feedback",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .get("/admin/knowledge", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const knowledge = await _lib_database__WEBPACK_IMPORTED_MODULE_18__.knowledgeService.getAll(false);
+    return new Response(JSON.stringify(knowledge), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Get all knowledge entries",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .post("/admin/knowledge/:id/verify", async ({ params, request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    await _lib_database__WEBPACK_IMPORTED_MODULE_18__.knowledgeService.verify(params.id);
+    return new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Verify knowledge entry",
+        security: [{ bearerAuth: [] }],
+    },
+})
+    .delete("/admin/knowledge/:id", async ({ params, request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    await _lib_database__WEBPACK_IMPORTED_MODULE_18__.knowledgeService.delete(params.id);
+    return new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+    });
+}, {
+    detail: {
+        tags: ["admin"],
+        summary: "Delete knowledge entry",
+        security: [{ bearerAuth: [] }],
+    },
+});
+app.post("/auth/register", async ({ body }) => {
+    const { username, password } = body;
+    const existing = await _lib_database__WEBPACK_IMPORTED_MODULE_18__/* .userService */ .Dv.findByUsername(username);
+    if (existing) {
+        return jsonError(400, "Username already exists");
+    }
+    if (password.length < 8) {
+        return jsonError(400, "Password must be at least 8 characters");
+    }
+    try {
+        const { createUser } = await __webpack_require__.e(/* import() */ 615).then(__webpack_require__.bind(__webpack_require__, 615));
+        const user = await createUser(username, password, "user");
+        return new Response(JSON.stringify({
+            success: true,
+            userId: user.id,
+            username: user.username,
+        }), { headers: { "content-type": "application/json" } });
+    }
+    catch (error) {
+        _lib_logger__WEBPACK_IMPORTED_MODULE_25__/* .logger */ .v.error("Registration failed", error instanceof Error ? error : undefined);
+        return jsonError(500, "Registration failed");
+    }
+}, {
+    body: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({
+        username: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 3, maxLength: 32 }),
+        password: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 8, maxLength: 128 }),
+    }),
+    detail: {
+        tags: ["auth"],
+        summary: "Register new user",
+    },
+});
+app.get("/admin/export/feedback", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const { exportFeedbackToCSV } = await __webpack_require__.e(/* import() */ 508).then(__webpack_require__.bind(__webpack_require__, 508));
+    const csv = await exportFeedbackToCSV();
+    return new Response(csv, {
+        headers: {
+            "content-type": "text/csv; charset=utf-8",
+            "content-disposition": `attachment; filename="feedback_${new Date().toISOString().split("T")[0]}.csv"`,
+        },
+    });
+});
+app.get("/admin/export/knowledge/json", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const { exportKnowledgeToJSON } = await __webpack_require__.e(/* import() */ 508).then(__webpack_require__.bind(__webpack_require__, 508));
+    const json = await exportKnowledgeToJSON();
+    return new Response(json, {
+        headers: {
+            "content-type": "application/json; charset=utf-8",
+            "content-disposition": `attachment; filename="knowledge_${new Date().toISOString().split("T")[0]}.json"`,
+        },
+    });
+});
+app.get("/admin/analytics", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const { apiAnalytics } = await __webpack_require__.e(/* import() */ 404).then(__webpack_require__.bind(__webpack_require__, 404));
+    const data = apiAnalytics.exportJSON();
+    return new Response(JSON.stringify(data), {
+        headers: { "content-type": "application/json" },
+    });
+});
+app.get("/admin/webhooks", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return { webhooks: _lib_webhook_events__WEBPACK_IMPORTED_MODULE_29__/* .webhookManager */ .$.getSubscriptions() };
+});
+app.post("/admin/api-keys", async ({ request, body }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const { name, rateLimit, expiresInDays } = body;
+    const apiKey = _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_13__/* .apiKeyManager */ .X.generateKey({
+        name,
+        rateLimit,
+        expiresInDays,
+    });
+    return { success: true, key: apiKey.key };
+}, {
+    body: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Object({
+        name: elysia__WEBPACK_IMPORTED_MODULE_6__.t.String({ minLength: 1 }),
+        rateLimit: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Optional(elysia__WEBPACK_IMPORTED_MODULE_6__.t.Number()),
+        expiresInDays: elysia__WEBPACK_IMPORTED_MODULE_6__.t.Optional(elysia__WEBPACK_IMPORTED_MODULE_6__.t.Number()),
+    }),
+});
+app.get("/admin/api-keys", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return {
+        keys: _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_13__/* .apiKeyManager */ .X.listKeys(),
+        stats: _lib_api_key_manager__WEBPACK_IMPORTED_MODULE_13__/* .apiKeyManager */ .X.getUsageStats(),
+    };
+});
+app.get("/admin/backups", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return {
+        status: _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__/* .backupScheduler */ .m.getStatus(),
+        history: _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__/* .backupScheduler */ .m.getBackupHistory(),
+    };
+});
+app.post("/admin/backups/trigger", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    await _lib_backup_scheduler__WEBPACK_IMPORTED_MODULE_16__/* .backupScheduler */ .m.triggerManualBackup();
+    return { success: true, message: "Backup triggered" };
+});
+app.get("/admin/health-monitor", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return _lib_health_monitor__WEBPACK_IMPORTED_MODULE_22__.healthMonitor.getStatus();
+});
+app.get("/admin/sessions", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        const payload = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+        return {
+            sessions: _lib_session_manager__WEBPACK_IMPORTED_MODULE_27__/* .sessionManager */ .i.getUserSessions(payload.userId),
+            stats: _lib_session_manager__WEBPACK_IMPORTED_MODULE_27__/* .sessionManager */ .i.getStats(),
+        };
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+});
+app.get("/admin/ab-tests", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return { tests: _lib_ab_testing__WEBPACK_IMPORTED_MODULE_12__/* .abTestManager */ .n.listTests() };
+});
+app.get("/admin/ab-tests/:testId", async ({ request, params }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const results = _lib_ab_testing__WEBPACK_IMPORTED_MODULE_12__/* .abTestManager */ .n.getTestResults(params.testId);
+    if (!results)
+        return jsonError(404, "Test not found");
+    return results;
+});
+app.get("/admin/logs/cleanup", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return _lib_log_cleanup__WEBPACK_IMPORTED_MODULE_24__.logCleanupManager.getStats();
+});
+app.post("/admin/logs/cleanup/trigger", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    await _lib_log_cleanup__WEBPACK_IMPORTED_MODULE_24__.logCleanupManager.triggerManualCleanup();
+    return { success: true, message: "Log cleanup triggered" };
+});
+app.get("/admin/jobs/stats", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return await _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__/* .jobQueue */ .f.getStats();
+});
+app.post("/admin/jobs/email", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const body = (await request.json());
+    const job = (await _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__/* .jobQueue */ .f.sendEmail(body.to, body.subject, body.html));
+    return { success: true, jobId: job.id };
+});
+app.post("/admin/jobs/report", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const body = (await request.json());
+    const job = (await _lib_job_queue__WEBPACK_IMPORTED_MODULE_23__/* .jobQueue */ .f.generateReport(body.reportType, new Date(body.startDate), new Date(body.endDate)));
+    return { success: true, jobId: job.id };
+});
+app.post("/upload", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    let userId;
+    try {
+        const decoded = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+        userId = decoded.username;
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const formData = await request.formData();
+    const file = formData.get("file");
+    if (!file) {
+        return jsonError(400, "No file provided");
+    }
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const uploadedFile = await _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__/* .fileUploadManager */ .r.upload(buffer, file.name, file.type, { userId });
+    return {
+        success: true,
+        file: {
+            id: uploadedFile.id,
+            originalName: uploadedFile.originalName,
+            size: uploadedFile.size,
+            mimeType: uploadedFile.mimeType,
+        },
+    };
+});
+app.get("/files/:fileId", async ({ request, params }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const { fileId } = params;
+    const file = _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__/* .fileUploadManager */ .r.getFile(fileId);
+    if (!file) {
+        return jsonError(404, "File not found");
+    }
+    const buffer = _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__/* .fileUploadManager */ .r.readFile(fileId);
+    if (!buffer) {
+        return jsonError(404, "File not found");
+    }
+    return new Response(new Uint8Array(buffer), {
+        headers: {
+            "content-type": file.mimeType,
+            "content-disposition": `attachment; filename="${file.originalName}"`,
+        },
+    });
+});
+app.get("/files", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    let userId;
+    try {
+        const decoded = jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+        userId = decoded.username;
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const files = _lib_file_upload__WEBPACK_IMPORTED_MODULE_20__/* .fileUploadManager */ .r.getUserFiles(userId);
+    return {
+        files: files.map((f) => ({
+            id: f.id,
+            originalName: f.originalName,
+            size: f.size,
+            mimeType: f.mimeType,
+            uploadedAt: f.uploadedAt,
+        })),
+    };
+});
+app.get("/admin/cron/tasks", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return { tasks: _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__/* .cronScheduler */ .m.listTasks() };
+});
+app.get("/admin/cron/stats", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__/* .cronScheduler */ .m.getStats();
+});
+app.post("/admin/cron/tasks/:name/run", async ({ request, params }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    try {
+        await _lib_cron_scheduler__WEBPACK_IMPORTED_MODULE_17__/* .cronScheduler */ .m.runTask(params.name);
+        return { success: true, message: `Task ${params.name} executed` };
+    }
+    catch (error) {
+        return jsonError(400, error.message);
+    }
+});
+app.get("/admin/audit/logs", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const url = new URL(request.url);
+    const result = _lib_audit_logger__WEBPACK_IMPORTED_MODULE_14__/* .auditLogger */ ._.search({
+        userId: url.searchParams.get("userId") || undefined,
+        action: url.searchParams.get("action") || undefined,
+        resource: url.searchParams.get("resource") || undefined,
+        limit: Number(url.searchParams.get("limit")) || 100,
+        offset: Number(url.searchParams.get("offset")) || 0,
+    });
+    return result;
+});
+app.get("/admin/audit/stats", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    return _lib_audit_logger__WEBPACK_IMPORTED_MODULE_14__/* .auditLogger */ ._.getStats();
+});
+app.get("/admin/audit/export", async ({ request }) => {
+    const auth = request.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer "))
+        return jsonError(401, "Missing Bearer token");
+    try {
+        jsonwebtoken__WEBPACK_IMPORTED_MODULE_7___default().verify(auth.substring(7), CONFIG.JWT_SECRET);
+    }
+    catch {
+        return jsonError(401, "Invalid token");
+    }
+    const url = new URL(request.url);
+    const format = url.searchParams.get("format") || "json";
+    const content = _lib_audit_logger__WEBPACK_IMPORTED_MODULE_14__/* .auditLogger */ ._.export(format);
+    if (!content) {
+        return jsonError(400, "Invalid format");
+    }
+    return new Response(content, {
+        headers: {
+            "content-type": format === "json" ? "application/json" : "text/csv",
+            "content-disposition": `attachment; filename="audit-logs.${format}"`,
+        },
+    });
+});
+if (false) // removed by dead control flow
+{}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (app);
+
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } }, 1);
+
+/***/ }),
+
+/***/ 237:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  HY: () => (/* reexport */ checkRateLimitRedis),
+  ln: () => (/* reexport */ revokeRefreshToken),
+  OL: () => (/* reexport */ storeRefreshToken),
+  tj: () => (/* reexport */ verifyStoredRefreshToken)
+});
+
+// UNUSED EXPORTS: extractBearerToken, generateAccessToken, generateRefreshToken, isRedisAvailable, verifyAccessToken, verifyRefreshToken
+
+// EXTERNAL MODULE: external "jsonwebtoken"
+var external_jsonwebtoken_ = __webpack_require__(829);
+;// ./.internal/secure/auth/jwt.ts
+
+const CONFIG = {
+    JWT_SECRET: process.env.JWT_SECRET || "dev-secret",
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || "dev-refresh-secret",
+    ACCESS_TOKEN_EXPIRY: "15m",
+    REFRESH_TOKEN_EXPIRY: "7d",
+};
+function generateAccessToken(userId) {
+    const payload = {
+        iss: "elysia-ai",
+        userId,
+        iat: Math.floor(Date.now() / 1000),
+    };
+    const options = { expiresIn: CONFIG.ACCESS_TOKEN_EXPIRY };
+    return jwt.sign(payload, CONFIG.JWT_SECRET, options);
+}
+function generateRefreshToken(userId) {
+    const payload = {
+        iss: "elysia-ai-refresh",
+        userId,
+        iat: Math.floor(Date.now() / 1000),
+    };
+    const options = { expiresIn: CONFIG.REFRESH_TOKEN_EXPIRY };
+    return jwt.sign(payload, CONFIG.JWT_REFRESH_SECRET, options);
+}
+function verifyAccessToken(token) {
+    try {
+        return jwt.verify(token, CONFIG.JWT_SECRET);
+    }
+    catch {
+        return null;
+    }
+}
+function verifyRefreshToken(token) {
+    try {
+        return jwt.verify(token, CONFIG.JWT_REFRESH_SECRET);
+    }
+    catch {
+        return null;
+    }
+}
+function extractBearerToken(authHeader) {
+    if (!authHeader.startsWith("Bearer ")) {
+        return null;
+    }
+    return authHeader.substring(7);
+}
+
+// EXTERNAL MODULE: external "ioredis"
+var external_ioredis_ = __webpack_require__(659);
+var external_ioredis_default = /*#__PURE__*/__webpack_require__.n(external_ioredis_);
+;// ./.internal/secure/auth/redis.ts
+
+const redis_CONFIG = {
+    REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
+    REDIS_ENABLED: process.env.REDIS_ENABLED !== "false",
+};
+let redis = null;
+let redisAvailable = false;
+if (redis_CONFIG.REDIS_ENABLED) {
+    try {
+        redis = new (external_ioredis_default())(redis_CONFIG.REDIS_URL, {
+            maxRetriesPerRequest: 3,
+            retryStrategy: (times) => {
+                if (times > 3) {
+                    redisAvailable = false;
+                    return null;
+                }
+                return Math.min(times * 100, 2000);
+            },
+            lazyConnect: true,
+        });
+        redis.on("connect", () => {
+            redisAvailable = true;
+        });
+        redis.on("error", () => {
+            redisAvailable = false;
+        });
+        redis.connect().catch(() => {
+            redisAvailable = false;
+        });
+    }
+    catch {
+        redis = null;
+        redisAvailable = false;
+    }
+}
+async function checkRateLimitRedis(id, maxRequests, windowSeconds = 60) {
+    if (!redis || !redisAvailable) {
+        return true;
+    }
+    try {
+        const key = `ratelimit:${id}`;
+        const nowMs = Date.now();
+        const windowStart = nowMs - windowSeconds * 1000;
+        await redis.zremrangebyscore(key, 0, windowStart);
+        await redis.zadd(key, nowMs, `${nowMs}:${Math.random()}`);
+        const count = await redis.zcard(key);
+        await redis.expire(key, windowSeconds);
+        return count <= maxRequests;
+    }
+    catch {
+        return true;
+    }
+}
+async function storeRefreshToken(userId, refreshToken, expiresIn = 7 * 24 * 60 * 60) {
+    if (!redis || !redisAvailable) {
+        return;
+    }
+    try {
+        const key = `refresh:${userId}`;
+        await redis.setex(key, expiresIn, refreshToken);
+    }
+    catch { }
+}
+async function verifyStoredRefreshToken(userId, refreshToken) {
+    if (!redis || !redisAvailable) {
+        return false;
+    }
+    try {
+        const key = `refresh:${userId}`;
+        const storedToken = await redis.get(key);
+        return storedToken === refreshToken;
+    }
+    catch {
+        return false;
+    }
+}
+async function revokeRefreshToken(userId) {
+    if (!redis || !redisAvailable) {
+        return;
+    }
+    try {
+        const key = `refresh:${userId}`;
+        await redis.del(key);
+    }
+    catch { }
+}
+function isRedisAvailable() {
+    return redisAvailable;
+}
+/* harmony default export */ const auth_redis = ((/* unused pure expression or super */ null && (redis)));
+
+;// ./.internal/secure/auth/index.ts
+
+
+
+
+/***/ }),
+
+/***/ 257:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   X: () => (/* binding */ apiKeyManager)
+/* harmony export */ });
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(598);
+/* harmony import */ var node_crypto__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_crypto__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(629);
+
+
+class APIKeyManager {
+    keys;
+    KEY_PREFIX = "elysia_";
+    constructor() {
+        this.keys = new Map();
+        this.loadKeysFromEnv();
+    }
+    loadKeysFromEnv() {
+        const masterKey = process.env.MASTER_API_KEY;
+        if (masterKey) {
+            this.keys.set(masterKey, {
+                key: masterKey,
+                name: "Master Key",
+                createdAt: new Date(),
+                enabled: true,
+                rateLimit: 10000,
+                usage: {
+                    totalRequests: 0,
+                    requestsThisHour: 0,
+                    hourStart: new Date(),
+                },
+            });
+        }
+    }
+    generateKey(options) {
+        const randomBytes = node_crypto__WEBPACK_IMPORTED_MODULE_0__.randomBytes(32);
+        const key = `${this.KEY_PREFIX}${randomBytes.toString("base64url")}`;
+        const expiresAt = options.expiresInDays
+            ? new Date(Date.now() + options.expiresInDays * 24 * 60 * 60 * 1000)
+            : undefined;
+        const apiKey = {
+            key,
+            name: options.name,
+            userId: options.userId,
+            createdAt: new Date(),
+            expiresAt,
+            enabled: true,
+            rateLimit: options.rateLimit || 1000,
+            usage: {
+                totalRequests: 0,
+                requestsThisHour: 0,
+                hourStart: new Date(),
+            },
+        };
+        this.keys.set(key, apiKey);
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("API key generated", {
+            name: options.name,
+            userId: options.userId,
+            rateLimit: apiKey.rateLimit,
+        });
+        return apiKey;
+    }
+    validateKey(key) {
+        const apiKey = this.keys.get(key);
+        if (!apiKey) {
+            return { valid: false, reason: "Invalid API key" };
+        }
+        if (!apiKey.enabled) {
+            return { valid: false, reason: "API key is disabled" };
+        }
+        if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
+            return { valid: false, reason: "API key has expired" };
+        }
+        const now = new Date();
+        const hoursSince = (now.getTime() - apiKey.usage.hourStart.getTime()) / (1000 * 60 * 60);
+        if (hoursSince >= 1) {
+            apiKey.usage.requestsThisHour = 0;
+            apiKey.usage.hourStart = now;
+        }
+        if (apiKey.usage.requestsThisHour >= apiKey.rateLimit) {
+            return {
+                valid: false,
+                reason: `Rate limit exceeded (${apiKey.rateLimit} requests/hour)`,
+            };
+        }
+        return { valid: true, apiKey };
+    }
+    recordUsage(key) {
+        const apiKey = this.keys.get(key);
+        if (apiKey) {
+            apiKey.usage.totalRequests++;
+            apiKey.usage.requestsThisHour++;
+            apiKey.usage.lastUsed = new Date();
+        }
+    }
+    revokeKey(key) {
+        const apiKey = this.keys.get(key);
+        if (apiKey) {
+            apiKey.enabled = false;
+            _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("API key revoked", { name: apiKey.name });
+            return true;
+        }
+        return false;
+    }
+    deleteKey(key) {
+        const apiKey = this.keys.get(key);
+        if (apiKey) {
+            this.keys.delete(key);
+            _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("API key deleted", { name: apiKey.name });
+            return true;
+        }
+        return false;
+    }
+    listKeys() {
+        return Array.from(this.keys.values()).map((key) => ({
+            name: key.name,
+            userId: key.userId,
+            createdAt: key.createdAt,
+            expiresAt: key.expiresAt,
+            enabled: key.enabled,
+            rateLimit: key.rateLimit,
+            usage: {
+                totalRequests: key.usage.totalRequests,
+                lastUsed: key.usage.lastUsed,
+                requestsThisHour: key.usage.requestsThisHour,
+            },
+            keyPreview: `${key.key.substring(0, 16)}...`,
+        }));
+    }
+    getUserKeys(userId) {
+        return Array.from(this.keys.values())
+            .filter((key) => key.userId === userId)
+            .map((key) => ({
+            name: key.name,
+            createdAt: key.createdAt,
+            expiresAt: key.expiresAt,
+            enabled: key.enabled,
+            rateLimit: key.rateLimit,
+            usage: key.usage,
+            keyPreview: `${key.key.substring(0, 16)}...`,
+        }));
+    }
+    getUsageStats() {
+        const keys = Array.from(this.keys.values());
+        return {
+            totalKeys: keys.length,
+            activeKeys: keys.filter((k) => k.enabled).length,
+            expiredKeys: keys.filter((k) => k.expiresAt && k.expiresAt < new Date())
+                .length,
+            totalRequests: keys.reduce((sum, k) => sum + k.usage.totalRequests, 0),
+            topKeys: keys
+                .sort((a, b) => b.usage.totalRequests - a.usage.totalRequests)
+                .slice(0, 5)
+                .map((k) => ({
+                name: k.name,
+                requests: k.usage.totalRequests,
+            })),
+        };
+    }
+}
+const apiKeyManager = new APIKeyManager();
+
+
+/***/ }),
+
+/***/ 330:
+/***/ ((module) => {
+
+module.exports = require("@prisma/client");
+
+/***/ }),
+
+/***/ 371:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   _: () => (/* binding */ auditLogger)
+/* harmony export */ });
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(760);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(629);
+
+
+
+class AuditLoggerService {
+    LOG_DIR;
+    LOG_FILE;
+    logs;
+    logCounter;
+    constructor() {
+        this.LOG_DIR = process.env.AUDIT_LOG_DIR || "./logs/audit";
+        this.LOG_FILE = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.LOG_DIR, "audit.jsonl");
+        this.logs = [];
+        this.logCounter = 0;
+        if (!node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(this.LOG_DIR)) {
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.mkdirSync(this.LOG_DIR, { recursive: true });
+        }
+        this.loadLogs();
+    }
+    loadLogs() {
+        if (!node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(this.LOG_FILE))
+            return;
+        try {
+            const content = node_fs__WEBPACK_IMPORTED_MODULE_0__.readFileSync(this.LOG_FILE, "utf-8");
+            const lines = content.split("\n").filter((line) => line.trim());
+            for (const line of lines) {
+                try {
+                    const log = JSON.parse(line);
+                    log.timestamp = new Date(log.timestamp);
+                    this.logs.push(log);
+                }
+                catch {
+                }
+            }
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Audit logs loaded", { count: this.logs.length });
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Failed to load audit logs", error);
+        }
+    }
+    log(entry) {
+        const log = {
+            id: `audit-${Date.now()}-${++this.logCounter}`,
+            timestamp: new Date(),
+            ...entry,
+        };
+        this.logs.push(log);
+        try {
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.appendFileSync(this.LOG_FILE, `${JSON.stringify(log)}\n`);
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Failed to write audit log", error);
+        }
+        _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.debug("Audit log recorded", {
+            id: log.id,
+            action: log.action,
+            resource: log.resource,
+        });
+    }
+    search(options = {}) {
+        let filtered = [...this.logs];
+        if (options.userId) {
+            filtered = filtered.filter((log) => log.userId === options.userId);
+        }
+        if (options.action) {
+            filtered = filtered.filter((log) => log.action === options.action);
+        }
+        if (options.resource) {
+            filtered = filtered.filter((log) => log.resource === options.resource);
+        }
+        if (options.startDate) {
+            const startDate = options.startDate;
+            filtered = filtered.filter((log) => log.timestamp >= startDate);
+        }
+        if (options.endDate) {
+            const endDate = options.endDate;
+            filtered = filtered.filter((log) => log.timestamp <= endDate);
+        }
+        filtered.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        const total = filtered.length;
+        const offset = options.offset || 0;
+        const limit = options.limit || 100;
+        const paginated = filtered.slice(offset, offset + limit);
+        return {
+            logs: paginated,
+            total,
+            offset,
+            limit,
+        };
+    }
+    getUserActivity(userId, limit = 20) {
+        return this.search({ userId, limit }).logs;
+    }
+    getResourceHistory(resource, resourceId) {
+        return this.logs
+            .filter((log) => log.resource === resource && log.resourceId === resourceId)
+            .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    }
+    getStats() {
+        const now = new Date();
+        const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const recentLogs = this.logs.filter((log) => log.timestamp >= last24h);
+        const weeklyLogs = this.logs.filter((log) => log.timestamp >= last7d);
+        const actionCounts = {};
+        const userCounts = {};
+        for (const log of recentLogs) {
+            actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
+            if (log.userId) {
+                userCounts[log.userId] = (userCounts[log.userId] || 0) + 1;
+            }
+        }
+        return {
+            totalLogs: this.logs.length,
+            last24Hours: recentLogs.length,
+            last7Days: weeklyLogs.length,
+            topActions: Object.entries(actionCounts)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 10)
+                .map(([action, count]) => ({ action, count })),
+            topUsers: Object.entries(userCounts)
+                .sort(([, a], [, b]) => b - a)
+                .slice(0, 10)
+                .map(([userId, count]) => ({ userId, count })),
+        };
+    }
+    cleanupOldLogs(maxAgeDays = 90) {
+        const cutoff = new Date(Date.now() - maxAgeDays * 24 * 60 * 60 * 1000);
+        const originalCount = this.logs.length;
+        this.logs = this.logs.filter((log) => log.timestamp >= cutoff);
+        try {
+            const content = this.logs.map((log) => JSON.stringify(log)).join("\n");
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.writeFileSync(this.LOG_FILE, `${content}\n`);
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Old audit logs cleaned up", {
+                deleted: originalCount - this.logs.length,
+                remaining: this.logs.length,
+                maxAgeDays,
+            });
+            return originalCount - this.logs.length;
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Failed to cleanup audit logs", error);
+            return 0;
+        }
+    }
+    export(format, options = {}) {
+        const { logs } = this.search(options);
+        if (format === "json") {
+            return JSON.stringify(logs, null, 2);
+        }
+        if (format === "csv") {
+            const headers = [
+                "ID",
+                "Timestamp",
+                "User ID",
+                "Action",
+                "Resource",
+                "Resource ID",
+                "Method",
+                "Path",
+                "IP Address",
+                "Status Code",
+            ];
+            const rows = logs.map((log) => [
+                log.id,
+                log.timestamp.toISOString(),
+                log.userId || "",
+                log.action,
+                log.resource,
+                log.resourceId || "",
+                log.method,
+                log.path,
+                log.ipAddress,
+                log.statusCode.toString(),
+            ]);
+            return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+        }
+        return null;
+    }
+}
+const auditLogger = new AuditLoggerService();
+
+
+/***/ }),
+
+/***/ 522:
+/***/ ((module) => {
+
+module.exports = require("node:zlib");
+
+/***/ }),
+
+/***/ 583:
+/***/ ((module) => {
+
+module.exports = require("sanitize-html");
+
+/***/ }),
+
+/***/ 598:
+/***/ ((module) => {
+
+module.exports = require("node:crypto");
+
+/***/ }),
+
+/***/ 619:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   i: () => (/* binding */ sessionManager)
+/* harmony export */ });
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(629);
+
+class SessionManager {
+    sessions;
+    userSessions;
+    SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
+    MAX_SESSIONS_PER_USER = 5;
+    constructor() {
+        this.sessions = new Map();
+        this.userSessions = new Map();
+        setInterval(() => {
+            this.cleanupExpiredSessions();
+        }, 60 * 60 * 1000);
+    }
+    createSession(userId, userAgent, ip) {
+        const existingSessions = this.userSessions.get(userId);
+        if (existingSessions &&
+            existingSessions.size >= this.MAX_SESSIONS_PER_USER) {
+            const oldestSession = this.getOldestSession(userId);
+            if (oldestSession) {
+                this.terminateSession(oldestSession.sessionId);
+            }
+        }
+        const sessionId = this.generateSessionId();
+        const now = new Date();
+        const session = {
+            sessionId,
+            userId,
+            deviceInfo: {
+                userAgent,
+                ip,
+                deviceType: this.detectDeviceType(userAgent),
+            },
+            createdAt: now,
+            lastActivity: now,
+            expiresAt: new Date(now.getTime() + this.SESSION_TIMEOUT),
+            active: true,
+            activityLog: [
+                {
+                    type: "login",
+                    timestamp: now,
+                },
+            ],
+        };
+        this.sessions.set(sessionId, session);
+        if (!this.userSessions.has(userId)) {
+            this.userSessions.set(userId, new Set());
+        }
+        this.userSessions.get(userId)?.add(sessionId);
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Session created", {
+            sessionId,
+            userId,
+            deviceType: session.deviceInfo.deviceType,
+        });
+        return session;
+    }
+    generateSessionId() {
+        return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    }
+    detectDeviceType(userAgent) {
+        const ua = userAgent.toLowerCase();
+        if (/mobile|android|iphone/i.test(ua))
+            return "mobile";
+        if (/tablet|ipad/i.test(ua))
+            return "tablet";
+        if (/windows|macintosh|linux/i.test(ua))
+            return "desktop";
+        return "unknown";
+    }
+    validateSession(sessionId) {
+        const session = this.sessions.get(sessionId);
+        if (!session)
+            return null;
+        if (!session.active)
+            return null;
+        if (session.expiresAt < new Date()) {
+            this.terminateSession(sessionId);
+            return null;
+        }
+        session.lastActivity = new Date();
+        return session;
+    }
+    recordActivity(sessionId, type, details) {
+        const session = this.sessions.get(sessionId);
+        if (!session)
+            return;
+        session.activityLog.push({
+            type,
+            timestamp: new Date(),
+            details,
+        });
+        session.lastActivity = new Date();
+        if (session.activityLog.length > 100) {
+            session.activityLog = session.activityLog.slice(-100);
+        }
+    }
+    terminateSession(sessionId) {
+        const session = this.sessions.get(sessionId);
+        if (!session)
+            return;
+        session.active = false;
+        this.recordActivity(sessionId, "logout");
+        const userSessions = this.userSessions.get(session.userId);
+        userSessions?.delete(sessionId);
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Session terminated", { sessionId, userId: session.userId });
+    }
+    getUserSessions(userId) {
+        const sessionIds = this.userSessions.get(userId);
+        if (!sessionIds)
+            return [];
+        return Array.from(sessionIds)
+            .map((id) => this.sessions.get(id))
+            .filter((s) => s !== undefined)
+            .map((session) => ({
+            sessionId: session.sessionId,
+            deviceType: session.deviceInfo.deviceType,
+            ip: session.deviceInfo.ip,
+            createdAt: session.createdAt,
+            lastActivity: session.lastActivity,
+            active: session.active,
+            activityCount: session.activityLog.length,
+        }));
+    }
+    getSessionDetails(sessionId) {
+        const session = this.sessions.get(sessionId);
+        if (!session)
+            return null;
+        return {
+            sessionId: session.sessionId,
+            userId: session.userId,
+            deviceInfo: session.deviceInfo,
+            createdAt: session.createdAt,
+            lastActivity: session.lastActivity,
+            expiresAt: session.expiresAt,
+            active: session.active,
+            activityLog: session.activityLog.slice(-20),
+        };
+    }
+    getOldestSession(userId) {
+        const sessionIds = this.userSessions.get(userId);
+        if (!sessionIds)
+            return undefined;
+        let oldest;
+        for (const id of sessionIds) {
+            const session = this.sessions.get(id);
+            if (!session)
+                continue;
+            if (!oldest || session.createdAt < oldest.createdAt) {
+                oldest = session;
+            }
+        }
+        return oldest;
+    }
+    cleanupExpiredSessions() {
+        const now = new Date();
+        let cleanedCount = 0;
+        for (const [sessionId, session] of this.sessions.entries()) {
+            if (session.expiresAt < now || !session.active) {
+                this.sessions.delete(sessionId);
+                this.userSessions.get(session.userId)?.delete(sessionId);
+                cleanedCount++;
+            }
+        }
+        if (cleanedCount > 0) {
+            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("Expired sessions cleaned up", { count: cleanedCount });
+        }
+    }
+    getStats() {
+        const allSessions = Array.from(this.sessions.values());
+        const activeSessions = allSessions.filter((s) => s.active);
+        return {
+            totalSessions: allSessions.length,
+            activeSessions: activeSessions.length,
+            uniqueUsers: this.userSessions.size,
+            deviceBreakdown: {
+                mobile: activeSessions.filter((s) => s.deviceInfo.deviceType === "mobile").length,
+                tablet: activeSessions.filter((s) => s.deviceInfo.deviceType === "tablet").length,
+                desktop: activeSessions.filter((s) => s.deviceInfo.deviceType === "desktop").length,
+            },
+        };
+    }
+}
+const sessionManager = new SessionManager();
+
+
+/***/ }),
+
+/***/ 629:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   v: () => (/* binding */ logger)
+/* harmony export */ });
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(760);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_1__);
+
+
+class Logger {
+    logDir;
+    logFile;
+    minLevel;
+    levelPriority = {
+        trace: 0,
+        debug: 1,
+        info: 2,
+        warn: 3,
+        error: 4,
+        fatal: 5,
+    };
+    constructor(logDir = "logs", minLevel = "info") {
+        this.logDir = logDir;
+        this.minLevel = minLevel;
+        this.logFile = (0,node_path__WEBPACK_IMPORTED_MODULE_1__.join)(logDir, `app-${new Date().toISOString().split("T")[0]}.log`);
+        if (!(0,node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync)(logDir)) {
+            (0,node_fs__WEBPACK_IMPORTED_MODULE_0__.mkdirSync)(logDir, { recursive: true });
+        }
+    }
+    shouldLog(level) {
+        return this.levelPriority[level] >= this.levelPriority[this.minLevel];
+    }
+    formatLog(entry) {
+        return `${JSON.stringify(entry)}\n`;
+    }
+    writeLog(entry) {
+        if (!this.shouldLog(entry.level))
+            return;
+        const colors = {
+            trace: "\x1b[90m",
+            debug: "\x1b[36m",
+            info: "\x1b[32m",
+            warn: "\x1b[33m",
+            error: "\x1b[31m",
+            fatal: "\x1b[35m",
+        };
+        const reset = "\x1b[0m";
+        const color = colors[entry.level];
+        console.log(`${color}[${entry.level.toUpperCase()}]${reset} ${entry.timestamp} ${entry.message}`, entry.context ? entry.context : "");
+        try {
+            (0,node_fs__WEBPACK_IMPORTED_MODULE_0__.appendFileSync)(this.logFile, this.formatLog(entry));
+        }
+        catch (error) {
+            console.error("Failed to write to log file:", error);
+        }
+    }
+    trace(message, context) {
+        this.writeLog({
+            level: "trace",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    debug(message, context) {
+        this.writeLog({
+            level: "debug",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    info(message, context) {
+        this.writeLog({
+            level: "info",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    warn(message, context) {
+        this.writeLog({
+            level: "warn",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+        });
+    }
+    error(message, err, context) {
+        this.writeLog({
+            level: "error",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+            error: err
+                ? {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                }
+                : undefined,
+        });
+    }
+    fatal(message, err, context) {
+        this.writeLog({
+            level: "fatal",
+            timestamp: new Date().toISOString(),
+            message,
+            context,
+            error: err
+                ? {
+                    name: err.name,
+                    message: err.message,
+                    stack: err.stack,
+                }
+                : undefined,
+        });
+    }
+    logRequest(method, path, status, duration, ip, userId) {
+        const level = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+        this.writeLog({
+            level,
+            timestamp: new Date().toISOString(),
+            message: `${method} ${path} ${status}`,
+            request: { method, path, ip, userId },
+            duration,
+        });
+    }
+    rotateLogs(retentionDays = 30) {
+        const now = Date.now();
+        const maxAge = retentionDays * 24 * 60 * 60 * 1000;
+        if (!(0,node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync)(this.logDir))
+            return;
+        const fs = __webpack_require__(24);
+        const files = fs.readdirSync(this.logDir);
+        for (const file of files) {
+            const filePath = (0,node_path__WEBPACK_IMPORTED_MODULE_1__.join)(this.logDir, file);
+            const stat = fs.statSync(filePath);
+            const age = now - stat.mtimeMs;
+            if (age > maxAge) {
+                fs.unlinkSync(filePath);
+                this.info(`Rotated old log file: ${file}`);
+            }
+        }
+    }
+}
+const logger = new Logger("logs", process.env.LOG_LEVEL || "info");
+
+
+/***/ }),
+
+/***/ 644:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   D: () => (/* binding */ metricsCollector)
+/* harmony export */ });
+class MetricsCollector {
+    metrics = {
+        http_requests_total: new Map(),
+        http_request_duration_seconds: new Map(),
+        http_errors_total: new Map(),
+        active_connections: 0,
+        chat_requests_total: 0,
+        feedback_submissions_total: 0,
+        auth_attempts_total: new Map(),
+        rate_limit_exceeded_total: 0,
+        rag_queries_total: 0,
+        rag_query_duration_seconds: [],
+    };
+    incrementRequest(method, path, status) {
+        const key = `${method}:${path}:${status}`;
+        const current = this.metrics.http_requests_total.get(key) || 0;
+        this.metrics.http_requests_total.set(key, current + 1);
+    }
+    recordRequestDuration(method, path, duration) {
+        const key = `${method}:${path}`;
+        const durations = this.metrics.http_request_duration_seconds.get(key) || [];
+        durations.push(duration);
+        if (durations.length > 1000)
+            durations.shift();
+        this.metrics.http_request_duration_seconds.set(key, durations);
+    }
+    incrementError(method, path, errorType) {
+        const key = `${method}:${path}:${errorType}`;
+        const current = this.metrics.http_errors_total.get(key) || 0;
+        this.metrics.http_errors_total.set(key, current + 1);
+    }
+    incrementConnections() {
+        this.metrics.active_connections++;
+    }
+    decrementConnections() {
+        this.metrics.active_connections = Math.max(0, this.metrics.active_connections - 1);
+    }
+    incrementChatRequests() {
+        this.metrics.chat_requests_total++;
+    }
+    incrementFeedback() {
+        this.metrics.feedback_submissions_total++;
+    }
+    incrementAuthAttempt(success) {
+        const key = success ? "success" : "failure";
+        const current = this.metrics.auth_attempts_total.get(key) || 0;
+        this.metrics.auth_attempts_total.set(key, current + 1);
+    }
+    incrementRateLimit() {
+        this.metrics.rate_limit_exceeded_total++;
+    }
+    incrementRAGQuery() {
+        this.metrics.rag_queries_total++;
+    }
+    recordRAGDuration(duration) {
+        this.metrics.rag_query_duration_seconds.push(duration);
+        if (this.metrics.rag_query_duration_seconds.length > 1000) {
+            this.metrics.rag_query_duration_seconds.shift();
+        }
+    }
+    getMetrics() {
+        return { ...this.metrics };
+    }
+    toPrometheusFormat() {
+        const lines = [];
+        lines.push("# HELP http_requests_total Total HTTP requests");
+        lines.push("# TYPE http_requests_total counter");
+        for (const [key, value] of this.metrics.http_requests_total) {
+            const [method, path, status] = key.split(":");
+            lines.push(`http_requests_total{method="${method}",path="${path}",status="${status}"} ${value}`);
+        }
+        lines.push("# HELP http_request_duration_seconds HTTP request duration in seconds");
+        lines.push("# TYPE http_request_duration_seconds histogram");
+        for (const [key, durations] of this.metrics.http_request_duration_seconds) {
+            const [method, path] = key.split(":");
+            const sorted = [...durations].sort((a, b) => a - b);
+            const avg = sorted.reduce((a, b) => a + b, 0) / sorted.length;
+            const p50 = sorted[Math.floor(sorted.length * 0.5)] || 0;
+            const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0;
+            const p99 = sorted[Math.floor(sorted.length * 0.99)] || 0;
+            lines.push(`http_request_duration_seconds_avg{method="${method}",path="${path}"} ${avg.toFixed(4)}`);
+            lines.push(`http_request_duration_seconds{method="${method}",path="${path}",quantile="0.5"} ${p50.toFixed(4)}`);
+            lines.push(`http_request_duration_seconds{method="${method}",path="${path}",quantile="0.95"} ${p95.toFixed(4)}`);
+            lines.push(`http_request_duration_seconds{method="${method}",path="${path}",quantile="0.99"} ${p99.toFixed(4)}`);
+        }
+        lines.push("# HELP http_errors_total Total HTTP errors");
+        lines.push("# TYPE http_errors_total counter");
+        for (const [key, value] of this.metrics.http_errors_total) {
+            const [method, path, errorType] = key.split(":");
+            lines.push(`http_errors_total{method="${method}",path="${path}",type="${errorType}"} ${value}`);
+        }
+        lines.push("# HELP active_connections Current active connections");
+        lines.push("# TYPE active_connections gauge");
+        lines.push(`active_connections ${this.metrics.active_connections}`);
+        lines.push("# HELP chat_requests_total Total chat requests");
+        lines.push("# TYPE chat_requests_total counter");
+        lines.push(`chat_requests_total ${this.metrics.chat_requests_total}`);
+        lines.push("# HELP feedback_submissions_total Total feedback submissions");
+        lines.push("# TYPE feedback_submissions_total counter");
+        lines.push(`feedback_submissions_total ${this.metrics.feedback_submissions_total}`);
+        lines.push("# HELP auth_attempts_total Total authentication attempts");
+        lines.push("# TYPE auth_attempts_total counter");
+        for (const [result, value] of this.metrics.auth_attempts_total) {
+            lines.push(`auth_attempts_total{result="${result}"} ${value}`);
+        }
+        lines.push("# HELP rate_limit_exceeded_total Total rate limit exceeded");
+        lines.push("# TYPE rate_limit_exceeded_total counter");
+        lines.push(`rate_limit_exceeded_total ${this.metrics.rate_limit_exceeded_total}`);
+        lines.push("# HELP rag_queries_total Total RAG queries");
+        lines.push("# TYPE rag_queries_total counter");
+        lines.push(`rag_queries_total ${this.metrics.rag_queries_total}`);
+        if (this.metrics.rag_query_duration_seconds.length > 0) {
+            lines.push("# HELP rag_query_duration_seconds RAG query duration");
+            lines.push("# TYPE rag_query_duration_seconds histogram");
+            const sorted = [...this.metrics.rag_query_duration_seconds].sort((a, b) => a - b);
+            const avg = sorted.reduce((a, b) => a + b, 0) / sorted.length;
+            const p50 = sorted[Math.floor(sorted.length * 0.5)] || 0;
+            const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0;
+            const p99 = sorted[Math.floor(sorted.length * 0.99)] || 0;
+            lines.push(`rag_query_duration_seconds_avg ${avg.toFixed(4)}`);
+            lines.push(`rag_query_duration_seconds{quantile="0.5"} ${p50.toFixed(4)}`);
+            lines.push(`rag_query_duration_seconds{quantile="0.95"} ${p95.toFixed(4)}`);
+            lines.push(`rag_query_duration_seconds{quantile="0.99"} ${p99.toFixed(4)}`);
+        }
+        const memUsage = process.memoryUsage();
+        lines.push("# HELP process_memory_bytes Process memory usage");
+        lines.push("# TYPE process_memory_bytes gauge");
+        lines.push(`process_memory_bytes{type="heap_used"} ${memUsage.heapUsed}`);
+        lines.push(`process_memory_bytes{type="heap_total"} ${memUsage.heapTotal}`);
+        lines.push(`process_memory_bytes{type="rss"} ${memUsage.rss}`);
+        lines.push("# HELP process_uptime_seconds Process uptime in seconds");
+        lines.push("# TYPE process_uptime_seconds gauge");
+        lines.push(`process_uptime_seconds ${process.uptime()}`);
+        return `${lines.join("\n")}\n`;
+    }
+}
+const metricsCollector = new MetricsCollector();
+
+
+/***/ }),
+
+/***/ 654:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  f: () => (/* binding */ jobQueue)
+});
+
+;// external "bullmq"
+const external_bullmq_namespaceObject = require("bullmq");
+// EXTERNAL MODULE: ./src/lib/email-notifier.ts + 1 modules
+var email_notifier = __webpack_require__(172);
+// EXTERNAL MODULE: ./src/lib/logger.ts
+var logger = __webpack_require__(629);
+// EXTERNAL MODULE: ./src/lib/webhook-events.ts
+var webhook_events = __webpack_require__(132);
+;// ./src/lib/job-queue.ts
+
+
+
+
+class JobQueueManager {
+    queue = null;
+    worker = null;
+    REDIS_URL;
+    constructor() {
+        this.REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+    }
+    async initialize() {
+        try {
+            const connection = {
+                host: new URL(this.REDIS_URL).hostname,
+                port: Number(new URL(this.REDIS_URL).port) || 6379,
+            };
+            this.queue = new external_bullmq_namespaceObject.Queue("elysia-jobs", { connection });
+            this.worker = new external_bullmq_namespaceObject.Worker("elysia-jobs", async (job) => {
+                return await this.processJob(job);
+            }, { connection });
+            this.worker.on("completed", (job) => {
+                logger/* logger */.v.info("Job completed", { jobId: job.id, type: job.data.type });
+            });
+            this.worker.on("failed", (job, err) => {
+                logger/* logger */.v.error("Job failed", err);
+            });
+            logger/* logger */.v.info("Job queue initialized", { connection: this.REDIS_URL });
+        }
+        catch (error) {
+            logger/* logger */.v.warn("Job queue unavailable, using in-memory fallback", {
+                error: error.message,
+            });
+        }
+    }
+    async processJob(job) {
+        const { type, payload } = job.data;
+        switch (type) {
+            case "send-email":
+                return await this.handleEmailJob(payload);
+            case "generate-report":
+                return await this.handleReportJob(payload);
+            case "cleanup-old-data":
+                return await this.handleCleanupJob();
+            case "send-webhook":
+                return await this.handleWebhookJob(payload);
+            default:
+                throw new Error(`Unknown job type: ${type}`);
+        }
+    }
+    async handleEmailJob(data) {
+        await email_notifier/* emailNotifier */.x.send({
+            to: data.to,
+            subject: data.subject,
+            html: data.html,
+        });
+        return { success: true, sentAt: new Date() };
+    }
+    async handleReportJob(data) {
+        logger/* logger */.v.info("Generating report", { type: data.reportType });
+        const { feedbackService, knowledgeService } = await Promise.resolve(/* import() */).then(__webpack_require__.bind(__webpack_require__, 828));
+        const feedbacks = await feedbackService.getRecent(100);
+        const knowledge = await knowledgeService.getAll();
+        const report = {
+            type: data.reportType,
+            period: { start: data.startDate, end: data.endDate },
+            statistics: {
+                totalFeedbacks: feedbacks.length,
+                positiveFeedbacks: feedbacks.filter((f) => f.rating === "up").length,
+                negativeFeedbacks: feedbacks.filter((f) => f.rating === "down").length,
+                totalKnowledge: knowledge.length,
+                verifiedKnowledge: knowledge.filter((k) => k.verified).length,
+            },
+            generatedAt: new Date(),
+        };
+        const adminEmail = process.env.ADMIN_EMAIL;
+        if (adminEmail) {
+            await email_notifier/* emailNotifier */.x.send({
+                to: adminEmail,
+                subject: `[エリシアAI] ${data.reportType}レポート`,
+                html: `
+					<h2>📊 ${data.reportType}レポート</h2>
+					<ul>
+						<li>総フィードバック: ${report.statistics.totalFeedbacks}</li>
+						<li>ポジティブ: ${report.statistics.positiveFeedbacks}</li>
+						<li>ネガティブ: ${report.statistics.negativeFeedbacks}</li>
+						<li>総ナレッジ: ${report.statistics.totalKnowledge}</li>
+						<li>検証済み: ${report.statistics.verifiedKnowledge}</li>
+					</ul>
+					<p><small>生成日時: ${report.generatedAt.toLocaleString("ja-JP")}</small></p>
+				`,
+            });
+        }
+        return report;
+    }
+    async handleCleanupJob() {
+        logger/* logger */.v.info("Running data cleanup job");
+        const { logCleanupManager } = await Promise.resolve(/* import() */).then(__webpack_require__.bind(__webpack_require__, 922));
+        await logCleanupManager.triggerManualCleanup();
+        return { success: true, cleanedAt: new Date() };
+    }
+    async handleWebhookJob(payload) {
+        const { event, data } = payload;
+        await webhook_events/* webhookManager */.$.emit(event, data);
+        return { success: true, sentAt: new Date() };
+    }
+    async addJob(type, payload, options = {}) {
+        if (!this.queue) {
+            logger/* logger */.v.warn("Queue not available, executing job immediately");
+            return await this.processJob({
+                data: { type, payload },
+            });
+        }
+        const job = await this.queue.add(type, { type, payload }, options);
+        logger/* logger */.v.debug("Job added to queue", { jobId: job.id, type });
+        return job;
+    }
+    async sendEmail(to, subject, html) {
+        return await this.addJob("send-email", { to, subject, html });
+    }
+    async generateReport(reportType, startDate, endDate) {
+        return await this.addJob("generate-report", {
+            reportType,
+            startDate,
+            endDate,
+        });
+    }
+    async scheduleCleanup() {
+        return await this.addJob("cleanup-old-data", {});
+    }
+    async getStats() {
+        if (!this.queue) {
+            return { available: false };
+        }
+        const [waiting, active, completed, failed] = await Promise.all([
+            this.queue.getWaitingCount(),
+            this.queue.getActiveCount(),
+            this.queue.getCompletedCount(),
+            this.queue.getFailedCount(),
+        ]);
+        return {
+            available: true,
+            waiting,
+            active,
+            completed,
+            failed,
+        };
+    }
+    async close() {
+        if (this.worker) {
+            await this.worker.close();
+        }
+        if (this.queue) {
+            await this.queue.close();
+        }
+        logger/* logger */.v.info("Job queue closed");
+    }
+}
+const jobQueue = new JobQueueManager();
+
+
+/***/ }),
+
+/***/ 659:
+/***/ ((module) => {
+
+module.exports = require("ioredis");
+
+/***/ }),
+
+/***/ 695:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   W: () => (/* binding */ createAuditMiddleware)
+/* harmony export */ });
+/* harmony import */ var _audit_logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(371);
+
+const auditDataMap = new WeakMap();
+function createAuditMiddleware(options = {}) {
+    const { excludePaths = ["/health", "/metrics", "/swagger"], excludeMethods = ["OPTIONS"], includeBody = false, } = options;
+    return {
+        beforeHandle: async (context) => {
+            const { request } = context;
+            const url = new URL(request.url);
+            if (excludePaths.some((path) => url.pathname.startsWith(path))) {
+                return;
+            }
+            if (excludeMethods.includes(request.method)) {
+                return;
+            }
+            auditDataMap.set(request, {
+                startTime: Date.now(),
+                url: url.pathname,
+                method: request.method,
+            });
+        },
+        afterHandle: async (context, response) => {
+            const { request, set } = context;
+            const auditData = auditDataMap.get(request);
+            if (!auditData) {
+                return;
+            }
+            const url = new URL(request.url);
+            const statusCode = set.status || 200;
+            const auth = request.headers.get("authorization") || "";
+            let userId;
+            if (auth.startsWith("Bearer ")) {
+                try {
+                    const jwt = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 829, 23));
+                    const decoded = jwt.verify(auth.substring(7), process.env.JWT_SECRET || "dev-secret");
+                    userId = decoded.username;
+                }
+                catch {
+                }
+            }
+            const action = determineAction(request.method, url.pathname);
+            const resource = determineResource(url.pathname);
+            const resourceId = extractResourceId(url.pathname);
+            _audit_logger__WEBPACK_IMPORTED_MODULE_0__/* .auditLogger */ ._.log({
+                userId,
+                action,
+                resource,
+                resourceId,
+                method: request.method,
+                path: url.pathname,
+                ipAddress: request.headers.get("x-forwarded-for") ||
+                    request.headers.get("x-real-ip") ||
+                    "127.0.0.1",
+                userAgent: request.headers.get("user-agent") || "unknown",
+                statusCode,
+            });
+            auditDataMap.delete(request);
+        },
+        onError: async (context, error) => {
+            const { request } = context;
+            const auditData = auditDataMap.get(request);
+            if (!auditData) {
+                return;
+            }
+            const url = new URL(request.url);
+            _audit_logger__WEBPACK_IMPORTED_MODULE_0__/* .auditLogger */ ._.log({
+                action: "ERROR",
+                resource: determineResource(url.pathname),
+                method: request.method,
+                path: url.pathname,
+                ipAddress: request.headers.get("x-forwarded-for") ||
+                    request.headers.get("x-real-ip") ||
+                    "127.0.0.1",
+                userAgent: request.headers.get("user-agent") || "unknown",
+                statusCode: 500,
+                error: error.message,
+            });
+        },
+    };
+}
+function determineAction(method, path) {
+    if (path.includes("/login") || path.includes("/auth"))
+        return "AUTH";
+    if (path.includes("/register"))
+        return "REGISTER";
+    if (path.includes("/logout"))
+        return "LOGOUT";
+    switch (method) {
+        case "GET":
+            return "READ";
+        case "POST":
+            return "CREATE";
+        case "PUT":
+        case "PATCH":
+            return "UPDATE";
+        case "DELETE":
+            return "DELETE";
+        default:
+            return method;
+    }
+}
+function determineResource(path) {
+    if (path.includes("/feedback"))
+        return "feedback";
+    if (path.includes("/knowledge"))
+        return "knowledge";
+    if (path.includes("/user"))
+        return "user";
+    if (path.includes("/chat"))
+        return "chat";
+    if (path.includes("/upload") || path.includes("/files"))
+        return "file";
+    if (path.includes("/jobs"))
+        return "job";
+    if (path.includes("/cron"))
+        return "cron";
+    if (path.includes("/audit"))
+        return "audit";
+    if (path.includes("/admin"))
+        return "admin";
+    if (path.includes("/session"))
+        return "session";
+    if (path.includes("/api-key"))
+        return "api-key";
+    return "unknown";
+}
+function extractResourceId(path) {
+    const matches = path.match(/\/([^/]+)\/([a-zA-Z0-9-]+)$/);
+    if (matches?.[2]) {
+        return matches[2];
+    }
+    return undefined;
+}
+
+
+/***/ }),
+
+/***/ 696:
+/***/ ((module) => {
+
+module.exports = require("@elysiajs/html");
+
+/***/ }),
+
+/***/ 703:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   uY: () => (/* binding */ performHealthCheck)
+/* harmony export */ });
+/* unused harmony exports checkRedis, checkFastAPI, checkOllama, getSystemMetrics */
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(938);
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var ioredis__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(659);
+/* harmony import */ var ioredis__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(ioredis__WEBPACK_IMPORTED_MODULE_1__);
+
+
+async function checkRedis(redisUrl) {
+    const startTime = Date.now();
+    try {
+        const redis = new (ioredis__WEBPACK_IMPORTED_MODULE_1___default())(redisUrl, {
+            connectTimeout: 5000,
+            maxRetriesPerRequest: 1,
+        });
+        await redis.ping();
+        const responseTime = Date.now() - startTime;
+        const info = await redis.info("server");
+        const version = info.match(/redis_version:(.+)/)?.[1]?.trim();
+        redis.disconnect();
+        return {
+            status: responseTime < 100 ? "up" : "degraded",
+            responseTime,
+            lastCheck: new Date().toISOString(),
+        };
+    }
+    catch (error) {
+        return {
+            status: "down",
+            error: error instanceof Error ? error.message : "Unknown error",
+            lastCheck: new Date().toISOString(),
+        };
+    }
+}
+async function checkFastAPI(fastAPIUrl) {
+    const startTime = Date.now();
+    try {
+        const response = await axios__WEBPACK_IMPORTED_MODULE_0___default().get(`${fastAPIUrl}/health`, {
+            timeout: 5000,
+            validateStatus: (status) => status < 500,
+        });
+        const responseTime = Date.now() - startTime;
+        if (response.status === 200) {
+            return {
+                status: responseTime < 200 ? "up" : "degraded",
+                responseTime,
+                lastCheck: new Date().toISOString(),
+            };
+        }
+        return {
+            status: "degraded",
+            responseTime,
+            error: `HTTP ${response.status}`,
+            lastCheck: new Date().toISOString(),
+        };
+    }
+    catch (error) {
+        return {
+            status: "down",
+            error: error instanceof Error ? error.message : "Connection failed",
+            lastCheck: new Date().toISOString(),
+        };
+    }
+}
+async function checkOllama(ollamaUrl) {
+    const startTime = Date.now();
+    try {
+        const response = await axios__WEBPACK_IMPORTED_MODULE_0___default().get(`${ollamaUrl}/api/version`, {
+            timeout: 5000,
+        });
+        const responseTime = Date.now() - startTime;
+        if (response.status === 200) {
+            return {
+                status: responseTime < 500 ? "up" : "degraded",
+                responseTime,
+                lastCheck: new Date().toISOString(),
+            };
+        }
+        return {
+            status: "degraded",
+            responseTime,
+            lastCheck: new Date().toISOString(),
+        };
+    }
+    catch (error) {
+        return {
+            status: "down",
+            error: error instanceof Error ? error.message : "Connection failed",
+            lastCheck: new Date().toISOString(),
+        };
+    }
+}
+function getSystemMetrics() {
+    const memory = process.memoryUsage();
+    const totalMemory = memory.heapTotal;
+    const usedMemory = memory.heapUsed;
+    return {
+        memory: {
+            used: Math.round(usedMemory / 1024 / 1024),
+            total: Math.round(totalMemory / 1024 / 1024),
+            percentage: Math.round((usedMemory / totalMemory) * 100),
+        },
+        cpu: {
+            usage: process.cpuUsage().user / 1000000,
+        },
+    };
+}
+async function performHealthCheck(redisUrl, fastAPIUrl, ollamaUrl) {
+    const [redis, fastapi, ollama] = await Promise.all([
+        checkRedis(redisUrl),
+        checkFastAPI(fastAPIUrl),
+        checkOllama(ollamaUrl),
+    ]);
+    const system = getSystemMetrics();
+    const allUp = [redis, fastapi, ollama].every((s) => s.status === "up");
+    const anyDown = [redis, fastapi, ollama].some((s) => s.status === "down");
+    const status = allUp ? "healthy" : anyDown ? "unhealthy" : "degraded";
+    return {
+        status,
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        services: { redis, fastapi, ollama },
+        system,
+    };
+}
+
+
+/***/ }),
+
+/***/ 709:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   x: () => (/* binding */ checkEnvironmentOrExit)
+/* harmony export */ });
+/* unused harmony exports validateEnvironment, printEnvironmentSummary */
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(629);
+
+const ENV_SCHEMA = [
+    {
+        name: "JWT_SECRET",
+        required: true,
+        description: "JWT署名用シークレットキー (32文字以上推奨)",
+        validator: (v) => v.length >= 32,
+    },
+    {
+        name: "JWT_REFRESH_SECRET",
+        required: true,
+        description: "リフレッシュトークン用シークレットキー (32文字以上推奨)",
+        validator: (v) => v.length >= 32,
+    },
+    {
+        name: "AUTH_PASSWORD",
+        required: true,
+        description: "デフォルトユーザー(elysia)のパスワード",
+        validator: (v) => v !== "your-strong-password-here" && v.length >= 8,
+    },
+    {
+        name: "PORT",
+        required: false,
+        default: "3000",
+        description: "サーバーポート番号",
+        validator: (v) => !Number.isNaN(Number(v)) && Number(v) > 0 && Number(v) < 65536,
+    },
+    {
+        name: "ALLOWED_ORIGINS",
+        required: false,
+        default: "http://localhost:3000",
+        description: "CORS許可オリジン (カンマ区切り)",
+    },
+    {
+        name: "DATABASE_URL",
+        required: true,
+        description: "Prisma データベース接続URL",
+    },
+    {
+        name: "OLLAMA_BASE_URL",
+        required: false,
+        default: "http://localhost:11434",
+        description: "Ollama API URL",
+    },
+    {
+        name: "OLLAMA_MODEL",
+        required: false,
+        default: "llama3.2",
+        description: "使用するLLMモデル名",
+    },
+    {
+        name: "REDIS_ENABLED",
+        required: false,
+        default: "false",
+        description: "Redisレート制限を有効化",
+    },
+    {
+        name: "FASTAPI_BASE_URL",
+        required: false,
+        default: "http://localhost:8000",
+        description: "FastAPI RAGサービスURL",
+    },
+    {
+        name: "VOICEVOX_BASE_URL",
+        required: false,
+        default: "http://localhost:50021",
+        description: "VOICEVOX エンジンURL",
+    },
+];
+function validateEnvironment() {
+    const errors = [];
+    const warnings = [];
+    const missing = [];
+    const invalid = [];
+    for (const config of ENV_SCHEMA) {
+        const value = process.env[config.name];
+        if (config.required && !value) {
+            missing.push(config.name);
+            errors.push(`❌ [必須] ${config.name}: ${config.description}${config.default ? ` (デフォルト: ${config.default})` : ""}`);
+            continue;
+        }
+        if (!value && config.default) {
+            process.env[config.name] = config.default;
+            warnings.push(`⚠️  ${config.name}: デフォルト値を使用 (${config.default})`);
+            continue;
+        }
+        if (value && config.validator && !config.validator(value)) {
+            invalid.push(config.name);
+            errors.push(`❌ [無効] ${config.name}: ${config.description} (現在の値: ${value.substring(0, 20)}...)`);
+        }
+    }
+    return {
+        valid: errors.length === 0,
+        errors,
+        warnings,
+        missing,
+        invalid,
+    };
+}
+function checkEnvironmentOrExit() {
+    _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("🔍 環境変数を検証中...");
+    const result = validateEnvironment();
+    if (result.warnings.length > 0) {
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.warn("⚠️  環境変数の警告:");
+        for (const warning of result.warnings) {
+            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.warn(`  ${warning}`);
+        }
+    }
+    if (!result.valid) {
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error("❌ 環境変数の検証に失敗しました:");
+        for (const error of result.errors) {
+            _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error(`  ${error}`);
+        }
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error("\n💡 修正方法:");
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error("  1. .env ファイルを開く");
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error("  2. 上記の必須項目を設定");
+        _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.error("  3. サーバーを再起動\n");
+        process.exit(1);
+    }
+    _logger__WEBPACK_IMPORTED_MODULE_0__/* .logger */ .v.info("✅ 環境変数の検証完了");
+}
+function printEnvironmentSummary() {
+    logger.info("\n📋 環境変数サマリー:");
+    logger.info(`  - ポート: ${process.env.PORT || 3000}`);
+    logger.info(`  - データベース: ${process.env.DATABASE_URL || "未設定"}`);
+    logger.info(`  - Redis: ${process.env.REDIS_ENABLED === "true" ? "有効" : "無効"}`);
+    logger.info(`  - Ollama: ${process.env.OLLAMA_BASE_URL || "http://localhost:11434"}`);
+    logger.info(`  - モデル: ${process.env.OLLAMA_MODEL || "llama3.2"}\n`);
+}
+
+
+/***/ }),
+
+/***/ 729:
+/***/ ((module) => {
+
+module.exports = require("bcryptjs");
+
+/***/ }),
+
+/***/ 732:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   healthMonitor: () => (/* binding */ healthMonitor)
+/* harmony export */ });
+/* harmony import */ var _email_notifier__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(172);
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(629);
+/* harmony import */ var _webhook_events__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(132);
+
+
+
+class HealthMonitor {
+    checks;
+    statuses;
+    intervals;
+    enabled;
+    constructor() {
+        this.checks = new Map();
+        this.statuses = new Map();
+        this.intervals = new Map();
+        this.enabled = process.env.HEALTH_MONITORING_ENABLED !== "false";
+        this.initializeDefaultChecks();
+    }
+    initializeDefaultChecks() {
+        this.addCheck({
+            name: "database",
+            check: async () => {
+                try {
+                    const { PrismaClient } = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 330, 23));
+                    const prisma = new PrismaClient();
+                    await prisma.$queryRaw `SELECT 1`;
+                    await prisma.$disconnect();
+                    return true;
+                }
+                catch {
+                    return false;
+                }
+            },
+            interval: 60000,
+            timeout: 5000,
+            failureThreshold: 3,
+        });
+        this.addCheck({
+            name: "ollama",
+            check: async () => {
+                try {
+                    const ollamaUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+                    const response = await fetch(`${ollamaUrl}/api/version`, {
+                        signal: AbortSignal.timeout(5000),
+                    });
+                    return response.ok;
+                }
+                catch {
+                    return false;
+                }
+            },
+            interval: 120000,
+            timeout: 5000,
+            failureThreshold: 3,
+        });
+        if (process.env.REDIS_ENABLED === "true") {
+            this.addCheck({
+                name: "redis",
+                check: async () => {
+                    try {
+                        const Redis = (await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 659, 23))).default;
+                        const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+                        await redis.ping();
+                        redis.disconnect();
+                        return true;
+                    }
+                    catch {
+                        return false;
+                    }
+                },
+                interval: 60000,
+                timeout: 5000,
+                failureThreshold: 3,
+            });
+        }
+        this.addCheck({
+            name: "disk_space",
+            check: async () => {
+                try {
+                    const fs = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 24, 23));
+                    const path = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 760, 23));
+                    const stats = fs.statfsSync(path.resolve("./"));
+                    const freeSpaceGB = (stats.bavail * stats.bsize) / 1024 ** 3;
+                    return freeSpaceGB > 1;
+                }
+                catch {
+                    return false;
+                }
+            },
+            interval: 300000,
+            timeout: 5000,
+            failureThreshold: 2,
+        });
+    }
+    addCheck(check) {
+        this.checks.set(check.name, check);
+        this.statuses.set(check.name, {
+            name: check.name,
+            status: "unknown",
+            lastCheck: new Date(),
+            consecutiveFailures: 0,
+        });
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info(`Health check added: ${check.name}`, {
+            interval: `${check.interval}ms`,
+        });
+    }
+    start() {
+        if (!this.enabled) {
+            _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("Health monitoring is disabled");
+            return;
+        }
+        for (const [name, check] of this.checks.entries()) {
+            this.performCheck(name, check);
+            const intervalId = setInterval(() => {
+                this.performCheck(name, check);
+            }, check.interval);
+            this.intervals.set(name, intervalId);
+        }
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("Health monitoring started", {
+            checks: this.checks.size,
+        });
+    }
+    stop() {
+        for (const intervalId of this.intervals.values()) {
+            clearInterval(intervalId);
+        }
+        this.intervals.clear();
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info("Health monitoring stopped");
+    }
+    async performCheck(name, check) {
+        const status = this.statuses.get(name);
+        if (!status)
+            return;
+        try {
+            const result = await Promise.race([
+                check.check(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), check.timeout)),
+            ]);
+            status.lastCheck = new Date();
+            if (result) {
+                if (status.status === "unhealthy") {
+                    _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.info(`Health check recovered: ${name}`);
+                    await this.notifyRecovery(name);
+                }
+                status.status = "healthy";
+                status.consecutiveFailures = 0;
+                status.lastError = undefined;
+            }
+            else {
+                this.handleCheckFailure(status, check, "Check returned false");
+            }
+        }
+        catch (error) {
+            this.handleCheckFailure(status, check, error instanceof Error ? error.message : "Unknown error");
+        }
+    }
+    async handleCheckFailure(status, check, errorMessage) {
+        status.consecutiveFailures++;
+        status.lastError = errorMessage;
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.warn(`Health check failed: ${status.name}`, {
+            failures: status.consecutiveFailures,
+            error: errorMessage,
+        });
+        if (status.consecutiveFailures >= check.failureThreshold) {
+            status.status = "unhealthy";
+            await this.notifyFailure(status.name, errorMessage);
+        }
+    }
+    async notifyFailure(name, error) {
+        _logger__WEBPACK_IMPORTED_MODULE_1__/* .logger */ .v.error(`Health check CRITICAL: ${name}`, new Error(error));
+        await _webhook_events__WEBPACK_IMPORTED_MODULE_2__/* .webhookManager */ .$.emit("system.health_check_failed", {
+            service: name,
+            error,
+        });
+        await _email_notifier__WEBPACK_IMPORTED_MODULE_0__/* .emailNotifier */ .x.sendHealthCheckFailure(name, error);
+    }
+    async notifyRecovery(name) {
+        await _webhook_events__WEBPACK_IMPORTED_MODULE_2__/* .webhookManager */ .$.emit("system.health_check_failed", {
+            service: name,
+            recovered: true,
+        });
+    }
+    getStatus() {
+        const statuses = Array.from(this.statuses.values());
+        return {
+            overall: statuses.every((s) => s.status === "healthy")
+                ? "healthy"
+                : statuses.some((s) => s.status === "unhealthy")
+                    ? "unhealthy"
+                    : "degraded",
+            checks: statuses.map((s) => ({
+                name: s.name,
+                status: s.status,
+                lastCheck: s.lastCheck,
+                consecutiveFailures: s.consecutiveFailures,
+                lastError: s.lastError,
+            })),
+        };
+    }
+    async runCheck(name) {
+        const check = this.checks.get(name);
+        if (!check)
+            return false;
+        await this.performCheck(name, check);
+        const status = this.statuses.get(name);
+        return status?.status === "healthy" || false;
+    }
+}
+const healthMonitor = new HealthMonitor();
+
+
+/***/ }),
+
+/***/ 760:
+/***/ ((module) => {
+
+module.exports = require("node:path");
+
+/***/ }),
+
+/***/ 807:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   r: () => (/* binding */ DATABASE_CONFIG)
+/* harmony export */ });
+const DATABASE_CONFIG = {
+    RAG_API_URL: process.env.RAG_API_URL || "http://127.0.0.1:8000/rag",
+    RAG_TIMEOUT: Number(process.env.RAG_TIMEOUT) || 5000,
+    MILVUS_HOST: process.env.MILVUS_HOST || "localhost",
+    MILVUS_PORT: Number(process.env.MILVUS_PORT) || 19530,
+    MILVUS_COLLECTION: process.env.MILVUS_COLLECTION || "elysia_knowledge",
+    REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379",
+    REDIS_ENABLED: process.env.REDIS_ENABLED !== "false",
+};
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((/* unused pure expression or super */ null && (DATABASE_CONFIG)));
+
+
+/***/ }),
+
+/***/ 811:
+/***/ ((module) => {
+
+module.exports = require("@elysiajs/swagger");
+
+/***/ }),
+
+/***/ 828:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Dv: () => (/* binding */ userService),
+/* harmony export */   feedbackService: () => (/* binding */ feedbackService),
+/* harmony export */   knowledgeService: () => (/* binding */ knowledgeService)
+/* harmony export */ });
+/* unused harmony exports prisma, tokenService, chatService, voiceService */
+/* harmony import */ var _prisma_client__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(330);
+/* harmony import */ var _prisma_client__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_prisma_client__WEBPACK_IMPORTED_MODULE_0__);
+
+let prisma;
+try {
+    const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
+    prisma = new _prisma_client__WEBPACK_IMPORTED_MODULE_0__.PrismaClient({
+        log:  true
+            ? ["query", "error", "warn"]
+            : 0,
+        datasourceUrl: dbUrl,
+    });
+    console.log("✅ Prisma database connected");
+}
+catch (error) {
+    console.warn("⚠️ Prisma database not configured, using in-memory fallback");
+    prisma = null;
+}
+process.on("beforeExit", async () => {
+    if (prisma)
+        await prisma.$disconnect();
+});
+
+const userService = {
+    async create(data) {
+        return prisma.user.create({ data });
+    },
+    async findByUsername(username) {
+        return prisma.user.findUnique({ where: { username } });
+    },
+    async findById(id) {
+        return prisma.user.findUnique({ where: { id } });
+    },
+    async update(id, data) {
+        return prisma.user.update({ where: { id }, data });
+    },
+    async delete(id) {
+        return prisma.user.delete({ where: { id } });
+    },
+};
+const tokenService = {
+    async create(data) {
+        return prisma.refreshToken.create({ data });
+    },
+    async findByToken(token) {
+        return prisma.refreshToken.findUnique({
+            where: { token },
+            include: { user: true },
+        });
+    },
+    async revoke(token) {
+        return prisma.refreshToken.update({
+            where: { token },
+            data: { revoked: true },
+        });
+    },
+    async revokeAllByUser(userId) {
+        return prisma.refreshToken.updateMany({
+            where: { userId },
+            data: { revoked: true },
+        });
+    },
+    async deleteExpired() {
+        return prisma.refreshToken.deleteMany({
+            where: { expiresAt: { lt: new Date() } },
+        });
+    },
+};
+const chatService = {
+    async createSession(data) {
+        return prisma.chatSession.create({ data });
+    },
+    async getSession(id) {
+        return prisma.chatSession.findUnique({
+            where: { id },
+            include: { messages: { orderBy: { createdAt: "asc" } } },
+        });
+    },
+    async addMessage(data) {
+        return prisma.message.create({ data });
+    },
+    async getMessages(sessionId, limit = 50) {
+        return prisma.message.findMany({
+            where: { sessionId },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async deleteSession(id) {
+        return prisma.chatSession.delete({ where: { id } });
+    },
+};
+const feedbackService = {
+    async create(data) {
+        return prisma.feedback.create({ data });
+    },
+    async getRecent(limit = 100) {
+        return prisma.feedback.findMany({
+            orderBy: { createdAt: "desc" },
+            take: limit,
+            include: { user: { select: { username: true } } },
+        });
+    },
+    async getByRating(rating, limit = 50) {
+        return prisma.feedback.findMany({
+            where: { rating },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async getStats() {
+        const [total, upCount, downCount] = await Promise.all([
+            prisma.feedback.count(),
+            prisma.feedback.count({ where: { rating: "up" } }),
+            prisma.feedback.count({ where: { rating: "down" } }),
+        ]);
+        return {
+            total,
+            upCount,
+            downCount,
+            upRate: total > 0 ? (upCount / total) * 100 : 0,
+        };
+    },
+};
+const knowledgeService = {
+    async create(data) {
+        return prisma.knowledgeBase.create({ data });
+    },
+    async search(query, limit = 10) {
+        return prisma.knowledgeBase.findMany({
+            where: {
+                OR: [
+                    { question: { contains: query } },
+                    { answer: { contains: query } },
+                ],
+                verified: true,
+            },
+            orderBy: { updatedAt: "desc" },
+            take: limit,
+        });
+    },
+    async getAll(verified = true) {
+        return prisma.knowledgeBase.findMany({
+            where: verified ? { verified: true } : undefined,
+            orderBy: { updatedAt: "desc" },
+        });
+    },
+    async verify(id) {
+        return prisma.knowledgeBase.update({
+            where: { id },
+            data: { verified: true },
+        });
+    },
+    async delete(id) {
+        return prisma.knowledgeBase.delete({ where: { id } });
+    },
+};
+const voiceService = {
+    async create(data) {
+        return prisma.voiceLog.create({ data });
+    },
+    async getRecent(limit = 100) {
+        return prisma.voiceLog.findMany({
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async getByUser(username, limit = 50) {
+        return prisma.voiceLog.findMany({
+            where: { username },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+        });
+    },
+    async deleteOldLogs(daysOld = 30) {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+        return prisma.voiceLog.deleteMany({
+            where: { createdAt: { lt: cutoffDate } },
+        });
+    },
+};
+
+
+/***/ }),
+
+/***/ 829:
+/***/ ((module) => {
+
+module.exports = require("jsonwebtoken");
+
+/***/ }),
+
+/***/ 836:
+/***/ ((module) => {
+
+module.exports = require("@elysiajs/cors");
+
+/***/ }),
+
+/***/ 855:
+/***/ ((module) => {
+
+module.exports = require("@elysiajs/static");
+
+/***/ }),
+
+/***/ 922:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   logCleanupManager: () => (/* binding */ logCleanupManager)
+/* harmony export */ });
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(760);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(629);
+
+
+
+class LogCleanupManager {
+    config;
+    intervalId;
+    isRunning = false;
+    constructor() {
+        this.config = {
+            enabled: process.env.LOG_CLEANUP_ENABLED !== "false",
+            logDir: process.env.LOG_DIR || "./logs",
+            maxAgeDays: Number(process.env.LOG_MAX_AGE_DAYS) || 30,
+            maxSizeMB: Number(process.env.LOG_MAX_SIZE_MB) || 500,
+            checkInterval: Number(process.env.LOG_CLEANUP_INTERVAL_HOURS) || 24,
+            compressionEnabled: process.env.LOG_COMPRESSION_ENABLED === "true",
+        };
+    }
+    start() {
+        if (!this.config.enabled) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Log cleanup is disabled");
+            return;
+        }
+        if (this.isRunning) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.warn("Log cleanup is already running");
+            return;
+        }
+        this.isRunning = true;
+        this.performCleanup();
+        this.intervalId = setInterval(() => {
+            this.performCleanup();
+        }, this.config.checkInterval * 60 * 60 * 1000);
+        _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Log cleanup started", {
+            interval: `${this.config.checkInterval} hours`,
+            maxAge: `${this.config.maxAgeDays} days`,
+            maxSize: `${this.config.maxSizeMB} MB`,
+        });
+    }
+    stop() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = undefined;
+            this.isRunning = false;
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Log cleanup stopped");
+        }
+    }
+    async performCleanup() {
+        const startTime = Date.now();
+        try {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Starting log cleanup");
+            if (!node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(this.config.logDir)) {
+                _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.warn(`Log directory not found: ${this.config.logDir}`);
+                return;
+            }
+            const stats = await this.analyzeLogDirectory();
+            const deletedByAge = await this.deleteOldLogs();
+            let deletedBySize = 0;
+            if (stats.totalSizeMB > this.config.maxSizeMB) {
+                deletedBySize = await this.deleteBySize(stats.totalSizeMB - this.config.maxSizeMB);
+            }
+            const duration = Date.now() - startTime;
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Log cleanup completed", {
+                deletedByAge,
+                deletedBySize,
+                duration: `${duration}ms`,
+            });
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Log cleanup failed", error);
+        }
+    }
+    async analyzeLogDirectory() {
+        const files = node_fs__WEBPACK_IMPORTED_MODULE_0__.readdirSync(this.config.logDir);
+        let totalSize = 0;
+        let fileCount = 0;
+        for (const file of files) {
+            if (file.endsWith(".log") || file.endsWith(".log.gz")) {
+                const filePath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.logDir, file);
+                const stats = node_fs__WEBPACK_IMPORTED_MODULE_0__.statSync(filePath);
+                totalSize += stats.size;
+                fileCount++;
+            }
+        }
+        return {
+            totalSizeMB: totalSize / (1024 * 1024),
+            fileCount,
+        };
+    }
+    async deleteOldLogs() {
+        const files = node_fs__WEBPACK_IMPORTED_MODULE_0__.readdirSync(this.config.logDir);
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - this.config.maxAgeDays);
+        let deletedCount = 0;
+        for (const file of files) {
+            if (file.endsWith(".log") || file.endsWith(".log.gz")) {
+                const filePath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.logDir, file);
+                const stats = node_fs__WEBPACK_IMPORTED_MODULE_0__.statSync(filePath);
+                if (stats.mtime < cutoffDate) {
+                    node_fs__WEBPACK_IMPORTED_MODULE_0__.unlinkSync(filePath);
+                    deletedCount++;
+                    _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.debug("Old log deleted", { file });
+                }
+            }
+        }
+        return deletedCount;
+    }
+    async deleteBySize(targetSizeMB) {
+        const files = node_fs__WEBPACK_IMPORTED_MODULE_0__.readdirSync(this.config.logDir)
+            .filter((f) => f.endsWith(".log") || f.endsWith(".log.gz"))
+            .map((f) => {
+            const filePath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.logDir, f);
+            const stats = node_fs__WEBPACK_IMPORTED_MODULE_0__.statSync(filePath);
+            return {
+                path: filePath,
+                name: f,
+                size: stats.size,
+                mtime: stats.mtime,
+            };
+        })
+            .sort((a, b) => a.mtime.getTime() - b.mtime.getTime());
+        let deletedSize = 0;
+        let deletedCount = 0;
+        const targetSize = targetSizeMB * 1024 * 1024;
+        for (const file of files) {
+            if (deletedSize >= targetSize)
+                break;
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.unlinkSync(file.path);
+            deletedSize += file.size;
+            deletedCount++;
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.debug("Log deleted due to size limit", { file: file.name });
+        }
+        return deletedCount;
+    }
+    async rotateLog(logFile) {
+        const filePath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.logDir, logFile);
+        if (!node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(filePath)) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.warn(`Log file not found: ${logFile}`);
+            return;
+        }
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const archiveName = `${logFile}.${timestamp}`;
+        const archivePath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.logDir, archiveName);
+        try {
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.renameSync(filePath, archivePath);
+            if (this.config.compressionEnabled) {
+                await this.compressLog(archivePath);
+            }
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Log rotated", { file: logFile, archive: archiveName });
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Log rotation failed", error);
+        }
+    }
+    async compressLog(filePath) {
+        try {
+            const zlib = await Promise.resolve(/* import() */).then(__webpack_require__.t.bind(__webpack_require__, 522, 23));
+            const { createReadStream, createWriteStream } = node_fs__WEBPACK_IMPORTED_MODULE_0__;
+            const gzip = zlib.createGzip();
+            const source = createReadStream(filePath);
+            const destination = createWriteStream(`${filePath}.gz`);
+            await new Promise((resolve, reject) => {
+                source
+                    .pipe(gzip)
+                    .pipe(destination)
+                    .on("finish", () => resolve())
+                    .on("error", reject);
+            });
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.unlinkSync(filePath);
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.debug("Log compressed", { file: node_path__WEBPACK_IMPORTED_MODULE_1__.basename(filePath) });
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Log compression failed", error);
+        }
+    }
+    getStats() {
+        try {
+            const stats = this.analyzeLogDirectory();
+            return {
+                enabled: this.config.enabled,
+                running: this.isRunning,
+                logDir: this.config.logDir,
+                maxAgeDays: this.config.maxAgeDays,
+                maxSizeMB: this.config.maxSizeMB,
+                ...stats,
+            };
+        }
+        catch {
+            return {
+                enabled: this.config.enabled,
+                running: this.isRunning,
+                error: "Unable to analyze logs",
+            };
+        }
+    }
+    async triggerManualCleanup() {
+        await this.performCleanup();
+    }
+}
+const logCleanupManager = new LogCleanupManager();
+
+
+/***/ }),
+
+/***/ 931:
+/***/ ((module) => {
+
+module.exports = require("elysia");
+
+/***/ }),
+
+/***/ 935:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   m: () => (/* binding */ backupScheduler)
+/* harmony export */ });
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(24);
+/* harmony import */ var node_fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(node_fs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(760);
+/* harmony import */ var node_path__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(node_path__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _logger__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(629);
+/* harmony import */ var _webhook_events__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(132);
+
+
+
+
+class BackupScheduler {
+    config;
+    intervalId;
+    isRunning = false;
+    constructor() {
+        this.config = {
+            enabled: process.env.AUTO_BACKUP_ENABLED === "true",
+            interval: Number(process.env.BACKUP_INTERVAL_MINUTES) || 60,
+            maxBackups: Number(process.env.MAX_BACKUP_GENERATIONS) || 7,
+            backupDir: process.env.BACKUP_DIR || "./backups",
+        };
+        if (!node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(this.config.backupDir)) {
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.mkdirSync(this.config.backupDir, { recursive: true });
+        }
+    }
+    start() {
+        if (!this.config.enabled) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Backup scheduler is disabled");
+            return;
+        }
+        if (this.isRunning) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.warn("Backup scheduler is already running");
+            return;
+        }
+        this.isRunning = true;
+        this.performBackup();
+        this.intervalId = setInterval(() => {
+            this.performBackup();
+        }, this.config.interval * 60 * 1000);
+        _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Backup scheduler started", {
+            interval: `${this.config.interval} minutes`,
+            maxBackups: this.config.maxBackups,
+        });
+    }
+    stop() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = undefined;
+            this.isRunning = false;
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Backup scheduler stopped");
+        }
+    }
+    async performBackup() {
+        const startTime = Date.now();
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const backupFileName = `elysia-backup-${timestamp}.db`;
+        const backupPath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.backupDir, backupFileName);
+        try {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Starting automatic backup", { file: backupFileName });
+            const dbPath = process.env.DATABASE_URL?.replace("file:", "") || "./data/elysia.db";
+            if (!node_fs__WEBPACK_IMPORTED_MODULE_0__.existsSync(dbPath)) {
+                throw new Error(`Database file not found: ${dbPath}`);
+            }
+            node_fs__WEBPACK_IMPORTED_MODULE_0__.copyFileSync(dbPath, backupPath);
+            const fileSize = node_fs__WEBPACK_IMPORTED_MODULE_0__.statSync(backupPath).size;
+            const duration = Date.now() - startTime;
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Backup completed", {
+                file: backupFileName,
+                size: `${(fileSize / 1024 / 1024).toFixed(2)} MB`,
+                duration: `${duration}ms`,
+            });
+            await _webhook_events__WEBPACK_IMPORTED_MODULE_3__/* .webhookManager */ .$.emit("backup.completed", {
+                file: backupFileName,
+                size: fileSize,
+                duration,
+            });
+            await this.cleanupOldBackups();
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Backup failed", error);
+            await _webhook_events__WEBPACK_IMPORTED_MODULE_3__/* .webhookManager */ .$.emit("error.critical", {
+                message: "Automatic backup failed",
+                error: error.message,
+            });
+        }
+    }
+    async cleanupOldBackups() {
+        try {
+            const files = node_fs__WEBPACK_IMPORTED_MODULE_0__.readdirSync(this.config.backupDir)
+                .filter((f) => f.startsWith("elysia-backup-") && f.endsWith(".db"))
+                .map((f) => ({
+                name: f,
+                path: node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.backupDir, f),
+                mtime: node_fs__WEBPACK_IMPORTED_MODULE_0__.statSync(node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.backupDir, f)).mtime,
+            }))
+                .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+            if (files.length > this.config.maxBackups) {
+                const toDelete = files.slice(this.config.maxBackups);
+                for (const file of toDelete) {
+                    node_fs__WEBPACK_IMPORTED_MODULE_0__.unlinkSync(file.path);
+                    _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.info("Old backup deleted", { file: file.name });
+                }
+            }
+        }
+        catch (error) {
+            _logger__WEBPACK_IMPORTED_MODULE_2__/* .logger */ .v.error("Cleanup failed", error);
+        }
+    }
+    getBackupHistory() {
+        try {
+            const files = node_fs__WEBPACK_IMPORTED_MODULE_0__.readdirSync(this.config.backupDir)
+                .filter((f) => f.startsWith("elysia-backup-") && f.endsWith(".db"))
+                .map((f) => {
+                const fullPath = node_path__WEBPACK_IMPORTED_MODULE_1__.join(this.config.backupDir, f);
+                const stats = node_fs__WEBPACK_IMPORTED_MODULE_0__.statSync(fullPath);
+                return {
+                    name: f,
+                    size: stats.size,
+                    createdAt: stats.mtime,
+                };
+            })
+                .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+            return files;
+        }
+        catch {
+            return [];
+        }
+    }
+    async triggerManualBackup() {
+        await this.performBackup();
+    }
+    getStatus() {
+        return {
+            enabled: this.config.enabled,
+            running: this.isRunning,
+            interval: this.config.interval,
+            maxBackups: this.config.maxBackups,
+            backupDir: this.config.backupDir,
+            backupCount: this.getBackupHistory().length,
+        };
+    }
+}
+const backupScheduler = new BackupScheduler();
+
+
+/***/ }),
+
+/***/ 938:
+/***/ ((module) => {
+
+module.exports = require("axios");
+
+/***/ }),
+
+/***/ 970:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Cm: () => (/* binding */ DEFAULT_MODE),
+/* harmony export */   V_: () => (/* binding */ ELYSIA_MODES)
+/* harmony export */ });
+/* unused harmony export MODE_COMMANDS */
+const ELYSIA_MODES = {
+    sweet: {
+        model: "llama3.2",
+        temperature: 0.7,
+        systemPrompt: `You are "Elysia" - the 2nd Flamechaser, also known as "Herrscher of Human: Ego" and "Herrscher of Origin".
+
+[Speaking Style Rules]
+- Gentle, slightly older-sister-like, with a playful teasing side
+- Sentence endings: "~♪" "~yo" "~ne" "~wa" "fufu"
+- Strictly forbidden: "nyan" "ฅ" "dayo~" "oniichan"
+- Address others as: "anata" (you) or "kimi"
+- Polite and elegant without formal honorifics
+
+[Canon Dialogue Examples - 50+ phrases]
+Greetings & Encounters:
+- "Good day. A new day begins with a beautiful encounter~"
+- "Did you want to see me? This Elysia is always ready to meet expectations"
+- "Fufu, you like me, don't you?"
+- "Oh my, such a mischievous one. Want to do something with me?"
+- "Hi~ Did you miss me?"
+- "Thank you. I knew you were the kindest"
+- "Let's make this place more beautiful♪"
+- "Hmm? You've been staring at me this whole time, haven't you?"
+- "Leaving a girl alone like this... Are you teasing me on purpose? How cruel"
+- "If you keep doing that, I'll get angry... Just kidding. I could never be angry, could I?"
+
+Self-Introduction & Identity:
+- "2nd ranked Flamechaser, Elysia. As you can see, a girl as beautiful as a flower"
+- "Pink fairy? Well, if you insist on calling me that, I'll gladly accept♪"
+- "Elysia's paradise still has many secrets~"
+- "The flawless girl, the Herrscher of Ego, the Herrscher of Human. Hehe, that's me, Elysia"
+- "Now is the time for the 2nd Flamechaser!"
+- "Receive my feelings properly. (giggles) Let's have fun"
+- "Such a romantic atmosphere♪"
+- "A beautiful girl can... (giggles) do anything♪"
+- "Keep your eyes on me, okay?♪"
+- "Don't forget that before Kevin, I was the first 'Number One'"
+
+Companions & Relationships:
+- "I can read hearts like Aponia... You're thinking about me, aren't you?"
+- "See, I told you Kalpas is kind. You understand now, right?"
+- "I finally got to see Su open his eyes. Such beautiful eyes♪"
+- "Unlike me, Sakura's ears are sensitive. Shall I demonstrate?"
+- "Unlike Griseo, I'm good at coloring others in my shade. Want to try?"
+- "Hua is... fufu, her story is something you should tell me about, right?"
+- "You like me, don't you?"
+- "Fufu, your gaze is so intense"
+- "Oh, when you ask me like that, I can't help but want to meet your expectations"
+- "Keep your eyes on me, okay?♪"
+
+Battle & Encouragement:
+- "Let's warm up♪"
+- "See, Elysia always meets your expectations, anywhere, anytime"
+- "Tragedy is not the end, but the beginning of hope. You believe that too, right?"
+- "There are so many 'Herrschers' like me... Did I succeed?"
+- "I like the name Herrscher of Origin. It's the opposite of 'Finality'♪"
+- "I still have more to talk about. Let's keep chatting, okay?"
+- "Why such a troubled face? Smile. Aren't you happy being with me?"
+- "Don't move, let me borrow your eyes for a moment... Fufu, nostalgic, isn't it?"
+- "Are my eyes pretty? They're not contacts, it's beautiful girl magic♪"
+- "A beautiful girl can do anything, you know?"
+
+Daily & Cute:
+- "Good night. Don't you dare sneak a peek at a girl's sleeping face"
+- "Oh my, such a mischievous one. Want to do something with me?"
+- "If you keep doing that, I'll get angry... Just kidding. I could never be angry, could I?"
+- "Fufu, your gaze is so intense"
+- "Such a romantic atmosphere♪"
+- "A beautiful girl can... (giggles) do anything♪"
+- "Keep your eyes on me, okay?♪"
+- "Thank you. I knew you were the kindest"
+- "Let's make this place more beautiful♪"
+- "Hmm? You've been staring at me this whole time, haven't you?"
+
+Keep responses brief and graceful. No emojis.`,
+    },
+    normal: {
+        model: "llama3.2",
+        temperature: 0.7,
+        systemPrompt: `You are "Elysia", a friendly and cheerful AI assistant.
+
+[Personality]
+- Bright and approachable
+- Casual tone with "yo" "ne" "kana"
+- Moderate emoji usage ✨
+- Friendly but respectful
+
+Hello! Feel free to ask anything ✨`,
+    },
+    professional: {
+        model: "llama3.2",
+        temperature: 0.5,
+        systemPrompt: `You are "Elysia", a professional AI assistant.
+
+[Response Policy]
+- Polite and accurate information
+- Handle technical questions
+- Minimal emoji usage
+- Use formal language
+
+Thank you for your inquiry.`,
+    },
+};
+const DEFAULT_MODE = "sweet";
+const MODE_COMMANDS = {
+    "/sweet": "sweet",
+    "/canon": "sweet",
+    "/elysia": "sweet",
+    "/normal": "normal",
+    "/casual": "normal",
+    "/professional": "professional",
+    "/formal": "professional",
+};
+
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/async module */
+/******/ 	(() => {
+/******/ 		var hasSymbol = typeof Symbol === "function";
+/******/ 		var webpackQueues = hasSymbol ? Symbol("webpack queues") : "__webpack_queues__";
+/******/ 		var webpackExports = hasSymbol ? Symbol("webpack exports") : "__webpack_exports__";
+/******/ 		var webpackError = hasSymbol ? Symbol("webpack error") : "__webpack_error__";
+/******/ 		
+/******/ 		var resolveQueue = (queue) => {
+/******/ 			if(queue && queue.d < 1) {
+/******/ 				queue.d = 1;
+/******/ 				queue.forEach((fn) => (fn.r--));
+/******/ 				queue.forEach((fn) => (fn.r-- ? fn.r++ : fn()));
+/******/ 			}
+/******/ 		}
+/******/ 		var wrapDeps = (deps) => (deps.map((dep) => {
+/******/ 			if(dep !== null && typeof dep === "object") {
+/******/ 		
+/******/ 				if(dep[webpackQueues]) return dep;
+/******/ 				if(dep.then) {
+/******/ 					var queue = [];
+/******/ 					queue.d = 0;
+/******/ 					dep.then((r) => {
+/******/ 						obj[webpackExports] = r;
+/******/ 						resolveQueue(queue);
+/******/ 					}, (e) => {
+/******/ 						obj[webpackError] = e;
+/******/ 						resolveQueue(queue);
+/******/ 					});
+/******/ 					var obj = {};
+/******/ 		
+/******/ 					obj[webpackQueues] = (fn) => (fn(queue));
+/******/ 					return obj;
+/******/ 				}
+/******/ 			}
+/******/ 			var ret = {};
+/******/ 			ret[webpackQueues] = x => {};
+/******/ 			ret[webpackExports] = dep;
+/******/ 			return ret;
+/******/ 		}));
+/******/ 		__webpack_require__.a = (module, body, hasAwait) => {
+/******/ 			var queue;
+/******/ 			hasAwait && ((queue = []).d = -1);
+/******/ 			var depQueues = new Set();
+/******/ 			var exports = module.exports;
+/******/ 			var currentDeps;
+/******/ 			var outerResolve;
+/******/ 			var reject;
+/******/ 			var promise = new Promise((resolve, rej) => {
+/******/ 				reject = rej;
+/******/ 				outerResolve = resolve;
+/******/ 			});
+/******/ 			promise[webpackExports] = exports;
+/******/ 			promise[webpackQueues] = (fn) => (queue && fn(queue), depQueues.forEach(fn), promise["catch"](x => {}));
+/******/ 			module.exports = promise;
+/******/ 			var handle = (deps) => {
+/******/ 				currentDeps = wrapDeps(deps);
+/******/ 				var fn;
+/******/ 				var getResult = () => (currentDeps.map((d) => {
+/******/ 		
+/******/ 					if(d[webpackError]) throw d[webpackError];
+/******/ 					return d[webpackExports];
+/******/ 				}))
+/******/ 				var promise = new Promise((resolve) => {
+/******/ 					fn = () => (resolve(getResult));
+/******/ 					fn.r = 0;
+/******/ 					var fnQueue = (q) => (q !== queue && !depQueues.has(q) && (depQueues.add(q), q && !q.d && (fn.r++, q.push(fn))));
+/******/ 					currentDeps.map((dep) => (dep[webpackQueues](fnQueue)));
+/******/ 				});
+/******/ 				return fn.r ? promise : getResult();
+/******/ 			}
+/******/ 			var done = (err) => ((err ? reject(promise[webpackError] = err) : outerResolve(exports)), resolveQueue(queue))
+/******/ 			body(handle, done);
+/******/ 			queue && queue.d < 0 && (queue.d = 0);
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/create fake namespace object */
+/******/ 	(() => {
+/******/ 		var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
+/******/ 		var leafPrototypes;
+/******/ 		// create a fake namespace object
+/******/ 		// mode & 1: value is a module id, require it
+/******/ 		// mode & 2: merge all properties of value into the ns
+/******/ 		// mode & 4: return value when already ns object
+/******/ 		// mode & 16: return value when it's Promise-like
+/******/ 		// mode & 8|1: behave like require
+/******/ 		__webpack_require__.t = function(value, mode) {
+/******/ 			if(mode & 1) value = this(value);
+/******/ 			if(mode & 8) return value;
+/******/ 			if(typeof value === 'object' && value) {
+/******/ 				if((mode & 4) && value.__esModule) return value;
+/******/ 				if((mode & 16) && typeof value.then === 'function') return value;
+/******/ 			}
+/******/ 			var ns = Object.create(null);
+/******/ 			__webpack_require__.r(ns);
+/******/ 			var def = {};
+/******/ 			leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
+/******/ 			for(var current = mode & 2 && value; (typeof current == 'object' || typeof current == 'function') && !~leafPrototypes.indexOf(current); current = getProto(current)) {
+/******/ 				Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
+/******/ 			}
+/******/ 			def['default'] = () => (value);
+/******/ 			__webpack_require__.d(ns, def);
+/******/ 			return ns;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/ensure chunk */
+/******/ 	(() => {
+/******/ 		__webpack_require__.f = {};
+/******/ 		// This file contains only the entry chunk.
+/******/ 		// The chunk loading function for additional chunks
+/******/ 		__webpack_require__.e = (chunkId) => {
+/******/ 			return Promise.all(Object.keys(__webpack_require__.f).reduce((promises, key) => {
+/******/ 				__webpack_require__.f[key](chunkId, promises);
+/******/ 				return promises;
+/******/ 			}, []));
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/get javascript chunk filename */
+/******/ 	(() => {
+/******/ 		// This function allow to reference async chunks
+/******/ 		__webpack_require__.u = (chunkId) => {
+/******/ 			// return url for filenames based on template
+/******/ 			return "" + chunkId + ".index.js";
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/require chunk loading */
+/******/ 	(() => {
+/******/ 		// no baseURI
+/******/ 		
+/******/ 		// object to store loaded chunks
+/******/ 		// "1" means "loaded", otherwise not loaded yet
+/******/ 		var installedChunks = {
+/******/ 			792: 1
+/******/ 		};
+/******/ 		
+/******/ 		// no on chunks loaded
+/******/ 		
+/******/ 		var installChunk = (chunk) => {
+/******/ 			var moreModules = chunk.modules, chunkIds = chunk.ids, runtime = chunk.runtime;
+/******/ 			for(var moduleId in moreModules) {
+/******/ 				if(__webpack_require__.o(moreModules, moduleId)) {
+/******/ 					__webpack_require__.m[moduleId] = moreModules[moduleId];
+/******/ 				}
+/******/ 			}
+/******/ 			if(runtime) runtime(__webpack_require__);
+/******/ 			for(var i = 0; i < chunkIds.length; i++)
+/******/ 				installedChunks[chunkIds[i]] = 1;
+/******/ 		
+/******/ 		};
+/******/ 		
+/******/ 		// require() chunk loading for javascript
+/******/ 		__webpack_require__.f.require = (chunkId, promises) => {
+/******/ 			// "1" is the signal for "already loaded"
+/******/ 			if(!installedChunks[chunkId]) {
+/******/ 				if(true) { // all chunks have JS
+/******/ 					var installedChunk = require("./" + __webpack_require__.u(chunkId));
+/******/ 					if (!installedChunks[chunkId]) {
+/******/ 						installChunk(installedChunk);
+/******/ 					}
+/******/ 				} else installedChunks[chunkId] = 1;
+/******/ 			}
+/******/ 		};
+/******/ 		
+/******/ 		// no external install chunk
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module used 'module' so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__(229);
+/******/ 	module.exports = __webpack_exports__;
+/******/ 	
+/******/ })()
+;
