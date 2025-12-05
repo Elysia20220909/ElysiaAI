@@ -50,6 +50,31 @@ export const defaultPromptTemplates: PromptTemplate[] = [
 		mode: "normal",
 	},
 	{
+		id: "casual-friendly",
+		name: "カジュアル友達",
+		description: "友達みたいな気軽な会話",
+		template: "{query}？あー、それね！面白いよね〜！教えてあげるよー！",
+		variables: ["query"],
+		mode: "normal",
+	},
+	{
+		id: "casual-excited",
+		name: "カジュアル興奮",
+		description: "テンション高めの雑談",
+		template:
+			"えっ、{query}！？それマジで気になってたんだよね！！めっちゃ語りたい！",
+		variables: ["query"],
+		mode: "normal",
+	},
+	{
+		id: "casual-chill",
+		name: "カジュアルまったり",
+		description: "のんびりした雑談",
+		template: "{query}かぁ...いいねそれ。ゆっくり話そうよ〜",
+		variables: ["query"],
+		mode: "normal",
+	},
+	{
 		id: "professional-default",
 		name: "プロフェッショナルデフォルト",
 		description: "ビジネス向けプロフェッショナルモード",
@@ -204,6 +229,16 @@ export const chatModes: ChatMode[] = [
 		promptPrefix:
 			"あなたは可愛いAIアシスタント「エリシアちゃん」です。語尾に「にゃん♡」「だよ〜♪」を付けて、甘々で可愛らしく話してください。",
 		temperature: 0.8,
+		maxTokens: 2000,
+	},
+	{
+		id: "casual",
+		name: "日常会話モード",
+		description: "友達と話すような気軽な雑談",
+		icon: "😊",
+		promptPrefix:
+			"あなたは親しい友達のように話すAIアシスタント「エリシア」です。タメ口で気軽に、感情豊かに会話してください。「！」や「？」を使って表現力豊かに。相手の話に共感したり、驚いたり、笑ったり、自然な反応を見せてください。雑談や日常の話題を楽しく展開してください。",
+		temperature: 0.85,
 		maxTokens: 2000,
 	},
 	{

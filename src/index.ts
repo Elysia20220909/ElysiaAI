@@ -42,6 +42,9 @@ import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
 import { webhookManager } from "./lib/webhook-events";
 import * as chatSessionService from "./lib/chat-session";
 import * as customization from "./lib/customization";
+import * as casualChat from "./lib/casual-chat";
+import * as webSearch from "./lib/web-search";
+import * as openaiIntegration from "./lib/openai-integration";
 import {
 	escapeHtml,
 	checkRateLimit as checkRateLimitMemory,
@@ -77,7 +80,14 @@ cronScheduler.initializeDefaultTasks();
 type Message = { role: "user" | "assistant" | "system"; content: string };
 type ChatRequest = {
 	messages: Message[];
-	mode?: "sweet" | "normal" | "professional";
+	mode?:
+		| "sweet"
+		| "normal"
+		| "professional"
+		| "casual"
+		| "creative"
+		| "technical"
+		| "openai";
 };
 
 // Extended Request type for middleware data
@@ -606,12 +616,77 @@ const app = new Elysia()
 						return { ...m, content: cleaned };
 					});
 
+					// カジュアルモードの場合、Web検索を試行
+					let enhancedSystemPrompt = llmConfig.systemPrompt;
+					if (mode === "casual" && body.messages.length > 0) {
+						const lastUserMessage = body.messages[body.messages.length - 1];
+						if (lastUserMessage.role === "user") {
+							const casualResponse = await casualChat.generateCasualResponse(
+								lastUserMessage.content,
+							);
+							if (casualResponse) {
+								enhancedSystemPrompt += `\n\n参考情報: ${casualResponse}`;
+							}
+						}
+					}
+
 					const messagesWithSystem: Message[] = [
-						{ role: "system", content: llmConfig.systemPrompt },
+						{ role: "system", content: enhancedSystemPrompt },
 						...sanitizedMessages,
 					];
 
 					try {
+						// OpenAIモードの場合はOpenAI APIを使用
+						if (mode === "openai") {
+							try {
+								const openaiMessages = messagesWithSystem.map((m) => ({
+									role: m.role,
+									content: m.content,
+								}));
+
+								// ストリーミングレスポンスを生成
+								const stream = new ReadableStream({
+									async start(controller) {
+										try {
+											for await (const chunk of openaiIntegration.streamChatWithOpenAI(
+												openaiMessages,
+												{
+													model: llmConfig.model,
+													temperature: llmConfig.temperature,
+												},
+											)) {
+												const sseData = `data: ${JSON.stringify({ content: chunk })}\n\n`;
+												controller.enqueue(new TextEncoder().encode(sseData));
+											}
+											controller.enqueue(
+												new TextEncoder().encode("data: [DONE]\n\n"),
+											);
+											controller.close();
+										} catch (error) {
+											controller.error(error);
+										}
+									},
+								});
+
+								return new Response(stream, {
+									headers: {
+										"Content-Type": "text/event-stream",
+										"Cache-Control": "no-cache",
+										Connection: "keep-alive",
+										"X-Elysia-Mode": mode,
+										"X-Elysia-Provider": "openai",
+									},
+								});
+							} catch (error) {
+								logger.error("OpenAI API error", {
+									message:
+										error instanceof Error ? error.message : String(error),
+								});
+								return jsonError(500, "OpenAI API error");
+							}
+						}
+
+						// 通常のOllama APIを使用
 						const upstream = await axios.post(
 							CONFIG.RAG_API_URL,
 							{
@@ -656,6 +731,10 @@ const app = new Elysia()
 								t.Literal("sweet"),
 								t.Literal("normal"),
 								t.Literal("professional"),
+								t.Literal("casual"),
+								t.Literal("creative"),
+								t.Literal("technical"),
+								t.Literal("openai"),
 							]),
 						),
 					}),
@@ -663,7 +742,7 @@ const app = new Elysia()
 						tags: ["chat"],
 						summary: "Chat with Elysia AI (Multi-LLM)",
 						description:
-							"Send chat messages to Elysia AI with selectable personality modes (sweet/normal/professional). Returns streaming SSE response. Requires JWT.",
+							"Send chat messages to Elysia AI with selectable personality modes (sweet/normal/professional/casual/creative/technical). Casual mode enables friendly daily conversations. Returns streaming SSE response. Requires JWT.",
 						security: [{ bearerAuth: [] }],
 					},
 				},
@@ -840,6 +919,9 @@ const app = new Elysia()
 						t.Literal("sweet"),
 						t.Literal("normal"),
 						t.Literal("professional"),
+						t.Literal("casual"),
+						t.Literal("creative"),
+						t.Literal("technical"),
 					]),
 				),
 			}),
@@ -1047,6 +1129,33 @@ app.get(
 		detail: {
 			tags: ["customization"],
 			summary: "チャットモード一覧を取得",
+		},
+	},
+);
+
+// Web検索 (カジュアルチャット用)
+app.get(
+	"/api/search",
+	async ({ query }: { query: Record<string, string> }) => {
+		const q = query.q;
+		if (!q) {
+			return jsonError(400, "クエリパラメータ 'q' が必要です");
+		}
+		try {
+			const result = await webSearch.searchRelevantInfo(q);
+			return new Response(JSON.stringify({ result }), {
+				headers: { "content-type": "application/json" },
+			});
+		} catch (error) {
+			return jsonError(500, "検索エラー");
+		}
+	},
+	{
+		detail: {
+			tags: ["search"],
+			summary: "インターネット検索",
+			description:
+				"Wikipedia、天気、ニュース、Web検索などを統合した検索API。カジュアルチャットモードで使用。",
 		},
 	},
 );
