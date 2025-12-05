@@ -88,3 +88,88 @@ export async function changePassword(
 
 	return { success: true };
 }
+
+// ==================== 入力サニタイゼーション ====================
+
+/**
+ * XSS攻撃を防ぐためのHTMLエスケープ
+ */
+export function escapeHtml(text: string): string {
+	const map: Record<string, string> = {
+		"&": "&amp;",
+		"<": "&lt;",
+		">": "&gt;",
+		'"': "&quot;",
+		"'": "&#039;",
+	};
+	return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
+/**
+ * SQLインジェクション対策
+ */
+export function sanitizeSqlInput(input: string): string {
+	return input
+		.replace(/['";\\]/g, "")
+		.replace(/--/g, "")
+		.replace(/\/\*/g, "")
+		.trim();
+}
+
+/**
+ * パストラバーサル攻撃を防ぐ
+ */
+export function sanitizeFilePath(path: string): string {
+	return path
+		.replace(/\.\./g, "")
+		.replace(/[^a-zA-Z0-9._\-\/]/g, "")
+		.replace(/\/+/g, "/");
+}
+
+// ==================== レート制限 ====================
+
+interface RateLimitEntry {
+	count: number;
+	resetTime: number;
+}
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+export function checkRateLimit(
+	identifier: string,
+	options: { maxRequests: number; windowMs: number } = {
+		maxRequests: 100,
+		windowMs: 60000,
+	},
+): { allowed: boolean; resetTime?: number } {
+	const now = Date.now();
+	const entry = rateLimitStore.get(identifier);
+
+	if (!entry || now > entry.resetTime) {
+		rateLimitStore.set(identifier, {
+			count: 1,
+			resetTime: now + options.windowMs,
+		});
+		return { allowed: true };
+	}
+
+	entry.count++;
+
+	if (entry.count > options.maxRequests) {
+		return { allowed: false, resetTime: entry.resetTime };
+	}
+
+	return { allowed: true };
+}
+
+// ==================== セキュリティヘッダー ====================
+
+export function getSecurityHeaders(): Record<string, string> {
+	return {
+		"X-Content-Type-Options": "nosniff",
+		"X-Frame-Options": "DENY",
+		"X-XSS-Protection": "1; mode=block",
+		"Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+		"Referrer-Policy": "strict-origin-when-cross-origin",
+	};
+}

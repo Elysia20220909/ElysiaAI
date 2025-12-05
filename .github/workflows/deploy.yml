@@ -1,0 +1,38 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: 本番環境へデプロイ
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: リポジトリをチェックアウト
+      uses: actions/checkout@v4
+
+    - name: Bunをセットアップ
+      uses: oven-sh/setup-bun@v1
+
+    - name: 依存関係をインストール
+      run: bun install
+
+    - name: Prismaマイグレーション
+      run: bunx prisma migrate deploy
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    - name: ビルド
+      run: bun run build
+
+    - name: デプロイ通知
+      run: |
+        echo "デプロイ準備完了"
+        echo "タグ: ${{ github.ref }}"
+        echo "コミット: ${{ github.sha }}"
+
+    # AWS/GCPへのデプロイ設定はプロジェクトに応じて追加
