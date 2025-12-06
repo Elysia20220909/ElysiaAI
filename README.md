@@ -1,13 +1,14 @@
 <div align="center">
 
-# 💜 Elysia AI
+# 💜 Elysia AI 🦊✨
 
 [![Made with Bun](https://img.shields.io/badge/Bun-1.0+-000000?logo=bun)](https://bun.sh)
 [![Powered by Elysia](https://img.shields.io/badge/Elysia-1.4-6366f1?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiAxMkwxMiAyMkwyMiAxMkwxMiAyWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+)](https://elysiajs.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript)](https://typescriptlang.org)
 
-**エルゴノミックなAIチャット with RAG** - 超高速、型安全、そして楽しい 🦊
+**Bunで動くパワフルなAIチャットボット** 💜  
+ElysiaJSベースの超高速WebSocket API | RAG搭載 | 型安全で楽しい開発体験
 
 [English](./README.en.md) • [日本語](./README.ja.md)
 
@@ -17,7 +18,7 @@
 
 ## ✨ なぜ Elysia AI？
 
-Bunの速度、Elysiaのエルゴノミクス、そしてAIの力を組み合わせました。
+Bunの速度 ⚡、Elysiaのエルゴノミクス 🎯、そしてAIの力 🧠 を組み合わせました。
 
 ```typescript
 import { Elysia } from 'elysia'
@@ -31,7 +32,7 @@ new Elysia()
   .listen(3000)
 ```
 
-**妥協しない**: 高速性、型安全性、開発者体験のすべてを実現。
+**妥協しない**: 高速性 ⚡、型安全性 🛡️、開発者体験 💜 のすべてを実現。
 
 ---
 
@@ -50,7 +51,7 @@ bun run scripts/setup-python.ps1  # Windows
 bun run dev
 ```
 
-**これだけ！** 🎉 http://localhost:3000 を開く
+**これだけ！** 🎉 <http://localhost:3000> を開いてエリシアと会話しよう 💬
 
 ---
 
@@ -119,79 +120,82 @@ bun run dev
 
 ---
 
-## 🔐 Security
+## 🔐 セキュリティ
 
-- **Authentication**: JWT with refresh tokens (15min access + 7day refresh)
-- **Rate Limiting**: 60 req/min per user (Redis-backed)
-- **Encryption**: AES-256-GCM for sensitive data
+- **認証**: JWT + リフレッシュトークン (アクセス15分 + リフレッシュ7日)
+- **レート制限**: ユーザーあたり60リクエスト/分 (Redis)
+- **暗号化**: AES-256-GCM で機密データ保護
 - **RBAC**: PUBLIC → AUTHENTICATED → ADMIN → SUPER_ADMIN → SYSTEM
-- **Input Validation**: XSS/SQL injection prevention
-- **Security Headers**: CSP, X-Frame-Options, HSTS
+- **入力検証**: XSS/SQLインジェクション防止
+- **セキュリティヘッダー**: CSP、X-Frame-Options、HSTS
 
 ---
 
-## 📊 Monitoring
+## 📊 監視とモニタリング
 
 ```bash
-# Start monitoring stack
+# モニタリングスタックを起動
 cd monitoring && docker-compose up -d
 
-# Access Grafana: http://localhost:3001 (admin/admin)
+# Grafanaにアクセス: http://localhost:3001 (admin/admin)
 ```
 
-**Metrics**: HTTP requests • Response times (p50/p95/p99) • Error rates • Auth attempts • RAG queries
+**メトリクス**: HTTPリクエスト • レスポンス時間 (p50/p95/p99) • エラー率 • 認証試行 • RAGクエリ
 
-**Alerts**: High error rate • Slow responses • Service down • High memory usage
+**アラート**: 高エラー率 • 遅いレスポンス • サービス停止 • 高メモリ使用量
 
 ---
 
-## 🧪 Testing
+## 🧪 テスト
 
 ```bash
-bun test                    # All tests
-bun test --coverage        # With coverage
-bunx playwright test       # E2E tests
-.\scripts\load-test.ps1    # Load testing
+bun test                    # 全テスト実行
+bun test --coverage        # カバレッジ付き
+bunx playwright test       # E2Eテスト
+.\scripts\load-test.ps1    # 負荷テスト
 ```
 
 ---
 
-## 📈 Performance Benchmarks
+## 📈 パフォーマンスベンチマーク
 
-| Metric | Value |
-|--------|-------|
-| Cold Start | < 100ms |
-| Avg Response | 45ms (p50) |
-| p95 Response | 120ms |
-| Throughput | 10,000 req/s |
-| Max Users | 50,000+ |
-| Memory | 150MB idle, 800MB load |
+| メトリクス | 値 |
+|-----------|----|
+| コールドスタート | < 100ms |
+| 平均レスポンス | 45ms (p50) |
+| p95レスポンス | 120ms |
+| スループット | 10,000 req/s |
+| 最大同時ユーザー | 50,000+ |
+| メモリ使用量 | アイドル150MB、負荷時800MB |
 
-*AWS t3.xlarge (4vCPU, 16GB)*
+> 💜 測定環境: AWS t3.xlarge (4vCPU, 16GB RAM)
 
 ---
 
-## 🚢 Deployment
+## 🚢 デプロイ
 
-**Docker**:
+### 🐳 Docker
+
 ```bash
 docker build -f Dockerfile.production -t elysia-ai .
 docker-compose up -d
 ```
+
+### ☁️ クラウドデプロイ
 
 **AWS**: `cd cloud/aws && ./deploy.sh`  
 **GCP**: `cd cloud/gcp && ./deploy.sh`
 
 ---
 
-## 📖 Documentation
+## 📖 ドキュメント
 
-- [Architecture](docs/ARCHITECTURE.md) - System design
-- [API Reference](docs/API.md) - Complete endpoints
-- [Security Guide](docs/SECURITY.md) - Best practices
-- [Deployment](DEPLOYMENT.md) - Production setup
-- [Contributing](CONTRIBUTING.md) - How to contribute
-- [Changelog](CHANGELOG.md) - Version history
+- [アーキテクチャ](docs/ARCHITECTURE.md) - システム設計
+- [APIリファレンス](docs/API.md) - 全エンドポイント
+- [セキュリティガイド](docs/SECURITY.md) - ベストプラクティス
+- [デプロイガイド](docs/DEPLOYMENT_GUIDE.md) - 本番環境セットアップ
+- [コントリビューション](CONTRIBUTING.md) - 貢献方法
+- [変更履歴](CHANGELOG.md) - バージョン履歴
 
 ---
 
@@ -199,19 +203,19 @@ docker-compose up -d
 
 ---
 
-## 🔄 ロードマップ
+## 🗺️ ロードマップ
 
-**v2.0 (2026年Q1)**: Kubernetes • マルチテナント • GraphQL • リアルタイムコラボレーション  
-**v2.1 (2026年Q2)**: 音声入出力 • 画像生成 • 高度なRAG  
-**v3.0 (2026年Q3)**: エージェントフレームワーク • 関数呼び出し • マルチモーダルAI
+✨ **v2.0 (2026年Q1)**: Kubernetes • マルチテナント • GraphQL • リアルタイムコラボレーション  
+🎨 **v2.1 (2026年Q2)**: 音声入出力 • 画像生成 • 高度なRAG  
+🚀 **v3.0 (2026年Q3)**: エージェントフレームワーク • 関数呼び出し • マルチモーダルAI
 
 ---
 
 ## 📄 ライセンス
 
-**MITライセンス**
+### MITライセンス
 
-Copyright (c) 2025 chloeamethyst
+Copyright (c) 2025 chloeamethyst 💜
 
 このソフトウェアおよび関連文書ファイル（以下「ソフトウェア」）のコピーを取得した人は、
 無償でソフトウェアを制限なく扱うことができます。これには、使用、複製、修正、統合、
@@ -233,22 +237,28 @@ Copyright (c) 2025 chloeamethyst
 
 ## 🤝 サポート
 
-- **イシュー**: [GitHub Issues](https://github.com/chloeamethyst/ElysiaJS/issues)
-- **ディスカッション**: [GitHub Discussions](https://github.com/chloeamethyst/ElysiaJS/discussions)
-- **セキュリティ**: [SECURITY.md](docs/SECURITY.md) を参照
+困ったことがあったら、いつでもエリシアに相談してね 💜
+
+- 💬 **イシュー**: [GitHub Issues](https://github.com/chloeamethyst/ElysiaAI/issues)
+- 💭 **ディスカッション**: [GitHub Discussions](https://github.com/chloeamethyst/ElysiaAI/discussions)
+- 🔐 **セキュリティ**: [SECURITY.md](docs/SECURITY.md) を参照
 
 ---
 
-## 🙏 クレジット
+## 🙏 感謝
 
-[Elysia](https://elysiajs.com/) • [Bun](https://bun.sh/) • [Ollama](https://ollama.ai/) • [Milvus](https://milvus.io/) • [FastAPI](https://fastapi.tiangolo.com/)
+素晴らしいツールを作ってくれた皆さんに感謝 ✨
+
+[Elysia](https://elysiajs.com/) 🦊 • [Bun](https://bun.sh/) ⚡ • [Ollama](https://ollama.ai/) 🤖 • [Milvus](https://milvus.io/) 🔍 • [FastAPI](https://fastapi.tiangolo.com/) 🚀
 
 ---
 
 <div align="center">
 
-❤️ で作成 by [chloeamethyst](https://github.com/chloeamethyst)
+💜 エリシアと一緒に、もっと楽しいAI体験を 🦊✨
 
-⭐ **GitHubでスターをください！**
+作者: [chloeamethyst](https://github.com/chloeamethyst)
+
+⭐ **気に入ったらスターしてね！** ⭐
 
 </div>
