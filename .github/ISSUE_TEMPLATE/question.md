@@ -1,24 +1,22 @@
 ---
-name: Question
-about: Ask a question about the project
+name: ❓ 質問
+about: プロジェクトに関する質問をする
 title: '[QUESTION] '
 labels: question
 assignees: ''
 ---
 
-## Question
-What would you like to know?
+## ❓ 質問内容
 
-## Context
-Provide any relevant context that might help us answer your question.
+## 🧭 背景・目的
 
-## What I've Tried
-- List any solutions you've already attempted
-- Include relevant documentation you've consulted
+## 🔍 試したこと / 調べたこと
 
-## Environment (if applicable)
-- **OS**: [e.g. Windows 11, Ubuntu 22.04]
-- **Version**: [e.g. 1.0.51]
+-
 
-## Additional Information
-Any other information that might be helpful.
+## 💻 環境（必要なら）
+
+- OS: (例) Windows 11 / Ubuntu 22.04 / macOS 14
+- バージョン: (例) 1.0.51
+
+## 📝 追加情報
