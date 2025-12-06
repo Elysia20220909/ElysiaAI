@@ -4,7 +4,7 @@
  */
 
 import type { Server } from "node:http";
-import { type WebSocket as WSType, WebSocket, WebSocketServer } from "ws";
+import { WebSocket, WebSocketServer, type WebSocket as WSType } from "ws";
 import { logger } from "./logger";
 
 interface WSClient {

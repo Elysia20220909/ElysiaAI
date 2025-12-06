@@ -8,7 +8,7 @@ const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
 
 const prisma = new PrismaClient({
 	log: ["query", "error", "warn"],
-	// @ts-ignore - Prisma 7 datasourceUrl option
+	// @ts-expect-error - Prisma 7 datasourceUrl option
 	datasourceUrl: dbUrl,
 });
 
