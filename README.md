@@ -1,5 +1,3 @@
-<div align="center">
-
 # 💜 Elysia AI 🦊✨
 
 [![Made with Bun](https://img.shields.io/badge/Bun-1.0+-000000?logo=bun)](https://bun.sh)
@@ -10,9 +8,9 @@
 **Bunで動くパワフルなAIチャットボット** 💜  
 ElysiaJSベースの超高速WebSocket API | RAG搭載 | 型安全で楽しい開発体験
 
-[English](./README.en.md) • [日本語](./README.ja.md)
+エリシア（速さ）× キュレネ（守り）で、開発も体験も軽やかに。
 
-</div>
+他言語: [英語版はこちら](./README.en.md) ｜ [日本語詳細版](./README.ja.md)
 
 ---
 
@@ -38,6 +36,8 @@ new Elysia()
 
 ## 🚀 クイックスタート
 
+最短3コマンドで走り出せます。迷ったらこの順でOK。
+
 ```bash
 # Bunでインストール（推奨）
 bun install
@@ -57,27 +57,34 @@ bun run dev
 
 ## 📦 機能
 
+エリシアが攻めて、キュレネが守る。役割が噛み合う構成です。
+
 ### 🧠 **インテリジェントRAGシステム**
+
 - **ベクトル検索**: Milvus Lite with `all-MiniLM-L6-v2` 埋め込み
 - **コンテキスト取得**: セマンティック類似性マッチング
 - **スマートキャッシング**: Redisベースのレスポンスキャッシュ
 
 ### ⚡ **Elysia駆動**
+
 - **型安全**: Eden Treatyでエンドツーエンド TypeScript
 - **高速**: 最適化されたBunランタイム
 - **エルゴノミック**: 直感的なAPI設計、最小限のボイラープレート
 
 ### 🤖 **LLM統合**
+
 - **Ollama**: ローカル `llama3.2` モデルとストリーミング
 - **リアルタイム**: Server-Sent Events (SSE) によるライブレスポンス
 - **柔軟**: モデルとプロバイダーの簡単な切り替え
 
 ### 🎨 **美しいUI**
+
 - **Alpine.js**: リアクティブで軽量なフロントエンド
 - **レスポンシブ**: モバイルフレンドリーデザイン
 - **ダークモード**: 目に優しい 🌙
 
 ### 🔐 **セキュリティ第一**
+
 - リフレッシュトークン付きJWT認証
 - レート制限（ユーザーあたり60リクエスト/分）
 - AES-256-GCM暗号化
@@ -85,6 +92,7 @@ bun run dev
 - XSS/SQLインジェクション防止
 
 ### 📊 **可観測性**
+
 - Prometheusメトリクス
 - Grafanaダッシュボード
 - 構造化ログ
@@ -94,7 +102,9 @@ bun run dev
 
 ## 🏗️ アーキテクチャ
 
-```
+全体像はこんな感じ。どこでエリシアが走り、どこでキュレネが守るか一目で把握。
+
+```text
 ┌─────────────┐
 │  クライアントUI  │  Alpine.js + TailwindCSS
 └──────┬──────┘
@@ -143,6 +153,7 @@ cd monitoring && docker-compose up -d
 **メトリクス**: HTTPリクエスト • レスポンス時間 (p50/p95/p99) • エラー率 • 認証試行 • RAGクエリ
 
 **アラート**: 高エラー率 • 遅いレスポンス • サービス停止 • 高メモリ使用量
+（キュレネが危険を見つけたらすぐ知らせてくれます）
 
 ---
 
@@ -199,10 +210,6 @@ docker-compose up -d
 
 ---
 
-## 🔄 Roadmap
-
----
-
 ## 🗺️ ロードマップ
 
 ✨ **v2.0 (2026年Q1)**: Kubernetes • マルチテナント • GraphQL • リアルタイムコラボレーション  
@@ -253,12 +260,8 @@ Copyright (c) 2025 chloeamethyst 💜
 
 ---
 
-<div align="center">
-
 💜 エリシアと一緒に、もっと楽しいAI体験を 🦊✨
 
 作者: [chloeamethyst](https://github.com/chloeamethyst)
 
 ⭐ **気に入ったらスターしてね！** ⭐
-
-</div>
