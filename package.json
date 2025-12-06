@@ -90,7 +90,7 @@
 		"ws": "^8.18.3"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
+		"@biomejs/biome": "2.3.8",
 		"@elysiajs/eden": "^1.4.0",
 		"@playwright/test": "^1.40.0",
 		"@types/bcryptjs": "^3.0.0",
