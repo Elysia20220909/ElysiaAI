@@ -5,7 +5,7 @@ import app from "./src/index";
 
 const PORT = process.env.PORT || 3000;
 
-// @ts-ignore
+// @ts-expect-error
 console.log(`🌸 Starting Elysia AI Server on port ${PORT}...`);
 
 app.listen(PORT, (server) => {
