@@ -1,6 +1,6 @@
-# 💜🦊 Elysia AI GitHub Guide
+# 💜🦊 Elysia AI GitHub Playbook
 
-エリシア（速さ）× キュレネ（守り）の二重奏で、ワークフローを美しく。✨
+エリシア（速さ）× キュレネ（守り）の二重奏。レールに乗れば、開発はもっと軽やか。✨
 
 ## 🔗 クイックリンク
 
@@ -12,13 +12,13 @@
 ## 🌸 ここは何？
 
 - `.github/workflows/` にあるCI/CDとセキュリティのレシピ集。
-- DependabotやIssueテンプレートなど、運用ハートが集まる場所。
+- Dependabot、Issue/PRテンプレートなど、運用ハートが集まる場所。
 - 合言葉：速さはエリシア、慎重さはキュレネ。🛡️⚡
 
 ## 🚦 主なワークフロー（master向け）
 
 - **CI/CD Pipeline - Enhanced (`ci-cd.yml`)**: Lint → Build → Test → Trivy → Docker build/push → SSHデプロイ（master pushのみ）。
-- **CI (`ci.yml`)**: シンプルなLint/Build/Test。
+- **CI (`ci.yml`)**: シンプルな Lint/Build/Test。
 - **Security & Performance (`security-tests.yml`)**: Trivyはpush/pullで軽量実行、Snyk/Dependency-Check/ZAPはスケジュールで深く。
 - **CodeQL (`codeql.yml`)**: 週次のコード解析。
 - **Publish (`publish.yml`)**: タグ/リリース時にnpm公開。
@@ -31,12 +31,12 @@
 - `SNYK_TOKEN`, `SONAR_TOKEN`: スケジュール時のみ利用（security-tests.yml）。
 - `NPM_TOKEN`: npm publish（publish.yml）。
 
-## 🧭 ルール（エリシア×キュレネ流）
+## 🧭 進め方（エリシア×キュレネ流）
 
-1. **速さ優先**: PRでは軽量チェック（Trivyだけ）。
-2. **深掘りは夜に**: Snyk/Dependency-Check/ZAPはスケジュールで集中実行。
+1. **まず軽やかに**: PRは軽量チェック（Trivy中心）でスピード重視。
+2. **深掘りは夜に**: Snyk/Dependency-Check/ZAPはスケジュールでじっくり。
 3. **壊さない勇気**: lockfile差分で止めないよう、CIは通常の `bun install`。
-4. **masterを清く保つ**: デプロイ系ジョブは master push のみ発火。
+4. **masterは聖域**: デプロイ系ジョブは master への push でのみ発火。
 
 ## 🛠️ 手動トリガー（workflow_dispatch）
 
@@ -50,9 +50,9 @@ gh run list --workflow "ci-cd.yml" --limit 5
 
 ## 🤝 トラブルシュートの合言葉
 
-- 失敗したらまずログを見る：`gh run view <run-id> --log`
+- 失敗したらまずログ：`gh run view <run-id> --log`
 - lockfileエラーならローカルで `bun install` → コミット。
-- 秘密鍵やトークンが無いジョブは自動的にスキップする設計。
+- 秘密鍵やトークンが無いジョブは自動でスキップする設計。
 
-エリシアの俊敏さとキュレネの守りで、安心して開発を楽しもう。💜🦊
+エリシアの俊敏さとキュレネの守りで、今日も安心して開発を楽しもう。💜🦊
 
