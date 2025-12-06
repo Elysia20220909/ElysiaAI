@@ -1,53 +1,53 @@
-## Description
-<!-- Provide a clear and concise description of your changes -->
+## 📝 説明
+<!-- 変更の明確で簡潔な説明を提供してください -->
 
-## Related Issue
-<!-- Link to the issue this PR addresses -->
-Fixes #(issue number)
+## 🔗 関連Issue
+<!-- このPRが対処するissueへのリンク -->
+Fixes #(issue番号)
 
-## Type of Change
-<!-- Mark the relevant option with an "x" -->
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Refactoring (no functional changes)
-- [ ] Performance improvement
-- [ ] Code style update
-- [ ] CI/CD changes
-- [ ] Other (please describe):
+## 🔧 変更の種類
+<!-- 関連するオプションに"x"をマークしてください -->
+- [ ] バグ修正（問題を修正する非破壊的な変更）
+- [ ] 新機能（機能を追加する非破壊的な変更）
+- [ ] 破壊的変更（既存の機能が期待通りに動作しなくなる修正または機能）
+- [ ] ドキュメント更新
+- [ ] リファクタリング（機能的な変更なし）
+- [ ] パフォーマンス改善
+- [ ] コードスタイル更新
+- [ ] CI/CD変更
+- [ ] その他（説明してください）:
 
-## Changes Made
-<!-- List the specific changes you made -->
-- Change 1
-- Change 2
-- Change 3
+## 📋 実施した変更
+<!-- 実施した具体的な変更をリスト化してください -->
+- 変更1
+- 変更2
+- 変更3
 
-## Testing
-<!-- Describe the tests you ran to verify your changes -->
-- [ ] I have tested these changes locally
-- [ ] All existing tests pass
-- [ ] I have added new tests (if applicable)
-- [ ] I have run `bun test` successfully
+## 🧪 テスト
+<!-- 変更を検証するために実行したテストを説明してください -->
+- [ ] ローカルでこれらの変更をテストしました
+- [ ] すべての既存のテストが合格します
+- [ ] 新しいテストを追加しました（該当する場合）
+- [ ] `bun test`を正常に実行しました
 
-### Test Configuration
-- **OS**: [e.g. Windows 11, Ubuntu 22.04]
-- **Bun Version**: [e.g. 1.0.20]
-- **Node.js Version**: [if applicable]
+### テスト構成
+- **OS**: [例: Windows 11, Ubuntu 22.04]
+- **Bunバージョン**: [例: 1.0.20]
+- **Node.jsバージョン**: [該当する場合]
 
-## Checklist
-<!-- Mark completed items with an "x" -->
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings or errors
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
+## ✅ チェックリスト
+<!-- 完了した項目に"x"をマークしてください -->
+- [ ] コードはこのプロジェクトのスタイルガイドラインに従っています
+- [ ] 自分のコードのセルフレビューを実施しました
+- [ ] 特に理解しづらい部分にコメントを追加しました
+- [ ] ドキュメントに対応する変更を加えました
+- [ ] 変更により新しい警告やエラーが発生しません
+- [ ] 修正が有効であることまたは機能が動作することを証明するテストを追加しました
+- [ ] 新規および既存のユニットテストが変更でローカルに合格します
+- [ ] 依存する変更がすべてマージされ公開されています
 
-## Screenshots (if applicable)
-<!-- Add screenshots to help explain your changes -->
+## 📸 スクリーンショット（該当する場合）
+<!-- 変更の説明に役立つスクリーンショットを追加してください -->
 
 ## Breaking Changes
 <!-- If this PR introduces breaking changes, describe them here -->

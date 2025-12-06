@@ -1,52 +1,44 @@
-# Contributor Covenant Code of Conduct
+# 💜 Elysia AI コミュニティ行動規範
 
-## Our Pledge
+## 🤝 私たちの誓い
 
-We as members, contributors, and leaders pledge to make participation in our
-community a harassment-free experience for everyone, regardless of age, body
-size, visible or invisible disability, ethnicity, sex characteristics, gender
-identity and expression, level of experience, education, socio-economic status,
-nationality, personal appearance, race, caste, color, religion, or sexual
-identity and orientation.
+私たちメンバー、貢献者、リーダーは、年齢、体型、目に見える/見えない障害、民族性、性的特徴、
+ジェンダーアイデンティティと表現、経験レベル、教育、社会経済的地位、国籍、外見、人種、カースト、
+肌の色、宗教、性的アイデンティティと指向に関わらず、すべての人にとってハラスメントのない
+体験をコミュニティで実現することを誓います。
 
-We pledge to act and interact in ways that contribute to an open, welcoming,
-diverse, inclusive, and healthy community.
+私たちは、オープンで歓迎的で、多様性があり、包括的で、健全なコミュニティに貢献する方法で
+行動し、相互作用することを誓います。
 
-## Our Standards
+## ✨ 私たちの基準
 
-Examples of behavior that contributes to a positive environment for our
-community include:
+コミュニティにとってポジティブな環境に貢献する行動の例：
 
-* Demonstrating empathy and kindness toward other people
-* Being respectful of differing opinions, viewpoints, and experiences
-* Giving and gracefully accepting constructive feedback
-* Accepting responsibility and apologizing to those affected by our mistakes,
-  and learning from the experience
-* Focusing on what is best not just for us as individuals, but for the overall
-  community
+* 他の人々への共感と親切さを示す
+* 異なる意見、視点、経験を尊重する
+* 建設的なフィードバックを与え、優雅に受け入れる
+* 自分の過ちによって影響を受けた人々に責任を受け入れ、謝罪し、
+  その経験から学ぶ
+* 個人としてだけでなく、コミュニティ全体にとって最善なことに焦点を当てる
 
-Examples of unacceptable behavior include:
+受け入れられない行動の例：
 
-* The use of sexualized language or imagery, and sexual attention or advances of
-  any kind
-* Trolling, insulting or derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or email address,
-  without their explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+* 性的な言葉や画像の使用、あらゆる種類の性的な注目やアプローチ
+* トローリング、侮辱的または中傷的なコメント、個人的または政治的な攻撃
+* 公的または私的なハラスメント
+* 明示的な許可なしに、物理的またはメールアドレスなどの
+  他人の個人情報を公開すること
+* 専門的な環境で不適切と合理的に考えられるその他の行為
 
-## Enforcement Responsibilities
+## 🛡️ 執行責任
 
-Project maintainers are responsible for clarifying and enforcing our standards
-of acceptable behavior and will take appropriate and fair corrective action in
-response to any behavior that they deem inappropriate, threatening, offensive,
-or harmful.
+プロジェクトメンテナーは、許容される行動の基準を明確化し、執行する責任があり、
+不適切、脅迫的、攻撃的、または有害と判断される行動に対して、
+適切かつ公正な是正措置を講じます。
 
-Project maintainers have the right and responsibility to remove, edit, or reject
-comments, commits, code, wiki edits, issues, and other contributions that are
-not aligned to this Code of Conduct, and will communicate reasons for moderation
-decisions when appropriate.
+プロジェクトメンテナーは、この行動規範に沿っていないコメント、コミット、コード、
+Wikiの編集、Issue、およびその他の貢献を削除、編集、または拒否する権利と責任を持ち、
+適切な場合にはモデレーション判断の理由を伝えます。
 
 ## Scope
 

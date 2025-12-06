@@ -1,34 +1,34 @@
 ---
-name: Feature Request
-about: Suggest an idea for this project
-title: '[FEATURE] '
+name: ✨ 機能リクエスト
+about: このプロジェクトのアイデアを提案
+title: '[✨ FEATURE] '
 labels: enhancement
 assignees: ''
 ---
 
-## Is your feature request related to a problem?
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## 💡 機能リクエストは問題に関連していますか？
+問題が何であるかの明確で簡潔な説明。例：私はいつも[...]に困っています
 
-## Describe the solution you'd like
-A clear and concise description of what you want to happen.
+## 🎯 希望する解決策の説明
+何が起こってほしいかの明確で簡潔な説明。
 
-## Describe alternatives you've considered
-A clear and concise description of any alternative solutions or features you've considered.
+## 🔄 検討した代替案の説明
+検討した代替ソリューションまたは機能の明確で簡潔な説明。
 
-## Use Cases
-Describe specific use cases where this feature would be beneficial.
+## 📋 ユースケース
+この機能が有益となる具体的なユースケースを説明してください。
 
-## Additional Context
-Add any other context, mockups, or screenshots about the feature request here.
+## 📝 追加のコンテキスト
+機能リクエストに関する他のコンテキスト、モックアップ、またはスクリーンショットをここに追加してください。
 
-## Acceptance Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
+## ✅ 受け入れ基準
+- [ ] 基準1
+- [ ] 基準2
+- [ ] 基準3
 
-## Priority
-How important is this feature to you?
-- [ ] Critical - Blocks my usage
-- [ ] High - Would greatly improve my workflow
-- [ ] Medium - Nice to have
-- [ ] Low - Minor improvement
+## 🔥 優先度
+この機能はあなたにとってどれくらい重要ですか？
+- [ ] クリティカル - 使用をブロックする
+- [ ] 高 - ワークフローを大幅に改善する
+- [ ] 中 - あると良い
+- [ ] 低 - わずかな改善

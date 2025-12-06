@@ -1,33 +1,33 @@
-# Changelog
+# 📝 変更履歴
 
-All notable changes to this project will be documented in this file.
+このプロジェクトのすべての注目すべき変更がこのファイルに記録されます。
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+形式は[Keep a Changelog](https://keepachangelog.com/ja/1.0.0/)に基づいており、
+このプロジェクトは[セマンティックバージョニング](https://semver.org/lang/ja/)に準拠しています。
 
-## [Unreleased]
+## [未リリース]
 
-### Added
-- Enterprise-grade project structure and documentation
-- Comprehensive CI/CD workflows
-- Monitoring and observability setup
-- Community contribution guidelines
+### 追加
+- エンタープライズグレードのプロジェクト構造とドキュメント
+- 包括的なCI/CDワークフロー
+- モニタリングと可観測性のセットアップ
+- コミュニティ貢献ガイドライン
 
-## [1.0.51] - 2025-12-03
+## [1.0.51] - 2025年12月3日
 
-### Added
-- VOICEVOX integration with Shikoku Metan voice
-- Emotional expression system (joy/shy/normal) with automatic pitch adjustment
-- User name personalization (addresses users by name instead of generic terms)
-- Voice log saving (up to 100 entries)
-- Complete security features: XSS/SQLi/DoS/Prompt Injection protection
-- JWT authentication system with refresh tokens
-- Self-learning capabilities via Feedback and Knowledge APIs
-- JSONL-based data persistence with rotation scripts
-- Redis integration for rate limiting (with in-memory fallback)
-- Comprehensive maintenance scripts (weekly/monthly/quarterly)
-- Docker support with production-ready Dockerfile
-- Cloud deployment scripts (AWS/GCP)
+### 追加
+- VOICEVOX統合（四国めたん音声）
+- 感情表現システム（喜び/恥ずかしい/通常）と自動ピッチ調整
+- ユーザー名のパーソナライゼーション（一般的な呼び方ではなく名前で呼びかけ）
+- 音声ログ保存（最大100エントリ）
+- 完全なセキュリティ機能：XSS/SQLi/DoS/プロンプトインジェクション防御
+- リフレッシュトークン付きJWT認証システム
+- フィードバックとナレッジAPIによる自己学習機能
+- ローテーションスクリプト付きJSONLベースのデータ永続化
+- レート制限のためのRedis統合（インメモリフォールバック付き）
+- 包括的なメンテナンススクリプト（週次/月次/四半期）
+- 本番環境対応DockerfileによるDockerサポート
+- クラウドデプロイメントスクリプト（AWS/GCP）
 - Multi-platform setup scripts (Windows PowerShell, Linux/macOS bash)
 
 ### Changed
