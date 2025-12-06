@@ -2,9 +2,9 @@ name: CI/CD Pipeline - Enhanced
 
 on:
   push:
-    branches: [ master, elysia, develop ]
+    branches: [ master ]
   pull_request:
-    branches: [ master, elysia ]
+    branches: [ master ]
   workflow_dispatch:
 
 permissions:
