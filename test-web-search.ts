@@ -4,12 +4,12 @@
  */
 
 import {
-	searchWikipedia,
-	getWeather,
 	getLatestNews,
-	searchWeb,
-	searchRelevantInfo,
+	getWeather,
 	type NewsArticle,
+	searchRelevantInfo,
+	searchWeb,
+	searchWikipedia,
 	type WebSearchResult,
 } from "./src/lib/web-search";
 
