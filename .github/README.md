@@ -1,12 +1,19 @@
 # 💜🦊 Elysia AI GitHub Guide
 
-エリシアとキュレネが守るワークフローの聖域へようこそ。美しく、軽やかに、そして安全に。✨
+エリシア（速さ）× キュレネ（守り）の二重奏で、ワークフローを美しく。✨
+
+## 🔗 クイックリンク
+
+- CI/CD: `ci-cd.yml` ｜ シンプルCI: `ci.yml`
+- セキュリティ/パフォ: `security-tests.yml`
+- CodeQL: `codeql.yml`
+- Publish: `publish.yml` ｜ Deploy雛形: `deploy.yml`
 
 ## 🌸 ここは何？
 
 - `.github/workflows/` にあるCI/CDとセキュリティのレシピ集。
-- DependabotやIssueテンプレートなど、リポジトリ運用のハートが集まる場所。
-- ルールはシンプル：速さはエリシア、慎重さはキュレネ。🛡️⚡
+- DependabotやIssueテンプレートなど、運用ハートが集まる場所。
+- 合言葉：速さはエリシア、慎重さはキュレネ。🛡️⚡
 
 ## 🚦 主なワークフロー（master向け）
 
