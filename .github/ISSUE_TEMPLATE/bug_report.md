@@ -1,43 +1,43 @@
 ---
-name: Bug Report
-about: Create a report to help us improve
-title: '[BUG] '
+name: 🐛 バグ報告
+about: バグを報告して改善に貢献
+title: '[🐛 BUG] '
 labels: bug
 assignees: ''
 ---
 
-## Bug Description
-A clear and concise description of what the bug is.
+## 🐛 バグの説明
+バグの明確で簡潔な説明。
 
-## Steps to Reproduce
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. See error
+## 🔄 再現手順
+1. '...'に移動
+2. '...'をクリック
+3. 下にスクロール
+4. エラーが表示される
 
-## Expected Behavior
-A clear and concise description of what you expected to happen.
+## ✨ 期待される動作
+何が起こるべきだったかの明確で簡潔な説明。
 
-## Actual Behavior
-What actually happened instead.
+## ⚠️ 実際の動作
+実際に何が起こったのか。
 
-## Environment
-- **OS**: [e.g. Windows 11, Ubuntu 22.04, macOS 14]
-- **Bun Version**: [e.g. 1.0.20] (run `bun --version`)
-- **Node.js Version**: [if applicable] (run `node --version`)
-- **Python Version**: [e.g. 3.11.5] (run `python --version`)
-- **Browser**: [if applicable, e.g. Chrome 120, Firefox 121]
+## 💻 環境
+- **OS**: [例: Windows 11, Ubuntu 22.04, macOS 14]
+- **Bunバージョン**: [例: 1.0.20] (`bun --version`で確認)
+- **Node.jsバージョン**: [該当する場合] (`node --version`で確認)
+- **Pythonバージョン**: [例: 3.11.5] (`python --version`で確認)
+- **ブラウザ**: [該当する場合, 例: Chrome 120, Firefox 121]
 
-## Logs and Error Messages
+## 📜 ログとエラーメッセージ
 ```
-Paste relevant logs, error messages, or stack traces here
+関連するログ、エラーメッセージ、またはスタックトレースをここに貼り付けてください
 ```
 
-## Screenshots
-If applicable, add screenshots to help explain your problem.
+## 📸 スクリーンショット
+該当する場合、問題の説明に役立つスクリーンショットを追加してください。
 
-## Additional Context
-Add any other context about the problem here.
+## 💡 追加のコンテキスト
+問題に関する他のコンテキストをここに追加してください。
 
-## Possible Solution
-If you have ideas on how to fix this, please share them here.
+## 🔧 可能な解決策
+これを修正する方法についてアイデアがあれば、ここで共有してください。
