@@ -22,7 +22,10 @@ import { auditLogger } from "./lib/audit-logger";
 import { createAuditMiddleware } from "./lib/audit-middleware";
 import { backupScheduler } from "./lib/backup-scheduler";
 import { CacheManager } from "./lib/cache";
+import * as casualChat from "./lib/casual-chat";
+import * as chatSessionService from "./lib/chat-session";
 import { cronScheduler } from "./lib/cron-scheduler";
+import * as customization from "./lib/customization";
 import { feedbackService, knowledgeService, userService } from "./lib/database";
 import { emailNotifier } from "./lib/email-notifier";
 import {
@@ -37,19 +40,16 @@ import { jobQueue } from "./lib/job-queue";
 import { logCleanupManager } from "./lib/log-cleanup";
 import { logger } from "./lib/logger";
 import { metricsCollector } from "./lib/metrics";
-import { sessionManager } from "./lib/session-manager";
-import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
-import { webhookManager } from "./lib/webhook-events";
-import * as chatSessionService from "./lib/chat-session";
-import * as customization from "./lib/customization";
-import * as casualChat from "./lib/casual-chat";
-import * as webSearch from "./lib/web-search";
 import * as openaiIntegration from "./lib/openai-integration";
 import {
-	escapeHtml,
 	checkRateLimit as checkRateLimitMemory,
+	escapeHtml,
 	getSecurityHeaders,
 } from "./lib/security";
+import { sessionManager } from "./lib/session-manager";
+import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
+import * as webSearch from "./lib/web-search";
+import { webhookManager } from "./lib/webhook-events";
 
 // 環境変数検証（起動時）
 checkEnvironmentOrExit();

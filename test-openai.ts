@@ -3,13 +3,13 @@
  */
 
 import {
-	initializeOpenAI,
-	simpleChat,
 	conversationChat,
-	listAvailableModels,
-	isOpenAIAvailable,
 	estimateTokens,
+	initializeOpenAI,
+	isOpenAIAvailable,
+	listAvailableModels,
 	type OpenAIChatMessage,
+	simpleChat,
 } from "./src/lib/openai-integration";
 
 async function testOpenAI() {

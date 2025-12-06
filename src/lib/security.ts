@@ -122,7 +122,7 @@ export function sanitizeSqlInput(input: string): string {
 export function sanitizeFilePath(path: string): string {
 	return path
 		.replace(/\.\./g, "")
-		.replace(/[^a-zA-Z0-9._\-\/]/g, "")
+		.replace(/[^a-zA-Z0-9._\-/]/g, "")
 		.replace(/\/+/g, "/");
 }
 

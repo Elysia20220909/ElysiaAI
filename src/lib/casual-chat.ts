@@ -5,9 +5,9 @@
  */
 
 import {
+	formatSearchResultForChat,
 	needsWebSearch,
 	searchRelevantInfo,
-	formatSearchResultForChat,
 } from "./web-search";
 
 // ==================== 会話パターン ====================
