@@ -3,8 +3,8 @@
  * ストリーミング、上流サービス障害、タイムアウトなどの包括的な処理
  */
 
-import { logger } from "./logger";
 import type { Response } from "elysia";
+import { logger } from "./logger";
 
 export interface ErrorResponse {
 	error: string;
