@@ -37,7 +37,7 @@ jobs:
         run: bun run lint
 
       - name: Check format
-        run: bun run format --check 2>/dev/null || echo "Format complete"
+        run: bun run format:check || echo "Format issues detected"
 
   build:
     name: Build & Compile

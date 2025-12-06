@@ -40,6 +40,7 @@
 		"prepublishOnly": "npm run build",
 		"lint": "biome check .",
 		"format": "biome format --write .",
+		"format:check": "biome format --check .",
 		"fix": "biome check --write .",
 		"db:init": "bun run scripts/init-prisma.ts",
 		"db:migrate": "bun run scripts/prisma-migrate.ts",
