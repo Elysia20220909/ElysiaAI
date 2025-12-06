@@ -197,6 +197,15 @@ docker-compose up -d
 **AWS**: `cd cloud/aws && ./deploy.sh`  
 **GCP**: `cd cloud/gcp && ./deploy.sh`
 
+### 🛡️ 本番環境セットアップ（守りのキュレネ向け）
+
+- **環境変数とシークレット**: LLM/APIキー、Redis/Milvus接続情報、JWTシークレット、SMTPなどを `.env.production`（または安全なシークレットマネージャー）に格納。`NODE_ENV=production` を明示。
+- **TLSとドメイン**: 逆プロキシ（例: Nginx）でTLS終端し、`X-Forwarded-*` ヘッダーを正しく付与。CSPなどセキュリティヘッダーを有効化。
+- **データ永続化とバックアップ**: Milvus/Redis/Postgres系のボリュームを永続化し、スナップショットをスケジュール。最低1日1回、保持は7日以上を目安に。
+- **性能とスケール**: Webは水平スケール、FastAPI/LLMはCPU/GPUリソースを監視。レートリミットとキャッシュが有効か確認。
+- **ヘルスチェックと監視**: readiness/liveness をLBに登録。Prometheus/Grafana/アラートを本番でも有効にして閾値をチューニング。
+- **デプロイフロー**: Dockerイメージをビルド→レジストリにpush→`deploy.yml` などでロールアウト。ロールバック手順（直前のタグに戻す）を決めておく。
+
 ---
 
 ## 📖 ドキュメント
