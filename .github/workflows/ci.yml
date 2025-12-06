@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ elysia, master ]
+    branches: [ master ]
   pull_request:
-    branches: [ elysia, master ]
+    branches: [ master ]
 
 jobs:
   test:
