@@ -51,7 +51,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload dependency-check results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: dependency-check-report
           path: reports/
@@ -85,7 +85,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: test-results
           path: test-results/
@@ -178,7 +178,7 @@ jobs:
           ab -n 500 -c 25 -q http://localhost:5001/health | tee -a ab-results.txt
 
       - name: Upload load test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: load-test-results
           path: ab-results.txt
@@ -205,7 +205,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload ZAP report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: zap-report
           path: report_html.html
@@ -259,7 +259,7 @@ jobs:
           EOF
 
       - name: Upload security report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: security-report
           path: SECURITY_REPORT.md
