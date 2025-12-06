@@ -1,0 +1,20 @@
+# Copilot Instructions for Elysia AI
+- **Architecture map**: Primary gateway is `src/index.ts` (Bun + Elysia) with JWT auth, Redis rate limiting, telemetry, audit logging, and SSE; legacy server lives in `src/server.ts` (not used).
+- **AI backend**: `python/fastapi_server.py` provides RAG and chat; embeds Elysia quote set with SentenceTransformers, optional Milvus via `USE_MILVUS`, and calls Ollama (`OLLAMA_HOST`, model `OLLAMA_MODEL`) with streaming SSE.
+- **Data flow**: Client → Elysia routes → optional Redis (rate limit/session) → FastAPI RAG (`DATABASE_CONFIG.RAG_API_URL`) and Ollama → responses streamed back; JSONL records in `data/` for feedback/knowledge/voice logs.
+- **Config locations**: Runtime secrets in `.env` (template `.env.example`); build/TS configs under `config/internal/`; LLM presets in `.internal/app/llm/llm-config.ts`; auth/DB helpers in `.internal/secure/`.
+- **Dev workflow**: `bun run dev` dispatches to `scripts/dev.ps1`/`dev.sh`, which starts FastAPI (port 8000) then Elysia (port 3000) and writes logs to `./logs/*.log`; optional network simulator via `--network-sim` switch.
+- **Prod entry**: `start-server.ts` and `scripts/start-server.*` launch the bundled Elysia server; webpack build outputs to `dist/` using `config/internal/webpack.config.js`.
+- **Tests & tooling**: `bun test`, `bun test --watch|--coverage`; lint/format via Biome (`bun run lint|format|fix`); clean with `bun run clean` or `clean:deep` (PowerShell).
+- **Endpoints pattern**: Use `t.Object` validators, return `jsonError`, and sanitize user input (e.g., `sanitize-html`, `containsDangerousKeywords`) before persisting or forwarding.
+- **Auth conventions**: JWT with refresh tokens stored/validated in Redis (`store/verify/revokeRefreshToken` in `.internal/secure/auth`); protected routes expect `Authorization: Bearer ...` and use `JWT_SECRET`/`JWT_REFRESH_SECRET`.
+- **Rate limiting**: Prefer `checkRateLimitRedis` (rpm from `RATE_LIMIT_RPM`); code falls back to allowing traffic if Redis is unavailable—keep that behavior.
+- **Observability**: `/ping` (simple), `/health` (Redis + FastAPI + Ollama), `/metrics` (Prometheus text via `metricsCollector`), `/swagger` (OpenAPI UI); telemetry spans started in middleware and must be ended on responses.
+- **Caching/queueing**: Optional Redis-backed job queue (`jobQueue.initialize()`), `CacheManager` abstraction, and cron tasks via `cronScheduler.initializeDefaultTasks()`; keep defaults intact when adding background work.
+- **Persistence**: Services like `feedbackService`/`knowledgeService` append to JSONL under `data/` (auto-create dir) with size-based rotation scripts (`rotate:jsonl`).
+- **Static/UI**: Served from `public/index*.html` (Alpine + htmx, SSE); avoid breaking `admin-extended.html` dashboards that monitor jobs/cron/logs.
+- **RAG contract**: FastAPI `/rag` returns context/quotes; `/chat` streams SSE of filtered Ollama content—preserve `safe_filter` and context concatenation when modifying.
+- **Security headers**: Middleware sets `X-Content-Type-Options`, `X-Frame-Options`, and audit logs all requests; new routes should preserve audit, telemetry, and metrics hooks.
+- **Scripts of note**: `scripts/dev.*` orchestrate multi-service startup; `scripts/start-fastapi.*` runs the Python server; `scripts/start-server.*` runs Elysia; DB helpers under `scripts/*prisma*.ts` for Prisma 7.
+- **Avoid**: Removing `.internal` imports or bypassing env validation (`checkEnvironmentOrExit`); editing generated/legacy files (`src/server.ts`) unless intentionally reviving them.
+- **Quick checks**: `http://localhost:3000/swagger` for API contract, `http://localhost:3000/health` for readiness, and log tails in `logs/` if `bun run dev` stalls.
