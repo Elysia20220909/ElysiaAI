@@ -3,8 +3,8 @@
  * 重要イベント・エラーのメール通知
  */
 
-import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
+import nodemailer from "nodemailer";
 import { logger } from "./logger";
 
 interface EmailConfig {
