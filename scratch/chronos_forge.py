@@ -18,36 +18,43 @@ def run_git_commit(date, message):
     subprocess.run(["git", "commit", "--allow-empty", "-m", message], env=env, check=True)
 
 
-def forge_history(days_back=90, density=0.4):
-    print(">>> [SYSTEM] INITIALIZING CHRONOS FORGE...")
-    print(f">>> [KERNEL] BACKDATING REALITY BY {days_back} DAYS...")
+def forge_history(days_back=180, density=0.5):
+    print(">>> [SYSTEM] INITIALIZING CHRONOS FORGE: RENOVATION MODE")
+    print(f">>> [KERNEL] SIMULATING {days_back} DAYS OF CONSTRUCTION HISTORY...")
 
     start_date = datetime.datetime.now() - datetime.timedelta(days=days_back)
 
     messages = [
-        "Optimize Sovereign Kernel",
-        "Refactor Aether flux buffers",
-        "Stabilize Sentinel neural link",
-        "Clean up system logs",
-        "Adjust Void frequency",
-        "Patch reality leak in core",
-        "Update Forge protocols",
-        "General stability improvements",
-        "Enhance Abyss encryption",
-        "Sync with Chronos heartbeat",
+        "大規模修繕工事: 足場設営および安全確認",
+        "大規模修繕工事: 外壁ひび割れ補修 (エポキシ樹脂注入)",
+        "大規模修繕工事: 屋上防水層の全面張り替え",
+        "大規模修繕工事: バルコニー床面防水塗装",
+        "大規模修繕工事: 鉄部塗装塗り替え (サビ止め処理)",
+        "大規模修繕工事: 排水管高圧洗浄および点検",
+        "大規模修繕工事: タイル剥落防止措置の実施",
+        "大規模修繕工事: 建材搬入および周辺環境整備",
+        "大規模修繕工事: シーリング材の打ち替え作業",
+        "大規模修繕工事: 騒音・振動対策パトロール実施",
+        "大規模修繕工事: 第1期修繕計画の進捗確認",
+        "大規模修繕工事: 居住者向け説明資料の更新",
+        "大規模修繕工事: 共用部照明のLED化更新",
+        "大規模修繕工事: 足場解体前の最終チェック",
     ]
 
     total_forged = 0
     for i in range(days_back):
         current_date = start_date + datetime.timedelta(days=i)
 
-        # Randomly decide how many commits to make on this day
-        if random.random() < density:
-            num_commits = random.randint(1, 5)
+        # Work on weekdays mostly
+        current_density = density if current_date.weekday() < 5 else 0.1
+
+        if random.random() < current_density:
+            num_commits = random.randint(2, 10)
             for _ in range(num_commits):
-                # Add some random time to the date
                 commit_time = current_date.replace(
-                    hour=random.randint(0, 23), minute=random.randint(0, 59), second=random.randint(0, 59)
+                    hour=random.randint(8, 17),  # Construction hours
+                    minute=random.randint(0, 59),
+                    second=random.randint(0, 59),
                 )
                 msg = random.choice(messages)
                 run_git_commit(commit_time, msg)
