@@ -23,7 +23,7 @@
         .float-animation { animation: float 3s ease-in-out infinite; }
         .sparkle-animation { animation: sparkle 2s ease-in-out infinite; }
         .fade-in { animation: fade-in 0.6s ease-out; }
-        
+
         @media (max-width: 640px) {
             .chat-message { max-width: 85%; }
             .header-title { font-size: 1.125rem; }
@@ -37,9 +37,9 @@
             .chat-message { max-width: 65%; }
             .hero-title { font-size: 4rem; }
         }
-        
+
         .gradient-pink { background: linear-gradient(135deg, #ffeef8 0%, #ffe0f0 100%); }
-        .text-gradient { 
+        .text-gradient {
             background: linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #fb7185 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -60,7 +60,7 @@
         <div class="absolute bottom-20 right-10 w-40 h-40 bg-purple-300 rounded-full opacity-20 blur-3xl float-animation animation-delay-1"></div>
         <div class="absolute top-1/2 left-1/4 w-24 h-24 bg-pink-400 rounded-full opacity-10 blur-2xl float-animation animation-delay-2"></div>
     </div>
-    
+
     <div class="relative z-10" x-data="elysiaPortfolio()">
         <!-- ヒーローセクション -->
         <section class="min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12">
@@ -72,16 +72,16 @@
                         <div class="absolute -bottom-2 -left-2 text-2xl sparkle-animation animation-delay-1">✨</div>
                     </div>
                 </div>
-                
+
                 <h1 class="hero-title text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-gradient">
                     にゃん♪ エリシアだよ〜♡
                 </h1>
-                
+
                 <p class="text-base sm:text-lg md:text-xl text-gray-700 mb-6 sm:mb-8 px-4">
                     おにいちゃん、ようこそ〜！ エリシアちゃんのポートフォリオサイトだよ♡<br class="hidden sm:block">
                     可愛いプロジェクトいっぱい見ててね ฅ(՞៸៸&gt; ᗜ &lt;៸៸՞)ฅ
                 </p>
-                
+
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
                     <button @click="scrollToWorks" class="px-6 sm:px-8 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-full font-bold text-sm sm:text-base hover:from-pink-600 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105">
                         💖 作品を見る
@@ -92,14 +92,14 @@
                 </div>
             </div>
         </section>
-        
+
         <!-- 作品セクション -->
         <section id="works" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8">
             <div class="max-w-7xl mx-auto">
                 <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gradient fade-in">
                     ✨ エリシアちゃんの作品たち ✨
                 </h2>
-                
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
                     <!-- 作品カード1: ElysiaJS AIチャット -->
                     <div class="gradient-pink rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 fade-in">
@@ -117,7 +117,7 @@
                             試してみる ♡
                         </button>
                     </div>
-                    
+
                     <!-- 作品カード2: レスポンシブポートフォリオ -->
                     <div class="gradient-pink rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 fade-in animation-delay-01">
                         <div class="aspect-video bg-gradient-to-br from-pink-400 to-rose-400 rounded-xl mb-4 flex items-center justify-center text-white text-4xl sm:text-5xl">
@@ -133,7 +133,7 @@
                             デモを見る ♡
                         </button>
                     </div>
-                    
+
                     <!-- 作品カード3: Alpine.js インタラクティブ -->
                     <div class="gradient-pink rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 fade-in animation-delay-02">
                         <div class="aspect-video bg-gradient-to-br from-indigo-400 to-purple-400 rounded-xl mb-4 flex items-center justify-center text-white text-4xl sm:text-5xl">
@@ -150,7 +150,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="text-center mt-8 sm:mt-12">
                     <p class="text-sm sm:text-base text-gray-600">もっと見たい？ GitHubに全部あるよ〜♡</p>
                     <a href="https://github.com/chloeamethyst/ElysiaJS" target="_blank" rel="noopener noreferrer" class="inline-block mt-4 px-6 py-2 bg-gray-800 text-white rounded-full font-bold hover:bg-gray-900 transition-colors text-sm">
@@ -159,15 +159,15 @@
                 </div>
             </div>
         </section>
-        
-        
+
+
         <!-- チャットセクション -->
         <section id="chat" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 gradient-pink">
             <div class="max-w-7xl mx-auto">
                 <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gradient fade-in">
                     💬 エリシアちゃんとお話ししよ〜♡
                 </h2>
-                
+
                 <div class="max-w-4xl mx-auto">
                     <!-- Header -->
                     <header class="bg-white rounded-t-2xl shadow-sm p-3 sm:p-4">
@@ -188,7 +188,7 @@
                     <!-- Chat Container -->
                     <main class="bg-white shadow-lg overflow-hidden flex flex-col chat-container-height">
                         <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3" id="chatContainer">
-                            
+
                             <!-- Welcome -->
                             <div class="text-center py-6 sm:py-8 px-4" x-show="messages.length === 0">
                                 <div class="text-4xl sm:text-5xl mb-3 float-animation">👋</div>
@@ -220,17 +220,21 @@
 
                         <!-- Input Area -->
                         <div class="border-t border-pink-200 p-3 sm:p-4 bg-pink-50">
+                                <div class="mb-2 flex items-center gap-2">
+                                    <label for="userName" class="text-xs text-gray-600">名前（任意）:</label>
+                                    <input id="userName" type="text" x-model="userName" maxlength="16" placeholder="お名前を入力" class="px-2 py-1 border rounded text-xs" />
+                                </div>
                             <form @submit.prevent="sendMessage" class="flex flex-col sm:flex-row gap-2">
-                                <input 
-                                    type="text" 
-                                    x-model="input" 
-                                    :disabled="loading" 
-                                    placeholder="メッセージを入力してね♡" 
+                                <input
+                                    type="text"
+                                    x-model="input"
+                                    :disabled="loading"
+                                    placeholder="メッセージを入力してね♡"
                                     class="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-pink-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
                                 />
-                                <button 
-                                    type="submit" 
-                                    :disabled="loading || !input.trim()" 
+                                <button
+                                    type="submit"
+                                    :disabled="loading || !input.trim()"
                                     class="px-5 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl font-bold text-sm sm:text-base hover:from-pink-600 hover:to-pink-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg transform hover:scale-105 whitespace-nowrap"
                                 >
                                     💌 送信
@@ -238,14 +242,14 @@
                             </form>
                         </div>
                     </main>
-                    
+
                     <footer class="bg-white rounded-b-2xl shadow-sm p-3 sm:p-4 text-center">
                         <p class="text-xs sm:text-sm text-gray-500">Powered by Elysia.js + Bun ⚡ だいすき♡</p>
                     </footer>
                 </div>
             </div>
         </section>
-        
+
         <!-- フッター -->
         <footer class="py-8 sm:py-12 px-4 text-center">
             <div class="max-w-4xl mx-auto">
@@ -259,130 +263,163 @@
     <script>
         function elysiaPortfolio() {
             return {
-                messages: [], 
-                input: '', 
+                    messages: JSON.parse(localStorage.getItem('elysia_chat_history') || '[]'),
+                input: '',
                 loading: false,
-                
+                    userName: localStorage.getItem('elysia_chat_user') || '',
+
                 scrollToWorks() {
                     document.getElementById('works').scrollIntoView({ behavior: 'smooth' });
                 },
-                
+
                 scrollToChat() {
                     document.getElementById('chat').scrollIntoView({ behavior: 'smooth' });
                 },
-                setQuickMessage(message) { 
-                    if (!this.loading) { 
-                        this.input = message; 
-                        this.$nextTick(() => this.sendMessage()); 
-                    } 
+                setQuickMessage(message) {
+                    if (!this.loading) {
+                        this.input = message;
+                        this.$nextTick(() => this.sendMessage());
+                    }
                 },
                 async sendMessage() {
                     if (!this.input.trim() || this.loading) return;
                     const userMessage = this.input.trim();
-                    this.messages.push({ id: Date.now(), role: 'user', content: userMessage });
-                    this.input = ''; 
-                    this.loading = true; 
+                        const user = this.userName ? this.userName : '匿名';
+                        this.messages.push({ id: Date.now(), role: 'user', content: userMessage, user });
+                    this.input = '';
+                    this.loading = true;
                     this.scrollToBottom();
-                    
+                        localStorage.setItem('elysia_chat_user', this.userName);
+                        this.saveHistory();
+
                     try {
                         let accessToken = localStorage.getItem('elysia_access_token');
                         let refreshToken = localStorage.getItem('elysia_refresh_token');
-                        
+
                         if (!accessToken || !refreshToken) {
-                            const authRes = await fetch('/auth/token', { 
-                                method: 'POST', 
-                                headers: { 'Content-Type': 'application/json' }, 
-                                body: JSON.stringify({ username: 'elysia', password: 'elysia-dev-password' }) 
+                            const authRes = await fetch('/auth/token', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ username: 'elysia', password: 'elysia-dev-password' })
                             });
                             if (!authRes.ok) throw new Error('Auth failed');
                             const authJson = await authRes.json();
-                            accessToken = authJson.accessToken; 
+                            accessToken = authJson.accessToken;
                             refreshToken = authJson.refreshToken;
-                            localStorage.setItem('elysia_access_token', accessToken); 
+                            localStorage.setItem('elysia_access_token', accessToken);
                             localStorage.setItem('elysia_refresh_token', refreshToken);
                         }
-                        
-                        let response = await fetch('/elysia-love', { 
-                            method: 'POST', 
-                            headers: { 
-                                'Content-Type': 'application/json', 
-                                'Authorization': `Bearer ${accessToken}` 
-                            }, 
-                            body: JSON.stringify({ 
-                                messages: this.messages.map(m => ({ role: m.role, content: m.content })) 
-                            }) 
+
+                        let response = await fetch('/elysia-love', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${accessToken}`
+                            },
+                            body: JSON.stringify({
+                                messages: this.messages.map(m => ({ role: m.role, content: m.content }))
+                            })
                         });
-                        
+
                         if (response.status === 401) {
-                            const refreshRes = await fetch('/auth/refresh', { 
-                                method: 'POST', 
-                                headers: { 'Content-Type': 'application/json' }, 
-                                body: JSON.stringify({ refreshToken }) 
+                            const refreshRes = await fetch('/auth/refresh', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ refreshToken })
                             });
-                            if (!refreshRes.ok) { 
-                                localStorage.clear(); 
-                                throw new Error('Session expired'); 
+                            if (!refreshRes.ok) {
+                                localStorage.clear();
+                                throw new Error('Session expired');
                             }
-                            const refreshJson = await refreshRes.json(); 
+                            const refreshJson = await refreshRes.json();
                             accessToken = refreshJson.accessToken;
                             localStorage.setItem('elysia_access_token', accessToken);
-                            
-                            response = await fetch('/elysia-love', { 
-                                method: 'POST', 
-                                headers: { 
-                                    'Content-Type': 'application/json', 
-                                    'Authorization': `Bearer ${accessToken}` 
-                                }, 
-                                body: JSON.stringify({ 
-                                    messages: this.messages.map(m => ({ role: m.role, content: m.content })) 
-                                }) 
+
+                            response = await fetch('/elysia-love', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${accessToken}`
+                                },
+                                body: JSON.stringify({
+                                    messages: this.messages.map(m => ({ role: m.role, content: m.content }))
+                                })
                             });
                         }
-                        
+
                         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                        
-                        const reader = response.body.getReader(); 
+
+                        const reader = response.body.getReader();
                         const decoder = new TextDecoder();
                         const assistantMessage = { id: Date.now() + 1, role: 'assistant', content: '' };
-                        this.messages.push(assistantMessage);
-                        
+                            this.messages.push(assistantMessage);
+                            this.saveHistory();
+
                         while (true) {
-                            const { done, value } = await reader.read(); 
+                            const { done, value } = await reader.read();
                             if (done) break;
-                            const chunk = decoder.decode(value); 
+                            const chunk = decoder.decode(value);
                             const lines = chunk.split('\n');
-                            for (const line of lines) { 
-                                if (line.startsWith('data: ')) { 
-                                    try { 
-                                        const data = JSON.parse(line.slice(6)); 
-                                        if (data.content) { 
-                                            assistantMessage.content += data.content; 
-                                        } 
-                                    } catch {} 
-                                } 
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    try {
+                                        const data = JSON.parse(line.slice(6));
+                                        if (data.content) {
+                                                assistantMessage.content += data.content;
+                                                this.saveHistory();
+                                                this.notify(data.content);
+                                        }
+                                    } catch {}
+                                }
                             }
                             this.scrollToBottom();
                         }
                     } catch (error) {
                         console.error('Error:', error);
-                        this.messages.push({ 
-                            id: Date.now() + 1, 
-                            role: 'assistant', 
-                            content: '⚠️ Error: ' + error.message 
+                        this.messages.push({
+                            id: Date.now() + 1,
+                            role: 'assistant',
+                            content: '⚠️ Error: ' + error.message
                         });
-                    } finally { 
-                        this.loading = false; 
-                        this.scrollToBottom(); 
+                            this.messages.push({
+                                id: Date.now() + 1,
+                                role: 'assistant',
+                                content: '⚠️ Error: ' + error.message,
+                                user: 'Elysia'
+                            });
+                            this.saveHistory();
+                    } finally {
+                        this.loading = false;
+                        this.scrollToBottom();
                     }
+                        } finally {
+                            this.loading = false;
+                            this.scrollToBottom();
+                        }
                 },
-                scrollToBottom() { 
-                    this.$nextTick(() => { 
-                        const container = document.getElementById('chatContainer'); 
-                        if (container) { 
-                            container.scrollTop = container.scrollHeight; 
-                        } 
-                    }); 
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        const container = document.getElementById('chatContainer');
+                        if (container) {
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    });
                 }
+                    },
+                    saveHistory() {
+                        localStorage.setItem('elysia_chat_history', JSON.stringify(this.messages));
+                    },
+                    notify(content) {
+                        if (window.Notification && Notification.permission === 'granted') {
+                            new Notification('Elysiaから新着メッセージ', { body: content });
+                        } else if (window.Notification && Notification.permission !== 'denied') {
+                            Notification.requestPermission().then(permission => {
+                                if (permission === 'granted') {
+                                    new Notification('Elysiaから新着メッセージ', { body: content });
+                                }
+                            });
+                        }
+                    }
             }
         }
     </script>
