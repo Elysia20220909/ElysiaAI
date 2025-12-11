@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,23 +38,21 @@ jobs:
           npm whoami || npm whoami || true
           npm publish --access public
 
-  # Optional: Publish to GitHub Packages (requires scoped name like @OWNER/elysia-ai)
-  # publish-gh:
-  #   name: Publish to GitHub Packages
-  #   if: false  # enable after renaming package to @chloeamethyst/elysia-ai
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     packages: write
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         registry-url: 'https://npm.pkg.github.com'
-  #     - run: npm ci
-  #     - run: npm run build
-  #     - name: Publish to GitHub Packages
-  #       env:
-  #         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       run: npm publish
+  publish-gh:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+      - run: npm ci
+      - run: npm run build
+      - name: Publish to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish
