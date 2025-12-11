@@ -1,17 +1,17 @@
 declare class LogCleanupManager {
-    private config;
-    private intervalId?;
-    private isRunning;
-    constructor();
-    start(): void;
-    stop(): void;
-    private performCleanup;
-    private analyzeLogDirectory;
-    private deleteOldLogs;
-    private deleteBySize;
-    rotateLog(logFile: string): Promise<void>;
-    private compressLog;
-    getStats(): {
+  private config;
+  private intervalId?;
+  private isRunning;
+  constructor();
+  start(): void;
+  stop(): void;
+  private performCleanup;
+  private analyzeLogDirectory;
+  private deleteOldLogs;
+  private deleteBySize;
+  rotateLog(logFile: string): Promise<void>;
+  private compressLog;
+  getStats(): {
         then<TResult1 = {
             totalSizeMB: number;
             fileCount: number;
@@ -39,7 +39,7 @@ declare class LogCleanupManager {
         running: boolean;
         error: string;
     };
-    triggerManualCleanup(): Promise<void>;
+  triggerManualCleanup(): Promise<void>;
 }
 export declare const logCleanupManager: LogCleanupManager;
 export {};

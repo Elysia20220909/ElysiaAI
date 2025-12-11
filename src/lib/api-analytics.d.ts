@@ -16,23 +16,23 @@ interface EndpointStats {
     lastAccessed: Date;
 }
 declare class APIAnalytics {
-    private metrics;
-    private readonly MAX_METRICS;
-    recordRequest(data: RequestMetrics): void;
-    getEndpointStats(): Record<string, EndpointStats>;
-    getHourlyStats(): Record<number, number>;
-    getResponseTimeDistribution(): Record<string, number>;
-    getTopEndpoints(limit?: number): Array<{
+  private metrics;
+  private readonly MAX_METRICS;
+  recordRequest(data: RequestMetrics): void;
+  getEndpointStats(): Record<string, EndpointStats>;
+  getHourlyStats(): Record<number, number>;
+  getResponseTimeDistribution(): Record<string, number>;
+  getTopEndpoints(limit?: number): Array<{
         endpoint: string;
         requests: number;
     }>;
-    getErrorRate(): {
+  getErrorRate(): {
         total: number;
         errors: number;
         rate: number;
     };
-    clearMetrics(): void;
-    exportJSON(): {
+  clearMetrics(): void;
+  exportJSON(): {
         summary: {
             totalRequests: number;
             errorRate: {

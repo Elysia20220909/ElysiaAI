@@ -19,21 +19,21 @@ interface ABTest {
     };
 }
 declare class ABTestManager {
-    private tests;
-    private userAssignments;
-    constructor();
-    private initializeDefaultTests;
-    createTest(options: {
+  private tests;
+  private userAssignments;
+  constructor();
+  private initializeDefaultTests;
+  createTest(options: {
         id: string;
         name: string;
         description: string;
         variants: ABTestVariant[];
         endDate?: Date;
     }): ABTest;
-    assignVariant(testId: string, userId: string): ABTestVariant | null;
-    recordConversion(testId: string, userId: string): void;
-    recordRating(testId: string, userId: string, rating: number): void;
-    getTestResults(testId: string): {
+  assignVariant(testId: string, userId: string): ABTestVariant | null;
+  recordConversion(testId: string, userId: string): void;
+  recordRating(testId: string, userId: string, rating: number): void;
+  getTestResults(testId: string): {
         testId: string;
         name: string;
         description: string;
@@ -50,8 +50,8 @@ declare class ABTestManager {
             sampleSize: number;
         }[];
     } | null;
-    endTest(testId: string): void;
-    listTests(): {
+  endTest(testId: string): void;
+  listTests(): {
         id: string;
         name: string;
         description: string;
