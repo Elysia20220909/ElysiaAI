@@ -1,10 +1,20 @@
+// グローバル変数宣言
+let ranking: Ranking = {};
+let state: OthelloState = {
+  board: Array.from({length:8}, (_,y)=>Array.from({length:8}, (_,x)=>
+    (y===3&&x===3)||(y===4&&x===4)?2:(y===3&&x===4)||(y===4&&x===3)?1:0)),
+  turn: 1,
+  history: [],
+  passCount: 0,
+  aiEnabled: false
+};
+let clients: Set<any> = new Set();
+
 import { Elysia, t } from 'elysia';
 import { openapi, fromTypes } from '@elysiajs/openapi';
 import { cors } from '@elysiajs/cors';
 
-
-
-// オセロ用型定義
+// 型定義
 type Cell = 0 | 1 | 2; // 0:空, 1:黒, 2:白
 type Board = Cell[][];
 type Player = 1 | 2; // 1:黒, 2:白
@@ -19,18 +29,8 @@ type OthelloState = {
   userIds?: string[];
 };
 type Ranking = { [userId: string]: { win: number; lose: number; draw: number } };
-let ranking: Ranking = {};
-let state: OthelloState = {
-  board: Array.from({length:8}, (_,y)=>Array.from({length:8}, (_,x)=>
-    (y===3&&x===3)||(y===4&&x===4)?2:(y===3&&x===4)||(y===4&&x===3)?1:0)),
-  turn: 1,
-  history: [],
-  passCount: 0,
-  aiEnabled: false
-};
-let clients: Set<any> = new Set();
 
-// --- ゲームロジック関数を上部に移動 ---
+// ゲームロジック関数
 function placeOthello(board: Board, x: number, y: number, player: Player): { board: Board, flipped: number } {
   if (board[y][x] !== 0) return { board, flipped: 0 };
   const dirs = [ [-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1] ];
@@ -371,14 +371,6 @@ const app = new Elysia()
   }, {
     body: t.Object({ x: t.Number(), y: t.Number(), player: t.Number() })
   })
-  // AI: ランダム合法手
-  function getRandomLegalMove(board: Board, player: Player): {x:number,y:number}|null {
-    const moves: {x:number,y:number}[] = [];
-    for (let y=0; y<8; ++y) for (let x=0; x<8; ++x)
-      if (placeOthello(board,x,y,player).flipped) moves.push({x,y});
-    if (moves.length === 0) return null;
-    return moves[Math.floor(Math.random()*moves.length)];
-  }
 // Elysiaチェーン末尾にAPI宣言
 app.get('/game/ranking', () => ranking)
   .ws('/game/ws', {
@@ -434,17 +426,3 @@ app.get('/game/ranking', () => ranking)
       } catch {}
     }
   });
-  for (let p of [1,2] as Player[]) {
-    for (let y=0; y<8; ++y) for (let x=0; x<8; ++x)
-      if (placeOthello(board,x,y,p).flipped) return false;
-  }
-  return true;
-}
-
-function countStones(board: Board): [number,number] {
-  let b=0,w=0;
-  for (let row of board) for (let c of row) {
-    if (c===1) b++; else if (c===2) w++;
-  }
-  return [b,w];
-}
