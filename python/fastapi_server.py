@@ -49,7 +49,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
-model = SentenceTransformer(CONFIG["MODEL_NAME"])
+# SentenceTransformerのロード（オフライン時はスキップ）
+model = None
+try:
+    model = SentenceTransformer(CONFIG["MODEL_NAME"])
+    logger.info(f"✅ SentenceTransformer model loaded: {CONFIG['MODEL_NAME']}")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to load SentenceTransformer: {e}. RAG features will be limited.")
+    logger.warning("💡 To fix: Ensure internet connection or pre-download the model")
 
 # ベクトルストア初期化（Milvusまたはインメモリ）
 milvus_client = None
@@ -160,15 +167,22 @@ async def init_db() -> None:
         if len(quotes_store) == 0:
             logger.info(f"📝 Embedding {len(ELYSIA_QUOTES)} Elysia quotes...")
             quotes_store = ELYSIA_QUOTES.copy()
-            embeddings = model.encode(ELYSIA_QUOTES)
-            embeddings_store = [emb for emb in embeddings]
-            logger.info("✅ Elysia quotes embedded successfully!")
+
+            if model is not None:
+                embeddings = model.encode(ELYSIA_QUOTES)
+                embeddings_store = [emb for emb in embeddings]
+                logger.info("✅ Elysia quotes embedded successfully!")
+            else:
+                logger.warning("⚠️ Model not available, RAG search will return random quotes")
+                # モデルなしの場合は空のリストで初期化
+                embeddings_store = []
         else:
             logger.info(f"✅ Already have {len(quotes_store)} quotes in memory")
 
     except Exception as e:
         logger.error(f"❌ Error initializing DB: {e}")
-        raise
+        # エラーでもサーバーは起動を続ける
+        logger.warning("⚠️ Continuing without embeddings...")
 
 @app.post("/rag", response_model=RAGResponse)
 async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
@@ -190,6 +204,18 @@ async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
             raise HTTPException(400, "にゃん♡ 危ない言葉は使わないでね？")
 
         logger.info(f"🔍 RAG search: {query.text[:50]}...")
+
+        # モデルがない場合はランダムにセリフを返す
+        if model is None or len(embeddings_store) == 0:
+            logger.warning("⚠️ Model not available, returning random quotes")
+            import random
+            quotes = random.sample(quotes_store, min(CONFIG["SEARCH_LIMIT"], len(quotes_store)))
+            context = "\n".join(quotes)
+            return {
+                "context": context,
+                "quotes": quotes,
+                "error": ""
+            }
 
         # クエリをエンベディング化
         query_embedding = model.encode([query.text])[0]
