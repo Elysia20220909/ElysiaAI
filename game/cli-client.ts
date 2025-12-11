@@ -1,4 +1,5 @@
 
+
 const BASE_URL = 'http://localhost:3001';
 
 async function prompt(query: string): Promise<string> {
@@ -6,44 +7,60 @@ async function prompt(query: string): Promise<string> {
   return (await Bun.stdin.stream.readLine())?.trim() ?? '';
 }
 
-async function main() {
-  console.log('=== Elysia Network Game CLI (Bun専用) ===');
-  const userId = await prompt('あなたのユーザーID: ');
-  const opponentId = await prompt('相手ユーザーID: ');
+function printBoard(board: number[][]) {
+  console.log('  0 1 2 3 4 5 6 7');
+  for (let y = 0; y < 8; ++y) {
+    let row = '' + y + ' ';
+    for (let x = 0; x < 8; ++x) {
+      row += board[y][x] === 1 ? '● ' : board[y][x] === 2 ? '○ ' : '. ';
+    }
+    console.log(row);
+  }
+}
 
-  // ゲーム初期化
-  await fetch(`${BASE_URL}/game/start`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      nodes: [ {id:'A',connected:['B']}, {id:'B',connected:['A','C']}, {id:'C',connected:['B']} ],
-      agents: [ {id:'P1',position:'A',userId,score:0}, {id:'P2',position:'C',userId:opponentId,score:0} ]
-    })
-  });
-  console.log('ゲームを開始しました。');
+async function main() {
+  console.log('=== オセロCLI (Bun専用) ===');
+  const mode = await prompt('モード選択: 1=対人 2=AI(ランダム) 3=AI(強い) 4=観戦 > ');
+  if (mode === '2' || mode === '3') {
+    const aiLevel = mode === '3' ? 'strong' : 'random';
+    await fetch(`${BASE_URL}/game/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aiEnabled: true, aiLevel })
+    });
+    console.log(`AI対戦(${aiLevel === 'strong' ? '強いAI' : 'ランダム'})で開始。黒(●)が先手です。`);
+  } else if (mode === '4') {
+    console.log('観戦モード。盤面のみ表示します。');
+  } else {
+    await fetch(`${BASE_URL}/game/start`, { method: 'POST' });
+    console.log('対人モードで開始。黒(●)が先手です。');
+  }
 
   while (true) {
     const res = await fetch(`${BASE_URL}/game/state`);
     const state = await res.json();
-    console.log(`\nターン: ${state.turn}`);
-    state.agents.forEach((a: any) => {
-      console.log(`エージェント: ${a.id} (ユーザー: ${a.userId}) 位置: ${a.position} スコア: ${a.score}`);
-    });
+    printBoard(state.board);
     if (state.winner) {
       console.log(`\n=== 勝者: ${state.winner} ===`);
       break;
     }
+    console.log(`ターン: ${state.turn === 1 ? '黒(●)' : '白(○)'}`);
     console.log('履歴:');
     state.history.slice(-5).forEach((h: string) => console.log('  ' + h));
-    // 自分のエージェント
-    const agent = state.agents.find((a: any) => a.userId === userId);
-    const currentNode = state.nodes.find((n: any) => n.id === agent.position);
-    console.log(`現在位置: ${agent.position}  移動可能: ${currentNode.connected.join(', ')}`);
-    const to = await prompt('どこに移動しますか？: ');
+    if (mode === '3') {
+      await new Promise(r=>setTimeout(r,1500));
+      continue;
+    }
+    const input = await prompt('着手座標 x y（例: 2 3）: ');
+    const [x, y] = input.split(/\s+/).map(Number);
+    if (isNaN(x) || isNaN(y) || x < 0 || x > 7 || y < 0 || y > 7) {
+      console.log('座標は0～7の数字で入力してください。');
+      continue;
+    }
     await fetch(`${BASE_URL}/game/action`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agentId: agent.id, to, userId })
+      body: JSON.stringify({ x, y, player: state.turn })
     });
   }
 }
