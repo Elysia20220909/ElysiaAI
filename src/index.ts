@@ -37,7 +37,7 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { cors } from '@elysiajs/cors';
 import { html } from '@elysiajs/html';
 import { staticPlugin } from '@elysiajs/static';
-import { swagger } from '@elysiajs/swagger';
+import { openapi, fromTypes } from '@elysiajs/openapi';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import sanitizeHtml from 'sanitize-html';
@@ -214,7 +214,7 @@ app
   )
   .use(html())
   .use(staticPlugin({ assets: 'public' }))
-  .use(swagger({ path: '/swagger' }))
+  .use(openapi({ path: '/swagger', references: fromTypes() }))
 // Telemetry and metrics middleware
   .onBeforeHandle(({ request }) => {
     const url = new URL(request.url);
@@ -1944,14 +1944,29 @@ if (import.meta.main) {
       port: CONFIG.PORT,
     });
 
-    // WebSocketの初期化（HTTPサーバー取得後） - 一時的に無効化
-    // Elysia internal server property
+
+    // WebSocketの初期化（HTTPサーバー取得後）
     const httpServer = server.server;
-    // biome-ignore lint/correctness/noConstantCondition: WebSocket一時無効化中
-    if (false && httpServer) {
+    if (httpServer) {
       const { wsManager } = await import('./lib/websocket-manager');
       wsManager.initialize(httpServer);
       logger.info('WebSocket server initialized');
+    }
+
+    // APIドキュメント自動公開（swagger.jsonエクスポート）
+    try {
+      // openapiプラグインの返り値からgetJSON()を直接呼び出し
+      const openapiPlugin = app.plugins.find(p => p.name === 'openapi');
+      if (openapiPlugin && typeof openapiPlugin.getJSON === 'function') {
+        const swaggerJson = openapiPlugin.getJSON();
+        if (swaggerJson) {
+          const fs = await import('node:fs');
+          fs.writeFileSync('public/swagger.json', JSON.stringify(swaggerJson, null, 2));
+          logger.info('Swagger JSON exported to public/swagger.json');
+        }
+      }
+    } catch (err) {
+      logger.warn('Swagger JSON export failed', { error: err });
     }
 
     logger.info('Elysia server started', {
