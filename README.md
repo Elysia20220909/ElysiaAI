@@ -29,7 +29,7 @@ new Elysia()
 
 ---
 
-## 🚀 クイックスタート
+## 🚀 クイックスタート & 保守
 
 ```bash
 # Bunでインストール（推奨）
@@ -42,37 +42,50 @@ bun run scripts/setup-python.ps1  # Windows
 
 # すべてのサービスを起動
 bun run dev
+
+# コード品質・保守
+# TypeScript/JavaScriptのESLint自動修正（FlatConfig対応）
+npm install eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser --save-dev
+# FlatConfig設定例は eslint.config.js を参照
+npx eslint ElysiaAI/src/**/*.ts --fix
+
+# Python未使用import自動削除（手動またはIDE推奨）
+# src/配下の全ファイルも定期的にクリーンアップ
 ```
 
 **これだけ！** 🎉 <http://localhost:3000> を開く
 
 ---
 
-## 📦 機能
+## 📦 機能・品質向上
 
-### 🧠 **インテリジェントRAGシステム**
+### 🧠 **インテリジェントRAGシステム & 保守性**
 
 - **ベクトル検索**: Milvus Lite with `all-MiniLM-L6-v2` 埋め込み
 - **コンテキスト取得**: セマンティック類似性マッチング
-- **スマートキャッシング**: Redisベースのレスポンスキャッシュ
+  - **スマートキャッシング**: Redisベースのレスポンスキャッシュ
+  - **自動コード保守**: ESLint/FlatConfig・未使用import削除・src/全体クリーンアップ
 
-### ⚡ **Elysia駆動**
+### ⚡ **Elysia駆動 & 高品質TypeScript**
 
-- **型安全**: Eden Treatyでエンドツーエンド TypeScript
-- **高速**: 最適化されたBunランタイム
-- **エルゴノミック**: 直感的なAPI設計、最小限のボイラープレート
+  - **型安全**: Eden Treatyでエンドツーエンド TypeScript
+  - **高速**: 最適化されたBunランタイム
+  - **エルゴノミック**: 直感的なAPI設計、最小限のボイラープレート
+  - **ESLint/FlatConfig**: 最新のLintルールで品質維持
 
-### 🤖 **LLM統合**
+### 🤖 **LLM統合 & Python保守**
 
-- **Ollama**: ローカル `llama3.2` モデルとストリーミング
-- **リアルタイム**: Server-Sent Events (SSE) によるライブレスポンス
-- **柔軟**: モデルとプロバイダーの簡単な切り替え
+  - **Ollama**: ローカル `llama3.2` モデルとストリーミング
+  - **リアルタイム**: Server-Sent Events (SSE) によるライブレスポンス
+  - **柔軟**: モデルとプロバイダーの簡単な切り替え
+  - **Python未使用import削除**: クリーンなAIバックエンド
 
-### 🎨 **美しいUI**
+### 🎨 **美しいUI & 開発体験**
 
-- **Alpine.js**: リアクティブで軽量なフロントエンド
-- **レスポンシブ**: モバイルフレンドリーデザイン
-- **ダークモード**: 目に優しい 🌙
+  - **Alpine.js**: リアクティブで軽量なフロントエンド
+  - **レスポンシブ**: モバイルフレンドリーデザイン
+  - **ダークモード**: 目に優しい 🌙
+  - **開発体験**: コード保守・自動品質向上
 
 ### 🔐 **セキュリティ第一**
 

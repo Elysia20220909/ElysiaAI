@@ -1,7 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 declare const prisma: PrismaClient<{
-    log: ("error" | "warn" | "query")[];
-}, "error" | "warn" | "query", import("@prisma/client/runtime/client").DefaultArgs>;
+    log: ('error' | 'warn' | 'query')[];
+}, 'error' | 'warn' | 'query', import('@prisma/client/runtime/client').DefaultArgs>;
 export { prisma };
 export declare const userService: {
     create(data: {
@@ -90,8 +90,8 @@ export declare const tokenService: {
         expiresAt: Date;
         revoked: boolean;
     }>;
-    revokeAllByUser(userId: string): Promise<import("@prisma/client").Prisma.BatchPayload>;
-    deleteExpired(): Promise<import("@prisma/client").Prisma.BatchPayload>;
+    revokeAllByUser(userId: string): Promise<import('@prisma/client').Prisma.BatchPayload>;
+    deleteExpired(): Promise<import('@prisma/client').Prisma.BatchPayload>;
 };
 export declare const chatService: {
     createSession(data: {
@@ -174,7 +174,7 @@ export declare const feedbackService: {
         userId: string | null;
         createdAt: Date;
     })[]>;
-    getByRating(rating: "up" | "down", limit?: number): Promise<{
+    getByRating(rating: 'up' | 'down', limit?: number): Promise<{
         query: string;
         id: string;
         answer: string;
@@ -278,6 +278,6 @@ export declare const voiceService: {
         emotion: string;
         audioUrl: string | null;
     }[]>;
-    deleteOldLogs(daysOld?: number): Promise<import("@prisma/client").Prisma.BatchPayload>;
+    deleteOldLogs(daysOld?: number): Promise<import('@prisma/client').Prisma.BatchPayload>;
 };
 //# sourceMappingURL=database.d.ts.map

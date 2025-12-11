@@ -14,25 +14,25 @@ interface APIKey {
     };
 }
 declare class APIKeyManager {
-    private keys;
-    private readonly KEY_PREFIX;
-    constructor();
-    private loadKeysFromEnv;
-    generateKey(options: {
+  private keys;
+  private readonly KEY_PREFIX;
+  constructor();
+  private loadKeysFromEnv;
+  generateKey(options: {
         name: string;
         userId?: string;
         rateLimit?: number;
         expiresInDays?: number;
     }): APIKey;
-    validateKey(key: string): {
+  validateKey(key: string): {
         valid: boolean;
         reason?: string;
         apiKey?: APIKey;
     };
-    recordUsage(key: string): void;
-    revokeKey(key: string): boolean;
-    deleteKey(key: string): boolean;
-    listKeys(): {
+  recordUsage(key: string): void;
+  revokeKey(key: string): boolean;
+  deleteKey(key: string): boolean;
+  listKeys(): {
         name: string;
         userId: string | undefined;
         createdAt: Date;
@@ -46,7 +46,7 @@ declare class APIKeyManager {
         };
         keyPreview: string;
     }[];
-    getUserKeys(userId: string): {
+  getUserKeys(userId: string): {
         name: string;
         createdAt: Date;
         expiresAt: Date | undefined;
@@ -60,7 +60,7 @@ declare class APIKeyManager {
         };
         keyPreview: string;
     }[];
-    getUsageStats(): {
+  getUsageStats(): {
         totalKeys: number;
         activeKeys: number;
         expiredKeys: number;

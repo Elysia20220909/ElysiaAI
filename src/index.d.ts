@@ -1,9 +1,9 @@
-import { Elysia } from "elysia";
-declare const app: Elysia<"", {
+import { Elysia } from 'elysia';
+declare const app: Elysia<'', {
     decorator: {};
     store: {};
     derive: {
-        readonly html: (value: import("stream").Readable | JSX.Element) => Promise<Response | string> | Response | string;
+        readonly html: (value: import('stream').Readable | JSX.Element) => Promise<Response | string> | Response | string;
         readonly stream: <A = any>(value: (this: void, arg: A & {
             id: number;
         }) => JSX.Element, args: A) => Response | Promise<Response>;
@@ -41,8 +41,8 @@ declare const app: Elysia<"", {
     macro: {};
     macroFn: {};
     parser: {};
-    response: import("elysia/dist/types").ExtractErrorFromHandle<{
-        readonly html: (value: import("stream").Readable | JSX.Element) => Promise<Response | string> | Response | string;
+    response: import('elysia/dist/types').ExtractErrorFromHandle<{
+        readonly html: (value: import('stream').Readable | JSX.Element) => Promise<Response | string> | Response | string;
         readonly stream: <A = any>(value: (this: void, arg: A & {
             id: number;
         }) => JSX.Element, args: A) => Response | Promise<Response>;
@@ -114,7 +114,7 @@ declare const app: Elysia<"", {
                 reason?: string | undefined;
                 query: string;
                 answer: string;
-                rating: "up" | "down";
+                rating: 'up' | 'down';
             };
             params: {};
             query: unknown;
@@ -221,12 +221,12 @@ declare const app: Elysia<"", {
         };
     };
 } & {
-    "elysia-love": {
+    'elysia-love': {
         post: {
             body: {
-                mode?: "sweet" | "normal" | "professional" | undefined;
+                mode?: 'sweet' | 'normal' | 'professional' | undefined;
                 messages: {
-                    role: "user" | "assistant" | "system";
+                    role: 'user' | 'assistant' | 'system';
                     content: string;
                 }[];
             };
@@ -293,7 +293,7 @@ declare const app: Elysia<"", {
 } & {
     admin: {
         knowledge: {
-            ":id": {
+            ':id': {
                 verify: {
                     post: {
                         body: unknown;
@@ -315,7 +315,7 @@ declare const app: Elysia<"", {
 } & {
     admin: {
         knowledge: {
-            ":id": {
+            ':id': {
                 delete: {
                     body: unknown;
                     params: {

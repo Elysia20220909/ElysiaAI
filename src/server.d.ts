@@ -1,5 +1,5 @@
-import { Elysia } from "elysia";
-declare const app: Elysia<"", {
+import { Elysia } from 'elysia';
+declare const app: Elysia<'', {
     decorator: {};
     store: {};
     derive: {};

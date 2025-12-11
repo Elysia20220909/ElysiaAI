@@ -4,8 +4,6 @@
 """
 
 from locust import HttpUser, task, between, events
-import json
-import time
 from datetime import datetime
 
 class ElysiaAIUser(HttpUser):

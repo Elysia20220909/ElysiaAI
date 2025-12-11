@@ -24,22 +24,22 @@ interface AuditSearchOptions {
     offset?: number;
 }
 declare class AuditLoggerService {
-    private readonly LOG_DIR;
-    private readonly LOG_FILE;
-    private logs;
-    private logCounter;
-    constructor();
-    private loadLogs;
-    log(entry: Omit<AuditLog, "id" | "timestamp">): void;
-    search(options?: AuditSearchOptions): {
+  private readonly LOG_DIR;
+  private readonly LOG_FILE;
+  private logs;
+  private logCounter;
+  constructor();
+  private loadLogs;
+  log(entry: Omit<AuditLog, 'id' | 'timestamp'>): void;
+  search(options?: AuditSearchOptions): {
         logs: AuditLog[];
         total: number;
         offset: number;
         limit: number;
     };
-    getUserActivity(userId: string, limit?: number): AuditLog[];
-    getResourceHistory(resource: string, resourceId: string): AuditLog[];
-    getStats(): {
+  getUserActivity(userId: string, limit?: number): AuditLog[];
+  getResourceHistory(resource: string, resourceId: string): AuditLog[];
+  getStats(): {
         totalLogs: number;
         last24Hours: number;
         last7Days: number;
@@ -52,8 +52,8 @@ declare class AuditLoggerService {
             count: number;
         }[];
     };
-    cleanupOldLogs(maxAgeDays?: number): number;
-    export(format: "json" | "csv", options?: AuditSearchOptions): string | null;
+  cleanupOldLogs(maxAgeDays?: number): number;
+  export(format: 'json' | 'csv', options?: AuditSearchOptions): string | null;
 }
 export declare const auditLogger: AuditLoggerService;
 export {};
