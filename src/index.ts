@@ -176,16 +176,12 @@ async function checkRateLimit(key: string) {
 				userId: key.split(":")[0],
 				action: "rate_limit_exceeded",
 				resource: key,
-				status: 429,
 				timestamp: new Date().toISOString(),
 			});
 		}
 		return allowed;
-	} catch (err) {
-		logger.warn(
-			"Rate limit fallback: Redis unavailable",
-			err instanceof Error ? err.message : undefined,
-		);
+	} catch {
+		logger.warn("Rate limit fallback: Redis unavailable");
 		return true; // fallback: allow
 	}
 }
@@ -249,7 +245,6 @@ const app = new Elysia()
 			userId,
 			action: "error",
 			resource: url.pathname,
-			status: code,
 			error: errorMsg,
 			traceId,
 			timestamp: new Date().toISOString(),
@@ -263,7 +258,7 @@ const app = new Elysia()
 		}
 		// Audit middleware - log failed requests
 		try {
-			auditMiddleware.onError(request, error);
+			auditMiddleware.onError({ request, error, set });
 		} catch {}
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
@@ -293,7 +288,7 @@ const app = new Elysia()
 		}
 		// Audit middleware - log successful requests
 		try {
-			auditMiddleware.afterHandle?.(request, response);
+			auditMiddleware.afterHandle?.({ request, set, response });
 		} catch {}
 	})
 
