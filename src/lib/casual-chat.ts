@@ -231,7 +231,8 @@ export async function generateCasualResponse(
 		return getRandomResponse(pattern);
 	}
 
-	return null;
+	// パターンが見つからない場合でも必ず返答
+	return "今日はどうでしたか？何か話したいことがあれば教えてください！";
 }
 
 // ==================== 話題提案 ====================
