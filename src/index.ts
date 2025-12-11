@@ -229,9 +229,10 @@ const app = new Elysia()
 		async () => {
 			try {
 				const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+				const fastAPIBaseUrl = DATABASE_CONFIG.FASTAPI_BASE_URL;
 				const health = await performHealthCheck(
 					redisUrl,
-					CONFIG.RAG_API_URL,
+					fastAPIBaseUrl,
 					CONFIG.OLLAMA_BASE_URL,
 				);
 				const status = health.status === "healthy" ? 200 : 503;
