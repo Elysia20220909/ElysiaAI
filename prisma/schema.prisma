@@ -6,17 +6,17 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ==================== ユーザー管理 ====================
 model User {
-  id            String   @id @default(cuid())
-  username      String   @unique
-  passwordHash  String
-  role          String   @default("user")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("user")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // リレーション
   refreshTokens RefreshToken[]
@@ -37,7 +37,7 @@ model RefreshToken {
   revoked   Boolean  @default(false)
 
   // リレーション
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
@@ -53,22 +53,22 @@ model ChatSession {
   updatedAt DateTime @updatedAt
 
   // リレーション
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  messages  Message[]
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages Message[]
 
   @@index([userId])
   @@map("chat_sessions")
 }
 
 model Message {
-  id        String      @id @default(cuid())
+  id        String   @id @default(cuid())
   sessionId String
-  role      String      // user, assistant, system
+  role      String // user, assistant, system
   content   String
-  createdAt DateTime    @default(now())
+  createdAt DateTime @default(now())
 
   // リレーション
-  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
   @@map("messages")
@@ -80,12 +80,12 @@ model Feedback {
   userId    String?
   query     String
   answer    String
-  rating    String   // up, down
+  rating    String // up, down
   reason    String?
   createdAt DateTime @default(now())
 
   // リレーション
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([rating])
@@ -99,13 +99,13 @@ model KnowledgeBase {
   userId    String?
   question  String
   answer    String
-  source    String?  // user, admin, auto
+  source    String? // user, admin, auto
   verified  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // リレーション
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([verified])
@@ -117,7 +117,7 @@ model VoiceLog {
   id        String   @id @default(cuid())
   username  String?
   text      String
-  emotion   String   // joy, shy, normal
+  emotion   String // joy, shy, normal
   audioUrl  String?
   createdAt DateTime @default(now())
 

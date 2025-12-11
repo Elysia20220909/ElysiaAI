@@ -1,3 +1,6 @@
+import { Elysia } from 'elysia';
+const app = new Elysia();
+
 // チャットクリア（セッション内メッセージ全削除）
 app.post(
   '/sessions/:id/clear',
@@ -35,19 +38,17 @@ import { html } from '@elysiajs/html';
 import { staticPlugin } from '@elysiajs/static';
 import { swagger } from '@elysiajs/swagger';
 import axios from 'axios';
-import { Elysia, t } from 'elysia';
-import { createServer } from 'http';
 import jwt from 'jsonwebtoken';
 import sanitizeHtml from 'sanitize-html';
-import { DEFAULT_MODE, ELYSIA_MODES } from '../.internal/app/llm/llm-config';
+import { DEFAULT_MODE, ELYSIA_MODES } from './config/internal/llm-config';
 import {
   checkRateLimitRedis,
   revokeRefreshToken,
   storeRefreshToken,
   verifyStoredRefreshToken,
-} from '../.internal/secure/auth';
-import { DATABASE_CONFIG } from '../.internal/secure/db';
-import { setupSocket } from '../.internal/socket/socket-server';
+} from './config/internal/auth';
+import { DATABASE_CONFIG } from './config/internal/db';
+import { setupSocket } from './config/internal/socket-server';
 import { abTestManager } from './lib/ab-testing';
 import { apiKeyManager } from './lib/api-key-manager';
 import { auditLogger } from './lib/audit-logger';
@@ -82,6 +83,7 @@ import { sessionManager } from './lib/session-manager';
 import { getTraceContextFromRequest, telemetry } from './lib/telemetry';
 import * as webSearch from './lib/web-search';
 import { webhookManager } from './lib/webhook-events';
+import { t } from 'elysia';
 
 // 環境変数検証（起動時）
 checkEnvironmentOrExit();
@@ -199,7 +201,7 @@ const auditMiddleware = createAuditMiddleware({
   includeBody: false,
 });
 
-const app = new Elysia()
+app
   .use(
     cors({
       origin: CONFIG.ALLOWED_ORIGINS,
