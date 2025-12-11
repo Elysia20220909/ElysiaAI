@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elysia AI ♡</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FFB7D5 0%, #FF8AC6 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            color: #FF69B4;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .settings-btn {
+            background: #FF69B4;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .settings-btn:hover {
+            background: #FF1493;
+            transform: scale(1.05);
+        }
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.user {
+            align-self: flex-end;
+            background: white;
+            color: #333;
+        }
+        .message.assistant {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        .welcome {
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            margin-top: 100px;
+        }
+        .input-area {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-radius: 12px;
+            margin: 0 20px 20px;
+        }
+        #messageInput {
+            flex: 1;
+            border: 2px solid #FFB7D5;
+            border-radius: 20px;
+            padding: 10px 15px;
+            font-size: 14px;
+            outline: none;
+            resize: none;
+            max-height: 100px;
+        }
+        #sendBtn {
+            background: #FF69B4;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #sendBtn:hover:not(:disabled) {
+            background: #FF1493;
+            transform: scale(1.1);
+        }
+        #sendBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 14px;
+            padding: 8px 16px;
+        }
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .modal-content h2 {
+            color: #FF69B4;
+            margin-bottom: 20px;
+        }
+        .modal-content label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 600;
+        }
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #FFB7D5;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #FF69B4;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #FF1493;
+        }
+        .btn-secondary {
+            background: #ddd;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💕 Elysia AI ♡</h1>
+        <button class="settings-btn" onclick="openSettings()">⚙️ Settings</button>
+    </div>
+
+    <div class="chat-container">
+        <div class="messages" id="messages">
+            <div class="welcome">
+                ฅ(՞៸៸&gt; ᗜ &lt;៸៸՞)ฅ♡<br><br>
+                やっほー！エリシアだよ♡<br>
+                何でも話してね〜！
+            </div>
+        </div>
+
+        <div class="input-area">
+            <textarea id="messageInput" placeholder="メッセージを入力…♡" rows="1"></textarea>
+            <button id="sendBtn" onclick="sendMessage()">💌</button>
+        </div>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <h2>⚙️ 設定</h2>
+            <label>サーバーURL:</label>
+            <input type="text" id="apiUrlInput" placeholder="http://localhost:3000">
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeSettings()">キャンセル</button>
+                <button class="btn-primary" onclick="saveSettings()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apiUrl = 'http://localhost:3000';
+        const messages = [];
+        let isLoading = false;
+
+        // Initialize
+        (async () => {
+            apiUrl = await window.electronAPI.getApiUrl();
+            document.getElementById('apiUrlInput').value = apiUrl;
+        })();
+
+        // Auto-resize textarea
+        const messageInput = document.getElementById('messageInput');
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = `${Math.min(this.scrollHeight, 100)}px`;
+        });
+
+        // Enter to send (Shift+Enter for new line)
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        window.openSettings = function openSettings() {
+            document.getElementById('settingsModal').classList.add('show');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('show');
+        }
+
+        window.saveSettings = async function saveSettings() {
+            const newUrl = document.getElementById('apiUrlInput').value.trim();
+            if (newUrl) {
+                apiUrl = newUrl;
+                await window.electronAPI.setApiUrl(newUrl);
+            }
+            closeSettings();
+        }
+
+        async function sendMessage() {
+            if (isLoading) return;
+
+            const input = messageInput.value.trim();
+            if (!input) return;
+
+            // Add user message
+            messages.push({ role: 'user', content: input });
+            addMessageToUI('user', input);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+
+            // Show loading
+            isLoading = true;
+            document.getElementById('sendBtn').disabled = true;
+            const loadingEl = addLoadingToUI();
+
+            try {
+                const response = await fetch(`${apiUrl}/elysia-love`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                // Stream response
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let assistantContent = '';
+                let assistantEl = null;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    assistantContent += chunk;
+
+                    if (!assistantEl) {
+                        loadingEl.remove();
+                        assistantEl = addMessageToUI('assistant', assistantContent);
+                    } else {
+                        assistantEl.textContent = assistantContent;
+                        scrollToBottom();
+                    }
+                }
+
+                messages.push({ role: 'assistant', content: assistantContent });
+
+            } catch (error) {
+                console.error('Error:', error);
+                loadingEl.remove();
+                addMessageToUI('assistant', `ごめんね…エラーが起きちゃった💦\n${error.message}`);
+            } finally {
+                isLoading = false;
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+
+        function addMessageToUI(role, content) {
+            const messagesDiv = document.getElementById('messages');
+
+            // Remove welcome message if exists
+            const welcome = messagesDiv.querySelector('.welcome');
+            if (welcome) welcome.remove();
+
+            const msgEl = document.createElement('div');
+            msgEl.className = `message ${role}`;
+            msgEl.textContent = content;
+            messagesDiv.appendChild(msgEl);
+
+            scrollToBottom();
+            return msgEl;
+        }
+
+        function addLoadingToUI() {
+            const messagesDiv = document.getElementById('messages');
+            const loadingEl = document.createElement('div');
+            loadingEl.className = 'loading';
+            loadingEl.innerHTML = '<div class="loading-spinner"></div><span>エリシアが考え中…♡</span>';
+            messagesDiv.appendChild(loadingEl);
+            scrollToBottom();
+            return loadingEl;
+        }
+
+        function scrollToBottom() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>

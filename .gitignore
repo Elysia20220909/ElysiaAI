@@ -1,0 +1,117 @@
+# 隠蔽ディレクトリ
+src/.dev/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+DEBUG_REPORT.md
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Protected configuration directory (legacy)
+/config/private/
+
+# Secure internal configurations (legacy)
+/src/config/internal/
+/src/core/security/
+/src/database/config/
+
+# Deep-hidden secure files - CRITICAL SECURITY
+/.internal/
+/.internal/**
+.internal/secrets/
+.internal/security/
+.internal/private/
+
+# Security-sensitive files
+**/secrets/
+**/private/
+**/.env.secrets
+**/*.pem
+**/*.key
+**/*.crt
+**/*.p12
+**/*.pfx
+**/service-account*.json
+**/credentials*.json
+
+# vercel
+.vercel
+
+**/*.trace
+**/*.zip
+**/*.tar.gz
+**/*.tgz
+**/*.log
+package-lock.json
+**/*.bun
+
+# project extras to ignore and keep Biome quiet
+/network_simulation/
+/python/venv/
+/python/*.db
+/python/**/*.db
+/dist/
+/logs/
+/outputs/
+
+# Temporary and log files
+*.log
+*.tmp
+*.cache
+*-debug.log
+auth-debug.log
+server-swagger.log
+server.log
+node.log
+detailed.log
+bun.log
+
+# mobile
+/mobile/node_modules/
+/mobile/.expo/
+/mobile/dist/
+
+# desktop
+/desktop/node_modules/
+/desktop/dist/
+/desktop/bun.lock
+
+# native C++ modules
+/native/node_modules/
+/native/build/
+/native/bun.lock
+
+# CUDA modules
+/cuda/node_modules/
+/cuda/build/
+/cuda/*.dll
+/cuda/*.obj
+/cuda/bun.lock
+/src/generated/prisma

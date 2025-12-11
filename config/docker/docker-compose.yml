@@ -1,0 +1,99 @@
+version: '3.8'
+
+# Elysia AI - 簡素化された開発環境
+# 1コマンドで全サービス起動: docker-compose up -d
+
+services:
+  # ==================== Redis (レート制限用) ====================
+  redis:
+    image: redis:7-alpine
+    container_name: elysia-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - elysia-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ==================== Ollama (LLMエンジン) ====================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: elysia-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - elysia-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # GPU利用可能な場合
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # ==================== FastAPI (RAGサービス) ====================
+  fastapi:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    container_name: elysia-fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - DATABASE_URL=sqlite:///./elysia.db
+    volumes:
+      - ./python:/app
+      - ./data:/app/data
+    networks:
+      - elysia-network
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: uvicorn fastapi_server:app --host 0.0.0.0 --port 8000 --reload
+
+  # ==================== VOICEVOX (音声合成) ====================
+  voicevox:
+    image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+    container_name: elysia-voicevox
+    ports:
+      - "50021:50021"
+    networks:
+      - elysia-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:50021/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  ollama-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  elysia-network:
+    driver: bridge

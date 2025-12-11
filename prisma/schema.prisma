@@ -1,0 +1,127 @@
+// Elysia AI - Prisma Schema
+// データベーススキーマ定義
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ==================== ユーザー管理 ====================
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  passwordHash  String
+  role          String   @default("user")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // リレーション
+  refreshTokens RefreshToken[]
+  feedbacks     Feedback[]
+  knowledgeBase KnowledgeBase[]
+  chatSessions  ChatSession[]
+
+  @@map("users")
+}
+
+// ==================== 認証トークン ====================
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revoked   Boolean  @default(false)
+
+  // リレーション
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// ==================== チャットセッション ====================
+model ChatSession {
+  id        String   @id @default(cuid())
+  userId    String?
+  mode      String   @default("normal") // sweet, normal, professional
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // リレーション
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages  Message[]
+
+  @@index([userId])
+  @@map("chat_sessions")
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  sessionId String
+  role      String      // user, assistant, system
+  content   String
+  createdAt DateTime    @default(now())
+
+  // リレーション
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("messages")
+}
+
+// ==================== フィードバック ====================
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String?
+  query     String
+  answer    String
+  rating    String   // up, down
+  reason    String?
+  createdAt DateTime @default(now())
+
+  // リレーション
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("feedbacks")
+}
+
+// ==================== ナレッジベース ====================
+model KnowledgeBase {
+  id        String   @id @default(cuid())
+  userId    String?
+  question  String
+  answer    String
+  source    String?  // user, admin, auto
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // リレーション
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([verified])
+  @@map("knowledge_base")
+}
+
+// ==================== 音声ログ ====================
+model VoiceLog {
+  id        String   @id @default(cuid())
+  username  String?
+  text      String
+  emotion   String   // joy, shy, normal
+  audioUrl  String?
+  createdAt DateTime @default(now())
+
+  @@index([username])
+  @@index([createdAt])
+  @@map("voice_logs")
+}
