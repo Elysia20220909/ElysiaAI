@@ -17,16 +17,16 @@
   </style>
 </head>
 <body>
-  <h1>Elysia風ネットワークゲーム</h1>
+  <h1>オセロ（リバーシ）Web版</h1>
   <div>
-    ユーザーID: <input id="userId" value="user1" style="width:80px">
-    <span class="user-select">相手ID: <input id="opponentId" value="user2" style="width:80px"></span>
     <button onclick="startGame()">ゲーム開始</button>
-    <button onclick="moveAgent()">エージェント移動</button>
+    <button onclick="startAI('random')">AI対戦(ランダム)</button>
+    <button onclick="startAI('strong')">AI対戦(強いAI)</button>
+    <button onclick="observeGame()">観戦モード</button>
     <span id="turn" class="turn"></span>
     <span id="winner" class="winner"></span>
   </div>
-  <svg id="board" width="600" height="400"></svg>
+  <svg id="board" width="480" height="480" style="border:2px solid #888; background:#2e7d32; cursor:pointer"></svg>
   <div id="history"></div>
   <script>
     let state = null;
@@ -35,54 +35,63 @@
       const svg = document.getElementById('board');
       svg.innerHTML = '';
       if (!state) return;
-      // ノード描画
-      state.nodes.forEach((node, i) => {
-        const x = 100 + i * 120, y = 200;
-        svg.innerHTML += `<circle class='node' cx='${x}' cy='${y}' r='30'/><text x='${x-10}' y='${y+5}' font-size='16'>${node.id}</text>`;
-      });
-      // エージェント描画
-      state.agents.forEach(agent => {
-        const idx = state.nodes.findIndex(n => n.id === agent.position);
-        if (idx >= 0) {
-          const x = 100 + idx * 120, y = 150;
-          svg.innerHTML += `<circle class='agent' cx='${x}' cy='${y}' r='15'/><text x='${x-10}' y='${y+5}' font-size='12'>${agent.id}(${agent.userId})[${agent.score}]</text>`;
+      // 8x8盤面描画＋角ハイライト
+      for (let y = 0; y < 8; ++y) {
+        for (let x = 0; x < 8; ++x) {
+          let highlight = (x === 0 || x === 7) && (y === 0 || y === 7) ? "#ffd600" : "#388e3c";
+          svg.innerHTML += `<rect x='${x*60}' y='${y*60}' width='60' height='60' fill='${highlight}' stroke='#fff' stroke-width='2' data-x='${x}' data-y='${y}'/>`;
+          if (state.board[y][x] === 1)
+            svg.innerHTML += `<circle cx='${x*60+30}' cy='${y*60+30}' r='24' fill='#222'/><circle cx='${x*60+30}' cy='${y*60+30}' r='20' fill='#111'/><circle cx='${x*60+30}' cy='${y*60+30}' r='16' fill='#fff' opacity='0.1'/>`;
+          if (state.board[y][x] === 2)
+            svg.innerHTML += `<circle cx='${x*60+30}' cy='${y*60+30}' r='24' fill='#fafafa'/><circle cx='${x*60+30}' cy='${y*60+30}' r='20' fill='#eee'/><circle cx='${x*60+30}' cy='${y*60+30}' r='16' fill='#222' opacity='0.1'/>`;
         }
-      });
-      document.getElementById('turn').textContent = `ターン: ${state.turn}`;
+      }
+      document.getElementById('turn').textContent = `ターン: ${state.turn === 1 ? '黒(●)' : '白(○)'}`;
       document.getElementById('winner').textContent = state.winner ? `Winner: ${state.winner}` : '';
-      document.getElementById('history').innerHTML = state.history ? state.history.map(h=>`<div>${h}</div>`).join('') : '';
+      if (state.winner) document.getElementById('winner').style.background = '#ffd600';
+      else document.getElementById('winner').style.background = '';
+      document.getElementById('history').innerHTML = state.history ? state.history.slice(-8).map(h=>`<div>${h}</div>`).join('') : '';
     }
     function startGame() {
-      const userId = document.getElementById('userId').value;
-      const opponentId = document.getElementById('opponentId').value;
+      fetch('http://localhost:3001/game/start', { method: 'POST' })
+        .then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
+      if (!ws) {
+        ws = new WebSocket('ws://localhost:3001/game/ws');
+        ws.onmessage = e => { state = JSON.parse(e.data); drawBoard(); };
+      }
+    }
+    function startAI(level) {
       fetch('http://localhost:3001/game/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nodes: [ {id:'A',connected:['B']}, {id:'B',connected:['A','C']}, {id:'C',connected:['B']} ],
-          agents: [ {id:'P1',position:'A',userId:userId,score:0}, {id:'P2',position:'C',userId:opponentId,score:0} ]
-        })
+        body: JSON.stringify({ aiEnabled: true, aiLevel: level })
       }).then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
       if (!ws) {
         ws = new WebSocket('ws://localhost:3001/game/ws');
         ws.onmessage = e => { state = JSON.parse(e.data); drawBoard(); };
       }
     }
-    function moveAgent() {
-      if (!state) return;
-      const userId = document.getElementById('userId').value;
-      const agent = state.agents.find(a => a.userId === userId);
-      if (!agent) return;
-      // 可能な移動先を選択（例: 最初のconnectedノード）
-      const currentNode = state.nodes.find(n => n.id === agent.position);
-      const to = currentNode && currentNode.connected[0] ? currentNode.connected[0] : agent.position;
+    function observeGame() {
+      fetch('http://localhost:3001/game/state')
+        .then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
+      if (!ws) {
+        ws = new WebSocket('ws://localhost:3001/game/ws');
+        ws.onmessage = e => { state = JSON.parse(e.data); drawBoard(); };
+      }
+    }
+    document.getElementById('board').onclick = function(e) {
+      if (!state || state.winner) return;
+      const rect = e.target.closest('rect');
+      if (!rect) return;
+      const x = Number(rect.getAttribute('data-x'));
+      const y = Number(rect.getAttribute('data-y'));
       fetch('http://localhost:3001/game/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agentId: agent.id, to, userId })
+        body: JSON.stringify({ x, y, player: state.turn })
       }).then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
-      if (ws) ws.send(JSON.stringify({ agentId: agent.id, to, userId }));
-    }
+      if (ws) ws.send(JSON.stringify({ x, y, player: state.turn }));
+    };
   </script>
 </body>
 </html>
