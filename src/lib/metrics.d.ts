@@ -11,20 +11,20 @@ export interface Metrics {
     rag_query_duration_seconds: number[];
 }
 declare class MetricsCollector {
-    private metrics;
-    incrementRequest(method: string, path: string, status: number): void;
-    recordRequestDuration(method: string, path: string, duration: number): void;
-    incrementError(method: string, path: string, errorType: string): void;
-    incrementConnections(): void;
-    decrementConnections(): void;
-    incrementChatRequests(): void;
-    incrementFeedback(): void;
-    incrementAuthAttempt(success: boolean): void;
-    incrementRateLimit(): void;
-    incrementRAGQuery(): void;
-    recordRAGDuration(duration: number): void;
-    getMetrics(): Metrics;
-    toPrometheusFormat(): string;
+  private metrics;
+  incrementRequest(method: string, path: string, status: number): void;
+  recordRequestDuration(method: string, path: string, duration: number): void;
+  incrementError(method: string, path: string, errorType: string): void;
+  incrementConnections(): void;
+  decrementConnections(): void;
+  incrementChatRequests(): void;
+  incrementFeedback(): void;
+  incrementAuthAttempt(success: boolean): void;
+  incrementRateLimit(): void;
+  incrementRAGQuery(): void;
+  recordRAGDuration(duration: number): void;
+  getMetrics(): Metrics;
+  toPrometheusFormat(): string;
 }
 export declare const metricsCollector: MetricsCollector;
 export {};

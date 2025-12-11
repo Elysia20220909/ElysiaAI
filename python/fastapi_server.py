@@ -3,7 +3,7 @@
 Elysia AI - RAG Server with FastAPI + Milvus Lite
 エリシアちゃんのセリフ検索システム♡
 """
-from typing import Dict, List, Any, Optional
+from typing import List, Optional
 from fastapi import FastAPI, Body, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field

@@ -1,5 +1,5 @@
 export interface HealthStatus {
-    status: "healthy" | "degraded" | "unhealthy";
+    status: 'healthy' | 'degraded' | 'unhealthy';
     timestamp: string;
     uptime: number;
     services: {
@@ -19,7 +19,7 @@ export interface HealthStatus {
     };
 }
 export interface ServiceHealth {
-    status: "up" | "down" | "degraded";
+    status: 'up' | 'down' | 'degraded';
     responseTime?: number;
     error?: string;
     lastCheck: string;
