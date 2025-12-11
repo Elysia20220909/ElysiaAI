@@ -1,3 +1,33 @@
+// チャットクリア（セッション内メッセージ全削除）
+app.post(
+	"/sessions/:id/clear",
+	async ({ params, request }) => {
+		const auth = request.headers.get("authorization") || "";
+		if (!auth.startsWith("Bearer "))
+			return jsonError(401, "Missing Bearer token");
+		try {
+			jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
+		} catch {
+			return jsonError(401, "Invalid token");
+		}
+
+		const success = await chatSessionService.clearSessionMessages(params.id);
+		if (!success) return jsonError(500, "Failed to clear chat messages");
+
+		return new Response(JSON.stringify({ success: true }), {
+			headers: { "content-type": "application/json" },
+		});
+	},
+	{
+		detail: {
+			tags: ["sessions"],
+			summary: "チャット履歴をクリア（セッション内メッセージ全削除）",
+			description: "指定セッションのメッセージ履歴を全て削除します。JWT必須。",
+			security: [{ bearerAuth: [] }],
+		},
+	},
+);
+
 import { existsSync, mkdirSync } from "node:fs";
 // Secure Elysia AI Server with JWT, Redis rate limiting, and refresh tokens
 import { cors } from "@elysiajs/cors";
@@ -695,23 +725,39 @@ const app = new Elysia()
 
 					// カジュアルモードの場合、Web検索を試行
 					let enhancedSystemPrompt = llmConfig.systemPrompt;
-					let fallbackCasualResponse =
-						"今日はどんな一日でしたか？何か話したいことがあれば教えてください！";
+					let fallbackCasualResponse = "";
 					if (mode === "casual" && body.messages.length > 0) {
 						const lastUserMessage = body.messages[body.messages.length - 1];
 						if (lastUserMessage.role === "user") {
 							try {
+								// パターン応答＋話題提案をランダム化
 								const casualResponse = await casualChat.generateCasualResponse(
 									lastUserMessage.content,
 								);
-								if (casualResponse) {
-									enhancedSystemPrompt += `\n\n参考情報: ${casualResponse}`;
-									fallbackCasualResponse = casualResponse;
+								const topicPrompt = casualChat.getRandomTopic().prompt;
+								// 50%で話題提案、50%でパターン応答
+								fallbackCasualResponse =
+									Math.random() < 0.5 ? casualResponse : topicPrompt;
+								// 万一空文字なら話題提案
+								if (
+									!fallbackCasualResponse ||
+									fallbackCasualResponse.trim() === ""
+								) {
+									fallbackCasualResponse = topicPrompt;
 								}
+								enhancedSystemPrompt += `\n\n参考情報: ${fallbackCasualResponse}`;
 							} catch {
-								// 何もせず fallback
+								// fallback: ランダム話題
+								fallbackCasualResponse = casualChat.getRandomTopic().prompt;
 							}
+						} else {
+							// ユーザー発話がない場合は話題提案
+							fallbackCasualResponse = casualChat.getRandomTopic().prompt;
 						}
+					} else {
+						// カジュアル以外は従来通り
+						fallbackCasualResponse =
+							"今日はどんな一日でしたか？何か話したいことがあれば教えてください！";
 					}
 
 					const messagesWithSystem: Message[] = [
@@ -746,8 +792,18 @@ const app = new Elysia()
 												new TextEncoder().encode("data: [DONE]\n\n"),
 											);
 											controller.close();
-										} catch {
-											controller.error(error);
+										} catch (error) {
+											const errorMsg =
+												error instanceof Error ? error.message : String(error);
+											controller.enqueue(
+												new TextEncoder().encode(
+													`data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`,
+												),
+											);
+											controller.enqueue(
+												new TextEncoder().encode("data: [DONE]\n\n"),
+											);
+											controller.close();
 										}
 									},
 								});
@@ -767,10 +823,10 @@ const app = new Elysia()
 										? openaiError.message
 										: String(openaiError);
 								logger.error(`OpenAI API error: ${errorMsg}`);
-								// OpenAIエラー時も日本語日常会話返答
+								// OpenAIエラー時も日本語日常会話返答＋エラー内容
 								const stream = new ReadableStream({
 									start(controller) {
-										const sseData = `data: ${JSON.stringify({ content: fallbackCasualResponse })}\n\n`;
+										const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
 										controller.enqueue(new TextEncoder().encode(sseData));
 										controller.enqueue(
 											new TextEncoder().encode("data: [DONE]\n\n"),
@@ -810,11 +866,15 @@ const app = new Elysia()
 								},
 							});
 						} catch (ollamaError) {
-							logger.error(`Ollama API error: ${String(ollamaError)}`);
-							// Ollamaエラー時も日本語日常会話返答
+							const errorMsg =
+								ollamaError instanceof Error
+									? ollamaError.message
+									: String(ollamaError);
+							logger.error(`Ollama API error: ${errorMsg}`);
+							// Ollamaエラー時も日本語日常会話返答＋エラー内容
 							const stream = new ReadableStream({
 								start(controller) {
-									const sseData = `data: ${JSON.stringify({ content: fallbackCasualResponse })}\n\n`;
+									const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
 									controller.enqueue(new TextEncoder().encode(sseData));
 									controller.enqueue(
 										new TextEncoder().encode("data: [DONE]\n\n"),
@@ -832,11 +892,13 @@ const app = new Elysia()
 							});
 						}
 					} catch (error) {
-						// 予期せぬエラー時も日本語日常会話返答
-						logger.error(`Internal chat error: ${String(error)}`);
+						// 予期せぬエラー時も日本語日常会話返答＋エラー内容
+						const errorMsg =
+							error instanceof Error ? error.message : String(error);
+						logger.error(`Internal chat error: ${errorMsg}`);
 						const stream = new ReadableStream({
 							start(controller) {
-								const sseData = `data: ${JSON.stringify({ content: fallbackCasualResponse })}\n\n`;
+								const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
 								controller.enqueue(new TextEncoder().encode(sseData));
 								controller.enqueue(
 									new TextEncoder().encode("data: [DONE]\n\n"),

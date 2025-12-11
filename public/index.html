@@ -263,15 +263,15 @@
     <script>
         function elysiaPortfolio() {
             return {
-                    messages: JSON.parse(localStorage.getItem('elysia_chat_history') || '[]'),
+                messages: JSON.parse(localStorage.getItem('elysia_chat_history') || '[]'),
                 input: '',
                 loading: false,
-                    userName: localStorage.getItem('elysia_chat_user') || '',
+                userName: localStorage.getItem('elysia_chat_user') || '',
+                errorMsg: '',
 
                 scrollToWorks() {
                     document.getElementById('works').scrollIntoView({ behavior: 'smooth' });
                 },
-
                 scrollToChat() {
                     document.getElementById('chat').scrollIntoView({ behavior: 'smooth' });
                 },
@@ -283,33 +283,36 @@
                 },
                 async sendMessage() {
                     if (!this.input.trim() || this.loading) return;
+                    this.errorMsg = '';
                     const userMessage = this.input.trim();
-                        const user = this.userName ? this.userName : '匿名';
-                        this.messages.push({ id: Date.now(), role: 'user', content: userMessage, user });
+                    const user = this.userName ? this.userName : '匿名';
+                    this.messages.push({ id: Date.now(), role: 'user', content: userMessage, user });
                     this.input = '';
                     this.loading = true;
                     this.scrollToBottom();
-                        localStorage.setItem('elysia_chat_user', this.userName);
-                        this.saveHistory();
-
+                    localStorage.setItem('elysia_chat_user', this.userName);
+                    this.saveHistory();
+                    let accessToken = localStorage.getItem('elysia_access_token');
+                    let refreshToken = localStorage.getItem('elysia_refresh_token');
                     try {
-                        let accessToken = localStorage.getItem('elysia_access_token');
-                        let refreshToken = localStorage.getItem('elysia_refresh_token');
-
+                        // トークン取得
                         if (!accessToken || !refreshToken) {
                             const authRes = await fetch('/auth/token', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ username: 'elysia', password: 'elysia-dev-password' })
                             });
-                            if (!authRes.ok) throw new Error('Auth failed');
+                            if (!authRes.ok) {
+                                this.errorMsg = '認証失敗: サーバーに接続できません';
+                                throw new Error('Auth failed');
+                            }
                             const authJson = await authRes.json();
                             accessToken = authJson.accessToken;
                             refreshToken = authJson.refreshToken;
                             localStorage.setItem('elysia_access_token', accessToken);
                             localStorage.setItem('elysia_refresh_token', refreshToken);
                         }
-
+                        // チャット送信
                         let response = await fetch('/elysia-love', {
                             method: 'POST',
                             headers: {
@@ -320,7 +323,7 @@
                                 messages: this.messages.map(m => ({ role: m.role, content: m.content }))
                             })
                         });
-
+                        // 401ならリフレッシュ
                         if (response.status === 401) {
                             const refreshRes = await fetch('/auth/refresh', {
                                 method: 'POST',
@@ -329,12 +332,12 @@
                             });
                             if (!refreshRes.ok) {
                                 localStorage.clear();
+                                this.errorMsg = 'セッション期限切れ: 再度ログインしてください';
                                 throw new Error('Session expired');
                             }
                             const refreshJson = await refreshRes.json();
                             accessToken = refreshJson.accessToken;
                             localStorage.setItem('elysia_access_token', accessToken);
-
                             response = await fetch('/elysia-love', {
                                 method: 'POST',
                                 headers: {
@@ -346,15 +349,17 @@
                                 })
                             });
                         }
-
-                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
+                        if (!response.ok) {
+                            this.errorMsg = `送信失敗: サーバーエラー (${response.status})`;
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+                        // SSEストリーム受信
                         const reader = response.body.getReader();
                         const decoder = new TextDecoder();
                         const assistantMessage = { id: Date.now() + 1, role: 'assistant', content: '' };
-                            this.messages.push(assistantMessage);
-                            this.saveHistory();
-
+                        this.messages.push(assistantMessage);
+                        this.saveHistory();
+                        let received = false;
                         while (true) {
                             const { done, value } = await reader.read();
                             if (done) break;
@@ -365,37 +370,31 @@
                                     try {
                                         const data = JSON.parse(line.slice(6));
                                         if (data.content) {
-                                                assistantMessage.content += data.content;
-                                                this.saveHistory();
-                                                this.notify(data.content);
+                                            assistantMessage.content += data.content;
+                                            this.saveHistory();
+                                            this.notify(data.content);
+                                            received = true;
                                         }
                                     } catch {}
                                 }
                             }
                             this.scrollToBottom();
                         }
+                        if (!received) {
+                            this.errorMsg = 'AI応答がありません。サーバー状態を確認してください。';
+                        }
                     } catch (error) {
-                        console.error('Error:', error);
+                        this.errorMsg = '送信エラー: ' + (error?.message || error);
                         this.messages.push({
                             id: Date.now() + 1,
                             role: 'assistant',
-                            content: '⚠️ Error: ' + error.message
+                            content: '⚠️ Error: ' + (error?.message || error)
                         });
-                            this.messages.push({
-                                id: Date.now() + 1,
-                                role: 'assistant',
-                                content: '⚠️ Error: ' + error.message,
-                                user: 'Elysia'
-                            });
-                            this.saveHistory();
+                        this.saveHistory();
                     } finally {
                         this.loading = false;
                         this.scrollToBottom();
                     }
-                        } finally {
-                            this.loading = false;
-                            this.scrollToBottom();
-                        }
                 },
                 scrollToBottom() {
                     this.$nextTick(() => {
@@ -404,22 +403,21 @@
                             container.scrollTop = container.scrollHeight;
                         }
                     });
-                }
-                    },
-                    saveHistory() {
-                        localStorage.setItem('elysia_chat_history', JSON.stringify(this.messages));
-                    },
-                    notify(content) {
-                        if (window.Notification && Notification.permission === 'granted') {
-                            new Notification('Elysiaから新着メッセージ', { body: content });
-                        } else if (window.Notification && Notification.permission !== 'denied') {
-                            Notification.requestPermission().then(permission => {
-                                if (permission === 'granted') {
-                                    new Notification('Elysiaから新着メッセージ', { body: content });
-                                }
-                            });
-                        }
+                },
+                saveHistory() {
+                    localStorage.setItem('elysia_chat_history', JSON.stringify(this.messages));
+                },
+                notify(content) {
+                    if (window.Notification && Notification.permission === 'granted') {
+                        new Notification('Elysiaから新着メッセージ', { body: content });
+                    } else if (window.Notification && Notification.permission !== 'denied') {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                new Notification('Elysiaから新着メッセージ', { body: content });
+                            }
+                        });
                     }
+                }
             }
         }
     </script>
