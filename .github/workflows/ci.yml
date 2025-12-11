@@ -34,10 +34,25 @@ jobs:
       run: bun run lint || echo "Lint warnings detected"
 
     - name: テスト実行
-      run: bun test
+      run: bun test --coverage
       env:
         REDIS_ENABLED: false
         TEST_MODE: true
+
+    - name: カバレッジレポートアップロード
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: coverage/
+
+    - name: Slack通知（失敗時のみ）
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,commit,author,job,ref,workflow
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     - name: ビルドチェック
       run: bun run build
