@@ -428,9 +428,4 @@ if __name__ == "__main__":
     logger.info(f"📚 Docs: http://{CONFIG['HOST']}:{CONFIG['PORT']}/docs")
     logger.info(f"🤖 Model: {CONFIG['MODEL_NAME']}")
 
-    uvicorn.run(
-        app,
-        host=CONFIG["HOST"],
-        port=CONFIG["PORT"],
-        log_level="info"
-    )
+    # uvicorn.run() has been removed to prevent immediate exit
