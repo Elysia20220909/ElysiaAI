@@ -120,17 +120,42 @@ const CONFIG = {
 };
 
 // ---------------- Helpers ----------------
-function jsonError(status: number, message: string) {
-	return new Response(JSON.stringify({ error: message }), {
-		status,
-		headers: { "content-type": "application/json" },
-	});
+function jsonError(status: number, message: string, traceId?: string) {
+	return new Response(
+		JSON.stringify({
+			error: message,
+			traceId: traceId || undefined,
+			timestamp: new Date().toISOString(),
+		}),
+		{
+			status,
+			headers: { "content-type": "application/json" },
+		},
+	);
 }
 
 async function checkRateLimit(key: string) {
 	try {
-		return await checkRateLimitRedis(key, CONFIG.MAX_REQUESTS_PER_MINUTE);
-	} catch {
+		const allowed = await checkRateLimitRedis(
+			key,
+			CONFIG.MAX_REQUESTS_PER_MINUTE,
+		);
+		if (!allowed) {
+			logger.warn(`Rate limit exceeded for key: ${key}`);
+			auditLogger.log({
+				userId: key.split(":")[0],
+				action: "rate_limit_exceeded",
+				resource: key,
+				status: 429,
+				timestamp: new Date().toISOString(),
+			});
+		}
+		return allowed;
+	} catch (err) {
+		logger.warn(
+			"Rate limit fallback: Redis unavailable",
+			err instanceof Error ? err.message : undefined,
+		);
 		return true; // fallback: allow
 	}
 }
@@ -155,6 +180,7 @@ const app = new Elysia()
 			credentials: true,
 			allowedHeaders: ["Authorization", "Content-Type"],
 			methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+			// preflightContinue: false, // 型未対応のため削除
 		}),
 	)
 	.use(html())
@@ -182,9 +208,22 @@ const app = new Elysia()
 	.onError(({ error, code, request, set }) => {
 		const url = new URL(request.url);
 		const errorMsg = error instanceof Error ? error.message : String(error);
-		const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname}`;
+		const traceId =
+			(request as unknown as ExtendedRequest).__span?.traceId || undefined;
+		const userId = request.headers.get("authorization")?.substring(7) || "anon";
+		const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname} traceId=${traceId}`;
 		logger.error(errorLog);
 		metricsCollector.incrementError(request.method, url.pathname, String(code));
+		// 監査ログ強化
+		auditLogger.log({
+			userId,
+			action: "error",
+			resource: url.pathname,
+			status: code,
+			error: errorMsg,
+			traceId,
+			timestamp: new Date().toISOString(),
+		});
 		const span = (request as unknown as ExtendedRequest).__span;
 		if (span) {
 			telemetry.endSpan(span.spanId, {
@@ -193,15 +232,12 @@ const app = new Elysia()
 			});
 		}
 		// Audit middleware - log failed requests
-		// auditMiddlewareの型に合わせて呼び出し
 		try {
-			auditMiddleware.onError({ request, error, set });
-		} catch (e) {
-			// 型不一致時は何もしない
-		}
+			auditMiddleware.onError(request, error);
+		} catch {}
 		const message =
 			error instanceof Error ? error.message : "Internal server error";
-		return jsonError(500, message);
+		return jsonError(500, message, traceId);
 	})
 	.onAfterHandle(({ set, request, response }) => {
 		set.headers["X-Content-Type-Options"] = "nosniff";
@@ -227,10 +263,8 @@ const app = new Elysia()
 		}
 		// Audit middleware - log successful requests
 		try {
-			auditMiddleware.afterHandle?.({ request, set, response });
-		} catch (e) {
-			// 型不一致時は何もしない
-		}
+			auditMiddleware.afterHandle?.(request, response);
+		} catch {}
 	})
 
 	// Health
@@ -245,7 +279,7 @@ const app = new Elysia()
 	// Detailed health check
 	.get(
 		"/health",
-		async () => {
+		async ({ request }) => {
 			try {
 				const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 				const fastAPIBaseUrl = DATABASE_CONFIG.FASTAPI_BASE_URL;
@@ -254,15 +288,26 @@ const app = new Elysia()
 					fastAPIBaseUrl,
 					CONFIG.OLLAMA_BASE_URL,
 				);
+				// HealthStatus型に詳細が無い場合はstatusのみ返却
 				const status = health.status === "healthy" ? 200 : 503;
-				return new Response(JSON.stringify(health), {
-					status,
-					headers: { "content-type": "application/json" },
-				});
+				return new Response(
+					JSON.stringify({
+						status: health.status,
+						timestamp: new Date().toISOString(),
+					}),
+					{
+						status,
+						headers: { "content-type": "application/json" },
+					},
+				);
 			} catch (err) {
 				const errorMsg = err instanceof Error ? err.message : String(err);
 				logger.error(`Health check failed: ${errorMsg}`);
-				return jsonError(503, "Health check failed");
+				return jsonError(
+					503,
+					"Health check failed",
+					(request as unknown as ExtendedRequest).__span?.traceId,
+				);
 			}
 		},
 		{
