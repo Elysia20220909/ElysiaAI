@@ -68,7 +68,7 @@ if (process.env.REDIS_ENABLED === "true") {
 		logger.warn(
 			"Job queue initialization failed, continuing without job queue",
 			{
-				error: error instanceof Error ? error.message : String(error),
+				error: error instanceof くくくくくError ? error.message : String(error),
 			},
 		);
 	}
@@ -146,7 +146,14 @@ const auditMiddleware = createAuditMiddleware({
 });
 
 const app = new Elysia()
-	.use(cors({ origin: CONFIG.ALLOWED_ORIGINS }))
+	.use(
+		cors({
+			origin: CONFIG.ALLOWED_ORIGINS,
+			credentials: true,
+			allowedHeaders: ["Authorization", "Content-Type"],
+			methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		}),
+	)
 	.use(html())
 	.use(staticPlugin({ assets: "public" }))
 	.use(swagger({ path: "/swagger" }))
@@ -619,14 +626,21 @@ const app = new Elysia()
 
 					// カジュアルモードの場合、Web検索を試行
 					let enhancedSystemPrompt = llmConfig.systemPrompt;
+					let fallbackCasualResponse =
+						"今日はどんな一日でしたか？何か話したいことがあれば教えてください！";
 					if (mode === "casual" && body.messages.length > 0) {
 						const lastUserMessage = body.messages[body.messages.length - 1];
 						if (lastUserMessage.role === "user") {
-							const casualResponse = await casualChat.generateCasualResponse(
-								lastUserMessage.content,
-							);
-							if (casualResponse) {
-								enhancedSystemPrompt += `\n\n参考情報: ${casualResponse}`;
+							try {
+								const casualResponse = await casualChat.generateCasualResponse(
+									lastUserMessage.content,
+								);
+								if (casualResponse) {
+									enhancedSystemPrompt += `\n\n参考情報: ${casualResponse}`;
+									fallbackCasualResponse = casualResponse;
+								}
+							} catch (e) {
+								// 何もせず fallback
 							}
 						}
 					}
@@ -684,21 +698,84 @@ const app = new Elysia()
 										? openaiError.message
 										: String(openaiError);
 								logger.error(`OpenAI API error: ${errorMsg}`);
-								return jsonError(500, "OpenAI API error");
+								// OpenAIエラー時も日本語日常会話返答
+								const stream = new ReadableStream({
+									start(controller) {
+										const sseData = `data: ${JSON.stringify({ content: fallbackCasualResponse })}\n\n`;
+										controller.enqueue(new TextEncoder().encode(sseData));
+										controller.enqueue(
+											new TextEncoder().encode("data: [DONE]\n\n"),
+										);
+										controller.close();
+									},
+								});
+								return new Response(stream, {
+									headers: {
+										"Content-Type": "text/event-stream",
+										"Cache-Control": "no-cache",
+										Connection: "keep-alive",
+										"X-Elysia-Mode": mode,
+										"X-Elysia-Provider": "openai",
+									},
+								});
 							}
 						}
 
 						// 通常のOllama APIを使用
-						const upstream = await axios.post(
-							CONFIG.RAG_API_URL,
-							{
-								messages: messagesWithSystem,
-								temperature: llmConfig.temperature,
-								model: llmConfig.model,
+						try {
+							const upstream = await axios.post(
+								CONFIG.RAG_API_URL,
+								{
+									messages: messagesWithSystem,
+									temperature: llmConfig.temperature,
+									model: llmConfig.model,
+								},
+								{ responseType: "stream", timeout: CONFIG.RAG_TIMEOUT },
+							);
+							return new Response(upstream.data, {
+								headers: {
+									"Content-Type": "text/event-stream",
+									"Cache-Control": "no-cache",
+									Connection: "keep-alive",
+									"X-Elysia-Mode": mode,
+								},
+							});
+						} catch (ollamaError) {
+							logger.error(`Ollama API error: ${String(ollamaError)}`);
+							// Ollamaエラー時も日本語日常会話返答
+							const stream = new ReadableStream({
+								start(controller) {
+									const sseData = `data: ${JSON.stringify({ content: fallbackCasualResponse })}\n\n`;
+									controller.enqueue(new TextEncoder().encode(sseData));
+									controller.enqueue(
+										new TextEncoder().encode("data: [DONE]\n\n"),
+									);
+									controller.close();
+								},
+							});
+							return new Response(stream, {
+								headers: {
+									"Content-Type": "text/event-stream",
+									"Cache-Control": "no-cache",
+									Connection: "keep-alive",
+									"X-Elysia-Mode": mode,
+								},
+							});
+						}
+					} catch (error) {
+						// 予期せぬエラー時も日本語日常会話返答
+						logger.error(`Internal chat error: ${String(error)}`);
+						const stream = new ReadableStream({
+							start(controller) {
+								const sseData = `data: ${JSON.stringify({ content: fallbackCasualResponse })}\n\n`;
+								controller.enqueue(new TextEncoder().encode(sseData));
+								controller.enqueue(
+									new TextEncoder().encode("data: [DONE]\n\n"),
+								);
+								controller.close();
 							},
-							{ responseType: "stream", timeout: CONFIG.RAG_TIMEOUT },
-						);
-						return new Response(upstream.data, {
+						});
+						return new Response(stream, {
 							headers: {
 								"Content-Type": "text/event-stream",
 								"Cache-Control": "no-cache",
@@ -706,10 +783,6 @@ const app = new Elysia()
 								"X-Elysia-Mode": mode,
 							},
 						});
-					} catch (error) {
-						if (axios.isAxiosError(error) && error.response?.status === 503)
-							return jsonError(503, "Upstream unavailable");
-						return jsonError(500, "Internal chat error");
 					}
 				},
 				{
