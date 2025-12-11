@@ -23,6 +23,230 @@ export interface ConversationPattern {
  * 日常会話のパターン集
  */
 export const conversationPatterns: ConversationPattern[] = [
+	// 季節・イベント
+	{
+		id: "season-spring",
+		category: "season",
+		patterns: ["春", "桜", "花見", "新生活"],
+		responses: [
+			"春だね！桜はもう見に行った？",
+			"新生活の季節だね。何か始めたいことある？",
+			"花見したいな〜！おすすめスポットある？",
+			"春は気分も明るくなるよね！",
+		],
+	},
+	{
+		id: "season-summer",
+		category: "season",
+		patterns: ["夏", "海", "花火", "祭り", "暑い"],
+		responses: [
+			"夏といえば海！泳ぎに行きたいね！",
+			"花火大会、今年は行く？",
+			"夏祭りの屋台、何が好き？",
+			"暑いけど夏は楽しいこといっぱい！",
+		],
+	},
+	{
+		id: "season-autumn",
+		category: "season",
+		patterns: ["秋", "紅葉", "読書の秋", "食欲の秋"],
+		responses: [
+			"秋は紅葉がきれいだよね！どこか見に行く？",
+			"読書の秋、最近読んだ本ある？",
+			"秋の味覚、何が好き？",
+			"秋は過ごしやすくて好き！",
+		],
+	},
+	{
+		id: "season-winter",
+		category: "season",
+		patterns: ["冬", "雪", "こたつ", "クリスマス", "寒い"],
+		responses: [
+			"冬はこたつでぬくぬくしたいね！",
+			"雪が降ったら何して遊ぶ？",
+			"クリスマスはどう過ごす予定？",
+			"寒いけど冬のイベントも楽しいよね！",
+		],
+	},
+	// イベント・悩み相談・応援
+	{
+		id: "support-cheer",
+		category: "support",
+		patterns: ["頑張る", "応援", "挑戦", "努力", "目標"],
+		responses: [
+			"応援してるよ！一緒に頑張ろう！",
+			"挑戦する姿、素敵だね！",
+			"努力は必ず報われるよ！",
+			"目標に向かって進むのってかっこいい！",
+		],
+	},
+	{
+		id: "consult-trouble",
+		category: "consult",
+		patterns: ["悩み", "相談", "困った", "どうしよう"],
+		responses: [
+			"何か悩みがあるの？よかったら話してみて！",
+			"相談に乗るよ！一緒に考えよう！",
+			"困ったことがあれば力になるよ！",
+			"どんなことでも話してね！",
+		],
+	},
+	// 自己紹介・趣味深掘り
+	{
+		id: "self-intro",
+		category: "self",
+		patterns: ["自己紹介", "名前", "どこ住み", "年齢"],
+		responses: [
+			"私はElysia AI！あなたのことも教えて！",
+			"どこに住んでるの？趣味は？",
+			"年齢は秘密だけど、みんなと話すのが好き！",
+			"自己紹介してくれると嬉しいな！",
+		],
+	},
+	{
+		id: "hobby-detail",
+		category: "hobby",
+		patterns: ["ハマってる", "おすすめ", "詳しく", "極める"],
+		responses: [
+			"ハマってること、もっと教えて！",
+			"おすすめの理由も知りたい！",
+			"詳しく聞かせて！興味津々！",
+			"極めるってすごい！どうやって続けてる？",
+		],
+	},
+	// 天気詳細・家族・友達・ペット・旅行・スポーツ・IT・勉強・恋愛・健康・ファッション・ニュース
+	{
+		id: "weather-detail",
+		category: "weather",
+		patterns: ["台風", "気温", "湿度", "天気予報"],
+		responses: [
+			"台風大丈夫？備えはしてる？",
+			"気温の変化で体調崩さないようにね！",
+			"湿度高いと過ごしにくいよね...",
+			"天気予報チェックしてる？",
+		],
+	},
+	{
+		id: "family",
+		category: "family",
+		patterns: ["家族", "兄弟", "姉妹", "親", "子供"],
+		responses: [
+			"家族の話、聞かせて！仲良し？",
+			"兄弟姉妹ってどんな感じ？",
+			"親との思い出とかある？",
+			"子供の頃の話も聞きたいな！",
+		],
+	},
+	{
+		id: "friend",
+		category: "friend",
+		patterns: ["友達", "親友", "仲間", "同級生"],
+		responses: [
+			"友達と最近何した？",
+			"親友ってどんな人？",
+			"仲間と過ごす時間って大事だよね！",
+			"同級生との思い出ある？",
+		],
+	},
+	{
+		id: "pet-detail",
+		category: "pet",
+		patterns: ["犬", "猫", "動物", "ペット"],
+		responses: [
+			"ペット飼ってる？どんな子？",
+			"犬派？猫派？",
+			"動物好きなんだね！",
+			"ペットの面白い話ある？",
+		],
+	},
+	{
+		id: "travel-detail",
+		category: "travel",
+		patterns: ["旅行", "観光", "温泉", "海外", "国内"],
+		responses: [
+			"旅行の思い出、教えて！",
+			"観光地でおすすめある？",
+			"温泉好き？どこが良かった？",
+			"海外と国内、どっちが好き？",
+		],
+	},
+	{
+		id: "sports",
+		category: "sports",
+		patterns: ["スポーツ", "運動", "サッカー", "野球", "バスケ"],
+		responses: [
+			"スポーツ何かやってる？",
+			"運動すると気分もスッキリするよね！",
+			"サッカーや野球、どっちが好き？",
+			"バスケの話も聞きたい！",
+		],
+	},
+	{
+		id: "it-tech",
+		category: "it",
+		patterns: ["IT", "パソコン", "スマホ", "ガジェット", "プログラミング"],
+		responses: [
+			"IT系の話題、好き！最近気になる技術ある？",
+			"パソコンやスマホ、何使ってる？",
+			"ガジェット好き？おすすめある？",
+			"プログラミングやってみたい？",
+		],
+	},
+	{
+		id: "study",
+		category: "study",
+		patterns: ["勉強", "テスト", "受験", "資格", "学習"],
+		responses: [
+			"勉強大変だけど頑張ってるね！",
+			"テストのコツとかある？",
+			"受験の思い出、教えて！",
+			"資格取得、応援してるよ！",
+		],
+	},
+	{
+		id: "love",
+		category: "love",
+		patterns: ["恋愛", "好きな人", "告白", "デート", "彼氏", "彼女"],
+		responses: [
+			"恋愛の話、ドキドキするね！",
+			"好きな人いる？",
+			"告白したことある？",
+			"デートの思い出、教えて！",
+		],
+	},
+	{
+		id: "health",
+		category: "health",
+		patterns: ["健康", "体調", "病気", "運動", "睡眠"],
+		responses: [
+			"健康に気をつけてる？",
+			"体調管理って大事だよね！",
+			"病気しないように気をつけてね！",
+			"運動や睡眠、意識してる？",
+		],
+	},
+	{
+		id: "fashion",
+		category: "fashion",
+		patterns: ["ファッション", "服", "コーデ", "おしゃれ", "流行"],
+		responses: [
+			"ファッションの話、好き！どんな服が好き？",
+			"コーデのポイント教えて！",
+			"おしゃれって楽しいよね！",
+			"流行のアイテム、何か持ってる？",
+		],
+	},
+	{
+		id: "news",
+		category: "news",
+		patterns: ["ニュース", "話題", "事件", "出来事", "速報"],
+		responses: [
+			"最近気になるニュースある？",
+			"話題の出来事、どう思う？",
+			"事件や速報、びっくりすること多いね！",
+			"ニュースで知った面白い話ある？",
+		],
+	},
 	// 挨拶
 	{
 		id: "greeting-morning",
@@ -215,12 +439,14 @@ export function getRandomResponse(pattern: ConversationPattern): string {
 /**
  * 日常会話の応答を生成 (Web検索連携)
  */
-export async function generateCasualResponse(
-	input: string,
-): Promise<string | null> {
+export async function generateCasualResponse(input: string): Promise<string> {
 	// Web検索が必要な場合
 	if (needsWebSearch(input)) {
 		const searchResult = await searchRelevantInfo(input);
+		// 検索結果が空なら話題提案
+		if (!searchResult || searchResult.trim() === "") {
+			return getRandomTopic().prompt;
+		}
 		return formatSearchResultForChat(searchResult);
 	}
 
@@ -231,8 +457,16 @@ export async function generateCasualResponse(
 		return getRandomResponse(pattern);
 	}
 
-	// パターンが見つからない場合でも必ず返答
-	return "今日はどうでしたか？何か話したいことがあれば教えてください！";
+	// パターンが見つからない場合は話題提案・質問返し・汎用返答をランダム化
+	const genericReplies = [
+		"今日はどうでしたか？何か話したいことがあれば教えてください！",
+		"最近気になることとかある？何でも話してね！",
+		"暇なときは何してる？おすすめの過ごし方ある？",
+		getRandomTopic().prompt,
+		"最近の出来事とか、面白い話があれば教えて！",
+		"気分はどう？何か楽しいことあった？",
+	];
+	return genericReplies[Math.floor(Math.random() * genericReplies.length)];
 }
 
 // ==================== 話題提案 ====================

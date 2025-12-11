@@ -1,4 +1,27 @@
 /**
+ * セッション内の全メッセージを削除
+ */
+export async function clearSessionMessages(
+	sessionId: string,
+): Promise<boolean> {
+	try {
+		await prisma.message.deleteMany({ where: { sessionId } });
+		await prisma.chatSession.update({
+			where: { id: sessionId },
+			data: { updatedAt: new Date() },
+		});
+		logger.info(`セッションメッセージ全削除: ${sessionId}`);
+		return true;
+	} catch (error) {
+		logger.error(
+			"セッションメッセージ全削除エラー",
+			error instanceof Error ? error : undefined,
+		);
+		return false;
+	}
+}
+
+/**
  * チャットセッション管理サービス
  * 会話履歴の永続化とセッション管理
  */
