@@ -19,15 +19,19 @@
 <body>
   <h1>オセロ（リバーシ）Web版</h1>
   <div>
+    <input id="user1" class="user-select" placeholder="ユーザー1名" value="user1" style="width:90px">
+    <input id="user2" class="user-select" placeholder="ユーザー2名/AI" value="user2" style="width:90px">
     <button onclick="startGame()">ゲーム開始</button>
     <button onclick="startAI('random')">AI対戦(ランダム)</button>
     <button onclick="startAI('strong')">AI対戦(強いAI)</button>
     <button onclick="observeGame()">観戦モード</button>
+    <button onclick="showRanking()">ランキング表示</button>
     <span id="turn" class="turn"></span>
     <span id="winner" class="winner"></span>
   </div>
   <svg id="board" width="480" height="480" style="border:2px solid #888; background:#2e7d32; cursor:pointer"></svg>
   <div id="history"></div>
+  <div id="ranking" style="margin-top:1em;"></div>
   <script>
     let state = null;
     let ws = null;
@@ -52,8 +56,19 @@
       else document.getElementById('winner').style.background = '';
       document.getElementById('history').innerHTML = state.history ? state.history.slice(-8).map(h=>`<div>${h}</div>`).join('') : '';
     }
+    function getUserIds(ai) {
+      const u1 = document.getElementById('user1').value || 'user1';
+      let u2 = document.getElementById('user2').value || (ai ? 'AI' : 'user2');
+      if (ai && (u2 === '' || u2 === 'user2')) u2 = 'AI';
+      return [u1, u2];
+    }
     function startGame() {
-      fetch('http://localhost:3001/game/start', { method: 'POST' })
+      const userIds = getUserIds(false);
+      fetch('http://localhost:3001/game/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds })
+      })
         .then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
       if (!ws) {
         ws = new WebSocket('ws://localhost:3001/game/ws');
@@ -61,16 +76,29 @@
       }
     }
     function startAI(level) {
+      const userIds = getUserIds(true);
       fetch('http://localhost:3001/game/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aiEnabled: true, aiLevel: level })
+        body: JSON.stringify({ aiEnabled: true, aiLevel: level, userIds })
       }).then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
       if (!ws) {
         ws = new WebSocket('ws://localhost:3001/game/ws');
         ws.onmessage = e => { state = JSON.parse(e.data); drawBoard(); };
       }
     }
+        function showRanking() {
+          fetch('http://localhost:3001/game/ranking')
+            .then(r=>r.json())
+            .then(rank => {
+              let html = '<table border="1" style="border-collapse:collapse;background:#fff"><tr><th>ユーザー</th><th>勝</th><th>敗</th><th>引分</th></tr>';
+              Object.entries(rank).forEach(([user, rec]) => {
+                html += `<tr><td>${user}</td><td>${rec.win}</td><td>${rec.lose}</td><td>${rec.draw}</td></tr>`;
+              });
+              html += '</table>';
+              document.getElementById('ranking').innerHTML = html;
+            });
+        }
     function observeGame() {
       fetch('http://localhost:3001/game/state')
         .then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
