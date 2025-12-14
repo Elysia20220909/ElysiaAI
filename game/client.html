@@ -56,10 +56,14 @@
       else document.getElementById('winner').style.background = '';
       document.getElementById('history').innerHTML = state.history ? state.history.slice(-8).map(h=>`<div>${h}</div>`).join('') : '';
     }
+    function randomUser() {
+      return 'user_' + Math.random().toString(36).slice(2, 8);
+    }
     function getUserIds(ai) {
-      const u1 = document.getElementById('user1').value || 'user1';
-      let u2 = document.getElementById('user2').value || (ai ? 'AI' : 'user2');
-      if (ai && (u2 === '' || u2 === 'user2')) u2 = 'AI';
+      let u1 = document.getElementById('user1').value.trim();
+      let u2 = document.getElementById('user2').value.trim();
+      if (!u1) u1 = randomUser();
+      if (!u2) u2 = ai ? 'AI' : randomUser();
       return [u1, u2];
     }
     function startGame() {
