@@ -2,7 +2,7 @@
 
 ## 🏗️ Directory Overview
 
-```text
+````text
 elysia-ai/
 ├── config/                         # Configuration files
 │   └── private/                    # 🔒 Private configuration (not in git)
@@ -116,7 +116,7 @@ bun run dev
 # Or start production build
 bun run build
 bun run start
-```
+````
 
 ## 📚 Additional Resources
 

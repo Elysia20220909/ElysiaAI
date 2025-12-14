@@ -9,6 +9,7 @@ Elysia AIにOpenAI GPTモデルを統合しました。既存のOllamaベース�
 ### 1. OpenAI統合ライブラリ (`src/lib/openai-integration.ts`)
 
 **主な機能:**
+
 - **クライアント管理**: OpenAIクライアントの初期化と管理
 - **チャット機能**: 非ストリーミング/ストリーミング両対応
 - **簡易API**: シンプルなチャット関数
@@ -16,6 +17,7 @@ Elysia AIにOpenAI GPTモデルを統合しました。既存のOllamaベース�
 - **ユーティリティ**: モデル一覧、トークン推定
 
 **エクスポート関数:**
+
 ```typescript
 // 初期化
 initializeOpenAI(apiKey?: string): OpenAI
@@ -38,6 +40,7 @@ estimateTokens(text: string): number
 ### 2. 新しいモード: `openai`
 
 **LLM設定** (`.internal/app/llm/llm-config.ts`):
+
 ```typescript
 openai: {
   model: "gpt-4o-mini",
@@ -48,18 +51,21 @@ openai: {
 ```
 
 **切り替えコマンド:**
+
 - `/openai`
 - `/gpt`
 
 ### 3. API統合 (`src/index.ts`)
 
 **処理フロー:**
+
 1. モードが `openai` の場合、OpenAI APIを使用
 2. ストリーミングレスポンスを生成
 3. SSE形式でクライアントに送信
 4. 他のモードは従来通りOllamaを使用
 
 **レスポンスヘッダー:**
+
 ```
 X-Elysia-Mode: openai
 X-Elysia-Provider: openai
@@ -70,6 +76,7 @@ X-Elysia-Provider: openai
 ### 必須環境変数
 
 `.env` ファイルに追加:
+
 ```env
 OPENAI_API_KEY=sk-proj-your-api-key-here
 OPENAI_MODEL=gpt-4o-mini  # オプション、デフォルト: gpt-4o-mini
@@ -95,6 +102,7 @@ bun run test-openai.ts
 ```
 
 **テスト内容:**
+
 - APIキー確認
 - クライアント初期化
 - 簡単なチャット
@@ -124,16 +132,10 @@ curl -X POST http://localhost:3000/elysia-love \
 import { simpleChat, conversationChat } from "./src/lib/openai-integration";
 
 // シンプルなチャット
-const response = await simpleChat(
-  "今日の天気は?",
-  "あなたは親切なAIアシスタントです。",
-  { model: "gpt-4o-mini", temperature: 0.7 }
-);
+const response = await simpleChat("今日の天気は?", "あなたは親切なAIアシスタントです。", { model: "gpt-4o-mini", temperature: 0.7 });
 
 // 会話履歴付き
-let history = [
-  { role: "system", content: "あなたは日本語で話すAIです。" }
-];
+let history = [{ role: "system", content: "あなたは日本語で話すAIです。" }];
 
 const turn1 = await conversationChat(history, "私の名前はタロウです。");
 console.log(turn1.response);
@@ -145,15 +147,15 @@ console.log(turn2.response); // "タロウ"と覚えている
 
 ## モード比較
 
-| モード | プロバイダー | モデル | 特徴 |
-|--------|------------|--------|------|
-| sweet | Ollama | llama3.2 | 公式Elysiaキャラクター |
-| normal | Ollama | llama3.2 | フレンドリー |
-| professional | Ollama | llama3.2 | フォーマル |
-| casual | Ollama | llama3.2 | タメ口、Web検索対応 |
-| creative | Ollama | llama3.2 | 創造的 |
-| technical | Ollama | llama3.2 | 技術的 |
-| **openai** | **OpenAI** | **gpt-4o-mini** | **高品質、広範な知識** |
+| モード       | プロバイダー | モデル          | 特徴                   |
+| ------------ | ------------ | --------------- | ---------------------- |
+| sweet        | Ollama       | llama3.2        | 公式Elysiaキャラクター |
+| normal       | Ollama       | llama3.2        | フレンドリー           |
+| professional | Ollama       | llama3.2        | フォーマル             |
+| casual       | Ollama       | llama3.2        | タメ口、Web検索対応    |
+| creative     | Ollama       | llama3.2        | 創造的                 |
+| technical    | Ollama       | llama3.2        | 技術的                 |
+| **openai**   | **OpenAI**   | **gpt-4o-mini** | **高品質、広範な知識** |
 
 ## コスト管理
 
@@ -172,6 +174,7 @@ const tokens = estimateTokens(text); // 約30トークン
 - 出力: $0.60 / 1M トークン
 
 **例:**
+
 - 100文字の質問 → 約150トークン → $0.0000225
 - 300文字の応答 → 約450トークン → $0.000270
 - **合計:** $0.0002925 (約0.03円)

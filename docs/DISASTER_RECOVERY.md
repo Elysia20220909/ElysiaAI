@@ -17,6 +17,7 @@ This document outlines the disaster recovery (DR) procedures for Elysia AI to en
 **Symptoms**: Complete server unresponsiveness, connection timeout
 
 **Recovery Steps**:
+
 ```powershell
 # 1. Verify server status
 Test-NetConnection -ComputerName your-server -Port 3000
@@ -39,6 +40,7 @@ Restart-Service ElysiaAI
 **Symptoms**: Redis connection errors, data inconsistency
 
 **Recovery Steps**:
+
 ```powershell
 # 1. Stop services
 docker-compose -f monitoring/docker-compose.yml down
@@ -59,6 +61,7 @@ redis-cli PING
 **Symptoms**: Missing files, corrupted JSONL files
 
 **Recovery Steps**:
+
 ```powershell
 # 1. Stop all services to prevent further data corruption
 .\scripts\stop-all.ps1
@@ -81,6 +84,7 @@ Get-ChildItem backups | Sort-Object -Descending
 **Symptoms**: Unauthorized access, suspicious activity
 
 **Immediate Actions**:
+
 ```powershell
 # 1. Isolate the system
 Stop-Service ElysiaAI
@@ -110,6 +114,7 @@ Get-Content logs/*.log | Select-String -Pattern "suspicious|error|unauthorized"
 **Symptoms**: Cannot reach cloud services (AWS/GCP/Azure)
 
 **Recovery Steps**:
+
 ```powershell
 # 1. Switch to local mode
 $Env:CLOUD_MODE = "false"
@@ -130,6 +135,7 @@ Invoke-WebRequest -Uri "https://backup.domain.com/health"
 ### Automated Backups
 
 **Daily Backups** (3:00 AM):
+
 ```powershell
 # Add to Task Scheduler
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' `
@@ -139,6 +145,7 @@ Register-ScheduledTask -Action $action -Trigger $trigger -TaskName 'ElysiaAI-Dai
 ```
 
 **Weekly Full Backups** (Sunday 2:00 AM):
+
 ```powershell
 # Includes all data, logs, and system state
 .\scripts\backup.ps1 -Compress -Remote -RemotePath "s3://elysia-backups/weekly"
@@ -218,7 +225,7 @@ docker-compose up -d
 
 1. **Detect**: Automated monitoring alerts via Prometheus/Alertmanager
 2. **Assess**: Incident severity (P1-P4)
-3. **Notify**: 
+3. **Notify**:
    - P1 (Critical): Immediate phone + email + Slack
    - P2 (High): Email + Slack within 15 min
    - P3 (Medium): Slack within 1 hour
@@ -333,10 +340,10 @@ docs/incident-reports/YYYY-MM-DD-incident-name.md
 
 ## Emergency Contacts
 
-| Role | Name | Phone | Email |
-|------|------|-------|-------|
-| Project Owner | [Name] | [Phone] | [Email] |
-| DevOps Lead | [Name] | [Phone] | [Email] |
+| Role          | Name       | Phone            | Email           |
+| ------------- | ---------- | ---------------- | --------------- |
+| Project Owner | [Name]     | [Phone]          | [Email]         |
+| DevOps Lead   | [Name]     | [Phone]          | [Email]         |
 | Cloud Support | [Provider] | [Support Number] | [Support Email] |
 
 ## Tools and Resources

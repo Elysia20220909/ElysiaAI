@@ -2,11 +2,11 @@ name: CodeQL Analysis
 
 on:
   push:
-    branches: [ "master", "main", "elysia" ]
+    branches: ["master", "main", "elysia"]
   pull_request:
-    branches: [ "master", "main", "elysia" ]
+    branches: ["master", "main", "elysia"]
   schedule:
-    - cron: '0 0 * * 1'  # Weekly on Monday at midnight
+    - cron: "0 0 * * 1" # Weekly on Monday at midnight
   workflow_dispatch:
 
 permissions:
@@ -19,12 +19,12 @@ jobs:
     name: Analyze
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    
+
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript', 'python' ]
-    
+        language: ["javascript", "python"]
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

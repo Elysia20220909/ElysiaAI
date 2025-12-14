@@ -1,12 +1,13 @@
 ---
 name: 🐛 バグ報告
 about: バグを報告して改善に貢献
-title: '[🐛 BUG] '
+title: "[🐛 BUG] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 ## 🐛 バグの説明
+
 何が起きている？一言で（エリシアに伝わるように）。
 
 ## 🔄 再現手順

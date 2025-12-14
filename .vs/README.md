@@ -9,7 +9,6 @@
    - `elysia-ai` フォルダを選択
 
 2. **必要なワークロード**
-
    - Node.js development
    - Python development
    - Docker support (オプション)
@@ -59,29 +58,24 @@
 ### デバッグの開始
 
 1. **メニューから**:
-
    - `Debug` → `Start Debugging` (F5)
    - 設定を選択
 
 2. **ツールバーから**:
-
    - デバッグターゲットドロップダウンから選択
    - 緑の再生ボタンをクリック
 
 ### ブレークポイント
 
 1. **設定**:
-
    - コード行の左端をクリック
    - または `F9` キーで切り替え
 
 2. **条件付きブレークポイント**:
-
    - 右クリック → `Conditions...`
    - 式や実行回数を設定
 
 3. **ログポイント**:
-
    - 右クリック → `Actions...`
    - コンソールに出力するメッセージを設定
 
@@ -101,12 +95,10 @@
 ### 実行方法
 
 1. **Solution Explorer**:
-
    - プロジェクトを右クリック
    - タスク名を選択
 
 2. **Task Runner Explorer**:
-
    - `View` → `Other Windows` → `Task Runner Explorer`
 
 ### 利用可能なタスク
@@ -148,9 +140,9 @@
 ```typescript
 // src/index.ts
 app.post("/elysia-love", async ({ body }) => {
-    debugger; // ← ブレークポイント代わり
-    const { messages } = body as ChatRequest;
-    // ...
+  debugger; // ← ブレークポイント代わり
+  const { messages } = body as ChatRequest;
+  // ...
 });
 ```
 
@@ -213,11 +205,9 @@ async def rag_endpoint(query: Query):
 ### ブレークポイントが無視される
 
 1. ソースマップが有効か確認:
-
    - `tsconfig.json` の `sourceMap: true`
 
 2. コンパイル後のコードを確認:
-
    - `dist/` フォルダをチェック
 
 ### Pythonデバッガーが動かない

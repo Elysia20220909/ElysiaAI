@@ -1,4 +1,5 @@
 # Elysia AI - Service Startup Summary
+
 **Date**: 2025-12-05  
 **Status**: Partially Successful
 
@@ -7,12 +8,14 @@
 ## ✅ Successfully Started Services
 
 ### 1. **Ollama AI Server** (Port 11434)
+
 - **Status**: ✅ RUNNING
 - **Function**: AI Model Server (llama3.2)
 - **Access**: http://localhost:11434
 - **Notes**: Started automatically, working correctly
 
 ### 2. **FastAPI RAG Backend** (Port 8000)
+
 - **Status**: ✅ RUNNING
 - **Function**: RAG (Retrieval-Augmented Generation) Backend
 - **Access**: http://localhost:8000
@@ -20,6 +23,7 @@
 - **Dependencies**: Python 3.9.13, requirements.txt installed
 
 ### 3. **Elysia Main Server** (Port 3000)
+
 - **Status**: ✅ RUNNING (with warnings)
 - **Function**: Main Application Server
 - **Access**: http://localhost:3000
@@ -29,6 +33,7 @@
 - **WebSocket**: ws://localhost:3000/ws
 
 **Initialized Features**:
+
 - A/B Testing (2 tests)
 - Audit Logs (36 entries)
 - Health Monitoring (3 checks)
@@ -41,15 +46,17 @@
 ## ⚠️ Services with Warnings
 
 ### 1. **Redis Cache** (Port 6379)
+
 - **Status**: ❌ NOT RUNNING
 - **Reason**: Docker Desktop not running
 - **Impact**: Using in-memory fallback for rate limiting
-- **Solution**: 
+- **Solution**:
   - Start Docker Desktop, then run: `docker run -d --name elysia-redis -p 6379:6379 redis:7-alpine`
   - OR use WSL2: `wsl sudo apt-get install redis-server && redis-server`
   - OR set `REDIS_ENABLED=false` in `.env` (currently using this workaround)
 
 ### 2. **Prisma Database**
+
 - **Status**: ⚠️ In-Memory Fallback
 - **Warning**: "Prisma database not configured, using in-memory fallback"
 - **Impact**: Data not persisted on restart
@@ -60,11 +67,13 @@
   Then run: `bun scripts/init-prisma.ts`
 
 ### 3. **Health Checks**
+
 - **Database Health**: ❌ FAILED (expected - using in-memory)
 - **Disk Space Health**: ❌ FAILED (check implementation issue)
 - **Ollama Health**: ✅ PASSED
 
 ### 4. **Static File Plugin**
+
 - **Warning**: `[@elysiajs/static] require process.getBuiltinModule. Static plugin is disabled`
 - **Impact**: Static files may not be served correctly
 - **Workaround**: Use nginx or CDN for static file serving in production
@@ -74,11 +83,13 @@
 ## ❌ Services Not Attempted
 
 ### 1. **Milvus Vector Database** (Port 19530)
+
 - **Reason**: Docker Desktop not running
 - **Required**: Docker Compose
 - **Start Command**: `docker-compose up -d milvus-standalone`
 
 ### 2. **VOICEVOX TTS** (Port 50021)
+
 - **Reason**: Application not installed
 - **Required**: VOICEVOX desktop application
 - **Download**: https://voicevox.hiroshiba.jp/
@@ -88,6 +99,7 @@
 ## 🔥 Firewall Configuration
 
 All ports have been enabled in Windows Firewall:
+
 ```powershell
 ✅ Port 3000  - Elysia Main Server (Inbound TCP)
 ✅ Port 8000  - FastAPI (Inbound TCP)
@@ -101,25 +113,28 @@ All ports have been enabled in Windows Firewall:
 
 ## 📊 Current Service Matrix
 
-| Service | Port | Status | Function | Notes |
-|---------|------|--------|----------|-------|
-| **Elysia** | 3000 | ✅ Running | Main Server | With warnings |
-| **FastAPI** | 8000 | ✅ Running | RAG Backend | Background job |
-| **Ollama** | 11434 | ✅ Running | AI Model | Working |
-| **Redis** | 6379 | ⚠️ Fallback | Cache/Queue | In-memory mode |
-| **Milvus** | 19530 | ❌ Stopped | Vector DB | Docker required |
-| **VOICEVOX** | 50021 | ❌ Stopped | TTS | App not installed |
+| Service      | Port  | Status      | Function    | Notes             |
+| ------------ | ----- | ----------- | ----------- | ----------------- |
+| **Elysia**   | 3000  | ✅ Running  | Main Server | With warnings     |
+| **FastAPI**  | 8000  | ✅ Running  | RAG Backend | Background job    |
+| **Ollama**   | 11434 | ✅ Running  | AI Model    | Working           |
+| **Redis**    | 6379  | ⚠️ Fallback | Cache/Queue | In-memory mode    |
+| **Milvus**   | 19530 | ❌ Stopped  | Vector DB   | Docker required   |
+| **VOICEVOX** | 50021 | ❌ Stopped  | TTS         | App not installed |
 
 ---
 
 ## 🚀 Quick Start Commands
 
 ### Current Session (Recommended)
+
 All essential services are already running. Access the application at:
+
 - **Main App**: http://localhost:3000
 - **API Docs**: http://localhost:3000/swagger
 
 ### To Start Redis (Optional)
+
 ```powershell
 # Option A: Docker (easiest)
 docker run -d --name elysia-redis -p 6379:6379 redis:7-alpine
@@ -133,6 +148,7 @@ redis-server
 ```
 
 ### To Configure Persistent Database
+
 ```powershell
 # 1. Create .env file with:
 echo "DATABASE_URL=file:./prisma/dev.db" >> .env
@@ -144,6 +160,7 @@ bun scripts/init-prisma.ts
 ```
 
 ### To Start Milvus Vector DB
+
 ```powershell
 # Requires Docker Desktop running
 docker-compose up -d milvus-standalone
@@ -154,18 +171,24 @@ docker-compose up -d milvus-standalone
 ## 🔍 Troubleshooting
 
 ### Redis Connection Errors (ECONNREFUSED)
+
 **Current Workaround**: Running with `REDIS_ENABLED=false`
+
 - Application falls back to in-memory rate limiting
 - No data loss, just reduced scalability
 - **To fix**: Start Redis service or Docker container
 
 ### Database Health Check Failures
+
 **Expected Behavior**: Using in-memory fallback
+
 - Configure DATABASE_URL for production use
 - Run `bun scripts/setup-database.ts` to verify setup
 
 ### Disk Space Health Check Failures
+
 **Issue**: Health check implementation issue
+
 - Does not affect application functionality
 - Check `src/lib/health-monitor.ts` for fix
 
@@ -174,6 +197,7 @@ docker-compose up -d milvus-standalone
 ## ✅ Production Readiness Checklist
 
 **Required for Production**:
+
 - [x] Elysia server running
 - [x] Firewall ports configured
 - [x] AI backend (Ollama) operational
@@ -185,6 +209,7 @@ docker-compose up -d milvus-standalone
 - [ ] SSL/TLS certificates configured
 
 **Optional but Recommended**:
+
 - [ ] Milvus vector database for embeddings
 - [ ] VOICEVOX for text-to-speech
 - [ ] Docker Desktop for containerized services
@@ -200,6 +225,7 @@ docker-compose up -d milvus-standalone
 - **Scalability**: Add Redis and Milvus for production workloads
 
 **Next Steps**:
+
 1. Configure persistent database (DATABASE_URL)
 2. Set up Redis for production caching
 3. Test all API endpoints via Swagger UI

@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # Elysia AI - 簡素化された開発環境
 # 1コマンドで全サービス起動: docker-compose up -d

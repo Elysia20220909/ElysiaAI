@@ -10,10 +10,7 @@ const libPath = path.join(__dirname, "build", "elysia_cuda.dll");
 if (fs.existsSync(libPath)) {
 	try {
 		cudaLib = ffi.Library(libPath, {
-			cudaComputeSimilarities: [
-				"int",
-				["pointer", "pointer", "pointer", "int", "int", "int"],
-			],
+			cudaComputeSimilarities: ["int", ["pointer", "pointer", "pointer", "int", "int", "int"]],
 		});
 		console.log("✅ CUDA acceleration enabled");
 	} catch (error) {
@@ -79,9 +76,7 @@ function computeSimilarities(queries, database) {
 
 // CPU fallback implementation
 function computeSimilaritiesCPU(queries, database) {
-	return queries.map((query) =>
-		database.map((vector) => cosineSimilarity(query, vector)),
-	);
+	return queries.map((query) => database.map((vector) => cosineSimilarity(query, vector)));
 }
 
 function cosineSimilarity(vec1, vec2) {

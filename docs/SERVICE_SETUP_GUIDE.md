@@ -6,11 +6,11 @@
 
 ## 📋 必要なサービス
 
-| サービス | ポート | 機能 | 必須度 |
-|---------|--------|------|--------|
-| **Redis** | 6379 | レート制限、キャッシング | オプショナル |
-| **Ollama** | 11434 | LLM推論エンジン | 推奨 |
-| **FastAPI** | 8000 | RAG (検索拡張生成) | オプショナル |
+| サービス    | ポート | 機能                     | 必須度       |
+| ----------- | ------ | ------------------------ | ------------ |
+| **Redis**   | 6379   | レート制限、キャッシング | オプショナル |
+| **Ollama**  | 11434  | LLM推論エンジン          | 推奨         |
+| **FastAPI** | 8000   | RAG (検索拡張生成)       | オプショナル |
 
 **注意**: これらのサービスがなくてもElysiaサーバーは動作しますが、一部機能が制限されます。
 
@@ -49,6 +49,7 @@ docker compose -f config/docker/docker-compose.yml up -d redis ollama fastapi
 ### インストール
 
 **Windows (WSL2推奨)**:
+
 ```powershell
 # WSL2を使用
 wsl sudo apt-get update
@@ -56,10 +57,12 @@ wsl sudo apt-get install redis-server
 ```
 
 **Windows (ネイティブ)**:
+
 1. [Redis for Windows](https://github.com/microsoftarchive/redis/releases) からダウンロード
 2. `redis-server.exe` を実行
 
 **macOS/Linux**:
+
 ```bash
 # macOS
 brew install redis
@@ -117,10 +120,12 @@ REDIS_URL=redis://localhost:6379
 ### インストール
 
 **Windows/macOS/Linux**:
+
 1. [Ollama公式サイト](https://ollama.ai/download) からダウンロード
 2. インストーラーを実行
 
 **コマンドライン (Linux)**:
+
 ```bash
 curl -fsSL https://ollama.ai/install.sh | sh
 ```
@@ -185,6 +190,7 @@ OLLAMA_MODEL=llama3.2
 ### 前提条件
 
 Python 3.11以降がインストールされていること:
+
 ```powershell
 python --version
 # Python 3.11.0 以上
@@ -281,6 +287,7 @@ npm run dev
 ```
 
 アクセス先:
+
 - **メインアプリ**: http://localhost:3000
 - **管理画面**: http://localhost:3000/admin-extended.html
 - **Swagger API**: http://localhost:3000/swagger
@@ -327,19 +334,21 @@ Stop-Process -Id <PID> -Force
 ### サービスが起動しない
 
 1. **ログ確認**:
+
    ```powershell
    # Elysiaログ
    Get-Content logs/app.log -Tail 50
-   
+
    # FastAPIログ
    Get-Content logs/fastapi.log -Tail 50
    ```
 
 2. **依存関係確認**:
+
    ```powershell
    # Python依存関係
    pip list
-   
+
    # Bunパッケージ
    bun install
    ```
@@ -352,6 +361,7 @@ Stop-Process -Id <PID> -Force
 ### メモリ不足
 
 Ollamaの使用メモリを削減:
+
 ```powershell
 # 軽量モデルに変更
 ollama pull llama3.2:3b

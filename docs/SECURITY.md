@@ -30,12 +30,12 @@ body: t.Object({
       content: t.String({
         maxLength: 400,
         minLength: 1,
-        pattern: "^[a-zA-Z0-9\\s\\p{L}\\p{N}\\p{P}\\p{S}♡♪〜！？。、]+$"
-      })
+        pattern: "^[a-zA-Z0-9\\s\\p{L}\\p{N}\\p{P}\\p{S}♡♪〜！？。、]+$",
+      }),
     }),
-    { maxItems: 8 }
-  )
-})
+    { maxItems: 8 },
+  ),
+});
 ```
 
 **効果**: XSSインジェクション、異常長入力、スクリプト埋め込みを防止
@@ -45,15 +45,16 @@ body: t.Object({
 #### sanitize-html パッケージ
 
 ```typescript
-import sanitizeHtml from "sanitize-html"
+import sanitizeHtml from "sanitize-html";
 
 const cleanContent = sanitizeHtml(m.content, {
-  allowedTags: [],        // タグ全削除
-  allowedAttributes: {}   // 属性全削除
-})
+  allowedTags: [], // タグ全削除
+  allowedAttributes: {}, // 属性全削除
+});
 ```
 
 **防御例**:
+
 - 入力: `<script>alert('hack')</script>`
 - 出力: `alert('hack')` (無害化)
 
@@ -62,10 +63,7 @@ const cleanContent = sanitizeHtml(m.content, {
 #### フロントエンド / サーバー (ElysiaJS)
 
 ```typescript
-const DANGEROUS_KEYWORDS = [
-  "eval","exec","system","drop","delete","<script",
-  "onerror","onload","javascript:","--",";--","union select"
-];
+const DANGEROUS_KEYWORDS = ["eval", "exec", "system", "drop", "delete", "<script", "onerror", "onload", "javascript:", "--", ";--", "union select"];
 
 if (containsDangerousKeywords(cleaned)) {
   throw new Error("Dangerous content detected");
@@ -98,6 +96,7 @@ const tokenBucket = rateLimiter.checkTokenBucket(ip, 60, 10, 2);
 ```
 
 **特徴**:
+
 - **Redis統合**: 複数サーバー間で共有可能
 - **自動クリーンアップ**: 5分ごとにメモリ解放
 - **フォールバック**: Redis未接続時はインメモリ動作
@@ -110,21 +109,14 @@ const tokenBucket = rateLimiter.checkTokenBucket(ip, 60, 10, 2);
 
 ```typescript
 // アクセストークン (15分有効)
-const accessToken = jwt.sign(
-  { userId, role }, 
-  CONFIG.JWT_SECRET, 
-  { expiresIn: '15m' }
-);
+const accessToken = jwt.sign({ userId, role }, CONFIG.JWT_SECRET, { expiresIn: "15m" });
 
 // リフレッシュトークン (7日有効)
-const refreshToken = jwt.sign(
-  { userId, tokenId }, 
-  CONFIG.JWT_REFRESH_SECRET, 
-  { expiresIn: '7d' }
-);
+const refreshToken = jwt.sign({ userId, tokenId }, CONFIG.JWT_REFRESH_SECRET, { expiresIn: "7d" });
 ```
 
 **エンドポイント**:
+
 - `POST /auth/token` - パスワード認証でトークンペア発行
 - `POST /auth/refresh` - リフレッシュトークンで新しいアクセストークン取得
 - `POST /auth/logout` - リフレッシュトークン無効化
@@ -134,31 +126,24 @@ const refreshToken = jwt.sign(
 ```typescript
 onAfterHandle(({ set }) => {
   const ragOrigin = new URL(CONFIG.RAG_API_URL).origin;
-  
-  set.headers['X-Frame-Options'] = 'DENY';
-  set.headers['X-Content-Type-Options'] = 'nosniff';
-  set.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin';
-  set.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()';
-  set.headers['Content-Security-Policy'] = [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline'",
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data:",
-    `connect-src 'self' ${ragOrigin}`,
-    "font-src 'self'",
-    "object-src 'none'",
-    "frame-ancestors 'none'",
-  ].join('; ');
+
+  set.headers["X-Frame-Options"] = "DENY";
+  set.headers["X-Content-Type-Options"] = "nosniff";
+  set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+  set.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
+  set.headers["Content-Security-Policy"] = ["default-src 'self'", "script-src 'self' 'unsafe-inline'", "style-src 'self' 'unsafe-inline'", "img-src 'self' data:", `connect-src 'self' ${ragOrigin}`, "font-src 'self'", "object-src 'none'", "frame-ancestors 'none'"].join("; ");
 });
 ```
 
 ### 7. CORS制限 (CORS Policy)
 
 ```typescript
-app.use(cors({
-  origin: ["http://localhost:3000"],  // 許可ドメインのみ
-  methods: ["GET", "POST"],           // 許可メソッド
-}));
+app.use(
+  cors({
+    origin: ["http://localhost:3000"], // 許可ドメインのみ
+    methods: ["GET", "POST"], // 許可メソッド
+  }),
+);
 ```
 
 **効果**: 不正なドメインからのリクエストをブロック
@@ -167,17 +152,17 @@ app.use(cors({
 
 #### Ollama応答の安全化
 
-```python
+````python
 def safe_filter(text: str) -> str:
     # コードブロック削除
     text = re.sub(r'```[\s\S]*?```', '', text)
-    
+
     # 危険キーワード除去
     for kw in ["eval", "exec", "system", "__import__", "subprocess"]:
         text = text.replace(kw, "[安全性のため削除]")
-    
+
     return text
-```
+````
 
 **効果**: AIが生成した悪意あるコード（ウイルス、ハッキングスクリプト）を無害化
 
@@ -260,6 +245,7 @@ MILVUS_TOKEN=your_secure_token_here
 ### 機密情報の配置
 
 #### 1. `/config/private/` - 環境変数と認証情報
+
 ```
 config/private/
 ├── .env              # 本番環境変数（Git管理外）
@@ -268,26 +254,31 @@ config/private/
 ```
 
 **含まれる情報:**
+
 - API キー、シークレット
 - データベース接続文字列
 - 認証パスワード
 
 **アクセス制御:**
+
 - `.gitignore` で完全に除外
 - 読み取り権限を最小限に制限
 
 #### 2. `/src/config/internal/` - 内部設定
+
 ```
 src/config/internal/
 └── llm-config.ts     # LLMモデル設定とプロンプト
 ```
 
 **含まれる情報:**
+
 - システムプロンプト
 - モデルパラメータ
 - キャラクター設定
 
 #### 3. `/src/core/security/` - セキュリティモジュール
+
 ```
 src/core/security/
 ├── index.ts          # エクスポート集約
@@ -296,11 +287,13 @@ src/core/security/
 ```
 
 **含まれる機能:**
+
 - トークン生成・検証
 - リフレッシュトークン管理
 - レート制限制御
 
 #### 4. `/.internal/` - 最高機密（オプション）
+
 ```
 .internal/
 ├── security/              # セキュリティモジュール (SUPER_ADMIN)
@@ -320,6 +313,7 @@ src/core/security/
 ### Layer 1: ファイルシステム保護
 
 **Unix/Linux**:
+
 ```bash
 # 厳格なパーミッション設定
 chmod 700 .internal/
@@ -329,6 +323,7 @@ chmod 600 .internal/secrets/.env.secrets
 ```
 
 **Windows PowerShell**:
+
 ```powershell
 # 継承を削除
 icacls ".internal" /inheritance:r
@@ -345,6 +340,7 @@ icacls ".internal\secrets" /grant:r "SYSTEM:(OI)(CI)F"
 ### Layer 2: バージョン管理保護
 
 `.gitignore` に含まれる:
+
 - `.internal/`
 - `config/private/`
 - `src/config/internal/`
@@ -355,6 +351,7 @@ icacls ".internal\secrets" /grant:r "SYSTEM:(OI)(CI)F"
 ### Layer 3: Docker イメージ保護
 
 `.dockerignore` で除外:
+
 - `.internal/` ディレクトリ
 - すべての機密ファイルパターン
 - 秘密鍵と証明書
@@ -362,17 +359,19 @@ icacls ".internal\secrets" /grant:r "SYSTEM:(OI)(CI)F"
 ### Layer 4: アプリケーションレベルアクセス制御
 
 **アクセスレベル**:
+
 ```typescript
 enum AccessLevel {
-  PUBLIC = 0,        // 公開リソース
+  PUBLIC = 0, // 公開リソース
   AUTHENTICATED = 1, // ログインユーザー
-  ADMIN = 2,        // 管理者
-  SUPER_ADMIN = 3,  // スーパー管理者
-  SYSTEM = 4        // システムレベルのみ
+  ADMIN = 2, // 管理者
+  SUPER_ADMIN = 3, // スーパー管理者
+  SYSTEM = 4, // システムレベルのみ
 }
 ```
 
 **保護リソース**:
+
 - `.internal/secrets/*` → SYSTEM レベル
 - `.internal/security/*` → SUPER_ADMIN レベル
 - `.internal/private/*` → ADMIN レベル
@@ -384,6 +383,7 @@ enum AccessLevel {
 ### Layer 5: 保存時暗号化
 
 すべての機密データは暗号化:
+
 - **アルゴリズム**: AES-256-GCM
 - **鍵導出**: scrypt
 - **認証**: GCM 認証タグ
@@ -418,6 +418,7 @@ Write-Host "ENCRYPTION_KEY=$encryptionKey"
 ```
 
 **Linux/macOS**:
+
 ```bash
 # OpenSSLで生成
 openssl rand -hex 32  # JWT_SECRET
@@ -429,6 +430,7 @@ openssl rand -hex 32  # ENCRYPTION_KEY
 ### 2. 環境変数設定
 
 `config/private/.env` を作成:
+
 ```bash
 # JWT設定
 JWT_SECRET=<generated-value>
@@ -451,11 +453,13 @@ MILVUS_TOKEN=<your-milvus-token>
 ### 3. ファイルパーミッション設定
 
 **Windows**:
+
 ```powershell
 .\scripts\setup-security.ps1
 ```
 
 **Unix/Linux**:
+
 ```bash
 chmod +x scripts/setup-security.sh
 ./scripts/setup-security.sh
@@ -549,18 +553,19 @@ curl -X POST http://localhost:3000/auth/refresh \
 
 ```typescript
 app.listen({
-  hostname: 'localhost',
+  hostname: "localhost",
   port: 3000,
   tls: {
-    key: Bun.file('key.pem'),
-    cert: Bun.file('cert.pem')
-  }
-})
+    key: Bun.file("key.pem"),
+    cert: Bun.file("cert.pem"),
+  },
+});
 ```
 
 ### WAF (Web Application Firewall)
 
 推奨サービス:
+
 - **Cloudflare**: 無料プランでDDoS保護、基本WAF
 - **AWS WAF**: SQLi/XSSルールセット、カスタムルール
 - **Nginx ModSecurity**: セルフホスト環境向け
@@ -572,19 +577,20 @@ app.listen({
 ### アクセスログ監視
 
 ```typescript
-import { accessControl } from './.internal/security/access-control';
+import { accessControl } from "./.internal/security/access-control";
 
 // 最近のアクセス試行を取得
 const logs = accessControl.getAccessLog(100);
 
 // 分析用にエクスポート
 const fullLog = accessControl.exportAccessLog();
-await saveToFile('audit-log.json', fullLog);
+await saveToFile("audit-log.json", fullLog);
 ```
 
 ### アラート設定
 
 監視対象:
+
 1. **失敗したアクセス試行**: 5分間に3回以上
 2. **不正アクセス**: SYSTEMリソースへのアクセス試行
 3. **営業時間外アクセス**: 営業時間外のアクセス
@@ -595,9 +601,9 @@ await saveToFile('audit-log.json', fullLog);
 
 ```typescript
 const accessDeniedCounter = new Counter({
-  name: 'access_denied_total',
-  help: 'Total number of denied access attempts',
-  labelNames: ['resource', 'user', 'reason']
+  name: "access_denied_total",
+  help: "Total number of denied access attempts",
+  labelNames: ["resource", "user", "reason"],
 });
 ```
 
@@ -698,18 +704,21 @@ npm run test:pentest
 ### メンテナンススケジュール
 
 #### 月次タスク:
+
 - アクセスログ確認
 - 不正アクセス試行のチェック
 - 暗号化鍵の安全性確認
 - セキュリティドキュメント更新
 
 #### 四半期タスク:
+
 - すべてのシークレットローテーション
 - セキュリティ監査
 - 依存関係更新
 - アクセスポリシーの見直しと更新
 
 #### 年次タスク:
+
 - 完全なセキュリティ評価
 - ペネトレーションテスト
 - ディザスタリカバリ訓練

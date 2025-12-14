@@ -20,9 +20,7 @@ async function testOpenAI() {
 	console.log(`利用可能: ${isOpenAIAvailable()}\n`);
 
 	if (!isOpenAIAvailable()) {
-		console.log(
-			"環境変数 OPENAI_API_KEY が設定されていません。テストを終了します。",
-		);
+		console.log("環境変数 OPENAI_API_KEY が設定されていません。テストを終了します。");
 		return;
 	}
 

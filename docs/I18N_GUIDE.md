@@ -57,10 +57,10 @@ const count_ja = i18n.plural("messages", 5, "ja"); // "5件のメッセージ"
 import { getLocaleFromRequest } from "./lib/i18n";
 
 app.get("/api/data", ({ request }) => {
-	const locale = getLocaleFromRequest(request);
-	return {
-		message: i18n.t("common.welcome", locale),
-	};
+  const locale = getLocaleFromRequest(request);
+  return {
+    message: i18n.t("common.welcome", locale),
+  };
 });
 
 // Query parameter: ?locale=ja
@@ -73,18 +73,18 @@ app.get("/api/data", ({ request }) => {
 
 ```json
 {
-	"common": {
-		"hello": "Hello",
-		"welcome": "Welcome to Elysia AI"
-	},
-	"auth": {
-		"login": "Login",
-		"loginSuccess": "Login successful"
-	},
-	"messages": {
-		"one": "{{count}} message",
-		"other": "{{count}} messages"
-	}
+  "common": {
+    "hello": "Hello",
+    "welcome": "Welcome to Elysia AI"
+  },
+  "auth": {
+    "login": "Login",
+    "loginSuccess": "Login successful"
+  },
+  "messages": {
+    "one": "{{count}} message",
+    "other": "{{count}} messages"
+  }
 }
 ```
 
@@ -92,18 +92,18 @@ app.get("/api/data", ({ request }) => {
 
 ```json
 {
-	"common": {
-		"hello": "こんにちは",
-		"welcome": "Elysia AIへようこそ"
-	},
-	"auth": {
-		"login": "ログイン",
-		"loginSuccess": "ログインに成功しました"
-	},
-	"messages": {
-		"one": "{{count}}件のメッセージ",
-		"other": "{{count}}件のメッセージ"
-	}
+  "common": {
+    "hello": "こんにちは",
+    "welcome": "Elysia AIへようこそ"
+  },
+  "auth": {
+    "login": "ログイン",
+    "loginSuccess": "ログインに成功しました"
+  },
+  "messages": {
+    "one": "{{count}}件のメッセージ",
+    "other": "{{count}}件のメッセージ"
+  }
 }
 ```
 
@@ -114,6 +114,7 @@ app.get("/api/data", ({ request }) => {
 Get translation for a key.
 
 **Parameters:**
+
 - `key`: Translation key (dot notation)
 - `locale`: Target locale (optional, uses default if not provided)
 - `params`: Object with interpolation parameters (optional)
@@ -125,6 +126,7 @@ Get translation for a key.
 Get pluralized translation.
 
 **Parameters:**
+
 - `key`: Translation key (without .one or .other)
 - `count`: Number for pluralization
 - `locale`: Target locale (optional)
@@ -137,6 +139,7 @@ Get pluralized translation.
 Detect best matching locale from Accept-Language header.
 
 **Parameters:**
+
 - `acceptLanguage`: Accept-Language header value
 
 **Returns:** Best matching supported locale
@@ -146,6 +149,7 @@ Detect best matching locale from Accept-Language header.
 Extract locale from HTTP request (query param or header).
 
 **Parameters:**
+
 - `request`: HTTP Request object
 
 **Returns:** Detected locale
@@ -156,10 +160,10 @@ Extract locale from HTTP request (query param or header).
 import { I18n } from "./lib/i18n";
 
 const i18n = new I18n({
-	defaultLocale: "en",
-	fallbackLocale: "en",
-	supportedLocales: ["en", "ja", "zh", "ko"],
-	localesPath: "locales",
+  defaultLocale: "en",
+  fallbackLocale: "en",
+  supportedLocales: ["en", "ja", "zh", "ko"],
+  localesPath: "locales",
 });
 ```
 
@@ -185,20 +189,20 @@ import { describe, expect, it } from "bun:test";
 import { i18n, getLocaleFromRequest } from "./lib/i18n";
 
 describe("i18n", () => {
-	it("should translate to Japanese", () => {
-		expect(i18n.t("common.hello", "ja")).toBe("こんにちは");
-	});
+  it("should translate to Japanese", () => {
+    expect(i18n.t("common.hello", "ja")).toBe("こんにちは");
+  });
 
-	it("should interpolate parameters", () => {
-		const text = i18n.t("validation.required", "en", { field: "Username" });
-		expect(text).toContain("Username");
-	});
+  it("should interpolate parameters", () => {
+    const text = i18n.t("validation.required", "en", { field: "Username" });
+    expect(text).toContain("Username");
+  });
 
-	it("should detect locale from header", () => {
-		const request = new Request("http://localhost", {
-			headers: { "Accept-Language": "ja-JP,ja;q=0.9" },
-		});
-		expect(getLocaleFromRequest(request)).toBe("ja");
-	});
+  it("should detect locale from header", () => {
+    const request = new Request("http://localhost", {
+      headers: { "Accept-Language": "ja-JP,ja;q=0.9" },
+    });
+    expect(getLocaleFromRequest(request)).toBe("ja");
+  });
 });
 ```

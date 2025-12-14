@@ -124,25 +124,21 @@ npm run gcp:deploy
 ## ✨ 主な改善点
 
 1. **Swift Native Client**
-
    - AsyncHTTPClient使用
    - ストリーミング対応
    - iOS/macOSネイティブサポート
 
 2. **Docker最適化**
-
    - マルチステージビルドでサイズ削減
    - Bun + Python統合
    - ヘルスチェック実装
 
 3. **AWS対応**
-
    - CloudFormation自動化
    - ECS Fargate + Spot
    - ALB + Auto-scaling
 
 4. **GCP対応**
-
    - Cloud Build CI/CD
    - Cloud Run serverless
    - 自動スケーリング

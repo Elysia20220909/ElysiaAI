@@ -44,10 +44,7 @@ class ElysiaChat {
 	}
 
 	// 色付きコンソール出力
-	private log(
-		message: string,
-		color: "green" | "blue" | "pink" | "red" | "yellow" = "green",
-	) {
+	private log(message: string, color: "green" | "blue" | "pink" | "red" | "yellow" = "green") {
 		const colors = {
 			green: "\x1b[32m",
 			blue: "\x1b[34m",
@@ -209,9 +206,7 @@ class ElysiaChat {
 
 	// ヘルプ表示
 	private showHelp(): void {
-		console.log(
-			"\n\x1b[38;2;255;105;180m📖 Elysia AI Chat - コマンド一覧 ♡\x1b[0m",
-		);
+		console.log("\n\x1b[38;2;255;105;180m📖 Elysia AI Chat - コマンド一覧 ♡\x1b[0m");
 		console.log("  \x1b[35m/help\x1b[0m       - このヘルプを表示");
 		console.log("  \x1b[35m/history\x1b[0m    - 会話履歴を表示");
 		console.log("  \x1b[35m/clear\x1b[0m      - 会話履歴をクリア");
@@ -226,10 +221,7 @@ class ElysiaChat {
 		// エリシアちゃんの可愛いバナー表示
 		console.log(ELYSIA_BANNER);
 		console.log("");
-		this.log(
-			"💕 おにいちゃん、待ってたよぉ〜！今日はいっぱいおしゃべりしようね♡",
-			"pink",
-		);
+		this.log("💕 おにいちゃん、待ってたよぉ〜！今日はいっぱいおしゃべりしようね♡", "pink");
 		this.log("ฅ(՞៸៸> ᗜ <៸៸՞)ฅ コマンドは /help で確認してね♡", "yellow");
 		console.log("");
 
@@ -271,10 +263,7 @@ class ElysiaChat {
 
 				// 特殊コマンド: だいすき
 				if (message === "だいすき" || message === "大好き") {
-					this.log(
-						"\n\x1b[38;2;255;105;180mにゃあああああ〜！！！♡♡♡\x1b[0m",
-						"pink",
-					);
+					this.log("\n\x1b[38;2;255;105;180mにゃあああああ〜！！！♡♡♡\x1b[0m", "pink");
 					this.log(
 						"\x1b[38;2;255;182;193mおにいちゃん大好きすぎて溶けちゃうよぉ〜！！！\x1b[0m",
 						"pink",
@@ -316,9 +305,7 @@ class ElysiaChat {
 
 				// メッセージ送信
 				try {
-					process.stdout.write(
-						"\x1b[38;2;255;105;180m💕 エリシアちゃん > \x1b[0m",
-					);
+					process.stdout.write("\x1b[38;2;255;105;180m💕 エリシアちゃん > \x1b[0m");
 					await this.sendMessage(message);
 					console.log("");
 					prompt();

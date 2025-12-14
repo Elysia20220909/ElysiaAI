@@ -1,9 +1,9 @@
 ---
 name: ❓ 質問
 about: プロジェクトに関する質問をする
-title: '[QUESTION] '
+title: "[QUESTION] "
 labels: question
-assignees: ''
+assignees: ""
 ---
 
 ## ❓ 質問内容

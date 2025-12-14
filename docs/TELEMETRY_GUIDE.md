@@ -23,10 +23,10 @@ import { telemetry } from "./lib/telemetry";
 
 // Start a span
 const span = telemetry.startSpan("database.query", {
-	attributes: {
-		"db.system": "redis",
-		"db.operation": "get",
-	},
+  attributes: {
+    "db.system": "redis",
+    "db.operation": "get",
+  },
 });
 
 // Do work...
@@ -40,17 +40,17 @@ telemetry.endSpan(span.spanId, { code: "OK" });
 ```typescript
 // Automatic span management
 const result = await telemetry.trace("processData", async (span) => {
-	span.attributes["data.size"] = data.length;
+  span.attributes["data.size"] = data.length;
 
-	// Your logic here
-	const processed = await process(data);
+  // Your logic here
+  const processed = await process(data);
 
-	// Add events
-	telemetry.addEvent(span.spanId, "processing.complete", {
-		"result.count": processed.length,
-	});
+  // Add events
+  telemetry.addEvent(span.spanId, "processing.complete", {
+    "result.count": processed.length,
+  });
 
-	return processed;
+  return processed;
 });
 ```
 
@@ -60,32 +60,29 @@ const result = await telemetry.trace("processData", async (span) => {
 import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
 
 app.use(async ({ request, path, set }) => {
-	// Extract parent trace context
-	const parentContext = getTraceContextFromRequest(request);
+  // Extract parent trace context
+  const parentContext = getTraceContextFromRequest(request);
 
-	// Start span
-	const span = telemetry.startSpan(`HTTP ${request.method} ${path}`, {
-		parentContext: parentContext || undefined,
-		attributes: {
-			"http.method": request.method,
-			"http.url": request.url,
-			"http.route": path,
-		},
-	});
+  // Start span
+  const span = telemetry.startSpan(`HTTP ${request.method} ${path}`, {
+    parentContext: parentContext || undefined,
+    attributes: {
+      "http.method": request.method,
+      "http.url": request.url,
+      "http.route": path,
+    },
+  });
 
-	// Add trace context to response
-	set.headers["traceparent"] = telemetry.createTraceContext(
-		span.traceId,
-		span.spanId,
-	);
+  // Add trace context to response
+  set.headers["traceparent"] = telemetry.createTraceContext(span.traceId, span.spanId);
 
-	try {
-		// Continue request processing
-		return;
-	} finally {
-		// End span on response
-		telemetry.endSpan(span.spanId);
-	}
+  try {
+    // Continue request processing
+    return;
+  } finally {
+    // End span on response
+    telemetry.endSpan(span.spanId);
+  }
 });
 ```
 
@@ -93,43 +90,43 @@ app.use(async ({ request, path, set }) => {
 
 ```typescript
 app.post("/api/process", async ({ body, request }) => {
-	const parentContext = getTraceContextFromRequest(request);
+  const parentContext = getTraceContextFromRequest(request);
 
-	return await telemetry.trace(
-		"api.process",
-		async (parentSpan) => {
-			// Nested span
-			const childSpan = telemetry.startSpan("database.query", {
-				parentContext: {
-					traceId: parentSpan.traceId,
-					spanId: parentSpan.spanId,
-					traceFlags: 1,
-				},
-			});
+  return await telemetry.trace(
+    "api.process",
+    async (parentSpan) => {
+      // Nested span
+      const childSpan = telemetry.startSpan("database.query", {
+        parentContext: {
+          traceId: parentSpan.traceId,
+          spanId: parentSpan.spanId,
+          traceFlags: 1,
+        },
+      });
 
-			const data = await fetchFromDB();
-			telemetry.endSpan(childSpan.spanId);
+      const data = await fetchFromDB();
+      telemetry.endSpan(childSpan.spanId);
 
-			// Another nested span
-			await telemetry.trace(
-				"processing.transform",
-				async (transformSpan) => {
-					transformSpan.attributes["data.count"] = data.length;
-					return transform(data);
-				},
-				{
-					parentContext: {
-						traceId: parentSpan.traceId,
-						spanId: parentSpan.spanId,
-						traceFlags: 1,
-					},
-				},
-			);
+      // Another nested span
+      await telemetry.trace(
+        "processing.transform",
+        async (transformSpan) => {
+          transformSpan.attributes["data.count"] = data.length;
+          return transform(data);
+        },
+        {
+          parentContext: {
+            traceId: parentSpan.traceId,
+            spanId: parentSpan.spanId,
+            traceFlags: 1,
+          },
+        },
+      );
 
-			return { success: true };
-		},
-		{ parentContext: parentContext || undefined },
-	);
+      return { success: true };
+    },
+    { parentContext: parentContext || undefined },
+  );
 });
 ```
 
@@ -139,12 +136,12 @@ app.post("/api/process", async ({ body, request }) => {
 
 ```typescript
 span.attributes = {
-	"http.method": "POST",
-	"http.url": "https://api.example.com/chat",
-	"http.status_code": 200,
-	"http.route": "/chat",
-	"http.scheme": "https",
-	"http.target": "/chat?mode=sweet",
+  "http.method": "POST",
+  "http.url": "https://api.example.com/chat",
+  "http.status_code": 200,
+  "http.route": "/chat",
+  "http.scheme": "https",
+  "http.target": "/chat?mode=sweet",
 };
 ```
 
@@ -152,10 +149,10 @@ span.attributes = {
 
 ```typescript
 span.attributes = {
-	"db.system": "redis",
-	"db.operation": "get",
-	"db.statement": "GET user:123",
-	"db.connection_string": "redis://localhost:6379",
+  "db.system": "redis",
+  "db.operation": "get",
+  "db.statement": "GET user:123",
+  "db.connection_string": "redis://localhost:6379",
 };
 ```
 
@@ -163,11 +160,11 @@ span.attributes = {
 
 ```typescript
 span.attributes = {
-	"user.id": "user-123",
-	"chat.mode": "sweet",
-	"rag.query": "What is AI?",
-	"llm.model": "llama3.2",
-	"llm.temperature": 0.7,
+  "user.id": "user-123",
+  "chat.mode": "sweet",
+  "rag.query": "What is AI?",
+  "llm.model": "llama3.2",
+  "llm.temperature": 0.7,
 };
 ```
 
@@ -176,14 +173,14 @@ span.attributes = {
 ```typescript
 // Add event to span
 telemetry.addEvent(span.spanId, "cache.hit", {
-	"cache.key": "user:123",
-	"cache.ttl": 3600,
+  "cache.key": "user:123",
+  "cache.ttl": 3600,
 });
 
 telemetry.addEvent(span.spanId, "rag.query.start");
 telemetry.addEvent(span.spanId, "rag.query.complete", {
-	"query.duration_ms": 250,
-	"results.count": 5,
+  "query.duration_ms": 250,
+  "results.count": 5,
 });
 ```
 
@@ -191,21 +188,21 @@ telemetry.addEvent(span.spanId, "rag.query.complete", {
 
 ```typescript
 try {
-	const result = await riskyOperation();
-	telemetry.endSpan(span.spanId, { code: "OK" });
+  const result = await riskyOperation();
+  telemetry.endSpan(span.spanId, { code: "OK" });
 } catch (error) {
-	telemetry.endSpan(span.spanId, {
-		code: "ERROR",
-		message: error instanceof Error ? error.message : "Unknown error",
-	});
+  telemetry.endSpan(span.spanId, {
+    code: "ERROR",
+    message: error instanceof Error ? error.message : "Unknown error",
+  });
 
-	telemetry.addEvent(span.spanId, "exception", {
-		"exception.type": error.constructor.name,
-		"exception.message": error.message,
-		"exception.stacktrace": error.stack,
-	});
+  telemetry.addEvent(span.spanId, "exception", {
+    "exception.type": error.constructor.name,
+    "exception.message": error.message,
+    "exception.stacktrace": error.stack,
+  });
 
-	throw error;
+  throw error;
 }
 ```
 
@@ -213,21 +210,18 @@ try {
 
 ```typescript
 // Export completed spans every 10 seconds
-setInterval(
-	() => {
-		const spans = telemetry.exportSpans();
+setInterval(() => {
+  const spans = telemetry.exportSpans();
 
-		if (spans.length > 0) {
-			// Send to OpenTelemetry collector
-			fetch("http://localhost:4318/v1/traces", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ spans }),
-			});
-		}
-	},
-	10000,
-);
+  if (spans.length > 0) {
+    // Send to OpenTelemetry collector
+    fetch("http://localhost:4318/v1/traces", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ spans }),
+    });
+  }
+}, 10000);
 ```
 
 ## W3C Trace Context
@@ -244,9 +238,9 @@ Format: `version-traceId-spanId-traceFlags`
 
 ```typescript
 const traceparent = telemetry.createTraceContext(
-	span.traceId,
-	span.spanId,
-	true, // sampled
+  span.traceId,
+  span.spanId,
+  true, // sampled
 );
 
 // Add to response headers
@@ -276,13 +270,11 @@ console.log(stats);
 ```typescript
 import { Telemetry } from "./lib/telemetry";
 
-const telemetry = new Telemetry(
-	process.env.TELEMETRY_ENABLED !== "false",
-);
+const telemetry = new Telemetry(process.env.TELEMETRY_ENABLED !== "false");
 
 // Disable in development
 if (process.env.NODE_ENV === "development") {
-	telemetry.setEnabled(false);
+  telemetry.setEnabled(false);
 }
 ```
 
@@ -311,9 +303,9 @@ OTEL_SERVICE_VERSION=1.0.0
 ```typescript
 // Track span metrics
 app.get("/metrics", () => {
-	const stats = telemetry.getStats();
+  const stats = telemetry.getStats();
 
-	return `
+  return `
 # HELP traces_total Total number of traces
 # TYPE traces_total counter
 traces_total ${stats.traces}
@@ -332,6 +324,7 @@ span_duration_avg ${stats.averageDuration}
 ### Grafana Visualization
 
 Create dashboard queries:
+
 - Trace duration distribution
 - Error rate by span
 - Request latency by endpoint
@@ -344,41 +337,41 @@ import { describe, expect, it } from "bun:test";
 import { telemetry } from "./lib/telemetry";
 
 describe("telemetry", () => {
-	beforeEach(() => {
-		telemetry.clear();
-	});
+  beforeEach(() => {
+    telemetry.clear();
+  });
 
-	it("should create and end span", () => {
-		const span = telemetry.startSpan("test");
-		expect(span.spanId).toBeDefined();
+  it("should create and end span", () => {
+    const span = telemetry.startSpan("test");
+    expect(span.spanId).toBeDefined();
 
-		telemetry.endSpan(span.spanId);
-		const retrieved = telemetry.getSpan(span.spanId);
-		expect(retrieved?.endTime).toBeDefined();
-		expect(retrieved?.duration).toBeGreaterThan(0);
-	});
+    telemetry.endSpan(span.spanId);
+    const retrieved = telemetry.getSpan(span.spanId);
+    expect(retrieved?.endTime).toBeDefined();
+    expect(retrieved?.duration).toBeGreaterThan(0);
+  });
 
-	it("should trace async function", async () => {
-		const result = await telemetry.trace("async-test", async (span) => {
-			span.attributes["test"] = true;
-			await new Promise((resolve) => setTimeout(resolve, 10));
-			return "success";
-		});
+  it("should trace async function", async () => {
+    const result = await telemetry.trace("async-test", async (span) => {
+      span.attributes["test"] = true;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return "success";
+    });
 
-		expect(result).toBe("success");
-	});
+    expect(result).toBe("success");
+  });
 
-	it("should handle errors", async () => {
-		try {
-			await telemetry.trace("error-test", async () => {
-				throw new Error("Test error");
-			});
-		} catch (error) {
-			// Expected
-		}
+  it("should handle errors", async () => {
+    try {
+      await telemetry.trace("error-test", async () => {
+        throw new Error("Test error");
+      });
+    } catch (error) {
+      // Expected
+    }
 
-		const spans = telemetry.exportSpans();
-		expect(spans[0].status.code).toBe("ERROR");
-	});
+    const spans = telemetry.exportSpans();
+    expect(spans[0].status.code).toBe("ERROR");
+  });
 });
 ```

@@ -135,14 +135,14 @@ brew services start redis
 
 ## スクリプト一覧
 
-| スクリプト | 説明 |
-|-----------|------|
-| `./scripts/setup-python.sh` | Python環境セットアップ |
-| `./scripts/start-server.sh` | Elysiaサーバー起動 |
-| `./scripts/start-fastapi.sh` | FastAPI RAG起動 |
+| スクリプト                       | 説明                       |
+| -------------------------------- | -------------------------- |
+| `./scripts/setup-python.sh`      | Python環境セットアップ     |
+| `./scripts/start-server.sh`      | Elysiaサーバー起動         |
+| `./scripts/start-fastapi.sh`     | FastAPI RAG起動            |
 | `./scripts/start-network-sim.sh` | Network Simulation API起動 |
-| `./scripts/dev.sh` | 全サービス一括起動 |
-| `./scripts/rotate-jsonl.sh` | JSONLログローテーション |
+| `./scripts/dev.sh`               | 全サービス一括起動         |
+| `./scripts/rotate-jsonl.sh`      | JSONLログローテーション    |
 
 ## トラブルシューティング
 
@@ -257,7 +257,6 @@ ulimit -n 65536
    ```
 
 4. **本番環境ではTLS必須**
-
    - Nginx + Let's Encrypt使用
    - `DEPLOYMENT.md` 参照
 

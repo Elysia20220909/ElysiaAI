@@ -59,6 +59,7 @@ bunx prisma studio
 **Prisma 7 では、`schema.prisma` に datasource URL を記述できません。**
 
 ❌ 間違い：
+
 ```prisma
 datasource db {
   provider = "sqlite"
@@ -100,6 +101,7 @@ const prisma = new PrismaClient({
 **原因**: `prisma.config.js` が見つからないか、`datasources` が定義されていない
 
 **解決策**:
+
 1. `prisma/prisma.config.js` が存在することを確認
 2. ファイルに以下の内容があることを確認：
 

@@ -24,21 +24,25 @@ scripts/
 ## 🎯 主な機能
 
 ### 🔧 セットアップ
+
 - `setup-database.ts` - データベース初期化
 - `setup-python.ps1` - Python環境構築
 - `setup-production.sh` - 本番環境セットアップ
 
 ### 🛡️ セキュリティ
+
 - `complete-security-setup.sh` - 完全なセキュリティ設定
 - `firewall-setup.sh` - ファイアウォール設定
 - `ssl-setup.sh` - SSL/TLS証明書設定
 
 ### 🔍 検証
+
 - `verify-services.ps1` - サービス動作確認
 - `verify-curl.bat` - API接続確認
 - `auto-verify.bat` - 自動検証実行
 
 ### 🔄 メンテナンス
+
 - `maintenance-weekly.ps1` - 週次メンテナンス
 - `maintenance-monthly.ps1` - 月次メンテナンス
 - `backup.ps1` - バックアップ実行

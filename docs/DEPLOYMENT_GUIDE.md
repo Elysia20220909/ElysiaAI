@@ -1,6 +1,7 @@
 # Elysia AI デプロイメントガイド
 
 ## 目次
+
 1. [システム要件](#システム要件)
 2. [環境変数設定](#環境変数設定)
 3. [データベースセットアップ](#データベースセットアップ)
@@ -15,18 +16,21 @@
 ## システム要件
 
 ### 最小要件
+
 - **CPU**: 2コア
 - **RAM**: 4GB
 - **ストレージ**: 20GB
 - **OS**: Ubuntu 20.04+ / Windows Server 2019+ / macOS 11+
 
 ### 推奨要件
+
 - **CPU**: 4コア以上
 - **RAM**: 8GB以上
 - **ストレージ**: 50GB SSD
 - **OS**: Ubuntu 22.04 LTS
 
 ### 依存ソフトウェア
+
 - **Bun**: 1.0.0+ (ランタイム)
 - **PostgreSQL**: 14+ (データベース)
 - **Redis**: 7.0+ (キャッシュ/セッション)
@@ -262,6 +266,7 @@ find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
 ```
 
 cron設定:
+
 ```bash
 crontab -e
 # 毎日午前3時にバックアップ
@@ -393,25 +398,28 @@ pm2 startup
 ```javascript
 // ecosystem.config.js
 module.exports = {
-  apps: [{
-    name: 'elysia-ai',
-    script: 'src/index.ts',
-    interpreter: 'bun',
-    instances: 'max',
-    exec_mode: 'cluster',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000
+  apps: [
+    {
+      name: "elysia-ai",
+      script: "src/index.ts",
+      interpreter: "bun",
+      instances: "max",
+      exec_mode: "cluster",
+      env: {
+        NODE_ENV: "production",
+        PORT: 3000,
+      },
+      error_file: "./logs/err.log",
+      out_file: "./logs/out.log",
+      log_file: "./logs/combined.log",
+      time: true,
     },
-    error_file: './logs/err.log',
-    out_file: './logs/out.log',
-    log_file: './logs/combined.log',
-    time: true
-  }]
+  ],
 };
 ```
 
 起動:
+
 ```bash
 pm2 start ecosystem.config.js
 ```
@@ -424,7 +432,7 @@ pm2 start ecosystem.config.js
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -692,6 +700,7 @@ redis-cli INFO stats
 ## サポート
 
 問題が発生した場合:
+
 1. ログを確認 (`/logs` または `pm2 logs`)
 2. ヘルスチェックを実行
 3. GitHub Issuesで報告
