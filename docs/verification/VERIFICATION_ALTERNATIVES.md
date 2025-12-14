@@ -1,4 +1,3 @@
-
 # 検証スクリプト代替方法
 
 PowerShell履歴のUnicodeエラーを回避するため、3つの代替検証スクリプトを用意しました。
@@ -19,17 +18,20 @@ System.Text.EncoderFallbackException:
 ### 1. ⭐ verify-simple.bat (推奨)
 
 **特徴**:
+
 - cmd.exeベースのバッチファイル
 - PowerShellを最小限使用(履歴に残らない短いコマンドのみ)
 - Windows標準機能のみで動作
 - 絵文字なし、シンプルな出力
 
 **使い方**:
+
 ```cmd
 verify-simple.bat
 ```
 
 **出力例**:
+
 ```
 ========================================
    SIMPLE SERVICE VERIFICATION
@@ -54,20 +56,24 @@ verify-simple.bat
 ### 2. 🌐 verify-curl.bat
 
 **特徴**:
+
 - curlを使用したHTTPベースの検証
 - より正確なHTTPステータスコードチェック
 - JSONレスポンスを直接確認可能
 
 **前提条件**:
+
 - Windows 10 1803以降(curl標準搭載)
 - または手動でcurlをインストール
 
 **使い方**:
+
 ```cmd
 verify-curl.bat
 ```
 
 **出力例**:
+
 ```
 ========================================
    CURL-BASED SERVICE VERIFICATION
@@ -97,21 +103,25 @@ Using curl for HTTP checks...
 ### 3. 🐧 verify-wsl.sh (Linux環境)
 
 **特徴**:
+
 - WSL(Windows Subsystem for Linux)で実行
 - Bashスクリプト
 - カラー出力対応
 - 最も高速
 
 **前提条件**:
+
 - WSLがインストール済み
 - Ubuntu/Debian等のLinuxディストリビューション
 
 **WSLインストール**:
+
 ```powershell
 wsl --install
 ```
 
 **使い方**:
+
 ```bash
 # WSL環境で実行
 cd /mnt/c/Users/hosih/elysia-ai
@@ -122,6 +132,7 @@ wsl bash verify-wsl.sh
 ```
 
 **出力例**:
+
 ```
 ========================================
    WSL SERVICE VERIFICATION
@@ -141,12 +152,12 @@ wsl bash verify-wsl.sh
 
 ## 比較表
 
-| スクリプト | 環境 | 速度 | 追加要件 | おすすめ度 |
-|-----------|------|------|----------|-----------|
-| verify-simple.bat | cmd | 普通 | なし | ⭐⭐⭐⭐⭐ |
-| verify-curl.bat | cmd + curl | 速い | curl | ⭐⭐⭐⭐ |
-| verify-wsl.sh | WSL/Linux | 最速 | WSL | ⭐⭐⭐ |
-| verify-services.ps1 | PowerShell | 普通 | なし | ⭐⭐ (履歴エラー) |
+| スクリプト          | 環境       | 速度 | 追加要件 | おすすめ度        |
+| ------------------- | ---------- | ---- | -------- | ----------------- |
+| verify-simple.bat   | cmd        | 普通 | なし     | ⭐⭐⭐⭐⭐        |
+| verify-curl.bat     | cmd + curl | 速い | curl     | ⭐⭐⭐⭐          |
+| verify-wsl.sh       | WSL/Linux  | 最速 | WSL      | ⭐⭐⭐            |
+| verify-services.ps1 | PowerShell | 普通 | なし     | ⭐⭐ (履歴エラー) |
 
 ## PowerShell 7 (pwsh) による完全な解決
 
@@ -173,6 +184,7 @@ pwsh
 ```
 
 **利点**:
+
 - ✅ UTF-8がデフォルト(絵文字対応)
 - ✅ より高速
 - ✅ クロスプラットフォーム対応
@@ -183,6 +195,7 @@ pwsh
 ### タスクスケジューラで定期実行
 
 **verify-simple.bat を使用**:
+
 ```cmd
 # タスクスケジューラを開く
 taskschd.msc
@@ -195,6 +208,7 @@ taskschd.msc
 ### Windows Terminalで簡単起動
 
 **プロファイルに追加**:
+
 ```json
 {
   "name": "Service Verification",

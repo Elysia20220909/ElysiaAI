@@ -10,6 +10,7 @@ Elysia AIプロジェクトにPrisma 7を統合し、SQLiteデータベース永
 ## ✅ 実装済み機能
 
 ### 1. スキーマ定義
+
 - **ファイル**: `prisma/schema.prisma`
 - **テーブル数**: 7個
 - **レコード数**: ユーザー、チャットセッション、メッセージ、フィードバック、ナレッジベース、リフレッシュトークン、ボイスログ
@@ -25,6 +26,7 @@ voice_logs         - 音声ログ
 ```
 
 ### 2. データベースユーティリティ
+
 - **ファイル**: `src/lib/database-utils.ts`
 - **機能**:
   - ユーザー作成・認証
@@ -36,13 +38,7 @@ voice_logs         - 音声ログ
 
 ```typescript
 // 使用例
-import { 
-  createUser, 
-  authenticateUser, 
-  createChatSession,
-  saveMessage,
-  saveFeedback
-} from "@/lib/database-utils";
+import { createUser, authenticateUser, createChatSession, saveMessage, saveFeedback } from "@/lib/database-utils";
 
 // ユーザー作成
 const user = await createUser("username", "password");
@@ -59,6 +55,7 @@ await saveFeedback("質問", "回答", "up");
 ```
 
 ### 3. Prisma初期化スクリプト
+
 - **ファイル**: `src/lib/prisma-init.ts`
 - **機能**:
   - データベース接続確認
@@ -66,6 +63,7 @@ await saveFeedback("質問", "回答", "up");
   - テーブル統計情報
 
 ### 4. マイグレーション管理
+
 - **ファイル**: `scripts/prisma-migrate.ts`
 - **開発環境**: `prisma migrate dev`
 - **本番環境**: `prisma migrate deploy`
@@ -113,21 +111,25 @@ bun test tests/prisma-integration.test.ts
 ## 📊 テストケース
 
 ### ユーザー管理テスト
+
 - ✅ ユーザー作成
 - ✅ ユーザー認証（成功）
 - ✅ ユーザー認証（失敗）
 
 ### チャット機能テスト
+
 - ✅ セッション作成
 - ✅ メッセージ保存
 - ✅ 複数メッセージ保存
 
 ### フィードバック管理テスト
+
 - ✅ ポジティブ評価保存
 - ✅ ネガティブ評価保存
 - ✅ 統計情報取得
 
 ### データベースヘルスチェック
+
 - ✅ 接続確認
 - ✅ テーブル確認
 
@@ -242,15 +244,18 @@ CREATE TABLE feedbacks (
 ## 🔐 セキュリティ機能
 
 ### パスワードハッシング
+
 - ライブラリ: `bcryptjs`
 - アルゴリズム: bcrypt (salt rounds: 10)
 
 ### トークン管理
+
 - Refresh Token 実装
 - 自動リボケーション対応
 - 有効期限管理
 
 ### 認可機能
+
 - Role-Based Access Control (RBAC)
 - デフォルトロール: "user"
 - 拡張可能: "admin", "moderator" など
@@ -258,6 +263,7 @@ CREATE TABLE feedbacks (
 ## 📈 パフォーマンス
 
 ### インデックス
+
 - `users.username` - ユニークインデックス
 - `users.id` - プライマリキー
 - `chat_sessions.userId` - 外部キーインデックス
@@ -269,6 +275,7 @@ CREATE TABLE feedbacks (
 - `voice_logs.createdAt` - 時系列用
 
 ### クエリ最適化
+
 - 自動的にincludeでリレーション取得
 - ページネーション対応
 - 統計クエリの効率化
@@ -313,14 +320,14 @@ CMD ["bun", "run", "dev"]
 
 ## ✨ 完成度スコア
 
-| 項目 | 進捗 | 詳細 |
-|------|------|------|
-| スキーマ定義 | ✅ 100% | 7テーブル完成 |
-| ユーティリティ | ✅ 100% | 全機能実装 |
-| テスト | ✅ 80% | 主要機能テスト済み |
-| ドキュメント | ✅ 100% | 完全に文書化 |
-| 本番対応 | ✅ 90% | PostgreSQL移行可能 |
-| **総合** | **✅ 95%** | **実装・検証完了** |
+| 項目           | 進捗       | 詳細               |
+| -------------- | ---------- | ------------------ |
+| スキーマ定義   | ✅ 100%    | 7テーブル完成      |
+| ユーティリティ | ✅ 100%    | 全機能実装         |
+| テスト         | ✅ 80%     | 主要機能テスト済み |
+| ドキュメント   | ✅ 100%    | 完全に文書化       |
+| 本番対応       | ✅ 90%     | PostgreSQL移行可能 |
+| **総合**       | **✅ 95%** | **実装・検証完了** |
 
 ---
 

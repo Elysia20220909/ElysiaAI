@@ -87,10 +87,7 @@ export default function IndexScreen() {
 					assistantContent += chunk;
 
 					// Update assistant message in real-time
-					setMessages([
-						...newMessages,
-						{ role: "assistant", content: assistantContent },
-					]);
+					setMessages([...newMessages, { role: "assistant", content: assistantContent }]);
 				}
 			}
 
@@ -130,19 +127,12 @@ export default function IndexScreen() {
 						<Text style={styles.settingsHint}>
 							ヒント: コンピューターのローカルIPアドレスを使用してください。
 							{"\n"}
-							`ipconfig` (Windows) または `ifconfig` (Mac/Linux)
-							で確認できます。
+							`ipconfig` (Windows) または `ifconfig` (Mac/Linux) で確認できます。
 						</Text>
-						<TouchableOpacity
-							style={styles.saveButton}
-							onPress={() => saveApiUrl(apiUrl)}
-						>
+						<TouchableOpacity style={styles.saveButton} onPress={() => saveApiUrl(apiUrl)}>
 							<Text style={styles.saveButtonText}>保存して閉じる</Text>
 						</TouchableOpacity>
-						<TouchableOpacity
-							style={styles.cancelButton}
-							onPress={() => setShowSettings(false)}
-						>
+						<TouchableOpacity style={styles.cancelButton} onPress={() => setShowSettings(false)}>
 							<Text style={styles.cancelButtonText}>キャンセル</Text>
 						</TouchableOpacity>
 					</View>
@@ -162,9 +152,7 @@ export default function IndexScreen() {
 					ref={scrollViewRef}
 					style={styles.messagesContainer}
 					contentContainerStyle={styles.messagesContent}
-					onContentSizeChange={() =>
-						scrollViewRef.current?.scrollToEnd({ animated: true })
-					}
+					onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
 				>
 					{messages.length === 0 && (
 						<View style={styles.welcomeContainer}>
@@ -180,9 +168,7 @@ export default function IndexScreen() {
 							key={`${msg.role}-${idx}-${msg.content.slice(0, 20)}`}
 							style={[
 								styles.messageBubble,
-								msg.role === "user"
-									? styles.userBubble
-									: styles.assistantBubble,
+								msg.role === "user" ? styles.userBubble : styles.assistantBubble,
 							]}
 						>
 							<Text style={styles.messageText}>{msg.content}</Text>
@@ -197,10 +183,7 @@ export default function IndexScreen() {
 				</ScrollView>
 
 				<View style={styles.inputContainer}>
-					<TouchableOpacity
-						style={styles.settingsIconButton}
-						onPress={() => setShowSettings(true)}
-					>
+					<TouchableOpacity style={styles.settingsIconButton} onPress={() => setShowSettings(true)}>
 						<Text style={styles.settingsIcon}>⚙️</Text>
 					</TouchableOpacity>
 					<TextInput

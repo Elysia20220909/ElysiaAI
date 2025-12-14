@@ -20,10 +20,10 @@
 ```javascript
 const utter = new SpeechSynthesisUtterance(text);
 utter.voice = elysiaVoice;
-utter.rate = 0.88;   // ゆっくり甘え声♡
-utter.pitch = 1.35;  // 高めで可愛く♡
+utter.rate = 0.88; // ゆっくり甘え声♡
+utter.pitch = 1.35; // 高めで可愛く♡
 utter.volume = 1.0;
-utter.lang = 'ja-JP';
+utter.lang = "ja-JP";
 ```
 
 ### ボイス選択ロジック
@@ -48,7 +48,7 @@ utter.lang = 'ja-JP';
 #### ボイス速度調整
 
 ```javascript
-utter.rate = 0.88;  // 0.1〜10.0（デフォルト: 1.0）
+utter.rate = 0.88; // 0.1〜10.0（デフォルト: 1.0）
 // 0.85: ゆっくり甘々
 // 0.88: 現在の設定（推奨）
 // 1.0: 通常速度
@@ -57,7 +57,7 @@ utter.rate = 0.88;  // 0.1〜10.0（デフォルト: 1.0）
 #### ピッチ調整
 
 ```javascript
-utter.pitch = 1.35;  // 0.0〜2.0（デフォルト: 1.0）
+utter.pitch = 1.35; // 0.0〜2.0（デフォルト: 1.0）
 // 1.2: 少し高め
 // 1.35: 現在の設定（可愛い♡）
 // 1.5: 天使級♡
@@ -66,7 +66,7 @@ utter.pitch = 1.35;  // 0.0〜2.0（デフォルト: 1.0）
 #### 音量調整
 
 ```javascript
-utter.volume = 1.0;  // 0.0〜1.0（デフォルト: 1.0）
+utter.volume = 1.0; // 0.0〜1.0（デフォルト: 1.0）
 ```
 
 ---
@@ -76,28 +76,23 @@ utter.volume = 1.0;  // 0.0〜1.0（デフォルト: 1.0）
 ### 超甘々設定（おすすめ♡）
 
 ```javascript
-utter.rate = 0.85;   // もっとゆっくり
-utter.pitch = 1.5;   // もっと高く
+utter.rate = 0.85; // もっとゆっくり
+utter.pitch = 1.5; // もっと高く
 utter.volume = 1.0;
 
 // 加工強化
-speakText = text
-    .replace(/！/g, '〜♡♡♡')
-    .replace(/。/g, 'だよぉ〜♡')
-    .replace(/？/g, 'なのかなぁ〜？♡')
-    .replace(/ね/g, 'ねぇ〜♡')
-    .replace(/よ/g, 'よぉ〜♡');
+speakText = text.replace(/！/g, "〜♡♡♡").replace(/。/g, "だよぉ〜♡").replace(/？/g, "なのかなぁ〜？♡").replace(/ね/g, "ねぇ〜♡").replace(/よ/g, "よぉ〜♡");
 ```
 
 ### クールモード（普通のエリシアちゃん）
 
 ```javascript
-utter.rate = 1.0;    // 通常速度
-utter.pitch = 1.1;   // 少し高め
+utter.rate = 1.0; // 通常速度
+utter.pitch = 1.1; // 少し高め
 utter.volume = 0.9;
 
 // 加工なし
-elysiaSpeak(text, false);  // cute = false
+elysiaSpeak(text, false); // cute = false
 ```
 
 ---
@@ -134,17 +129,15 @@ elysiaSpeak(text, false);  // cute = false
 
 ```javascript
 // ブラウザコンソールで実行
-speechSynthesis.getVoices().forEach(v => 
-    console.log(v.name, v.lang)
-);
+speechSynthesis.getVoices().forEach((v) => console.log(v.name, v.lang));
 ```
 
 #### 2. 手動ボイステスト
 
 ```javascript
 // ブラウザコンソールで実行
-const utter = new SpeechSynthesisUtterance('テスト');
-utter.lang = 'ja-JP';
+const utter = new SpeechSynthesisUtterance("テスト");
+utter.lang = "ja-JP";
 speechSynthesis.speak(utter);
 ```
 
@@ -165,17 +158,17 @@ speechSynthesis.speak(utter);
 ```javascript
 // タイムアウト調整
 setTimeout(() => {
-    elysiaSpeak(text, true);
-}, 500);  // 300ms → 500ms に変更
+  elysiaSpeak(text, true);
+}, 500); // 300ms → 500ms に変更
 ```
 
 ### 音声が早すぎる/遅すぎる場合
 
 ```javascript
 // rate 調整
-utter.rate = 0.8;   // もっと遅く
-utter.rate = 1.0;   // 普通
-utter.rate = 1.2;   // 少し早く
+utter.rate = 0.8; // もっと遅く
+utter.rate = 1.0; // 普通
+utter.rate = 1.2; // 少し早く
 ```
 
 ---
@@ -189,7 +182,7 @@ utter.rate = 1.2;   // 少し早く
 voicevox_engine --host 127.0.0.1 --port 50021
 
 # JavaScript から呼び出し
-const response = await fetch('http://127.0.0.1:50021/audio_query?text=' + 
+const response = await fetch('http://127.0.0.1:50021/audio_query?text=' +
     encodeURIComponent(text) + '&speaker=8');  // 四国めたん = 井上麻里奈風
 const audioQuery = await response.json();
 const audioResponse = await fetch('http://127.0.0.1:50021/synthesis?speaker=8', {
@@ -223,20 +216,20 @@ utter.pitch = 1.3;
 ```javascript
 const voiceLogs = [];
 function elysiaSpeak(text, cute = true) {
-    // ... 既存コード ...
-    voiceLogs.push({
-        timestamp: new Date().toISOString(),
-        text: speakText,
-        settings: { rate: utter.rate, pitch: utter.pitch }
-    });
-    localStorage.setItem('elysia_voice_logs', JSON.stringify(voiceLogs));
+  // ... 既存コード ...
+  voiceLogs.push({
+    timestamp: new Date().toISOString(),
+    text: speakText,
+    settings: { rate: utter.rate, pitch: utter.pitch },
+  });
+  localStorage.setItem("elysia_voice_logs", JSON.stringify(voiceLogs));
 }
 ```
 
 ### 4. ユーザー名呼び
 
 ```javascript
-const userName = localStorage.getItem('user_name') || 'おにいちゃん';
+const userName = localStorage.getItem("user_name") || "おにいちゃん";
 speakText = text.replace(/おにいちゃん/g, userName);
 ```
 

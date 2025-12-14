@@ -9,8 +9,7 @@ import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
-const DB_PATH =
-	process.env.DATABASE_URL?.replace("file:", "") || "./prisma/dev.db";
+const DB_PATH = process.env.DATABASE_URL?.replace("file:", "") || "./prisma/dev.db";
 
 console.log("SQLite database setup started...\n");
 console.log(`Database path: ${DB_PATH}\n`);

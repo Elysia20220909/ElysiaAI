@@ -1,4 +1,5 @@
 # Copilot Instructions for Elysia AI
+
 - **Architecture map**: Primary gateway is `src/index.ts` (Bun + Elysia) with JWT auth, Redis rate limiting, telemetry, audit logging, and SSE; legacy server lives in `src/server.ts` (not used).
 - **AI backend**: `python/fastapi_server.py` provides RAG and chat; embeds Elysia quote set with SentenceTransformers, optional Milvus via `USE_MILVUS`, and calls Ollama (`OLLAMA_HOST`, model `OLLAMA_MODEL`) with streaming SSE.
 - **Data flow**: Client → Elysia routes → optional Redis (rate limit/session) → FastAPI RAG (`DATABASE_CONFIG.RAG_API_URL`) and Ollama → responses streamed back; JSONL records in `data/` for feedback/knowledge/voice logs.

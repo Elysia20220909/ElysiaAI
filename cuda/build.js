@@ -9,9 +9,7 @@ try {
 	execSync("nvcc --version", { stdio: "inherit" });
 } catch {
 	console.warn("⚠️  CUDA toolkit not found. Skipping CUDA build.");
-	console.warn(
-		"   Install CUDA from: https://developer.nvidia.com/cuda-downloads",
-	);
+	console.warn("   Install CUDA from: https://developer.nvidia.com/cuda-downloads");
 	process.exit(0);
 }
 
@@ -39,7 +37,7 @@ try {
 	execSync(
 		`nvcc -c "${path.join(srcDir, "similarity.cu")}" ` +
 			`-o "${path.join(buildDir, "similarity.obj")}" ` +
-			`-arch=sm_75 -O3`,
+			"-arch=sm_75 -O3",
 		{ stdio: "inherit" },
 	);
 

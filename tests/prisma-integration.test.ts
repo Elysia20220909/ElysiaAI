@@ -78,22 +78,12 @@ describe("Prisma Database Integration Tests", () => {
 	// ========== フィードバック機能テスト ==========
 
 	it("フィードバック: ポジティブ評価を保存", async () => {
-		const feedback = await saveFeedback(
-			"エリシアって？",
-			"AIキャラクターです",
-			"up",
-		);
+		const feedback = await saveFeedback("エリシアって？", "AIキャラクターです", "up");
 		expect(feedback.rating).toBe("up");
 	});
 
 	it("フィードバック: ネガティブ評価を保存", async () => {
-		const feedback = await saveFeedback(
-			"質問",
-			"回答",
-			"down",
-			undefined,
-			"不正確",
-		);
+		const feedback = await saveFeedback("質問", "回答", "down", undefined, "不正確");
 		expect(feedback.rating).toBe("down");
 		expect(feedback.reason).toBe("不正確");
 	});

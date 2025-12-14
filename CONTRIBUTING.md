@@ -35,6 +35,7 @@
 ### 🚀 プルリクエスト
 
 1. **Forkしてブランチを作成**
+
    ```bash
    git checkout -b feature/amazing-feature
    ```
@@ -45,10 +46,11 @@
    - ドキュメントを更新
 
 3. **コミット**
+
    ```bash
    git commit -m "feat: add amazing feature"
    ```
-   
+
    コミットメッセージは [Conventional Commits](https://www.conventionalcommits.org/) に従ってください：
    - `feat:` 新機能
    - `fix:` バグ修正
@@ -60,6 +62,7 @@
    - `chore:` ビルドプロセスやツールの変更
 
 4. **プッシュ**
+
    ```bash
    git push origin feature/amazing-feature
    ```

@@ -28,6 +28,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -101,12 +102,14 @@ Authorization: Bearer <access_token>
 ```
 
 **Parameters:**
+
 - `query` (string, required): Original user query
 - `answer` (string, required): AI's answer
 - `rating` (string, required): "up" or "down"
 - `reason` (string, optional): Feedback reason
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -134,12 +137,14 @@ Authorization: Bearer <access_token>
 ```
 
 **Parameters:**
+
 - `summary` (string, required): Knowledge summary
 - `sourceUrl` (string, optional): Source URL
 - `tags` (array, optional): Tags for categorization
 - `confidence` (number, optional): Confidence score (0-1)
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -157,9 +162,11 @@ Authorization: Bearer <access_token>
 ```
 
 **Query Parameters:**
+
 - `n` (number, optional): Number of recent entries to retrieve (default: 20, max: 100)
 
 **Response:**
+
 ```json
 {
   "entries": [
@@ -184,9 +191,11 @@ GET /voice-logs?n=10
 ```
 
 **Query Parameters:**
+
 - `n` (number, optional): Number of recent logs (default: 10, max: 100)
 
 **Response:**
+
 ```json
 {
   "logs": [
@@ -208,6 +217,7 @@ GET /health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "ok",
@@ -281,12 +291,12 @@ http_request_duration_seconds_bucket{le="0.1"} 100
 
 ## Rate Limits
 
-| Endpoint | Limit | Window |
-|----------|-------|--------|
-| `/elysia-love` | 20 requests | 60 seconds |
-| `/feedback` | 10 requests | 60 seconds |
-| `/knowledge/upsert` | 30 requests | 60 seconds |
-| `/auth/token` | 5 requests | 300 seconds |
+| Endpoint            | Limit       | Window      |
+| ------------------- | ----------- | ----------- |
+| `/elysia-love`      | 20 requests | 60 seconds  |
+| `/feedback`         | 10 requests | 60 seconds  |
+| `/knowledge/upsert` | 30 requests | 60 seconds  |
+| `/auth/token`       | 5 requests  | 300 seconds |
 
 ## Webhooks
 
@@ -320,21 +330,18 @@ Content-Type: application/json
 
 ```typescript
 // Authentication
-const response = await fetch('http://localhost:3000/auth/token', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("http://localhost:3000/auth/token", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    username: 'elysia',
-    password: 'your-password'
-  })
+    username: "elysia",
+    password: "your-password",
+  }),
 });
 const { accessToken } = await response.json();
 
 // Chat with SSE
-const eventSource = new EventSource(
-  'http://localhost:3000/elysia-love?' + 
-  new URLSearchParams({ message: 'Hello', userName: 'User' })
-);
+const eventSource = new EventSource("http://localhost:3000/elysia-love?" + new URLSearchParams({ message: "Hello", userName: "User" }));
 
 eventSource.onmessage = (event) => {
   const data = JSON.parse(event.data);
@@ -346,17 +353,17 @@ eventSource.onmessage = (event) => {
 };
 
 // Submit feedback
-await fetch('http://localhost:3000/feedback', {
-  method: 'POST',
+await fetch("http://localhost:3000/feedback", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${accessToken}`
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`,
   },
   body: JSON.stringify({
-    query: 'test query',
-    answer: 'test answer',
-    rating: 'up'
-  })
+    query: "test query",
+    answer: "test answer",
+    rating: "up",
+  }),
 });
 ```
 

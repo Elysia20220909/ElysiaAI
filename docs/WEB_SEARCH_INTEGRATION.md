@@ -3,9 +3,11 @@
 ## 実装内容
 
 ### 1. Web検索ライブラリ (`src/lib/web-search.ts`)
+
 インターネットから情報を取得する包括的な検索機能を実装しました。
 
 **機能:**
+
 - **Wikipedia検索**: 日本語Wikipediaから概要を取得
 - **天気情報**: Open-Meteo API経由で日本の主要10都市の天気を取得
 - **ニュース**: NHKニュースのRSSフィードから最新ニュースを取得
@@ -16,20 +18,24 @@
 東京、大阪、名古屋、札幌、福岡、京都、神戸、横浜、仙台、広島
 
 **ニュースカテゴリ:**
+
 - general: 一般ニュース
 - technology: 技術ニュース
 - sports: スポーツニュース
 - culture: 文化ニュース
 
 ### 2. カジュアルチャット連携 (`src/lib/casual-chat.ts`)
+
 日常会話機能にWeb検索を統合しました。
 
 **変更点:**
+
 - `generateCasualResponse()` を async 関数に変更
 - `needsWebSearch()` で検索が必要か自動判定
 - 検索結果を会話形式で返す `formatSearchResultForChat()`
 
 **検索トリガーキーワード:**
+
 - 天気、気温、ニュース、最新、今日、現在
 - what is, who is, when, where
 - について、とは、って何、教えて
@@ -37,14 +43,13 @@
 ### 3. API統合 (`src/index.ts`)
 
 **カジュアルモードでの自動検索:**
+
 ```typescript
 // カジュアルモードの場合、Web検索を試行
 if (mode === "casual" && body.messages.length > 0) {
   const lastUserMessage = body.messages[body.messages.length - 1];
   if (lastUserMessage.role === "user") {
-    const casualResponse = await casualChat.generateCasualResponse(
-      lastUserMessage.content,
-    );
+    const casualResponse = await casualChat.generateCasualResponse(lastUserMessage.content);
     if (casualResponse) {
       enhancedSystemPrompt += `\n\n参考情報: ${casualResponse}`;
     }
@@ -53,14 +58,17 @@ if (mode === "casual" && body.messages.length > 0) {
 ```
 
 **新しいAPIエンドポイント:**
+
 ```
 GET /api/search?q=検索クエリ
 ```
 
 ### 4. テストファイル (`test-web-search.ts`)
+
 全ての検索機能をテストするスクリプトを作成しました。
 
 **テスト内容:**
+
 1. Wikipedia検索 (人工知能)
 2. 天気情報 (東京)
 3. 最新ニュース
@@ -70,6 +78,7 @@ GET /api/search?q=検索クエリ
 ## 使用方法
 
 ### カジュアルモードで使用
+
 ```bash
 curl -X POST http://localhost:3000/elysia-love \
   -H "Content-Type: application/json" \
@@ -83,11 +92,13 @@ curl -X POST http://localhost:3000/elysia-love \
 ```
 
 ### 直接検索API使用
+
 ```bash
 curl "http://localhost:3000/api/search?q=今日の天気"
 ```
 
 ### テスト実行
+
 ```bash
 bun run test-web-search.ts
 ```
@@ -124,15 +135,18 @@ bun run test-web-search.ts
 ## 技術仕様
 
 ### 外部API
+
 - **Wikipedia API**: https://ja.wikipedia.org/w/api.php
 - **Open-Meteo API**: https://api.open-meteo.com (無料、登録不要)
 - **NHKニュースRSS**: https://www.nhk.or.jp/rss/
 - **DuckDuckGo API**: https://api.duckduckgo.com
 
 ### タイムアウト設定
+
 全ての外部API呼び出しに10秒のタイムアウトを設定しています。
 
 ### エラーハンドリング
+
 - ネットワークエラー: コンソールログに記録し、null/空配列を返す
 - タイムアウト: 自動的にフォールバック
 - API利用不可: 他の検索方法を試行

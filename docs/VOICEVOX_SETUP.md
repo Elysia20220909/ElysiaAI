@@ -135,7 +135,7 @@ VOICEVOX_SPEAKER = 6
 
 ```javascript
 // public/index.html の 308行目あたり
-const VOICEVOX_SPEAKER = 2;  // ← ここを変更
+const VOICEVOX_SPEAKER = 2; // ← ここを変更
 
 // スピーカーID一覧:
 // 0: 四国めたん（あまあま）
@@ -157,32 +157,32 @@ const VOICEVOX_SPEAKER = 2;  // ← ここを変更
 
 ```javascript
 function getEmotionSettings(emotion) {
-    const settings = {
-        // 喜び：早めで高い♡
-        happy: { 
-            rate: 1.0,          // Web Speech速度
-            pitch: 1.5,         // Web Speechピッチ
-            speedScale: 1.1,    // VOICEVOX速度
-            pitchScale: 0.15    // VOICEVOXピッチ
-        },
-        
-        // 照れ：ゆっくりで少し高い♡
-        shy: { 
-            rate: 0.8, 
-            pitch: 1.4, 
-            speedScale: 0.9, 
-            pitchScale: 0.12 
-        },
-        
-        // 普通：デフォルト♡
-        normal: { 
-            rate: 0.88, 
-            pitch: 1.35, 
-            speedScale: 1.0, 
-            pitchScale: 0.0 
-        }
-    };
-    return settings[emotion] || settings.normal;
+  const settings = {
+    // 喜び：早めで高い♡
+    happy: {
+      rate: 1.0, // Web Speech速度
+      pitch: 1.5, // Web Speechピッチ
+      speedScale: 1.1, // VOICEVOX速度
+      pitchScale: 0.15, // VOICEVOXピッチ
+    },
+
+    // 照れ：ゆっくりで少し高い♡
+    shy: {
+      rate: 0.8,
+      pitch: 1.4,
+      speedScale: 0.9,
+      pitchScale: 0.12,
+    },
+
+    // 普通：デフォルト♡
+    normal: {
+      rate: 0.88,
+      pitch: 1.35,
+      speedScale: 1.0,
+      pitchScale: 0.0,
+    },
+  };
+  return settings[emotion] || settings.normal;
 }
 ```
 
@@ -263,16 +263,16 @@ voicevox_engine.exe --cors_policy_mode all
 ```javascript
 // ブラウザコンソールで実行
 async function testVV() {
-    const r1 = await fetch('http://127.0.0.1:50021/audio_query?text=テスト&speaker=2', {method: 'POST'});
-    const q = await r1.json();
-    const r2 = await fetch('http://127.0.0.1:50021/synthesis?speaker=2', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(q)
-    });
-    const blob = await r2.blob();
-    const audio = new Audio(URL.createObjectURL(blob));
-    audio.play();
+  const r1 = await fetch("http://127.0.0.1:50021/audio_query?text=テスト&speaker=2", { method: "POST" });
+  const q = await r1.json();
+  const r2 = await fetch("http://127.0.0.1:50021/synthesis?speaker=2", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(q),
+  });
+  const blob = await r2.blob();
+  const audio = new Audio(URL.createObjectURL(blob));
+  audio.play();
 }
 testVV();
 ```
@@ -303,13 +303,13 @@ VOICEVOX設定
 
 ## 📊 性能比較
 
-| 項目 | Web Speech API | VOICEVOX |
-|------|----------------|----------|
-| **音質** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **速度** | 即座（<100ms） | やや遅い（0.5〜1s） |
-| **リソース** | 軽量 | 中〜重量 |
-| **感情表現** | 限定的 | 自由自在 |
-| **エリシア再現度** | 70% | **98%♡** |
+| 項目               | Web Speech API | VOICEVOX            |
+| ------------------ | -------------- | ------------------- |
+| **音質**           | ⭐⭐⭐         | ⭐⭐⭐⭐⭐          |
+| **速度**           | 即座（<100ms） | やや遅い（0.5〜1s） |
+| **リソース**       | 軽量           | 中〜重量            |
+| **感情表現**       | 限定的         | 自由自在            |
+| **エリシア再現度** | 70%            | **98%♡**            |
 
 ---
 
@@ -346,9 +346,9 @@ shy: { rate: 0.75, pitch: 1.45 }    // 照れ強調
 ```javascript
 // 四国めたん + ずんだもん でハイブリッド♡
 async function blendVoices(text) {
-    const audio1 = await synthesize(text, 2);  // めたん
-    const audio2 = await synthesize(text, 8);  // ずんだもん
-    // Web Audio APIでミックス
+  const audio1 = await synthesize(text, 2); // めたん
+  const audio2 = await synthesize(text, 8); // ずんだもん
+  // Web Audio APIでミックス
 }
 ```
 
@@ -356,10 +356,10 @@ async function blendVoices(text) {
 
 ```javascript
 // テキスト解析で1文ごとに感情変化
-const sentences = text.split('。');
+const sentences = text.split("。");
 for (const s of sentences) {
-    const emotion = detectEmotion(s);
-    await elysiaSpeak(s, true, emotion);
+  const emotion = detectEmotion(s);
+  await elysiaSpeak(s, true, emotion);
 }
 ```
 
@@ -397,7 +397,6 @@ VOICEVOX関連の質問:
 - **公式Discord**: [https://discord.gg/voicevox](https://discord.gg/voicevox)
 - **GitHub Issues**: [VOICEVOX Issue Tracker](https://github.com/VOICEVOX/voicevox/issues)
 - **エリシアAI Issues**: [ElysiaJS](https://github.com/chloeamethyst/ElysiaJS/issues)
-
 
 ---
 

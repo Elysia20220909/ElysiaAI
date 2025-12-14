@@ -5,6 +5,7 @@
 ### 1. UI/UXカスタマイズ機能
 
 #### プロンプトテンプレート
+
 - **6つのデフォルトテンプレート**
   - 甘々デフォルト / 甘々テンション高め
   - 通常デフォルト / 通常フレンドリー
@@ -16,6 +17,7 @@ curl http://localhost:3000/customization/templates
 ```
 
 #### テーマ設定
+
 - **4つのプリセットテーマ**
   - ピンク可愛い (デフォルト)
   - ブループロフェッショナル
@@ -28,6 +30,7 @@ curl http://localhost:3000/customization/themes
 ```
 
 #### チャットモード
+
 - **5つのモード**
   - 💕 甘々モード (temperature: 0.8)
   - 💬 通常モード (temperature: 0.7)
@@ -41,6 +44,7 @@ curl http://localhost:3000/customization/modes
 ```
 
 #### エクスポート形式
+
 - JSON / Markdown / TXT / HTML
 
 ```bash
@@ -51,6 +55,7 @@ curl http://localhost:3000/customization/export-formats
 ### 2. セキュリティ強化機能
 
 #### 入力サニタイゼーション
+
 - **XSS対策**: HTMLエスケープ (`escapeHtml`)
 - **SQLインジェクション対策**: 危険文字除去 (`sanitizeSqlInput`)
 - **パストラバーサル対策**: ディレクトリ遡り防止 (`sanitizeFilePath`)
@@ -63,6 +68,7 @@ const safe = escapeHtml(userInput);
 ```
 
 #### レート制限
+
 - **メモリベースのレート制限** (本番ではRedis推奨)
 - デフォルト: 100リクエスト/分
 
@@ -71,7 +77,7 @@ import { checkRateLimit } from "./lib/security";
 
 const result = checkRateLimit(userId, {
   maxRequests: 50,
-  windowMs: 60000
+  windowMs: 60000,
 });
 
 if (!result.allowed) {
@@ -80,6 +86,7 @@ if (!result.allowed) {
 ```
 
 #### セキュリティヘッダー
+
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
 - `X-XSS-Protection: 1; mode=block`
@@ -158,7 +165,7 @@ app.post("/api/sensitive", async ({ request }) => {
 // すべてのレスポンスにセキュリティヘッダーを追加
 const headers = {
   ...getSecurityHeaders(),
-  "Content-Type": "application/json"
+  "Content-Type": "application/json",
 };
 
 return new Response(data, { headers });
@@ -173,6 +180,7 @@ return new Response(data, { headers });
 **推奨度**: ★★★★★
 
 #### 手順:
+
 1. GitHubリポジトリページを開く: https://github.com/chloeamethyst/ElysiaAI
 2. **Settings** タブをクリック
 3. 左サイドバーの **Collaborators** をクリック
@@ -182,6 +190,7 @@ return new Response(data, { headers });
 7. 「**Add to repository**」をクリックして招待送信
 
 #### 特徴:
+
 - ✅ 読み取り専用アクセス
 - ✅ リポジトリ全体へのアクセス
 - ✅ GitHub UIから簡単に管理可能
@@ -195,10 +204,12 @@ return new Response(data, { headers });
 ## 📁 実装ファイル
 
 ### 新規作成
+
 - `src/lib/customization.ts` - UI/UXカスタマイズ機能
 - `docs/CUSTOMIZATION_SECURITY_GUIDE.md` - このガイド
 
 ### 更新
+
 - `src/lib/security.ts` - セキュリティ機能追加
 - `src/index.ts` - カスタマイズAPIエンドポイント追加
 
@@ -232,11 +243,11 @@ bun test tests/security.test.ts
 ```javascript
 // desktop/index.html
 async function loadThemes() {
-  const themes = await fetch('/customization/themes').then(r => r.json());
-  const select = document.getElementById('theme-select');
+  const themes = await fetch("/customization/themes").then((r) => r.json());
+  const select = document.getElementById("theme-select");
 
-  themes.forEach(theme => {
-    const option = document.createElement('option');
+  themes.forEach((theme) => {
+    const option = document.createElement("option");
     option.value = theme.id;
     option.textContent = theme.name;
     select.appendChild(option);
@@ -244,8 +255,8 @@ async function loadThemes() {
 }
 
 function applyTheme(themeId) {
-  const theme = themes.find(t => t.id === themeId);
-  document.documentElement.style.setProperty('--color-primary', theme.colors.primary);
+  const theme = themes.find((t) => t.id === themeId);
+  document.documentElement.style.setProperty("--color-primary", theme.colors.primary);
   // ... 他の色も設定
 }
 ```

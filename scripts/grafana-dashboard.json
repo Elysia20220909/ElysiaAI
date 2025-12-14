@@ -6,19 +6,19 @@
       {
         "type": "graph",
         "title": "Request Rate",
-        "targets": [{"expr": "elysia_requests_total"}],
+        "targets": [{ "expr": "elysia_requests_total" }],
         "datasource": "Prometheus"
       },
       {
         "type": "graph",
         "title": "Error Rate",
-        "targets": [{"expr": "elysia_errors_total"}],
+        "targets": [{ "expr": "elysia_errors_total" }],
         "datasource": "Prometheus"
       },
       {
         "type": "graph",
         "title": "Active Connections",
-        "targets": [{"expr": "elysia_active_connections"}],
+        "targets": [{ "expr": "elysia_active_connections" }],
         "datasource": "Prometheus"
       }
     ]

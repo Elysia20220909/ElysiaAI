@@ -1,17 +1,17 @@
 {
-	"recommendations": [
-		"biomejs.biome",
-		"oven.bun-vscode",
-		"dbaeumer.vscode-eslint",
-		"ms-vscode.vscode-typescript-next",
-		"ms-python.python",
-		"ms-python.vscode-pylance",
-		"ms-python.debugpy",
-		"ms-azuretools.vscode-docker",
-		"eamodio.gitlens",
-		"esbenp.prettier-vscode",
-		"streetsidesoftware.code-spell-checker",
-		"wayou.vscode-todo-highlight",
-		"gruntfuggly.todo-tree"
-	]
+  "recommendations": [
+    "biomejs.biome",
+    "oven.bun-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode.vscode-typescript-next",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "ms-azuretools.vscode-docker",
+    "eamodio.gitlens",
+    "esbenp.prettier-vscode",
+    "streetsidesoftware.code-spell-checker",
+    "wayou.vscode-todo-highlight",
+    "gruntfuggly.todo-tree"
+  ]
 }

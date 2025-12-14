@@ -54,6 +54,7 @@
 ### 1. Frontend Layer
 
 #### Web UI (Alpine.js + htmx)
+
 - **Purpose**: Interactive web interface
 - **Technology**: Alpine.js for reactivity, htmx for server communication
 - **Features**:
@@ -63,11 +64,13 @@
   - Responsive layout
 
 #### Mobile App (React Native)
+
 - **Purpose**: Cross-platform mobile application
 - **Technology**: React Native, Expo
 - **Status**: In development
 
 #### Desktop App (Electron)
+
 - **Purpose**: Native desktop experience
 - **Technology**: Electron
 - **Status**: Basic implementation
@@ -75,6 +78,7 @@
 ### 2. API Gateway (Elysia)
 
 #### Core Responsibilities
+
 - **Request Routing**: Direct requests to appropriate services
 - **Security**: JWT authentication, input validation, XSS protection
 - **Rate Limiting**: Protect against abuse (Redis-backed or in-memory)
@@ -82,6 +86,7 @@
 - **Logging**: Request/response logging
 
 #### Key Plugins
+
 - `@elysiajs/cors`: CORS handling
 - `@elysiajs/static`: Static file serving
 - `@elysiajs/stream`: Server-sent events
@@ -90,6 +95,7 @@
 ### 3. Services
 
 #### Chat Service
+
 ```typescript
 ┌─────────────────────────────────────┐
 │         Chat Service Flow           │
@@ -104,11 +110,13 @@
 ```
 
 #### Authentication Service
+
 - **Token Management**: JWT access & refresh tokens
 - **Session Storage**: Redis (optional)
 - **Security**: Bcrypt password hashing, token rotation
 
 #### Data Service
+
 - **Feedback Collection**: User ratings and comments
 - **Knowledge Management**: CRUD operations for knowledge base
 - **Voice Logs**: Speech synthesis history
@@ -116,6 +124,7 @@
 ### 4. AI/ML Backend
 
 #### FastAPI RAG Service
+
 ```python
 ┌─────────────────────────────────────┐
 │     RAG Service Architecture        │
@@ -135,11 +144,13 @@
 ```
 
 **Key Components**:
+
 - **Milvus Lite**: Vector database for semantic search
 - **Sentence Transformers**: Text embedding
 - **FastAPI**: REST API framework
 
 #### Ollama LLM Service
+
 - **Model**: llama3.2
 - **Mode**: Streaming
 - **Integration**: Direct HTTP API calls
@@ -148,11 +159,13 @@
 ### 5. Storage Layer
 
 #### Redis (Optional)
+
 - **Rate Limiting**: Token bucket algorithm
 - **Session Management**: Refresh token storage
 - **Caching**: Frequently accessed data
 
 #### JSONL Files
+
 ```
 data/
 ├── feedback.jsonl       # User feedback
@@ -161,6 +174,7 @@ data/
 ```
 
 **Rotation Strategy**:
+
 - Size-based rotation (default: 50MB)
 - Automated via maintenance scripts
 - Numbered backups (e.g., `feedback.jsonl.1`)
@@ -311,6 +325,7 @@ User Input
 ## Deployment Architecture
 
 ### Development
+
 ```
 localhost:3000  (Elysia)
 localhost:8000  (FastAPI)
@@ -319,6 +334,7 @@ localhost:6379  (Redis)
 ```
 
 ### Production
+
 ```
 https://api.domain.com    (Elysia behind Nginx)
 https://rag.domain.com    (FastAPI)
@@ -327,14 +343,14 @@ Internal: Ollama + Redis + Milvus
 
 ## Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Runtime | Bun | Fast JavaScript runtime |
-| Framework | Elysia | Web framework |
-| Frontend | Alpine.js + htmx | Reactive UI |
-| AI Backend | FastAPI + Python | RAG service |
-| LLM | Ollama (llama3.2) | Language model |
-| Vector DB | Milvus Lite | Semantic search |
-| Cache | Redis | Rate limiting, sessions |
-| Monitoring | Prometheus + Grafana | Observability |
-| CI/CD | GitHub Actions | Automation |
+| Layer      | Technology           | Purpose                 |
+| ---------- | -------------------- | ----------------------- |
+| Runtime    | Bun                  | Fast JavaScript runtime |
+| Framework  | Elysia               | Web framework           |
+| Frontend   | Alpine.js + htmx     | Reactive UI             |
+| AI Backend | FastAPI + Python     | RAG service             |
+| LLM        | Ollama (llama3.2)    | Language model          |
+| Vector DB  | Milvus Lite          | Semantic search         |
+| Cache      | Redis                | Rate limiting, sessions |
+| Monitoring | Prometheus + Grafana | Observability           |
+| CI/CD      | GitHub Actions       | Automation              |

@@ -14,15 +14,15 @@
 ## ✨ これが Elysia AI
 
 ```typescript
-import { Elysia } from 'elysia'
+import { Elysia } from "elysia";
 
 new Elysia()
-  .get('/chat', async ({ query }) => {
+  .get("/chat", async ({ query }) => {
     // 型安全、自動検証、超高速 ⚡
-    const response = await ai.chat(query.message)
-    return { reply: response }
+    const response = await ai.chat(query.message);
+    return { reply: response };
   })
-  .listen(3000)
+  .listen(3000);
 ```
 
 **妥協なし**: 速さ ⚡、型安全 🛡️、そして作っていて楽しい 💜
@@ -68,24 +68,24 @@ npx eslint ElysiaAI/src/**/*.ts --fix
 
 ### ⚡ **Elysia駆動 & 高品質TypeScript**
 
-  - **型安全**: Eden Treatyでエンドツーエンド TypeScript
-  - **高速**: 最適化されたBunランタイム
-  - **エルゴノミック**: 直感的なAPI設計、最小限のボイラープレート
-  - **ESLint/FlatConfig**: 最新のLintルールで品質維持
+- **型安全**: Eden Treatyでエンドツーエンド TypeScript
+- **高速**: 最適化されたBunランタイム
+- **エルゴノミック**: 直感的なAPI設計、最小限のボイラープレート
+- **ESLint/FlatConfig**: 最新のLintルールで品質維持
 
 ### 🤖 **LLM統合 & Python保守**
 
-  - **Ollama**: ローカル `llama3.2` モデルとストリーミング
-  - **リアルタイム**: Server-Sent Events (SSE) によるライブレスポンス
-  - **柔軟**: モデルとプロバイダーの簡単な切り替え
-  - **Python未使用import削除**: クリーンなAIバックエンド
+- **Ollama**: ローカル `llama3.2` モデルとストリーミング
+- **リアルタイム**: Server-Sent Events (SSE) によるライブレスポンス
+- **柔軟**: モデルとプロバイダーの簡単な切り替え
+- **Python未使用import削除**: クリーンなAIバックエンド
 
 ### 🎨 **美しいUI & 開発体験**
 
-  - **Alpine.js**: リアクティブで軽量なフロントエンド
-  - **レスポンシブ**: モバイルフレンドリーデザイン
-  - **ダークモード**: 目に優しい 🌙
-  - **開発体験**: コード保守・自動品質向上
+- **Alpine.js**: リアクティブで軽量なフロントエンド
+- **レスポンシブ**: モバイルフレンドリーデザイン
+- **ダークモード**: 目に優しい 🌙
+- **開発体験**: コード保守・自動品質向上
 
 ### 🔐 **セキュリティ第一**
 

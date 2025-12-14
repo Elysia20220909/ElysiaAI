@@ -13,11 +13,7 @@ function log(level: string, message: string): void {
 	console.log(`[${timestamp}] ${level} ${message}`);
 }
 
-async function runCommand(
-	command: string,
-	args: string[],
-	cwd?: string,
-): Promise<number> {
+async function runCommand(command: string, args: string[], cwd?: string): Promise<number> {
 	return new Promise((resolve, reject) => {
 		const proc = spawn(command, args, {
 			cwd: cwd || process.cwd(),
@@ -52,13 +48,7 @@ async function main(): Promise<void> {
 		// 開発環境: prisma migrate dev
 		if (!isProduction) {
 			log("INFO", "📝 開発環境マイグレーション実行");
-			const code = await runCommand("bunx", [
-				"prisma",
-				"migrate",
-				"dev",
-				"--name",
-				"init",
-			]);
+			const code = await runCommand("bunx", ["prisma", "migrate", "dev", "--name", "init"]);
 			if (code !== 0) {
 				log("ERROR", "マイグレーション実行に失敗");
 				process.exit(1);

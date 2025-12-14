@@ -26,6 +26,7 @@ elysia-ai/
 ## Hidden/Internal Directories
 
 ### 🔐 config/ - Configuration Files (Hidden from casual view)
+
 ```
 config/
 ├── internal/              # Build and development configs
@@ -53,6 +54,7 @@ config/
 ```
 
 ### 🔧 dev/ - Development Tools (Hidden from production)
+
 ```
 dev/
 ├── chat.ts               # Interactive chat CLI
@@ -65,6 +67,7 @@ dev/
 ```
 
 ### 📚 docs/internal/ - Internal Documentation
+
 ```
 docs/internal/
 ├── INTEGRATION_COMPLETE.md  # Phase completion report
@@ -73,6 +76,7 @@ docs/internal/
 ```
 
 ### 🌐 Multi-Platform Support
+
 ```
 desktop/                  # Electron desktop app
 mobile/                   # React Native mobile app
@@ -83,6 +87,7 @@ python/                   # FastAPI RAG service
 ```
 
 ### ☁️ Cloud Deployment
+
 ```
 cloud/
 ├── aws/                  # AWS CloudFormation
@@ -116,6 +121,7 @@ cloud/
 ### 📝 Migration Notes
 
 All file references have been updated:
+
 - `package.json` scripts point to new locations
 - Docker builds reference `config/docker/`
 - Tests updated for new paths
@@ -124,12 +130,14 @@ All file references have been updated:
 ### 🚀 Quick Access
 
 **Development:**
+
 ```bash
 bun run dev              # Start development server
 bun run dev/chat.ts      # Interactive chat CLI
 ```
 
 **Configuration:**
+
 ```bash
 config/internal/         # Build configs
 config/docker/           # Docker files
@@ -137,6 +145,7 @@ config/deployment/       # Deploy guides
 ```
 
 **Documentation:**
+
 ```bash
 README.md               # Main docs
 docs/                   # API, guides

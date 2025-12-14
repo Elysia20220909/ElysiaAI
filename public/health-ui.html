@@ -1,32 +1,46 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>ヘルスチェック</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-</head>
-<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center">
-  <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
-    <h1 class="text-2xl font-bold mb-4 text-green-700">サーバーヘルスチェック</h1>
-    <div id="health-status" class="mb-4 text-lg text-gray-700">読み込み中...</div>
-    <button id="refresh" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">再読み込み</button>
-  </div>
-  <script>
-    async function fetchHealth() {
-      const statusDiv = document.getElementById('health-status');
-      statusDiv.textContent = '読み込み中...';
-      try {
-        const res = await fetch('/health');
-        if (!res.ok) throw new Error('サーバー応答エラー');
-        const data = await res.json();
-        statusDiv.textContent = JSON.stringify(data, null, 2);
-      } catch (e) {
-        statusDiv.textContent = '取得失敗: ' + e.message;
+  <head>
+    <meta charset="UTF-8" />
+    <title>ヘルスチェック</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    />
+  </head>
+  <body
+    class="bg-gray-50 min-h-screen flex flex-col items-center justify-center"
+  >
+    <div class="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
+      <h1 class="text-2xl font-bold mb-4 text-green-700">
+        サーバーヘルスチェック
+      </h1>
+      <div id="health-status" class="mb-4 text-lg text-gray-700">
+        読み込み中...
+      </div>
+      <button
+        id="refresh"
+        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+      >
+        再読み込み
+      </button>
+    </div>
+    <script>
+      async function fetchHealth() {
+        const statusDiv = document.getElementById("health-status");
+        statusDiv.textContent = "読み込み中...";
+        try {
+          const res = await fetch("/health");
+          if (!res.ok) throw new Error("サーバー応答エラー");
+          const data = await res.json();
+          statusDiv.textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          statusDiv.textContent = "取得失敗: " + e.message;
+        }
       }
-    }
-    document.getElementById('refresh').onclick = fetchHealth;
-    fetchHealth();
-  </script>
-</body>
+      document.getElementById("refresh").onclick = fetchHealth;
+      fetchHealth();
+    </script>
+  </body>
 </html>

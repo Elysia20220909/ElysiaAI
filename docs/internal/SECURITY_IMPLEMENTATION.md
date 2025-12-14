@@ -24,23 +24,28 @@
 #### 2. **多層防御システム**
 
 **Layer 1: ファイルシステム保護**
+
 - Windows ACL設定（SYSTEM + Administrators のみ）
 - Unix/Linux パーミッション（700/600）
 
 **Layer 2: バージョン管理保護**
+
 - `.gitignore`で`.internal/`完全除外
 - 全てのシークレットパターンを除外
 
 **Layer 3: Dockerイメージ保護**
+
 - `.dockerignore`で機密ファイル除外
 
 **Layer 4: アプリケーションレベル保護**
+
 - 5段階のアクセスレベル制御
 - IPホワイトリスト
 - 時間ベースの制限
 - 完全な監査ログ
 
 **Layer 5: 暗号化**
+
 - AES-256-GCM（認証付き暗号化）
 - scryptによる鍵導出
 - ユニークなIV/Salt
@@ -48,17 +53,20 @@
 #### 3. **セキュリティモジュール**
 
 **ConfigManager** (`config-manager.ts`):
+
 - シングルトンパターン
 - 自動バリデーション
 - デフォルト値警告
 
 **Encryption** (`encryption.ts`):
+
 - 暗号化/復号化
 - 一方向ハッシュ
 - セキュアなトークン生成
 - タイミング攻撃対策の比較
 
 **AccessControl** (`access-control.ts`):
+
 - ロールベースアクセス制御（RBAC）
 - パターンマッチング
 - 監査ログ
@@ -66,13 +74,13 @@
 
 #### 4. **アクセスレベル**
 
-| レベル | 値 | 用途 |
-|--------|---|------|
-| PUBLIC | 0 | 公開リソース |
-| AUTHENTICATED | 1 | 認証済みユーザー |
-| ADMIN | 2 | 管理者 |
-| SUPER_ADMIN | 3 | スーパー管理者 |
-| SYSTEM | 4 | システムレベル |
+| レベル        | 値  | 用途             |
+| ------------- | --- | ---------------- |
+| PUBLIC        | 0   | 公開リソース     |
+| AUTHENTICATED | 1   | 認証済みユーザー |
+| ADMIN         | 2   | 管理者           |
+| SUPER_ADMIN   | 3   | スーパー管理者   |
+| SYSTEM        | 4   | システムレベル   |
 
 #### 5. **保護対象リソース**
 
@@ -107,6 +115,7 @@ Write-Host $secret
 #### ステップ3: 設定ファイル編集
 
 `.internal/secrets/.env.secrets`を編集:
+
 ```bash
 JWT_SECRET=<生成した値>
 JWT_REFRESH_SECRET=<生成した値>
@@ -118,23 +127,18 @@ ENCRYPTION_KEY=<生成した値>
 
 ```typescript
 // src/index.ts
-import SecurityConfigManager from '../.internal/security/config-manager';
-import { encryption } from '../.internal/security/encryption';
-import { accessControl, AccessLevel } from '../.internal/security/access-control';
+import SecurityConfigManager from "../.internal/security/config-manager";
+import { encryption } from "../.internal/security/encryption";
+import { accessControl, AccessLevel } from "../.internal/security/access-control";
 
 // 設定読み込み
 const config = SecurityConfigManager.loadConfig();
 
 // 機密データの暗号化
-const encrypted = encryption.encrypt('sensitive data');
+const encrypted = encryption.encrypt("sensitive data");
 
 // アクセス制御
-const access = accessControl.checkAccess(
-  userId, 
-  AccessLevel.ADMIN, 
-  'sensitive-resource',
-  clientIP
-);
+const access = accessControl.checkAccess(userId, AccessLevel.ADMIN, "sensitive-resource", clientIP);
 ```
 
 ### セキュリティ機能
@@ -143,16 +147,16 @@ const access = accessControl.checkAccess(
 
 ```typescript
 // データ暗号化
-const encrypted = encryption.encrypt('secret data');
+const encrypted = encryption.encrypt("secret data");
 
 // データ復号化
 const decrypted = encryption.decrypt(encrypted);
 
 // パスワードハッシュ
-const hashed = encryption.hash('password');
+const hashed = encryption.hash("password");
 
 // ハッシュ検証
-const isValid = encryption.verifyHash('password', hashed);
+const isValid = encryption.verifyHash("password", hashed);
 
 // トークン生成
 const token = encryption.generateToken(32);
@@ -162,22 +166,17 @@ const token = encryption.generateToken(32);
 
 ```typescript
 // アクセスチェック
-const result = accessControl.checkAccess(
-  'user123',
-  AccessLevel.ADMIN,
-  '.internal/secrets/.env.secrets',
-  '192.168.1.100'
-);
+const result = accessControl.checkAccess("user123", AccessLevel.ADMIN, ".internal/secrets/.env.secrets", "192.168.1.100");
 
 if (!result.allowed) {
   throw new Error(result.reason);
 }
 
 // 時限トークン生成
-const token = accessControl.generateAccessToken('user', 'resource', 300000);
+const token = accessControl.generateAccessToken("user", "resource", 300000);
 
 // トークン検証
-const isValid = accessControl.verifyAccessToken(token, 'user', 'resource');
+const isValid = accessControl.verifyAccessToken(token, "user", "resource");
 ```
 
 #### 監査ログ
@@ -199,6 +198,7 @@ const fullLog = accessControl.exportAccessLog();
 ### ベストプラクティス
 
 ✅ **DO（推奨）**:
+
 - 32バイト以上の強力なランダムシークレットを使用
 - 90日ごとにシークレットをローテーション
 - 週次でアクセスログをレビュー
@@ -207,6 +207,7 @@ const fullLog = accessControl.exportAccessLog();
 - 最小権限の原則を適用
 
 ❌ **DON'T（禁止）**:
+
 - シークレットをバージョン管理にコミット
 - 本番環境でデフォルト値を使用
 - 機密情報を安全でないチャネルで共有
@@ -216,22 +217,24 @@ const fullLog = accessControl.exportAccessLog();
 ### 監視とアラート
 
 **Prometheusメトリクス追加**:
+
 ```typescript
 // アクセス拒否カウンター
 const accessDeniedCounter = new Counter({
-  name: 'access_denied_total',
-  help: 'Total access denied attempts',
-  labelNames: ['resource', 'user', 'reason']
+  name: "access_denied_total",
+  help: "Total access denied attempts",
+  labelNames: ["resource", "user", "reason"],
 });
 
 // 暗号化失敗カウンター
 const encryptionErrorCounter = new Counter({
-  name: 'encryption_errors_total',
-  help: 'Total encryption errors'
+  name: "encryption_errors_total",
+  help: "Total encryption errors",
 });
 ```
 
 **アラート設定**:
+
 - 5分間で3回以上のアクセス拒否
 - 営業時間外のSYSTEMリソースアクセス
 - 不明なIPからのアクセス試行
@@ -240,6 +243,7 @@ const encryptionErrorCounter = new Counter({
 ### コンプライアンス対応
 
 この実装により以下の規格に対応:
+
 - ✅ **GDPR** - データ暗号化、アクセス制御、監査ログ
 - ✅ **PCI DSS** - 鍵管理、アクセスログ、暗号化
 - ✅ **HIPAA** - 暗号化、アクセス制御、監査証跡
@@ -267,14 +271,16 @@ npm audit
 シークレット漏洩時の手順:
 
 1. **即座の対応**:
+
    ```powershell
    .\scripts\emergency-rotate-secrets.ps1
    ```
 
 2. **調査**:
+
    ```typescript
    const logs = accessControl.getAccessLog(1000);
-   const suspicious = logs.filter(l => !l.allowed);
+   const suspicious = logs.filter((l) => !l.allowed);
    ```
 
 3. **修復**:

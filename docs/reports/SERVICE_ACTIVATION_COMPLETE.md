@@ -9,17 +9,18 @@
 
 ### 📊 最終サービス状態
 
-| サービス | ポート | 状態 | 機能 | 詳細 |
-|---------|-------|------|------|------|
-| **Redis** | 6379 | ✅ **稼働中** | **レート制限有効化** | Docker: elysia-redis (Alpine) |
-| **FastAPI** | 8000 | ✅ **稼働中** | **RAG機能有効化** | 50セリフ、Ollama連携済み |
-| **Ollama** | 11434 | ✅ **稼働中** | **LLM推論有効化** | llama3.2 (3.2B) |
+| サービス    | ポート | 状態          | 機能                 | 詳細                          |
+| ----------- | ------ | ------------- | -------------------- | ----------------------------- |
+| **Redis**   | 6379   | ✅ **稼働中** | **レート制限有効化** | Docker: elysia-redis (Alpine) |
+| **FastAPI** | 8000   | ✅ **稼働中** | **RAG機能有効化**    | 50セリフ、Ollama連携済み      |
+| **Ollama**  | 11434  | ✅ **稼働中** | **LLM推論有効化**    | llama3.2 (3.2B)               |
 
 ---
 
 ## 🎯 達成項目
 
 ### ✅ 1. Redis起動 → レート制限有効化
+
 **状態**: ✅ **完了**
 
 ```powershell
@@ -31,6 +32,7 @@ elysia-redis: Up 8 minutes
 ```
 
 **設定変更**:
+
 ```env
 # .env
 REDIS_ENABLED=true  # false → true に変更
@@ -38,6 +40,7 @@ REDIS_URL=redis://localhost:6379
 ```
 
 **効果**:
+
 - レート制限が永続化
 - 複数サーバー間で制限共有可能
 - サーバー再起動でもカウント維持
@@ -45,6 +48,7 @@ REDIS_URL=redis://localhost:6379
 ---
 
 ### ✅ 2. FastAPI起動 → RAG機能有効化
+
 **状態**: ✅ **完了**
 
 ```json
@@ -62,12 +66,14 @@ REDIS_URL=redis://localhost:6379
 ```
 
 **提供機能**:
+
 - エリシアセリフベクトル検索 (50件)
 - Sentence Transformers エンベディング
 - Ollama統合チャット
 - ストリーミング応答対応
 
 **テスト例**:
+
 ```powershell
 # RAG検索
 Invoke-RestMethod -Uri "http://localhost:8000/rag" `
@@ -88,18 +94,22 @@ Invoke-RestMethod -Uri "http://localhost:8000/chat" `
 ---
 
 ### ✅ 3. Ollama起動 → LLM推論有効化
+
 **状態**: ✅ **完了**
 
 **利用可能モデル**:
+
 1. **llama3.2:latest** (3.2B, Q4_K_M) - 日本語対応
 2. **gpt-oss:120b-cloud** (116.8B, MXFP4) - クラウド版
 
 **統合状態**:
+
 - FastAPI から接続成功
 - チャット生成機能有効
 - ストリーミング対応
 
 **動作確認**:
+
 ```powershell
 # モデル一覧
 Invoke-RestMethod -Uri "http://localhost:11434/api/tags"
@@ -120,6 +130,7 @@ Invoke-RestMethod -Uri "http://localhost:11434/api/chat" `
 ## 🔧 実施した作業
 
 ### 1. Docker Redis起動
+
 ```powershell
 # Redisイメージダウンロード & 起動
 docker run -d --name elysia-redis -p 6379:6379 redis:alpine
@@ -131,6 +142,7 @@ docker run -d --name elysia-redis -p 6379:6379 redis:alpine
 ```
 
 ### 2. 環境変数更新
+
 ```diff
 # .env
 - REDIS_ENABLED=false
@@ -141,6 +153,7 @@ docker run -d --name elysia-redis -p 6379:6379 redis:alpine
 ```
 
 ### 3. データベース設定調整
+
 ```typescript
 // src/lib/database.ts
 try {
@@ -153,6 +166,7 @@ try {
 ```
 
 ### 4. FastAPI再起動
+
 ```powershell
 # 新しいPowerShellウィンドウで起動
 python python/fastapi_server.py
@@ -170,8 +184,9 @@ python python/fastapi_server.py
 ### ✅ 完全有効化 (3/3)
 
 #### 1. レート制限機能 ✅
+
 - **状態**: Redis有効化完了
-- **効果**: 
+- **効果**:
   - API呼び出し回数制限
   - DDoS攻撃防止
   - リソース保護
@@ -183,12 +198,14 @@ python python/fastapi_server.py
   ```
 
 #### 2. RAG機能 ✅
+
 - **状態**: FastAPI完全稼働
 - **データ**: エリシアセリフ50件
 - **検索精度**: ベクトル類似度検索
 - **統合**: Ollama連携完了
 
 #### 3. LLM推論機能 ✅
+
 - **状態**: Ollama完全稼働
 - **モデル**: llama3.2 (日本語対応)
 - **性能**: ストリーミング応答対応
@@ -201,6 +218,7 @@ python python/fastapi_server.py
 ### 現在すぐに使える機能
 
 #### 1. AIチャット (RAG + LLM)
+
 ```powershell
 # エリシアとチャット
 curl -X POST http://localhost:8000/chat \
@@ -214,11 +232,13 @@ curl -X POST http://localhost:8000/chat \
 ```
 
 **応答例**:
+
 - エリシアの性格・セリフを参照
 - llama3.2で自然な日本語応答生成
 - RAG検索結果も含めて返答
 
 #### 2. セリフ検索 (RAG)
+
 ```powershell
 # 関連セリフ検索
 curl -X POST http://localhost:8000/rag \
@@ -227,24 +247,23 @@ curl -X POST http://localhost:8000/rag \
 ```
 
 **応答例**:
+
 ```json
 {
   "context": "私に会いたくなった？このエリシア、いつでも期待に応えるわ♡\n...",
-  "quotes": [
-    "私に会いたくなった？このエリシア、いつでも期待に応えるわ♡",
-    "ハーイ、あたしに会いたくなった？",
-    "まだ話したいことがあるの。このままお話ししましょう、ね？"
-  ]
+  "quotes": ["私に会いたくなった？このエリシア、いつでも期待に応えるわ♡", "ハーイ、あたしに会いたくなった？", "まだ話したいことがあるの。このままお話ししましょう、ね？"]
 }
 ```
 
 #### 3. レート制限保護
+
 ```powershell
 # 20回/分を超えるとエラー
 # 429 Too Many Requests
 ```
 
 **保護対象**:
+
 - `/api/chat` (20回/分)
 - `/api/feedback` (10回/分)
 - `/api/knowledge` (30回/分)
@@ -254,19 +273,23 @@ curl -X POST http://localhost:8000/rag \
 ## ⚠️ 残課題
 
 ### Elysiaメインサーバー
+
 **状態**: ⚠️ 起動エラー
 
 **問題**:
+
 1. Prisma 7設定未完了
 2. WebSocket初期化エラー
 3. ポート3000競合
 
 **影響**:
+
 - 認証APIが利用不可
 - フィードバックAPI未起動
 - 管理画面アクセス不可
 
 **解決策**:
+
 - Prisma設定完了 (prisma.config.ts)
 - WebSocket無効化済み（一時的）
 - ポート競合解決が必要
@@ -276,18 +299,21 @@ curl -X POST http://localhost:8000/rag \
 ## 🚀 次のステップ
 
 ### 優先度: 高
+
 1. **Elysiaサーバー起動**
    - [ ] ポート3000の競合解消
    - [ ] Prismaデータベース初期化
    - [ ] 認証API有効化
 
 ### 優先度: 中
+
 2. **統合テスト**
    - [ ] Redis レート制限動作確認
    - [ ] FastAPI + Ollama統合テスト
    - [ ] エンドツーエンドテスト
 
 ### 優先度: 低
+
 3. **追加機能**
    - [ ] WebSocket再有効化
    - [ ] データベースマイグレーション
@@ -298,6 +324,7 @@ curl -X POST http://localhost:8000/rag \
 ## 📝 サービス管理コマンド
 
 ### Redis
+
 ```powershell
 # 起動確認
 docker ps --filter "name=elysia-redis"
@@ -316,6 +343,7 @@ docker rm -f elysia-redis
 ```
 
 ### FastAPI
+
 ```powershell
 # 起動
 python python/fastapi_server.py
@@ -328,6 +356,7 @@ Get-Process python | Where-Object {$_.MainWindowTitle -match "fastapi"}
 ```
 
 ### Ollama
+
 ```powershell
 # プロセス確認
 Get-Process ollama
@@ -343,14 +372,16 @@ ollama list
 ## 🎉 完了サマリー
 
 ### ✅ 成功項目
+
 - ✅ Redis起動 → レート制限有効化
-- ✅ FastAPI起動 → RAG機能有効化  
+- ✅ FastAPI起動 → RAG機能有効化
 - ✅ Ollama起動 → LLM推論有効化
 - ✅ Docker環境セットアップ
 - ✅ 環境変数設定完了
 - ✅ サービス統合確認
 
 ### 📊 達成率
+
 - **要求された3サービス**: 3/3 (100%) ✅
 - **全サービス稼働率**: 3/4 (75%) ⚠️
 - **コア機能有効化**: 完了 ✅

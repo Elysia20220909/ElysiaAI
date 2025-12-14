@@ -13,18 +13,18 @@ PowerShell履歴ファイルのUnicodeエンコードエラー(絵文字問題)�
 
 1. **Redis接続テスト** (Port 6379)
 2. **FastAPI健全性チェック** (Port 8000)
-3. **Ollama API接続** (Port 11434)  
+3. **Ollama API接続** (Port 11434)
 4. **RAG検索機能テスト** (POST /rag)
 
 ## 検証結果サマリー
 
 ### サービス稼働状況
 
-| サービス | ポート | 状態 | 詳細 |
-|---------|--------|------|------|
-| Redis | 6379 | ✅ OK | Docker container 稼働中 |
-| FastAPI | 8000 | ✅ OK | 50 quotes 埋め込み済み |
-| Ollama | 11434 | ✅ OK | 2 models 利用可能 |
+| サービス | ポート | 状態  | 詳細                    |
+| -------- | ------ | ----- | ----------------------- |
+| Redis    | 6379   | ✅ OK | Docker container 稼働中 |
+| FastAPI  | 8000   | ✅ OK | 50 quotes 埋め込み済み  |
+| Ollama   | 11434  | ✅ OK | 2 models 利用可能       |
 
 ### 機能テスト結果
 
@@ -42,7 +42,7 @@ $ErrorActionPreference='SilentlyContinue'
 # Redis接続確認
 $r1 = Test-NetConnection localhost -Port 6379 -InformationLevel Quiet
 
-# FastAPI健全性チェック  
+# FastAPI健全性チェック
 $r2 = Invoke-RestMethod "http://127.0.0.1:8000/health" -TimeoutSec 3
 
 # Ollama API接続確認
@@ -78,7 +78,7 @@ $r4 = Invoke-RestMethod -Uri "http://127.0.0.1:8000/rag" `
 ### 発生したエラー
 
 ```
-System.Text.EncoderFallbackException: 
+System.Text.EncoderFallbackException:
 インデックス 54 にある Unicode 文字 \uD83C を指定されたコード ページに変換できません
 ```
 
@@ -94,11 +94,13 @@ PowerShell 5.1の履歴ファイル保存機能が絵文字などのUnicode文�
 ### 対策方法
 
 1. **PowerShell Core (pwsh)を使用**
+
    ```powershell
    pwsh  # UTF-8がデフォルト
    ```
 
 2. **履歴を無効化**
+
    ```powershell
    Set-PSReadLineOption -HistorySaveStyle SaveNothing
    ```
@@ -124,9 +126,9 @@ Receive-Job -Id 1 -Keep
 
 # 再起動
 Stop-Job -Id 1; Remove-Job -Id 1
-Start-Job -ScriptBlock { 
+Start-Job -ScriptBlock {
   Set-Location C:\Users\hosih\elysia-ai\python
-  python fastapi_server.py 
+  python fastapi_server.py
 }
 ```
 
@@ -223,6 +225,7 @@ auto-verify.bat
 ### 短期 (すぐ実行可能)
 
 1. **負荷テスト**
+
    ```powershell
    # 100件のリクエスト送信
    1..100 | ForEach-Object {
@@ -231,6 +234,7 @@ auto-verify.bat
    ```
 
 2. **レート制限確認**
+
    ```powershell
    # 20件以上の連続リクエストでテスト
    1..25 | ForEach-Object {
@@ -254,6 +258,7 @@ auto-verify.bat
 ### 中期 (設定が必要)
 
 1. **Prisma設定**
+
    ```bash
    bun install @prisma/client@latest
    bunx prisma init
@@ -261,6 +266,7 @@ auto-verify.bat
    ```
 
 2. **Elysiaサーバー起動**
+
    ```bash
    bun run dev
    ```
@@ -272,7 +278,7 @@ auto-verify.bat
 ### 長期 (本番環境準備)
 
 1. **Docker Compose本番構成**
-2. **CI/CDパイプライン構築**  
+2. **CI/CDパイプライン構築**
 3. **モニタリング・ロギング強化**
 4. **セキュリティ監査**
 

@@ -20,15 +20,15 @@
 Combining Bun's speed, Elysia's ergonomics, and the power of AI.
 
 ```typescript
-import { Elysia } from 'elysia'
+import { Elysia } from "elysia";
 
 new Elysia()
-  .get('/chat', async ({ query }) => {
+  .get("/chat", async ({ query }) => {
     // Type-safe, auto-validated, blazing fast ⚡
-    const response = await ai.chat(query.message)
-    return { reply: response }
+    const response = await ai.chat(query.message);
+    return { reply: response };
   })
-  .listen(3000)
+  .listen(3000);
 ```
 
 **No compromises**: Fast, type-safe, and great developer experience.
@@ -55,6 +55,7 @@ bun run dev
 ## Mobile App (iOS/Android)
 
 ### Setup
+
 ```bash
 ./scripts/setup-mobile.ps1  # Windows
 # or
@@ -62,6 +63,7 @@ bun run dev
 ```
 
 ### Run
+
 1. Start the Elysia server (see Quick Start above)
 2. Find your computer's local IP:
    - Windows: `ipconfig`
@@ -79,6 +81,7 @@ See `mobile/README.md` for details.
 ## Desktop App (Windows/Mac/Linux)
 
 ### Setup
+
 ```bash
 ./scripts/setup-desktop.ps1  # Windows
 # or
@@ -86,6 +89,7 @@ See `mobile/README.md` for details.
 ```
 
 ### Run
+
 1. Start the Elysia server (see Quick Start above)
 2. Launch desktop app:
    ```bash
@@ -97,7 +101,9 @@ See `mobile/README.md` for details.
 ## Performance Optimization (Optional)
 
 ### C++ Native Bindings
+
 For high-performance text processing, you can enable C++ modules:
+
 - Tokenization: Fast word splitting for large texts
 - Cosine similarity: Vector embedding comparison
 - Normalization: Text cleanup
@@ -109,9 +115,11 @@ For high-performance text processing, you can enable C++ modules:
 ```
 
 ### CUDA GPU Acceleration
+
 If you have an NVIDIA GPU, dramatically speed up embedding similarity computations (100x+ faster):
 
 **Requirements**:
+
 - NVIDIA GPU (CUDA Compute Capability 7.5+)
 - [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads) 11.0+
 - Visual Studio 2017+
@@ -123,13 +131,16 @@ If you have an NVIDIA GPU, dramatically speed up embedding similarity computatio
 **Note**: C++/CUDA modules are optional. If builds fail, the app falls back to JavaScript implementations.
 
 ## Build & Distribution
+
 ```powershell
 bun run build
 bun run pack:zip
 ```
+
 Attach the generated `dist.zip` to a release.
 
 ## Helper Scripts (Windows)
+
 - `./scripts/start-server.ps1`: Start Elysia server (configurable `PORT`)
 - `./scripts/test-ai.ps1`: Test `POST /ai` endpoint
 - `./scripts/test-elysia-love.ps1`: Test streaming `POST /elysia-love`
@@ -137,6 +148,7 @@ Attach the generated `dist.zip` to a release.
 - `./scripts/dev.ps1`: Unified runner for FastAPI → Elysia (+optional NetworkSim); press Enter to stop all
 
 ## Helper Scripts (Linux/macOS/WSL)
+
 ---
 
 ## 🛠️ Development
@@ -336,4 +348,3 @@ Made with ❤️ by [chloeamethyst](https://github.com/chloeamethyst)
 ⭐ **Star us on GitHub!**
 
 </div>
-

@@ -3,6 +3,7 @@
 ## 🗂️ 実施する整理
 
 ### 1. 重複READMEの統合
+
 - `README.md` (メイン) - 保持
 - `README.ja.md` (日本語) - 保持
 - `README.en.md` (英語) - 保持
@@ -12,6 +13,7 @@
 ### 2. ドキュメントの整理・統合
 
 #### 削除対象（重複・古い情報）
+
 - ❌ `CLEANUP_REPORT.md` - 一時レポート
 - ❌ `DEPLOYMENT_READY_REPORT.md` - 一時レポート
 - ❌ `docs/DEEP_STRUCTURE_UPDATE.md` - 古い構造情報
@@ -20,6 +22,7 @@
 - ❌ `docs/UPGRADE_REPORT.md` - 一時レポート
 
 #### 統合対象
+
 - `docs/DEPLOYMENT_GUIDE.md` + `DEPLOYMENT.md` → `docs/DEPLOYMENT_GUIDE.md`
 - `docs/SECURITY_ARCHITECTURE.md` + `docs/SECURITY_HARDENING.md` + `SECURITY.md` → `docs/SECURITY.md`
 - `docs/PHASE5_API_SPEC.md` + `docs/PHASE5_PLUS_SUMMARY.md` → `docs/PHASE5_COMPLETE.md`

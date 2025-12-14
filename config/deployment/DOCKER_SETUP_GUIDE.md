@@ -5,6 +5,7 @@
 ### Step 1: システム要件確認
 
 **必須要件:**
+
 - Windows 10/11 (64-bit)
 - WSL 2（Windows Subsystem for Linux 2）
 - 仮想化機能有効化（BIOS設定）
@@ -12,22 +13,24 @@
 ### Step 2: Docker Desktop ダウンロード
 
 1. **公式サイトからダウンロード**
+
    ```
    https://www.docker.com/products/docker-desktop/
    ```
 
 2. **または PowerShell から直接ダウンロード**
+
    ```powershell
    # ダウンロード先ディレクトリ作成
    New-Item -ItemType Directory -Path "$env:TEMP\docker" -Force
-   
+
    # Docker Desktop インストーラーダウンロード
    $url = "https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe"
    $output = "$env:TEMP\docker\DockerDesktopInstaller.exe"
-   
+
    Write-Host "Docker Desktop をダウンロード中..." -ForegroundColor Cyan
    Invoke-WebRequest -Uri $url -OutFile $output
-   
+
    Write-Host "ダウンロード完了: $output" -ForegroundColor Green
    ```
 
@@ -71,6 +74,7 @@ Start-Process -FilePath "$env:TEMP\docker\DockerDesktopInstaller.exe" -Wait
 ```
 
 **インストール設定:**
+
 - ✅ Use WSL 2 instead of Hyper-V（推奨）
 - ✅ Add shortcut to desktop
 

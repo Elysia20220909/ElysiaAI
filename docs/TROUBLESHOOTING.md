@@ -11,6 +11,7 @@ EADDRINUSE: Failed to start server. Is port 3000 in use?
 **解決策**:
 
 #### Windows PowerShell
+
 ```powershell
 # Bun プロセス停止
 Get-Process bun | Stop-Process -Force
@@ -23,6 +24,7 @@ Stop-Process -Id <PID> -Force
 ```
 
 #### Linux/macOS
+
 ```bash
 # ポート使用状況確認
 lsof -i :3000
@@ -44,16 +46,19 @@ kill -9 <PID>
 **解決策**:
 
 1. `.env` に `DATABASE_URL` を設定：
+
 ```env
 DATABASE_URL="file:./prisma/dev.db"
 ```
 
 2. Prisma クライアント生成：
+
 ```bash
 bunx prisma generate
 ```
 
 3. マイグレーション実行：
+
 ```bash
 bunx prisma migrate dev --name init
 ```
@@ -70,6 +75,7 @@ Health check failed: disk_space { failures: 1, error: "Check returned false" }
 **原因**: データベース未初期化またはディスク容量不足
 
 **解決策**:
+
 - データベースマイグレーション実行
 - ディスク容量確認
 - ロードしすぎたログファイルを削除：`rm logs/*.log`
@@ -87,6 +93,7 @@ Error: connect ECONNREFUSED 127.0.0.1:8000
 **解決策**:
 
 1. FastAPI が起動しているか確認：
+
 ```powershell
 Get-Process python -ErrorAction SilentlyContinue
 
@@ -95,11 +102,13 @@ python python/fastapi_server.py
 ```
 
 2. Python 依存関係確認：
+
 ```bash
 python -m pip install -r python/requirements.txt
 ```
 
 3. FastAPI ヘルスチェック：
+
 ```bash
 Invoke-WebRequest -Uri "http://localhost:8000/health"
 ```
@@ -117,17 +126,20 @@ Error: Failed to connect to Ollama at http://localhost:11434
 **解決策**:
 
 1. Ollama が起動しているか確認：
+
 ```bash
 ollama list
 ollama serve
 ```
 
 2. モデル確認：
+
 ```bash
 curl http://localhost:11434/api/tags
 ```
 
 3. テスト実行：
+
 ```bash
 curl -X POST http://localhost:11434/api/chat \
   -H "Content-Type: application/json" \
@@ -147,6 +159,7 @@ Error: connect ECONNREFUSED 127.0.0.1:6379
 **解決策**:
 
 #### Docker で Redis 起動
+
 ```bash
 docker run -d --name redis -p 6379:6379 redis:alpine
 
@@ -159,6 +172,7 @@ docker rm redis
 ```
 
 #### Redis 無効化（レート制限が不要な場合）
+
 ```env
 REDIS_ENABLED=false
 ```
@@ -176,6 +190,7 @@ TS18002: The 'files' list in config file 'tsconfig.json' is empty.
 **解決策**:
 
 1. `tsconfig.json` に `include` フィールドがあることを確認：
+
 ```json
 {
   "include": ["src/**/*", "tests/**/*"],
@@ -184,6 +199,7 @@ TS18002: The 'files' list in config file 'tsconfig.json' is empty.
 ```
 
 2. Webpack 設定でコンフィグファイルを指定：
+
 ```javascript
 options: {
   configFile: path.resolve(__dirname, "tsconfig.json"),
@@ -202,11 +218,13 @@ error TS2322: Type 'X' is not assignable to type 'Y'
 **解決策**:
 
 1. 厳密モードを確認：
+
 ```bash
 bun run lint
 ```
 
 2. 型定義をチェック：
+
 ```bash
 bun run build
 ```
@@ -250,11 +268,13 @@ Module not found: Error: Can't resolve
 **解決策**:
 
 1. エントリーポイント確認：
+
 ```javascript
-entry: path.resolve(__dirname, "../../src", "index.ts")
+entry: path.resolve(__dirname, "../../src", "index.ts");
 ```
 
 2. キャッシュクリア：
+
 ```bash
 bun run clean
 bun install
@@ -270,16 +290,19 @@ bun run build
 **解決策**:
 
 1. ログレベル調整：
+
 ```env
 LOG_LEVEL=info
 ```
 
 2. ヒープサイズ設定：
+
 ```bash
 bun --max-old-space-size=2048 run src/index.ts
 ```
 
 3. キャッシュクリア：
+
 ```bash
 bun run clean
 ```
@@ -307,15 +330,17 @@ Access to XMLHttpRequest blocked by CORS policy
 **解決策**:
 
 `.env` で許可オリジン設定：
+
 ```env
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 ```
 
 または `src/index.ts` で設定：
+
 ```typescript
 cors({
   origin: process.env.ALLOWED_ORIGINS?.split(","),
-})
+});
 ```
 
 ---

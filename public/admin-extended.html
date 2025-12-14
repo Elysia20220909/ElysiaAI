@@ -1,590 +1,683 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Elysia AI - 拡張管理ダッシュボード</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-        .header {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        .header h1 {
-            color: #667eea;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-            background: white;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        .tab {
-            padding: 10px 20px;
-            border: none;
-            background: #f0f0f0;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.3s;
-        }
-        .tab.active {
-            background: #667eea;
-            color: white;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .card h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stat-item {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .stat-item .value {
-            font-size: 2em;
-            font-weight: bold;
-        }
-        .stat-item .label {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table th, table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-        table th {
-            background: #f5f5f5;
-            font-weight: 600;
-        }
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-success { background: #48bb78; color: white; }
-        .btn-danger { background: #f56565; color: white; }
-        .btn-warning { background: #ed8936; color: white; }
-        .btn:hover { opacity: 0.8; }
-        .search-box {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 300px;
-            margin-bottom: 15px;
-        }
-        .badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.85em;
-        }
-        .badge-success { background: #c6f6d5; color: #22543d; }
-        .badge-danger { background: #fed7d7; color: #742a2a; }
-        .badge-warning { background: #feebc8; color: #7c2d12; }
-        .badge-info { background: #bee3f8; color: #2c5282; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", system-ui, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1600px;
+        margin: 0 auto;
+      }
+      .header {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        text-align: center;
+      }
+      .header h1 {
+        color: #667eea;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+      }
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+      }
+      .tab {
+        padding: 10px 20px;
+        border: none;
+        background: #f0f0f0;
+        cursor: pointer;
+        border-radius: 5px;
+        transition: all 0.3s;
+      }
+      .tab.active {
+        background: #667eea;
+        color: white;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .card h3 {
+        color: #667eea;
+        margin-bottom: 15px;
+      }
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+      .stat-item {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+      }
+      .stat-item .value {
+        font-size: 2em;
+        font-weight: bold;
+      }
+      .stat-item .label {
+        font-size: 0.9em;
+        opacity: 0.9;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      table th,
+      table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+      }
+      table th {
+        background: #f5f5f5;
+        font-weight: 600;
+      }
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-right: 5px;
+      }
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+      .btn-success {
+        background: #48bb78;
+        color: white;
+      }
+      .btn-danger {
+        background: #f56565;
+        color: white;
+      }
+      .btn-warning {
+        background: #ed8936;
+        color: white;
+      }
+      .btn:hover {
+        opacity: 0.8;
+      }
+      .search-box {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        width: 300px;
+        margin-bottom: 15px;
+      }
+      .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+      .badge-success {
+        background: #c6f6d5;
+        color: #22543d;
+      }
+      .badge-danger {
+        background: #fed7d7;
+        color: #742a2a;
+      }
+      .badge-warning {
+        background: #feebc8;
+        color: #7c2d12;
+      }
+      .badge-info {
+        background: #bee3f8;
+        color: #2c5282;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>🚀 Elysia AI 拡張管理ダッシュボード</h1>
-            <p>ジョブキュー | Cron | 監査ログ | ファイル管理</p>
+      <div class="header">
+        <h1>🚀 Elysia AI 拡張管理ダッシュボード</h1>
+        <p>ジョブキュー | Cron | 監査ログ | ファイル管理</p>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('jobs')">
+          ジョブキュー
+        </button>
+        <button class="tab" onclick="switchTab('cron')">Cronタスク</button>
+        <button class="tab" onclick="switchTab('audit')">監査ログ</button>
+        <button class="tab" onclick="switchTab('files')">ファイル管理</button>
+      </div>
+
+      <!-- ジョブキュータブ -->
+      <div id="jobs-tab" class="tab-content active">
+        <div class="card">
+          <h3>📦 ジョブキュー統計</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="value" id="jobs-waiting">-</div>
+              <div class="label">待機中</div>
+            </div>
+            <div class="stat-item">
+              <div class="value" id="jobs-active">-</div>
+              <div class="label">実行中</div>
+            </div>
+            <div class="stat-item">
+              <div class="value" id="jobs-completed">-</div>
+              <div class="label">完了</div>
+            </div>
+            <div class="stat-item">
+              <div class="value" id="jobs-failed">-</div>
+              <div class="label">失敗</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="refreshJobStats()">
+            🔄 更新
+          </button>
         </div>
 
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('jobs')">ジョブキュー</button>
-            <button class="tab" onclick="switchTab('cron')">Cronタスク</button>
-            <button class="tab" onclick="switchTab('audit')">監査ログ</button>
-            <button class="tab" onclick="switchTab('files')">ファイル管理</button>
+        <div class="card">
+          <h3>✉️ メール送信ジョブ追加</h3>
+          <input
+            type="email"
+            id="job-email"
+            placeholder="送信先メールアドレス"
+            style="width: 300px; padding: 8px; margin-right: 10px"
+          />
+          <input
+            type="text"
+            id="job-subject"
+            placeholder="件名"
+            style="width: 300px; padding: 8px; margin-right: 10px"
+          />
+          <button class="btn btn-success" onclick="addEmailJob()">
+            📨 送信
+          </button>
         </div>
 
-        <!-- ジョブキュータブ -->
-        <div id="jobs-tab" class="tab-content active">
-            <div class="card">
-                <h3>📦 ジョブキュー統計</h3>
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="value" id="jobs-waiting">-</div>
-                        <div class="label">待機中</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value" id="jobs-active">-</div>
-                        <div class="label">実行中</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value" id="jobs-completed">-</div>
-                        <div class="label">完了</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value" id="jobs-failed">-</div>
-                        <div class="label">失敗</div>
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick="refreshJobStats()">🔄 更新</button>
-            </div>
+        <div class="card">
+          <h3>📊 レポート生成</h3>
+          <select id="report-type" style="padding: 8px; margin-right: 10px">
+            <option value="daily">日次レポート</option>
+            <option value="weekly">週次レポート</option>
+            <option value="monthly">月次レポート</option>
+          </select>
+          <button class="btn btn-success" onclick="generateReport()">
+            📈 生成
+          </button>
+        </div>
+      </div>
 
-            <div class="card">
-                <h3>✉️ メール送信ジョブ追加</h3>
-                <input type="email" id="job-email" placeholder="送信先メールアドレス" style="width: 300px; padding: 8px; margin-right: 10px;">
-                <input type="text" id="job-subject" placeholder="件名" style="width: 300px; padding: 8px; margin-right: 10px;">
-                <button class="btn btn-success" onclick="addEmailJob()">📨 送信</button>
+      <!-- Cronタスクタブ -->
+      <div id="cron-tab" class="tab-content">
+        <div class="card">
+          <h3>⏰ Cronタスク統計</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="value" id="cron-total">-</div>
+              <div class="label">総タスク数</div>
             </div>
-
-            <div class="card">
-                <h3>📊 レポート生成</h3>
-                <select id="report-type" style="padding: 8px; margin-right: 10px;">
-                    <option value="daily">日次レポート</option>
-                    <option value="weekly">週次レポート</option>
-                    <option value="monthly">月次レポート</option>
-                </select>
-                <button class="btn btn-success" onclick="generateReport()">📈 生成</button>
+            <div class="stat-item">
+              <div class="value" id="cron-enabled">-</div>
+              <div class="label">有効</div>
             </div>
+            <div class="stat-item">
+              <div class="value" id="cron-disabled">-</div>
+              <div class="label">無効</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="refreshCronStats()">
+            🔄 更新
+          </button>
         </div>
 
-        <!-- Cronタスクタブ -->
-        <div id="cron-tab" class="tab-content">
-            <div class="card">
-                <h3>⏰ Cronタスク統計</h3>
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="value" id="cron-total">-</div>
-                        <div class="label">総タスク数</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value" id="cron-enabled">-</div>
-                        <div class="label">有効</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value" id="cron-disabled">-</div>
-                        <div class="label">無効</div>
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick="refreshCronStats()">🔄 更新</button>
-            </div>
+        <div class="card">
+          <h3>📋 タスク一覧</h3>
+          <table id="cron-table">
+            <thead>
+              <tr>
+                <th>タスク名</th>
+                <th>Cron式</th>
+                <th>状態</th>
+                <th>次回実行</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
 
-            <div class="card">
-                <h3>📋 タスク一覧</h3>
-                <table id="cron-table">
-                    <thead>
-                        <tr>
-                            <th>タスク名</th>
-                            <th>Cron式</th>
-                            <th>状態</th>
-                            <th>次回実行</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+      <!-- 監査ログタブ -->
+      <div id="audit-tab" class="tab-content">
+        <div class="card">
+          <h3>📝 監査ログ統計</h3>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="value" id="audit-total">-</div>
+              <div class="label">総ログ数</div>
             </div>
+            <div class="stat-item">
+              <div class="value" id="audit-24h">-</div>
+              <div class="label">24時間</div>
+            </div>
+            <div class="stat-item">
+              <div class="value" id="audit-7d">-</div>
+              <div class="label">7日間</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="refreshAuditStats()">
+            🔄 更新
+          </button>
+          <button class="btn btn-warning" onclick="exportAuditLogs('json')">
+            📥 JSON
+          </button>
+          <button class="btn btn-warning" onclick="exportAuditLogs('csv')">
+            📥 CSV
+          </button>
         </div>
 
-        <!-- 監査ログタブ -->
-        <div id="audit-tab" class="tab-content">
-            <div class="card">
-                <h3>📝 監査ログ統計</h3>
-                <div class="stat-grid">
-                    <div class="stat-item">
-                        <div class="value" id="audit-total">-</div>
-                        <div class="label">総ログ数</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value" id="audit-24h">-</div>
-                        <div class="label">24時間</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="value" id="audit-7d">-</div>
-                        <div class="label">7日間</div>
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick="refreshAuditStats()">🔄 更新</button>
-                <button class="btn btn-warning" onclick="exportAuditLogs('json')">📥 JSON</button>
-                <button class="btn btn-warning" onclick="exportAuditLogs('csv')">📥 CSV</button>
-            </div>
-
-            <div class="card">
-                <h3>🔍 ログ検索</h3>
-                <input type="text" id="audit-search-user" class="search-box" placeholder="ユーザーID">
-                <input type="text" id="audit-search-action" class="search-box" placeholder="アクション">
-                <input type="text" id="audit-search-resource" class="search-box" placeholder="リソース">
-                <button class="btn btn-primary" onclick="searchAuditLogs()">🔍 検索</button>
-            </div>
-
-            <div class="card">
-                <h3>📋 最新ログ</h3>
-                <table id="audit-table">
-                    <thead>
-                        <tr>
-                            <th>日時</th>
-                            <th>ユーザー</th>
-                            <th>アクション</th>
-                            <th>リソース</th>
-                            <th>ステータス</th>
-                            <th>IPアドレス</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        <div class="card">
+          <h3>🔍 ログ検索</h3>
+          <input
+            type="text"
+            id="audit-search-user"
+            class="search-box"
+            placeholder="ユーザーID"
+          />
+          <input
+            type="text"
+            id="audit-search-action"
+            class="search-box"
+            placeholder="アクション"
+          />
+          <input
+            type="text"
+            id="audit-search-resource"
+            class="search-box"
+            placeholder="リソース"
+          />
+          <button class="btn btn-primary" onclick="searchAuditLogs()">
+            🔍 検索
+          </button>
         </div>
 
-        <!-- ファイル管理タブ -->
-        <div id="files-tab" class="tab-content">
-            <div class="card">
-                <h3>📁 ストレージ統計</h3>
-                <div id="storage-stats"></div>
-                <button class="btn btn-primary" onclick="refreshFileStats()">🔄 更新</button>
-            </div>
-
-            <div class="card">
-                <h3>📤 ファイルアップロード</h3>
-                <input type="file" id="file-upload" style="margin-right: 10px;">
-                <button class="btn btn-success" onclick="uploadFile()">📤 アップロード</button>
-            </div>
-
-            <div class="card">
-                <h3>📋 マイファイル</h3>
-                <table id="files-table">
-                    <thead>
-                        <tr>
-                            <th>ファイル名</th>
-                            <th>サイズ</th>
-                            <th>タイプ</th>
-                            <th>アップロード日時</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+        <div class="card">
+          <h3>📋 最新ログ</h3>
+          <table id="audit-table">
+            <thead>
+              <tr>
+                <th>日時</th>
+                <th>ユーザー</th>
+                <th>アクション</th>
+                <th>リソース</th>
+                <th>ステータス</th>
+                <th>IPアドレス</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
+      </div>
+
+      <!-- ファイル管理タブ -->
+      <div id="files-tab" class="tab-content">
+        <div class="card">
+          <h3>📁 ストレージ統計</h3>
+          <div id="storage-stats"></div>
+          <button class="btn btn-primary" onclick="refreshFileStats()">
+            🔄 更新
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>📤 ファイルアップロード</h3>
+          <input type="file" id="file-upload" style="margin-right: 10px" />
+          <button class="btn btn-success" onclick="uploadFile()">
+            📤 アップロード
+          </button>
+        </div>
+
+        <div class="card">
+          <h3>📋 マイファイル</h3>
+          <table id="files-table">
+            <thead>
+              <tr>
+                <th>ファイル名</th>
+                <th>サイズ</th>
+                <th>タイプ</th>
+                <th>アップロード日時</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <script>
-        const API_BASE = window.location.origin;
-        let authToken = '';
+      const API_BASE = window.location.origin;
+      let authToken = "";
 
-        // 初期化
-        window.onload = async () => {
-            const token = prompt('JWT トークンを入力してください:');
-            if (!token) {
-                alert('トークンが必要です');
-                return;
-            }
-            authToken = token;
-            
+      // 初期化
+      window.onload = async () => {
+        const token = prompt("JWT トークンを入力してください:");
+        if (!token) {
+          alert("トークンが必要です");
+          return;
+        }
+        authToken = token;
+
+        await refreshJobStats();
+        await refreshCronStats();
+        await refreshAuditStats();
+        await refreshFileStats();
+      };
+
+      // タブ切り替え
+      function switchTab(tab) {
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((c) => c.classList.remove("active"));
+
+        event.target.classList.add("active");
+        document.getElementById(`${tab}-tab`).classList.add("active");
+      }
+
+      // ジョブキュー統計
+      async function refreshJobStats() {
+        try {
+          const res = await fetch(`${API_BASE}/admin/jobs/stats`, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          const data = await res.json();
+
+          document.getElementById("jobs-waiting").textContent =
+            data.waiting || 0;
+          document.getElementById("jobs-active").textContent = data.active || 0;
+          document.getElementById("jobs-completed").textContent =
+            data.completed || 0;
+          document.getElementById("jobs-failed").textContent = data.failed || 0;
+        } catch (err) {
+          console.error("Failed to fetch job stats:", err);
+        }
+      }
+
+      // メールジョブ追加
+      async function addEmailJob() {
+        const email = document.getElementById("job-email").value;
+        const subject = document.getElementById("job-subject").value;
+
+        if (!email || !subject) {
+          alert("メールアドレスと件名を入力してください");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API_BASE}/admin/jobs/email`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              to: email,
+              subject: subject,
+              html: "<h1>テストメール</h1><p>Elysia AIからのテストメールです。</p>",
+            }),
+          });
+
+          if (res.ok) {
+            alert("メールジョブを追加しました");
             await refreshJobStats();
-            await refreshCronStats();
-            await refreshAuditStats();
-            await refreshFileStats();
-        };
-
-        // タブ切り替え
-        function switchTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            event.target.classList.add('active');
-            document.getElementById(`${tab}-tab`).classList.add('active');
+          } else {
+            alert("エラーが発生しました");
+          }
+        } catch (err) {
+          console.error("Failed to add email job:", err);
         }
+      }
 
-        // ジョブキュー統計
-        async function refreshJobStats() {
-            try {
-                const res = await fetch(`${API_BASE}/admin/jobs/stats`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                const data = await res.json();
-                
-                document.getElementById('jobs-waiting').textContent = data.waiting || 0;
-                document.getElementById('jobs-active').textContent = data.active || 0;
-                document.getElementById('jobs-completed').textContent = data.completed || 0;
-                document.getElementById('jobs-failed').textContent = data.failed || 0;
-            } catch (err) {
-                console.error('Failed to fetch job stats:', err);
-            }
+      // レポート生成
+      async function generateReport() {
+        const type = document.getElementById("report-type").value;
+        const now = new Date();
+        const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+        try {
+          const res = await fetch(`${API_BASE}/admin/jobs/report`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              reportType: type,
+              startDate: start.toISOString(),
+              endDate: now.toISOString(),
+            }),
+          });
+
+          if (res.ok) {
+            alert("レポート生成ジョブを追加しました");
+            await refreshJobStats();
+          } else {
+            alert("エラーが発生しました");
+          }
+        } catch (err) {
+          console.error("Failed to generate report:", err);
         }
+      }
 
-        // メールジョブ追加
-        async function addEmailJob() {
-            const email = document.getElementById('job-email').value;
-            const subject = document.getElementById('job-subject').value;
-            
-            if (!email || !subject) {
-                alert('メールアドレスと件名を入力してください');
-                return;
-            }
+      // Cron統計
+      async function refreshCronStats() {
+        try {
+          const res = await fetch(`${API_BASE}/admin/cron/stats`, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          const data = await res.json();
 
-            try {
-                const res = await fetch(`${API_BASE}/admin/jobs/email`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        to: email,
-                        subject: subject,
-                        html: '<h1>テストメール</h1><p>Elysia AIからのテストメールです。</p>'
-                    })
-                });
-                
-                if (res.ok) {
-                    alert('メールジョブを追加しました');
-                    await refreshJobStats();
-                } else {
-                    alert('エラーが発生しました');
-                }
-            } catch (err) {
-                console.error('Failed to add email job:', err);
-            }
-        }
+          document.getElementById("cron-total").textContent =
+            data.totalTasks || 0;
+          document.getElementById("cron-enabled").textContent =
+            data.enabledTasks || 0;
+          document.getElementById("cron-disabled").textContent =
+            data.disabledTasks || 0;
 
-        // レポート生成
-        async function generateReport() {
-            const type = document.getElementById('report-type').value;
-            const now = new Date();
-            const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          // タスク一覧を取得
+          const tasksRes = await fetch(`${API_BASE}/admin/cron/tasks`, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          const tasksData = await tasksRes.json();
 
-            try {
-                const res = await fetch(`${API_BASE}/admin/jobs/report`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        reportType: type,
-                        startDate: start.toISOString(),
-                        endDate: now.toISOString()
-                    })
-                });
-                
-                if (res.ok) {
-                    alert('レポート生成ジョブを追加しました');
-                    await refreshJobStats();
-                } else {
-                    alert('エラーが発生しました');
-                }
-            } catch (err) {
-                console.error('Failed to generate report:', err);
-            }
-        }
+          const tbody = document.querySelector("#cron-table tbody");
+          tbody.innerHTML = "";
 
-        // Cron統計
-        async function refreshCronStats() {
-            try {
-                const res = await fetch(`${API_BASE}/admin/cron/stats`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                const data = await res.json();
-                
-                document.getElementById('cron-total').textContent = data.totalTasks || 0;
-                document.getElementById('cron-enabled').textContent = data.enabledTasks || 0;
-                document.getElementById('cron-disabled').textContent = data.disabledTasks || 0;
-
-                // タスク一覧を取得
-                const tasksRes = await fetch(`${API_BASE}/admin/cron/tasks`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                const tasksData = await tasksRes.json();
-                
-                const tbody = document.querySelector('#cron-table tbody');
-                tbody.innerHTML = '';
-                
-                tasksData.tasks.forEach(task => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
+          tasksData.tasks.forEach((task) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
                         <td>${task.name}</td>
                         <td><code>${task.cronTime}</code></td>
-                        <td><span class="badge badge-${task.enabled ? 'success' : 'danger'}">${task.enabled ? '有効' : '無効'}</span></td>
-                        <td>${task.nextRun ? new Date(task.nextRun).toLocaleString('ja-JP') : '-'}</td>
+                        <td><span class="badge badge-${task.enabled ? "success" : "danger"}">${task.enabled ? "有効" : "無効"}</span></td>
+                        <td>${task.nextRun ? new Date(task.nextRun).toLocaleString("ja-JP") : "-"}</td>
                         <td><button class="btn btn-primary" onclick="runCronTask('${task.name}')">▶️ 実行</button></td>
                     `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error('Failed to fetch cron stats:', err);
-            }
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error("Failed to fetch cron stats:", err);
         }
+      }
 
-        // Cronタスク実行
-        async function runCronTask(name) {
-            try {
-                const res = await fetch(`${API_BASE}/admin/cron/tasks/${name}/run`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                if (res.ok) {
-                    alert(`タスク ${name} を実行しました`);
-                } else {
-                    alert('エラーが発生しました');
-                }
-            } catch (err) {
-                console.error('Failed to run cron task:', err);
-            }
+      // Cronタスク実行
+      async function runCronTask(name) {
+        try {
+          const res = await fetch(`${API_BASE}/admin/cron/tasks/${name}/run`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+
+          if (res.ok) {
+            alert(`タスク ${name} を実行しました`);
+          } else {
+            alert("エラーが発生しました");
+          }
+        } catch (err) {
+          console.error("Failed to run cron task:", err);
         }
+      }
 
-        // 監査ログ統計
-        async function refreshAuditStats() {
-            try {
-                const res = await fetch(`${API_BASE}/admin/audit/stats`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                const data = await res.json();
-                
-                document.getElementById('audit-total').textContent = data.totalLogs || 0;
-                document.getElementById('audit-24h').textContent = data.last24Hours || 0;
-                document.getElementById('audit-7d').textContent = data.last7Days || 0;
+      // 監査ログ統計
+      async function refreshAuditStats() {
+        try {
+          const res = await fetch(`${API_BASE}/admin/audit/stats`, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          const data = await res.json();
 
-                // 最新ログを取得
-                await searchAuditLogs();
-            } catch (err) {
-                console.error('Failed to fetch audit stats:', err);
-            }
+          document.getElementById("audit-total").textContent =
+            data.totalLogs || 0;
+          document.getElementById("audit-24h").textContent =
+            data.last24Hours || 0;
+          document.getElementById("audit-7d").textContent = data.last7Days || 0;
+
+          // 最新ログを取得
+          await searchAuditLogs();
+        } catch (err) {
+          console.error("Failed to fetch audit stats:", err);
         }
+      }
 
-        // 監査ログ検索
-        async function searchAuditLogs() {
-            const userId = document.getElementById('audit-search-user').value;
-            const action = document.getElementById('audit-search-action').value;
-            const resource = document.getElementById('audit-search-resource').value;
-            
-            const params = new URLSearchParams();
-            if (userId) params.append('userId', userId);
-            if (action) params.append('action', action);
-            if (resource) params.append('resource', resource);
-            params.append('limit', '50');
+      // 監査ログ検索
+      async function searchAuditLogs() {
+        const userId = document.getElementById("audit-search-user").value;
+        const action = document.getElementById("audit-search-action").value;
+        const resource = document.getElementById("audit-search-resource").value;
 
-            try {
-                const res = await fetch(`${API_BASE}/admin/audit/logs?${params}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                const data = await res.json();
-                
-                const tbody = document.querySelector('#audit-table tbody');
-                tbody.innerHTML = '';
-                
-                data.logs.forEach(log => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${new Date(log.timestamp).toLocaleString('ja-JP')}</td>
-                        <td>${log.userId || '-'}</td>
+        const params = new URLSearchParams();
+        if (userId) params.append("userId", userId);
+        if (action) params.append("action", action);
+        if (resource) params.append("resource", resource);
+        params.append("limit", "50");
+
+        try {
+          const res = await fetch(`${API_BASE}/admin/audit/logs?${params}`, {
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          const data = await res.json();
+
+          const tbody = document.querySelector("#audit-table tbody");
+          tbody.innerHTML = "";
+
+          data.logs.forEach((log) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                        <td>${new Date(log.timestamp).toLocaleString("ja-JP")}</td>
+                        <td>${log.userId || "-"}</td>
                         <td><span class="badge badge-info">${log.action}</span></td>
                         <td>${log.resource}</td>
-                        <td><span class="badge badge-${log.statusCode < 400 ? 'success' : 'danger'}">${log.statusCode}</span></td>
+                        <td><span class="badge badge-${log.statusCode < 400 ? "success" : "danger"}">${log.statusCode}</span></td>
                         <td>${log.ipAddress}</td>
                     `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                console.error('Failed to search audit logs:', err);
-            }
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          console.error("Failed to search audit logs:", err);
+        }
+      }
+
+      // 監査ログエクスポート
+      async function exportAuditLogs(format) {
+        try {
+          const res = await fetch(
+            `${API_BASE}/admin/audit/export?format=${format}`,
+            {
+              headers: { Authorization: `Bearer ${authToken}` },
+            },
+          );
+
+          const blob = await res.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `audit-logs.${format}`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (err) {
+          console.error("Failed to export audit logs:", err);
+        }
+      }
+
+      // ファイル統計
+      async function refreshFileStats() {
+        // 実装予定
+        document.getElementById("storage-stats").innerHTML =
+          "<p>ファイル統計を取得中...</p>";
+      }
+
+      // ファイルアップロード
+      async function uploadFile() {
+        const fileInput = document.getElementById("file-upload");
+        if (!fileInput.files.length) {
+          alert("ファイルを選択してください");
+          return;
         }
 
-        // 監査ログエクスポート
-        async function exportAuditLogs(format) {
-            try {
-                const res = await fetch(`${API_BASE}/admin/audit/export?format=${format}`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                const blob = await res.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `audit-logs.${format}`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            } catch (err) {
-                console.error('Failed to export audit logs:', err);
-            }
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+          const res = await fetch(`${API_BASE}/upload`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${authToken}` },
+            body: formData,
+          });
+
+          if (res.ok) {
+            alert("ファイルをアップロードしました");
+            await refreshFileStats();
+          } else {
+            alert("エラーが発生しました");
+          }
+        } catch (err) {
+          console.error("Failed to upload file:", err);
         }
-
-        // ファイル統計
-        async function refreshFileStats() {
-            // 実装予定
-            document.getElementById('storage-stats').innerHTML = '<p>ファイル統計を取得中...</p>';
-        }
-
-        // ファイルアップロード
-        async function uploadFile() {
-            const fileInput = document.getElementById('file-upload');
-            if (!fileInput.files.length) {
-                alert('ファイルを選択してください');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-
-            try {
-                const res = await fetch(`${API_BASE}/upload`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${authToken}` },
-                    body: formData
-                });
-                
-                if (res.ok) {
-                    alert('ファイルをアップロードしました');
-                    await refreshFileStats();
-                } else {
-                    alert('エラーが発生しました');
-                }
-            } catch (err) {
-                console.error('Failed to upload file:', err);
-            }
-        }
+      }
     </script>
-</body>
+  </body>
 </html>

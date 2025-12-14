@@ -138,14 +138,16 @@ curl -X POST http://localhost:3000/knowledge \
 ### 3. WebSocket リアルタイム通信
 
 ```javascript
-const ws = new WebSocket('ws://localhost:3000/ws');
+const ws = new WebSocket("ws://localhost:3000/ws");
 
 ws.onopen = () => {
-  ws.send(JSON.stringify({
-    type: 'chat',
-    room: 'general',
-    data: { message: 'Hello!' }
-  }));
+  ws.send(
+    JSON.stringify({
+      type: "chat",
+      room: "general",
+      data: { message: "Hello!" },
+    }),
+  );
 };
 ```
 

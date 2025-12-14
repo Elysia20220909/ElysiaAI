@@ -7,18 +7,19 @@
 
 ## 📊 サービス状態サマリー
 
-| サービス | ポート | 状態 | 機能 | 詳細 |
-|---------|-------|------|------|------|
-| **Ollama** | 11434 | ✅ **稼働中** | LLM推論有効化 | llama3.2, gpt-oss:120b-cloud |
-| **FastAPI** | 8000 | ✅ **稼働中** | RAG機能有効化 | 50セリフ、Ollama連携済み |
-| **Redis** | 6379 | ✅ **稼働中** | レート制限有効化 | Docker: elysia-redis |
-| **Elysia** | 3000 | ⚠️ **部分起動** | メインAPI | Prisma設定待ち |
+| サービス    | ポート | 状態            | 機能             | 詳細                         |
+| ----------- | ------ | --------------- | ---------------- | ---------------------------- |
+| **Ollama**  | 11434  | ✅ **稼働中**   | LLM推論有効化    | llama3.2, gpt-oss:120b-cloud |
+| **FastAPI** | 8000   | ✅ **稼働中**   | RAG機能有効化    | 50セリフ、Ollama連携済み     |
+| **Redis**   | 6379   | ✅ **稼働中**   | レート制限有効化 | Docker: elysia-redis         |
+| **Elysia**  | 3000   | ⚠️ **部分起動** | メインAPI        | Prisma設定待ち               |
 
 ---
 
 ## ✅ 稼働中サービス詳細
 
 ### 1. Ollama (LLM推論サービス)
+
 **状態**: ✅ **完全稼働中**
 
 ```json
@@ -30,11 +31,13 @@
 ```
 
 **機能**:
+
 - チャット応答生成
 - ストリーミング対応
 - 複数モデル対応
 
 **テストコマンド**:
+
 ```bash
 curl -X POST http://localhost:11434/api/chat \
   -H "Content-Type: application/json" \
@@ -47,6 +50,7 @@ curl -X POST http://localhost:11434/api/chat \
 ---
 
 ### 2. FastAPI (RAGサービス)
+
 **状態**: ✅ **完全稼働中**
 
 ```json
@@ -64,17 +68,20 @@ curl -X POST http://localhost:11434/api/chat \
 ```
 
 **機能**:
+
 - エリシアセリフ検索 (50件)
 - ベクトル検索 (Sentence Transformers)
 - Ollama統合チャット
 - ストリーミング応答
 
 **エンドポイント**:
+
 - `GET /health` - ヘルスチェック
 - `POST /rag` - RAG検索
 - `POST /chat` - Ollamaチャット
 
 **テストコマンド**:
+
 ```bash
 # RAG検索
 curl -X POST http://localhost:8000/rag \
@@ -95,9 +102,11 @@ curl -X POST http://localhost:8000/chat \
 ## ❌ 未起動サービス
 
 ### 3. Redis (レート制限サービス)
+
 **状態**: ❌ **未インストール**
 
 **影響**:
+
 - レート制限がインメモリにフォールバック
 - 複数サーバー間での制限共有不可
 - サーバー再起動でカウントリセット
@@ -105,6 +114,7 @@ curl -X POST http://localhost:8000/chat \
 **インストールオプション**:
 
 #### オプション A: Docker (推奨)
+
 ```powershell
 # Redisコンテナ起動
 docker run -d --name redis -p 6379:6379 redis:alpine
@@ -120,6 +130,7 @@ docker rm redis
 ```
 
 #### オプション B: WSL2 + Ubuntu
+
 ```bash
 # WSL2で実行
 sudo apt-get update
@@ -131,6 +142,7 @@ redis-cli ping  # PONG が返ればOK
 ```
 
 #### オプション C: Windows版 Redis (非推奨)
+
 ```powershell
 # Chocolateyでインストール
 choco install redis-64
@@ -140,7 +152,9 @@ choco install redis-64
 ```
 
 **起動後の設定**:
+
 1. `.env`ファイルを編集:
+
 ```env
 REDIS_ENABLED=true
 REDIS_URL=redis://localhost:6379
@@ -153,13 +167,16 @@ REDIS_URL=redis://localhost:6379
 ## ⏸️ 待機中サービス
 
 ### 4. Elysia (メインAPIサーバー)
+
 **状態**: ⏸️ **待機中**
 
 **待機理由**:
+
 - Prismaデータベース設定が必要
 - Redis起動推奨 (オプション)
 
 **起動コマンド**:
+
 ```powershell
 # 開発サーバー
 bun run dev
@@ -169,6 +186,7 @@ bun run src/index.ts
 ```
 
 **提供機能** (起動後):
+
 - `/api/chat` - AIチャット
 - `/api/feedback` - フィードバック
 - `/api/knowledge` - ナレッジベース
@@ -183,12 +201,14 @@ bun run src/index.ts
 ### ✅ 有効化済み
 
 #### 1. LLM推論機能 (Ollama) ✅
+
 - **状態**: 完全有効
 - **モデル**: llama3.2 (3.2B)
 - **機能**: チャット生成、ストリーミング
 - **パフォーマンス**: 良好
 
 #### 2. RAG機能 (FastAPI) ✅
+
 - **状態**: 完全有効
 - **データ**: エリシアセリフ50件
 - **検索**: ベクトル類似度検索
@@ -197,6 +217,7 @@ bun run src/index.ts
 ### ⚠️ 部分的有効
 
 #### 3. レート制限機能 ⚠️
+
 - **状態**: インメモリモード
 - **影響**: 単一サーバーのみ
 - **推奨**: Redis導入
@@ -204,6 +225,7 @@ bun run src/index.ts
 ### ❌ 無効
 
 #### 4. メインAPI機能 ❌
+
 - **状態**: Prisma設定待ち
 - **影響**: 全APIエンドポイント利用不可
 
@@ -212,11 +234,13 @@ bun run src/index.ts
 ## 📈 推奨アクション
 
 ### 即座実行 (Priority: High)
+
 1. ✅ **Ollama起動確認** - 完了
 2. ✅ **FastAPI起動確認** - 完了
 3. ⏳ **Redis起動** - 下記手順参照
 
 ### Redis起動手順 (Docker推奨)
+
 ```powershell
 # 1. Redisコンテナ起動
 docker run -d --name elysia-redis -p 6379:6379 redis:alpine
@@ -232,6 +256,7 @@ bun run dev
 ```
 
 ### 短期実行 (Priority: Medium)
+
 4. **Prisma設定完了** - データベース初期化
 5. **Elysiaサーバー起動** - メインAPI有効化
 6. **統合テスト実行** - 全機能確認
@@ -241,6 +266,7 @@ bun run dev
 ## 🧪 動作確認スクリプト
 
 ### FastAPI + Ollama 統合テスト
+
 ```powershell
 # RAG検索 → Ollamaチャット
 $ragResponse = Invoke-RestMethod -Uri "http://localhost:8000/rag" `
@@ -292,12 +318,14 @@ Write-Host $chatResponse.response
 ## 🎉 稼働サービスサマリー
 
 ### 現在利用可能
+
 - ✅ **Ollama LLM**: llama3.2で日本語対応可能
 - ✅ **FastAPI RAG**: エリシアセリフ検索 + チャット生成
 - ✅ **ベクトル検索**: Sentence Transformers (all-MiniLM-L6-v2)
 - ✅ **ストリーミング**: リアルタイム応答生成
 
 ### 追加導入推奨
+
 - ⚠️ **Redis**: レート制限の永続化・分散化
 - ⏳ **Prisma DB**: ユーザー管理・履歴保存
 

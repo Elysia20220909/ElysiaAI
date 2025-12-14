@@ -17,6 +17,7 @@
 ## 1. 準備作業
 
 ### システム要件
+
 ```bash
 - Linux (Ubuntu 20.04+ または CentOS 7+)
 - Root アクセス権限
@@ -25,6 +26,7 @@
 ```
 
 ### 前提条件の確認
+
 ```bash
 # SSH でサーバーにログイン
 ssh user@your-server-ip
@@ -63,6 +65,7 @@ sudo bash complete-security-setup.sh
 ```
 
 このスクリプトは以下を順序立てて実行します：
+
 1. セキュリティ認証情報の生成
 2. ファイアウォール設定
 3. SSH強化
@@ -83,6 +86,7 @@ sudo bash /opt/elysia-ai/scripts/firewall-setup.sh
 ```
 
 このスクリプトが実行すること：
+
 - UFW（Uncomplicated Firewall）をインストール・設定
 - デフォルトポリシー設定（受信拒否、送信許可）
 - SSH（22）, HTTP（80）, HTTPS（443）ポートを開放
@@ -90,6 +94,7 @@ sudo bash /opt/elysia-ai/scripts/firewall-setup.sh
 - ファイアウォール有効化
 
 **出力例：**
+
 ```
 ✓ UFW Status: active
 ✓ Firewall rules configured
@@ -105,6 +110,7 @@ sudo bash /opt/elysia-ai/scripts/ssh-security.sh
 ```
 
 このスクリプトが実行すること：
+
 - SSH設定のバックアップを作成
 - パスワード認証を無効化（公開鍵認証のみ）
 - Root ログインを禁止
@@ -122,6 +128,7 @@ sudo bash /opt/elysia-ai/scripts/ssl-setup.sh example.com
 ```
 
 このスクリプトが実行すること：
+
 - Certbot（Let's Encrypt）のインストール
 - SSL証明書の生成・インストール
 - 自動更新の設定
@@ -130,6 +137,7 @@ sudo bash /opt/elysia-ai/scripts/ssl-setup.sh example.com
 - セキュリティヘッダーの設定
 
 **パラメータ:**
+
 ```bash
 # 基本的な使用法
 sudo bash ssl-setup.sh example.com
@@ -148,6 +156,7 @@ sudo bash /opt/elysia-ai/scripts/backup-setup.sh
 ```
 
 このスクリプトが実行すること：
+
 - バックアップディレクトリ作成（/backup）
 - 自動バックアップスクリプト配置
 - PostgreSQL データベースバックアップ
@@ -157,6 +166,7 @@ sudo bash /opt/elysia-ai/scripts/backup-setup.sh
 - 古いバックアップの自動削除（30日保持）
 
 **バックアップ対象:**
+
 ```
 - Database: PostgreSQL dump (SQL.gz)
 - Application: tar.gz (node_modules 除外)
@@ -165,6 +175,7 @@ sudo bash /opt/elysia-ai/scripts/backup-setup.sh
 ```
 
 **手動バックアップ:**
+
 ```bash
 /opt/backup-elysia-ai.sh
 
@@ -179,6 +190,7 @@ sudo bash /opt/elysia-ai/scripts/log-monitoring-setup.sh
 ```
 
 このスクリプトが実行すること：
+
 - ログディレクトリ作成（/var/log/elysia）
 - Logrotate 設定（ログローテーション）
 - ログ監視スクリプト配置
@@ -186,6 +198,7 @@ sudo bash /opt/elysia-ai/scripts/log-monitoring-setup.sh
 - ホーリー監視 Cron ジョブ設定
 
 **ログ監視レポート:**
+
 ```bash
 # 手動実行
 /opt/monitor-elysia-logs.sh
@@ -205,6 +218,7 @@ sudo bash /opt/elysia-ai/scripts/fail2ban-setup.sh
 ```
 
 このスクリプトが実行すること：
+
 - Fail2Ban（侵入検出システム）インストール
 - API、SSH、DDoS フィルター設定
 - Jail ルール設定
@@ -212,6 +226,7 @@ sudo bash /opt/elysia-ai/scripts/fail2ban-setup.sh
 - Cron ジョブで期限切れバンを自動解除
 
 **ルール:**
+
 ```
 Elysia API:
   - 5 回の失敗で 1 時間ブロック
@@ -227,6 +242,7 @@ SSH DDoS:
 ```
 
 **監視:**
+
 ```bash
 # 状態確認
 fail2ban-client status
@@ -248,12 +264,14 @@ sudo bash /opt/elysia-ai/scripts/security-audit-setup.sh
 ```
 
 このスクリプトが実行すること：
+
 - Lynis（セキュリティ監査ツール）インストール
 - AIDE（ファイル整合性監視）インストール・設定
 - 監査スクリプト配置
 - 定期監査スケジュール設定
 
 **監査スケジュール:**
+
 ```
 - Lynis: 週 1 回（日曜 2:00 AM）
 - AIDE: 毎日（3:00 AM）
@@ -261,6 +279,7 @@ sudo bash /opt/elysia-ai/scripts/security-audit-setup.sh
 ```
 
 **手動実行:**
+
 ```bash
 # Lynis 監査
 /opt/run-security-audit.sh
@@ -332,6 +351,7 @@ cat /opt/elysia-ai/.env
 ```
 
 必須の環境変数：
+
 ```bash
 # JWT 認証
 JWT_SECRET=<生成されたランダム文字列>
@@ -536,62 +556,74 @@ tail -f /var/log/fail2ban.log
 本番デプロイ前に以下を確認してください：
 
 - [ ] UFW ファイアウォール有効
+
   ```bash
   sudo ufw status
   ```
 
 - [ ] SSH 公開鍵認証のみ
+
   ```bash
   sudo grep PasswordAuthentication /etc/ssh/sshd_config
   ```
 
 - [ ] Root SSH ログイン禁止
+
   ```bash
   sudo grep PermitRootLogin /etc/ssh/sshd_config
   ```
 
 - [ ] SSL/TLS 証明書インストール
+
   ```bash
   sudo ls /etc/letsencrypt/live/
   ```
 
 - [ ] Fail2Ban 有効
+
   ```bash
   sudo fail2ban-client status
   ```
 
 - [ ] 自動バックアップ設定
+
   ```bash
   crontab -l | grep backup
   ```
 
 - [ ] ログ監視有効
+
   ```bash
   crontab -l | grep monitor
   ```
 
 - [ ] 定期監査スケジュール
+
   ```bash
   crontab -l | grep audit
   ```
 
 - [ ] セキュリティアップデート適用
+
   ```bash
   apt list --upgradable | grep -i security
   ```
 
 - [ ] データベースパスワード変更
+
   ```bash
   sudo -u postgres psql
   \password elysia_user
   ```
 
 - [ ] JWT シークレット変更（強力なランダム値）
+
   ```bash
   grep JWT_SECRET /opt/elysia-ai/.env
   ```
 
 - [ ] ディスク空き容量確認
+
   ```bash
   df -h
   ```

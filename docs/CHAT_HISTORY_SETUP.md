@@ -7,20 +7,24 @@ Elysia AIに会話履歴の永続化機能が追加されました。これに�
 ## 機能一覧
 
 ### 1. セッション管理
+
 - ✅ 新規セッション作成
 - ✅ セッション一覧取得
 - ✅ セッション詳細取得
 - ✅ セッション削除
 
 ### 2. メッセージ管理
+
 - ✅ メッセージの自動保存
 - ✅ 会話履歴の取得
 
 ### 3. エクスポート機能
+
 - ✅ JSON形式でエクスポート
 - ✅ Markdown形式でエクスポート
 
 ### 4. 統計情報
+
 - ✅ メッセージ数
 - ✅ 会話時間
 - ✅ 平均メッセージ長
@@ -98,12 +102,14 @@ curl http://localhost:3000/sessions \
 ### セッションエクスポート
 
 #### JSON形式
+
 ```bash
 curl http://localhost:3000/sessions/{sessionId}/export?format=json \
   -o session.json
 ```
 
 #### Markdown形式
+
 ```bash
 curl http://localhost:3000/sessions/{sessionId}/export?format=markdown \
   -o session.md
@@ -164,12 +170,12 @@ await cleanupOldSessions(30);
 
 ```typescript
 // ユーザーの過去のセッションを取得
-const sessions = await fetch('/sessions', {
-  headers: { 'Authorization': `Bearer ${token}` }
-}).then(r => r.json());
+const sessions = await fetch("/sessions", {
+  headers: { Authorization: `Bearer ${token}` },
+}).then((r) => r.json());
 
 // 一覧表示
-sessions.forEach(session => {
+sessions.forEach((session) => {
   console.log(`${session.id}: ${session.messages.length}件のメッセージ`);
 });
 ```
@@ -177,30 +183,27 @@ sessions.forEach(session => {
 ### エクスポートボタン
 
 ```html
-<button onclick="exportSession('markdown')">
-  Markdownでエクスポート
-</button>
+<button onclick="exportSession('markdown')">Markdownでエクスポート</button>
 
 <script>
-async function exportSession(format) {
-  const sessionId = getCurrentSessionId();
-  const blob = await fetch(
-    `/sessions/${sessionId}/export?format=${format}`
-  ).then(r => r.blob());
-  
-  // ダウンロード
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `session.${format === 'json' ? 'json' : 'md'}`;
-  a.click();
-}
+  async function exportSession(format) {
+    const sessionId = getCurrentSessionId();
+    const blob = await fetch(`/sessions/${sessionId}/export?format=${format}`).then((r) => r.blob());
+
+    // ダウンロード
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `session.${format === "json" ? "json" : "md"}`;
+    a.click();
+  }
 </script>
 ```
 
 ## データベーススキーマ
 
 ### ChatSession
+
 ```prisma
 model ChatSession {
   id        String   @id @default(cuid())
@@ -208,13 +211,14 @@ model ChatSession {
   mode      String   @default("normal")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user      User?    @relation(...)
   messages  Message[]
 }
 ```
 
 ### Message
+
 ```prisma
 model Message {
   id        String      @id @default(cuid())
@@ -222,7 +226,7 @@ model Message {
   role      String
   content   String
   createdAt DateTime    @default(now())
-  
+
   session   ChatSession @relation(...)
 }
 ```
@@ -242,11 +246,13 @@ bunx prisma migrate dev
 ### セッションが保存されない
 
 1. Prismaクライアントが生成されているか確認
+
 ```powershell
 bunx prisma generate
 ```
 
 2. データベース接続を確認
+
 ```powershell
 bunx prisma studio
 ```
@@ -256,6 +262,7 @@ bunx prisma studio
 ### インデックス
 
 必要なインデックスは既にスキーマに含まれています:
+
 - `sessionId`（高速メッセージ検索）
 - `userId`（ユーザー別セッション検索）
 - `createdAt`（時系列ソート）
@@ -266,8 +273,8 @@ bunx prisma studio
 // メッセージ数の多いセッションは limit を使用
 const recentMessages = await prisma.message.findMany({
   where: { sessionId },
-  orderBy: { createdAt: 'desc' },
-  take: 50 // 最新50件のみ
+  orderBy: { createdAt: "desc" },
+  take: 50, // 最新50件のみ
 });
 ```
 

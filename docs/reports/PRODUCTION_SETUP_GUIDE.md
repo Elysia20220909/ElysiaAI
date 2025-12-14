@@ -3,12 +3,14 @@
 ## ✅ 完了済み設定
 
 ### 1. 基本設定
+
 - [x] サーバーポート設定 (PORT=3000)
 - [x] データベース設定 (SQLite: dev.db)
 - [x] Redis接続設定 (TLS対応)
 - [x] JWT認証設定済み
 
 ### 2. セキュリティ
+
 - [x] Rate limiting設定 (60 RPM)
 - [x] JWT_SECRET設定済み
 - [x] Input sanitization実装
@@ -16,6 +18,7 @@
 - [x] セキュリティヘッダー設定
 
 ### 3. 機能実装
+
 - [x] 7モードLLM対応
 - [x] Web検索統合 (Wikipedia、天気、ニュース)
 - [x] OpenAI統合実装
@@ -123,6 +126,7 @@ WantedBy=multi-user.target
 ```
 
 **コマンド**:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable elysia-ai
@@ -135,7 +139,7 @@ sudo systemctl status elysia-ai
 **ファイル**: `docker-compose.production.yml`
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   elysia-ai:
@@ -194,21 +198,26 @@ volumes:
 ### 5. 監視・ログ
 
 #### Prometheus メトリクス
+
 - エンドポイント: `http://localhost:3000/metrics`
 - 既に実装済み
 
 #### ヘルスチェック
+
 - `/ping` - シンプルチェック
 - `/health` - 詳細チェック (Redis, Ollama, Database)
 
 #### ログローテーション
+
 既存の自動クリーンアップ機能:
+
 - 最大ファイルサイズ: 500MB
 - 保持期間: 30日
 
 ### 6. バックアップ戦略
 
 #### データベース
+
 ```bash
 # 毎日3:00 AMに自動実行（既存のcron設定）
 # 手動バックアップ:
@@ -216,6 +225,7 @@ bunx prisma db pull
 ```
 
 #### アップロードファイル
+
 ```bash
 # 定期バックアップ
 rsync -avz ./uploads/ /backup/uploads/$(date +%Y%m%d)/
@@ -224,6 +234,7 @@ rsync -avz ./uploads/ /backup/uploads/$(date +%Y%m%d)/
 ## 📋 デプロイ手順
 
 ### ステップ1: サーバー準備
+
 ```bash
 # 依存パッケージインストール
 sudo apt update && sudo apt upgrade -y
@@ -234,6 +245,7 @@ curl -fsSL https://bun.sh/install | bash
 ```
 
 ### ステップ2: アプリケーション配置
+
 ```bash
 # リポジトリクローン
 git clone https://github.com/chloeamethyst/ElysiaAI.git /opt/elysia-ai
@@ -248,6 +260,7 @@ nano .env.production  # 本番用に編集
 ```
 
 ### ステップ3: データベースセットアップ
+
 ```bash
 # Prisma設定
 bunx prisma generate
@@ -255,6 +268,7 @@ bunx prisma db push --config config/internal/prisma.config.ts
 ```
 
 ### ステップ4: ビルドとテスト
+
 ```bash
 # ビルド
 bun run build
@@ -264,6 +278,7 @@ NODE_ENV=production bun run src/index.ts
 ```
 
 ### ステップ5: サービス登録
+
 ```bash
 # Systemdサービス登録
 sudo cp elysia-ai.service /etc/systemd/system/
@@ -272,6 +287,7 @@ sudo systemctl start elysia-ai
 ```
 
 ### ステップ6: Nginx設定
+
 ```bash
 # Nginx設定
 sudo cp nginx.conf.example /etc/nginx/sites-available/elysia-ai
@@ -281,6 +297,7 @@ sudo systemctl reload nginx
 ```
 
 ### ステップ7: SSL証明書 (Let's Encrypt)
+
 ```bash
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d yourdomain.com
@@ -301,6 +318,7 @@ sudo certbot --nginx -d yourdomain.com
 ## 📊 パフォーマンス最適化
 
 ### 推奨設定
+
 1. **Redis**: キャッシュ戦略の最適化
 2. **Database**: インデックス最適化、コネクションプーリング
 3. **CDN**: 静的ファイルの配信
@@ -308,6 +326,7 @@ sudo certbot --nginx -d yourdomain.com
 5. **PM2/Systemd**: プロセス管理
 
 ### 監視項目
+
 - CPU使用率
 - メモリ使用率
 - ディスク容量
@@ -317,16 +336,19 @@ sudo certbot --nginx -d yourdomain.com
 ## 📞 トラブルシューティング
 
 ### サーバーが起動しない
+
 1. ログ確認: `sudo journalctl -u elysia-ai -f`
 2. ポート競合確認: `sudo lsof -i :3000`
 3. 環境変数確認: `.env.production`の内容
 
 ### データベース接続エラー
+
 1. PostgreSQL稼働確認: `sudo systemctl status postgresql`
 2. 接続情報確認: DATABASE_URL
 3. ファイアウォール確認
 
 ### パフォーマンス問題
+
 1. `/metrics` でメトリクス確認
 2. `/health` で各サービス状態確認
 3. ログファイルの容量確認

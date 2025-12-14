@@ -47,23 +47,23 @@ ws://localhost:3000/ws
 ### 接続方法
 
 ```javascript
-const ws = new WebSocket('ws://localhost:3000/ws');
+const ws = new WebSocket("ws://localhost:3000/ws");
 
 ws.onopen = () => {
-  console.log('WebSocket connected');
+  console.log("WebSocket connected");
 };
 
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
-  console.log('Received:', data);
+  console.log("Received:", data);
 };
 
 ws.onerror = (error) => {
-  console.error('WebSocket error:', error);
+  console.error("WebSocket error:", error);
 };
 
 ws.onclose = () => {
-  console.log('WebSocket disconnected');
+  console.log("WebSocket disconnected");
 };
 ```
 
@@ -260,11 +260,11 @@ Authorization: Bearer {JWT_TOKEN}
 **アクション判定:**
 
 | HTTP メソッド | アクション |
-|--------------|----------|
-| GET          | READ     |
-| POST         | CREATE   |
-| PUT/PATCH    | UPDATE   |
-| DELETE       | DELETE   |
+| ------------- | ---------- |
+| GET           | READ       |
+| POST          | CREATE     |
+| PUT/PATCH     | UPDATE     |
+| DELETE        | DELETE     |
 
 ---
 
@@ -303,7 +303,7 @@ const result = await cacheService.cacheQueryResult(
   async () => {
     return await db.query("SELECT * FROM feedback LIMIT 10");
   },
-  300 // 5分TTL
+  300, // 5分TTL
 );
 ```
 
@@ -337,9 +337,7 @@ await queryOptimizer.createIndexes(db);
 #### クエリ分析
 
 ```typescript
-const analysis = queryOptimizer.analyzeQuery(
-  "SELECT * FROM feedback WHERE rating > 3"
-);
+const analysis = queryOptimizer.analyzeQuery("SELECT * FROM feedback WHERE rating > 3");
 
 // => {
 //   type: "SELECT",
@@ -366,12 +364,12 @@ const frequentQueries = queryOptimizer.getMostFrequentQueries(10);
 
 ### キャッシュTTL推奨値
 
-| データ種別 | TTL |
-|----------|-----|
+| データ種別         | TTL            |
+| ------------------ | -------------- |
 | ユーザーセッション | 3600秒 (1時間) |
-| APIキー検証 | 3600秒 (1時間) |
-| フィードバック一覧 | 300秒 (5分) |
-| 統計情報 | 60秒 (1分) |
+| APIキー検証        | 3600秒 (1時間) |
+| フィードバック一覧 | 300秒 (5分)    |
+| 統計情報           | 60秒 (1分)     |
 
 ---
 
@@ -418,12 +416,7 @@ await enhancedRateLimiter.checkIPRateLimit("192.168.1.1", 100, 60000);
 await enhancedRateLimiter.checkUserRateLimit("user123", 1000, 3600000);
 
 // エンドポイント別制限
-await enhancedRateLimiter.checkEndpointRateLimit(
-  "/api/sensitive",
-  "user123",
-  10,
-  60000
-);
+await enhancedRateLimiter.checkEndpointRateLimit("/api/sensitive", "user123", 10, 60000);
 
 // 統計取得
 const stats = enhancedRateLimiter.getStats();
@@ -471,11 +464,13 @@ const stats = responseCompressor.getStats();
 ```typescript
 import { createCompressionMiddleware } from "./lib/response-compressor";
 
-app.use(createCompressionMiddleware({
-  threshold: 1024,      // 最小圧縮サイズ（デフォルト: 1KB）
-  level: 6,             // 圧縮レベル 0-9（デフォルト: 6）
-  preferBrotli: true    // Brotli優先（デフォルト: true）
-}));
+app.use(
+  createCompressionMiddleware({
+    threshold: 1024, // 最小圧縮サイズ（デフォルト: 1KB）
+    level: 6, // 圧縮レベル 0-9（デフォルト: 6）
+    preferBrotli: true, // Brotli優先（デフォルト: true）
+  }),
+);
 ```
 
 ---
@@ -487,18 +482,13 @@ app.use(createCompressionMiddleware({
 ```typescript
 app.get("/api/sensitive", async ({ request }) => {
   const userId = getUserIdFromToken(request);
-  
-  const allowed = await enhancedRateLimiter.checkEndpointRateLimit(
-    "/api/sensitive",
-    userId,
-    10,
-    60000
-  );
-  
+
+  const allowed = await enhancedRateLimiter.checkEndpointRateLimit("/api/sensitive", userId, 10, 60000);
+
   if (!allowed) {
     return { error: "Rate limit exceeded" };
   }
-  
+
   return { data: "sensitive data" };
 });
 ```

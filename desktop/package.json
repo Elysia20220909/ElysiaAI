@@ -1,48 +1,48 @@
 {
-	"name": "elysia-ai-desktop",
-	"version": "1.0.0",
-	"description": "Elysia AI Desktop App",
-	"main": "main.js",
-	"scripts": {
-		"start": "electron .",
-		"build": "electron-builder",
-		"build:win": "electron-builder --win",
-		"build:mac": "electron-builder --mac",
-		"build:linux": "electron-builder --linux"
-	},
-	"build": {
-		"appId": "com.elysia.ai.desktop",
-		"productName": "Elysia AI",
-		"directories": {
-			"output": "dist"
-		},
-		"win": {
-			"target": [
-				"nsis",
-				"portable"
-			],
-			"icon": "assets/icon.ico"
-		},
-		"mac": {
-			"target": [
-				"dmg",
-				"zip"
-			],
-			"icon": "assets/icon.icns"
-		},
-		"linux": {
-			"target": [
-				"AppImage",
-				"deb"
-			],
-			"icon": "assets/icon.png"
-		}
-	},
-	"dependencies": {
-		"electron-store": "^8.1.0"
-	},
-	"devDependencies": {
-		"electron": "^39.2.4",
-		"electron-builder": "^24.9.0"
-	}
+  "name": "elysia-ai-desktop",
+  "version": "1.0.0",
+  "description": "Elysia AI Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.elysia.ai.desktop",
+    "productName": "Elysia AI",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "assets/icon.png"
+    }
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^39.2.4",
+    "electron-builder": "^24.9.0"
+  }
 }

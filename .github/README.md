@@ -14,15 +14,15 @@
 ## ✨ これが Elysia AI
 
 ```typescript
-import { Elysia } from 'elysia'
+import { Elysia } from "elysia";
 
 new Elysia()
-  .get('/chat', async ({ query }) => {
+  .get("/chat", async ({ query }) => {
     // 型安全、自動検証、超高速 ⚡
-    const response = await ai.chat(query.message)
-    return { reply: response }
+    const response = await ai.chat(query.message);
+    return { reply: response };
   })
-  .listen(3000)
+  .listen(3000);
 ```
 
 **妥協なし**: 速さ ⚡、型安全 🛡️、そして作っていて楽しい 💜
