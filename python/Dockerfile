@@ -1,20 +1,13 @@
 FROM python:3.11-slim
 
 WORKDIR /app
-
-# システム依存パッケージ
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Python依存関係
+# 依存ファイルのみ先にコピーし、キャッシュを活用
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# アプリケーションコード
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir -r requirements.txt
+# アプリ本体をコピー
 COPY . .
 
-# ヘルスチェック用エンドポイント確認
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
