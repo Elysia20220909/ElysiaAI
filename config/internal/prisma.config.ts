@@ -1,4 +1,4 @@
-// Elysia AI - Prisma Configuration
+// 開発用: SQLiteローカルDB接続
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
@@ -7,6 +7,7 @@ export default defineConfig({
 		path: "../../prisma/migrations",
 	},
 	datasource: {
-		url: "file:../../dev.db",
+		provider: "sqlite",
+		url: "file:../../dev.db", // 開発環境はローカルファイルDB
 	},
 });
