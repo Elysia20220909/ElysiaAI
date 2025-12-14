@@ -41,10 +41,11 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
 import { DEFAULT_MODE, ELYSIA_MODES } from "./config/internal/llm-config.ts";
-	checkRateLimitRedis,
-	revokeRefreshToken,
-	storeRefreshToken,
-	verifyStoredRefreshToken,
+import {
+  checkRateLimitRedis,
+  revokeRefreshToken,
+  storeRefreshToken,
+  verifyStoredRefreshToken,
 } from "./config/internal/auth.ts";
 import { DATABASE_CONFIG } from "./config/internal/db.ts";
 import { setupSocket } from "./config/internal/socket-server.ts";
@@ -70,9 +71,10 @@ import { logCleanupManager } from "./lib/log-cleanup.ts";
 import { logger } from "./lib/logger.ts";
 import { metricsCollector } from "./lib/metrics.ts";
 import * as openaiIntegration from "./lib/openai-integration.ts";
-	checkRateLimit as checkRateLimitMemory,
-	escapeHtml,
-	getSecurityHeaders,
+import {
+  checkRateLimit as checkRateLimitMemory,
+  escapeHtml,
+  getSecurityHeaders,
 } from "./lib/security.ts";
 import { sessionManager } from "./lib/session-manager.ts";
 import { getTraceContextFromRequest, telemetry } from "./lib/telemetry.ts";
