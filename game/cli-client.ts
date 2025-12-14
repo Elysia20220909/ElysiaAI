@@ -1,10 +1,16 @@
 
 
+import readline from 'readline';
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
 const BASE_URL = 'http://localhost:3001';
 
 async function prompt(query: string): Promise<string> {
-  process.stdout.write(query);
-  return (await Bun.stdin.stream.readLine())?.trim() ?? '';
+  return new Promise(resolve => rl.question(query, ans => resolve(ans.trim())));
 }
 
 function printBoard(board: number[][]) {
@@ -88,3 +94,4 @@ async function main() {
 }
 
 main();
+// rl.close() はmain内でreturn時に必要なら追加してください
