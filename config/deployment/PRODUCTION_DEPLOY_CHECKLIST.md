@@ -348,11 +348,11 @@ Get-Content logs/error.log -Tail 50 -Wait
 ```yaml
 # monitoring/alertmanager/config.yml 編集例
 receivers:
-  - name: 'slack'
+  - name: "slack"
     slack_configs:
-      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
-        channel: '#alerts'
-        title: 'Elysia AI Alert'
+      - api_url: "YOUR_SLACK_WEBHOOK_URL"
+        channel: "#alerts"
+        title: "Elysia AI Alert"
 ```
 
 ---
@@ -422,7 +422,7 @@ gcloud run revisions list --service elysia-ai --region us-central1
 
 ## 📝 デプロイ記録テンプレート
 
-```markdown
+````markdown
 ## デプロイ記録: YYYY-MM-DD HH:MM
 
 ### 環境
@@ -469,7 +469,7 @@ gcloud run revisions list --service elysia-ai --region us-central1
 ### 備考
 
 [特記事項があれば記載]
-```
+````
 
 ---
 

@@ -9,14 +9,17 @@
 ## ✅ フェーズ4: 実用的な個人開発機能 (2025/12/4 NEW)
 
 ### 1. ジョブキュー (Job Queue)
+
 **ファイル:** `src/lib/job-queue.ts`
 
 **機能:**
+
 - BullMQを使用した非同期タスク処理
 - メール送信、レポート生成、データクリーンアップ、Webhook送信
 - Redis対応 (オプション、インメモリフォールバック付き)
 
 **API:**
+
 ```bash
 GET /admin/jobs/stats           # ジョブ統計
 POST /admin/jobs/email          # メール送信ジョブ
@@ -26,15 +29,18 @@ POST /admin/jobs/report         # レポート生成ジョブ
 ---
 
 ### 2. ファイルアップロード (File Upload)
+
 **ファイル:** `src/lib/file-upload.ts`
 
 **機能:**
+
 - 画像・PDF・テキストファイルのアップロード
 - サイズ制限 (デフォルト10MB)
 - ユーザー別ファイル管理
 - 自動クリーンアップ (30日経過)
 
 **API:**
+
 ```bash
 POST /upload                    # ファイルアップロード
 GET /files                      # ファイル一覧
@@ -44,14 +50,17 @@ GET /files/:fileId              # ファイルダウンロード
 ---
 
 ### 3. Cronスケジューラー (Cron Scheduler)
+
 **ファイル:** `src/lib/cron-scheduler.ts`
 
 **機能:**
+
 - 定期タスクのスケジューリング
 - 7つのデフォルトタスク (日次/週次/月次レポート、バックアップ、クリーンアップ等)
 - タスクの有効化/無効化
 
 **API:**
+
 ```bash
 GET /admin/cron/tasks           # タスク一覧
 GET /admin/cron/stats           # Cron統計
@@ -59,6 +68,7 @@ POST /admin/cron/tasks/:name/run # タスク手動実行
 ```
 
 **デフォルトタスク:**
+
 - daily-report: 毎日 9:00 AM
 - weekly-report: 毎週月曜 10:00 AM
 - monthly-report: 毎月1日 10:00 AM
@@ -70,15 +80,18 @@ POST /admin/cron/tasks/:name/run # タスク手動実行
 ---
 
 ### 4. 監査ログ (Audit Log)
+
 **ファイル:** `src/lib/audit-logger.ts`
 
 **機能:**
+
 - 全ユーザー操作の記録
 - IPアドレス、タイムスタンプ、変更前後の値を保存
 - 検索・フィルタリング機能
 - JSON/CSV形式でのエクスポート
 
 **API:**
+
 ```bash
 GET /admin/audit/logs           # ログ検索
 GET /admin/audit/stats          # ログ統計
@@ -88,9 +101,11 @@ GET /admin/audit/export         # ログエクスポート (JSON/CSV)
 ---
 
 ### 5. WebSocketマネージャー (実装済み、統合完了)
+
 **ファイル:** `src/lib/websocket-manager.ts`
 
 **機能:**
+
 - リアルタイム通信システム
 - チャット、通知、ダッシュボード更新
 - ルームベースのブロードキャスト
@@ -105,15 +120,18 @@ GET /admin/audit/export         # ログエクスポート (JSON/CSV)
 ---
 
 ### 1. 環境変数の検証・バリデーション
+
 **ファイル:** `src/lib/env-validator.ts`
 
 **機能:**
+
 - サーバー起動時に必須環境変数を自動チェック
 - 不足している設定を警告表示
 - JWT_SECRET、AUTH_PASSWORDなど重要項目の検証
 - デフォルト値の自動適用
 
 **使い方:**
+
 ```typescript
 // src/index.ts で自動実行
 import { checkEnvironmentOrExit } from "./lib/env-validator";
@@ -121,24 +139,29 @@ checkEnvironmentOrExit();
 ```
 
 **効果:**
+
 - 設定ミスによるバグを起動時に検出
 - デプロイ時のトラブル削減
 
 ---
 
 ### 2. データベースバックアップスクリプト
-**ファイル:** 
+
+**ファイル:**
+
 - `scripts/backup-db.ps1` (手動バックアップ)
 - `scripts/restore-db.ps1` (リストア)
 - `scripts/setup-backup-schedule.ps1` (自動化設定)
 
 **機能:**
+
 - SQLiteデータベース(dev.db)の自動バックアップ
 - タイムスタンプ付きバックアップファイル作成
 - 古いバックアップの自動削除(最大10個保持)
 - 簡単なリストア機能
 
 **使い方:**
+
 ```powershell
 # 手動バックアップ
 .\scripts\backup-db.ps1
@@ -151,21 +174,25 @@ checkEnvironmentOrExit();
 ```
 
 **効果:**
+
 - データロス防止
 - 開発中の安全な実験
 
 ---
 
 ### 3. 開発用ダッシュボード
+
 **ファイル:** `public/admin.html`
 
 **機能:**
+
 - フィードバック統計のリアルタイム表示
 - ナレッジベース管理(検証・削除)
 - モダンなUI/UX
 - JWT認証対応のAdmin API追加
 
 **新規API:**
+
 - `GET /admin/feedback/stats` - フィードバック統計
 - `GET /admin/feedback` - フィードバック一覧
 - `GET /admin/knowledge` - ナレッジ一覧
@@ -173,28 +200,34 @@ checkEnvironmentOrExit();
 - `DELETE /admin/knowledge/:id` - ナレッジ削除
 
 **アクセス:**
+
 ```
 http://localhost:3000/admin.html
 ```
 
 **効果:**
+
 - データの可視化
 - 管理作業の効率化
 
 ---
 
 ### 4. ログローテーション自動化
+
 **ファイル:**
+
 - `scripts/rotate-logs.ps1` (ローテーション実行)
 - `scripts/setup-log-rotation.ps1` (自動化設定)
 
 **機能:**
+
 - 50MB以上のログファイルを自動圧縮
 - 30日以上古いログを自動削除
 - 圧縮ファイルは5個まで保持
 - 毎週日曜日2:00AMに自動実行
 
 **使い方:**
+
 ```powershell
 # 手動実行
 .\scripts\rotate-logs.ps1
@@ -207,24 +240,29 @@ http://localhost:3000/admin.html
 ```
 
 **効果:**
+
 - ディスク容量の節約
 - ログ管理の自動化
 
 ---
 
 ### 5. Docker Compose簡素化
+
 **ファイル:**
+
 - `docker-compose.yml` (全サービス定義)
 - `python/Dockerfile` (FastAPI用)
 - `scripts/start-docker-env.ps1` (起動スクリプト)
 
 **含まれるサービス:**
+
 - Redis (レート制限)
 - Ollama (LLMエンジン)
 - FastAPI (RAGサービス)
 - VOICEVOX (音声合成)
 
 **使い方:**
+
 ```powershell
 # 1コマンドで全サービス起動
 .\scripts\start-docker-env.ps1
@@ -240,6 +278,7 @@ docker-compose logs -f
 ```
 
 **効果:**
+
 - 開発環境のセットアップが簡単
 - 依存サービスの管理が楽
 
@@ -247,25 +286,27 @@ docker-compose logs -f
 
 ## 📊 実装結果サマリー
 
-| 機能 | ファイル数 | コード行数 | 効果 |
-|------|-----------|-----------|------|
-| 環境変数検証 | 1 | 150行 | バグ予防 |
-| DBバックアップ | 3 | 180行 | データ保護 |
-| 管理ダッシュボード | 2 | 500行 | 可視化 |
-| ログローテーション | 2 | 120行 | 自動化 |
-| Docker Compose | 3 | 200行 | 環境構築 |
-| **合計** | **11** | **1,150行** | **生産性向上** |
+| 機能               | ファイル数 | コード行数  | 効果           |
+| ------------------ | ---------- | ----------- | -------------- |
+| 環境変数検証       | 1          | 150行       | バグ予防       |
+| DBバックアップ     | 3          | 180行       | データ保護     |
+| 管理ダッシュボード | 2          | 500行       | 可視化         |
+| ログローテーション | 2          | 120行       | 自動化         |
+| Docker Compose     | 3          | 200行       | 環境構築       |
+| **合計**           | **11**     | **1,150行** | **生産性向上** |
 
 ---
 
 ## 🚀 次のステップ
 
 ### すぐに使える機能
+
 1. サーバー起動すると環境変数チェックが自動実行 ✅
 2. `.\scripts\backup-db.ps1` でデータバックアップ
 3. `http://localhost:3000/admin.html` で管理画面アクセス
 
 ### 推奨設定
+
 ```powershell
 # 自動バックアップ設定(毎日3:00AM)
 .\scripts\setup-backup-schedule.ps1
@@ -282,6 +323,7 @@ docker-compose logs -f
 ## 💡 使用例
 
 ### シナリオ1: 開発開始時
+
 ```powershell
 # Docker環境起動
 .\scripts\start-docker-env.ps1
@@ -291,6 +333,7 @@ bun run dev
 ```
 
 ### シナリオ2: データ確認
+
 ```powershell
 # 管理ダッシュボードにアクセス
 Start-Process "http://localhost:3000/admin.html"
@@ -300,6 +343,7 @@ bunx prisma studio
 ```
 
 ### シナリオ3: トラブル時
+
 ```powershell
 # バックアップから復元
 .\scripts\restore-db.ps1
@@ -313,6 +357,7 @@ Get-Content .\logs\app.log -Tail 50
 ## ✨ 改善された開発体験
 
 **Before:**
+
 - 手動で環境変数チェック
 - データバックアップは自力
 - ログが溜まり続ける
@@ -320,6 +365,7 @@ Get-Content .\logs\app.log -Tail 50
 - データ確認はSQL直打ち
 
 **After:**
+
 - ✅ 起動時に自動検証
 - ✅ 自動バックアップ(毎日3:00AM)
 - ✅ 自動ログローテーション(毎週日曜)
@@ -331,6 +377,7 @@ Get-Content .\logs\app.log -Tail 50
 ## 🎓 学べること
 
 この実装から学べる技術:
+
 1. **環境変数バリデーション** - 設定ミス防止パターン
 2. **自動バックアップ** - データ保護のベストプラクティス
 3. **タスクスケジューラ** - Windows自動化

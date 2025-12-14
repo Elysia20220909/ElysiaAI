@@ -20,15 +20,15 @@
 Bunの速度、Elysiaのエルゴノミクス、そしてAIの力を組み合わせました。
 
 ```typescript
-import { Elysia } from 'elysia'
+import { Elysia } from "elysia";
 
 new Elysia()
-  .get('/chat', async ({ query }) => {
+  .get("/chat", async ({ query }) => {
     // 型安全、自動バリデーション、超高速 ⚡
-    const response = await ai.chat(query.message)
-    return { reply: response }
+    const response = await ai.chat(query.message);
+    return { reply: response };
   })
-  .listen(3000)
+  .listen(3000);
 ```
 
 **妥協しない**: 高速性、型安全性、開発者体験のすべてを実現。
@@ -322,4 +322,3 @@ Made with ❤️ by [chloeamethyst](https://github.com/chloeamethyst)
 ⭐ **GitHubでスターをお願いします！**
 
 </div>
-

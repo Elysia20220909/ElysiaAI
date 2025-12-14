@@ -1,9 +1,7 @@
 try {
 	module.exports = require("./build/Release/elysia_native.node");
 } catch {
-	console.warn(
-		"ネイティブモジュールがビルドされていません。npm install を実行してください。",
-	);
+	console.warn("ネイティブモジュールがビルドされていません。npm install を実行してください。");
 	// JS実装へフォールバック
 	module.exports = {
 		tokenize: (text) => text.toLowerCase().split(/\W+/).filter(Boolean),

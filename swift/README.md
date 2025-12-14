@@ -81,21 +81,21 @@ import ElysiaAI
 class ChatViewModel: ObservableObject {
     @Published var messages: [Message] = []
     @Published var currentResponse = ""
-    
+
     private let client = ElysiaClient()
-    
+
     func sendMessage(_ text: String) async {
         let userMessage = Message(role: "user", content: text)
         messages.append(userMessage)
-        
+
         currentResponse = ""
-        
+
         do {
             let stream = try await client.sendMessage(messages: messages)
             for try await chunk in stream {
                 currentResponse += chunk
             }
-            
+
             let assistantMessage = Message(role: "assistant", content: currentResponse)
             messages.append(assistantMessage)
         } catch {
@@ -112,14 +112,14 @@ class ChatViewModel: ObservableObject {
 ```swift
 class ElysiaClient {
     init(configuration: Configuration = Configuration())
-    
+
     // ストリーミングチャット
-    func sendMessage(messages: [Message]) async throws 
+    func sendMessage(messages: [Message]) async throws
         -> AsyncThrowingStream<String, Error>
-    
+
     // RAG検索
     func searchRAG(query: String) async throws -> RAGResponse
-    
+
     // ヘルスチェック
     func healthCheck() async throws -> Bool
 }

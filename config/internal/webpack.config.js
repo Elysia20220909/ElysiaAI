@@ -8,9 +8,7 @@ const nodeExternals = require("webpack-node-externals");
 
 // ==================== 設定定数 ====================
 const VALID_MODES = ["production", "development", "none"];
-const BUILD_MODE = VALID_MODES.includes(process.env.NODE_ENV)
-	? process.env.NODE_ENV
-	: "production";
+const BUILD_MODE = VALID_MODES.includes(process.env.NODE_ENV) ? process.env.NODE_ENV : "production";
 
 const EXCLUDE_DIRS = [
 	/node_modules/, // 外部依存

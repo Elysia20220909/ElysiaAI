@@ -100,8 +100,8 @@ npm run build:linux
 
 ```javascript
 const mainWindow = new BrowserWindow({
-  width: 1200,  // 幅を変更
-  height: 800,  // 高さを変更
+  width: 1200, // 幅を変更
+  height: 800, // 高さを変更
   // ...
 });
 ```

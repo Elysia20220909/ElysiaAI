@@ -16,15 +16,16 @@ Last Updated: 2025-12-03
 
 ### Chat Endpoint (`/elysia-love`)
 
-| Metric | Value | Notes |
-|--------|-------|-------|
-| Average Response Time (First Token) | 850ms | Including RAG lookup |
-| Average Total Response Time | 3.2s | Full response generation |
-| Throughput | 25 req/s | With rate limiting |
-| P95 Response Time | 1.2s | First token |
-| P99 Response Time | 1.8s | First token |
+| Metric                              | Value    | Notes                    |
+| ----------------------------------- | -------- | ------------------------ |
+| Average Response Time (First Token) | 850ms    | Including RAG lookup     |
+| Average Total Response Time         | 3.2s     | Full response generation |
+| Throughput                          | 25 req/s | With rate limiting       |
+| P95 Response Time                   | 1.2s     | First token              |
+| P99 Response Time                   | 1.8s     | First token              |
 
 **Load Test Results** (100 concurrent users, 1000 requests):
+
 ```
 Total Requests:     1000
 Successful:         998 (99.8%)
@@ -38,34 +39,35 @@ Requests/sec:       24.3
 
 ### Authentication Endpoint (`/auth/token`)
 
-| Metric | Value |
-|--------|-------|
-| Average Response Time | 180ms |
-| Throughput | 50 req/s |
-| P95 Response Time | 250ms |
-| P99 Response Time | 350ms |
+| Metric                | Value    |
+| --------------------- | -------- |
+| Average Response Time | 180ms    |
+| Throughput            | 50 req/s |
+| P95 Response Time     | 250ms    |
+| P99 Response Time     | 350ms    |
 
 ### Feedback Endpoint (`/feedback`)
 
-| Metric | Value |
-|--------|-------|
-| Average Response Time | 45ms |
-| Throughput | 100 req/s |
-| P95 Response Time | 78ms |
-| P99 Response Time | 120ms |
+| Metric                | Value     |
+| --------------------- | --------- |
+| Average Response Time | 45ms      |
+| Throughput            | 100 req/s |
+| P95 Response Time     | 78ms      |
+| P99 Response Time     | 120ms     |
 
 ## RAG Performance
 
 ### Vector Search (Milvus Lite)
 
-| Metric | Value | Dataset Size |
-|--------|-------|--------------|
-| Average Search Time | 12ms | 50 documents |
-| Average Search Time | 35ms | 500 documents |
-| Average Search Time | 120ms | 5000 documents |
-| Top-K Retrieval | 5 results | Default |
+| Metric              | Value     | Dataset Size   |
+| ------------------- | --------- | -------------- |
+| Average Search Time | 12ms      | 50 documents   |
+| Average Search Time | 35ms      | 500 documents  |
+| Average Search Time | 120ms     | 5000 documents |
+| Top-K Retrieval     | 5 results | Default        |
 
 **Embedding Generation**:
+
 ```
 Model: all-MiniLM-L6-v2
 Average Time: 25ms per text (max 512 tokens)
@@ -76,14 +78,15 @@ Batch Processing: 40ms for 10 texts
 
 ### Model: llama3.2
 
-| Metric | Value | Configuration |
-|--------|-------|---------------|
-| Tokens per Second | 28.5 | CPU mode |
-| First Token Latency | 680ms | Average |
-| Context Window | 2048 tokens | Default |
-| Memory Usage | 4.2GB | Per instance |
+| Metric              | Value       | Configuration |
+| ------------------- | ----------- | ------------- |
+| Tokens per Second   | 28.5        | CPU mode      |
+| First Token Latency | 680ms       | Average       |
+| Context Window      | 2048 tokens | Default       |
+| Memory Usage        | 4.2GB       | Per instance  |
 
 **Streaming Performance**:
+
 ```
 Average Chunk Size:     3-5 tokens
 Chunk Interval:        120ms
@@ -94,40 +97,40 @@ Total Response Tokens:  150-300 (typical)
 
 ### Runtime Memory
 
-| Component | Idle | Under Load | Peak |
-|-----------|------|------------|------|
-| Elysia Server | 85MB | 180MB | 250MB |
-| FastAPI Backend | 120MB | 200MB | 280MB |
-| Ollama | 4.2GB | 4.8GB | 5.5GB |
-| Redis | 15MB | 35MB | 80MB |
+| Component       | Idle  | Under Load | Peak  |
+| --------------- | ----- | ---------- | ----- |
+| Elysia Server   | 85MB  | 180MB      | 250MB |
+| FastAPI Backend | 120MB | 200MB      | 280MB |
+| Ollama          | 4.2GB | 4.8GB      | 5.5GB |
+| Redis           | 15MB  | 35MB       | 80MB  |
 
 ### Storage
 
-| Data Type | Size (1000 entries) | Growth Rate |
-|-----------|---------------------|-------------|
-| Feedback JSONL | 2.1MB | ~2KB per entry |
-| Knowledge JSONL | 3.5MB | ~3.5KB per entry |
-| Voice Logs | 1.8MB | ~1.8KB per entry |
+| Data Type       | Size (1000 entries) | Growth Rate      |
+| --------------- | ------------------- | ---------------- |
+| Feedback JSONL  | 2.1MB               | ~2KB per entry   |
+| Knowledge JSONL | 3.5MB               | ~3.5KB per entry |
+| Voice Logs      | 1.8MB               | ~1.8KB per entry |
 
 ## Database Performance
 
 ### Redis Operations
 
 | Operation | Average Time | P99 Time |
-|-----------|-------------|----------|
-| GET | 0.8ms | 2.1ms |
-| SET | 1.1ms | 2.8ms |
-| DEL | 0.9ms | 2.3ms |
-| INCR | 0.7ms | 1.9ms |
+| --------- | ------------ | -------- |
+| GET       | 0.8ms        | 2.1ms    |
+| SET       | 1.1ms        | 2.8ms    |
+| DEL       | 0.9ms        | 2.3ms    |
+| INCR      | 0.7ms        | 1.9ms    |
 
 ### JSONL File Operations
 
-| Operation | Average Time | File Size |
-|-----------|-------------|-----------|
-| Append | 5ms | 10MB |
-| Read Last N | 15ms | 10MB |
-| Full Read | 120ms | 10MB |
-| Rotation | 180ms | 50MB |
+| Operation   | Average Time | File Size |
+| ----------- | ------------ | --------- |
+| Append      | 5ms          | 10MB      |
+| Read Last N | 15ms         | 10MB      |
+| Full Read   | 120ms        | 10MB      |
+| Rotation    | 180ms        | 50MB      |
 
 ## Stress Test Results
 
@@ -145,6 +148,7 @@ Error Rate:         0.55%
 ```
 
 **Resource Usage During Test**:
+
 - CPU: 45-60%
 - Memory: Stable at ~6GB
 - Network I/O: 12MB/s average
@@ -165,19 +169,19 @@ Error Rate (spike): 2.1%
 
 ### Before vs After Rate Limiting
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Error Rate (high load) | 8.5% | 0.5% | 94% reduction |
-| P99 Latency | 5.2s | 1.9s | 63% reduction |
-| Server Stability | Poor | Excellent | N/A |
+| Metric                 | Before | After     | Improvement   |
+| ---------------------- | ------ | --------- | ------------- |
+| Error Rate (high load) | 8.5%   | 0.5%      | 94% reduction |
+| P99 Latency            | 5.2s   | 1.9s      | 63% reduction |
+| Server Stability       | Poor   | Excellent | N/A           |
 
 ### Caching Impact (Redis)
 
-| Metric | No Cache | With Cache | Improvement |
-|--------|----------|------------|-------------|
-| Auth Token Validation | 180ms | 5ms | 97% faster |
-| Rate Limit Check | 25ms | 1ms | 96% faster |
-| Session Lookup | 150ms | 3ms | 98% faster |
+| Metric                | No Cache | With Cache | Improvement |
+| --------------------- | -------- | ---------- | ----------- |
+| Auth Token Validation | 180ms    | 5ms        | 97% faster  |
+| Rate Limit Check      | 25ms     | 1ms        | 96% faster  |
+| Session Lookup        | 150ms    | 3ms        | 98% faster  |
 
 ## Recommendations
 
@@ -186,7 +190,6 @@ Error Rate (spike): 2.1%
 1. **LLM Response Time**: Most significant latency source
    - Consider GPU acceleration for Ollama
    - Implement response caching for common queries
-   
 2. **RAG Vector Search**: Scales linearly with dataset size
    - Consider upgrading to full Milvus for >10K documents
    - Implement query result caching
@@ -197,12 +200,12 @@ Error Rate (spike): 2.1%
 
 ### Scalability Targets
 
-| Load Level | Current | Target | Status |
-|------------|---------|--------|--------|
-| Concurrent Users | 50 | 200 | ⚠️ Needs optimization |
-| Requests/sec | 25 | 100 | ⚠️ Needs horizontal scaling |
-| P95 Latency | 1.2s | <500ms | ⚠️ Needs GPU for LLM |
-| Uptime | 99.5% | 99.9% | ✅ Achievable |
+| Load Level       | Current | Target | Status                      |
+| ---------------- | ------- | ------ | --------------------------- |
+| Concurrent Users | 50      | 200    | ⚠️ Needs optimization       |
+| Requests/sec     | 25      | 100    | ⚠️ Needs horizontal scaling |
+| P95 Latency      | 1.2s    | <500ms | ⚠️ Needs GPU for LLM        |
+| Uptime           | 99.5%   | 99.9%  | ✅ Achievable               |
 
 ### Optimization Priorities
 

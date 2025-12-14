@@ -14,6 +14,7 @@ bun install
 ## Development
 
 1. **Start the Elysia server on your computer:**
+
    ```bash
    # From the root directory
    ./scripts/dev.ps1  # Windows
@@ -33,6 +34,7 @@ bun install
    - Tap "Save & Close"
 
 4. **Start the mobile app:**
+
    ```bash
    npm start
    # or
@@ -47,11 +49,13 @@ bun install
 ## Build for Production
 
 ### iOS (requires macOS + Xcode)
+
 ```bash
 npm run ios
 ```
 
 ### Android
+
 ```bash
 npm run android
 ```

@@ -1,12 +1,13 @@
 ---
 name: ✨ 機能リクエスト
 about: このプロジェクトのアイデアを提案
-title: '[✨ FEATURE] '
+title: "[✨ FEATURE] "
 labels: enhancement
-assignees: ''
+assignees: ""
 ---
 
 ## 💡 どんな課題を解決したい？
+
 （例）いつも〇〇で困っている、など一文で。エリシアに願いを届けるイメージで。
 
 ## 🎯 こうなったら嬉しい

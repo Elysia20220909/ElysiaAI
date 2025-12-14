@@ -57,10 +57,7 @@ async function runTests() {
 
 		// Test 8: User authentication
 		devLogger.info("Test 8: User authentication");
-		const authenticated = await db.authenticateUser(
-			user.username,
-			"test123456",
-		);
+		const authenticated = await db.authenticateUser(user.username, "test123456");
 		assert.assertTrue(authenticated !== null, "Authentication succeeded");
 
 		// Test 9: Get all users

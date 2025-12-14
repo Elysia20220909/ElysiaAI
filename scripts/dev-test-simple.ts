@@ -81,9 +81,7 @@ async function runTests() {
 		// Test 6: User authentication
 		try {
 			devLogger.info("Test 6: User authentication");
-			const user = await testDataGenerator.createTestUser(
-				`auth_test_${Date.now()}`,
-			);
+			const user = await testDataGenerator.createTestUser(`auth_test_${Date.now()}`);
 			const auth = await db.authenticateUser(user.username, "test123456");
 			assert.assertNotNull(auth);
 			devLogger.info("Test 6 PASSED");

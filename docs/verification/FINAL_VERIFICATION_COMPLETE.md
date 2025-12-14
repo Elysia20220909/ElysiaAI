@@ -46,7 +46,7 @@ PowerShellのUnicode履歴ファイルエラーによりターミナル出力に
 - **リクエスト例**:
 
   ```json
-  {"text": "エリシアに会いたい"}
+  { "text": "エリシアに会いたい" }
   ```
 
 - **期待結果**: 関連する3件のセリフを返す
@@ -59,7 +59,7 @@ PowerShellのUnicode履歴ファイルエラーによりターミナル出力に
 
   ```json
   {
-    "messages": [{"role": "user", "content": "こんにちは"}],
+    "messages": [{ "role": "user", "content": "こんにちは" }],
     "stream": false
   }
   ```
@@ -192,11 +192,7 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8000/rag" `
 
 ```json
 {
-  "quotes": [
-    "エリシアのセリフ1",
-    "エリシアのセリフ2",
-    "エリシアのセリフ3"
-  ]
+  "quotes": ["エリシアのセリフ1", "エリシアのセリフ2", "エリシアのセリフ3"]
 }
 ```
 

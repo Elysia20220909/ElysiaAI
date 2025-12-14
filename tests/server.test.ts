@@ -87,9 +87,7 @@ describe("RAG API Tests (if available)", () => {
 				expect(response.data).toHaveProperty("quotes");
 				console.log("✅ RAG API working");
 			} else {
-				console.warn(
-					"⚠️  RAG API not available (this is OK if FastAPI is not running)",
-				);
+				console.warn("⚠️  RAG API not available (this is OK if FastAPI is not running)");
 			}
 		} catch (error: unknown) {
 			const err = error as { code?: string };
@@ -107,10 +105,7 @@ describe("Docker Configuration Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const dockerfilePath = path.join(
-			process.cwd(),
-			"config/docker/Dockerfile.production",
-		);
+		const dockerfilePath = path.join(process.cwd(), "config/docker/Dockerfile.production");
 		expect(fs.existsSync(dockerfilePath)).toBe(true);
 
 		const content = fs.readFileSync(dockerfilePath, "utf-8");
@@ -123,10 +118,7 @@ describe("Docker Configuration Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const composePath = path.join(
-			process.cwd(),
-			"config/docker/docker-compose.yml",
-		);
+		const composePath = path.join(process.cwd(), "config/docker/docker-compose.yml");
 		expect(fs.existsSync(composePath)).toBe(true);
 
 		const content = fs.readFileSync(composePath, "utf-8");
@@ -141,12 +133,7 @@ describe("Cloud Configuration Tests", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const cfPath = path.join(
-			process.cwd(),
-			"cloud",
-			"aws",
-			"cloudformation.yaml",
-		);
+		const cfPath = path.join(process.cwd(), "cloud", "aws", "cloudformation.yaml");
 		expect(fs.existsSync(cfPath)).toBe(true);
 
 		const content = fs.readFileSync(cfPath, "utf-8");

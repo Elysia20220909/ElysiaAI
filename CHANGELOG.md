@@ -8,6 +8,7 @@
 ## [未リリース]
 
 ### 追加
+
 - エンタープライズグレードのプロジェクト構造とドキュメント
 - 包括的なCI/CDワークフロー
 - モニタリングと可観測性のセットアップ
@@ -16,6 +17,7 @@
 ## [1.0.51] - 2025年12月3日
 
 ### 追加
+
 - VOICEVOX統合（四国めたん音声）
 - 感情表現システム（喜び/恥ずかしい/通常）と自動ピッチ調整
 - ユーザー名のパーソナライゼーション（一般的な呼び方ではなく名前で呼びかけ）
@@ -31,12 +33,14 @@
 - Multi-platform setup scripts (Windows PowerShell, Linux/macOS bash)
 
 ### Changed
+
 - Updated to Elysia v1.4.17
 - Migrated from ESLint/Prettier to Biome for better performance
 - Enhanced UI with Glassmorphism design
 - Improved error handling and validation
 
 ### Security
+
 - JWT secret rotation support
 - Input sanitization with sanitize-html
 - Rate limiting with configurable thresholds
@@ -47,6 +51,7 @@
 ## [1.0.0] - 2025-XX-XX
 
 ### Added
+
 - Initial release
 - RAG (Retrieval Augmented Generation) with FastAPI + Milvus Lite
 - Ollama integration (llama3.2) with streaming responses
@@ -57,6 +62,7 @@
 - Webpack build configuration
 
 ### Dependencies
+
 - Elysia v1.4.x
 - Bun runtime
 - Python 3.10+ (FastAPI backend)

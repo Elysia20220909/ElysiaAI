@@ -24,9 +24,7 @@ describe("Metrics Collector", () => {
 	it("should increment error counter", () => {
 		metricsCollector.incrementError("POST", "/api", "validation");
 		const metrics = metricsCollector.getMetrics();
-		expect(
-			metrics.http_errors_total.get("POST:/api:validation"),
-		).toBeGreaterThan(0);
+		expect(metrics.http_errors_total.get("POST:/api:validation")).toBeGreaterThan(0);
 	});
 
 	it("should track active connections", () => {
@@ -55,9 +53,7 @@ describe("Logger", () => {
 	});
 
 	it("should log with context", () => {
-		expect(() =>
-			logger.info("Test with context", { userId: "123", action: "test" }),
-		).not.toThrow();
+		expect(() => logger.info("Test with context", { userId: "123", action: "test" })).not.toThrow();
 	});
 
 	it("should log errors with stack trace", () => {

@@ -1,129 +1,231 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Elysia Network Game</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; background: #f5f5fa; }
-    #board { border: 2px solid #888; width: 600px; height: 400px; background: #fff; box-shadow: 0 2px 8px #bbb; }
-    .node { fill: #4fc3f7; stroke: #1976d2; stroke-width: 2; transition: fill 0.3s; }
-    .agent { fill: #ffb74d; stroke: #f57c00; stroke-width: 2; filter: drop-shadow(0 0 6px #fbc02d); transition: fill 0.3s; }
-    .winner { color: #d32f2f; font-weight: bold; font-size: 1.2em; animation: winnerFlash 1s infinite alternate; }
-    #history { margin-top: 1em; font-size: 15px; background: #e3f2fd; padding: 8px; border-radius: 8px; min-height: 40px; }
-    @keyframes winnerFlash { from { color: #d32f2f; } to { color: #fbc02d; } }
-    .turn { font-weight: bold; color: #1976d2; margin-left: 1em; }
-    .user-select { margin-left: 1em; }
-  </style>
-</head>
-<body>
-  <h1>オセロ（リバーシ）Web版</h1>
-  <div>
-    <input id="user1" class="user-select" placeholder="ユーザー1名" value="user1" style="width:90px">
-    <input id="user2" class="user-select" placeholder="ユーザー2名/AI" value="user2" style="width:90px">
-    <button onclick="startGame()">ゲーム開始</button>
-    <button onclick="startAI('random')">AI対戦(ランダム)</button>
-    <button onclick="startAI('strong')">AI対戦(強いAI)</button>
-    <button onclick="observeGame()">観戦モード</button>
-    <button onclick="showRanking()">ランキング表示</button>
-    <span id="turn" class="turn"></span>
-    <span id="winner" class="winner"></span>
-  </div>
-  <svg id="board" width="480" height="480" style="border:2px solid #888; background:#2e7d32; cursor:pointer"></svg>
-  <div id="history"></div>
-  <div id="ranking" style="margin-top:1em;"></div>
-  <script>
-    let state = null;
-    let ws = null;
-    function drawBoard() {
-      const svg = document.getElementById('board');
-      svg.innerHTML = '';
-      if (!state) return;
-      // 8x8盤面描画＋角ハイライト
-      for (let y = 0; y < 8; ++y) {
-        for (let x = 0; x < 8; ++x) {
-          let highlight = (x === 0 || x === 7) && (y === 0 || y === 7) ? "#ffd600" : "#388e3c";
-          svg.innerHTML += `<rect x='${x*60}' y='${y*60}' width='60' height='60' fill='${highlight}' stroke='#fff' stroke-width='2' data-x='${x}' data-y='${y}'/>`;
-          if (state.board[y][x] === 1)
-            svg.innerHTML += `<circle cx='${x*60+30}' cy='${y*60+30}' r='24' fill='#222'/><circle cx='${x*60+30}' cy='${y*60+30}' r='20' fill='#111'/><circle cx='${x*60+30}' cy='${y*60+30}' r='16' fill='#fff' opacity='0.1'/>`;
-          if (state.board[y][x] === 2)
-            svg.innerHTML += `<circle cx='${x*60+30}' cy='${y*60+30}' r='24' fill='#fafafa'/><circle cx='${x*60+30}' cy='${y*60+30}' r='20' fill='#eee'/><circle cx='${x*60+30}' cy='${y*60+30}' r='16' fill='#222' opacity='0.1'/>`;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Elysia Network Game</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f5f5fa;
+      }
+      #board {
+        border: 2px solid #888;
+        width: 600px;
+        height: 400px;
+        background: #fff;
+        box-shadow: 0 2px 8px #bbb;
+      }
+      .node {
+        fill: #4fc3f7;
+        stroke: #1976d2;
+        stroke-width: 2;
+        transition: fill 0.3s;
+      }
+      .agent {
+        fill: #ffb74d;
+        stroke: #f57c00;
+        stroke-width: 2;
+        filter: drop-shadow(0 0 6px #fbc02d);
+        transition: fill 0.3s;
+      }
+      .winner {
+        color: #d32f2f;
+        font-weight: bold;
+        font-size: 1.2em;
+        animation: winnerFlash 1s infinite alternate;
+      }
+      #history {
+        margin-top: 1em;
+        font-size: 15px;
+        background: #e3f2fd;
+        padding: 8px;
+        border-radius: 8px;
+        min-height: 40px;
+      }
+      @keyframes winnerFlash {
+        from {
+          color: #d32f2f;
+        }
+        to {
+          color: #fbc02d;
         }
       }
-      document.getElementById('turn').textContent = `ターン: ${state.turn === 1 ? '黒(●)' : '白(○)'}`;
-      document.getElementById('winner').textContent = state.winner ? `Winner: ${state.winner}` : '';
-      if (state.winner) document.getElementById('winner').style.background = '#ffd600';
-      else document.getElementById('winner').style.background = '';
-      document.getElementById('history').innerHTML = state.history ? state.history.slice(-8).map(h=>`<div>${h}</div>`).join('') : '';
-    }
-    function randomUser() {
-      return 'user_' + Math.random().toString(36).slice(2, 8);
-    }
-    function getUserIds(ai) {
-      let u1 = document.getElementById('user1').value.trim();
-      let u2 = document.getElementById('user2').value.trim();
-      if (!u1) u1 = randomUser();
-      if (!u2) u2 = ai ? 'AI' : randomUser();
-      return [u1, u2];
-    }
-    function startGame() {
-      const userIds = getUserIds(false);
-      fetch('http://localhost:3001/game/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userIds })
-      })
-        .then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
-      if (!ws) {
-        ws = new WebSocket('ws://localhost:3001/game/ws');
-        ws.onmessage = e => { state = JSON.parse(e.data); drawBoard(); };
+      .turn {
+        font-weight: bold;
+        color: #1976d2;
+        margin-left: 1em;
       }
-    }
-    function startAI(level) {
-      const userIds = getUserIds(true);
-      fetch('http://localhost:3001/game/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aiEnabled: true, aiLevel: level, userIds })
-      }).then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
-      if (!ws) {
-        ws = new WebSocket('ws://localhost:3001/game/ws');
-        ws.onmessage = e => { state = JSON.parse(e.data); drawBoard(); };
+      .user-select {
+        margin-left: 1em;
       }
-    }
-        function showRanking() {
-          fetch('http://localhost:3001/game/ranking')
-            .then(r=>r.json())
-            .then(rank => {
-              let html = '<table border="1" style="border-collapse:collapse;background:#fff"><tr><th>ユーザー</th><th>勝</th><th>敗</th><th>引分</th></tr>';
-              Object.entries(rank).forEach(([user, rec]) => {
-                html += `<tr><td>${user}</td><td>${rec.win}</td><td>${rec.lose}</td><td>${rec.draw}</td></tr>`;
-              });
-              html += '</table>';
-              document.getElementById('ranking').innerHTML = html;
+    </style>
+  </head>
+  <body>
+    <h1>オセロ（リバーシ）Web版</h1>
+    <div>
+      <input
+        id="user1"
+        class="user-select"
+        placeholder="ユーザー1名"
+        value="user1"
+        style="width: 90px"
+      />
+      <input
+        id="user2"
+        class="user-select"
+        placeholder="ユーザー2名/AI"
+        value="user2"
+        style="width: 90px"
+      />
+      <button onclick="startGame()">ゲーム開始</button>
+      <button onclick="startAI('random')">AI対戦(ランダム)</button>
+      <button onclick="startAI('strong')">AI対戦(強いAI)</button>
+      <button onclick="observeGame()">観戦モード</button>
+      <button onclick="showRanking()">ランキング表示</button>
+      <span id="turn" class="turn"></span>
+      <span id="winner" class="winner"></span>
+    </div>
+    <svg
+      id="board"
+      width="480"
+      height="480"
+      style="border: 2px solid #888; background: #2e7d32; cursor: pointer"
+    ></svg>
+    <div id="history"></div>
+    <div id="ranking" style="margin-top: 1em"></div>
+    <script>
+      let state = null;
+      let ws = null;
+      function drawBoard() {
+        const svg = document.getElementById("board");
+        svg.innerHTML = "";
+        if (!state) return;
+        // 8x8盤面描画＋角ハイライト
+        for (let y = 0; y < 8; ++y) {
+          for (let x = 0; x < 8; ++x) {
+            let highlight =
+              (x === 0 || x === 7) && (y === 0 || y === 7)
+                ? "#ffd600"
+                : "#388e3c";
+            svg.innerHTML += `<rect x='${x * 60}' y='${y * 60}' width='60' height='60' fill='${highlight}' stroke='#fff' stroke-width='2' data-x='${x}' data-y='${y}'/>`;
+            if (state.board[y][x] === 1)
+              svg.innerHTML += `<circle cx='${x * 60 + 30}' cy='${y * 60 + 30}' r='24' fill='#222'/><circle cx='${x * 60 + 30}' cy='${y * 60 + 30}' r='20' fill='#111'/><circle cx='${x * 60 + 30}' cy='${y * 60 + 30}' r='16' fill='#fff' opacity='0.1'/>`;
+            if (state.board[y][x] === 2)
+              svg.innerHTML += `<circle cx='${x * 60 + 30}' cy='${y * 60 + 30}' r='24' fill='#fafafa'/><circle cx='${x * 60 + 30}' cy='${y * 60 + 30}' r='20' fill='#eee'/><circle cx='${x * 60 + 30}' cy='${y * 60 + 30}' r='16' fill='#222' opacity='0.1'/>`;
+          }
+        }
+        document.getElementById("turn").textContent =
+          `ターン: ${state.turn === 1 ? "黒(●)" : "白(○)"}`;
+        document.getElementById("winner").textContent = state.winner
+          ? `Winner: ${state.winner}`
+          : "";
+        if (state.winner)
+          document.getElementById("winner").style.background = "#ffd600";
+        else document.getElementById("winner").style.background = "";
+        document.getElementById("history").innerHTML = state.history
+          ? state.history
+              .slice(-8)
+              .map((h) => `<div>${h}</div>`)
+              .join("")
+          : "";
+      }
+      function randomUser() {
+        return "user_" + Math.random().toString(36).slice(2, 8);
+      }
+      function getUserIds(ai) {
+        let u1 = document.getElementById("user1").value.trim();
+        let u2 = document.getElementById("user2").value.trim();
+        if (!u1) u1 = randomUser();
+        if (!u2) u2 = ai ? "AI" : randomUser();
+        return [u1, u2];
+      }
+      function startGame() {
+        const userIds = getUserIds(false);
+        fetch("http://localhost:3001/game/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userIds }),
+        })
+          .then((r) => r.json())
+          .then((s) => {
+            state = s;
+            drawBoard();
+          });
+        if (!ws) {
+          ws = new WebSocket("ws://localhost:3001/game/ws");
+          ws.onmessage = (e) => {
+            state = JSON.parse(e.data);
+            drawBoard();
+          };
+        }
+      }
+      function startAI(level) {
+        const userIds = getUserIds(true);
+        fetch("http://localhost:3001/game/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ aiEnabled: true, aiLevel: level, userIds }),
+        })
+          .then((r) => r.json())
+          .then((s) => {
+            state = s;
+            drawBoard();
+          });
+        if (!ws) {
+          ws = new WebSocket("ws://localhost:3001/game/ws");
+          ws.onmessage = (e) => {
+            state = JSON.parse(e.data);
+            drawBoard();
+          };
+        }
+      }
+      function showRanking() {
+        fetch("http://localhost:3001/game/ranking")
+          .then((r) => r.json())
+          .then((rank) => {
+            let html =
+              '<table border="1" style="border-collapse:collapse;background:#fff"><tr><th>ユーザー</th><th>勝</th><th>敗</th><th>引分</th></tr>';
+            Object.entries(rank).forEach(([user, rec]) => {
+              html += `<tr><td>${user}</td><td>${rec.win}</td><td>${rec.lose}</td><td>${rec.draw}</td></tr>`;
             });
-        }
-    function observeGame() {
-      fetch('http://localhost:3001/game/state')
-        .then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
-      if (!ws) {
-        ws = new WebSocket('ws://localhost:3001/game/ws');
-        ws.onmessage = e => { state = JSON.parse(e.data); drawBoard(); };
+            html += "</table>";
+            document.getElementById("ranking").innerHTML = html;
+          });
       }
-    }
-    document.getElementById('board').onclick = function(e) {
-      if (!state || state.winner) return;
-      const rect = e.target.closest('rect');
-      if (!rect) return;
-      const x = Number(rect.getAttribute('data-x'));
-      const y = Number(rect.getAttribute('data-y'));
-      fetch('http://localhost:3001/game/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ x, y, player: state.turn })
-      }).then(r=>r.json()).then(s=>{ state=s; drawBoard(); });
-      if (ws) ws.send(JSON.stringify({ x, y, player: state.turn }));
-    };
-  </script>
-</body>
+      function observeGame() {
+        fetch("http://localhost:3001/game/state")
+          .then((r) => r.json())
+          .then((s) => {
+            state = s;
+            drawBoard();
+          });
+        if (!ws) {
+          ws = new WebSocket("ws://localhost:3001/game/ws");
+          ws.onmessage = (e) => {
+            state = JSON.parse(e.data);
+            drawBoard();
+          };
+        }
+      }
+      document.getElementById("board").onclick = function (e) {
+        if (!state || state.winner) return;
+        const rect = e.target.closest("rect");
+        if (!rect) return;
+        const x = Number(rect.getAttribute("data-x"));
+        const y = Number(rect.getAttribute("data-y"));
+        fetch("http://localhost:3001/game/action", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ x, y, player: state.turn }),
+        })
+          .then((r) => r.json())
+          .then((s) => {
+            state = s;
+            drawBoard();
+          });
+        if (ws) ws.send(JSON.stringify({ x, y, player: state.turn }));
+      };
+    </script>
+  </body>
 </html>

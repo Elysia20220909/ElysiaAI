@@ -1,56 +1,74 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>管理ダッシュボード</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-</head>
-<body class="bg-gray-50 min-h-screen">
-  <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6 text-blue-700">管理ダッシュボード</h1>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="bg-white shadow rounded-lg p-6">
-        <h2 class="text-xl font-semibold mb-2">サーバーステータス</h2>
-        <div id="server-status" class="text-gray-700">読み込み中...</div>
-        <button id="refresh-status" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">再読み込み</button>
-      </div>
-      <div class="bg-white shadow rounded-lg p-6">
-        <h2 class="text-xl font-semibold mb-2">ログ表示</h2>
-        <pre id="logs" class="bg-gray-100 p-2 rounded text-xs h-48 overflow-auto">読み込み中...</pre>
-        <button id="refresh-logs" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">再読み込み</button>
+  <head>
+    <meta charset="UTF-8" />
+    <title>管理ダッシュボード</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    />
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto py-8">
+      <h1 class="text-3xl font-bold mb-6 text-blue-700">管理ダッシュボード</h1>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white shadow rounded-lg p-6">
+          <h2 class="text-xl font-semibold mb-2">サーバーステータス</h2>
+          <div id="server-status" class="text-gray-700">読み込み中...</div>
+          <button
+            id="refresh-status"
+            class="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+          >
+            再読み込み
+          </button>
+        </div>
+        <div class="bg-white shadow rounded-lg p-6">
+          <h2 class="text-xl font-semibold mb-2">ログ表示</h2>
+          <pre
+            id="logs"
+            class="bg-gray-100 p-2 rounded text-xs h-48 overflow-auto"
+          >
+読み込み中...</pre
+          >
+          <button
+            id="refresh-logs"
+            class="mt-2 bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+          >
+            再読み込み
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-  <script>
-    async function fetchStatus() {
-      const el = document.getElementById('server-status');
-      el.textContent = '読み込み中...';
-      try {
-        const res = await fetch('/health');
-        if (!res.ok) throw new Error('サーバー応答エラー');
-        const data = await res.json();
-        el.textContent = JSON.stringify(data, null, 2);
-      } catch (e) {
-        el.textContent = '取得失敗: ' + e.message;
+    <script>
+      async function fetchStatus() {
+        const el = document.getElementById("server-status");
+        el.textContent = "読み込み中...";
+        try {
+          const res = await fetch("/health");
+          if (!res.ok) throw new Error("サーバー応答エラー");
+          const data = await res.json();
+          el.textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          el.textContent = "取得失敗: " + e.message;
+        }
       }
-    }
-    async function fetchLogs() {
-      const el = document.getElementById('logs');
-      el.textContent = '読み込み中...';
-      try {
-        const res = await fetch('/logs/test-output.txt');
-        if (!res.ok) throw new Error('ログ取得エラー');
-        const data = await res.text();
-        el.textContent = data;
-      } catch (e) {
-        el.textContent = '取得失敗: ' + e.message;
+      async function fetchLogs() {
+        const el = document.getElementById("logs");
+        el.textContent = "読み込み中...";
+        try {
+          const res = await fetch("/logs/test-output.txt");
+          if (!res.ok) throw new Error("ログ取得エラー");
+          const data = await res.text();
+          el.textContent = data;
+        } catch (e) {
+          el.textContent = "取得失敗: " + e.message;
+        }
       }
-    }
-    document.getElementById('refresh-status').onclick = fetchStatus;
-    document.getElementById('refresh-logs').onclick = fetchLogs;
-    fetchStatus();
-    fetchLogs();
-  </script>
-</body>
+      document.getElementById("refresh-status").onclick = fetchStatus;
+      document.getElementById("refresh-logs").onclick = fetchLogs;
+      fetchStatus();
+      fetchLogs();
+    </script>
+  </body>
 </html>
