@@ -1,9 +1,8 @@
-const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
-
+// DB接続先はadapterで切り替え（Prisma 7推奨構成）
+const isDev = process.env.NODE_ENV !== 'production';
 module.exports = {
-	datasources: {
-		db: {
-			url: dbUrl,
-		},
-	},
+  datasource: {
+    provider: isDev ? 'sqlite' : 'postgresql',
+    adapter: isDev ? 'file:../../dev.db' : process.env.DATABASE_URL,
+  },
 };
