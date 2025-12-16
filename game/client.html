@@ -1,3 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>オセロWebクライアント</title>
+  <style>
+    body { font-family: sans-serif; }
+    #board { font-size: 2em; line-height: 1.2; }
+    #winner { font-weight: bold; color: red; }
+  </style>
+</head>
+<body>
+  <h1>オセロWebクライアント</h1>
+  <div>
+    <input id="user1" placeholder="ユーザー1名">
+    <input id="user2" placeholder="ユーザー2名/AI名">
+    <button onclick="startGame()">開始</button>
+    <button onclick="startGame(true)">AI対戦</button>
+  </div>
+  <div id="board"></div>
+  <div id="winner"></div>
+  <div id="history"></div>
+  <script>
+    function renderBoard(board) {
+      let html = '<table>';
+      for (let i = 0; i < 8; i++) {
+        html += '<tr>';
+        for (let j = 0; j < 8; j++) {
+          html += `<td>${board[i][j] === 0 ? '.' : board[i][j] === 1 ? '●' : '○'}</td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</table>';
+      document.getElementById('board').innerHTML = html;
+    }
+    function renderState(state) {
+      renderBoard(state.board);
+      document.getElementById('winner').textContent = state.winner ? `勝者: ${state.winner}` : '';
+      if (state.winner) document.getElementById('winner').style.background = '#ff0';
+      else document.getElementById('winner').style.background = '';
+      document.getElementById('history').innerHTML = state.history ? state.history.slice(-8).map(h=>`<div>${h}</div>`).join('') : '';
+    }
+    function randomUser() {
+      return 'user_' + Math.random().toString(36).slice(2, 8);
+    }
+    function getUserIds(ai) {
+      let u1 = document.getElementById('user1').value.trim();
+      let u2 = document.getElementById('user2').value.trim();
+      if (!u1) u1 = randomUser();
+      if (!u2) u2 = ai ? 'AI' : randomUser();
+      return [u1, u2];
+    }
+    async function startGame(ai) {
+      const [user1, user2] = getUserIds(ai);
+      // ...（以降のゲームロジックは省略）...
+    }
+  </script>
+</body>
+</html>
 <!doctype html>
 <html lang="ja">
   <head>
