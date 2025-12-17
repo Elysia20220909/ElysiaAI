@@ -115,3 +115,27 @@ bun.log
 /cuda/*.obj
 /cuda/bun.lock
 /src/generated/prisma
+
+# Database files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+dev.db
+prisma/dev.db
+
+# Prisma temp files
+prisma.config.bak
+prisma.config.mjs.bak
+
+# Backup files
+/backups/
+*.backup
+
+# Upload files
+/uploads/
+/temp/
+
+# Test results
+/test-results/
+/playwright-report/
