@@ -4,13 +4,12 @@
 import app from "./src/index";
 
 const PORT = process.env.PORT || 3000;
-
-// @ts-expect-error
 console.log(`🌸 Starting Elysia AI Server on port ${PORT}...`);
 
 app.listen(PORT, (server) => {
-	console.log(`✅ Server is running at ${server.url}`);
-	console.log(`📚 Swagger: ${server.url}/swagger`);
-	console.log(`🏥 Health: ${server.url}/health`);
-	console.log(`📊 Metrics: ${server.url}/metrics`);
+	const base = String(server.url).replace(/\/$/, "");
+	console.log(`✅ Server is running at ${base}/`);
+	console.log(`📚 Swagger: ${base}/swagger`);
+	console.log(`🏥 Health: ${base}/health`);
+	console.log(`📊 Metrics: ${base}/metrics`);
 });

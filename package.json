@@ -23,6 +23,7 @@
   "author": "chloeamethyst",
   "scripts": {
     "test": "bun test",
+    "test:local": "powershell -ExecutionPolicy Bypass -File ./scripts/test-local.ps1",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
     "dev": "node -e \"process.platform==='win32'?require('child_process').exec('powershell -ExecutionPolicy Bypass -File ./scripts/dev.ps1'):require('child_process').exec('bash ./scripts/dev.sh')\"",

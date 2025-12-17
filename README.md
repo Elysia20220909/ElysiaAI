@@ -91,7 +91,20 @@ npx eslint ElysiaAI/src/**/*.ts --fix
 - **柔軟**: モデルとプロバイダーの簡単な切り替え
 - **Python未使用import削除**: クリーンなAIバックエンド
 
-### 🎨 **美しいUI & 開発体験**
+### � **OpenAI GPT-5.1-Codex-Max (Preview)**
+
+- **全クライアント対応**: `.env` で `OPENAI_MODEL=gpt-5.1-codex-max` を設定済み
+- **API キー**: `.env` の `OPENAI_API_KEY=sk-your-api-key` にOpenAI APIキーを設定
+- **アクセス権限**: GPT-5.1-Codex-Max へのアクセス権が必要（OpenAIアカウント設定で確認）
+- **切り替え**: Ollamaとの切り替えはエンドポイントまたはコードで指定可能
+
+```bash
+# .env に OpenAI API キーを設定
+OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
+OPENAI_MODEL=gpt-5.1-codex-max  # 既に設定済み
+```
+
+### �🎨 **美しいUI & 開発体験**
 
 - **Alpine.js**: リアクティブで軽量なフロントエンド
 - **レスポンシブ**: モバイルフレンドリーデザイン

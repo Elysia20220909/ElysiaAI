@@ -1,4 +1,7 @@
-import "dotenv/config";
+// 環境変数は .env を最優先で読み込む（既存の環境変数を上書き）
+// Windows 環境でグローバルに設定された DATABASE_URL などに勝つための対策
+import dotenv from "dotenv";
+dotenv.config({ override: true });
 import { Elysia } from "elysia";
 const app = new Elysia();
 
@@ -245,7 +248,13 @@ app
 			auditMiddleware.onError({ request, error, set });
 		} catch {}
 		const message = error instanceof Error ? error.message : "Internal server error";
-		return jsonError(500, message, traceId);
+		// Map Elysia error code to HTTP status (default 500)
+		let status = 500;
+		if (code === "NOT_FOUND") status = 404;
+		else if (code === "VALIDATION") status = 400;
+		else if (code === "UNAUTHORIZED") status = 401;
+		else if (code === "FORBIDDEN") status = 403;
+		return jsonError(status, message, traceId);
 	})
 	.onAfterHandle(({ set, request, response }) => {
 		set.headers["X-Content-Type-Options"] = "nosniff";
