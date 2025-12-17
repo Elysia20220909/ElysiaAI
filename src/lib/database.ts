@@ -3,24 +3,121 @@
  * Prisma ORMを使用したデータベース操作
  */
 
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient as PrismaClientType } from "@prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 // Prismaクライアントのシングルトン (一時的に無効化)
-let prisma: PrismaClient;
+let prisma: PrismaClientType;
 
 try {
-	// Prisma 7: データベース URL をコンストラクタで指定
-	const dbUrl = process.env.DATABASE_URL || "file:./prisma/dev.db";
+	// Prisma 7 では datasourceUrl は非推奨。環境変数を利用して接続
+	const dbUrl = process.env.DATABASE_URL || "file:./dev.db";
 
-	// SQLite の場合は直接ファイルを使用
+	// LibSQL アダプタ（engineType=client を満たす）
+	const adapter = new PrismaLibSql({ url: dbUrl });
+
+	// ランタイム import（型のみ静的インポート）
+	const { PrismaClient } = await import("@prisma/client");
 	prisma = new PrismaClient({
+		adapter,
 		log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-		// Prisma 7: datasourceUrl を指定
-		datasourceUrl: dbUrl,
 	});
-	console.log("✅ Prisma database connected");
+
+	// 必要なテーブルを作成（SQLite）
+	await prisma.$executeRawUnsafe(`
+		CREATE TABLE IF NOT EXISTS users (
+			id TEXT PRIMARY KEY,
+			username TEXT UNIQUE NOT NULL,
+			passwordHash TEXT NOT NULL,
+			role TEXT NOT NULL DEFAULT 'user',
+			createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
+	await prisma.$executeRawUnsafe(`
+		CREATE TABLE IF NOT EXISTS refresh_tokens (
+			id TEXT PRIMARY KEY,
+			token TEXT UNIQUE NOT NULL,
+			userId TEXT NOT NULL,
+			expiresAt DATETIME NOT NULL,
+			createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			revoked INTEGER NOT NULL DEFAULT 0,
+			FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+		);
+	`);
+	await prisma.$executeRawUnsafe(`
+		CREATE TABLE IF NOT EXISTS chat_sessions (
+			id TEXT PRIMARY KEY,
+			userId TEXT,
+			mode TEXT NOT NULL DEFAULT 'normal',
+			createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+		);
+	`);
+	await prisma.$executeRawUnsafe(`
+		CREATE TABLE IF NOT EXISTS messages (
+			id TEXT PRIMARY KEY,
+			sessionId TEXT NOT NULL,
+			role TEXT NOT NULL,
+			content TEXT NOT NULL,
+			createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (sessionId) REFERENCES chat_sessions(id) ON DELETE CASCADE
+		);
+	`);
+	await prisma.$executeRawUnsafe(`
+		CREATE TABLE IF NOT EXISTS feedbacks (
+			id TEXT PRIMARY KEY,
+			userId TEXT,
+			query TEXT NOT NULL,
+			answer TEXT NOT NULL,
+			rating TEXT NOT NULL,
+			reason TEXT,
+			createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+		);
+	`);
+	await prisma.$executeRawUnsafe(`
+		CREATE TABLE IF NOT EXISTS knowledge_base (
+			id TEXT PRIMARY KEY,
+			userId TEXT,
+			question TEXT NOT NULL,
+			answer TEXT NOT NULL,
+			source TEXT,
+			verified INTEGER NOT NULL DEFAULT 0,
+			createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+		);
+	`);
+	await prisma.$executeRawUnsafe(`
+		CREATE TABLE IF NOT EXISTS voice_logs (
+			id TEXT PRIMARY KEY,
+			username TEXT,
+			text TEXT NOT NULL,
+			emotion TEXT NOT NULL,
+			audioUrl TEXT,
+			createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+	`);
+
+	// 必要なインデックス
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_userId ON refresh_tokens(userId);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_chat_sessions_userId ON chat_sessions(userId);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_messages_sessionId ON messages(sessionId);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_feedbacks_userId ON feedbacks(userId);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_feedbacks_rating ON feedbacks(rating);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_feedbacks_createdAt ON feedbacks(createdAt);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_knowledge_base_userId ON knowledge_base(userId);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_knowledge_base_verified ON knowledge_base(verified);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_voice_logs_username ON voice_logs(username);`);
+	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_voice_logs_createdAt ON voice_logs(createdAt);`);
+
+	console.log("✅ Prisma database connected via LibSQL adapter (url=%s)", dbUrl);
 } catch (error) {
 	console.warn("⚠️ Prisma database not configured, using in-memory fallback");
+	console.error(error);
 	// モックPrismaクライアント（データベースなしでも動作）
 	// biome-ignore lint/suspicious/noExplicitAny: Prisma設定未完了時の一時的なフォールバック
 	prisma = null as any;
