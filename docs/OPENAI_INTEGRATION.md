@@ -79,12 +79,15 @@ X-Elysia-Provider: openai
 
 ```env
 OPENAI_API_KEY=sk-proj-your-api-key-here
-OPENAI_MODEL=gpt-4o-mini  # オプション、デフォルト: gpt-4o-mini
+OPENAI_MODEL=gpt-5.1-codex-max  # 既定モデル（GPT-5.1-Codex-Max Preview）
 ```
+
+> **注意**: GPT-5.1-Codex-Max は Preview モデルです。OpenAI アカウントでアクセス権限を確認してください。
 
 ### 利用可能なモデル
 
-- `gpt-4o-mini`: 高速・コスト効率的 (推奨)
+- `gpt-5.1-codex-max`: **最新プレビューモデル** - コード生成・補完に最適化（推奨）
+- `gpt-4o-mini`: 高速・コスト効率的
 - `gpt-4o`: 最高品質
 - `gpt-4-turbo`: バランス型
 - `gpt-3.5-turbo`: 低コスト
@@ -168,13 +171,17 @@ const text = "こんにちは、今日はいい天気ですね。";
 const tokens = estimateTokens(text); // 約30トークン
 ```
 
-### 料金目安 (gpt-4o-mini)
+### 料金目安
 
+**gpt-4o-mini:**
 - 入力: $0.15 / 1M トークン
 - 出力: $0.60 / 1M トークン
 
-**例:**
+**gpt-5.1-codex-max (Preview):**
+- 料金は OpenAI の最新ドキュメントを確認してください
+- コード生成・補完で高いコストパフォーマンスを発揮
 
+**例 (gpt-4o-mini):**
 - 100文字の質問 → 約150トークン → $0.0000225
 - 300文字の応答 → 約450トークン → $0.000270
 - **合計:** $0.0002925 (約0.03円)

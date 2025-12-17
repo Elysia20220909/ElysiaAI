@@ -33,11 +33,24 @@ jobs:
       - name: リントチェック
         run: bun run lint || echo "Lint warnings detected"
 
+      - name: サーバー起動 (バックグラウンド)
+        run: |
+          nohup bun ./start-server.ts > server.log 2>&1 &
+          echo "Server starting..."
+      - name: /health 応答待機
+        run: |
+          for i in {1..30}; do
+            if curl -sf http://localhost:3000/health > /dev/null; then
+              echo "Server is up"; exit 0; fi;
+            echo "Waiting for server... ($i)"; sleep 2;
+          done
+          echo "Server did not start in time"; echo "--- server.log ---"; cat server.log; exit 1
       - name: テスト実行
         run: bun test --coverage
         env:
           REDIS_ENABLED: false
           TEST_MODE: true
+          DATABASE_URL: file:./dev.db
 
       - name: カバレッジレポートアップロード
         uses: actions/upload-artifact@v3
