@@ -1,0 +1,51 @@
+# Code Owners for ElysiaAI
+# These owners will be requested for review when PRs are opened
+
+# Global owners - will be requested for review on all PRs
+* @chloeamethyst
+
+# Documentation
+/docs/ @chloeamethyst
+*.md @chloeamethyst
+
+# Core backend code
+/src/ @chloeamethyst
+/prisma/ @chloeamethyst
+
+# Configuration files
+*.config.js @chloeamethyst
+*.config.mjs @chloeamethyst
+*.config.ts @chloeamethyst
+.env.example @chloeamethyst
+prisma.config.mjs @chloeamethyst
+
+# Database and migrations
+/prisma/schema.prisma @chloeamethyst
+/prisma/migrations/ @chloeamethyst
+/src/lib/database.ts @chloeamethyst
+
+# Security and authentication
+/src/lib/auth.ts @chloeamethyst
+/src/lib/security.ts @chloeamethyst
+/docs/SECURITY.md @chloeamethyst
+
+# CI/CD and deployment
+/.github/workflows/ @chloeamethyst
+/deploy/ @chloeamethyst
+Dockerfile @chloeamethyst
+docker-compose.yml @chloeamethyst
+
+# Frontend
+/public/ @chloeamethyst
+/src/web/ @chloeamethyst
+
+# Mobile and Desktop
+/mobile/ @chloeamethyst
+/desktop/ @chloeamethyst
+
+# Cloud infrastructure
+/cloud/ @chloeamethyst
+
+# Dependencies
+package.json @chloeamethyst
+bun.lockb @chloeamethyst
