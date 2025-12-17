@@ -5,11 +5,11 @@
   "description": "Elysia(Bun) + FastAPI + Milvus Lite + Ollama によるRAG AIチャット",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chloeamethyst/ElysiaJS.git"
+    "url": "git+https://github.com/chloeamethyst/ElysiaAI.git"
   },
-  "homepage": "https://github.com/chloeamethyst/ElysiaJS",
+  "homepage": "https://github.com/chloeamethyst/ElysiaAI",
   "bugs": {
-    "url": "https://github.com/chloeamethyst/ElysiaJS/issues"
+    "url": "https://github.com/chloeamethyst/ElysiaAI/issues"
   },
   "keywords": [
     "Elysia",
