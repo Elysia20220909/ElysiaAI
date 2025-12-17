@@ -48,9 +48,10 @@ class HealthMonitor {
 			check: async () => {
 				try {
 					const { PrismaClient } = await import("@prisma/client");
-					const prisma = new PrismaClient({
-						datasourceUrl: process.env.DATABASE_URL || "file:./dev.db",
-					});
+					const { PrismaLibSql } = await import("@prisma/adapter-libsql");
+					const url = process.env.DATABASE_URL || "file:./dev.db";
+					const adapter = new PrismaLibSql({ url });
+					const prisma = new PrismaClient({ adapter });
 					await prisma.$queryRaw`SELECT 1`;
 					await prisma.$disconnect();
 					return true;
