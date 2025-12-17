@@ -35,13 +35,17 @@ new Elysia()
 # Bunでインストール（推奨）
 bun install
 
-# Pythonサービスのセットアップ
+# Prisma クライアントを生成
+bunx prisma generate
+
+# 開発サーバーを起動（SQLiteは自動作成されます）
+cd ElysiaAI
+bun ./start-server.ts
+
+# Pythonサービスのセットアップ（オプション - RAG機能用）
 bun run scripts/setup-python.ps1  # Windows
 # または
 ./scripts/setup-python.sh         # Linux/macOS/WSL
-
-# すべてのサービスを起動
-bun run dev
 
 # コード品質・保守
 # TypeScript/JavaScriptのESLint自動修正（FlatConfig対応）
@@ -54,6 +58,13 @@ npx eslint ElysiaAI/src/**/*.ts --fix
 ```
 
 **これだけ！** 🎉 <http://localhost:3000> を開く
+
+### 📡 利用可能なエンドポイント
+
+- **メイン**: http://localhost:3000/
+- **Swagger API**: http://localhost:3000/swagger
+- **Health Check**: http://localhost:3000/health
+- **Metrics**: http://localhost:3000/metrics
 
 ---
 
@@ -95,12 +106,20 @@ npx eslint ElysiaAI/src/**/*.ts --fix
 - 5つの権限レベルを持つRBAC
 - XSS/SQLインジェクション防止
 
+### � **データ永続化**
+
+- **Prisma 7**: 最新のTypeScript ORM with LibSQL adapter
+- **SQLite**: 開発環境用の軽量データベース（自動作成）
+- **PostgreSQL対応**: 本番環境向け（.envで切り替え可能）
+- **自動スキーマ**: 起動時にテーブル自動生成
+- **型安全**: PrismaによるエンドツーエンドTypeScript型推論
+
 ### 📊 **可観測性**
 
 - Prometheusメトリクス
 - Grafanaダッシュボード
 - 構造化ログ
-- ヘルスチェック＆レディネスプローブ
+- ヘルスチェック＆レディネスプローブ（database, ollama, disk_space）
 
 ---
 
@@ -117,7 +136,12 @@ npx eslint ElysiaAI/src/**/*.ts --fix
 └──────┬──────┘
        │
    ┌───▼───┐
-   │FastAPI│  Python + RAG
+   │Prisma 7│  ORM + LibSQL Adapter
+   │ SQLite │  データ永続化
+   └───────┘
+       │
+   ┌───▼───┐
+   │FastAPI│  Python + RAG (オプション)
    │  RAG  │
    └───┬───┘
        │
