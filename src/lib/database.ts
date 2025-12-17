@@ -3,6 +3,10 @@
  * Prisma ORMを使用したデータベース操作
  */
 
+// .env を最優先で適用（マシン全体の環境変数よりも .env を使う）
+import dotenv from "dotenv";
+dotenv.config({ override: true });
+
 import type { PrismaClient as PrismaClientType } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
