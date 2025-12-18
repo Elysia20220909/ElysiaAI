@@ -1,0 +1,142 @@
+{"level":"info","timestamp":"2025-12-16T15:44:49.938Z","message":"A/B test created","context":{"id":"prompt-style","name":"プロンプトスタイルテスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.942Z","message":"A/B test created","context":{"id":"response-length","name":"レスポンス長テスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.944Z","message":"Audit logs loaded","context":{"count":129}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.947Z","message":"Health check added: database","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.948Z","message":"Health check added: ollama","context":{"interval":"120000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.948Z","message":"Health check added: redis","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.949Z","message":"Health check added: disk_space","context":{"interval":"300000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.953Z","message":"🔍 環境変数を検証中..."}
+{"level":"warn","timestamp":"2025-12-16T15:44:49.953Z","message":"⚠️  環境変数の警告:"}
+{"level":"warn","timestamp":"2025-12-16T15:44:49.954Z","message":"  ⚠️  PORT: デフォルト値を使用 (3000)"}
+{"level":"warn","timestamp":"2025-12-16T15:44:49.954Z","message":"  ⚠️  ALLOWED_ORIGINS: デフォルト値を使用 (http://localhost:3000)"}
+{"level":"info","timestamp":"2025-12-16T15:44:49.954Z","message":"✅ 環境変数の検証完了"}
+{"level":"info","timestamp":"2025-12-16T15:44:49.955Z","message":"Backup scheduler is disabled"}
+{"level":"info","timestamp":"2025-12-16T15:44:49.958Z","message":"Health monitoring started","context":{"checks":4}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.958Z","message":"Starting log cleanup"}
+{"level":"info","timestamp":"2025-12-16T15:44:49.959Z","message":"Log cleanup started","context":{"interval":"24 hours","maxAge":"30 days","maxSize":"500 MB"}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.965Z","message":"Job queue initialized","context":{"host":"localhost","port":6379,"tls":false}}
+{"level":"info","timestamp":"2025-12-16T15:44:49.971Z","message":"Job queue enabled with Redis"}
+{"level":"info","timestamp":"2025-12-16T15:44:50.015Z","message":"Cron task added","context":{"name":"db-backup","cronTime":"0 3 * * *"}}
+{"level":"info","timestamp":"2025-12-16T15:44:50.019Z","message":"Cron task added","context":{"name":"log-cleanup","cronTime":"0 4 * * *"}}
+{"level":"info","timestamp":"2025-12-16T15:44:50.023Z","message":"Cron task added","context":{"name":"file-cleanup","cronTime":"0 5 * * 0"}}
+{"level":"info","timestamp":"2025-12-16T15:44:50.024Z","message":"Cron scheduler initialized","context":{"tasks":7}}
+{"level":"info","timestamp":"2025-12-16T15:44:50.034Z","message":"Log cleanup completed","context":{"deletedByAge":0,"deletedBySize":0,"duration":"76ms"}}
+{"level":"warn","timestamp":"2025-12-16T15:44:50.053Z","message":"Health check failed: database","context":{"failures":1,"error":"Check returned false"}}
+{"level":"warn","timestamp":"2025-12-16T15:44:50.797Z","message":"Health check failed: ollama","context":{"failures":1,"error":"Check returned false"}}
+{"level":"error","timestamp":"2025-12-16T15:45:02.238Z","message":"NOT_FOUND: NOT_FOUND at /tailwind.css traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:45:02.413Z","message":"NOT_FOUND: NOT_FOUND at /elysia-cute.svg traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:45:02.489Z","message":"NOT_FOUND: NOT_FOUND at /favicon.ico traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:45:03.969Z","message":"NOT_FOUND: NOT_FOUND at //swagger traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:45:04.017Z","message":"NOT_FOUND: NOT_FOUND at /favicon.ico traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:45:04.667Z","message":"NOT_FOUND: NOT_FOUND at //health traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:45:04.714Z","message":"NOT_FOUND: NOT_FOUND at /favicon.ico traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:45:05.524Z","message":"NOT_FOUND: NOT_FOUND at //metrics traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:45:05.573Z","message":"NOT_FOUND: NOT_FOUND at /favicon.ico traceId=undefined"}
+{"level":"info","timestamp":"2025-12-16T15:48:56.270Z","message":"A/B test created","context":{"id":"prompt-style","name":"プロンプトスタイルテスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.274Z","message":"A/B test created","context":{"id":"response-length","name":"レスポンス長テスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.276Z","message":"Audit logs loaded","context":{"count":139}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.278Z","message":"Health check added: database","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.279Z","message":"Health check added: ollama","context":{"interval":"120000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.280Z","message":"Health check added: redis","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.280Z","message":"Health check added: disk_space","context":{"interval":"300000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.284Z","message":"🔍 環境変数を検証中..."}
+{"level":"warn","timestamp":"2025-12-16T15:48:56.284Z","message":"⚠️  環境変数の警告:"}
+{"level":"warn","timestamp":"2025-12-16T15:48:56.285Z","message":"  ⚠️  PORT: デフォルト値を使用 (3000)"}
+{"level":"warn","timestamp":"2025-12-16T15:48:56.285Z","message":"  ⚠️  ALLOWED_ORIGINS: デフォルト値を使用 (http://localhost:3000)"}
+{"level":"info","timestamp":"2025-12-16T15:48:56.286Z","message":"✅ 環境変数の検証完了"}
+{"level":"info","timestamp":"2025-12-16T15:48:56.286Z","message":"Backup scheduler is disabled"}
+{"level":"info","timestamp":"2025-12-16T15:48:56.289Z","message":"Health monitoring started","context":{"checks":4}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.290Z","message":"Starting log cleanup"}
+{"level":"info","timestamp":"2025-12-16T15:48:56.291Z","message":"Log cleanup started","context":{"interval":"24 hours","maxAge":"30 days","maxSize":"500 MB"}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.297Z","message":"Job queue initialized","context":{"host":"localhost","port":6379,"tls":false}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.302Z","message":"Job queue enabled with Redis"}
+{"level":"info","timestamp":"2025-12-16T15:48:56.341Z","message":"Cron task added","context":{"name":"db-backup","cronTime":"0 3 * * *"}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.346Z","message":"Cron task added","context":{"name":"log-cleanup","cronTime":"0 4 * * *"}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.350Z","message":"Cron task added","context":{"name":"file-cleanup","cronTime":"0 5 * * 0"}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.351Z","message":"Cron scheduler initialized","context":{"tasks":7}}
+{"level":"info","timestamp":"2025-12-16T15:48:56.364Z","message":"Log cleanup completed","context":{"deletedByAge":0,"deletedBySize":0,"duration":"74ms"}}
+{"level":"warn","timestamp":"2025-12-16T15:48:56.384Z","message":"Health check failed: database","context":{"failures":1,"error":"Check returned false"}}
+{"level":"warn","timestamp":"2025-12-16T15:48:56.815Z","message":"Health check failed: ollama","context":{"failures":1,"error":"Check returned false"}}
+{"level":"warn","timestamp":"2025-12-16T15:49:56.301Z","message":"Health check failed: database","context":{"failures":2,"error":"Check returned false"}}
+{"level":"warn","timestamp":"2025-12-16T15:50:56.302Z","message":"Health check failed: database","context":{"failures":3,"error":"Check returned false"}}
+{"level":"error","timestamp":"2025-12-16T15:50:56.303Z","message":"Health check CRITICAL: database","error":{"name":"Error","message":"Check returned false","stack":"Error: Check returned false\n    at notifyFailure (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:265:54)\n    at notifyFailure (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:264:30)\n    at handleCheckFailure (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:257:15)\n    at handleCheckFailure (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:245:35)\n    at performCheck (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:230:10)\n    at processTicksAndRejections (native:7:39)"}}
+{"level":"warn","timestamp":"2025-12-16T15:50:56.306Z","message":"Health check failed: ollama","context":{"failures":2,"error":"Check returned false"}}
+{"level":"warn","timestamp":"2025-12-16T15:51:56.306Z","message":"Health check failed: database","context":{"failures":4,"error":"Check returned false"}}
+{"level":"error","timestamp":"2025-12-16T15:51:56.308Z","message":"Health check CRITICAL: database","error":{"name":"Error","message":"Check returned false","stack":"Error: Check returned false\n    at notifyFailure (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:265:54)\n    at notifyFailure (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:264:30)\n    at handleCheckFailure (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:257:15)\n    at handleCheckFailure (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:245:35)\n    at performCheck (C:\\Users\\hosih\\elysia-ai\\ElysiaAI\\src\\lib\\health-monitor.ts:230:10)\n    at processTicksAndRejections (native:7:39)"}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.086Z","message":"A/B test created","context":{"id":"prompt-style","name":"プロンプトスタイルテスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.089Z","message":"A/B test created","context":{"id":"response-length","name":"レスポンス長テスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.091Z","message":"Audit logs loaded","context":{"count":139}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.094Z","message":"Health check added: database","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.094Z","message":"Health check added: ollama","context":{"interval":"120000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.095Z","message":"Health check added: redis","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.095Z","message":"Health check added: disk_space","context":{"interval":"300000ms"}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.099Z","message":"🔍 環境変数を検証中..."}
+{"level":"warn","timestamp":"2025-12-16T15:52:16.101Z","message":"⚠️  環境変数の警告:"}
+{"level":"warn","timestamp":"2025-12-16T15:52:16.101Z","message":"  ⚠️  PORT: デフォルト値を使用 (3000)"}
+{"level":"warn","timestamp":"2025-12-16T15:52:16.102Z","message":"  ⚠️  ALLOWED_ORIGINS: デフォルト値を使用 (http://localhost:3000)"}
+{"level":"info","timestamp":"2025-12-16T15:52:16.103Z","message":"✅ 環境変数の検証完了"}
+{"level":"info","timestamp":"2025-12-16T15:52:16.103Z","message":"Backup scheduler is disabled"}
+{"level":"info","timestamp":"2025-12-16T15:52:16.106Z","message":"Health monitoring started","context":{"checks":4}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.107Z","message":"Starting log cleanup"}
+{"level":"info","timestamp":"2025-12-16T15:52:16.109Z","message":"Log cleanup started","context":{"interval":"24 hours","maxAge":"30 days","maxSize":"500 MB"}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.120Z","message":"Job queue initialized","context":{"host":"localhost","port":6379,"tls":false}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.126Z","message":"Job queue enabled with Redis"}
+{"level":"info","timestamp":"2025-12-16T15:52:16.166Z","message":"Cron task added","context":{"name":"db-backup","cronTime":"0 3 * * *"}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.170Z","message":"Cron task added","context":{"name":"log-cleanup","cronTime":"0 4 * * *"}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.174Z","message":"Cron task added","context":{"name":"file-cleanup","cronTime":"0 5 * * 0"}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.175Z","message":"Cron scheduler initialized","context":{"tasks":7}}
+{"level":"info","timestamp":"2025-12-16T15:52:16.187Z","message":"Log cleanup completed","context":{"deletedByAge":0,"deletedBySize":0,"duration":"80ms"}}
+{"level":"warn","timestamp":"2025-12-16T15:52:16.208Z","message":"Health check failed: database","context":{"failures":1,"error":"Check returned false"}}
+{"level":"warn","timestamp":"2025-12-16T15:52:16.687Z","message":"Health check failed: ollama","context":{"failures":1,"error":"Check returned false"}}
+{"level":"error","timestamp":"2025-12-16T15:52:28.707Z","message":"NOT_FOUND: NOT_FOUND at /tailwind.css traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:52:28.780Z","message":"NOT_FOUND: NOT_FOUND at /elysia-cute.svg traceId=undefined"}
+{"level":"error","timestamp":"2025-12-16T15:52:28.787Z","message":"NOT_FOUND: NOT_FOUND at /favicon.ico traceId=undefined"}
+{"level":"info","timestamp":"2025-12-16T16:02:26.389Z","message":"A/B test created","context":{"id":"prompt-style","name":"プロンプトスタイルテスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.393Z","message":"A/B test created","context":{"id":"response-length","name":"レスポンス長テスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.394Z","message":"Audit logs loaded","context":{"count":143}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.397Z","message":"Health check added: database","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.397Z","message":"Health check added: ollama","context":{"interval":"120000ms"}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.398Z","message":"Health check added: redis","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.398Z","message":"Health check added: disk_space","context":{"interval":"300000ms"}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.402Z","message":"🔍 環境変数を検証中..."}
+{"level":"warn","timestamp":"2025-12-16T16:02:26.403Z","message":"⚠️  環境変数の警告:"}
+{"level":"warn","timestamp":"2025-12-16T16:02:26.403Z","message":"  ⚠️  PORT: デフォルト値を使用 (3000)"}
+{"level":"warn","timestamp":"2025-12-16T16:02:26.404Z","message":"  ⚠️  ALLOWED_ORIGINS: デフォルト値を使用 (http://localhost:3000)"}
+{"level":"info","timestamp":"2025-12-16T16:02:26.404Z","message":"✅ 環境変数の検証完了"}
+{"level":"info","timestamp":"2025-12-16T16:02:26.405Z","message":"Backup scheduler is disabled"}
+{"level":"info","timestamp":"2025-12-16T16:02:26.407Z","message":"Health monitoring started","context":{"checks":4}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.408Z","message":"Starting log cleanup"}
+{"level":"info","timestamp":"2025-12-16T16:02:26.409Z","message":"Log cleanup started","context":{"interval":"24 hours","maxAge":"30 days","maxSize":"500 MB"}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.416Z","message":"Job queue initialized","context":{"host":"localhost","port":6379,"tls":false}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.421Z","message":"Job queue enabled with Redis"}
+{"level":"info","timestamp":"2025-12-16T16:02:26.459Z","message":"Cron task added","context":{"name":"db-backup","cronTime":"0 3 * * *"}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.463Z","message":"Cron task added","context":{"name":"log-cleanup","cronTime":"0 4 * * *"}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.466Z","message":"Cron task added","context":{"name":"file-cleanup","cronTime":"0 5 * * 0"}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.467Z","message":"Cron scheduler initialized","context":{"tasks":7}}
+{"level":"info","timestamp":"2025-12-16T16:02:26.477Z","message":"Log cleanup completed","context":{"deletedByAge":0,"deletedBySize":0,"duration":"69ms"}}
+{"level":"warn","timestamp":"2025-12-16T16:02:26.498Z","message":"Health check failed: database","context":{"failures":1,"error":"Check returned false"}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.211Z","message":"A/B test created","context":{"id":"prompt-style","name":"プロンプトスタイルテスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.215Z","message":"A/B test created","context":{"id":"response-length","name":"レスポンス長テスト","variants":2}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.218Z","message":"Audit logs loaded","context":{"count":143}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.221Z","message":"Health check added: database","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.221Z","message":"Health check added: ollama","context":{"interval":"120000ms"}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.222Z","message":"Health check added: redis","context":{"interval":"60000ms"}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.222Z","message":"Health check added: disk_space","context":{"interval":"300000ms"}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.227Z","message":"🔍 環境変数を検証中..."}
+{"level":"warn","timestamp":"2025-12-16T22:37:59.228Z","message":"⚠️  環境変数の警告:"}
+{"level":"warn","timestamp":"2025-12-16T22:37:59.228Z","message":"  ⚠️  PORT: デフォルト値を使用 (3000)"}
+{"level":"warn","timestamp":"2025-12-16T22:37:59.229Z","message":"  ⚠️  ALLOWED_ORIGINS: デフォルト値を使用 (http://localhost:3000)"}
+{"level":"info","timestamp":"2025-12-16T22:37:59.229Z","message":"✅ 環境変数の検証完了"}
+{"level":"info","timestamp":"2025-12-16T22:37:59.230Z","message":"Backup scheduler is disabled"}
+{"level":"info","timestamp":"2025-12-16T22:37:59.232Z","message":"Health monitoring started","context":{"checks":4}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.233Z","message":"Starting log cleanup"}
+{"level":"info","timestamp":"2025-12-16T22:37:59.234Z","message":"Log cleanup started","context":{"interval":"24 hours","maxAge":"30 days","maxSize":"500 MB"}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.241Z","message":"Job queue initialized","context":{"host":"localhost","port":6379,"tls":false}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.246Z","message":"Job queue enabled with Redis"}
+{"level":"info","timestamp":"2025-12-16T22:37:59.287Z","message":"Cron task added","context":{"name":"db-backup","cronTime":"0 3 * * *"}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.291Z","message":"Cron task added","context":{"name":"log-cleanup","cronTime":"0 4 * * *"}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.294Z","message":"Cron task added","context":{"name":"file-cleanup","cronTime":"0 5 * * 0"}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.295Z","message":"Cron scheduler initialized","context":{"tasks":7}}
+{"level":"info","timestamp":"2025-12-16T22:37:59.305Z","message":"Log cleanup completed","context":{"deletedByAge":0,"deletedBySize":0,"duration":"72ms"}}
+{"level":"warn","timestamp":"2025-12-16T22:37:59.327Z","message":"Health check failed: database","context":{"failures":1,"error":"Check returned false"}}
+{"level":"warn","timestamp":"2025-12-16T22:37:59.835Z","message":"Health check failed: ollama","context":{"failures":1,"error":"Check returned false"}}

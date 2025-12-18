@@ -1,0 +1,248 @@
+<style>
+body {
+  background: linear-gradient(135deg, #f8e8ff 0%, #e0f7fa 100%);
+  font-family: 'Segoe UI', 'Hiragino Maru Gothic Pro', 'Arial Rounded MT Bold', sans-serif;
+  display: flex;
+  <style>
+  body {
+    background: linear-gradient(135deg, #f8e8ff 0%, #e0f7fa 100%);
+    font-family: 'Segoe UI', 'Hiragino Maru Gothic Pro', 'Arial Rounded MT Bold', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    </style>
+
+    <textarea id="msg"></textarea>
+    <button onclick="send()">送信</button>
+    <pre id="log"></pre>
+
+    <script>
+    async function send() {
+      const msg = document.getElementById("msg").value;
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg })
+      });
+      const data = await res.json();
+      log.textContent += "\nAI: " + data.reply;
+    }
+    </script>
+  }
+  #send-btn:hover:not(:disabled) {
+    background: linear-gradient(90deg, #a259e6 80%, #e0b3ff 100%);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 4px 16px #e0b3ff55;
+  }
+  </style>
+  opacity: 0.7;
+  letter-spacing: 0.05em;
+}
+.log {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1em;
+  font-size: 1.1em;
+  padding-right: 0.2em;
+  scroll-behavior: smooth;
+}
+.msg-row {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 0.7em;
+  animation: popIn 0.4s cubic-bezier(.5,1.8,.7,1) both;
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+  100% { opacity: 1; transform: none; }
+}
+.msg-bubble {
+  padding: 0.7em 1.2em;
+  border-radius: 1.2em;
+  max-width: 75%;
+  word-break: break-word;
+  box-shadow: 0 2px 12px #e0b3ff33, 0 1px 0 #fff;
+  position: relative;
+  font-size: 1.08em;
+  line-height: 1.7;
+}
+.msg-user {
+  background: #e0f7fa;
+  color: #333;
+  margin-left: auto;
+  border-bottom-right-radius: 0.3em;
+  border: 1.5px solid #b2ebf2;
+}
+.msg-ai {
+  background: #f8e8ff;
+  color: #a259e6;
+  margin-right: auto;
+  border-bottom-left-radius: 0.3em;
+  border: 1.5px solid #e0b3ff;
+  position: relative;
+}
+.msg-ai::after {
+  content: '♡';
+  color: #f8a5c2cc;
+  font-size: 1.1em;
+  position: absolute;
+  right: -1.2em;
+  bottom: 0.2em;
+  opacity: 0.7;
+}
+.ai-icon {
+  width: 2.2em;
+  height: 2.2em;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff0fa 60%, #f8e8ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4em;
+  margin-right: 0.5em;
+  border: 2px solid #e0b3ff;
+  box-shadow: 0 1px 8px #e0b3ff33;
+  position: relative;
+}
+.ai-icon::after {
+  content: 'リボン';
+  position: absolute;
+  bottom: -1.1em;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7em;
+  color: #f8a5c2cc;
+  opacity: 0.7;
+  letter-spacing: 0.1em;
+}
+.input-row {
+  display: flex;
+  width: 100%;
+  gap: 0.5em;
+}
+#msg {
+  flex: 1;
+  border-radius: 1em;
+  border: 1.5px solid #e0b3ff;
+  padding: 0.7em 1em;
+  font-size: 1.1em;
+  outline: none;
+  resize: none;
+  min-height: 2.5em;
+  background: #fff;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 6px #e0b3ff22;
+}
+#msg:focus {
+  border: 2px solid #a259e6;
+  box-shadow: 0 2px 12px #e0b3ff44;
+}
+#send-btn {
+  background: linear-gradient(90deg, #a259e6 60%, #f8e8ff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 1em;
+  font-size: 1.1em;
+  padding: 0.7em 1.5em;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 2px 8px #e0b3ff33;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+#send-btn::after {
+  content: '💖';
+  position: absolute;
+  right: 0.7em;
+  top: 0.5em;
+  font-size: 1.1em;
+  opacity: 0.7;
+  pointer-events: none;
+  animation: sendBtnHeart 2.2s infinite linear;
+}
+@keyframes sendBtnHeart {
+  0%, 100% { transform: scale(1) rotate(-10deg); opacity: 0.7; }
+  50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+}
+#send-btn:hover {
+  background: linear-gradient(90deg, #a259e6 80%, #e0b3ff 100%);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px #e0b3ff55;
+}
+</style>
+
+
+
+<div class="elysia-title" aria-label="Elysia AI Chat">Elysia AI Chat<span class="elysia-heart" aria-hidden="true">♡</span></div>
+<div class="chat-container" role="main" aria-label="チャットエリア">
+  <div id="log" class="log" aria-live="polite" aria-atomic="false"></div>
+  <div class="input-row">
+    <label for="msg" class="visually-hidden">メッセージ入力</label>
+    <textarea id="msg" placeholder="エリシアに話しかけてみてね♪" rows="2" aria-label="メッセージ入力"></textarea>
+    <button id="send-btn" onclick="send()" aria-label="送信">🌸 送信</button>
+  </div>
+</div>
+
+<script>
+const log = document.getElementById("log");
+const msgInput = document.getElementById("msg");
+
+
+// 初回にエリシア自己紹介を表示
+window.addEventListener("DOMContentLoaded", () => {
+  addMsg("こんにちは、エリシアですわ♪ なんでもお話しくださいませ♡", true);
+  msgInput.focus();
+});
+
+function addMsg(text, isAI) {
+  const row = document.createElement("div");
+  row.className = "msg-row";
+  if (isAI) {
+    const icon = document.createElement("div");
+    icon.className = "ai-icon";
+    icon.textContent = "🌸";
+    row.appendChild(icon);
+  }
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble " + (isAI ? "msg-ai" : "msg-user");
+  bubble.textContent = text;
+  row.appendChild(bubble);
+  log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+  // 送信時のふわっとエフェクト
+  setTimeout(() => row.classList.add("pop"), 10);
+}
+
+let sending = false;
+async function send() {
+  if (sending) return;
+  const msg = msgInput.value.trim();
+  if (!msg) return;
+  addMsg(msg, false);
+  msgInput.value = "";
+  msgInput.focus();
+  document.getElementById("send-btn").disabled = true;
+  sending = true;
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+    addMsg(data.reply, true);
+  } finally {
+    document.getElementById("send-btn").disabled = false;
+    sending = false;
+    msgInput.focus();
+  }
+}
+msgInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    send();
+  }
+});
+</script>
