@@ -66,6 +66,8 @@ npx eslint ElysiaAI/src/**/*.ts --fix
 - **Health Check**: http://localhost:3000/health
 - **Metrics**: http://localhost:3000/metrics
 
+> 注意: 開発直後は `FASTAPI_BASE_URL` や Redis を未起動の場合が多く、`/health` は 503 (Service Unavailable) を返すことがあります。Ollama のみ稼働中でも `/metrics` と `/swagger` は利用可能です。完全な 200 (healthy) を得るには FastAPI と Redis を起動してください（Redis は `.env` の `REDIS_ENABLED=false` で無効化したままでも可）。
+
 ---
 
 ## 📦 機能・品質向上
