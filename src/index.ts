@@ -1878,18 +1878,11 @@ if (import.meta.main) {
 
 		// APIドキュメント自動公開（swagger.jsonエクスポート）
 		try {
-			// openapiプラグインの返り値からgetJSON()を直接呼び出し
-			const openapiPlugin = app.plugins.find((p) => p.name === "openapi");
-			if (openapiPlugin && typeof openapiPlugin.getJSON === "function") {
-				const swaggerJson = openapiPlugin.getJSON();
-				if (swaggerJson) {
-					const fs = await import("node:fs");
-					fs.writeFileSync("public/swagger.json", JSON.stringify(swaggerJson, null, 2));
-					logger.info("Swagger JSON exported to public/swagger.json");
-				}
-			}
+			// Elysiaのプラグイン構造は内部実装のため、エクスポートはスキップ
+			// 必要であればSwaggerエンドポイント (/swagger) を直接利用
+			logger.info("Swagger documentation available at /swagger endpoint");
 		} catch (err) {
-			logger.warn("Swagger JSON export failed", { error: err });
+			logger.warn("Swagger setup warning", { error: err });
 		}
 
 		logger.info("Elysia server started", {
