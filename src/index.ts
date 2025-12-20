@@ -179,6 +179,37 @@ function containsDangerousKeywords(text: string) {
 	return bad.some((r) => r.test(text));
 }
 
+// Build a Content-Security-Policy header value based on configured upstreams
+function buildCSP(requestUrl: string): string {
+	// Collect connect-src origins (SSE/Ollama/FastAPI/WebSocket)
+	const connect = new Set<string>(["'self'", "ws:", "wss:"]);
+	const addOrigin = (u?: string) => {
+		try {
+			if (!u) return;
+			const origin = new URL(u).origin;
+			if (origin && origin !== "null") connect.add(origin);
+		} catch {}
+	};
+	addOrigin(CONFIG.OLLAMA_BASE_URL);
+	addOrigin(process.env.FASTAPI_BASE_URL || DATABASE_CONFIG.FASTAPI_BASE_URL);
+
+	// Conservative defaults; allow data: for images/fonts used by UI
+	const csp = [
+		"default-src 'self'",
+		"base-uri 'self'",
+		"object-src 'none'",
+		"frame-ancestors 'none'",
+		"script-src 'self'",
+		"style-src 'self' 'unsafe-inline'",
+		"img-src 'self' data:",
+		"font-src 'self' data:",
+		`connect-src ${Array.from(connect).join(' ')}`,
+		// Form submissions remain local
+		"form-action 'self'",
+	];
+	return csp.join("; ");
+}
+
 // ---------------- App ----------------
 // Create audit middleware
 const auditMiddleware = createAuditMiddleware({
@@ -259,6 +290,24 @@ app
 	.onAfterHandle(({ set, request, response }) => {
 		set.headers["X-Content-Type-Options"] = "nosniff";
 		set.headers["X-Frame-Options"] = "DENY";
+		// 追加の推奨セキュリティヘッダ
+		set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+		set.headers["X-XSS-Protection"] = "1; mode=block";
+		set.headers["Cross-Origin-Opener-Policy"] = "same-origin";
+		const reqUrl = new URL(request.url);
+		// Swaggerは外部アセットを用いる可能性があるためCSP適用を除外
+		if (!reqUrl.pathname.startsWith("/swagger")) {
+			set.headers["Content-Security-Policy"] = buildCSP(request.url);
+		}
+		if ((request.url || "").startsWith("https://")) {
+			set.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+		}
+		// 追加の推奨セキュリティヘッダ
+		set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+		set.headers["X-XSS-Protection"] = "1; mode=block";
+		if ((request.url || "").startsWith("https://")) {
+			set.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+		}
 		const extReq = request as unknown as ExtendedRequest;
 		const span = extReq.__span;
 		if (span) {
@@ -637,7 +686,10 @@ app
 			app.post(
 				"/elysia-love",
 				async ({ body, request }: { body: ChatRequest; request: Request }) => {
-					// const ip = request.headers.get("x-forwarded-for") || "anon"; // 未使用のため削除
+					const ip =
+						request.headers.get("x-forwarded-for") ||
+						request.headers.get("x-real-ip") ||
+						"anon";
 					let userId = "anon";
 					const auth = request.headers.get("authorization") || "";
 					try {
