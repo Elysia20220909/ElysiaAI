@@ -1,5 +1,5 @@
 import { Database } from "bun:sqlite";
-import { existsSync } from "fs";
+import { existsSync } from "node:fs";
 
 const dbPath = "./dev.db";
 
