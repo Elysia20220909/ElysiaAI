@@ -7,11 +7,13 @@ Elysia AI uses environment variables to control test execution in CI/CD and loca
 ## Environment Variables
 
 ### `RUN_LIVE_TESTS`
+
 **Purpose**: Controls execution of tests that require live backend services (Redis, FastAPI, Ollama).
 
 **Default**: `undefined` (tests are skipped by default in CI)
 
 **Usage**:
+
 ```bash
 # Enable live tests locally
 export RUN_LIVE_TESTS=true
@@ -31,11 +33,13 @@ RUN_LIVE_TESTS=true bun test
 - `tests/server.test.ts` - Server integration tests
 
 ### `RUN_E2E_TESTS`
+
 **Purpose**: Controls execution of end-to-end tests using Playwright.
 
 **Default**: `undefined` (E2E tests are skipped by default)
 
 **Usage**:
+
 ```bash
 # Enable E2E tests locally
 export RUN_E2E_TESTS=true
@@ -52,6 +56,7 @@ RUN_E2E_TESTS=true bun test
 ## CI/CD Configuration
 
 ### GitHub Actions
+
 Both environment variables are set to `false` in CI pipelines to skip live/E2E tests by default:
 
 ```yaml
@@ -63,6 +68,7 @@ Both environment variables are set to `false` in CI pipelines to skip live/E2E t
 ```
 
 ### Local Development
+
 For local testing with all services running:
 
 ```bash
@@ -74,6 +80,7 @@ RUN_LIVE_TESTS=true RUN_E2E_TESTS=true bun test
 ```
 
 ### Test Output
+
 - **Skipped**: Tests show as "skipped" when environment variables are not set
 - **Running**: Tests execute normally when variables are set to `true`
 - **Failing**: Only unit tests and non-gated tests will fail in CI if broken
@@ -93,6 +100,7 @@ describeLive("Chat API", () => {
 ```
 
 For E2E tests:
+
 ```typescript
 if (process.env.RUN_E2E_TESTS !== 'true') {
   console.log('[Playwright] Skipping E2E tests (RUN_E2E_TESTS not set)');
@@ -105,6 +113,7 @@ test.describe("Application E2E", () => {
 ```
 
 ## Test Results Summary (Current)
+
 - **Unit Tests**: 73 passing
 - **Skipped Tests**: 57 (live + E2E tests)
 - **Failing Tests**: 0
