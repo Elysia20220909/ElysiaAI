@@ -281,7 +281,7 @@ const app = new Elysia()
 				turn: 1,
 				history: [],
 				passCount: 0,
-				aiEnabled: !!body?.aiEnabled,
+				aiEnabled: body && body.aiEnabled ? true : false,
 				aiLevel:
 					body && (body.aiLevel === "strong" || body.aiLevel === "god")
 						? body.aiLevel
