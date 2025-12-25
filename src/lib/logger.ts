@@ -39,7 +39,10 @@ class Logger {
 	constructor(logDir = "logs", minLevel: LogLevel = "info") {
 		this.logDir = logDir;
 		this.minLevel = minLevel;
-		this.logFile = join(logDir, `app-${new Date().toISOString().split("T")[0]}.log`);
+		this.logFile = join(
+			logDir,
+			`app-${new Date().toISOString().split("T")[0]}.log`,
+		);
 
 		if (!existsSync(logDir)) {
 			mkdirSync(logDir, { recursive: true });
@@ -156,7 +159,8 @@ class Logger {
 		ip?: string,
 		userId?: string,
 	) {
-		const level: LogLevel = status >= 500 ? "error" : status >= 400 ? "warn" : "info";
+		const level: LogLevel =
+			status >= 500 ? "error" : status >= 400 ? "warn" : "info";
 		this.writeLog({
 			level,
 			timestamp: new Date().toISOString(),
@@ -187,4 +191,7 @@ class Logger {
 	}
 }
 
-export const logger = new Logger("logs", (process.env.LOG_LEVEL as LogLevel) || "info");
+export const logger = new Logger(
+	"logs",
+	(process.env.LOG_LEVEL as LogLevel) || "info",
+);

@@ -45,12 +45,31 @@ jobs:
             echo "Waiting for server... ($i)"; sleep 2;
           done
           echo "Server did not start in time"; echo "--- server.log ---"; cat server.log; exit 1
+      - name: Pythonをセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Python依存関係をインストール
+        run: |
+          cd python
+          pip install -r requirements.txt
+
+      - name: FastAPI起動 (バックグラウンド)
+        run: |
+          cd python
+          nohup python fastapi_server.py > fastapi.log 2>&1 &
+          echo "FastAPI starting..."
+          sleep 5
+
       - name: テスト実行
         run: bun test --coverage
         env:
           REDIS_ENABLED: false
           TEST_MODE: true
           DATABASE_URL: file:./dev.db
+          RUN_LIVE_TESTS: false
+          RUN_E2E_TESTS: false
 
       - name: カバレッジレポートアップロード
         uses: actions/upload-artifact@v3

@@ -8,7 +8,8 @@ import { randomUUID } from "node:crypto";
 import bcryptjs from "bcryptjs";
 
 // SQLite データベース接続
-const dbPath = process.env.DATABASE_URL?.replace("file:", "") || "./prisma/dev.db";
+const dbPath =
+	process.env.DATABASE_URL?.replace("file:", "") || "./prisma/dev.db";
 const db = new Database(dbPath);
 
 // ============ ユーザー操作 ============
@@ -22,7 +23,11 @@ export interface User {
 	updatedAt: Date;
 }
 
-export async function createUser(username: string, password: string, role = "user"): Promise<User> {
+export async function createUser(
+	username: string,
+	password: string,
+	role = "user",
+): Promise<User> {
 	const id = randomUUID();
 	const passwordHash = await bcryptjs.hash(password, 10);
 	const now = new Date();
@@ -30,7 +35,14 @@ export async function createUser(username: string, password: string, role = "use
 	const stmt = db.prepare(
 		"INSERT INTO users (id, username, passwordHash, role, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)",
 	);
-	stmt.run(id, username, passwordHash, role, now.toISOString(), now.toISOString());
+	stmt.run(
+		id,
+		username,
+		passwordHash,
+		role,
+		now.toISOString(),
+		now.toISOString(),
+	);
 
 	return {
 		id,
@@ -57,7 +69,9 @@ export async function getUser(userId: string): Promise<User | null> {
 		: null;
 }
 
-export async function getUserByUsername(username: string): Promise<User | null> {
+export async function getUserByUsername(
+	username: string,
+): Promise<User | null> {
 	const stmt = db.prepare("SELECT * FROM users WHERE username = ?");
 	const row = stmt.get(username) as Record<string, unknown> | undefined;
 	return row
@@ -72,7 +86,10 @@ export async function getUserByUsername(username: string): Promise<User | null> 
 		: null;
 }
 
-export async function authenticateUser(username: string, password: string): Promise<User | null> {
+export async function authenticateUser(
+	username: string,
+	password: string,
+): Promise<User | null> {
 	const user = await getUserByUsername(username);
 	if (!user) return null;
 
@@ -103,7 +120,10 @@ export interface ChatSession {
 	updatedAt: Date;
 }
 
-export async function createChatSession(userId?: string, mode = "normal"): Promise<ChatSession> {
+export async function createChatSession(
+	userId?: string,
+	mode = "normal",
+): Promise<ChatSession> {
 	const id = randomUUID();
 	const now = new Date();
 
@@ -115,7 +135,9 @@ export async function createChatSession(userId?: string, mode = "normal"): Promi
 	return { id, userId, mode, createdAt: now, updatedAt: now };
 }
 
-export async function getChatSession(sessionId: string): Promise<ChatSession | null> {
+export async function getChatSession(
+	sessionId: string,
+): Promise<ChatSession | null> {
 	const stmt = db.prepare("SELECT * FROM chat_sessions WHERE id = ?");
 	const row = stmt.get(sessionId) as Record<string, unknown> | undefined;
 	return row
@@ -129,7 +151,9 @@ export async function getChatSession(sessionId: string): Promise<ChatSession | n
 		: null;
 }
 
-export async function getUserChatSessions(userId: string): Promise<ChatSession[]> {
+export async function getUserChatSessions(
+	userId: string,
+): Promise<ChatSession[]> {
 	const stmt = db.prepare(
 		"SELECT * FROM chat_sessions WHERE userId = ? ORDER BY createdAt DESC LIMIT 50",
 	);
@@ -180,7 +204,15 @@ export async function saveFeedback(
 	const stmt = db.prepare(
 		"INSERT INTO feedbacks (id, userId, query, answer, rating, reason, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
 	);
-	stmt.run(id, userId || null, query, answer, rating, reason || null, now.toISOString());
+	stmt.run(
+		id,
+		userId || null,
+		query,
+		answer,
+		rating,
+		reason || null,
+		now.toISOString(),
+	);
 
 	return { id, userId, query, answer, rating, reason, createdAt: now };
 }
@@ -199,7 +231,9 @@ export async function getFeedbacks(
 		);
 		result = stmt.all(rating, limit, offset) as Record<string, unknown>[];
 	} else {
-		stmt = db.prepare("SELECT * FROM feedbacks ORDER BY createdAt DESC LIMIT ? OFFSET ?");
+		stmt = db.prepare(
+			"SELECT * FROM feedbacks ORDER BY createdAt DESC LIMIT ? OFFSET ?",
+		);
 		result = stmt.all(limit, offset) as Record<string, unknown>[];
 	}
 
@@ -221,8 +255,12 @@ export async function getFeedbackStats(): Promise<{
 	upRate: number;
 }> {
 	const totalStmt = db.prepare("SELECT COUNT(*) as count FROM feedbacks");
-	const upStmt = db.prepare("SELECT COUNT(*) as count FROM feedbacks WHERE rating = 'up'");
-	const downStmt = db.prepare("SELECT COUNT(*) as count FROM feedbacks WHERE rating = 'down'");
+	const upStmt = db.prepare(
+		"SELECT COUNT(*) as count FROM feedbacks WHERE rating = 'up'",
+	);
+	const downStmt = db.prepare(
+		"SELECT COUNT(*) as count FROM feedbacks WHERE rating = 'down'",
+	);
 
 	const total = (totalStmt.get() as { count: number }).count;
 	const up = (upStmt.get() as { count: number }).count;
@@ -249,13 +287,23 @@ export async function addKnowledgeBase(
 	const stmt = db.prepare(
 		"INSERT INTO knowledge_base (id, userId, content, topic, verified, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
 	);
-	stmt.run(id, userId || null, content, topic || null, 1, now.toISOString(), now.toISOString());
+	stmt.run(
+		id,
+		userId || null,
+		content,
+		topic || null,
+		1,
+		now.toISOString(),
+		now.toISOString(),
+	);
 }
 
 export async function getVerifiedKnowledgeBase(
 	limit = 100,
 ): Promise<Array<{ content: string; topic?: string }>> {
-	const stmt = db.prepare("SELECT content, topic FROM knowledge_base WHERE verified = 1 LIMIT ?");
+	const stmt = db.prepare(
+		"SELECT content, topic FROM knowledge_base WHERE verified = 1 LIMIT ?",
+	);
 	return stmt.all(limit) as Array<{ content: string; topic?: string }>;
 }
 
@@ -311,7 +359,10 @@ export async function clearTestData(): Promise<void> {
 
 // Prisma互換の簡易ラッパー（テスト用）
 export const prisma = {
-	async $queryRaw<T = unknown>(query: TemplateStringsArray | string, ...params: unknown[]): Promise<T> {
+	async $queryRaw<T = unknown>(
+		query: TemplateStringsArray | string,
+		...params: unknown[]
+	): Promise<T> {
 		const sql = Array.isArray(query) ? query.join("") : query;
 		const trimmed = sql.trim();
 		const stmt = db.prepare(trimmed);

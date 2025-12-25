@@ -51,7 +51,10 @@ class MetricsCollector {
 	}
 
 	decrementConnections() {
-		this.metrics.active_connections = Math.max(0, this.metrics.active_connections - 1);
+		this.metrics.active_connections = Math.max(
+			0,
+			this.metrics.active_connections - 1,
+		);
 	}
 
 	incrementChatRequests() {
@@ -99,7 +102,9 @@ class MetricsCollector {
 			);
 		}
 
-		lines.push("# HELP http_request_duration_seconds HTTP request duration in seconds");
+		lines.push(
+			"# HELP http_request_duration_seconds HTTP request duration in seconds",
+		);
 		lines.push("# TYPE http_request_duration_seconds histogram");
 		for (const [key, durations] of this.metrics.http_request_duration_seconds) {
 			const [method, path] = key.split(":");
@@ -142,7 +147,9 @@ class MetricsCollector {
 
 		lines.push("# HELP feedback_submissions_total Total feedback submissions");
 		lines.push("# TYPE feedback_submissions_total counter");
-		lines.push(`feedback_submissions_total ${this.metrics.feedback_submissions_total}`);
+		lines.push(
+			`feedback_submissions_total ${this.metrics.feedback_submissions_total}`,
+		);
 
 		lines.push("# HELP auth_attempts_total Total authentication attempts");
 		lines.push("# TYPE auth_attempts_total counter");
@@ -152,7 +159,9 @@ class MetricsCollector {
 
 		lines.push("# HELP rate_limit_exceeded_total Total rate limit exceeded");
 		lines.push("# TYPE rate_limit_exceeded_total counter");
-		lines.push(`rate_limit_exceeded_total ${this.metrics.rate_limit_exceeded_total}`);
+		lines.push(
+			`rate_limit_exceeded_total ${this.metrics.rate_limit_exceeded_total}`,
+		);
 
 		lines.push("# HELP rag_queries_total Total RAG queries");
 		lines.push("# TYPE rag_queries_total counter");
@@ -161,16 +170,24 @@ class MetricsCollector {
 		if (this.metrics.rag_query_duration_seconds.length > 0) {
 			lines.push("# HELP rag_query_duration_seconds RAG query duration");
 			lines.push("# TYPE rag_query_duration_seconds histogram");
-			const sorted = [...this.metrics.rag_query_duration_seconds].sort((a, b) => a - b);
+			const sorted = [...this.metrics.rag_query_duration_seconds].sort(
+				(a, b) => a - b,
+			);
 			const avg = sorted.reduce((a, b) => a + b, 0) / sorted.length;
 			const p50 = sorted[Math.floor(sorted.length * 0.5)] || 0;
 			const p95 = sorted[Math.floor(sorted.length * 0.95)] || 0;
 			const p99 = sorted[Math.floor(sorted.length * 0.99)] || 0;
 
 			lines.push(`rag_query_duration_seconds_avg ${avg.toFixed(4)}`);
-			lines.push(`rag_query_duration_seconds{quantile="0.5"} ${p50.toFixed(4)}`);
-			lines.push(`rag_query_duration_seconds{quantile="0.95"} ${p95.toFixed(4)}`);
-			lines.push(`rag_query_duration_seconds{quantile="0.99"} ${p99.toFixed(4)}`);
+			lines.push(
+				`rag_query_duration_seconds{quantile="0.5"} ${p50.toFixed(4)}`,
+			);
+			lines.push(
+				`rag_query_duration_seconds{quantile="0.95"} ${p95.toFixed(4)}`,
+			);
+			lines.push(
+				`rag_query_duration_seconds{quantile="0.99"} ${p99.toFixed(4)}`,
+			);
 		}
 
 		const memUsage = process.memoryUsage();

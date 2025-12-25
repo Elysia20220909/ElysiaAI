@@ -35,8 +35,5 @@ export default defineConfig({
 		url: "http://localhost:3000",
 		reuseExistingServer: !process.env.CI,
 	},
-	testIgnore: [
-		"../*.test.ts",
-		"../tests/*.test.ts",
-	],
+	testIgnore: ["../*.test.ts", "../tests/*.test.ts"],
 });

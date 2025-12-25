@@ -48,10 +48,17 @@ class SessionManager {
 	/**
 	 * 新しいセッションを作成
 	 */
-	createSession(userId: string, userAgent: string, ip: string): UserSession | null {
+	createSession(
+		userId: string,
+		userAgent: string,
+		ip: string,
+	): UserSession | null {
 		// ユーザーの既存セッション数をチェック
 		const existingSessions = this.userSessions.get(userId);
-		if (existingSessions && existingSessions.size >= this.MAX_SESSIONS_PER_USER) {
+		if (
+			existingSessions &&
+			existingSessions.size >= this.MAX_SESSIONS_PER_USER
+		) {
 			// 最も古いセッションを削除
 			const oldestSession = this.getOldestSession(userId);
 			if (oldestSession) {
@@ -108,7 +115,9 @@ class SessionManager {
 	/**
 	 * デバイスタイプを検出
 	 */
-	private detectDeviceType(userAgent: string): "mobile" | "tablet" | "desktop" | "unknown" {
+	private detectDeviceType(
+		userAgent: string,
+	): "mobile" | "tablet" | "desktop" | "unknown" {
 		const ua = userAgent.toLowerCase();
 		if (/mobile|android|iphone/i.test(ua)) return "mobile";
 		if (/tablet|ipad/i.test(ua)) return "tablet";
@@ -137,7 +146,11 @@ class SessionManager {
 	/**
 	 * アクティビティを記録
 	 */
-	recordActivity(sessionId: string, type: Activity["type"], details?: Record<string, unknown>) {
+	recordActivity(
+		sessionId: string,
+		type: Activity["type"],
+		details?: Record<string, unknown>,
+	) {
 		const session = this.sessions.get(sessionId);
 		if (!session) return;
 
@@ -261,9 +274,15 @@ class SessionManager {
 			activeSessions: activeSessions.length,
 			uniqueUsers: this.userSessions.size,
 			deviceBreakdown: {
-				mobile: activeSessions.filter((s) => s.deviceInfo.deviceType === "mobile").length,
-				tablet: activeSessions.filter((s) => s.deviceInfo.deviceType === "tablet").length,
-				desktop: activeSessions.filter((s) => s.deviceInfo.deviceType === "desktop").length,
+				mobile: activeSessions.filter(
+					(s) => s.deviceInfo.deviceType === "mobile",
+				).length,
+				tablet: activeSessions.filter(
+					(s) => s.deviceInfo.deviceType === "tablet",
+				).length,
+				desktop: activeSessions.filter(
+					(s) => s.deviceInfo.deviceType === "desktop",
+				).length,
 			},
 		};
 	}

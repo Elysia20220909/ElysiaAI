@@ -80,7 +80,8 @@ export const KnowledgeUpsertSchema = {
 			minLength: 10,
 			maxLength: 2000,
 			description: "Summary of the knowledge entry",
-			example: "Machine learning is a subset of AI that enables systems to learn from data",
+			example:
+				"Machine learning is a subset of AI that enables systems to learn from data",
 		},
 		sourceUrl: {
 			type: "string",

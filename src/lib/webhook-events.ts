@@ -47,7 +47,11 @@ class WebhookManager {
 		if (discordUrl) {
 			this.subscribe("discord", {
 				url: discordUrl,
-				events: ["error.critical", "system.health_check_failed", "rate_limit.exceeded"],
+				events: [
+					"error.critical",
+					"system.health_check_failed",
+					"rate_limit.exceeded",
+				],
 				enabled: true,
 			});
 		}
@@ -151,7 +155,10 @@ class WebhookManager {
 	/**
 	 * HMAC-SHA256署名を生成
 	 */
-	private async generateSignature(payload: string, secret: string): Promise<string> {
+	private async generateSignature(
+		payload: string,
+		secret: string,
+	): Promise<string> {
 		const encoder = new TextEncoder();
 		const keyData = encoder.encode(secret);
 		const data = encoder.encode(payload);

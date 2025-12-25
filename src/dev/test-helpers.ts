@@ -8,7 +8,10 @@ import * as db from "../lib/database-utils";
 
 export const testDataGenerator = {
 	// User test data generation
-	createTestUser: async (username = `test_${Date.now()}`, password = "test123456") => {
+	createTestUser: async (
+		username = `test_${Date.now()}`,
+		password = "test123456",
+	) => {
 		return await db.createUser(username, password, "user");
 	},
 
@@ -21,7 +24,11 @@ export const testDataGenerator = {
 	createTestMessages: async (sessionId: string, count = 3) => {
 		const messages = [];
 		for (let i = 0; i < count; i++) {
-			await db.saveMessage(sessionId, i % 2 === 0 ? "user" : "assistant", `Test message ${i + 1}`);
+			await db.saveMessage(
+				sessionId,
+				i % 2 === 0 ? "user" : "assistant",
+				`Test message ${i + 1}`,
+			);
 			messages.push(`Message ${i + 1}`);
 		}
 		return messages;
@@ -53,7 +60,11 @@ export const testDataGenerator = {
 };
 
 export const assert = {
-	assertEquals: (actual: unknown, expected: unknown, message?: string): void => {
+	assertEquals: (
+		actual: unknown,
+		expected: unknown,
+		message?: string,
+	): void => {
 		if (actual !== expected) {
 			throw new Error(
 				`Assertion failed: ${message || ""}\nExpected: ${expected}\nActual: ${actual}`,
@@ -63,7 +74,9 @@ export const assert = {
 
 	assertNotNull: (value: unknown, message?: string): void => {
 		if (value === null || value === undefined) {
-			throw new Error(`Assertion failed: ${message || ""} - value is null or undefined`);
+			throw new Error(
+				`Assertion failed: ${message || ""} - value is null or undefined`,
+			);
 		}
 	},
 
@@ -75,20 +88,33 @@ export const assert = {
 
 	assertFalse: (value: boolean, message?: string): void => {
 		if (value !== false) {
-			throw new Error(`Assertion failed: ${message || ""} - value is not false`);
+			throw new Error(
+				`Assertion failed: ${message || ""} - value is not false`,
+			);
 		}
 	},
 
-	assertGreaterThan: (actual: number, expected: number, message?: string): void => {
+	assertGreaterThan: (
+		actual: number,
+		expected: number,
+		message?: string,
+	): void => {
 		if (actual <= expected) {
-			throw new Error(`Assertion failed: ${message || ""}\n${actual} > ${expected}`);
+			throw new Error(
+				`Assertion failed: ${message || ""}\n${actual} > ${expected}`,
+			);
 		}
 	},
 
-	assertThrows: async (fn: () => Promise<void>, message?: string): Promise<void> => {
+	assertThrows: async (
+		fn: () => Promise<void>,
+		message?: string,
+	): Promise<void> => {
 		try {
 			await fn();
-			throw new Error(`Assertion failed: ${message || ""} - no error was thrown`);
+			throw new Error(
+				`Assertion failed: ${message || ""} - no error was thrown`,
+			);
 		} catch (error) {
 			// Expected
 		}

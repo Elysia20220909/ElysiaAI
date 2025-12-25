@@ -1,5 +1,5 @@
 // グローバル変数宣言
-let ranking: Ranking = {};
+const ranking: Ranking = {};
 let state: OthelloState = {
 	board: Array.from({ length: 8 }, (_, y) =>
 		Array.from({ length: 8 }, (_, x) =>
@@ -15,11 +15,11 @@ let state: OthelloState = {
 	passCount: 0,
 	aiEnabled: false,
 };
-let clients: Set<any> = new Set();
+const clients: Set<any> = new Set();
 
-import { Elysia, t } from "elysia";
-import { openapi, fromTypes } from "@elysiajs/openapi";
 import { cors } from "@elysiajs/cors";
+import { fromTypes, openapi } from "@elysiajs/openapi";
+import { Elysia, t } from "elysia";
 
 // 型定義
 type Cell = 0 | 1 | 2; // 0:空, 1:黒, 2:白
@@ -35,7 +35,9 @@ type OthelloState = {
 	aiLevel?: "random" | "strong" | "god";
 	userIds?: string[];
 };
-type Ranking = { [userId: string]: { win: number; lose: number; draw: number } };
+type Ranking = {
+	[userId: string]: { win: number; lose: number; draw: number };
+};
 
 // ゲームロジック関数
 function placeOthello(
@@ -61,12 +63,25 @@ function placeOthello(
 		let nx = x + dx,
 			ny = y + dy,
 			line: [number, number][] = [];
-		while (nx >= 0 && nx < 8 && ny >= 0 && ny < 8 && newBoard[ny][nx] === (player === 1 ? 2 : 1)) {
+		while (
+			nx >= 0 &&
+			nx < 8 &&
+			ny >= 0 &&
+			ny < 8 &&
+			newBoard[ny][nx] === (player === 1 ? 2 : 1)
+		) {
 			line.push([nx, ny]);
 			nx += dx;
 			ny += dy;
 		}
-		if (line.length && nx >= 0 && nx < 8 && ny >= 0 && ny < 8 && newBoard[ny][nx] === player) {
+		if (
+			line.length &&
+			nx >= 0 &&
+			nx < 8 &&
+			ny >= 0 &&
+			ny < 8 &&
+			newBoard[ny][nx] === player
+		) {
 			for (const [fx, fy] of line) {
 				newBoard[fy][fx] = player;
 				flipped++;
@@ -78,17 +93,18 @@ function placeOthello(
 }
 function isGameOver(board: Board): boolean {
 	if (board.flat().every((c) => c !== 0)) return true;
-	for (let p of [1, 2] as Player[]) {
+	for (const p of [1, 2] as Player[]) {
 		for (let y = 0; y < 8; ++y)
-			for (let x = 0; x < 8; ++x) if (placeOthello(board, x, y, p).flipped) return false;
+			for (let x = 0; x < 8; ++x)
+				if (placeOthello(board, x, y, p).flipped) return false;
 	}
 	return true;
 }
 function countStones(board: Board): [number, number] {
 	let b = 0,
 		w = 0;
-	for (let row of board)
-		for (let c of row) {
+	for (const row of board)
+		for (const c of row) {
 			if (c === 1) b++;
 			else if (c === 2) w++;
 		}
@@ -159,7 +175,10 @@ function alphabeta(
 		return minEval;
 	}
 }
-function getStrongAIMove(board: Board, player: Player): { x: number; y: number } | null {
+function getStrongAIMove(
+	board: Board,
+	player: Player,
+): { x: number; y: number } | null {
 	let bestScore = -Infinity,
 		bestMove = null;
 	for (let y = 0; y < 8; ++y)
@@ -183,7 +202,10 @@ function getStrongAIMove(board: Board, player: Player): { x: number; y: number }
 		}
 	return bestMove;
 }
-function getGodAIMove(board: Board, player: Player): { x: number; y: number } | null {
+function getGodAIMove(
+	board: Board,
+	player: Player,
+): { x: number; y: number } | null {
 	const corners = [
 		{ x: 0, y: 0 },
 		{ x: 0, y: 7 },
@@ -216,10 +238,14 @@ function getGodAIMove(board: Board, player: Player): { x: number; y: number } | 
 		}
 	return bestMove;
 }
-function getRandomLegalMove(board: Board, player: Player): { x: number; y: number } | null {
+function getRandomLegalMove(
+	board: Board,
+	player: Player,
+): { x: number; y: number } | null {
 	const moves: { x: number; y: number }[] = [];
 	for (let y = 0; y < 8; ++y)
-		for (let x = 0; x < 8; ++x) if (placeOthello(board, x, y, player).flipped) moves.push({ x, y });
+		for (let x = 0; x < 8; ++x)
+			if (placeOthello(board, x, y, player).flipped) moves.push({ x, y });
 	if (moves.length === 0) return null;
 	return moves[Math.floor(Math.random() * moves.length)];
 }
@@ -257,7 +283,9 @@ const app = new Elysia()
 				passCount: 0,
 				aiEnabled: body && body.aiEnabled ? true : false,
 				aiLevel:
-					body && (body.aiLevel === "strong" || body.aiLevel === "god") ? body.aiLevel : "random",
+					body && (body.aiLevel === "strong" || body.aiLevel === "god")
+						? body.aiLevel
+						: "random",
 				userIds: body && body.userIds ? body.userIds : ["user1", "user2"],
 			};
 			clients.clear();
@@ -265,7 +293,11 @@ const app = new Elysia()
 		},
 		{
 			body: t.Optional(
-				t.Object({ aiEnabled: t.Boolean(), aiLevel: t.String(), userIds: t.Array(t.String()) }),
+				t.Object({
+					aiEnabled: t.Boolean(),
+					aiLevel: t.String(),
+					userIds: t.Array(t.String()),
+				}),
 			),
 		},
 	)
@@ -294,7 +326,7 @@ const app = new Elysia()
 			}
 			state.board = result.board;
 			// 角ボーナス
-			let bonus = (x === 0 || x === 7) && (y === 0 || y === 7) ? 2 : 0;
+			const bonus = (x === 0 || x === 7) && (y === 0 || y === 7) ? 2 : 0;
 			state.history.push(
 				`Player ${player === 1 ? "黒" : "白"}: (${x},${y}) 反転${result.flipped}個${bonus ? " 角ボーナス+2" : ""}`,
 			);
@@ -344,7 +376,12 @@ const app = new Elysia()
 					if (aiMove) {
 						// 直接actionロジックを呼び出す
 						const aiAction = { x: aiMove.x, y: aiMove.y, player: 2 };
-						const result = placeOthello(state.board, aiAction.x, aiAction.y, aiAction.player);
+						const result = placeOthello(
+							state.board,
+							aiAction.x,
+							aiAction.y,
+							aiAction.player,
+						);
 						if (!result.flipped) {
 							state.passCount++;
 							state.history.push(
@@ -362,8 +399,9 @@ const app = new Elysia()
 							return;
 						}
 						state.board = result.board;
-						let bonus =
-							(aiAction.x === 0 || aiAction.x === 7) && (aiAction.y === 0 || aiAction.y === 7)
+						const bonus =
+							(aiAction.x === 0 || aiAction.x === 7) &&
+							(aiAction.y === 0 || aiAction.y === 7)
 								? 2
 								: 0;
 						state.history.push(
@@ -403,7 +441,10 @@ const app = new Elysia()
 				}, 500);
 			}
 			// 最強AI: 評価関数＋αβ探索（深さ4）＋定石（角優先）
-			function getGodAIMove(board: Board, player: Player): { x: number; y: number } | null {
+			function getGodAIMove(
+				board: Board,
+				player: Player,
+			): { x: number; y: number } | null {
 				// 角優先
 				const corners = [
 					{ x: 0, y: 0 },
@@ -419,7 +460,17 @@ const app = new Elysia()
 				for (let y = 0; y < 8; ++y)
 					for (let x = 0; x < 8; ++x) {
 						if (placeOthello(board, x, y, player).flipped) {
-							const score = alphabeta(board, player, 4, true, -Infinity, Infinity, player, x, y);
+							const score = alphabeta(
+								board,
+								player,
+								4,
+								true,
+								-Infinity,
+								Infinity,
+								player,
+								x,
+								y,
+							);
 							if (score > bestScore) {
 								bestScore = score;
 								bestMove = { x, y };
@@ -440,7 +491,8 @@ const app = new Elysia()
 				beta: number,
 				origPlayer: Player,
 			): number {
-				if (depth === 0 || isGameOver(board)) return evaluateBoard(board, origPlayer);
+				if (depth === 0 || isGameOver(board))
+					return evaluateBoard(board, origPlayer);
 				if (maximizing) {
 					let maxEval = -Infinity;
 					for (let y = 0; y < 8; ++y)
@@ -488,7 +540,10 @@ const app = new Elysia()
 
 			// ランキングAPIはappチェーン内で宣言
 			// 強いAI: 評価関数＋αβ探索（深さ2）
-			function getStrongAIMove(board: Board, player: Player): { x: number; y: number } | null {
+			function getStrongAIMove(
+				board: Board,
+				player: Player,
+			): { x: number; y: number } | null {
 				let bestScore = -Infinity,
 					bestMove = null;
 				for (let y = 0; y < 8; ++y)
@@ -536,7 +591,8 @@ const app = new Elysia()
 				beta: number,
 				origPlayer: Player,
 			): number {
-				if (depth === 0 || isGameOver(board)) return evaluateBoard(board, origPlayer);
+				if (depth === 0 || isGameOver(board))
+					return evaluateBoard(board, origPlayer);
 				if (maximizing) {
 					let maxEval = -Infinity;
 					for (let y = 0; y < 8; ++y)
@@ -606,10 +662,17 @@ app
 					typeof action.y === "number" &&
 					typeof action.player === "number"
 				) {
-					const result = placeOthello(state.board, action.x, action.y, action.player);
+					const result = placeOthello(
+						state.board,
+						action.x,
+						action.y,
+						action.player,
+					);
 					if (!result.flipped) {
 						state.passCount++;
-						state.history.push(`不正な手/パス: (${action.x},${action.y}) by ${action.player}`);
+						state.history.push(
+							`不正な手/パス: (${action.x},${action.y}) by ${action.player}`,
+						);
 						if (state.passCount >= 2) {
 							const [b, w] = countStones(state.board);
 							if (b > w) state.winner = "黒";
@@ -622,8 +685,11 @@ app
 						return;
 					}
 					state.board = result.board;
-					let bonus =
-						(action.x === 0 || action.x === 7) && (action.y === 0 || action.y === 7) ? 2 : 0;
+					const bonus =
+						(action.x === 0 || action.x === 7) &&
+						(action.y === 0 || action.y === 7)
+							? 2
+							: 0;
 					state.history.push(
 						`Player ${action.player === 1 ? "黒" : "白"}: (${action.x},${action.y}) 反転${result.flipped}個${bonus ? " 角ボーナス+2" : ""}`,
 					);

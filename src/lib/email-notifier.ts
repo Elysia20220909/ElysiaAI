@@ -150,7 +150,11 @@ class EmailNotifier {
 	/**
 	 * バックアップ完了通知メールを送信
 	 */
-	async sendBackupNotification(backupInfo: { file: string; size: number; duration: number }) {
+	async sendBackupNotification(backupInfo: {
+		file: string;
+		size: number;
+		duration: number;
+	}) {
 		const adminEmail = process.env.ADMIN_EMAIL;
 		if (!adminEmail) return;
 

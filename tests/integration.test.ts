@@ -47,7 +47,11 @@ describe("Integration Tests - Full Stack", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const requirementsPath = path.join(process.cwd(), "python", "requirements.txt");
+		const requirementsPath = path.join(
+			process.cwd(),
+			"python",
+			"requirements.txt",
+		);
 		if (fs.existsSync(requirementsPath)) {
 			const content = fs.readFileSync(requirementsPath, "utf-8");
 			expect(content).toContain("fastapi");
@@ -64,7 +68,10 @@ describe("Configuration Validation", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const tsconfigPath = path.join(process.cwd(), "config/internal/tsconfig.json");
+		const tsconfigPath = path.join(
+			process.cwd(),
+			"config/internal/tsconfig.json",
+		);
 		expect(fs.existsSync(tsconfigPath)).toBe(true);
 
 		// tsconfig.jsonにはコメントが含まれるため、正規表現で削除してからパース
@@ -82,7 +89,10 @@ describe("Configuration Validation", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const webpackPath = path.join(process.cwd(), "config/internal/webpack.config.js");
+		const webpackPath = path.join(
+			process.cwd(),
+			"config/internal/webpack.config.js",
+		);
 		expect(fs.existsSync(webpackPath)).toBe(true);
 
 		const content = fs.readFileSync(webpackPath, "utf-8");

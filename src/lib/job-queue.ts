@@ -40,12 +40,18 @@ class JobQueueManager {
 	async initialize() {
 		try {
 			// Redis接続設定（TLS対応）
-			const redisHost = process.env.REDIS_HOST || new URL(this.REDIS_URL).hostname;
+			const redisHost =
+				process.env.REDIS_HOST || new URL(this.REDIS_URL).hostname;
 			const redisPort =
-				Number(process.env.REDIS_PORT) || Number(new URL(this.REDIS_URL).port) || 6379;
-			const redisPassword = process.env.REDIS_PASSWORD || new URL(this.REDIS_URL).password;
+				Number(process.env.REDIS_PORT) ||
+				Number(new URL(this.REDIS_URL).port) ||
+				6379;
+			const redisPassword =
+				process.env.REDIS_PASSWORD || new URL(this.REDIS_URL).password;
 			const redisUsername =
-				process.env.REDIS_USERNAME || new URL(this.REDIS_URL).username || "default";
+				process.env.REDIS_USERNAME ||
+				new URL(this.REDIS_URL).username ||
+				"default";
 			const useTLS = process.env.REDIS_TLS === "true";
 
 			const connection: Record<string, unknown> = {
@@ -56,7 +62,10 @@ class JobQueueManager {
 				maxRetriesPerRequest: Number(process.env.REDIS_MAX_RETRIES) || 5,
 				connectTimeout: Number(process.env.REDIS_CONNECT_TIMEOUT) || 10000,
 				retryStrategy: (times: number) => {
-					const delay = Math.min(times * Number(process.env.REDIS_RETRY_DELAY_MS || 2000), 10000);
+					const delay = Math.min(
+						times * Number(process.env.REDIS_RETRY_DELAY_MS || 2000),
+						10000,
+					);
 					logger.warn(`Redis reconnect attempt ${times}, retry in ${delay}ms`);
 					return delay;
 				},
@@ -240,7 +249,11 @@ class JobQueueManager {
 	/**
 	 * レポート生成ジョブを追加
 	 */
-	async generateReport(reportType: "daily" | "weekly" | "monthly", startDate: Date, endDate: Date) {
+	async generateReport(
+		reportType: "daily" | "weekly" | "monthly",
+		startDate: Date,
+		endDate: Date,
+	) {
 		return await this.addJob("generate-report", {
 			reportType,
 			startDate,

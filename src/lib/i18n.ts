@@ -52,7 +52,11 @@ export class I18n {
 	/**
 	 * Get translation for a key
 	 */
-	t(key: string, locale?: SupportedLocale, params?: Record<string, string | number>): string {
+	t(
+		key: string,
+		locale?: SupportedLocale,
+		params?: Record<string, string | number>,
+	): string {
 		const targetLocale = locale || this.config.defaultLocale;
 		const translation = this.translations.get(targetLocale);
 
@@ -72,12 +76,17 @@ export class I18n {
 	/**
 	 * Get fallback translation
 	 */
-	private getFallback(key: string, params?: Record<string, string | number>): string {
+	private getFallback(
+		key: string,
+		params?: Record<string, string | number>,
+	): string {
 		if (this.config.fallbackLocale === this.config.defaultLocale) {
 			return key; // Return key if no fallback
 		}
 
-		const fallbackTranslation = this.translations.get(this.config.fallbackLocale);
+		const fallbackTranslation = this.translations.get(
+			this.config.fallbackLocale,
+		);
 		if (!fallbackTranslation) {
 			return key;
 		}
@@ -107,7 +116,10 @@ export class I18n {
 	/**
 	 * Interpolate parameters into translation string
 	 */
-	private interpolate(text: string, params?: Record<string, string | number>): string {
+	private interpolate(
+		text: string,
+		params?: Record<string, string | number>,
+	): string {
 		if (!params) return text;
 
 		return text.replace(/\{\{(\w+)\}\}/g, (match, key) => {
@@ -215,7 +227,8 @@ export const i18n = new I18n({
 export function getLocaleFromRequest(request: Request): SupportedLocale {
 	// Check query parameter
 	const url = new URL(request.url);
-	const queryLocale = url.searchParams.get("locale") || url.searchParams.get("lang");
+	const queryLocale =
+		url.searchParams.get("locale") || url.searchParams.get("lang");
 	if (queryLocale && i18n.isSupported(queryLocale)) {
 		return queryLocale as SupportedLocale;
 	}

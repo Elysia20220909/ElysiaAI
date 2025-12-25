@@ -25,7 +25,11 @@ class ResponseCompressor {
 	/**
 	 * 圧縮すべきか判定
 	 */
-	shouldCompress(contentType: string, size: number, threshold: number): boolean {
+	shouldCompress(
+		contentType: string,
+		size: number,
+		threshold: number,
+	): boolean {
 		if (size < threshold) return false;
 
 		const compressibleTypes = [
@@ -136,7 +140,9 @@ class ResponseCompressor {
 				compressedSize: originalSize,
 			};
 		} catch (error) {
-			logger.error(`Compression error: ${error instanceof Error ? error.message : String(error)}`);
+			logger.error(
+				`Compression error: ${error instanceof Error ? error.message : String(error)}`,
+			);
 			return {
 				compressed: buffer,
 				encoding: "identity",
@@ -161,7 +167,10 @@ class ResponseCompressor {
 		const savedBytes = this.stats.originalBytes - this.stats.compressedBytes;
 		const compressionRate =
 			this.stats.totalRequests > 0
-				? ((this.stats.compressedRequests / this.stats.totalRequests) * 100).toFixed(1)
+				? (
+						(this.stats.compressedRequests / this.stats.totalRequests) *
+						100
+					).toFixed(1)
 				: "0.0";
 		const savingsRate =
 			this.stats.originalBytes > 0
@@ -232,12 +241,22 @@ export function createCompressionMiddleware(options?: CompressionOptions) {
 			const threshold = options?.threshold || 1024;
 
 			// Check if compression is beneficial
-			if (!responseCompressor.shouldCompress(contentType, Buffer.byteLength(body), threshold)) {
+			if (
+				!responseCompressor.shouldCompress(
+					contentType,
+					Buffer.byteLength(body),
+					threshold,
+				)
+			) {
 				return;
 			}
 
 			// Compress response
-			const result = responseCompressor.compressResponse(body, acceptEncoding, options);
+			const result = responseCompressor.compressResponse(
+				body,
+				acceptEncoding,
+				options,
+			);
 
 			if (result.encoding !== "identity") {
 				set.headers["content-encoding"] = result.encoding;

@@ -161,7 +161,8 @@ class ABTestManager {
 		if (selectedVariant) {
 			userTests?.set(testId, selectedVariant.id);
 			// インプレッションを記録
-			const currentImpressions = test.metrics.impressions.get(selectedVariant.id) || 0;
+			const currentImpressions =
+				test.metrics.impressions.get(selectedVariant.id) || 0;
 			test.metrics.impressions.set(selectedVariant.id, currentImpressions + 1);
 		}
 
@@ -215,7 +216,9 @@ class ABTestManager {
 			const conversions = test.metrics.conversions.get(variant.id) || 0;
 			const ratings = test.metrics.averageRating.get(variant.id) || [];
 			const avgRating =
-				ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : 0;
+				ratings.length > 0
+					? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+					: 0;
 
 			return {
 				variantId: variant.id,

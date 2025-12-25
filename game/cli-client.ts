@@ -8,7 +8,9 @@ const rl = readline.createInterface({
 const BASE_URL = "http://localhost:3000";
 
 async function prompt(query: string): Promise<string> {
-	return new Promise((resolve) => rl.question(query, (ans) => resolve(ans.trim())));
+	return new Promise((resolve) =>
+		rl.question(query, (ans) => resolve(ans.trim())),
+	);
 }
 
 function printBoard(board: number[][]) {
@@ -17,7 +19,16 @@ function printBoard(board: number[][]) {
 		let row = i + " ";
 		for (let j = 0; j < 8; j++) {
 			row += board[i][j] === 0 ? ". " : board[i][j] === 1 ? "● " : "○ ";
-		main();
+		}
+		console.log(row);
+	}
+}
+
+async function main() {
+	console.log("=== Elysia Network Game CLI ===");
+	const mode = await prompt("モード: 1=対人 2=AI 3=観戦 > ");
+
+	while (true) {
 		const res = await fetch(`${BASE_URL}/game/state`);
 		const state = await res.json();
 		printBoard(state.board);
@@ -47,4 +58,3 @@ function printBoard(board: number[][]) {
 }
 
 main();
-// rl.close() はmain内でreturn時に必要なら追加してください

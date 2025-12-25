@@ -140,11 +140,17 @@ export async function conversationChat(
 	newUserMessage: string,
 	options: OpenAIChatOptions = {},
 ): Promise<{ response: string; updatedHistory: OpenAIChatMessage[] }> {
-	const messages = [...conversationHistory, { role: "user" as const, content: newUserMessage }];
+	const messages = [
+		...conversationHistory,
+		{ role: "user" as const, content: newUserMessage },
+	];
 
 	const response = await chatWithOpenAI(messages, options);
 
-	const updatedHistory = [...messages, { role: "assistant" as const, content: response }];
+	const updatedHistory = [
+		...messages,
+		{ role: "assistant" as const, content: response },
+	];
 
 	return {
 		response,
