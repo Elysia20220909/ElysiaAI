@@ -262,18 +262,21 @@ class AuditLoggerService {
 				"Status Code",
 			];
 
-			const rows = logs.map((log) => [
-				log.id,
-				log.timestamp.toISOString(),
-				log.userId || "",
-				log.action,
-				log.resource,
-				log.resourceId || "",
-				log.method,
-				log.path,
-				log.ipAddress,
-				log.statusCode.toString(),
-			]);
+			const rows = logs.map((log) => {
+				const status = log.statusCode ?? 0;
+				return [
+					log.id,
+					log.timestamp.toISOString(),
+					log.userId || "",
+					log.action,
+					log.resource,
+					log.resourceId || "",
+					log.method,
+					log.path,
+					log.ipAddress,
+					status.toString(),
+				];
+			});
 
 			return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
 		}

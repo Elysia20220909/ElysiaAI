@@ -18,7 +18,7 @@
         "@prisma/client": "^7.1.0",
         "@types/cron": "^2.4.3",
         "@types/ws": "^8.18.1",
-        "@zilliz/milvus2-sdk-node": "^2.6.5",
+        "@zilliz/milvus2-sdk-node": "^2.6.7",
         "ai": "^5.0.113",
         "alpinejs": "^3.15.2",
         "axios": "^1.13.2",
@@ -496,7 +496,7 @@
 
     "@xtuc/long": ["@xtuc/long@4.2.2", "", {}, "sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ=="],
 
-    "@zilliz/milvus2-sdk-node": ["@zilliz/milvus2-sdk-node@2.6.5", "", { "dependencies": { "@grpc/grpc-js": "1.7.3", "@grpc/proto-loader": "^0.7.10", "@opentelemetry/api": "^1.9.0", "@petamoriken/float16": "^3.8.6", "dayjs": "^1.11.7", "generic-pool": "^3.9.0", "lru-cache": "^9.1.2", "protobufjs": "^7.2.6", "winston": "^3.9.0" } }, "sha512-bHK2gNNpK2Oni4l+3+xbmHWFNpum5dUTSuxio9xG3zmV4mZMS7W5WGhhnjbCy1tYYhme5LGNDY1CGT/Q1ZtxQQ=="],
+    "@zilliz/milvus2-sdk-node": ["@zilliz/milvus2-sdk-node@2.6.7", "", { "dependencies": { "@grpc/grpc-js": "1.7.3", "@grpc/proto-loader": "^0.7.10", "@opentelemetry/api": "^1.9.0", "@petamoriken/float16": "^3.8.6", "dayjs": "^1.11.7", "generic-pool": "^3.9.0", "lru-cache": "^9.1.2", "protobufjs": "^7.2.6", "winston": "^3.9.0" } }, "sha512-Qd54QeSiMvZknHgcMubEvaEWYHp3/5yaljCB5g3et0/1MO9+UyojA9J0vebxbwCzIDxrVAiC17gVsbnkLYj3Ng=="],
 
     "acorn": ["acorn@8.15.0", "", { "bin": { "acorn": "bin/acorn" } }, "sha512-NZyJarBfL7nWwIq+FDL6Zp/yHEhePMNnnJ0y3qfieCrmNvYct8uvtiV41UvlSe6apAfk0fY1FbWx+NwfmpvtTg=="],
 

@@ -309,6 +309,22 @@ export async function clearTestData(): Promise<void> {
 	db.exec("DELETE FROM users");
 }
 
+// Prisma互換の簡易ラッパー（テスト用）
+export const prisma = {
+	async $queryRaw<T = unknown>(query: TemplateStringsArray | string, ...params: unknown[]): Promise<T> {
+		const sql = Array.isArray(query) ? query.join("") : query;
+		const trimmed = sql.trim();
+		const stmt = db.prepare(trimmed);
+
+		if (trimmed.toUpperCase().startsWith("SELECT")) {
+			return stmt.all(...params) as T;
+		}
+
+		stmt.run(...params);
+		return [] as T;
+	},
+};
+
 export function disconnect(): void {
 	db.close();
 }
