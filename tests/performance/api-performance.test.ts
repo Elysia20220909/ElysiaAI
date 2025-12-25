@@ -1,8 +1,10 @@
 import { describe, it, expect } from "bun:test";
 
 const BASE_URL = "http://localhost:3000";
+const LIVE_TESTS_ENABLED = process.env.RUN_LIVE_TESTS === "true";
+const describeLive = LIVE_TESTS_ENABLED ? describe : describe.skip;
 
-describe("API Performance Tests", () => {
+describeLive("API Performance Tests", () => {
   it("Health endpoint should respond within 100ms", async () => {
     const start = performance.now();
     const response = await fetch(`${BASE_URL}/health`);
@@ -99,7 +101,7 @@ describe("API Performance Tests", () => {
   });
 });
 
-describe("Load Testing (Light)", () => {
+describeLive("Load Testing (Light)", () => {
   it("Should handle 100 requests within 5 seconds", async () => {
     const totalRequests = 100;
     const start = performance.now();
@@ -143,7 +145,7 @@ describe("Load Testing (Light)", () => {
   });
 });
 
-describe("Response Size Optimization", () => {
+describeLive("Response Size Optimization", () => {
   it("Health endpoint response should be compact", async () => {
     const response = await fetch(`${BASE_URL}/health`);
     const text = await response.text();

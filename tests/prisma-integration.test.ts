@@ -14,7 +14,7 @@ import {
 	prisma,
 	saveFeedback,
 	saveMessage,
-} from "../lib/database-utils";
+} from "../src/lib/database-utils";
 
 // ========== テストスイート ==========
 
@@ -26,8 +26,6 @@ describe("Prisma Database Integration Tests", () => {
 	});
 
 	afterAll(async () => {
-		// Prisma切断
-		await disconnect();
 		console.log("✅ テストクリーンアップ完了");
 	});
 

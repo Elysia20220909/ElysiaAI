@@ -3,8 +3,10 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:3000";
 const RAG_URL = "http://localhost:8000";
+const LIVE_TESTS_ENABLED = process.env.RUN_LIVE_TESTS === "true";
+const liveDescribe = LIVE_TESTS_ENABLED ? describe : describe.skip;
 
-describe("Elysia AI Server Tests", () => {
+liveDescribe("Elysia AI Server Tests", () => {
 	beforeAll(async () => {
 		// サーバーを起動
 		console.log("🚀 Starting test server...");
@@ -67,7 +69,7 @@ describe("Elysia AI Server Tests", () => {
 	});
 });
 
-describe("RAG API Tests (if available)", () => {
+liveDescribe("RAG API Tests (if available)", () => {
 	test("RAG endpoint is reachable", async () => {
 		try {
 			const response = await axios.post(

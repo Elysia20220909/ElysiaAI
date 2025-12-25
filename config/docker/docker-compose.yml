@@ -4,10 +4,42 @@ version: "3.8"
 # 1コマンドで全サービス起動: docker-compose up -d
 
 services:
+  # ==================== Elysia (Bun API) ====================
+  elysia:
+    build:
+      context: ../..
+      dockerfile: config/docker/Dockerfile.production
+    container_name: elysia-app
+    profiles:
+      - app
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+      - FASTAPI_BASE_URL=http://fastapi:8000
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - REDIS_URL=redis://redis:6379
+      - VOICEVOX_BASE_URL=http://voicevox:50021
+    ports:
+      - "3000:3000"
+      - "8000:8000"
+    volumes:
+      - ../../data:/app/data
+      - ../../logs:/app/logs
+      - ../../public:/app/public
+    networks:
+      - elysia-network
+    depends_on:
+      - fastapi
+      - redis
+      - ollama
+    restart: unless-stopped
+
   # ==================== Redis (レート制限用) ====================
   redis:
     image: redis:7-alpine
     container_name: elysia-redis
+    profiles:
+      - core
     ports:
       - "6379:6379"
     volumes:
@@ -26,6 +58,8 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: elysia-ollama
+    profiles:
+      - llm
     ports:
       - "11434:11434"
     volumes:
@@ -50,17 +84,19 @@ services:
   # ==================== FastAPI (RAGサービス) ====================
   fastapi:
     build:
-      context: ./python
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: python/Dockerfile
     container_name: elysia-fastapi
+    profiles:
+      - api
     ports:
       - "8000:8000"
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
       - DATABASE_URL=sqlite:///./elysia.db
     volumes:
-      - ./python:/app
-      - ./data:/app/data
+      - ../../python:/app
+      - ../../data:/app/data
     networks:
       - elysia-network
     depends_on:
@@ -77,6 +113,8 @@ services:
   voicevox:
     image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
     container_name: elysia-voicevox
+    profiles:
+      - voice
     ports:
       - "50021:50021"
     networks:

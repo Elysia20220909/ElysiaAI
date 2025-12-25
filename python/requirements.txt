@@ -3,6 +3,8 @@ openai>=1.59.6
 fastapi>=0.115.6
 uvicorn[standard]>=0.34.0
 sentence-transformers>=3.3.1
+# Pin to patched version for CVE fixes (GHSA-w853-jp5j-5j7f)
+filelock>=3.20.1
 # network_simulation dependencies
 inputimeout==1.0.4
 networkx>=3.2

@@ -217,14 +217,17 @@ class JobQueueManager {
 	async addJob(type: string, payload: Record<string, unknown>, options = {}) {
 		if (!this.queue) {
 			logger.warn("Queue not available, executing job immediately");
-			return await this.processJob({
+			const fallbackId = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+			await this.processJob({
+				id: fallbackId,
 				data: { type, payload },
 			} as Job<JobData>);
+			return fallbackId;
 		}
 
 		const job = await this.queue.add(type, { type, payload }, options);
 		logger.debug("Job added to queue", { jobId: job.id, type });
-		return job;
+		return job.id?.toString();
 	}
 
 	/**

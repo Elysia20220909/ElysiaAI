@@ -5,10 +5,13 @@ import type app from "../src/index";
 
 type App = typeof app;
 const API_URL = "http://localhost:3000";
+const LIVE_TESTS = process.env.RUN_LIVE_TESTS === "true";
+const describeLive = LIVE_TESTS ? describe : describe.skip;
 
 let serverAvailable = true;
 
 beforeAll(async () => {
+	if (!LIVE_TESTS) return;
 	try {
 		const res = await fetch(`${API_URL}/ping`);
 		if (!res.ok) serverAvailable = false;
@@ -17,16 +20,7 @@ beforeAll(async () => {
 	}
 });
 
-function skipIfNoServer() {
-	if (!serverAvailable) {
-		it.skip("サーバ未起動のためテストをskip", () => {});
-		return true;
-	}
-	return false;
-}
-
-describe("Health Endpoints", () => {
-	skipIfNoServer();
+describeLive("Health Endpoints", () => {
 	it("should return OK for /ping", async () => {
 		const response = await fetch(`${API_URL}/ping`);
 		const data = await response.json();
@@ -49,7 +43,7 @@ describe("Health Endpoints", () => {
 	});
 });
 
-describe("Metrics Endpoint", () => {
+describeLive("Metrics Endpoint", () => {
 	it("should return Prometheus metrics", async () => {
 		const response = await fetch(`${API_URL}/metrics`);
 		const text = await response.text();
@@ -62,7 +56,7 @@ describe("Metrics Endpoint", () => {
 	});
 });
 
-describe("Authentication", () => {
+describeLive("Authentication", () => {
 	let accessToken: string;
 	let refreshToken: string;
 
@@ -148,7 +142,7 @@ describe("Authentication", () => {
 	});
 });
 
-describe("Input Validation", () => {
+describeLive("Input Validation", () => {
 	let token: string;
 
 	beforeAll(async () => {
@@ -199,7 +193,7 @@ describe("Input Validation", () => {
 	});
 });
 
-describe("Rate Limiting", () => {
+describeLive("Rate Limiting", () => {
 	let token: string;
 
 	beforeAll(async () => {
@@ -236,7 +230,7 @@ describe("Rate Limiting", () => {
 	});
 });
 
-describe("Chat API", () => {
+describeLive("Chat API", () => {
 	let token: string;
 
 	beforeAll(async () => {
@@ -288,7 +282,7 @@ describe("Chat API", () => {
 	});
 });
 
-describe("Security Headers", () => {
+describeLive("Security Headers", () => {
 	it("should include security headers", async () => {
 		const response = await fetch(`${API_URL}/ping`);
 

@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 
+const LIVE_TESTS = process.env.RUN_LIVE_TESTS === "true";
+const describeLive = LIVE_TESTS ? describe : describe.skip;
+
 /**
  * チャット機能の包括的テスト
  * - エラーハンドリング
@@ -8,7 +11,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
  * - レート制限
  */
 
-describe("チャット機能 - 包括的テスト", () => {
+describeLive("チャット機能 - 包括的テスト", () => {
 	const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
 	let authToken: string;
 
