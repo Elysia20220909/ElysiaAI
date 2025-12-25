@@ -1,6 +1,7 @@
 # Test Gating Guide
 
 ## Overview
+
 Elysia AI uses environment variables to control test execution in CI/CD and local development environments. This prevents tests that require live services (Redis, FastAPI, Ollama) from failing when those services are unavailable.
 
 ## Environment Variables
@@ -21,6 +22,7 @@ RUN_LIVE_TESTS=true bun test
 ```
 
 **Affected Tests**:
+
 - `tests/api.test.ts` - API endpoint tests
 - `tests/chat-comprehensive.test.ts` - Chat functionality tests
 - `tests/game.test.ts` - Game API tests
@@ -44,6 +46,7 @@ RUN_E2E_TESTS=true bun test
 ```
 
 **Affected Tests**:
+
 - `tests/e2e/app.spec.ts` - Full application E2E tests with browser automation
 
 ## CI/CD Configuration
