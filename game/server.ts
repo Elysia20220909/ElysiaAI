@@ -281,12 +281,12 @@ const app = new Elysia()
 				turn: 1,
 				history: [],
 				passCount: 0,
-				aiEnabled: body && body.aiEnabled ? true : false,
+				aiEnabled: !!body?.aiEnabled,
 				aiLevel:
 					body && (body.aiLevel === "strong" || body.aiLevel === "god")
 						? body.aiLevel
 						: "random",
-				userIds: body && body.userIds ? body.userIds : ["user1", "user2"],
+				userIds: body?.userIds ? body.userIds : ["user1", "user2"],
 			};
 			clients.clear();
 			return state;
@@ -335,13 +335,13 @@ const app = new Elysia()
 			// 勝敗判定
 			if (isGameOver(state.board)) {
 				const [b, w] = countStones(state.board);
-				let winnerId = "";
+				let _winnerId = "";
 				if (b > w) {
 					state.winner = "黒";
-					winnerId = state.userIds ? state.userIds[0] : "user1";
+					_winnerId = state.userIds ? state.userIds[0] : "user1";
 				} else if (w > b) {
 					state.winner = "白";
-					winnerId = state.userIds ? state.userIds[1] : "user2";
+					_winnerId = state.userIds ? state.userIds[1] : "user2";
 				} else state.winner = "引き分け";
 				state.history.push(`勝負終了: 黒${b} 白${w}`);
 				// ランキング記録
@@ -375,7 +375,7 @@ const app = new Elysia()
 					}
 					if (aiMove) {
 						// 直接actionロジックを呼び出す
-						const aiAction = { x: aiMove.x, y: aiMove.y, player: 2 };
+						const aiAction = { x: aiMove.x, y: aiMove.y, player: 2 as Player };
 						const result = placeOthello(
 							state.board,
 							aiAction.x,
@@ -411,13 +411,13 @@ const app = new Elysia()
 						state.passCount = 0;
 						if (isGameOver(state.board)) {
 							const [b, w] = countStones(state.board);
-							let winnerId = "";
+							let _winnerId = "";
 							if (b > w) {
 								state.winner = "黒";
-								winnerId = state.userIds ? state.userIds[0] : "user1";
+								_winnerId = state.userIds ? state.userIds[0] : "user1";
 							} else if (w > b) {
 								state.winner = "白";
-								winnerId = state.userIds ? state.userIds[1] : "user2";
+								_winnerId = state.userIds ? state.userIds[1] : "user2";
 							} else state.winner = "引き分け";
 							state.history.push(`勝負終了: 黒${b} 白${w}`);
 							if (state.userIds) {
@@ -441,7 +441,7 @@ const app = new Elysia()
 				}, 500);
 			}
 			// 最強AI: 評価関数＋αβ探索（深さ4）＋定石（角優先）
-			function getGodAIMove(
+			function _getGodAIMove(
 				board: Board,
 				player: Player,
 			): { x: number; y: number } | null {
@@ -460,16 +460,16 @@ const app = new Elysia()
 				for (let y = 0; y < 8; ++y)
 					for (let x = 0; x < 8; ++x) {
 						if (placeOthello(board, x, y, player).flipped) {
+							const newBoard = placeOthello(board, x, y, player).board;
+							const nextPlayer = (player === 1 ? 2 : 1) as Player;
 							const score = alphabeta(
-								board,
-								player,
-								4,
-								true,
+								newBoard,
+								nextPlayer,
+								3,
+								false,
 								-Infinity,
 								Infinity,
 								player,
-								x,
-								y,
 							);
 							if (score > bestScore) {
 								bestScore = score;
@@ -480,67 +480,9 @@ const app = new Elysia()
 				return bestMove;
 			}
 
-			// αβ探索（深さ4）
-			// αβ探索（深さ2/4）: Player型修正
-			function alphabeta(
-				board: Board,
-				player: Player,
-				depth: number,
-				maximizing: boolean,
-				alpha: number,
-				beta: number,
-				origPlayer: Player,
-			): number {
-				if (depth === 0 || isGameOver(board))
-					return evaluateBoard(board, origPlayer);
-				if (maximizing) {
-					let maxEval = -Infinity;
-					for (let y = 0; y < 8; ++y)
-						for (let x = 0; x < 8; ++x) {
-							if (placeOthello(board, x, y, player).flipped) {
-								const nextPlayer = player === 1 ? 2 : 1;
-								const evalScore = alphabeta(
-									placeOthello(board, x, y, player).board,
-									nextPlayer,
-									depth - 1,
-									false,
-									alpha,
-									beta,
-									origPlayer,
-								);
-								maxEval = Math.max(maxEval, evalScore);
-								alpha = Math.max(alpha, evalScore);
-								if (beta <= alpha) break;
-							}
-						}
-					return maxEval;
-				} else {
-					let minEval = Infinity;
-					for (let y = 0; y < 8; ++y)
-						for (let x = 0; x < 8; ++x) {
-							if (placeOthello(board, x, y, player).flipped) {
-								const nextPlayer = player === 1 ? 2 : 1;
-								const evalScore = alphabeta(
-									placeOthello(board, x, y, player).board,
-									nextPlayer,
-									depth - 1,
-									true,
-									alpha,
-									beta,
-									origPlayer,
-								);
-								minEval = Math.min(minEval, evalScore);
-								beta = Math.min(beta, evalScore);
-								if (beta <= alpha) break;
-							}
-						}
-					return minEval;
-				}
-			}
-
 			// ランキングAPIはappチェーン内で宣言
 			// 強いAI: 評価関数＋αβ探索（深さ2）
-			function getStrongAIMove(
+			function _getStrongAIMove(
 				board: Board,
 				player: Player,
 			): { x: number; y: number } | null {
@@ -582,7 +524,7 @@ const app = new Elysia()
 			}
 
 			// αβ探索（深さ2）
-			function alphabeta(
+			function _alphabeta(
 				board: Board,
 				player: Player,
 				depth: number,
@@ -599,7 +541,7 @@ const app = new Elysia()
 						for (let x = 0; x < 8; ++x) {
 							if (placeOthello(board, x, y, player).flipped) {
 								const nextPlayer = player === 1 ? 2 : 1;
-								const evalScore = alphabeta(
+								const evalScore = _alphabeta(
 									placeOthello(board, x, y, player).board,
 									nextPlayer,
 									depth - 1,
@@ -620,7 +562,7 @@ const app = new Elysia()
 						for (let x = 0; x < 8; ++x) {
 							if (placeOthello(board, x, y, player).flipped) {
 								const nextPlayer = player === 1 ? 2 : 1;
-								const evalScore = alphabeta(
+								const evalScore = _alphabeta(
 									placeOthello(board, x, y, player).board,
 									nextPlayer,
 									depth - 1,
@@ -654,7 +596,7 @@ app
 		close(ws: any) {
 			clients.delete(ws);
 		},
-		message(ws: any, msg: string) {
+		message(_ws: any, msg: string) {
 			try {
 				const action = JSON.parse(typeof msg === "string" ? msg : "");
 				if (
@@ -697,13 +639,13 @@ app
 					state.passCount = 0;
 					if (isGameOver(state.board)) {
 						const [b, w] = countStones(state.board);
-						let winnerId = "";
+						let _winnerId = "";
 						if (b > w) {
 							state.winner = "黒";
-							winnerId = state.userIds ? state.userIds[0] : "user1";
+							_winnerId = state.userIds ? state.userIds[0] : "user1";
 						} else if (w > b) {
 							state.winner = "白";
-							winnerId = state.userIds ? state.userIds[1] : "user2";
+							_winnerId = state.userIds ? state.userIds[1] : "user2";
 						} else state.winner = "引き分け";
 						state.history.push(`勝負終了: 黒${b} 白${w}`);
 						if (state.userIds) {

@@ -49,7 +49,7 @@ for (const signal of signals) {
 }
 
 // Start server
-const PORT = Number.parseInt(process.env.PORT || "3000");
+const PORT = Number.parseInt(process.env.PORT || "3000", 10);
 const HOST = process.env.HOST || "localhost";
 
 app.listen(PORT, () => {

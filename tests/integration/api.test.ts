@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
 const BASE_URL = "http://localhost:3000";
 const LIVE_TESTS_ENABLED = process.env.RUN_LIVE_TESTS === "true";
@@ -60,7 +60,7 @@ describeLive("Swagger Documentation", () => {
 });
 
 describeLive("Authentication Endpoints", () => {
-	let authToken: string;
+	let _authToken: string;
 	let refreshToken: string;
 
 	const creds = {
@@ -80,7 +80,7 @@ describeLive("Authentication Endpoints", () => {
 		expect(data).toHaveProperty("accessToken");
 		expect(data).toHaveProperty("refreshToken");
 
-		authToken = data.accessToken;
+		_authToken = data.accessToken;
 		refreshToken = data.refreshToken;
 	});
 

@@ -1,6 +1,3 @@
-// Enhanced OpenAPI Schema Definitions
-import type { TSchema } from "elysia";
-
 export const MessageSchema = {
 	type: "object",
 	properties: {

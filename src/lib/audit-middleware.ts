@@ -53,7 +53,7 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 
 		afterHandle: async (
 			context: Context & { request: Request; set: { status?: number } },
-			response?: Response,
+			_response?: Response,
 		) => {
 			const { request, set } = context;
 

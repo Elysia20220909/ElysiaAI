@@ -3,7 +3,6 @@
  * Development test data generation and assertions
  */
 
-import { randomUUID } from "node:crypto";
 import * as db from "../lib/database-utils";
 
 export const testDataGenerator = {
@@ -115,7 +114,7 @@ export const assert = {
 			throw new Error(
 				`Assertion failed: ${message || ""} - no error was thrown`,
 			);
-		} catch (error) {
+		} catch (_error) {
 			// Expected
 		}
 	},

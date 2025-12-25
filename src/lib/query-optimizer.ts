@@ -18,7 +18,6 @@ class QueryOptimizer {
 		}>
 	> = new Map();
 	private batchTimers: Map<string, NodeJS.Timeout> = new Map();
-	private preparedStatements: Map<string, unknown> = new Map();
 
 	constructor(options?: QueryOptimizerOptions) {
 		this.options = {

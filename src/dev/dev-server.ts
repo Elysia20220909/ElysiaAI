@@ -34,7 +34,7 @@ export class DevServer {
 		this.app.get("/dev/logs", (req) => {
 			const levelStr = (req.query?.level as string) || undefined;
 			const level = levelStr as "debug" | "info" | "warn" | "error" | undefined;
-			const limit = Number.parseInt((req.query?.limit as string) || "100");
+			const limit = Number.parseInt((req.query?.limit as string) || "100", 10);
 			return {
 				logs: devLogger.getLogs(level, limit),
 				total: devLogger.getLogs().length,
