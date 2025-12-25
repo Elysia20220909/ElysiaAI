@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 
 const BASE_URL = "http://localhost:3000";
+const LIVE_TESTS_ENABLED = process.env.RUN_LIVE_TESTS === "true";
+const describeLive = LIVE_TESTS_ENABLED ? describe : describe.skip;
 
-describe("Health Endpoints", () => {
+describeLive("Health Endpoints", () => {
   it("GET /health - should return healthy status", async () => {
     const response = await fetch(`${BASE_URL}/health`);
     const data = await response.json();
@@ -25,7 +27,7 @@ describe("Health Endpoints", () => {
   });
 });
 
-describe("API Root", () => {
+describeLive("API Root", () => {
   it("GET / - should return HTML (landing page)", async () => {
     const response = await fetch(BASE_URL);
     const text = await response.text();
@@ -36,7 +38,7 @@ describe("API Root", () => {
   });
 });
 
-describe("Swagger Documentation", () => {
+describeLive("Swagger Documentation", () => {
   it("GET /swagger - should return Swagger UI", async () => {
     const response = await fetch(`${BASE_URL}/swagger`);
     const text = await response.text();
@@ -57,7 +59,7 @@ describe("Swagger Documentation", () => {
   });
 });
 
-describe("Authentication Endpoints", () => {
+describeLive("Authentication Endpoints", () => {
   let authToken: string;
   let refreshToken: string;
 
@@ -104,7 +106,7 @@ describe("Authentication Endpoints", () => {
 
 // Chat endpoints are covered by E2E elsewhere; skipped here to avoid flakiness
 
-describe("Error Handling", () => {
+describeLive("Error Handling", () => {
   it("GET /nonexistent - should return 404", async () => {
     const response = await fetch(`${BASE_URL}/nonexistent`);
 
@@ -124,7 +126,7 @@ describe("Error Handling", () => {
   // Protected endpoints require Bearer token; skip explicit check here
 });
 
-describe("Rate Limiting", () => {
+describeLive("Rate Limiting", () => {
   it("should enforce rate limits on repeated requests", async () => {
     // Use /ping to avoid dependency-sensitive health status
     const requests = Array(20).fill(null).map(() => fetch(`${BASE_URL}/ping`));

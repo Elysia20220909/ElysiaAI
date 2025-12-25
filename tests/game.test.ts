@@ -2,8 +2,10 @@ import { describe, test, expect } from "bun:test";
 import axios from "axios";
 
 const BASE_URL = "http://localhost:3001";
+const LIVE_TESTS = process.env.RUN_LIVE_TESTS === "true";
+const describeLive = LIVE_TESTS ? describe : describe.skip;
 
-describe("Elysia Network Game API", () => {
+describeLive("Elysia Network Game API", () => {
 	test("ゲーム初期化APIが正常に動作する", async () => {
 		const res = await axios.post(`${BASE_URL}/game/start`, {
 			nodes: [
