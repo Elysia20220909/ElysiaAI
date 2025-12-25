@@ -3,8 +3,6 @@
  * エンドポイント別統計とレスポンスタイム分析
  */
 
-import { logger } from "./logger";
-
 interface RequestMetrics {
 	endpoint: string;
 	method: string;

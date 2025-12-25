@@ -1,6 +1,5 @@
 // Comprehensive Test Suite - Unit Tests
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { treaty } from "@elysiajs/eden";
+import { beforeAll, describe, expect, it } from "bun:test";
 import type app from "../src/index";
 
 type App = typeof app;
@@ -8,15 +7,15 @@ const API_URL = "http://localhost:3000";
 const LIVE_TESTS = process.env.RUN_LIVE_TESTS === "true";
 const describeLive = LIVE_TESTS ? describe : describe.skip;
 
-let serverAvailable = true;
+let _serverAvailable = true;
 
 beforeAll(async () => {
 	if (!LIVE_TESTS) return;
 	try {
 		const res = await fetch(`${API_URL}/ping`);
-		if (!res.ok) serverAvailable = false;
+		if (!res.ok) _serverAvailable = false;
 	} catch {
-		serverAvailable = false;
+		_serverAvailable = false;
 	}
 });
 

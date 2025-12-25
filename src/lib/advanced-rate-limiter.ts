@@ -26,7 +26,6 @@ class AdvancedRateLimiter {
 	private suspiciousIPs: Set<string> = new Set();
 
 	private readonly MAX_REQUESTS_PER_MINUTE = 60;
-	private readonly MAX_REQUESTS_PER_HOUR = 1000;
 	private readonly SUSPICIOUS_THRESHOLD = 100; // 1分以内
 	private readonly AUTO_BLOCK_THRESHOLD = 200; // 1分以内
 

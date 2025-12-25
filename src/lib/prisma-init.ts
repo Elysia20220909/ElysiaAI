@@ -104,7 +104,7 @@ async function logTableStats(): Promise<void> {
 		for (const [key, count] of Object.entries(stats)) {
 			logger.info(`  - ${key}: ${count}件`);
 		}
-	} catch (error) {
+	} catch (_error) {
 		logger.debug("統計情報取得スキップ");
 	}
 }

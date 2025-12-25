@@ -56,13 +56,11 @@ import {
 } from "./config/internal/auth.ts";
 import { DATABASE_CONFIG } from "./config/internal/db.ts";
 import { DEFAULT_MODE, ELYSIA_MODES } from "./config/internal/llm-config.ts";
-import { setupSocket } from "./config/internal/socket-server.ts";
 import { abTestManager } from "./lib/ab-testing.ts";
 import { apiKeyManager } from "./lib/api-key-manager.ts";
 import { auditLogger } from "./lib/audit-logger.ts";
 import { createAuditMiddleware } from "./lib/audit-middleware.ts";
 import { backupScheduler } from "./lib/backup-scheduler.ts";
-import { CacheManager } from "./lib/cache.ts";
 import * as casualChat from "./lib/casual-chat.ts";
 import * as chatSessionService from "./lib/chat-session.ts";
 import { cronScheduler } from "./lib/cron-scheduler.ts";
@@ -72,25 +70,15 @@ import {
 	knowledgeService,
 	userService,
 } from "./lib/database.ts";
-import { emailNotifier } from "./lib/email-notifier.ts";
-import {
-	checkEnvironmentOrExit,
-	printEnvironmentSummary,
-} from "./lib/env-validator.ts";
+import { checkEnvironmentOrExit } from "./lib/env-validator.ts";
 import { fileUploadManager } from "./lib/file-upload.ts";
 import { performHealthCheck } from "./lib/health.ts";
 import { healthMonitor } from "./lib/health-monitor.ts";
-import { getLocaleFromRequest, i18n } from "./lib/i18n.ts";
 import { jobQueue } from "./lib/job-queue.ts";
 import { logCleanupManager } from "./lib/log-cleanup.ts";
 import { logger } from "./lib/logger.ts";
 import { metricsCollector } from "./lib/metrics.ts";
 import * as openaiIntegration from "./lib/openai-integration.ts";
-import {
-	checkRateLimit as checkRateLimitMemory,
-	escapeHtml,
-	getSecurityHeaders,
-} from "./lib/security.ts";
 import { sessionManager } from "./lib/session-manager.ts";
 import { getTraceContextFromRequest, telemetry } from "./lib/telemetry.ts";
 import * as webSearch from "./lib/web-search.ts";
@@ -205,7 +193,7 @@ function containsDangerousKeywords(text: string) {
 }
 
 // Build a Content-Security-Policy header value based on configured upstreams
-function buildCSP(requestUrl: string): string {
+function buildCSP(_requestUrl: string): string {
 	// Collect connect-src origins (SSE/Ollama/FastAPI/WebSocket)
 	const connect = new Set<string>(["'self'", "ws:", "wss:"]);
 	const addOrigin = (u?: string) => {
@@ -478,7 +466,7 @@ app
 				return jsonError(401, "Invalid token");
 			}
 			if (!existsSync("data")) mkdirSync("data", { recursive: true });
-			const ip = request.headers.get("x-forwarded-for") || "anon";
+			const _ip = request.headers.get("x-forwarded-for") || "anon";
 			const userId = (payload as { userId?: string }).userId || undefined;
 			try {
 				await feedbackService.create({
@@ -1424,7 +1412,7 @@ app.get(
 			return new Response(JSON.stringify({ result }), {
 				headers: { "content-type": "application/json" },
 			});
-		} catch (error) {
+		} catch (_error) {
 			return jsonError(500, "検索エラー");
 		}
 	},

@@ -5,7 +5,7 @@
  */
 
 import "dotenv/config";
-import { debug, devLogger } from "../src/dev/dev-logger";
+import { devLogger } from "../src/dev/dev-logger";
 import { assert, testDataGenerator } from "../src/dev/test-helpers";
 import * as db from "../src/lib/database-utils";
 

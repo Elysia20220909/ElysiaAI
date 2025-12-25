@@ -26,7 +26,7 @@ async function testWebSearchIntegration() {
 
 			if (response) {
 				console.log("✅ Response:");
-				console.log(response.substring(0, 300) + "...");
+				console.log(`${response.substring(0, 300)}...`);
 			} else {
 				console.log("⚠️  No special response (using default casual mode)");
 			}
@@ -35,7 +35,7 @@ async function testWebSearchIntegration() {
 		}
 	}
 
-	console.log("\n" + "=".repeat(60));
+	console.log(`\n${"=".repeat(60)}`);
 	console.log("✅ Test completed");
 }
 
