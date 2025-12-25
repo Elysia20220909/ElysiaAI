@@ -3,6 +3,7 @@
 ## Current Status (Updated: 2025)
 
 ### Resolved CVEs
+
 ✅ **fonttools** - Updated to 4.60.2 (Fixed GHSA-768j-98cg-p3fv)
 ✅ **urllib3** - Updated to 2.6.0+ (Fixed GHSA-gm62-xv2j-4w53, GHSA-2xpw-w6gg-jr37)
 ✅ **pip** - Updated to 23.3+ (Fixed PYSEC-2023-228, GHSA-4xh5-x5gv-qwph)
@@ -12,6 +13,7 @@
 ✅ **uvicorn** - Updated to 0.39.0+
 
 ### Partially Addressed CVE
+
 ⚠️ **filelock** - Currently 3.19.1 (GHSA-w853-jp5j-5j7f)
 
 **Issue**: The CVE fix requires `filelock>=3.20.1`, but this version requires Python 3.10+.
@@ -24,6 +26,7 @@
 3. **Temporary**: Pin `filelock<3.20` and document the limitation
 
 **Risk Assessment**:
+
 - **Severity**: Low to Medium (depends on usage patterns)
 - **Impact**: The vulnerability is in file locking mechanisms; impact varies by usage
 - **Current State**: Version 3.19.1 includes some security improvements from earlier versions
@@ -61,9 +64,11 @@ Update GitHub Actions workflows to use Python 3.10:
 ```
 
 ## Dependencies Overview
+
 See `python/requirements.txt` for full dependency list with version constraints.
 
 ### Version Constraints Applied
+
 - `filelock>=3.13.4,<3.20` (Python 3.9 compatible range)
 - `fonttools>=4.60.2` (CVE fix)
 - `urllib3>=2.6.0` (CVE fix)
