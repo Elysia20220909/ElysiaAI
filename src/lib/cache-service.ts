@@ -76,7 +76,9 @@ class CacheService {
 
 			return JSON.parse(value) as T;
 		} catch (error) {
-			logger.error(`Cache get error: ${error instanceof Error ? error.message : String(error)}`);
+			logger.error(
+				`Cache get error: ${error instanceof Error ? error.message : String(error)}`,
+			);
 			return null;
 		}
 	}
@@ -89,7 +91,9 @@ class CacheService {
 			const ttl = options?.ttl || this.defaultTTL;
 			await this.client.setEx(fullKey, ttl, JSON.stringify(value));
 		} catch (error) {
-			logger.error(`Cache set error: ${error instanceof Error ? error.message : String(error)}`);
+			logger.error(
+				`Cache set error: ${error instanceof Error ? error.message : String(error)}`,
+			);
 		}
 	}
 
@@ -100,7 +104,9 @@ class CacheService {
 			const fullKey = this.buildKey(key, options?.prefix);
 			await this.client.del(fullKey);
 		} catch (error) {
-			logger.error(`Cache delete error: ${error instanceof Error ? error.message : String(error)}`);
+			logger.error(
+				`Cache delete error: ${error instanceof Error ? error.message : String(error)}`,
+			);
 		}
 	}
 
@@ -112,12 +118,17 @@ class CacheService {
 			const exists = await this.client.exists(fullKey);
 			return exists === 1;
 		} catch (error) {
-			logger.error(`Cache has error: ${error instanceof Error ? error.message : String(error)}`);
+			logger.error(
+				`Cache has error: ${error instanceof Error ? error.message : String(error)}`,
+			);
 			return false;
 		}
 	}
 
-	async invalidatePattern(pattern: string, options?: CacheOptions): Promise<void> {
+	async invalidatePattern(
+		pattern: string,
+		options?: CacheOptions,
+	): Promise<void> {
 		if (!this.client || !this.isConnected) return;
 
 		try {
@@ -134,7 +145,11 @@ class CacheService {
 	}
 
 	// Specialized cache methods
-	async cacheQueryResult<T>(queryKey: string, queryFn: () => Promise<T>, ttl = 300): Promise<T> {
+	async cacheQueryResult<T>(
+		queryKey: string,
+		queryFn: () => Promise<T>,
+		ttl = 300,
+	): Promise<T> {
 		const cached = await this.get<T>(queryKey);
 		if (cached !== null) return cached;
 
@@ -144,11 +159,20 @@ class CacheService {
 	}
 
 	async cacheAPIKey(apiKey: string, userId: string, ttl = 3600): Promise<void> {
-		await this.set(`apikey:${apiKey}`, { userId, valid: true }, { ttl, prefix: "" });
+		await this.set(
+			`apikey:${apiKey}`,
+			{ userId, valid: true },
+			{ ttl, prefix: "" },
+		);
 	}
 
-	async validateAPIKey(apiKey: string): Promise<{ userId: string; valid: boolean } | null> {
-		return await this.get<{ userId: string; valid: boolean }>(`apikey:${apiKey}`, { prefix: "" });
+	async validateAPIKey(
+		apiKey: string,
+	): Promise<{ userId: string; valid: boolean } | null> {
+		return await this.get<{ userId: string; valid: boolean }>(
+			`apikey:${apiKey}`,
+			{ prefix: "" },
+		);
 	}
 
 	async invalidateAPIKey(apiKey: string): Promise<void> {

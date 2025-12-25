@@ -1,7 +1,9 @@
 /**
  * セッション内の全メッセージを削除
  */
-export async function clearSessionMessages(sessionId: string): Promise<boolean> {
+export async function clearSessionMessages(
+	sessionId: string,
+): Promise<boolean> {
 	try {
 		await prisma.message.deleteMany({ where: { sessionId } });
 		await prisma.chatSession.update({
@@ -11,7 +13,10 @@ export async function clearSessionMessages(sessionId: string): Promise<boolean> 
 		logger.info(`セッションメッセージ全削除: ${sessionId}`);
 		return true;
 	} catch (error) {
-		logger.error("セッションメッセージ全削除エラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"セッションメッセージ全削除エラー",
+			error instanceof Error ? error : undefined,
+		);
 		return false;
 	}
 }
@@ -65,7 +70,10 @@ export async function createChatSession(
 
 		return session.id;
 	} catch (error) {
-		logger.error("チャットセッション作成エラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"チャットセッション作成エラー",
+			error instanceof Error ? error : undefined,
+		);
 		throw error;
 	}
 }
@@ -98,7 +106,10 @@ export async function addMessageToSession(
 			contentLength: content.length,
 		});
 	} catch (error) {
-		logger.error("メッセージ追加エラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"メッセージ追加エラー",
+			error instanceof Error ? error : undefined,
+		);
 		throw error;
 	}
 }
@@ -106,7 +117,9 @@ export async function addMessageToSession(
 /**
  * セッションの全メッセージを取得
  */
-export async function getSessionMessages(sessionId: string): Promise<ChatMessage[]> {
+export async function getSessionMessages(
+	sessionId: string,
+): Promise<ChatMessage[]> {
 	try {
 		const messages = await prisma.message.findMany({
 			where: { sessionId },
@@ -118,7 +131,10 @@ export async function getSessionMessages(sessionId: string): Promise<ChatMessage
 			content: msg.content,
 		}));
 	} catch (error) {
-		logger.error("メッセージ取得エラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"メッセージ取得エラー",
+			error instanceof Error ? error : undefined,
+		);
 		return [];
 	}
 }
@@ -126,7 +142,9 @@ export async function getSessionMessages(sessionId: string): Promise<ChatMessage
 /**
  * セッション情報を取得（メッセージ含む）
  */
-export async function getSession(sessionId: string): Promise<ChatSessionWithMessages | null> {
+export async function getSession(
+	sessionId: string,
+): Promise<ChatSessionWithMessages | null> {
 	try {
 		const session = await prisma.chatSession.findUnique({
 			where: { id: sessionId },
@@ -139,7 +157,10 @@ export async function getSession(sessionId: string): Promise<ChatSessionWithMess
 
 		return session;
 	} catch (error) {
-		logger.error("セッション取得エラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"セッション取得エラー",
+			error instanceof Error ? error : undefined,
+		);
 		return null;
 	}
 }
@@ -165,7 +186,10 @@ export async function getUserSessions(
 
 		return sessions;
 	} catch (error) {
-		logger.error("ユーザーセッション取得エラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"ユーザーセッション取得エラー",
+			error instanceof Error ? error : undefined,
+		);
 		return [];
 	}
 }
@@ -182,7 +206,10 @@ export async function deleteSession(sessionId: string): Promise<boolean> {
 		logger.info(`セッション削除: ${sessionId}`);
 		return true;
 	} catch (error) {
-		logger.error("セッション削除エラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"セッション削除エラー",
+			error instanceof Error ? error : undefined,
+		);
 		return false;
 	}
 }
@@ -210,7 +237,10 @@ export async function cleanupOldSessions(daysOld = 30): Promise<number> {
 
 		return result.count;
 	} catch (error) {
-		logger.error("セッションクリーンアップエラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"セッションクリーンアップエラー",
+			error instanceof Error ? error : undefined,
+		);
 		return 0;
 	}
 }
@@ -218,7 +248,9 @@ export async function cleanupOldSessions(daysOld = 30): Promise<number> {
 /**
  * セッションをJSON形式でエクスポート
  */
-export async function exportSessionAsJSON(sessionId: string): Promise<string | null> {
+export async function exportSessionAsJSON(
+	sessionId: string,
+): Promise<string | null> {
 	try {
 		const session = await getSession(sessionId);
 		if (!session) return null;
@@ -237,7 +269,10 @@ export async function exportSessionAsJSON(sessionId: string): Promise<string | n
 
 		return JSON.stringify(exportData, null, 2);
 	} catch (error) {
-		logger.error("セッションエクスポートエラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"セッションエクスポートエラー",
+			error instanceof Error ? error : undefined,
+		);
 		return null;
 	}
 }
@@ -245,7 +280,9 @@ export async function exportSessionAsJSON(sessionId: string): Promise<string | n
 /**
  * セッションをMarkdown形式でエクスポート
  */
-export async function exportSessionAsMarkdown(sessionId: string): Promise<string | null> {
+export async function exportSessionAsMarkdown(
+	sessionId: string,
+): Promise<string | null> {
 	try {
 		const session = await getSession(sessionId);
 		if (!session) return null;
@@ -273,7 +310,10 @@ export async function exportSessionAsMarkdown(sessionId: string): Promise<string
 
 		return markdown;
 	} catch (error) {
-		logger.error("Markdownエクスポートエラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"Markdownエクスポートエラー",
+			error instanceof Error ? error : undefined,
+		);
 		return null;
 	}
 }
@@ -293,22 +333,33 @@ export async function getSessionStats(sessionId: string): Promise<{
 		if (!session) return null;
 
 		const userMessages = session.messages.filter((m) => m.role === "user");
-		const assistantMessages = session.messages.filter((m) => m.role === "assistant");
+		const assistantMessages = session.messages.filter(
+			(m) => m.role === "assistant",
+		);
 
-		const totalLength = session.messages.reduce((sum, msg) => sum + msg.content.length, 0);
+		const totalLength = session.messages.reduce(
+			(sum, msg) => sum + msg.content.length,
+			0,
+		);
 
-		const duration = (session.updatedAt.getTime() - session.createdAt.getTime()) / 1000 / 60;
+		const duration =
+			(session.updatedAt.getTime() - session.createdAt.getTime()) / 1000 / 60;
 
 		return {
 			messageCount: session.messages.length,
 			userMessageCount: userMessages.length,
 			assistantMessageCount: assistantMessages.length,
 			averageMessageLength:
-				session.messages.length > 0 ? Math.round(totalLength / session.messages.length) : 0,
+				session.messages.length > 0
+					? Math.round(totalLength / session.messages.length)
+					: 0,
 			duration: Math.round(duration * 10) / 10,
 		};
 	} catch (error) {
-		logger.error("セッション統計エラー", error instanceof Error ? error : undefined);
+		logger.error(
+			"セッション統計エラー",
+			error instanceof Error ? error : undefined,
+		);
 		return null;
 	}
 }

@@ -171,7 +171,9 @@ class AuditLoggerService {
 	 */
 	getResourceHistory(resource: string, resourceId: string): AuditLog[] {
 		return this.logs
-			.filter((log) => log.resource === resource && log.resourceId === resourceId)
+			.filter(
+				(log) => log.resource === resource && log.resourceId === resourceId,
+			)
 			.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 	}
 
@@ -241,7 +243,10 @@ class AuditLoggerService {
 	/**
 	 * ログをエクスポート
 	 */
-	export(format: "json" | "csv", options: AuditSearchOptions = {}): string | null {
+	export(
+		format: "json" | "csv",
+		options: AuditSearchOptions = {},
+	): string | null {
 		const { logs } = this.search(options);
 
 		if (format === "json") {
@@ -278,7 +283,9 @@ class AuditLoggerService {
 				];
 			});
 
-			return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
+			return [headers.join(","), ...rows.map((row) => row.join(","))].join(
+				"\n",
+			);
 		}
 
 		return null;

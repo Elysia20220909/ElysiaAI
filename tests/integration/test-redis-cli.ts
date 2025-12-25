@@ -15,16 +15,22 @@ console.log("URL:", redisUrl);
 	try {
 		// PINGテスト
 		console.log("🔄 PING実行...");
-		const { stdout: ping } = await execAsync(`npx redis-cli -u "${redisUrl}" PING`, {
-			timeout: 10000,
-		});
+		const { stdout: ping } = await execAsync(
+			`npx redis-cli -u "${redisUrl}" PING`,
+			{
+				timeout: 10000,
+			},
+		);
 		console.log("✅ PING:", ping.trim());
 
 		// INFO取得
 		console.log("🔄 INFO SERVER取得...");
-		const { stdout: info } = await execAsync(`npx redis-cli -u "${redisUrl}" INFO server`, {
-			timeout: 10000,
-		});
+		const { stdout: info } = await execAsync(
+			`npx redis-cli -u "${redisUrl}" INFO server`,
+			{
+				timeout: 10000,
+			},
+		);
 		const lines = info
 			.split("\n")
 			.filter((l: string) => !l.startsWith("#"))

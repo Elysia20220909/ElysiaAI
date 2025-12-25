@@ -151,7 +151,11 @@ class Telemetry {
 	/**
 	 * Add event to span
 	 */
-	addEvent(spanId: string, name: string, attributes?: Record<string, string | number | boolean>) {
+	addEvent(
+		spanId: string,
+		name: string,
+		attributes?: Record<string, string | number | boolean>,
+	) {
 		const span = this.spans.get(spanId);
 		if (!span) return;
 
@@ -201,14 +205,18 @@ class Telemetry {
 	 * Get all spans for a trace
 	 */
 	getTrace(traceId: string): Span[] {
-		return Array.from(this.spans.values()).filter((span) => span.traceId === traceId);
+		return Array.from(this.spans.values()).filter(
+			(span) => span.traceId === traceId,
+		);
 	}
 
 	/**
 	 * Export spans (for sending to collector)
 	 */
 	exportSpans(): Span[] {
-		const completed = Array.from(this.spans.values()).filter((span) => span.endTime !== undefined);
+		const completed = Array.from(this.spans.values()).filter(
+			(span) => span.endTime !== undefined,
+		);
 
 		// Clear completed spans
 		for (const span of completed) {
@@ -268,7 +276,8 @@ class Telemetry {
 		const active = spans.filter((s) => s.endTime === undefined);
 
 		const avgDuration =
-			completed.reduce((sum, s) => sum + (s.duration || 0), 0) / completed.length || 0;
+			completed.reduce((sum, s) => sum + (s.duration || 0), 0) /
+				completed.length || 0;
 
 		return {
 			totalSpans: spans.length,
@@ -296,12 +305,16 @@ class Telemetry {
 }
 
 // Singleton instance
-export const telemetry = new Telemetry(process.env.TELEMETRY_ENABLED !== "false");
+export const telemetry = new Telemetry(
+	process.env.TELEMETRY_ENABLED !== "false",
+);
 
 /**
  * Middleware helper to extract trace context from request
  */
-export function getTraceContextFromRequest(request: Request): TraceContext | null {
+export function getTraceContextFromRequest(
+	request: Request,
+): TraceContext | null {
 	const traceparent = request.headers.get("traceparent");
 	return telemetry.parseTraceContext(traceparent || undefined);
 }
@@ -310,7 +323,11 @@ export function getTraceContextFromRequest(request: Request): TraceContext | nul
  * Decorator for tracing methods
  */
 export function Trace(spanName?: string) {
-	return <T extends object>(target: T, propertyKey: string, descriptor: PropertyDescriptor) => {
+	return <T extends object>(
+		target: T,
+		propertyKey: string,
+		descriptor: PropertyDescriptor,
+	) => {
 		const originalMethod = descriptor.value;
 
 		descriptor.value = async function (...args: unknown[]) {

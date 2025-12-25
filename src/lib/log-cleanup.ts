@@ -100,7 +100,9 @@ class LogCleanupManager {
 			// サイズ制限を超えている場合は古いものから削除
 			let deletedBySize = 0;
 			if (stats.totalSizeMB > this.config.maxSizeMB) {
-				deletedBySize = await this.deleteBySize(stats.totalSizeMB - this.config.maxSizeMB);
+				deletedBySize = await this.deleteBySize(
+					stats.totalSizeMB - this.config.maxSizeMB,
+				);
 			}
 
 			const duration = Date.now() - startTime;

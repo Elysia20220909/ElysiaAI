@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import axios from "axios";
 
 const BASE_URL = "http://localhost:3001";
@@ -66,6 +66,8 @@ describeLive("Elysia Network Game API", () => {
 		});
 		expect(res.status).toBe(200);
 		expect(res.data.winner).toBe("user1");
-		expect(res.data.history.some((h) => h.includes("Winner: user1"))).toBe(true);
+		expect(res.data.history.some((h) => h.includes("Winner: user1"))).toBe(
+			true,
+		);
 	});
 });

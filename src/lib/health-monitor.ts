@@ -73,7 +73,8 @@ class HealthMonitor {
 			name: "ollama",
 			check: async () => {
 				try {
-					const ollamaUrl = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+					const ollamaUrl =
+						process.env.OLLAMA_BASE_URL || "http://localhost:11434";
 					// Use the correct endpoint for Ollama health check
 					const response = await fetch(`${ollamaUrl}/api/version`, {
 						signal: AbortSignal.timeout(5000),
@@ -95,7 +96,9 @@ class HealthMonitor {
 				check: async () => {
 					try {
 						const Redis = (await import("ioredis")).default;
-						const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+						const redis = new Redis(
+							process.env.REDIS_URL || "redis://localhost:6379",
+						);
 						await redis.ping();
 						redis.disconnect();
 						return true;
@@ -243,7 +246,11 @@ class HealthMonitor {
 	/**
 	 * チェック失敗を処理
 	 */
-	private async handleCheckFailure(status: HealthStatus, check: HealthCheck, errorMessage: string) {
+	private async handleCheckFailure(
+		status: HealthStatus,
+		check: HealthCheck,
+		errorMessage: string,
+	) {
 		status.consecutiveFailures++;
 		status.lastError = errorMessage;
 

@@ -47,7 +47,11 @@ export class DevLogger {
 		return messageLevel >= currentLevel;
 	}
 
-	private formatMessage(level: LogLevel, message: string, data?: Record<string, unknown>): string {
+	private formatMessage(
+		level: LogLevel,
+		message: string,
+		data?: Record<string, unknown>,
+	): string {
 		const timestamp = new Date().toLocaleTimeString("ja-JP");
 		const color = LOG_COLORS[level];
 		const emoji = LOG_EMOJIS[level];
@@ -67,7 +71,11 @@ export class DevLogger {
 		return `${emoji} ${color}[${timestamp}]${reset} ${message}${formattedData}`;
 	}
 
-	private log(level: LogLevel, message: string, data?: Record<string, unknown>): void {
+	private log(
+		level: LogLevel,
+		message: string,
+		data?: Record<string, unknown>,
+	): void {
 		if (!this.shouldLog(level)) return;
 
 		const entry: LogEntry = {
@@ -160,10 +168,15 @@ export const devLogger = new DevLogger();
 
 // Debug macros
 export const debug = {
-	log: (msg: string, data?: Record<string, unknown>) => devLogger.debug(msg, data),
-	info: (msg: string, data?: Record<string, unknown>) => devLogger.info(msg, data),
-	warn: (msg: string, data?: Record<string, unknown>) => devLogger.warn(msg, data),
-	error: (msg: string, data?: Record<string, unknown>) => devLogger.error(msg, data),
+	log: (msg: string, data?: Record<string, unknown>) =>
+		devLogger.debug(msg, data),
+	info: (msg: string, data?: Record<string, unknown>) =>
+		devLogger.info(msg, data),
+	warn: (msg: string, data?: Record<string, unknown>) =>
+		devLogger.warn(msg, data),
+	error: (msg: string, data?: Record<string, unknown>) =>
+		devLogger.error(msg, data),
 	time: (label: string) => devLogger.time(label),
-	timeAsync: <T>(label: string, fn: () => Promise<T>) => devLogger.timeAsync(label, fn),
+	timeAsync: <T>(label: string, fn: () => Promise<T>) =>
+		devLogger.timeAsync(label, fn),
 };

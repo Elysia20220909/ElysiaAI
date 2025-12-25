@@ -42,7 +42,11 @@ export class CacheManager {
 	/**
 	 * Set value in cache with TTL
 	 */
-	async set<T>(key: string, value: T, options?: CacheOptions): Promise<boolean> {
+	async set<T>(
+		key: string,
+		value: T,
+		options?: CacheOptions,
+	): Promise<boolean> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
 			const ttl = options?.ttl || this.defaultTTL;
@@ -124,7 +128,11 @@ export class CacheManager {
 	/**
 	 * Get or compute value (cache-aside pattern)
 	 */
-	async getOrSet<T>(key: string, compute: () => Promise<T>, options?: CacheOptions): Promise<T> {
+	async getOrSet<T>(
+		key: string,
+		compute: () => Promise<T>,
+		options?: CacheOptions,
+	): Promise<T> {
 		// Try to get from cache
 		const cached = await this.get<T>(key, options);
 		if (cached !== null) {
@@ -143,7 +151,10 @@ export class CacheManager {
 	/**
 	 * Invalidate cache by pattern
 	 */
-	async invalidatePattern(pattern: string, options?: CacheOptions): Promise<number> {
+	async invalidatePattern(
+		pattern: string,
+		options?: CacheOptions,
+	): Promise<number> {
 		try {
 			const fullPattern = this.getKey(pattern, options?.namespace);
 			const keys = await this.redis.keys(fullPattern);
@@ -161,7 +172,11 @@ export class CacheManager {
 	/**
 	 * Hash operations
 	 */
-	async hget(key: string, field: string, options?: CacheOptions): Promise<string | null> {
+	async hget(
+		key: string,
+		field: string,
+		options?: CacheOptions,
+	): Promise<string | null> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
 			return await this.redis.hget(fullKey, field);
@@ -171,7 +186,12 @@ export class CacheManager {
 		}
 	}
 
-	async hset(key: string, field: string, value: string, options?: CacheOptions): Promise<boolean> {
+	async hset(
+		key: string,
+		field: string,
+		value: string,
+		options?: CacheOptions,
+	): Promise<boolean> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
 			await this.redis.hset(fullKey, field, value);
@@ -187,7 +207,10 @@ export class CacheManager {
 		}
 	}
 
-	async hgetall(key: string, options?: CacheOptions): Promise<Record<string, string>> {
+	async hgetall(
+		key: string,
+		options?: CacheOptions,
+	): Promise<Record<string, string>> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
 			return await this.redis.hgetall(fullKey);
@@ -251,7 +274,9 @@ export function createCacheManager(
 
 export function getCacheManager(): CacheManager {
 	if (!cacheInstance) {
-		throw new Error("Cache manager not initialized. Call createCacheManager first.");
+		throw new Error(
+			"Cache manager not initialized. Call createCacheManager first.",
+		);
 	}
 	return cacheInstance;
 }

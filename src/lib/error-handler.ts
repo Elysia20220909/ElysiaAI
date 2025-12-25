@@ -125,7 +125,10 @@ export async function fetchWithRetry<T>(
 			return await fetchFn();
 		} catch (error) {
 			lastError = error instanceof Error ? error : new Error(String(error));
-			logger.warn(`上流サービス呼び出し失敗 (試行 ${attempt}/${maxRetries})`, lastError);
+			logger.warn(
+				`上流サービス呼び出し失敗 (試行 ${attempt}/${maxRetries})`,
+				lastError,
+			);
 
 			if (attempt < maxRetries) {
 				// 指数バックオフ
@@ -148,7 +151,9 @@ export function withTimeout<T>(
 ): Promise<T> {
 	return Promise.race([
 		promise,
-		new Promise<T>((_, reject) => setTimeout(() => reject(new Error(errorMessage)), timeoutMs)),
+		new Promise<T>((_, reject) =>
+			setTimeout(() => reject(new Error(errorMessage)), timeoutMs),
+		),
 	]);
 }
 
@@ -226,7 +231,8 @@ export function categorizeError(error: unknown): {
 		) {
 			return {
 				category: "network",
-				userMessage: "ネットワークエラーが発生しました。接続を確認してください。",
+				userMessage:
+					"ネットワークエラーが発生しました。接続を確認してください。",
 				logMessage: `ネットワークエラー: ${error.message}`,
 			};
 		}

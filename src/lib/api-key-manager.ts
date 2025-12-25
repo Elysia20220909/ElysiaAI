@@ -118,7 +118,8 @@ class APIKeyManager {
 
 		// レート制限チェック
 		const now = new Date();
-		const hoursSince = (now.getTime() - apiKey.usage.hourStart.getTime()) / (1000 * 60 * 60);
+		const hoursSince =
+			(now.getTime() - apiKey.usage.hourStart.getTime()) / (1000 * 60 * 60);
 
 		if (hoursSince >= 1) {
 			// 新しい時間枠
@@ -220,7 +221,8 @@ class APIKeyManager {
 		return {
 			totalKeys: keys.length,
 			activeKeys: keys.filter((k) => k.enabled).length,
-			expiredKeys: keys.filter((k) => k.expiresAt && k.expiresAt < new Date()).length,
+			expiredKeys: keys.filter((k) => k.expiresAt && k.expiresAt < new Date())
+				.length,
 			totalRequests: keys.reduce((sum, k) => sum + k.usage.totalRequests, 0),
 			topKeys: keys
 				.sort((a, b) => b.usage.totalRequests - a.usage.totalRequests)

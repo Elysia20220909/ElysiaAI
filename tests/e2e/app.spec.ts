@@ -4,11 +4,13 @@ import { expect, test } from "@playwright/test";
 const RUN_E2E_TESTS = process.env.RUN_E2E_TESTS === "true";
 
 if (!RUN_E2E_TESTS) {
-	console.info("Skipping Playwright E2E tests; set RUN_E2E_TESTS=true to enable.");
+	console.info(
+		"Skipping Playwright E2E tests; set RUN_E2E_TESTS=true to enable.",
+	);
+	process.exit(0);
 }
 
-if (RUN_E2E_TESTS) {
-	test.describe.configure({ mode: "parallel" });
+test.describe.configure({ mode: "parallel" });
 
 test.describe("Homepage", () => {
 	test("should load the homepage", async ({ page }) => {

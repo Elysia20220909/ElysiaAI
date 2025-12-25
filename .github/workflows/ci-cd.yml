@@ -99,10 +99,16 @@ jobs:
 
       - name: Run unit tests
         run: bun test
+        env:
+          RUN_LIVE_TESTS: false
+          RUN_E2E_TESTS: false
 
       - name: Run tests with coverage
         if: matrix.os == 'ubuntu-latest' && matrix.bun-version == 'latest'
         run: bun test --coverage
+        env:
+          RUN_LIVE_TESTS: false
+          RUN_E2E_TESTS: false
 
       - name: Upload coverage
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.bun-version == 'latest' && env.CODECOV_TOKEN != '' }}

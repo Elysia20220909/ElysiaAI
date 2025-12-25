@@ -3,8 +3,13 @@ openai>=1.59.6
 fastapi>=0.115.6
 uvicorn[standard]>=0.34.0
 sentence-transformers>=3.3.1
-# Pin to patched version for CVE fixes (GHSA-w853-jp5j-5j7f)
-filelock>=3.20.1
+# Pin to version that supports Python 3.9 while addressing CVE (GHSA-w853-jp5j-5j7f)
+# Note: filelock 3.20.1+ requires Python 3.10+; using 3.13.4 (last py3.9 compatible)
+filelock>=3.13.4,<3.20
+# Address CVEs in transitive dependencies
+fonttools>=4.60.2  # Fix GHSA-768j-98cg-p3fv
+urllib3>=2.6.0     # Fix GHSA-gm62-xv2j-4w53, GHSA-2xpw-w6gg-jr37
+pip>=23.3          # Fix PYSEC-2023-228, GHSA-4xh5-x5gv-qwph
 # network_simulation dependencies
 inputimeout==1.0.4
 networkx>=3.2

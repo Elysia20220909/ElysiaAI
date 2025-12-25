@@ -63,7 +63,9 @@ class FileUploadManager {
 		// サイズチェック
 		const maxSize = (options.maxSizeMB || this.MAX_SIZE_MB) * 1024 * 1024;
 		if (fileBuffer.length > maxSize) {
-			throw new Error(`File size exceeds ${options.maxSizeMB || this.MAX_SIZE_MB}MB limit`);
+			throw new Error(
+				`File size exceeds ${options.maxSizeMB || this.MAX_SIZE_MB}MB limit`,
+			);
 		}
 
 		// MIMEタイプチェック
