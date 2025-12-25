@@ -4,7 +4,11 @@
  * Web検索連携による最新情報の提供
  */
 
-import { formatSearchResultForChat, needsWebSearch, searchRelevantInfo } from "./web-search";
+import {
+	formatSearchResultForChat,
+	needsWebSearch,
+	searchRelevantInfo,
+} from "./web-search";
 
 // ==================== 会話パターン ====================
 
@@ -317,7 +321,15 @@ export const conversationPatterns: ConversationPattern[] = [
 	{
 		id: "daily-food",
 		category: "daily",
-		patterns: ["ご飯", "食べ", "美味しい", "ランチ", "ディナー", "お腹", "料理"],
+		patterns: [
+			"ご飯",
+			"食べ",
+			"美味しい",
+			"ランチ",
+			"ディナー",
+			"お腹",
+			"料理",
+		],
 		responses: [
 			"食べ物の話！？好き！何食べたの？",
 			"いいね！私も食べたいな〜。何がオススメ？",
@@ -400,7 +412,9 @@ export const conversationPatterns: ConversationPattern[] = [
 /**
  * 入力テキストから会話パターンを検出
  */
-export function detectConversationPattern(input: string): ConversationPattern | null {
+export function detectConversationPattern(
+	input: string,
+): ConversationPattern | null {
 	const lowerInput = input.toLowerCase();
 
 	for (const pattern of conversationPatterns) {
@@ -557,11 +571,50 @@ export interface EmotionAnalysis {
  * 簡易的な感情分析
  */
 export function analyzeEmotion(text: string): EmotionAnalysis {
-	const happyKeywords = ["嬉しい", "楽しい", "最高", "幸せ", "笑", "ありがとう", "良い"];
-	const sadKeywords = ["悲しい", "つらい", "寂しい", "辛い", "泣", "残念", "ダメ"];
-	const excitedKeywords = ["やった", "すごい", "最高", "わーい", "きゃー", "！！", "めっちゃ"];
-	const angryKeywords = ["怒", "腹立つ", "ムカつく", "イライラ", "許せない", "最悪"];
-	const surprisedKeywords = ["えっ", "まじ", "本当", "うそ", "びっくり", "驚", "！？"];
+	const happyKeywords = [
+		"嬉しい",
+		"楽しい",
+		"最高",
+		"幸せ",
+		"笑",
+		"ありがとう",
+		"良い",
+	];
+	const sadKeywords = [
+		"悲しい",
+		"つらい",
+		"寂しい",
+		"辛い",
+		"泣",
+		"残念",
+		"ダメ",
+	];
+	const excitedKeywords = [
+		"やった",
+		"すごい",
+		"最高",
+		"わーい",
+		"きゃー",
+		"！！",
+		"めっちゃ",
+	];
+	const angryKeywords = [
+		"怒",
+		"腹立つ",
+		"ムカつく",
+		"イライラ",
+		"許せない",
+		"最悪",
+	];
+	const surprisedKeywords = [
+		"えっ",
+		"まじ",
+		"本当",
+		"うそ",
+		"びっくり",
+		"驚",
+		"！？",
+	];
 
 	let happyScore = 0;
 	let sadScore = 0;

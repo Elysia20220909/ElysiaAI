@@ -143,7 +143,9 @@ class PerformanceOptimizer {
 			"text/xml",
 		];
 
-		const isCompressible = compressibleTypes.some((type) => contentType.includes(type));
+		const isCompressible = compressibleTypes.some((type) =>
+			contentType.includes(type),
+		);
 		const isSizeEligible = size > 1024; // 1KB以上
 
 		return isCompressible && isSizeEligible;

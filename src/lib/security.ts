@@ -18,14 +18,21 @@ export async function hashPassword(password: string): Promise<string> {
 /**
  * パスワードを検証
  */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(
+	password: string,
+	hash: string,
+): Promise<boolean> {
 	return bcrypt.compare(password, hash);
 }
 
 /**
  * ユーザーを作成（パスワードハッシュ化込み）
  */
-export async function createUser(username: string, password: string, role = "user") {
+export async function createUser(
+	username: string,
+	password: string,
+	role = "user",
+) {
 	const passwordHash = await hashPassword(password);
 	return userService.create({
 		username,

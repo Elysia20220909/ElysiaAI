@@ -92,7 +92,8 @@ class BackupScheduler {
 			logger.info("Starting automatic backup", { file: backupFileName });
 
 			// SQLiteデータベースのコピー
-			const dbPath = process.env.DATABASE_URL?.replace("file:", "") || "./data/elysia.db";
+			const dbPath =
+				process.env.DATABASE_URL?.replace("file:", "") || "./data/elysia.db";
 
 			if (!fs.existsSync(dbPath)) {
 				throw new Error(`Database file not found: ${dbPath}`);

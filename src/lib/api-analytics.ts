@@ -70,16 +70,29 @@ class APIAnalytics {
 				stat.errorCount++;
 			}
 
-			stat.minResponseTime = Math.min(stat.minResponseTime, metric.responseTime);
-			stat.maxResponseTime = Math.max(stat.maxResponseTime, metric.responseTime);
+			stat.minResponseTime = Math.min(
+				stat.minResponseTime,
+				metric.responseTime,
+			);
+			stat.maxResponseTime = Math.max(
+				stat.maxResponseTime,
+				metric.responseTime,
+			);
 			stat.lastAccessed =
-				metric.timestamp > stat.lastAccessed ? metric.timestamp : stat.lastAccessed;
+				metric.timestamp > stat.lastAccessed
+					? metric.timestamp
+					: stat.lastAccessed;
 		}
 
 		// 平均レスポンスタイムを計算
 		for (const key in stats) {
-			const relevantMetrics = this.metrics.filter((m) => `${m.method} ${m.endpoint}` === key);
-			const totalTime = relevantMetrics.reduce((sum, m) => sum + m.responseTime, 0);
+			const relevantMetrics = this.metrics.filter(
+				(m) => `${m.method} ${m.endpoint}` === key,
+			);
+			const totalTime = relevantMetrics.reduce(
+				(sum, m) => sum + m.responseTime,
+				0,
+			);
 			stats[key].avgResponseTime = totalTime / relevantMetrics.length;
 		}
 

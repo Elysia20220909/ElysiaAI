@@ -1,8 +1,11 @@
 // 環境変数は .env を最優先で読み込む（既存の環境変数を上書き）
 // Windows 環境でグローバルに設定された DATABASE_URL などに勝つための対策
 import dotenv from "dotenv";
+
 dotenv.config({ override: true });
+
 import { Elysia } from "elysia";
+
 const app = new Elysia();
 
 // チャットクリア（セッション内メッセージ全削除）
@@ -10,7 +13,8 @@ app.post(
 	"/sessions/:id/clear",
 	async ({ params, request }) => {
 		const auth = request.headers.get("authorization") || "";
-		if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+		if (!auth.startsWith("Bearer "))
+			return jsonError(401, "Missing Bearer token");
 		try {
 			jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 		} catch {
@@ -38,19 +42,20 @@ import { existsSync, mkdirSync } from "node:fs";
 // Secure Elysia AI Server with JWT, Redis rate limiting, and refresh tokens
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
+import { fromTypes, openapi } from "@elysiajs/openapi";
 import { staticPlugin } from "@elysiajs/static";
-import { openapi, fromTypes } from "@elysiajs/openapi";
 import axios from "axios";
+import { t } from "elysia";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-import { DEFAULT_MODE, ELYSIA_MODES } from "./config/internal/llm-config.ts";
 import {
-  checkRateLimitRedis,
-  revokeRefreshToken,
-  storeRefreshToken,
-  verifyStoredRefreshToken,
+	checkRateLimitRedis,
+	revokeRefreshToken,
+	storeRefreshToken,
+	verifyStoredRefreshToken,
 } from "./config/internal/auth.ts";
 import { DATABASE_CONFIG } from "./config/internal/db.ts";
+import { DEFAULT_MODE, ELYSIA_MODES } from "./config/internal/llm-config.ts";
 import { setupSocket } from "./config/internal/socket-server.ts";
 import { abTestManager } from "./lib/ab-testing.ts";
 import { apiKeyManager } from "./lib/api-key-manager.ts";
@@ -62,9 +67,16 @@ import * as casualChat from "./lib/casual-chat.ts";
 import * as chatSessionService from "./lib/chat-session.ts";
 import { cronScheduler } from "./lib/cron-scheduler.ts";
 import * as customization from "./lib/customization.ts";
-import { feedbackService, knowledgeService, userService } from "./lib/database.ts";
+import {
+	feedbackService,
+	knowledgeService,
+	userService,
+} from "./lib/database.ts";
 import { emailNotifier } from "./lib/email-notifier.ts";
-import { checkEnvironmentOrExit, printEnvironmentSummary } from "./lib/env-validator.ts";
+import {
+	checkEnvironmentOrExit,
+	printEnvironmentSummary,
+} from "./lib/env-validator.ts";
 import { fileUploadManager } from "./lib/file-upload.ts";
 import { performHealthCheck } from "./lib/health.ts";
 import { healthMonitor } from "./lib/health-monitor.ts";
@@ -75,15 +87,14 @@ import { logger } from "./lib/logger.ts";
 import { metricsCollector } from "./lib/metrics.ts";
 import * as openaiIntegration from "./lib/openai-integration.ts";
 import {
-  checkRateLimit as checkRateLimitMemory,
-  escapeHtml,
-  getSecurityHeaders,
+	checkRateLimit as checkRateLimitMemory,
+	escapeHtml,
+	getSecurityHeaders,
 } from "./lib/security.ts";
 import { sessionManager } from "./lib/session-manager.ts";
 import { getTraceContextFromRequest, telemetry } from "./lib/telemetry.ts";
 import * as webSearch from "./lib/web-search.ts";
 import { webhookManager } from "./lib/webhook-events.ts";
-import { t } from "elysia";
 
 // 環境変数検証（起動時）
 checkEnvironmentOrExit();
@@ -99,9 +110,13 @@ if (process.env.REDIS_ENABLED === "true") {
 		await jobQueue.initialize();
 		logger.info("Job queue enabled with Redis");
 	} catch (error) {
-		logger.warn("Job queue initialization failed, continuing without job queue", {
-			error: error instanceof Error ? (error as Error).message : String(error),
-		});
+		logger.warn(
+			"Job queue initialization failed, continuing without job queue",
+			{
+				error:
+					error instanceof Error ? (error as Error).message : String(error),
+			},
+		);
 	}
 } else {
 	logger.info("Job queue disabled (REDIS_ENABLED=false)");
@@ -111,7 +126,14 @@ cronScheduler.initializeDefaultTasks();
 type Message = { role: "user" | "assistant" | "system"; content: string };
 type ChatRequest = {
 	messages: Message[];
-	mode?: "sweet" | "normal" | "professional" | "casual" | "creative" | "technical" | "openai";
+	mode?:
+		| "sweet"
+		| "normal"
+		| "professional"
+		| "casual"
+		| "creative"
+		| "technical"
+		| "openai";
 };
 
 // Extended Request type for middleware data
@@ -157,7 +179,10 @@ function jsonError(status: number, message: string, traceId?: string) {
 
 async function checkRateLimit(key: string) {
 	try {
-		const allowed = await checkRateLimitRedis(key, CONFIG.MAX_REQUESTS_PER_MINUTE);
+		const allowed = await checkRateLimitRedis(
+			key,
+			CONFIG.MAX_REQUESTS_PER_MINUTE,
+		);
 		if (!allowed) {
 			logger.warn(`Rate limit exceeded for key: ${key}`);
 			auditLogger.log({
@@ -203,7 +228,7 @@ function buildCSP(requestUrl: string): string {
 		"style-src 'self' 'unsafe-inline'",
 		"img-src 'self' data:",
 		"font-src 'self' data:",
-		`connect-src ${Array.from(connect).join(' ')}`,
+		`connect-src ${Array.from(connect).join(" ")}`,
 		// Form submissions remain local
 		"form-action 'self'",
 	];
@@ -253,7 +278,8 @@ app
 	.onError(({ error, code, request, set }) => {
 		const url = new URL(request.url);
 		const errorMsg = error instanceof Error ? error.message : String(error);
-		const traceId = (request as unknown as ExtendedRequest).__span?.traceId || undefined;
+		const traceId =
+			(request as unknown as ExtendedRequest).__span?.traceId || undefined;
 		const userId = request.headers.get("authorization")?.substring(7) || "anon";
 		const errorLog = `${String(code)}: ${errorMsg} at ${url.pathname} traceId=${traceId}`;
 		logger.error(errorLog);
@@ -278,7 +304,8 @@ app
 		try {
 			auditMiddleware.onError({ request, error, set });
 		} catch {}
-		const message = error instanceof Error ? error.message : "Internal server error";
+		const message =
+			error instanceof Error ? error.message : "Internal server error";
 		// Map Elysia error code to HTTP status (default 500)
 		let status = 500;
 		if (code === "NOT_FOUND") status = 404;
@@ -300,25 +327,34 @@ app
 			set.headers["Content-Security-Policy"] = buildCSP(request.url);
 		}
 		if ((request.url || "").startsWith("https://")) {
-			set.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+			set.headers["Strict-Transport-Security"] =
+				"max-age=31536000; includeSubDomains";
 		}
 		// 追加の推奨セキュリティヘッダ
 		set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
 		set.headers["X-XSS-Protection"] = "1; mode=block";
 		if ((request.url || "").startsWith("https://")) {
-			set.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains";
+			set.headers["Strict-Transport-Security"] =
+				"max-age=31536000; includeSubDomains";
 		}
 		const extReq = request as unknown as ExtendedRequest;
 		const span = extReq.__span;
 		if (span) {
-			set.headers.traceparent = telemetry.createTraceContext(span.traceId, span.spanId);
+			set.headers.traceparent = telemetry.createTraceContext(
+				span.traceId,
+				span.spanId,
+			);
 			telemetry.endSpan(span.spanId);
 		}
 		const startTime = extReq.__startTime;
 		if (startTime) {
 			const duration = (Date.now() - startTime) / 1000;
 			const url = new URL(request.url);
-			metricsCollector.recordRequestDuration(request.method, url.pathname, duration);
+			metricsCollector.recordRequestDuration(
+				request.method,
+				url.pathname,
+				duration,
+			);
 		}
 		// Audit middleware - log successful requests
 		try {
@@ -342,7 +378,11 @@ app
 			try {
 				const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 				const fastAPIBaseUrl = DATABASE_CONFIG.FASTAPI_BASE_URL;
-				const health = await performHealthCheck(redisUrl, fastAPIBaseUrl, CONFIG.OLLAMA_BASE_URL);
+				const health = await performHealthCheck(
+					redisUrl,
+					fastAPIBaseUrl,
+					CONFIG.OLLAMA_BASE_URL,
+				);
 				// HealthStatus型に詳細が無い場合はstatusのみ返却
 				const status = health.status === "healthy" ? 200 : 503;
 				return new Response(
@@ -369,7 +409,8 @@ app
 			detail: {
 				tags: ["health"],
 				summary: "Detailed health check",
-				description: "Check status of Redis, FastAPI, Ollama, and system metrics",
+				description:
+					"Check status of Redis, FastAPI, Ollama, and system metrics",
 			},
 		},
 	)
@@ -425,10 +466,14 @@ app
 			request: Request;
 		}) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 			let payload: jwt.JwtPayload;
 			try {
-				payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as jwt.JwtPayload;
+				payload = jwt.verify(
+					auth.substring(7),
+					CONFIG.JWT_SECRET,
+				) as jwt.JwtPayload;
 			} catch {
 				return jsonError(401, "Invalid token");
 			}
@@ -444,7 +489,10 @@ app
 					reason: body.reason || undefined,
 				});
 			} catch (err) {
-				logger.error("Failed to store feedback", err instanceof Error ? err : undefined);
+				logger.error(
+					"Failed to store feedback",
+					err instanceof Error ? err : undefined,
+				);
 				return jsonError(500, "Failed to store feedback");
 			}
 			return new Response(JSON.stringify({ ok: true }), {
@@ -461,7 +509,8 @@ app
 			detail: {
 				tags: ["feedback"],
 				summary: "Submit user feedback",
-				description: "Submit feedback for a query-answer pair. Requires JWT authentication.",
+				description:
+					"Submit feedback for a query-answer pair. Requires JWT authentication.",
 				security: [{ bearerAuth: [] }],
 			},
 		},
@@ -483,7 +532,8 @@ app
 			request: Request;
 		}) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 			} catch {
@@ -497,7 +547,10 @@ app
 					verified: body.confidence > 0.8,
 				});
 			} catch (err) {
-				logger.error("Failed to store knowledge", err instanceof Error ? err : undefined);
+				logger.error(
+					"Failed to store knowledge",
+					err instanceof Error ? err : undefined,
+				);
 				return jsonError(500, "Failed to store knowledge");
 			}
 			return new Response(JSON.stringify({ ok: true }), {
@@ -526,7 +579,8 @@ app
 		"/knowledge/review",
 		async ({ request, query }: { request: Request; query: { n?: number } }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 			} catch {
@@ -544,7 +598,9 @@ app
 						? await (globalThis as any).Bun.file("data/knowledge.jsonl").text()
 						: "";
 				const lines = file.trim().split("\n").filter(Boolean);
-				const last = lines.slice(Math.max(0, lines.length - n)).map((l: string) => JSON.parse(l));
+				const last = lines
+					.slice(Math.max(0, lines.length - n))
+					.map((l: string) => JSON.parse(l));
 				return new Response(JSON.stringify(last), {
 					headers: { "content-type": "application/json" },
 				});
@@ -557,7 +613,8 @@ app
 			detail: {
 				tags: ["knowledge"],
 				summary: "Get recent knowledge entries",
-				description: "Retrieve the last N knowledge entries from the knowledge base. Requires JWT.",
+				description:
+					"Retrieve the last N knowledge entries from the knowledge base. Requires JWT.",
 				security: [{ bearerAuth: [] }],
 			},
 		},
@@ -571,7 +628,10 @@ app
 				username: string;
 				password: string;
 			};
-			if (username !== CONFIG.AUTH_USERNAME || password !== CONFIG.AUTH_PASSWORD)
+			if (
+				username !== CONFIG.AUTH_USERNAME ||
+				password !== CONFIG.AUTH_PASSWORD
+			)
 				return jsonError(401, "Invalid credentials");
 
 			const userId = username;
@@ -590,9 +650,12 @@ app
 				{ expiresIn: "7d" },
 			);
 			await storeRefreshToken(userId, refreshToken, 7 * 24 * 60 * 60);
-			return new Response(JSON.stringify({ accessToken, refreshToken, expiresIn: 900 }), {
-				headers: { "content-type": "application/json" },
-			});
+			return new Response(
+				JSON.stringify({ accessToken, refreshToken, expiresIn: 900 }),
+				{
+					headers: { "content-type": "application/json" },
+				},
+			);
 		},
 		{
 			body: t.Object({
@@ -615,7 +678,10 @@ app
 			const { refreshToken } = body as { refreshToken: string };
 			let payload: jwt.JwtPayload;
 			try {
-				payload = jwt.verify(refreshToken, CONFIG.JWT_REFRESH_SECRET) as jwt.JwtPayload;
+				payload = jwt.verify(
+					refreshToken,
+					CONFIG.JWT_REFRESH_SECRET,
+				) as jwt.JwtPayload;
 			} catch {
 				return jsonError(401, "Invalid or expired refresh token");
 			}
@@ -627,9 +693,12 @@ app
 				CONFIG.JWT_SECRET,
 				{ expiresIn: "15m" },
 			);
-			return new Response(JSON.stringify({ accessToken: newAccessToken, expiresIn: 900 }), {
-				headers: { "content-type": "application/json" },
-			});
+			return new Response(
+				JSON.stringify({ accessToken: newAccessToken, expiresIn: 900 }),
+				{
+					headers: { "content-type": "application/json" },
+				},
+			);
 		},
 		{
 			body: t.Object({ refreshToken: t.String({ minLength: 20 }) }),
@@ -648,12 +717,19 @@ app
 		async ({ body }) => {
 			const { refreshToken } = body as { refreshToken: string };
 			try {
-				const payload = jwt.verify(refreshToken, CONFIG.JWT_REFRESH_SECRET) as jwt.JwtPayload;
-				const userId = (payload as { userId?: string }).userId || "default-user";
+				const payload = jwt.verify(
+					refreshToken,
+					CONFIG.JWT_REFRESH_SECRET,
+				) as jwt.JwtPayload;
+				const userId =
+					(payload as { userId?: string }).userId || "default-user";
 				await revokeRefreshToken(userId);
-				return new Response(JSON.stringify({ message: "Logged out successfully" }), {
-					headers: { "content-type": "application/json" },
-				});
+				return new Response(
+					JSON.stringify({ message: "Logged out successfully" }),
+					{
+						headers: { "content-type": "application/json" },
+					},
+				);
 			} catch {
 				return jsonError(400, "Invalid refresh token");
 			}
@@ -674,7 +750,8 @@ app
 		{
 			beforeHandle: ({ request }) => {
 				const auth = request.headers.get("authorization") || "";
-				if (!auth.startsWith("Bearer ")) throw new Error("Missing Bearer token");
+				if (!auth.startsWith("Bearer "))
+					throw new Error("Missing Bearer token");
 				try {
 					jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 				} catch {
@@ -694,7 +771,10 @@ app
 					const auth = request.headers.get("authorization") || "";
 					try {
 						if (auth.startsWith("Bearer ")) {
-							const payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as jwt.JwtPayload;
+							const payload = jwt.verify(
+								auth.substring(7),
+								CONFIG.JWT_SECRET,
+							) as jwt.JwtPayload;
 							userId = (payload as { userId?: string }).userId || "anon";
 						}
 					} catch {}
@@ -710,7 +790,8 @@ app
 							allowedTags: [],
 							allowedAttributes: {},
 						});
-						if (containsDangerousKeywords(cleaned)) throw new Error("Dangerous content detected");
+						if (containsDangerousKeywords(cleaned))
+							throw new Error("Dangerous content detected");
 						return { ...m, content: cleaned };
 					});
 
@@ -727,9 +808,13 @@ app
 								);
 								const topicPrompt = casualChat.getRandomTopic().prompt;
 								// 50%で話題提案、50%でパターン応答
-								fallbackCasualResponse = Math.random() < 0.5 ? casualResponse : topicPrompt;
+								fallbackCasualResponse =
+									Math.random() < 0.5 ? casualResponse : topicPrompt;
 								// 万一空文字なら話題提案
-								if (!fallbackCasualResponse || fallbackCasualResponse.trim() === "") {
+								if (
+									!fallbackCasualResponse ||
+									fallbackCasualResponse.trim() === ""
+								) {
 									fallbackCasualResponse = topicPrompt;
 								}
 								enhancedSystemPrompt += `\n\n参考情報: ${fallbackCasualResponse}`;
@@ -775,16 +860,21 @@ app
 												const sseData = `data: ${JSON.stringify({ content: chunk })}\n\n`;
 												controller.enqueue(new TextEncoder().encode(sseData));
 											}
-											controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+											controller.enqueue(
+												new TextEncoder().encode("data: [DONE]\n\n"),
+											);
 											controller.close();
 										} catch (error) {
-											const errorMsg = error instanceof Error ? error.message : String(error);
+											const errorMsg =
+												error instanceof Error ? error.message : String(error);
 											controller.enqueue(
 												new TextEncoder().encode(
 													`data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`,
 												),
 											);
-											controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+											controller.enqueue(
+												new TextEncoder().encode("data: [DONE]\n\n"),
+											);
 											controller.close();
 										}
 									},
@@ -801,14 +891,18 @@ app
 								});
 							} catch (openaiError) {
 								const errorMsg =
-									openaiError instanceof Error ? openaiError.message : String(openaiError);
+									openaiError instanceof Error
+										? openaiError.message
+										: String(openaiError);
 								logger.error(`OpenAI API error: ${errorMsg}`);
 								// OpenAIエラー時も日本語日常会話返答＋エラー内容
 								const stream = new ReadableStream({
 									start(controller) {
 										const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
 										controller.enqueue(new TextEncoder().encode(sseData));
-										controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+										controller.enqueue(
+											new TextEncoder().encode("data: [DONE]\n\n"),
+										);
 										controller.close();
 									},
 								});
@@ -845,14 +939,18 @@ app
 							});
 						} catch (ollamaError) {
 							const errorMsg =
-								ollamaError instanceof Error ? ollamaError.message : String(ollamaError);
+								ollamaError instanceof Error
+									? ollamaError.message
+									: String(ollamaError);
 							logger.error(`Ollama API error: ${errorMsg}`);
 							// Ollamaエラー時も日本語日常会話返答＋エラー内容
 							const stream = new ReadableStream({
 								start(controller) {
 									const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
 									controller.enqueue(new TextEncoder().encode(sseData));
-									controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+									controller.enqueue(
+										new TextEncoder().encode("data: [DONE]\n\n"),
+									);
 									controller.close();
 								},
 							});
@@ -867,13 +965,16 @@ app
 						}
 					} catch (error) {
 						// 予期せぬエラー時も日本語日常会話返答＋エラー内容
-						const errorMsg = error instanceof Error ? error.message : String(error);
+						const errorMsg =
+							error instanceof Error ? error.message : String(error);
 						logger.error(`Internal chat error: ${errorMsg}`);
 						const stream = new ReadableStream({
 							start(controller) {
 								const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
 								controller.enqueue(new TextEncoder().encode(sseData));
-								controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
+								controller.enqueue(
+									new TextEncoder().encode("data: [DONE]\n\n"),
+								);
 								controller.close();
 							},
 						});
@@ -891,7 +992,11 @@ app
 					body: t.Object({
 						messages: t.Array(
 							t.Object({
-								role: t.Union([t.Literal("user"), t.Literal("assistant"), t.Literal("system")]),
+								role: t.Union([
+									t.Literal("user"),
+									t.Literal("assistant"),
+									t.Literal("system"),
+								]),
 								content: t.String({
 									maxLength: 400,
 									minLength: 1,
@@ -927,7 +1032,8 @@ app
 		"/admin/feedback/stats",
 		async ({ request }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 			} catch {
@@ -953,7 +1059,8 @@ app
 		"/admin/feedback",
 		async ({ request }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 			} catch {
@@ -979,7 +1086,8 @@ app
 		"/admin/knowledge",
 		async ({ request }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 			} catch {
@@ -1005,7 +1113,8 @@ app
 		"/admin/knowledge/:id/verify",
 		async ({ params, request }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 			} catch {
@@ -1031,7 +1140,8 @@ app
 		"/admin/knowledge/:id",
 		async ({ params, request }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 			} catch {
@@ -1062,7 +1172,10 @@ app
 
 			try {
 				if (auth.startsWith("Bearer ")) {
-					const payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as jwt.JwtPayload;
+					const payload = jwt.verify(
+						auth.substring(7),
+						CONFIG.JWT_SECRET,
+					) as jwt.JwtPayload;
 					userId = (payload as { userId?: string }).userId;
 				}
 			} catch {}
@@ -1121,15 +1234,22 @@ app
 		"/sessions",
 		async ({ request, query }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 
 			try {
-				const payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as jwt.JwtPayload;
+				const payload = jwt.verify(
+					auth.substring(7),
+					CONFIG.JWT_SECRET,
+				) as jwt.JwtPayload;
 				const userId = (payload as { userId?: string }).userId;
 				if (!userId) return jsonError(401, "Invalid token");
 
 				const limit = Number(query?.limit ?? 20) || 20;
-				const sessions = await chatSessionService.getUserSessions(userId, limit);
+				const sessions = await chatSessionService.getUserSessions(
+					userId,
+					limit,
+				);
 
 				return new Response(JSON.stringify(sessions), {
 					headers: { "content-type": "application/json" },
@@ -1153,7 +1273,8 @@ app
 		"/sessions/:id",
 		async ({ params, request }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+			if (!auth.startsWith("Bearer "))
+				return jsonError(401, "Missing Bearer token");
 
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
@@ -1196,7 +1317,8 @@ app
 			}
 
 			if (format === "markdown") {
-				const data = await chatSessionService.exportSessionAsMarkdown(sessionId);
+				const data =
+					await chatSessionService.exportSessionAsMarkdown(sessionId);
 				if (!data) return jsonError(404, "Session not found");
 
 				return new Response(data, {
@@ -1362,7 +1484,10 @@ app.post(
 				{ headers: { "content-type": "application/json" } },
 			);
 		} catch (error) {
-			logger.error("Registration failed", error instanceof Error ? error : undefined);
+			logger.error(
+				"Registration failed",
+				error instanceof Error ? error : undefined,
+			);
 			return jsonError(500, "Registration failed");
 		}
 	},
@@ -1381,7 +1506,8 @@ app.post(
 // Data Export APIs
 app.get("/admin/export/feedback", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1401,7 +1527,8 @@ app.get("/admin/export/feedback", async ({ request }) => {
 
 app.get("/admin/export/knowledge/json", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1421,7 +1548,8 @@ app.get("/admin/export/knowledge/json", async ({ request }) => {
 
 app.get("/admin/analytics", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1439,7 +1567,8 @@ app.get("/admin/analytics", async ({ request }) => {
 // Webhook Management APIs
 app.get("/admin/webhooks", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1454,7 +1583,8 @@ app.post(
 	"/admin/api-keys",
 	async ({ request, body }) => {
 		const auth = request.headers.get("authorization") || "";
-		if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+		if (!auth.startsWith("Bearer "))
+			return jsonError(401, "Missing Bearer token");
 		try {
 			jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 		} catch {
@@ -1485,7 +1615,8 @@ app.post(
 
 app.get("/admin/api-keys", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1501,7 +1632,8 @@ app.get("/admin/api-keys", async ({ request }) => {
 // Backup Management APIs
 app.get("/admin/backups", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1516,7 +1648,8 @@ app.get("/admin/backups", async ({ request }) => {
 
 app.post("/admin/backups/trigger", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1530,7 +1663,8 @@ app.post("/admin/backups/trigger", async ({ request }) => {
 // Health Monitoring APIs
 app.get("/admin/health-monitor", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1543,7 +1677,8 @@ app.get("/admin/health-monitor", async ({ request }) => {
 // Session Management APIs
 app.get("/admin/sessions", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		const payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as {
 			userId: string;
@@ -1560,7 +1695,8 @@ app.get("/admin/sessions", async ({ request }) => {
 // A/B Testing APIs
 app.get("/admin/ab-tests", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1572,7 +1708,8 @@ app.get("/admin/ab-tests", async ({ request }) => {
 
 app.get("/admin/ab-tests/:testId", async ({ request, params }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1588,7 +1725,8 @@ app.get("/admin/ab-tests/:testId", async ({ request, params }) => {
 // Log Cleanup APIs
 app.get("/admin/logs/cleanup", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1600,7 +1738,8 @@ app.get("/admin/logs/cleanup", async ({ request }) => {
 
 app.post("/admin/logs/cleanup/trigger", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1614,7 +1753,8 @@ app.post("/admin/logs/cleanup/trigger", async ({ request }) => {
 // ---------------- Job Queue API ----------------
 app.get("/admin/jobs/stats", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1626,7 +1766,8 @@ app.get("/admin/jobs/stats", async ({ request }) => {
 
 app.post("/admin/jobs/email", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1646,7 +1787,8 @@ app.post("/admin/jobs/email", async ({ request }) => {
 
 app.post("/admin/jobs/report", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1669,7 +1811,8 @@ app.post("/admin/jobs/report", async ({ request }) => {
 // ---------------- File Upload API ----------------
 app.post("/upload", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	let userId: string;
 	try {
 		const decoded = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as {
@@ -1687,7 +1830,12 @@ app.post("/upload", async ({ request }) => {
 	}
 
 	const buffer = Buffer.from(await file.arrayBuffer());
-	const uploadedFile = await fileUploadManager.upload(buffer, file.name, file.type, { userId });
+	const uploadedFile = await fileUploadManager.upload(
+		buffer,
+		file.name,
+		file.type,
+		{ userId },
+	);
 
 	return {
 		success: true,
@@ -1702,7 +1850,8 @@ app.post("/upload", async ({ request }) => {
 
 app.get("/files/:fileId", async ({ request, params }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1730,7 +1879,8 @@ app.get("/files/:fileId", async ({ request, params }) => {
 
 app.get("/files", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	let userId: string;
 	try {
 		const decoded = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as {
@@ -1756,7 +1906,8 @@ app.get("/files", async ({ request }) => {
 // ---------------- Cron Scheduler API ----------------
 app.get("/admin/cron/tasks", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1768,7 +1919,8 @@ app.get("/admin/cron/tasks", async ({ request }) => {
 
 app.get("/admin/cron/stats", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1780,7 +1932,8 @@ app.get("/admin/cron/stats", async ({ request }) => {
 
 app.post("/admin/cron/tasks/:name/run", async ({ request, params }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1798,7 +1951,8 @@ app.post("/admin/cron/tasks/:name/run", async ({ request, params }) => {
 // ---------------- Audit Log API ----------------
 app.get("/admin/audit/logs", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1819,7 +1973,8 @@ app.get("/admin/audit/logs", async ({ request }) => {
 
 app.get("/admin/audit/stats", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1831,7 +1986,8 @@ app.get("/admin/audit/stats", async ({ request }) => {
 
 app.get("/admin/audit/export", async ({ request }) => {
 	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) return jsonError(401, "Missing Bearer token");
+	if (!auth.startsWith("Bearer "))
+		return jsonError(401, "Missing Bearer token");
 	try {
 		jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 	} catch {
@@ -1858,23 +2014,23 @@ app.get("/admin/audit/export", async ({ request }) => {
 // Only start server if this is the main module
 if (import.meta.main) {
 	try {
-		   const server = app.listen({
-			   port: CONFIG.PORT,
-		   });
+		const server = app.listen({
+			port: CONFIG.PORT,
+		});
 
-		   // Bun環境ではWebSocketサーバーをスキップ
-		   const isBun = typeof (globalThis as any).Bun !== "undefined";
-		   if (!isBun) {
-			   // WebSocketの初期化（HTTPサーバー取得後）
-			   const httpServer = server.server;
-			   if (httpServer) {
-				   const { wsManager } = await import("./lib/websocket-manager");
-				   wsManager.initialize(httpServer);
-				   logger.info("WebSocket server initialized");
-			   }
-		   } else {
-			   logger.info("Bun環境のためWebSocketサーバーはスキップされました");
-		   }
+		// Bun環境ではWebSocketサーバーをスキップ
+		const isBun = typeof (globalThis as any).Bun !== "undefined";
+		if (!isBun) {
+			// WebSocketの初期化（HTTPサーバー取得後）
+			const httpServer = server.server;
+			if (httpServer) {
+				const { wsManager } = await import("./lib/websocket-manager");
+				wsManager.initialize(httpServer);
+				logger.info("WebSocket server initialized");
+			}
+		} else {
+			logger.info("Bun環境のためWebSocketサーバーはスキップされました");
+		}
 
 		// APIドキュメント自動公開（swagger.jsonエクスポート）
 		try {

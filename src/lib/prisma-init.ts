@@ -74,7 +74,9 @@ async function checkSchema(): Promise<void> {
 			"_prisma_migrations",
 		];
 
-		const missingTables = expectedTables.filter((t) => !tables.some((table) => table.name === t));
+		const missingTables = expectedTables.filter(
+			(t) => !tables.some((table) => table.name === t),
+		);
 
 		if (missingTables.length > 0) {
 			logger.warn(`⚠️ 不足テーブル: ${missingTables.join(", ")}`);

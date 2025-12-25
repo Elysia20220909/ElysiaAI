@@ -72,7 +72,10 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 			if (auth.startsWith("Bearer ")) {
 				try {
 					const jwt = await import("jsonwebtoken");
-					const decoded = jwt.verify(auth.substring(7), process.env.JWT_SECRET || "dev-secret") as {
+					const decoded = jwt.verify(
+						auth.substring(7),
+						process.env.JWT_SECRET || "dev-secret",
+					) as {
 						username?: string;
 					};
 					userId = decoded.username;
@@ -95,7 +98,9 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 				method: request.method,
 				path: url.pathname,
 				ipAddress:
-					request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1",
+					request.headers.get("x-forwarded-for") ||
+					request.headers.get("x-real-ip") ||
+					"127.0.0.1",
 				userAgent: request.headers.get("user-agent") || "unknown",
 				statusCode,
 			});
@@ -121,7 +126,9 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 				method: request.method,
 				path: url.pathname,
 				ipAddress:
-					request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1",
+					request.headers.get("x-forwarded-for") ||
+					request.headers.get("x-real-ip") ||
+					"127.0.0.1",
 				userAgent: request.headers.get("user-agent") || "unknown",
 				statusCode: 500,
 				error: error.message,

@@ -33,7 +33,10 @@ class AdvancedRateLimiter {
 	/**
 	 * リクエストをチェック
 	 */
-	checkRateLimit(ip: string, endpoint: string): { allowed: boolean; reason?: string } {
+	checkRateLimit(
+		ip: string,
+		endpoint: string,
+	): { allowed: boolean; reason?: string } {
 		// ブロックリストチェック
 		const blocked = this.blockedIPs.get(ip);
 		if (blocked) {

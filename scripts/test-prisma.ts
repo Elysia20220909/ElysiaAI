@@ -45,7 +45,13 @@ async function runTests() {
 
 		// Test 6: Feedback save
 		console.log("Test 6: Feedback save");
-		await db.saveFeedback("Test query", "Test answer", "up", user.id, "Good answer");
+		await db.saveFeedback(
+			"Test query",
+			"Test answer",
+			"up",
+			user.id,
+			"Good answer",
+		);
 		console.log("Feedback saved\n");
 
 		// Test 7: Feedback statistics

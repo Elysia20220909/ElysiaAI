@@ -46,7 +46,9 @@ const USER_AGENT =
 /**
  * Wikipedia検索 (日本語)
  */
-export async function searchWikipedia(query: string): Promise<WikipediaSummary | null> {
+export async function searchWikipedia(
+	query: string,
+): Promise<WikipediaSummary | null> {
 	try {
 		const searchUrl = `https://ja.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&utf8=1&srlimit=1`;
 
@@ -99,7 +101,9 @@ export async function searchWikipedia(query: string): Promise<WikipediaSummary |
 /**
  * 天気情報取得 (Open-Meteo API - 無料)
  */
-export async function getWeather(location: string): Promise<WeatherData | null> {
+export async function getWeather(
+	location: string,
+): Promise<WeatherData | null> {
 	try {
 		// 日本の主要都市の座標
 		const cities: Record<string, { lat: number; lon: number }> = {
@@ -165,7 +169,9 @@ export async function getWeather(location: string): Promise<WeatherData | null> 
 /**
  * 最新ニュース取得 (RSS経由)
  */
-export async function getLatestNews(category = "general"): Promise<NewsArticle[]> {
+export async function getLatestNews(
+	category = "general",
+): Promise<NewsArticle[]> {
 	try {
 		// NHKニュースのRSSフィード
 		const feedUrls: Record<string, string> = {

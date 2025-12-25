@@ -14,7 +14,12 @@ interface WSClient {
 	lastActivity: Date;
 }
 
-type MessageType = "chat" | "notification" | "dashboard_update" | "typing" | "presence";
+type MessageType =
+	| "chat"
+	| "notification"
+	| "dashboard_update"
+	| "typing"
+	| "presence";
 
 interface WSMessage {
 	type: MessageType;
@@ -323,7 +328,10 @@ class WebSocketManager {
 			totalClients: this.clients.size,
 			totalRooms: this.rooms.size,
 			clientsByRoom: Object.fromEntries(
-				Array.from(this.rooms.entries()).map(([room, clients]) => [room, clients.size]),
+				Array.from(this.rooms.entries()).map(([room, clients]) => [
+					room,
+					clients.size,
+				]),
 			),
 		};
 	}

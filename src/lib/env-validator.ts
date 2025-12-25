@@ -40,7 +40,8 @@ const ENV_SCHEMA: EnvConfig[] = [
 		required: false,
 		default: "3000",
 		description: "サーバーポート番号",
-		validator: (v) => !Number.isNaN(Number(v)) && Number(v) > 0 && Number(v) < 65536,
+		validator: (v) =>
+			!Number.isNaN(Number(v)) && Number(v) > 0 && Number(v) < 65536,
 	},
 	{
 		name: "ALLOWED_ORIGINS",
@@ -123,7 +124,9 @@ export function validateEnvironment(): ValidationResult {
 		// デフォルト値の適用
 		if (!value && config.default) {
 			process.env[config.name] = config.default;
-			warnings.push(`⚠️  ${config.name}: デフォルト値を使用 (${config.default})`);
+			warnings.push(
+				`⚠️  ${config.name}: デフォルト値を使用 (${config.default})`,
+			);
 			continue;
 		}
 
@@ -186,7 +189,11 @@ export function printEnvironmentSummary() {
 	logger.info("\n📋 環境変数サマリー:");
 	logger.info(`  - ポート: ${process.env.PORT || 3000}`);
 	logger.info(`  - データベース: ${process.env.DATABASE_URL || "未設定"}`);
-	logger.info(`  - Redis: ${process.env.REDIS_ENABLED === "true" ? "有効" : "無効"}`);
-	logger.info(`  - Ollama: ${process.env.OLLAMA_BASE_URL || "http://localhost:11434"}`);
+	logger.info(
+		`  - Redis: ${process.env.REDIS_ENABLED === "true" ? "有効" : "無効"}`,
+	);
+	logger.info(
+		`  - Ollama: ${process.env.OLLAMA_BASE_URL || "http://localhost:11434"}`,
+	);
 	logger.info(`  - モデル: ${process.env.OLLAMA_MODEL || "llama3.2"}\n`);
 }

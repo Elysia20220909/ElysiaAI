@@ -24,7 +24,8 @@ interface SlidingWindowState {
 }
 
 class EnhancedRateLimiter {
-	private fixedWindows: Map<string, { count: number; resetTime: number }> = new Map();
+	private fixedWindows: Map<string, { count: number; resetTime: number }> =
+		new Map();
 	private slidingWindows: Map<string, SlidingWindowState> = new Map();
 	private tokenBuckets: Map<string, TokenBucketState> = new Map();
 
@@ -85,7 +86,9 @@ class EnhancedRateLimiter {
 		}
 
 		// Remove requests outside the window
-		state.requests = state.requests.filter((timestamp) => now - timestamp < windowMs);
+		state.requests = state.requests.filter(
+			(timestamp) => now - timestamp < windowMs,
+		);
 
 		if (state.requests.length >= maxRequests) {
 			return {
@@ -155,12 +158,24 @@ class EnhancedRateLimiter {
 	}> {
 		switch (config.algorithm) {
 			case "fixed":
-				return await this.checkFixedWindow(key, config.maxRequests, config.windowMs);
+				return await this.checkFixedWindow(
+					key,
+					config.maxRequests,
+					config.windowMs,
+				);
 			case "sliding":
-				return await this.checkSlidingWindow(key, config.maxRequests, config.windowMs);
+				return await this.checkSlidingWindow(
+					key,
+					config.maxRequests,
+					config.windowMs,
+				);
 			case "token-bucket": {
 				const refillRate = config.maxRequests / (config.windowMs / 1000);
-				const result = await this.checkTokenBucket(key, config.maxRequests, refillRate);
+				const result = await this.checkTokenBucket(
+					key,
+					config.maxRequests,
+					refillRate,
+				);
 				return {
 					allowed: result.allowed,
 					remaining: result.tokens,
@@ -184,7 +199,10 @@ class EnhancedRateLimiter {
 			fixedWindows: this.fixedWindows.size,
 			slidingWindows: this.slidingWindows.size,
 			tokenBuckets: this.tokenBuckets.size,
-			totalKeys: this.fixedWindows.size + this.slidingWindows.size + this.tokenBuckets.size,
+			totalKeys:
+				this.fixedWindows.size +
+				this.slidingWindows.size +
+				this.tokenBuckets.size,
 		};
 	}
 
@@ -216,7 +234,11 @@ class EnhancedRateLimiter {
 	/**
 	 * IPベースのレート制限
 	 */
-	async checkIPRateLimit(ipAddress: string, maxRequests = 100, windowMs = 60000): Promise<boolean> {
+	async checkIPRateLimit(
+		ipAddress: string,
+		maxRequests = 100,
+		windowMs = 60000,
+	): Promise<boolean> {
 		const result = await this.checkRateLimit(`ip:${ipAddress}`, {
 			maxRequests,
 			windowMs,
@@ -250,11 +272,14 @@ class EnhancedRateLimiter {
 		maxRequests = 10,
 		windowMs = 60000,
 	): Promise<boolean> {
-		const result = await this.checkRateLimit(`endpoint:${endpoint}:${identifier}`, {
-			maxRequests,
-			windowMs,
-			algorithm: "fixed",
-		});
+		const result = await this.checkRateLimit(
+			`endpoint:${endpoint}:${identifier}`,
+			{
+				maxRequests,
+				windowMs,
+				algorithm: "fixed",
+			},
+		);
 		return result.allowed;
 	}
 }

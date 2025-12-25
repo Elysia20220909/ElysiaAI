@@ -29,7 +29,8 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
-						error: error instanceof Error ? error.message : "エラーが発生しました",
+						error:
+							error instanceof Error ? error.message : "エラーが発生しました",
 					};
 				}
 			})
@@ -52,7 +53,8 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
-						error: error instanceof Error ? error.message : "エラーが発生しました",
+						error:
+							error instanceof Error ? error.message : "エラーが発生しました",
 					};
 				}
 			})
@@ -74,7 +76,8 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
-						error: error instanceof Error ? error.message : "エラーが発生しました",
+						error:
+							error instanceof Error ? error.message : "エラーが発生しました",
 					};
 				}
 			})
@@ -98,7 +101,8 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
-						error: error instanceof Error ? error.message : "エラーが発生しました",
+						error:
+							error instanceof Error ? error.message : "エラーが発生しました",
 					};
 				}
 			})
@@ -118,7 +122,8 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
-						error: error instanceof Error ? error.message : "エラーが発生しました",
+						error:
+							error instanceof Error ? error.message : "エラーが発生しました",
 					};
 				}
 			})
@@ -136,12 +141,19 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 						reason?: string;
 					};
 
-					const feedback = await db.saveFeedback(query, answer, rating, userId, reason);
+					const feedback = await db.saveFeedback(
+						query,
+						answer,
+						rating,
+						userId,
+						reason,
+					);
 					return { success: true, feedback };
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
-						error: error instanceof Error ? error.message : "エラーが発生しました",
+						error:
+							error instanceof Error ? error.message : "エラーが発生しました",
 					};
 				}
 			})
@@ -154,7 +166,8 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
-						error: error instanceof Error ? error.message : "エラーが発生しました",
+						error:
+							error instanceof Error ? error.message : "エラーが発生しました",
 					};
 				}
 			})
@@ -180,7 +193,8 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
-						error: error instanceof Error ? error.message : "エラーが発生しました",
+						error:
+							error instanceof Error ? error.message : "エラーが発生しました",
 					};
 				}
 			})
@@ -193,7 +207,8 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
-						error: error instanceof Error ? error.message : "エラーが発生しました",
+						error:
+							error instanceof Error ? error.message : "エラーが発生しました",
 					};
 				}
 			})

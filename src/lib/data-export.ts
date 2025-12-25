@@ -12,7 +12,15 @@ import { logger } from "./logger";
 export async function exportFeedbackToCSV(): Promise<string> {
 	const feedbacks = await feedbackService.getRecent(1000);
 
-	const headers = ["ID", "作成日時", "ユーザーID", "質問", "回答", "評価", "理由"];
+	const headers = [
+		"ID",
+		"作成日時",
+		"ユーザーID",
+		"質問",
+		"回答",
+		"評価",
+		"理由",
+	];
 	const rows = feedbacks.map((f) => [
 		f.id,
 		new Date(f.createdAt).toLocaleString("ja-JP"),

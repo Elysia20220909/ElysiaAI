@@ -61,7 +61,8 @@ export const defaultPromptTemplates: PromptTemplate[] = [
 		id: "casual-excited",
 		name: "カジュアル興奮",
 		description: "テンション高めの雑談",
-		template: "えっ、{query}！？それマジで気になってたんだよね！！めっちゃ語りたい！",
+		template:
+			"えっ、{query}！？それマジで気になってたんだよね！！めっちゃ語りたい！",
 		variables: ["query"],
 		mode: "normal",
 	},
@@ -94,7 +95,10 @@ export const defaultPromptTemplates: PromptTemplate[] = [
 /**
  * テンプレート変数を置換
  */
-export function applyTemplate(template: string, variables: Record<string, string>): string {
+export function applyTemplate(
+	template: string,
+	variables: Record<string, string>,
+): string {
 	let result = template;
 	for (const [key, value] of Object.entries(variables)) {
 		result = result.replace(new RegExp(`{${key}}`, "g"), value);
@@ -262,7 +266,8 @@ export const chatModes: ChatMode[] = [
 		name: "クリエイティブモード",
 		description: "創造的でユニークな回答",
 		icon: "🎨",
-		promptPrefix: "あなたは創造的なAIアシスタントです。ユニークで面白い視点から回答してください。",
+		promptPrefix:
+			"あなたは創造的なAIアシスタントです。ユニークで面白い視点から回答してください。",
 		temperature: 0.9,
 		maxTokens: 2500,
 	},
@@ -319,7 +324,10 @@ export function validateUserSettings(settings: Partial<UserSettings>): {
 		return { valid: false, error: "無効なテーマIDです" };
 	}
 
-	if (settings.defaultMode && !chatModes.find((m) => m.id === settings.defaultMode)) {
+	if (
+		settings.defaultMode &&
+		!chatModes.find((m) => m.id === settings.defaultMode)
+	) {
 		return { valid: false, error: "無効なモードIDです" };
 	}
 

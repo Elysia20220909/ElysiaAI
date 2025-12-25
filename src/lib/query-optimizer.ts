@@ -65,13 +65,20 @@ class QueryOptimizer {
 	};
 
 	getIndexRecommendations(table?: string): string[] {
-		if (table && this.indexRecommendations[table as keyof typeof this.indexRecommendations]) {
-			return this.indexRecommendations[table as keyof typeof this.indexRecommendations];
+		if (
+			table &&
+			this.indexRecommendations[table as keyof typeof this.indexRecommendations]
+		) {
+			return this.indexRecommendations[
+				table as keyof typeof this.indexRecommendations
+			];
 		}
 		return Object.values(this.indexRecommendations).flat();
 	}
 
-	async createIndexes(db: { execute: (query: string) => Promise<unknown> }): Promise<void> {
+	async createIndexes(db: {
+		execute: (query: string) => Promise<unknown>;
+	}): Promise<void> {
 		const indexes = this.getIndexRecommendations();
 		logger.info(`Creating ${indexes.length} database indexes...`);
 
@@ -110,7 +117,9 @@ class QueryOptimizer {
 
 		// Extract table names
 		const tableMatch = query.match(/FROM\s+([a-zA-Z0-9_,\s]+)/i);
-		const tables = tableMatch ? tableMatch[1].split(",").map((t) => t.trim()) : [];
+		const tables = tableMatch
+			? tableMatch[1].split(",").map((t) => t.trim())
+			: [];
 
 		const hasWhere = normalized.includes("WHERE");
 		const hasJoin = /JOIN/i.test(query);
@@ -119,10 +128,14 @@ class QueryOptimizer {
 
 		// Suggestions
 		if (type === "SELECT" && !hasLimit) {
-			suggestions.push("Consider adding LIMIT to prevent fetching too many rows");
+			suggestions.push(
+				"Consider adding LIMIT to prevent fetching too many rows",
+			);
 		}
 		if (type === "SELECT" && !hasWhere && !hasLimit) {
-			suggestions.push("SELECT without WHERE or LIMIT may return large result sets");
+			suggestions.push(
+				"SELECT without WHERE or LIMIT may return large result sets",
+			);
 		}
 		if (hasOrderBy && !hasLimit) {
 			suggestions.push("ORDER BY without LIMIT sorts entire result set");
@@ -131,7 +144,9 @@ class QueryOptimizer {
 			suggestions.push("Avoid SELECT *, specify only needed columns");
 		}
 		if (hasJoin && tables.length > 3) {
-			suggestions.push("Multiple JOINs detected, consider query restructuring or denormalization");
+			suggestions.push(
+				"Multiple JOINs detected, consider query restructuring or denormalization",
+			);
 		}
 
 		return {
@@ -146,7 +161,11 @@ class QueryOptimizer {
 	}
 
 	// Batch query execution
-	async batchQuery<T>(batchKey: string, query: string, params: unknown[]): Promise<T> {
+	async batchQuery<T>(
+		batchKey: string,
+		query: string,
+		params: unknown[],
+	): Promise<T> {
 		if (!this.options.enableBatching) {
 			throw new Error("Batching not enabled, execute query directly");
 		}
@@ -221,8 +240,10 @@ class QueryOptimizer {
 	}
 
 	// Query monitoring
-	private queryStats: Map<string, { count: number; totalTime: number; avgTime: number }> =
-		new Map();
+	private queryStats: Map<
+		string,
+		{ count: number; totalTime: number; avgTime: number }
+	> = new Map();
 
 	recordQueryExecution(query: string, executionTime: number): void {
 		const key = query.substring(0, 100); // Use first 100 chars as key
@@ -254,13 +275,17 @@ class QueryOptimizer {
 		}));
 	}
 
-	getSlowestQueries(limit = 10): Array<{ query: string; avgTime: number; count: number }> {
+	getSlowestQueries(
+		limit = 10,
+	): Array<{ query: string; avgTime: number; count: number }> {
 		return this.getQueryStats()
 			.sort((a, b) => b.avgTime - a.avgTime)
 			.slice(0, limit);
 	}
 
-	getMostFrequentQueries(limit = 10): Array<{ query: string; count: number; avgTime: number }> {
+	getMostFrequentQueries(
+		limit = 10,
+	): Array<{ query: string; count: number; avgTime: number }> {
 		return this.getQueryStats()
 			.sort((a, b) => b.count - a.count)
 			.slice(0, limit);

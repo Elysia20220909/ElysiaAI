@@ -1,9 +1,11 @@
 import Redis from "ioredis";
 
 const redisHost =
-	process.env.REDIS_HOST || "redis-10200.c54.ap-northeast-1-2.ec2.cloud.redislabs.com";
+	process.env.REDIS_HOST ||
+	"redis-10200.c54.ap-northeast-1-2.ec2.cloud.redislabs.com";
 const redisPort = Number(process.env.REDIS_PORT) || 10200;
-const redisPassword = process.env.REDIS_PASSWORD || "Hr7pQ66mbyxnu9M2QTPyy31fYC1l97wV";
+const redisPassword =
+	process.env.REDIS_PASSWORD || "Hr7pQ66mbyxnu9M2QTPyy31fYC1l97wV";
 const redisUsername = process.env.REDIS_USERNAME || "default";
 const useTLS = process.env.REDIS_TLS === "true" || true;
 

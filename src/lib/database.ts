@@ -5,10 +5,11 @@
 
 // .env を最優先で適用（マシン全体の環境変数よりも .env を使う）
 import dotenv from "dotenv";
+
 dotenv.config({ override: true });
 
-import type { PrismaClient as PrismaClientType } from "@prisma/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
+import type { PrismaClient as PrismaClientType } from "@prisma/client";
 
 // Prismaクライアントのシングルトン (一時的に無効化)
 let prisma: PrismaClientType;
@@ -24,7 +25,10 @@ try {
 	const { PrismaClient } = await import("@prisma/client");
 	prisma = new PrismaClient({
 		adapter,
-		log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+		log:
+			process.env.NODE_ENV === "development"
+				? ["query", "error", "warn"]
+				: ["error"],
 	});
 
 	// 必要なテーブルを作成（SQLite）
@@ -106,19 +110,44 @@ try {
 	`);
 
 	// 必要なインデックス
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_userId ON refresh_tokens(userId);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_chat_sessions_userId ON chat_sessions(userId);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_messages_sessionId ON messages(sessionId);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_feedbacks_userId ON feedbacks(userId);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_feedbacks_rating ON feedbacks(rating);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_feedbacks_createdAt ON feedbacks(createdAt);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_knowledge_base_userId ON knowledge_base(userId);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_knowledge_base_verified ON knowledge_base(verified);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_voice_logs_username ON voice_logs(username);`);
-	await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS idx_voice_logs_createdAt ON voice_logs(createdAt);`);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_userId ON refresh_tokens(userId);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_chat_sessions_userId ON chat_sessions(userId);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_messages_sessionId ON messages(sessionId);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_feedbacks_userId ON feedbacks(userId);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_feedbacks_rating ON feedbacks(rating);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_feedbacks_createdAt ON feedbacks(createdAt);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_knowledge_base_userId ON knowledge_base(userId);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_knowledge_base_verified ON knowledge_base(verified);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_voice_logs_username ON voice_logs(username);`,
+	);
+	await prisma.$executeRawUnsafe(
+		`CREATE INDEX IF NOT EXISTS idx_voice_logs_createdAt ON voice_logs(createdAt);`,
+	);
 
-	console.log("✅ Prisma database connected via LibSQL adapter (url=%s)", dbUrl);
+	console.log(
+		"✅ Prisma database connected via LibSQL adapter (url=%s)",
+		dbUrl,
+	);
 } catch (error) {
 	console.warn("⚠️ Prisma database not configured, using in-memory fallback");
 	console.error(error);
@@ -136,7 +165,11 @@ export { prisma };
 
 // ==================== ユーザー管理 ====================
 export const userService = {
-	async create(data: { username: string; passwordHash: string; role?: string }) {
+	async create(data: {
+		username: string;
+		passwordHash: string;
+		role?: string;
+	}) {
 		return prisma.user.create({ data });
 	},
 
@@ -148,7 +181,10 @@ export const userService = {
 		return prisma.user.findUnique({ where: { id } });
 	},
 
-	async update(id: string, data: Partial<{ passwordHash: string; role: string }>) {
+	async update(
+		id: string,
+		data: Partial<{ passwordHash: string; role: string }>,
+	) {
 		return prisma.user.update({ where: { id }, data });
 	},
 
@@ -280,7 +316,10 @@ export const knowledgeService = {
 	async search(query: string, limit = 10) {
 		return prisma.knowledgeBase.findMany({
 			where: {
-				OR: [{ question: { contains: query } }, { answer: { contains: query } }],
+				OR: [
+					{ question: { contains: query } },
+					{ answer: { contains: query } },
+				],
 				verified: true,
 			},
 			orderBy: { updatedAt: "desc" },
@@ -309,7 +348,12 @@ export const knowledgeService = {
 
 // ==================== 音声ログ ====================
 export const voiceService = {
-	async create(data: { username?: string; text: string; emotion: string; audioUrl?: string }) {
+	async create(data: {
+		username?: string;
+		text: string;
+		emotion: string;
+		audioUrl?: string;
+	}) {
 		return prisma.voiceLog.create({ data });
 	},
 

@@ -43,7 +43,8 @@ class ErrorMonitor {
 		// レート制限チェック
 		const existing = this.errorCounts.get(errorKey);
 		if (existing) {
-			const minutesSinceLastSeen = (now.getTime() - existing.lastSeen.getTime()) / 1000 / 60;
+			const minutesSinceLastSeen =
+				(now.getTime() - existing.lastSeen.getTime()) / 1000 / 60;
 			if (minutesSinceLastSeen < this.RATE_LIMIT) {
 				existing.count++;
 				return; // 通知しない
@@ -70,7 +71,10 @@ class ErrorMonitor {
 	/**
 	 * 重大なエラーを通知
 	 */
-	async captureCritical(error: Error | string, context?: Record<string, unknown>) {
+	async captureCritical(
+		error: Error | string,
+		context?: Record<string, unknown>,
+	) {
 		const alert: ErrorAlert = {
 			message: typeof error === "string" ? error : error.message,
 			stack: typeof error === "string" ? undefined : error.stack,
@@ -109,7 +113,11 @@ class ErrorMonitor {
 		if (!this.webhookConfig.discord) return;
 
 		const color =
-			alert.level === "critical" ? 0xff0000 : alert.level === "error" ? 0xffa500 : 0xffff00;
+			alert.level === "critical"
+				? 0xff0000
+				: alert.level === "error"
+					? 0xffa500
+					: 0xffff00;
 
 		const payload = {
 			embeds: [
@@ -127,7 +135,10 @@ class ErrorMonitor {
 							? [
 									{
 										name: "Context",
-										value: JSON.stringify(alert.context, null, 2).substring(0, 1024),
+										value: JSON.stringify(alert.context, null, 2).substring(
+											0,
+											1024,
+										),
 										inline: false,
 									},
 								]

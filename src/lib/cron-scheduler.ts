@@ -63,7 +63,11 @@ class CronScheduler {
 			async () => {
 				logger.info("Running monthly report task");
 				const today = new Date();
-				const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+				const lastMonth = new Date(
+					today.getFullYear(),
+					today.getMonth() - 1,
+					1,
+				);
 
 				await jobQueue.generateReport("monthly", lastMonth, today);
 			},
@@ -123,7 +127,12 @@ class CronScheduler {
 	/**
 	 * タスクを追加
 	 */
-	addTask(name: string, cronTime: string, callback: () => Promise<void>, enabled = true) {
+	addTask(
+		name: string,
+		cronTime: string,
+		callback: () => Promise<void>,
+		enabled = true,
+	) {
 		try {
 			const job = new CronJob(
 				cronTime,
