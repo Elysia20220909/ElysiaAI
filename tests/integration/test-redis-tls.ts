@@ -14,7 +14,7 @@ console.log("  パスワード:", url.password ? "***" : "なし");
 // redislabs.comなので TLS/SSL 必須
 const redis = new Redis({
 	host: url.hostname,
-	port: Number.parseInt(url.port || "10200"),
+	port: Number.parseInt(url.port || "10200", 10),
 	username: url.username || "default",
 	password: url.password,
 	tls: {},

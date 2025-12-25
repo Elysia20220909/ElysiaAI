@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { beforeAll, describe, expect, test } from "bun:test";
 
 const LIVE_TESTS = process.env.RUN_LIVE_TESTS === "true";
 const describeLive = LIVE_TESTS ? describe : describe.skip;
@@ -32,7 +32,7 @@ describeLive("チャット機能 - 包括的テスト", () => {
 				authToken = data.accessToken;
 				console.log("✅ 認証成功");
 			}
-		} catch (error) {
+		} catch (_error) {
 			console.warn("⚠️  認証スキップ（サーバーが起動していない可能性）");
 		}
 	});
@@ -235,7 +235,7 @@ describeLive("チャット機能 - 包括的テスト", () => {
 });
 
 describe("エラーハンドリング - 上流サービス障害", () => {
-	const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
+	const _BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
 
 	test("FastAPI/Ollama未起動時のグレースフルデグレード", async () => {
 		// この場合は503 Service Unavailableが返されるべき

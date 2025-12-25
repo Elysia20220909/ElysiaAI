@@ -43,7 +43,7 @@ export async function checkRedis(redisUrl: string): Promise<ServiceHealth> {
 		const responseTime = Date.now() - startTime;
 
 		const info = await redis.info("server");
-		const version = info.match(/redis_version:(.+)/)?.[1]?.trim();
+		const _version = info.match(/redis_version:(.+)/)?.[1]?.trim();
 
 		redis.disconnect();
 

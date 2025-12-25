@@ -1,7 +1,7 @@
 // 公式Node Redis クライアントでテスト
 // redis-cli互換の接続方法
-const { exec } = require("child_process");
-const { promisify } = require("util");
+const { exec } = require("node:child_process");
+const { promisify } = require("node:util");
 
 const execAsync = promisify(exec);
 

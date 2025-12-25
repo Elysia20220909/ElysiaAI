@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 
 // Simplified test server to verify deployment readiness
-const app = new Elysia()
+const _app = new Elysia()
 	.get("/", () => ({
 		status: "ok",
 		message: "🌸 Elysia AI Server (Test Mode)",

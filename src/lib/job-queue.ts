@@ -95,7 +95,7 @@ class JobQueueManager {
 				logger.info("Job completed", { jobId: job.id, type: job.data.type });
 			});
 
-			this.worker.on("failed", (job, err) => {
+			this.worker.on("failed", (_job, err) => {
 				logger.error("Job failed", err as Error);
 			});
 

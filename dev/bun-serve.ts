@@ -1,6 +1,6 @@
 ﻿Bun.serve({
 	port: 3000,
-	fetch(req) {
+	fetch(_req) {
 		return new Response("Hello");
 	},
 });

@@ -96,7 +96,7 @@ class ResponseCompressor {
 			if (preferBrotli && this.supportsBrotli(acceptEncoding)) {
 				const compressed = brotliCompressSync(buffer, {
 					params: {
-						[11]: level, // BROTLI_PARAM_QUALITY
+						11: level, // BROTLI_PARAM_QUALITY
 					},
 				});
 				this.stats.compressedRequests++;

@@ -32,7 +32,7 @@ export class HotReloadManager {
 				const watcher = watch(
 					absolutePath,
 					{ recursive: true, persistent: true },
-					(eventType, filename) => {
+					(_eventType, filename) => {
 						if (!filename) return;
 
 						// Exclude specific files
