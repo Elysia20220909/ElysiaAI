@@ -1,4 +1,4 @@
-import readline from "readline";
+import readline from "node:readline";
 
 const rl = readline.createInterface({
 	input: process.stdin,
@@ -16,7 +16,7 @@ async function prompt(query: string): Promise<string> {
 function printBoard(board: number[][]) {
 	console.log("  0 1 2 3 4 5 6 7");
 	for (let i = 0; i < 8; i++) {
-		let row = i + " ";
+		let row = `${i} `;
 		for (let j = 0; j < 8; j++) {
 			row += board[i][j] === 0 ? ". " : board[i][j] === 1 ? "● " : "○ ";
 		}
@@ -38,7 +38,7 @@ async function main() {
 		}
 		console.log(`ターン: ${state.turn === 1 ? "黒(●)" : "白(○)"}`);
 		console.log("履歴:");
-		state.history.slice(-5).forEach((h: string) => console.log("  " + h));
+		state.history.slice(-5).forEach((h: string) => console.log(`  ${h}`));
 		if (mode === "3") {
 			await new Promise((r) => setTimeout(r, 1500));
 			continue;
