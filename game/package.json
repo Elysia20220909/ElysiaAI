@@ -1,0 +1,45 @@
+{
+	"name": "elysia-ai-game",
+	"version": "1.0.0",
+	"description": "Elysia AI Game - Cross-Platform Multiplayer Network Game",
+	"main": "server.ts",
+	"scripts": {
+		"start": "bun server.ts",
+		"dev": "bun --watch server.ts",
+		"build": "bun build server.ts --outdir=dist --target=bun",
+		"build:standalone": "bun build server.ts --compile --outfile=dist/elysia-game",
+		"build:win": "bun build server.ts --compile --target=bun-windows-x64 --outfile=dist/elysia-game-win.exe",
+		"build:win:x64": "bun build server.ts --compile --target=bun-windows-x64 --outfile=dist/elysia-game-win-x64.exe",
+		"build:win:ia32": "bun build server.ts --compile --target=bun-windows-x64 --outfile=dist/elysia-game-win-ia32.exe",
+		"build:mac": "bun build server.ts --compile --target=bun-darwin-x64 --outfile=dist/elysia-game-mac && bun build server.ts --compile --target=bun-darwin-arm64 --outfile=dist/elysia-game-mac-arm64",
+		"build:mac:intel": "bun build server.ts --compile --target=bun-darwin-x64 --outfile=dist/elysia-game-mac-intel",
+		"build:mac:arm": "bun build server.ts --compile --target=bun-darwin-arm64 --outfile=dist/elysia-game-mac-arm64",
+		"build:linux": "bun build server.ts --compile --target=bun-linux-x64 --outfile=dist/elysia-game-linux",
+		"build:all": "npm run build:win && npm run build:mac && npm run build:linux",
+		"cli": "bun cli-client.ts",
+		"test": "bun test"
+	},
+	"dependencies": {
+		"elysia": "^1.2.0",
+		"@elysiajs/cors": "^1.2.0",
+		"@elysiajs/swagger": "^1.2.0"
+	},
+	"devDependencies": {
+		"bun-types": "latest"
+	},
+	"keywords": [
+		"game",
+		"multiplayer",
+		"network",
+		"reversi",
+		"othello",
+		"elysia",
+		"bun",
+		"cross-platform"
+	],
+	"author": "Elysia AI Team",
+	"license": "MIT",
+	"engines": {
+		"bun": ">=1.0.0"
+	}
+}
