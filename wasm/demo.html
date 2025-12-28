@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elysia WebAssembly Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .demo-box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .output {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🦀 Elysia WebAssembly Demo</h1>
+
+    <div class="demo-box">
+        <h2>Normalize Text</h2>
+        <textarea id="normalize-input" placeholder="Enter text to normalize">  hello   world  </textarea>
+        <button onclick="testNormalize()">Normalize</button>
+        <div class="output" id="normalize-output"></div>
+    </div>
+
+    <div class="demo-box">
+        <h2>Word Count</h2>
+        <textarea id="wordcount-input" placeholder="Enter text">hello world test</textarea>
+        <button onclick="testWordCount()">Count Words</button>
+        <div class="output" id="wordcount-output"></div>
+    </div>
+
+    <div class="demo-box">
+        <h2>Tokenize</h2>
+        <textarea id="tokenize-input" placeholder="Enter text">hello world</textarea>
+        <button onclick="testTokenize()">Tokenize</button>
+        <div class="output" id="tokenize-output"></div>
+    </div>
+
+    <div class="demo-box">
+        <h2>Truncate</h2>
+        <textarea id="truncate-input" placeholder="Enter text">hello world test</textarea>
+        <input type="number" id="truncate-len" value="8" placeholder="Max length">
+        <button onclick="testTruncate()">Truncate</button>
+        <div class="output" id="truncate-output"></div>
+    </div>
+
+    <script type="module">
+        import init, { ElysiasWasm } from './pkg/elysia_wasm.js';
+
+        window.wasmModule = null;
+
+        init().then(() => {
+            window.wasmModule = ElysiasWasm;
+            document.getElementById('normalize-output').textContent = '✅ WASM loaded successfully!';
+        }).catch(err => {
+            console.error('Failed to load WASM:', err);
+            document.getElementById('normalize-output').textContent = '❌ Failed to load WASM module';
+        });
+
+        window.testNormalize = function() {
+            if (!window.wasmModule) return;
+            const input = document.getElementById('normalize-input').value;
+            const result = window.wasmModule.normalize(input);
+            document.getElementById('normalize-output').textContent = result;
+        };
+
+        window.testWordCount = function() {
+            if (!window.wasmModule) return;
+            const input = document.getElementById('wordcount-input').value;
+            const result = window.wasmModule.word_count(input);
+            document.getElementById('wordcount-output').textContent = `Word count: ${result}`;
+        };
+
+        window.testTokenize = function() {
+            if (!window.wasmModule) return;
+            const input = document.getElementById('tokenize-input').value;
+            const result = window.wasmModule.tokenize(input);
+            document.getElementById('tokenize-output').textContent = JSON.stringify(result, null, 2);
+        };
+
+        window.testTruncate = function() {
+            if (!window.wasmModule) return;
+            const input = document.getElementById('truncate-input').value;
+            const len = parseInt(document.getElementById('truncate-len').value);
+            const result = window.wasmModule.truncate(input, len);
+            document.getElementById('truncate-output').textContent = result;
+        };
+    </script>
+</body>
+</html>

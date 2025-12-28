@@ -1,0 +1,63 @@
+[package]
+name = "elysia-rust"
+version = "1.0.0"
+edition = "2021"
+description = "High-performance Rust library for Elysia AI"
+repository = "https://github.com/Elysia20220909/ElysiaAI"
+license = "AGPL-3.0-or-later"
+
+[lib]
+name = "elysia_rust"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "elysia-cli"
+path = "src/bin/cli.rs"
+required-features = ["cli"]
+
+[dependencies]
+# Core dependencies
+tokio = { version = "1.35", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Text processing
+regex = "1.10"
+unicode-normalization = "0.1"
+
+# Optional: Node.js FFI bindings (for native module)
+[target.'cfg(target_os = "macos")'.dependencies]
+objc = "0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+winapi = { version = "0.3", features = ["processthreadsapi"] }
+
+[dev-dependencies]
+criterion = "0.5"
+proptest = "1.4"
+
+[features]
+default = ["cli"]
+cli = ["clap"]
+wasm = []
+
+# Optional: For Node.js native addon
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+# Platform-specific optimizations
+[profile.release-mac]
+inherits = "release"
+
+[profile.release-win]
+inherits = "release"
+
+[profile.release-linux]
+inherits = "release"

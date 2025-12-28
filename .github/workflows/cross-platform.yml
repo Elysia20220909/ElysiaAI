@@ -1,0 +1,307 @@
+name: Cross-Platform Build
+
+on:
+  push:
+    branches: [master, main, develop]
+  pull_request:
+    branches: [master, main]
+  release:
+    types: [created]
+
+jobs:
+  # Desktop App (Electron)
+  desktop:
+    name: Desktop App - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        node-version: [20]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd desktop
+          bun install
+
+      - name: Build (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd desktop
+          bun run build:mac:universal
+
+      - name: Build (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd desktop
+          bun run build:win
+
+      - name: Build (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd desktop
+          bun run build:linux
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: desktop/dist/*
+          retention-days: 7
+
+  # Game Server (Bun)
+  game:
+    name: Game Server - ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: win
+          - os: ubuntu-latest
+            platform: linux
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd ElysiaAI/game
+          bun install
+
+      - name: Build
+        run: |
+          cd ElysiaAI/game
+          bun run build:${{ matrix.platform }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-${{ matrix.platform }}
+          path: ElysiaAI/game/dist/*
+          retention-days: 7
+
+  # Swift Native App
+  swift:
+    name: Swift Native - ${{ matrix.platform }}
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        platform: [intel, arm]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0"
+
+      - name: Build (Intel)
+        if: matrix.platform == 'intel'
+        run: |
+          cd swift
+          swift build -c release --arch x86_64
+
+      - name: Build (Apple Silicon)
+        if: matrix.platform == 'arm'
+        run: |
+          cd swift
+          swift build -c release --arch arm64
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: swift-macos-${{ matrix.platform }}
+          path: swift/.build/release/ElysiaAICLI
+          retention-days: 7
+
+  # Native C++ Addon
+  native:
+    name: Native Addon - ${{ matrix.os }} Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        node: [18, 20]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          cd native
+          npm install
+
+      - name: Build
+        run: |
+          cd native
+          npm run build:release
+
+      - name: Test
+        run: |
+          cd native
+          npm test
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.os }}-node${{ matrix.node }}
+          path: native/build/Release/*.node
+          retention-days: 7
+
+  # Rust Library
+  rust:
+    name: Rust - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add targets
+        run: |
+          rustup target add x86_64-apple-darwin aarch64-apple-darwin
+          rustup target add x86_64-pc-windows-msvc i686-pc-windows-msvc
+          rustup target add x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Build (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          cd rust
+          cargo build --target x86_64-apple-darwin --release
+          cargo build --target aarch64-apple-darwin --release
+
+      - name: Build (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd rust
+          cargo build --target x86_64-pc-windows-msvc --release
+          cargo build --target i686-pc-windows-msvc --release
+
+      - name: Build (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cd rust
+          cargo build --target x86_64-unknown-linux-gnu --release
+          cargo build --target aarch64-unknown-linux-gnu --release
+
+      - name: Test
+        run: |
+          cd rust
+          cargo test --release
+
+      - name: Lint
+        run: |
+          cd rust
+          cargo clippy --all-targets --all-features
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-${{ matrix.os }}
+          path: rust/target/release/
+          retention-days: 7
+
+  # Mobile App (EAS Build)
+  mobile:
+    name: Mobile App - ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    strategy:
+      matrix:
+        platform: [android, ios]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: |
+          cd mobile
+          npm install
+
+      - name: Build ${{ matrix.platform }}
+        run: |
+          cd mobile
+          eas build --platform ${{ matrix.platform }} --non-interactive --no-wait
+
+  # Create Release
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    needs: [desktop, game, swift, native, rust]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release Assets
+        run: |
+          cd artifacts
+
+          # Desktop
+          tar -czf desktop-macos.tar.gz desktop-macos-latest/*
+          tar -czf desktop-windows.tar.gz desktop-windows-latest/*
+          tar -czf desktop-linux.tar.gz desktop-ubuntu-latest/*
+
+          # Game
+          tar -czf game-macos.tar.gz game-mac/*
+          tar -czf game-windows.tar.gz game-win/*
+          tar -czf game-linux.tar.gz game-linux/*
+
+          # Swift
+          tar -czf swift-intel.tar.gz swift-macos-intel/*
+          tar -czf swift-arm.tar.gz swift-macos-arm/*
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
