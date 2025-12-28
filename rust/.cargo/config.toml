@@ -1,0 +1,31 @@
+# Rust build configuration for Elysia
+
+[build]
+# Build settings
+jobs = 4
+rustflags = ["-C", "target-cpu=native"]
+
+# Platform-specific targets
+[target.x86_64-unknown-linux-gnu]
+linker = "gcc"
+
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-linux-gnu-gcc"
+
+[target.x86_64-pc-windows-msvc]
+linker = "rust-lld.exe"
+
+[target.aarch64-pc-windows-msvc]
+linker = "rust-lld.exe"
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-mmacosx-version-min=10.15"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-mmacosx-version-min=11.0"]
+
+# Alias for common commands
+[alias]
+build-release = "build --release"
+build-all = "build --all-targets"
+check-all = "check --all-targets --all-features"
