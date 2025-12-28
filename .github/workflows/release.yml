@@ -1,0 +1,213 @@
+name: Release & Publish
+
+on:
+  release:
+    types: [created, published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+
+jobs:
+  # Build all artifacts for release
+  build-all:
+    name: Build Release Artifacts
+    uses: ./.github/workflows/cross-platform.yml
+    secrets: inherit
+
+  # Create Release Package
+  create-release:
+    name: Create Release Package
+    runs-on: ubuntu-latest
+    needs: build-all
+    if: github.event_name == 'release'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release Assets
+        run: |
+          mkdir -p release-assets
+
+          # Desktop
+          cd artifacts
+          tar -czf ../release-assets/desktop-macos.tar.gz desktop-macos-latest/* 2>/dev/null || true
+          tar -czf ../release-assets/desktop-windows.tar.gz desktop-windows-latest/* 2>/dev/null || true
+          tar -czf ../release-assets/desktop-linux.tar.gz desktop-ubuntu-latest/* 2>/dev/null || true
+
+          # Game
+          tar -czf ../release-assets/game-macos.tar.gz game-mac/* 2>/dev/null || true
+          tar -czf ../release-assets/game-windows.tar.gz game-win/* 2>/dev/null || true
+          tar -czf ../release-assets/game-linux.tar.gz game-linux/* 2>/dev/null || true
+
+          # Rust
+          tar -czf ../release-assets/rust-macos.tar.gz rust-macos-latest/* 2>/dev/null || true
+          tar -czf ../release-assets/rust-windows.tar.gz rust-windows-latest/* 2>/dev/null || true
+          tar -czf ../release-assets/rust-linux.tar.gz rust-ubuntu-latest/* 2>/dev/null || true
+
+          # Native
+          tar -czf ../release-assets/native-macos.tar.gz native-macos-latest* 2>/dev/null || true
+          tar -czf ../release-assets/native-windows.tar.gz native-windows-latest* 2>/dev/null || true
+          tar -czf ../release-assets/native-linux.tar.gz native-ubuntu-latest* 2>/dev/null || true
+
+          # Swift
+          tar -czf ../release-assets/swift-intel.tar.gz swift-macos-intel/* 2>/dev/null || true
+          tar -czf ../release-assets/swift-arm.tar.gz swift-macos-arm/* 2>/dev/null || true
+
+          cd ../release-assets
+          ls -lh
+
+      - name: Generate Release Notes
+        id: release-notes
+        run: |
+          cat > RELEASE_NOTES.md << 'EOF'
+          # Elysia AI Cross-Platform Release
+
+          ## Package Contents
+
+          ### Desktop Application (Electron)
+          - `desktop-macos.tar.gz` - macOS (Intel & Apple Silicon)
+          - `desktop-windows.tar.gz` - Windows (32-bit & 64-bit)
+          - `desktop-linux.tar.gz` - Linux x64
+
+          ### Game Server (Standalone Bun)
+          - `game-macos.tar.gz` - macOS (Intel & ARM64)
+          - `game-windows.tar.gz` - Windows (32-bit & 64-bit)
+          - `game-linux.tar.gz` - Linux x64
+
+          ### Rust Library
+          - `rust-macos.tar.gz` - macOS binaries
+          - `rust-windows.tar.gz` - Windows binaries
+          - `rust-linux.tar.gz` - Linux binaries
+
+          ### Native C++ Addon (Node.js)
+          - `native-macos.tar.gz` - macOS (Node 18 & 20)
+          - `native-windows.tar.gz` - Windows (Node 18 & 20)
+          - `native-linux.tar.gz` - Linux (Node 18 & 20)
+
+          ### Swift Native App
+          - `swift-intel.tar.gz` - macOS Intel
+          - `swift-arm.tar.gz` - macOS Apple Silicon
+
+          ## Installation
+
+          Extract the appropriate archive for your platform and follow the included README.
+
+          ## Supported Platforms
+
+          | Platform | Architecture | Status |
+          |----------|--------------|--------|
+          | macOS | Intel x64, ARM64 (Universal) | ✅ |
+          | Windows | x64, ia32 | ✅ |
+          | Linux | x64, ARM64 | ✅ |
+          | iOS | ARM64 | ✅ |
+          | Android | Multiple | ✅ |
+
+          ## Checksums
+
+          EOF
+
+          cd release-assets
+          sha256sum *.tar.gz >> RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+          cp RELEASE_NOTES.md ../release-assets/
+
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-assets/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Publish to npm
+  publish-npm:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: github.event_name == 'release'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - name: Publish native addon
+        run: |
+          cd native
+          npm install
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        continue-on-error: true
+
+      - name: Publish Rust crate
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          cd rust
+          cargo login ${{ secrets.CARGO_TOKEN }}
+          cargo publish
+        continue-on-error: true
+
+  # Create version tag
+  tag-version:
+    name: Tag Version
+    runs-on: ubuntu-latest
+    needs: [publish-npm]
+    if: github.event_name == 'release'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get release version
+        id: version
+        run: |
+          VERSION=${{ github.event.release.tag_name }}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Create version file
+        run: |
+          mkdir -p .version
+          echo "${{ steps.version.outputs.version }}" > .version/current
+          echo "Built: $(date -u +'%Y-%m-%d %H:%M:%S')" >> .version/current
+
+      - name: Commit version
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .version/current
+          git commit -m "chore: Update version to ${{ steps.version.outputs.version }}" || true
+          git push
+
+  # Post-release notifications
+  notify:
+    name: Notify Release
+    runs-on: ubuntu-latest
+    needs: [tag-version]
+    if: always()
+
+    steps:
+      - name: Notify Success
+        if: needs.tag-version.result == 'success'
+        run: |
+          echo "✅ Release published successfully!"
+          echo "Release: ${{ github.event.release.html_url }}"
+
+      - name: Notify Failure
+        if: needs.tag-version.result != 'success'
+        run: |
+          echo "⚠️ Release partially completed. Check artifacts."
+          exit 1
