@@ -8,7 +8,7 @@ let package = Package(
     name: "ElysiaAI",
     platforms: [
         .iOS(.v16),
-        .macOS(.v13)
+        .macOS(.v13) // Intel (x86_64) and Apple Silicon (arm64) support
     ],
     products: [
         .library(
