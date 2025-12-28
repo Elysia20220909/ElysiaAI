@@ -6,7 +6,15 @@
 	"scripts": {
 		"install": "node-gyp rebuild",
 		"build": "node-gyp configure && node-gyp build",
-		"clean": "node-gyp clean"
+		"build:release": "node-gyp configure --release && node-gyp build --release",
+		"build:debug": "node-gyp configure --debug && node-gyp build --debug",
+		"build:mac": "node-gyp configure --arch=x64 --arch=arm64 && node-gyp build",
+		"build:win:x64": "node-gyp configure --arch=x64 && node-gyp build",
+		"build:win:ia32": "node-gyp configure --arch=ia32 && node-gyp build",
+		"build:linux": "node-gyp configure --arch=x64 && node-gyp build",
+		"clean": "node-gyp clean",
+		"rebuild": "npm run clean && npm run build",
+		"test": "node index.js"
 	},
 	"gypfile": true,
 	"dependencies": {

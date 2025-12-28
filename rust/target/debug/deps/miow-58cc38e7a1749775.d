@@ -1,0 +1,12 @@
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\miow-58cc38e7a1749775.d: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\handle.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\overlapped.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\iocp.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\net.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\pipe.rs
+
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\libmiow-58cc38e7a1749775.rlib: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\handle.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\overlapped.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\iocp.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\net.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\pipe.rs
+
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\libmiow-58cc38e7a1749775.rmeta: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\handle.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\overlapped.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\iocp.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\net.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\pipe.rs
+
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\lib.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\handle.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\overlapped.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\iocp.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\net.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\miow-0.2.2\src\pipe.rs:

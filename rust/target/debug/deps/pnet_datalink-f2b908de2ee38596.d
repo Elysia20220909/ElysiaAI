@@ -1,0 +1,10 @@
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\pnet_datalink-f2b908de2ee38596.d: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\bindings\mod.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\bindings\bpf.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\bindings\winpcap.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\winpcap.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\dummy.rs
+
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\libpnet_datalink-f2b908de2ee38596.rmeta: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\bindings\mod.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\bindings\bpf.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\bindings\winpcap.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\winpcap.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\dummy.rs
+
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\lib.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\bindings\mod.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\bindings\bpf.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\bindings\winpcap.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\winpcap.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\pnet_datalink-0.34.0\src\dummy.rs:

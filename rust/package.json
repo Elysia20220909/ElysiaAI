@@ -1,0 +1,30 @@
+{
+  "name": "elysia-rust-cli",
+  "version": "1.0.0",
+  "description": "Elysia Rust cross-platform bindings",
+  "private": true,
+  "scripts": {
+    "install": "cargo build --release",
+    "build": "cargo build",
+    "build:release": "cargo build --release",
+    "build:debug": "cargo build",
+    "build:mac": "cargo build --target x86_64-apple-darwin && cargo build --target aarch64-apple-darwin",
+    "build:mac:universal": "cargo build --release --target x86_64-apple-darwin && cargo build --release --target aarch64-apple-darwin && lipo -create target/x86_64-apple-darwin/release/libelysia_rust.dylib target/aarch64-apple-darwin/release/libelysia_rust.dylib -output target/release/libelysia_rust.dylib",
+    "build:win:x64": "cargo build --release --target x86_64-pc-windows-msvc",
+    "build:win:ia32": "cargo build --release --target i686-pc-windows-msvc",
+    "build:linux": "cargo build --release --target x86_64-unknown-linux-gnu",
+    "build:linux:arm64": "cargo build --release --target aarch64-unknown-linux-gnu",
+    "build:all": "cargo build --all-targets --release",
+    "clean": "cargo clean",
+    "test": "cargo test",
+    "test:all": "cargo test --all-features",
+    "bench": "cargo bench",
+    "clippy": "cargo clippy --all-targets --all-features",
+    "fmt": "cargo fmt",
+    "doc": "cargo doc --open",
+    "publish": "cargo publish"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
