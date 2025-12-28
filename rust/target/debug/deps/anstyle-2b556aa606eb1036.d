@@ -1,0 +1,12 @@
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\anstyle-2b556aa606eb1036.d: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\macros.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\color.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\effect.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\reset.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\style.rs
+
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\libanstyle-2b556aa606eb1036.rlib: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\macros.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\color.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\effect.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\reset.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\style.rs
+
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\libanstyle-2b556aa606eb1036.rmeta: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\macros.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\color.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\effect.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\reset.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\style.rs
+
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\lib.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\macros.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\color.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\effect.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\reset.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\anstyle-1.0.13\src\style.rs:

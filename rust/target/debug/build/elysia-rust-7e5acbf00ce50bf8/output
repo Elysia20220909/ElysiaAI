@@ -1,0 +1,3 @@
+cargo:rustc-env=TARGET=x86_64-pc-windows-msvc
+cargo:rustc-link-search=native=C:\Program Files\LLVM\lib
+cargo:rerun-if-changed=build.rs

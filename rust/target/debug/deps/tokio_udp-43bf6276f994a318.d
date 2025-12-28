@@ -1,0 +1,11 @@
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\tokio_udp-43bf6276f994a318.d: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\frame.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\recv_dgram.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\send_dgram.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\socket.rs
+
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\libtokio_udp-43bf6276f994a318.rlib: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\frame.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\recv_dgram.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\send_dgram.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\socket.rs
+
+C:\Users\hosih\elysia-ai\rust\target\debug\deps\libtokio_udp-43bf6276f994a318.rmeta: C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\lib.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\frame.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\recv_dgram.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\send_dgram.rs C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\socket.rs
+
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\lib.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\frame.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\recv_dgram.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\send_dgram.rs:
+C:\Users\hosih\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\tokio-udp-0.1.6\src\socket.rs:
