@@ -27,13 +27,16 @@ type Board = Cell[][];
 type Player = 1 | 2; // 1:黒, 2:白
 type OthelloState = {
 	board: Board;
-	turn: Player;
+	turn: Player | number;
 	history: string[];
 	winner?: string;
 	passCount: number;
 	aiEnabled?: boolean;
 	aiLevel?: "random" | "strong" | "god";
 	userIds?: string[];
+	mode?: "othello" | "network";
+	nodes?: { id: string; connected: string[] }[];
+	agents?: { id: string; position: string; userId: string; score: number }[];
 };
 type Ranking = {
 	[userId: string]: { win: number; lose: number; draw: number };
@@ -264,51 +267,111 @@ const app = new Elysia()
 		set.headers["X-XSS-Protection"] = "1; mode=block";
 	})
 	.use(openapi({ path: "/swagger", references: fromTypes() }))
+	.get("/", () => ({ status: "ok", service: "elysia-game", version: 1 }))
 	.get("/game/state", () => state)
 	.post(
 		"/game/start",
 		({ body }) => {
-			state = {
-				board: Array.from({ length: 8 }, (_, y) =>
-					Array.from({ length: 8 }, (_, x) =>
-						(y === 3 && x === 3) || (y === 4 && x === 4)
-							? 2
-							: (y === 3 && x === 4) || (y === 4 && x === 3)
-								? 1
-								: 0,
+			// ネットワークゲーム（graph/agents）開始か、オセロ開始かを判定
+			if (body && body.nodes && body.agents) {
+				state = {
+					board: Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => 0)),
+					turn: 0,
+					history: [],
+					passCount: 0,
+					mode: "network",
+					nodes: body.nodes,
+					agents: body.agents,
+					userIds: body.agents.map((a: any) => a.userId),
+				};
+			} else {
+				state = {
+					board: Array.from({ length: 8 }, (_, y) =>
+						Array.from({ length: 8 }, (_, x) =>
+							(y === 3 && x === 3) || (y === 4 && x === 4)
+								? 2
+								: (y === 3 && x === 4) || (y === 4 && x === 3)
+									? 1
+									: 0,
+							),
 					),
-				),
-				turn: 1,
-				history: [],
-				passCount: 0,
-				aiEnabled: body && body.aiEnabled ? true : false,
-				aiLevel:
-					body && (body.aiLevel === "strong" || body.aiLevel === "god")
-						? body.aiLevel
-						: "random",
-				userIds: body?.userIds ? body.userIds : ["user1", "user2"],
-			};
-			clients.clear();
+					turn: 1,
+					history: [],
+					passCount: 0,
+					aiEnabled: body && body.aiEnabled ? true : false,
+					aiLevel:
+						body && (body.aiLevel === "strong" || body.aiLevel === "god")
+							? body.aiLevel
+							: "random",
+					userIds: body?.userIds ? body.userIds : ["user1", "user2"],
+					mode: "othello",
+				};
+			}
 			return state;
 		},
 		{
 			body: t.Optional(
 				t.Object({
-					aiEnabled: t.Boolean(),
-					aiLevel: t.String(),
-					userIds: t.Array(t.String()),
+					aiEnabled: t.Optional(t.Boolean()),
+					aiLevel: t.Optional(t.Union([t.Literal("random"), t.Literal("strong"), t.Literal("god")])),
+					userIds: t.Optional(t.Array(t.String())),
+					nodes: t.Optional(
+						t.Array(
+							t.Object({ id: t.String(), connected: t.Array(t.String()) }),
+						),
+					),
+					agents: t.Optional(
+						t.Array(
+							t.Object({
+								id: t.String(),
+								position: t.String(),
+								userId: t.String(),
+								score: t.Number(),
+							}),
+						),
+					),
 				}),
 			),
 		},
 	)
 	.post(
 		"/game/action",
-		({ body }) => {
+		({ body }: { body: any }) => {
+			// ネットワークゲームのアクション（エージェント移動）
+			if (body && body.agentId && body.to && body.userId && state.mode === "network" && state.agents && state.nodes) {
+				const currentTurn = Number(state.turn || 0);
+				const agentIndex = state.agents.findIndex((a) => a.id === body.agentId);
+				if (agentIndex === -1) return state;
+				const agent = state.agents[agentIndex];
+				// 手番ユーザー確認
+				if (agentIndex !== currentTurn) return state;
+				if (agent.userId !== body.userId) return state;
+				// 移動可能チェック
+				const node = state.nodes.find((n) => n.id === agent.position);
+				if (!node || !node.connected.includes(body.to)) {
+					state.history.push(`invalid move: ${agent.id} tried ${body.to}`);
+					return state;
+				}
+				// 移動実行 + スコア加算
+				agent.position = body.to;
+				agent.score = (agent.score || 0) + 1;
+				state.history.push(`${agent.id} moved to ${body.to}`);
+				// 勝者判定（10点）
+				if (agent.score >= 10) {
+					state.winner = agent.userId;
+					state.history.push(`Winner: ${agent.userId}`);
+				}
+				// 手番更新
+				state.turn = (currentTurn + 1) % state.agents.length;
+				clients.forEach((ws) => ws.send(JSON.stringify(state)));
+				return state;
+			}
 			if (state.winner) return state;
-			const { x, y, player } = body;
-			if (player !== state.turn) return state;
+			const { x, y, player } = body as { x: number; y: number; player: number };
+			const p = player as Player;
+			if (state.mode === "othello" && p !== state.turn) return state;
 			// 合法手判定と石を裏返す
-			const result = placeOthello(state.board, x, y, player);
+			const result = placeOthello(state.board, x, y, p);
 			if (!result.flipped) {
 				state.passCount++;
 				state.history.push(`不正な手/パス: (${x},${y}) by ${player}`);
@@ -330,7 +393,7 @@ const app = new Elysia()
 			state.history.push(
 				`Player ${player === 1 ? "黒" : "白"}: (${x},${y}) 反転${result.flipped}個${bonus ? " 角ボーナス+2" : ""}`,
 			);
-			state.turn = (player === 1 ? 2 : 1) as Player;
+			state.turn = (p === 1 ? 2 : 1) as Player;
 			state.passCount = 0;
 			// 勝敗判定
 			if (isGameOver(state.board)) {
@@ -359,8 +422,6 @@ const app = new Elysia()
 						ranking[u1].draw++;
 						ranking[u2].draw++;
 					}
-				}
-			}
 			clients.forEach((ws) => ws.send(JSON.stringify(state)));
 			// AI対戦
 			if (state.aiEnabled && !state.winner && state.turn === 2) {
@@ -582,7 +643,12 @@ const app = new Elysia()
 			return state;
 		},
 		{
-			body: t.Object({ x: t.Number(), y: t.Number(), player: t.Number() }),
+			body: t.Union([
+				// オセロ用ペイロード
+				t.Object({ x: t.Number(), y: t.Number(), player: t.Number() }),
+				// ネットワークゲーム用ペイロード
+				t.Object({ agentId: t.String(), to: t.String(), userId: t.String() }),
+			]),
 		},
 	);
 // Elysiaチェーン末尾にAPI宣言
@@ -669,3 +735,8 @@ app
 			} catch {}
 		},
 	});
+
+// サーバ起動（既定ポート: 3001）
+const GAME_PORT = Number(process.env.GAME_PORT || 3001);
+app.listen(GAME_PORT);
+console.log(`[game] Othello server listening on http://localhost:${GAME_PORT}`);
