@@ -106,7 +106,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.8",
+    "@biomejs/biome": "2.3.10",
     "@elysiajs/eden": "^1.4.5",
     "@playwright/test": "^1.57.0",
     "@types/bcryptjs": "^3.0.0",
