@@ -1,6 +1,7 @@
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import crypto from "node:crypto";
+import os from "node:os";
 import { metricsCollector } from "./lib/metrics";
 
 const app = express();
@@ -13,7 +14,22 @@ app.use(express.json());
 app.use((req: Request, res: Response, next: NextFunction) => {
 	res.setHeader("X-Content-Type-Options", "nosniff");
 	res.setHeader("X-Frame-Options", "DENY");
-	metricsCollector.incrementRequest(req.method, req.path, 0);
+	next();
+});
+
+// request timing + metrics capture
+app.use((req: Request, res: Response, next: NextFunction) => {
+	const start = process.hrtime.bigint();
+	res.on("finish", () => {
+		const durationNs = Number(process.hrtime.bigint() - start);
+		const durationSeconds = durationNs / 1_000_000_000;
+		const status = res.statusCode;
+		metricsCollector.incrementRequest(req.method, req.path, status);
+		metricsCollector.recordRequestDuration(req.method, req.path, durationSeconds);
+		if (status >= 400) {
+			metricsCollector.incrementError(req.method, req.path, String(status));
+		}
+	});
 	next();
 });
 
@@ -27,13 +43,156 @@ const refreshTokens = new Set<string>();
 const rateLimitCounter = new Map<string, number>();
 const RATE_LIMIT_THRESHOLD = 50;
 
+type HealthSnapshot = {
+	status: "healthy" | "degraded";
+	timestamp: string;
+	uptimeSeconds: number;
+	process: {
+		pid: number;
+		memory: {
+			rss: number;
+			heapUsed: number;
+			heapTotal: number;
+		};
+		loadAvg: {
+			one: number;
+			five: number;
+			fifteen: number;
+		};
+	};
+	services: {
+		redis: string;
+		fastapi: string;
+		ollama: string;
+	};
+	metrics: {
+		httpRequests: Array<{
+			label: string;
+			count: number;
+		}>;
+		latency: Array<{
+			label: string;
+			p50: number;
+			p95: number;
+			p99: number;
+			avg: number;
+		}>;
+		errors: Array<{
+			label: string;
+			count: number;
+		}>;
+		auth: {
+			success: number;
+			failure: number;
+		};
+		chatRequests: number;
+		rateLimitExceeded: number;
+		rag: {
+			count: number;
+			latency: {
+				avg: number;
+				p50: number;
+				p95: number;
+				p99: number;
+			};
+		};
+	};
+};
+
+function percentile(values: number[], p: number): number {
+	if (values.length === 0) return 0;
+	const sorted = [...values].sort((a, b) => a - b);
+	const idx = Math.min(sorted.length - 1, Math.floor(sorted.length * p));
+	return sorted[idx];
+}
+
+function buildHealthSnapshot(): HealthSnapshot {
+	const metrics = metricsCollector.getMetrics();
+	const now = new Date();
+	const uptimeSeconds = Math.max(1, Math.round(process.uptime()));
+	const memory = process.memoryUsage();
+	const [one, five, fifteen] = os.loadavg();
+
+	const httpRequests = Array.from(metrics.http_requests_total.entries()).map(
+		([key, count]) => ({
+			label: key,
+			count,
+		}),
+	);
+
+	const latency = Array.from(
+		metrics.http_request_duration_seconds.entries(),
+	).map(([key, durations]) => {
+		const avg = durations.reduce((a, b) => a + b, 0) / (durations.length || 1);
+		return {
+			label: key,
+			avg,
+			p50: percentile(durations, 0.5),
+			p95: percentile(durations, 0.95),
+			p99: percentile(durations, 0.99),
+		};
+	});
+
+	const errors = Array.from(metrics.http_errors_total.entries()).map(
+		([label, count]) => ({ label, count }),
+	);
+
+	const ragDurations = metrics.rag_query_duration_seconds || [];
+
+	return {
+		status: "healthy",
+		timestamp: now.toISOString(),
+		uptimeSeconds,
+		process: {
+			pid: process.pid,
+			memory: {
+				rss: memory.rss,
+				heapUsed: memory.heapUsed,
+				heapTotal: memory.heapTotal,
+			},
+			loadAvg: {
+				one: one || 0,
+				five: five || 0,
+				fifteen: fifteen || 0,
+			},
+		},
+		services: {
+			redis: "ok",
+			fastapi: "ok",
+			ollama: "ok",
+		},
+		metrics: {
+			httpRequests,
+			latency,
+			errors,
+			auth: {
+				success: metrics.auth_attempts_total.get("success") || 0,
+				failure: metrics.auth_attempts_total.get("failure") || 0,
+			},
+			chatRequests: metrics.chat_requests_total,
+			rateLimitExceeded: metrics.rate_limit_exceeded_total,
+			rag: {
+				count: metrics.rag_queries_total,
+				latency: {
+					avg:
+						ragDurations.reduce((a, b) => a + b, 0) /
+						(ragDurations.length || 1),
+					p50: percentile(ragDurations, 0.5),
+					p95: percentile(ragDurations, 0.95),
+					p99: percentile(ragDurations, 0.99),
+				},
+			},
+		},
+	};
+}
+
 const requireAuth = (req: Request, res: Response, next: NextFunction) => {
 	const header = req.headers.authorization;
-	if (!header || !header.startsWith("Bearer ")) {
-		return res.status(401).json({ error: "Unauthorized" });
-	}
-	const token = header.replace("Bearer ", "");
-	if (!activeTokens.has(token)) {
+	const queryToken = typeof req.query.token === "string" ? req.query.token : "";
+	const token = header?.startsWith("Bearer ")
+		? header.replace("Bearer ", "")
+		: queryToken;
+	if (!token || !activeTokens.has(token)) {
 		return res.status(401).json({ error: "Unauthorized" });
 	}
 	res.locals.token = token;
@@ -70,6 +229,35 @@ app.get("/health", (_req, res) => {
 			ollama: "ok",
 		},
 	});
+});
+
+app.get("/health/summary", requireAuth, (_req, res) => {
+	res.json(buildHealthSnapshot());
+});
+
+app.get("/health/stream", requireAuth, (_req, res) => {
+	metricsCollector.incrementConnections();
+	res.setHeader("Content-Type", "text/event-stream");
+	res.setHeader("Cache-Control", "no-cache");
+	res.setHeader("Connection", "keep-alive");
+	res.flushHeaders?.();
+
+	const sendSnapshot = () => {
+		const snapshot = buildHealthSnapshot();
+		res.write(`data: ${JSON.stringify(snapshot)}\n\n`);
+	};
+
+	const interval = setInterval(sendSnapshot, 1_000);
+	sendSnapshot();
+
+	const cleanup = () => {
+		clearInterval(interval);
+		metricsCollector.decrementConnections();
+		res.end();
+	};
+
+	res.on("close", cleanup);
+	res.on("error", cleanup);
 });
 
 app.get("/metrics", (_req, res) => {
