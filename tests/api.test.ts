@@ -234,6 +234,34 @@ describe("Chat API", () => {
 		token = data.accessToken;
 	});
 
+	it("should reject empty messages", async () => {
+		const response = await fetch(`${API_URL}/elysia-love`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`,
+			},
+			body: JSON.stringify({ messages: [] }),
+		});
+
+		expect(response.status).toBe(400);
+	});
+
+	it("should reject too many messages", async () => {
+		const response = await fetch(`${API_URL}/elysia-love`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`,
+			},
+			body: JSON.stringify({
+				messages: Array.from({ length: 10 }, () => ({ role: "user", content: "hello" })),
+			}),
+		});
+
+		expect(response.status).toBe(400);
+	});
+
 	it("should accept valid chat request", async () => {
 		const response = await fetch(`${API_URL}/elysia-love`, {
 			method: "POST",
