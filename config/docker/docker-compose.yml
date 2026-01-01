@@ -4,6 +4,23 @@ version: '3.8'
 # 1コマンドで全サービス起動: docker-compose up -d
 
 services:
+  elysia:
+    build:
+      context: ../..
+      dockerfile: config/docker/Dockerfile.production
+    container_name: elysia-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - redis
+      - fastapi
+    networks:
+      - elysia-network
+    profiles:
+      - app
+
   # ==================== Redis (レート制限用) ====================
   redis:
     image: redis:7-alpine
@@ -110,6 +127,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    profiles:
+      - extras
 
 volumes:
   ollama-data:
