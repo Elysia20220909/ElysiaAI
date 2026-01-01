@@ -206,8 +206,9 @@ class CronScheduler {
 	 */
 	listTasks() {
 		return Array.from(this.tasks.values()).map((task) => ({
+			id: task.name,
 			name: task.name,
-			cronTime: task.cronTime,
+			schedule: task.cronTime,
 			enabled: task.enabled,
 			nextRun: task.enabled ? task.job.nextDate().toJSDate() : null,
 		}));
