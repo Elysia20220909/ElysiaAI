@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elysia Ops Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <div class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <p class="text-sm text-gray-500">リアルタイム監視 / SSE</p>
+        <h1 class="text-2xl font-bold">Elysia Ops Dashboard</h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="text-sm text-gray-500">接続状態: <span id="stream-status" class="font-semibold text-red-600">未接続</span></div>
+        <button id="connect-btn" class="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">接続</button>
+        <button id="disconnect-btn" class="px-3 py-2 bg-gray-200 text-sm rounded hover:bg-gray-300">切断</button>
+      </div>
+    </header>
+
+    <section class="bg-white shadow rounded-lg p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm text-gray-500">ユーザー名</label>
+        <input id="username" class="mt-1 w-full border rounded px-3 py-2" value="elysia" placeholder="elysia" />
+      </div>
+      <div>
+        <label class="block text-sm text-gray-500">パスワード</label>
+        <input id="password" type="password" class="mt-1 w-full border rounded px-3 py-2" value="elysia-dev-password" placeholder="password" />
+      </div>
+      <div class="flex items-end gap-2">
+        <button id="login-btn" class="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">トークン取得</button>
+        <span id="login-status" class="text-sm text-gray-600"></span>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-white shadow rounded-lg p-4">
+        <p class="text-sm text-gray-500">稼働時間</p>
+        <p id="uptime" class="text-2xl font-semibold">--</p>
+      </div>
+      <div class="bg-white shadow rounded-lg p-4">
+        <p class="text-sm text-gray-500">メモリ (RSS)</p>
+        <p id="memory" class="text-2xl font-semibold">--</p>
+      </div>
+      <div class="bg-white shadow rounded-lg p-4">
+        <p class="text-sm text-gray-500">負荷平均 (1m)</p>
+        <p id="loadavg" class="text-2xl font-semibold">--</p>
+      </div>
+      <div class="bg-white shadow rounded-lg p-4">
+        <p class="text-sm text-gray-500">チャットリクエスト</p>
+        <p id="chat-requests" class="text-2xl font-semibold">--</p>
+      </div>
+    </section>
+
+    <section class="bg-white shadow rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-semibold">レイテンシ分布 (p95)</h2>
+        <span id="latency-updated" class="text-xs text-gray-500">--</span>
+      </div>
+      <canvas id="latency-chart" height="120"></canvas>
+    </section>
+
+    <section class="bg-white shadow rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-semibold">HTTP リクエスト</h2>
+        <span class="text-xs text-gray-500">method:path:status</span>
+      </div>
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-3 py-2 text-left">ラベル</th>
+              <th class="px-3 py-2 text-right">回数</th>
+            </tr>
+          </thead>
+          <tbody id="http-requests"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white shadow rounded-lg p-4">
+        <h2 class="text-lg font-semibold mb-2">認証</h2>
+        <p class="text-sm">成功: <span id="auth-success" class="font-semibold">0</span></p>
+        <p class="text-sm">失敗: <span id="auth-failure" class="font-semibold">0</span></p>
+        <p class="text-sm">Rate Limit: <span id="rate-limit" class="font-semibold">0</span></p>
+      </div>
+      <div class="bg-white shadow rounded-lg p-4">
+        <h2 class="text-lg font-semibold mb-2">RAG</h2>
+        <p class="text-sm">クエリ数: <span id="rag-count" class="font-semibold">0</span></p>
+        <p class="text-sm">p95: <span id="rag-p95" class="font-semibold">0</span>s</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const state = {
+      accessToken: '',
+      eventSource: null,
+      latencyChart: null,
+    };
+
+    function formatSeconds(sec) {
+      const s = Number(sec || 0);
+      if (Number.isNaN(s)) return '--';
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const r = Math.floor(s % 60);
+      return `${h}h ${m}m ${r}s`;
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes && bytes !== 0) return '--';
+      const units = ['B','KB','MB','GB'];
+      let v = bytes;
+      let i = 0;
+      while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+      return `${v.toFixed(1)} ${units[i]}`;
+    }
+
+    function updateStatus(label, ok) {
+      const el = document.getElementById(label);
+      if (!el) return;
+      el.textContent = ok ? '接続中' : '未接続';
+      el.className = ok ? 'font-semibold text-green-600' : 'font-semibold text-red-600';
+    }
+
+    function renderHttpRequests(list) {
+      const tbody = document.getElementById('http-requests');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      (list || []).sort((a,b) => b.count - a.count).slice(0, 20).forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="px-3 py-2 border-b">${item.label}</td><td class="px-3 py-2 border-b text-right">${item.count}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function ensureLatencyChart() {
+      if (state.latencyChart) return state.latencyChart;
+      const ctx = document.getElementById('latency-chart').getContext('2d');
+      state.latencyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [{
+            label: 'p95 (秒)',
+            data: [],
+            backgroundColor: 'rgba(59, 130, 246, 0.6)'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+      return state.latencyChart;
+    }
+
+    function updateLatencyChart(latency) {
+      const chart = ensureLatencyChart();
+      const sorted = (latency || []).sort((a,b) => b.p95 - a.p95).slice(0, 8);
+      chart.data.labels = sorted.map(x => x.label);
+      chart.data.datasets[0].data = sorted.map(x => Number(x.p95.toFixed(4)));
+      chart.update('none');
+    }
+
+    function applySnapshot(snapshot) {
+      if (!snapshot) return;
+      document.getElementById('uptime').textContent = formatSeconds(snapshot.uptimeSeconds);
+      document.getElementById('memory').textContent = formatBytes(snapshot.process.memory.rss);
+      document.getElementById('loadavg').textContent = snapshot.process.loadAvg.one.toFixed(2);
+      document.getElementById('chat-requests').textContent = snapshot.metrics.chatRequests;
+      document.getElementById('latency-updated').textContent = snapshot.timestamp;
+      document.getElementById('auth-success').textContent = snapshot.metrics.auth.success;
+      document.getElementById('auth-failure').textContent = snapshot.metrics.auth.failure;
+      document.getElementById('rate-limit').textContent = snapshot.metrics.rateLimitExceeded;
+      document.getElementById('rag-count').textContent = snapshot.metrics.rag.count;
+      document.getElementById('rag-p95').textContent = snapshot.metrics.rag.latency.p95.toFixed(4);
+      renderHttpRequests(snapshot.metrics.httpRequests);
+      updateLatencyChart(snapshot.metrics.latency);
+    }
+
+    async function login() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const status = document.getElementById('login-status');
+      status.textContent = '要求中...';
+      try {
+        const res = await fetch('/auth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        if (!res.ok) throw new Error('認証失敗');
+        const data = await res.json();
+        state.accessToken = data.accessToken;
+        status.textContent = '取得成功';
+        status.className = 'text-sm text-green-600';
+        return true;
+      } catch (err) {
+        status.textContent = err.message;
+        status.className = 'text-sm text-red-600';
+        return false;
+      }
+    }
+
+    function disconnect() {
+      if (state.eventSource) {
+        state.eventSource.close();
+        state.eventSource = null;
+      }
+      updateStatus('stream-status', false);
+    }
+
+    async function connect() {
+      if (!state.accessToken) {
+        const ok = await login();
+        if (!ok) return;
+      }
+      disconnect();
+      const url = `/health/stream?token=${encodeURIComponent(state.accessToken)}`;
+      const es = new EventSource(url);
+      state.eventSource = es;
+      es.onopen = () => updateStatus('stream-status', true);
+      es.onerror = () => updateStatus('stream-status', false);
+      es.onmessage = (evt) => {
+        try {
+          const snapshot = JSON.parse(evt.data);
+          applySnapshot(snapshot);
+        } catch (_) {
+          /* noop */
+        }
+      };
+    }
+
+    document.getElementById('login-btn').addEventListener('click', login);
+    document.getElementById('connect-btn').addEventListener('click', connect);
+    document.getElementById('disconnect-btn').addEventListener('click', disconnect);
+  </script>
+</body>
+</html>
