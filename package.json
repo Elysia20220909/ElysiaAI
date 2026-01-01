@@ -68,7 +68,7 @@
     "gcp:deploy": "cd cloud/gcp && bash deploy.sh"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.86",
+    "@ai-sdk/openai": "^3.0.1",
     "@elysiajs/cors": "^1.4.0",
     "@elysiajs/html": "^1.4.0",
     "@elysiajs/openapi": "^1.4.11",
