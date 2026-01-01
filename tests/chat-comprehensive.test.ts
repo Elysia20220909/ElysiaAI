@@ -1,4 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { ensureTestServer } from "./helpers/test-server";
+
+ensureTestServer();
 
 /**
  * チャット機能の包括的テスト

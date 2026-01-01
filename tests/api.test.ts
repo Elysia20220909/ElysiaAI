@@ -1,7 +1,9 @@
 // Comprehensive Test Suite - Unit Tests
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { treaty } from "@elysiajs/eden";
-import type app from "../src/index";
+import { ensureTestServer } from "./helpers/test-server";
+
+ensureTestServer();
 
 type App = typeof app;
 const API_URL = "http://localhost:3000";
