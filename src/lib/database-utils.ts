@@ -5,12 +5,71 @@
 
 import { Database } from "bun:sqlite";
 import { randomUUID } from "node:crypto";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import bcryptjs from "bcryptjs";
 
 // SQLite データベース接続
 const dbPath =
 	process.env.DATABASE_URL?.replace("file:", "") || "./prisma/dev.db";
-const db = new Database(dbPath);
+const resolvedPath = path.resolve(dbPath);
+fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
+const db = new Database(resolvedPath);
+
+// Minimal schema setup for tests
+db.exec(`
+CREATE TABLE IF NOT EXISTS users (
+	id TEXT PRIMARY KEY,
+	username TEXT UNIQUE,
+	passwordHash TEXT,
+	role TEXT,
+	createdAt TEXT,
+	updatedAt TEXT
+);
+CREATE TABLE IF NOT EXISTS chat_sessions (
+	id TEXT PRIMARY KEY,
+	userId TEXT,
+	mode TEXT,
+	createdAt TEXT,
+	updatedAt TEXT
+);
+CREATE TABLE IF NOT EXISTS messages (
+	id TEXT PRIMARY KEY,
+	sessionId TEXT,
+	role TEXT,
+	content TEXT,
+	createdAt TEXT
+);
+CREATE TABLE IF NOT EXISTS feedbacks (
+	id TEXT PRIMARY KEY,
+	query TEXT,
+	answer TEXT,
+	rating TEXT,
+	userId TEXT,
+	reason TEXT,
+	createdAt TEXT
+);
+CREATE TABLE IF NOT EXISTS knowledge_base (
+	id TEXT PRIMARY KEY,
+	content TEXT,
+	topic TEXT,
+	verified INTEGER DEFAULT 0,
+	createdAt TEXT
+);
+CREATE TABLE IF NOT EXISTS voice_logs (
+	id TEXT PRIMARY KEY,
+	username TEXT,
+	voiceText TEXT,
+	language TEXT,
+	synthesisType TEXT,
+	createdAt TEXT
+);
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+	token TEXT PRIMARY KEY,
+	userId TEXT,
+	expiresAt TEXT
+);
+`);
 
 // ============ ユーザー操作 ============
 
@@ -360,5 +419,16 @@ export async function clearTestData(): Promise<void> {
 export function disconnect(): void {
 	db.close();
 }
+
+export const prisma = {
+	$queryRaw: async (
+		strings: TemplateStringsArray | string,
+		...params: unknown[]
+	) => {
+		const sql = Array.isArray(strings) ? strings.join("?") : strings;
+		const stmt = db.prepare(sql);
+		return params.length ? stmt.all(...params) : stmt.all();
+	},
+};
 
 export { db };
