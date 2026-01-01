@@ -1,16 +1,13 @@
 #!/usr/bin/env bun
 // シンプルなサーバー起動スクリプト（Bunバグ回避用）
 
-import app from "./src/index";
+import { startServer } from "./src/index";
 
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
 
-// @ts-expect-error
 console.log(`🌸 Starting Elysia AI Server on port ${PORT}...`);
-
-app.listen(PORT, (server) => {
-	console.log(`✅ Server is running at ${server.url}`);
-	console.log(`📚 Swagger: ${server.url}/swagger`);
-	console.log(`🏥 Health: ${server.url}/health`);
-	console.log(`📊 Metrics: ${server.url}/metrics`);
-});
+startServer(PORT);
+console.log(`✅ Server is running at http://localhost:${PORT}`);
+console.log(`📚 Swagger: http://localhost:${PORT}/swagger`);
+console.log(`🏥 Health: http://localhost:${PORT}/health`);
+console.log(`📊 Metrics: http://localhost:${PORT}/metrics`);
