@@ -25,11 +25,6 @@ describe("Prisma Database Integration Tests", () => {
 		console.log("✅ テストデータクリア完了");
 	});
 
-	afterAll(async () => {
-		// Prisma切断
-		await disconnect();
-		console.log("✅ テストクリーンアップ完了");
-	});
 
 	// ========== ユーザー認証テスト ==========
 
