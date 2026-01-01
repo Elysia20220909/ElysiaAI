@@ -2,6 +2,9 @@ import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import crypto from "node:crypto";
 import os from "node:os";
+import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 import { metricsCollector } from "./lib/metrics";
 
 const app = express();
@@ -41,7 +44,30 @@ const validPassword = envPassword || "elysia-dev-password";
 const activeTokens = new Set<string>();
 const refreshTokens = new Set<string>();
 const rateLimitCounter = new Map<string, number>();
-const RATE_LIMIT_THRESHOLD = 50;
+let rateLimitThreshold = 50;
+
+const ALERT_WEBHOOK_URL = process.env.ALERT_WEBHOOK_URL || "";
+const ALERT_DEBOUNCE_MS = 60_000;
+const alertLastSent = new Map<string, number>();
+
+type Alert = {
+	key: string;
+	severity: "info" | "warn" | "critical";
+	message: string;
+	value?: number;
+};
+
+type AiEvent = {
+	id: string;
+	timestamp: string;
+	severity: "info" | "warn" | "high";
+	issues: string[];
+	messages: string[];
+	ragContext?: string;
+};
+
+const aiEvents: AiEvent[] = [];
+const AI_EVENT_LIMIT = 50;
 
 type HealthSnapshot = {
 	status: "healthy" | "degraded";
@@ -97,6 +123,16 @@ type HealthSnapshot = {
 			};
 		};
 	};
+	alerts: Alert[];
+	aiSummary: {
+		recentHigh: number;
+		recentWarn: number;
+		total: number;
+	};
+	selfHealing: {
+		rateLimit: number;
+		mode: "normal" | "protect";
+	};
 };
 
 function percentile(values: number[], p: number): number {
@@ -104,6 +140,94 @@ function percentile(values: number[], p: number): number {
 	const sorted = [...values].sort((a, b) => a - b);
 	const idx = Math.min(sorted.length - 1, Math.floor(sorted.length * p));
 	return sorted[idx];
+}
+
+function detectPromptInjection(messages: string[]): { issues: string[]; severity: AiEvent["severity"] } {
+	const lowerJoined = messages.join("\n").toLowerCase();
+	const issues: string[] = [];
+	if (/ignore (all )?previous/i.test(lowerJoined)) issues.push("指示無効化の試み");
+	if (/system prompt|developer prompt/i.test(lowerJoined)) issues.push("システムプロンプト参照");
+	if (/password|api[- ]?key/i.test(lowerJoined)) issues.push("秘密情報要求");
+	if (/drop\s+table|union\s+select/i.test(lowerJoined)) issues.push("SQL らしき注入");
+	const severity: AiEvent["severity"] = issues.length >= 2 ? "high" : issues.length === 1 ? "warn" : "info";
+	return { issues, severity };
+}
+
+function recordAiEvent(event: AiEvent) {
+	aiEvents.unshift(event);
+	if (aiEvents.length > AI_EVENT_LIMIT) aiEvents.pop();
+}
+
+async function sendAlertWebhook(alerts: Alert[], snapshot: HealthSnapshot) {
+	if (!ALERT_WEBHOOK_URL || alerts.length === 0) return;
+	const now = Date.now();
+	const deduped = alerts.filter((a) => {
+		const last = alertLastSent.get(a.key) || 0;
+		if (now - last < ALERT_DEBOUNCE_MS) return false;
+		alertLastSent.set(a.key, now);
+		return true;
+	});
+	if (deduped.length === 0) return;
+	try {
+		await fetch(ALERT_WEBHOOK_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				source: "elysia-ops",
+				timestamp: snapshot.timestamp,
+				alerts: deduped,
+				uptimeSeconds: snapshot.uptimeSeconds,
+				selfHealing: snapshot.selfHealing,
+			}),
+		});
+	} catch (error) {
+		console.error("webhook send failed", error);
+	}
+}
+
+function evaluateAlerts(snapshot: HealthSnapshot): Alert[] {
+	const alerts: Alert[] = [];
+	const worstLatency = snapshot.metrics.latency.reduce(
+		(max, item) => Math.max(max, item.p95),
+		0,
+	);
+	if (worstLatency > 1.2) {
+		alerts.push({
+			key: "latency:p95",
+			severity: worstLatency > 2 ? "critical" : "warn",
+			message: `高レイテンシ検出 (p95=${worstLatency.toFixed(2)}s)`,
+			value: worstLatency,
+		});
+	}
+	const totalErrors = snapshot.metrics.errors.reduce((a, b) => a + b.count, 0);
+	if (totalErrors > 5) {
+		alerts.push({
+			key: "errors:total",
+			severity: totalErrors > 20 ? "critical" : "warn",
+			message: `エラー増加 (${totalErrors})`,
+			value: totalErrors,
+		});
+	}
+	if (snapshot.process.loadAvg.one > 1.5) {
+		alerts.push({
+			key: "loadavg:1m",
+			severity: snapshot.process.loadAvg.one > 2.5 ? "critical" : "warn",
+			message: `負荷平均上昇 (1m=${snapshot.process.loadAvg.one.toFixed(2)})`,
+			value: snapshot.process.loadAvg.one,
+		});
+	}
+	return alerts;
+}
+
+function applySelfHealing(snapshot: HealthSnapshot, alerts: Alert[]): HealthSnapshot["selfHealing"] {
+	const hasCritical = alerts.some((a) => a.severity === "critical");
+	const hasWarn = alerts.some((a) => a.severity === "warn");
+	if (hasCritical || hasWarn) {
+		rateLimitThreshold = 30;
+		return { rateLimit: rateLimitThreshold, mode: "protect" };
+	}
+	rateLimitThreshold = 50;
+	return { rateLimit: rateLimitThreshold, mode: "normal" };
 }
 
 function buildHealthSnapshot(): HealthSnapshot {
@@ -139,7 +263,13 @@ function buildHealthSnapshot(): HealthSnapshot {
 
 	const ragDurations = metrics.rag_query_duration_seconds || [];
 
-	return {
+	const aiSummary = {
+		recentHigh: aiEvents.filter((e) => e.severity === "high").length,
+		recentWarn: aiEvents.filter((e) => e.severity === "warn").length,
+		total: aiEvents.length,
+	};
+
+	const snapshot: HealthSnapshot = {
 		status: "healthy",
 		timestamp: now.toISOString(),
 		uptimeSeconds,
@@ -183,7 +313,19 @@ function buildHealthSnapshot(): HealthSnapshot {
 				},
 			},
 		},
+		alerts: [],
+		aiSummary,
+		selfHealing: { rateLimit: rateLimitThreshold, mode: "normal" },
 	};
+
+	const alerts = evaluateAlerts(snapshot);
+	snapshot.alerts = alerts;
+	snapshot.selfHealing = applySelfHealing(snapshot, alerts);
+	if (alerts.some((a) => a.severity === "critical")) {
+		snapshot.status = "degraded";
+	}
+	void sendAlertWebhook(alerts, snapshot);
+	return snapshot;
 }
 
 const requireAuth = (req: Request, res: Response, next: NextFunction) => {
@@ -203,22 +345,22 @@ function applyRateLimit(key: string): boolean {
 	const current = rateLimitCounter.get(key) || 0;
 	const next = current + 1;
 	rateLimitCounter.set(key, next);
-	if (next > RATE_LIMIT_THRESHOLD) {
+	if (next > rateLimitThreshold) {
 		metricsCollector.incrementRateLimit();
 		return true;
 	}
 	return false;
 }
 
-app.get("/", (_req, res) => {
+app.get("/", (_req: Request, res: Response) => {
 	res.status(200).type("text/html").send("<html><body><h1>Elysia AI</h1></body></html>");
 });
 
-app.get("/ping", (_req, res) => {
+app.get("/ping", (_req: Request, res: Response) => {
 	res.json({ ok: true });
 });
 
-app.get("/health", (_req, res) => {
+app.get("/health", (_req: Request, res: Response) => {
 	res.json({
 		status: "healthy",
 		uptime: Math.max(1, Math.round(process.uptime())),
@@ -231,11 +373,11 @@ app.get("/health", (_req, res) => {
 	});
 });
 
-app.get("/health/summary", requireAuth, (_req, res) => {
+app.get("/health/summary", requireAuth, (_req: Request, res: Response) => {
 	res.json(buildHealthSnapshot());
 });
 
-app.get("/health/stream", requireAuth, (_req, res) => {
+app.get("/health/stream", requireAuth, (_req: Request, res: Response) => {
 	metricsCollector.incrementConnections();
 	res.setHeader("Content-Type", "text/event-stream");
 	res.setHeader("Cache-Control", "no-cache");
@@ -260,11 +402,68 @@ app.get("/health/stream", requireAuth, (_req, res) => {
 	res.on("error", cleanup);
 });
 
-app.get("/metrics", (_req, res) => {
+app.get("/metrics", (_req: Request, res: Response) => {
 	res.type("text/plain").send(metricsCollector.toPrometheusFormat());
 });
 
-app.post("/auth/token", (req, res) => {
+app.get("/diagnostics/ai", requireAuth, (_req: Request, res: Response) => {
+	res.json({ events: aiEvents.slice(0, 20) });
+});
+
+app.get("/diagnostics/security", requireAuth, (_req: Request, res: Response) => {
+	const warnings: string[] = [];
+	if (!envUsername || !envPassword) {
+		warnings.push("AUTH_USERNAME/AUTH_PASSWORD が未設定です");
+	}
+	if (!ALERT_WEBHOOK_URL) {
+		warnings.push("ALERT_WEBHOOK_URL が未設定のため外部通知なし");
+	}
+	res.json({
+		rateLimitThreshold,
+		jwtConfigured: Boolean(envUsername && envPassword),
+		alertsWebhookEnabled: Boolean(ALERT_WEBHOOK_URL),
+		warnings,
+		redis: "ok",
+		fastapi: "ok",
+		ollama: "ok",
+	});
+});
+
+app.post("/ops/locust/run", requireAuth, (req: Request, res: Response) => {
+	const users = Number(req.body?.users || 10);
+	const spawnRate = Number(req.body?.spawnRate || 2);
+	const duration = String(req.body?.duration || "1m");
+	const host = String(req.body?.host || "http://localhost:3000");
+	const jobId = crypto.randomUUID();
+	const logsDir = path.join(process.cwd(), "logs");
+	if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
+	const logFile = path.join(logsDir, `locust-${jobId}.log`);
+
+	const args = [
+		"locustfile.py",
+		"--headless",
+		"-u",
+		String(users),
+		"-r",
+		String(spawnRate),
+		"-t",
+		duration,
+		"--host",
+		host,
+	];
+
+	const child = spawn("python", args, { cwd: process.cwd(), stdio: ["ignore", "pipe", "pipe"] });
+	child.stdout.pipe(fs.createWriteStream(logFile));
+	child.stderr.pipe(fs.createWriteStream(logFile, { flags: "a" }));
+
+	child.on("error", (error) => {
+		console.error("locust spawn error", error);
+	});
+
+	res.json({ jobId, logFile });
+});
+
+app.post("/auth/token", (req: Request, res: Response) => {
 	const { username, password } = req.body || {};
 	const matchesDefault = username === "elysia" && password === "elysia-dev-password";
 	const matchesEnv = username === validUsername && password === validPassword;
@@ -280,7 +479,7 @@ app.post("/auth/token", (req, res) => {
 	return res.status(401).json({ error: "Invalid credentials" });
 });
 
-app.post("/auth/refresh", (req, res) => {
+app.post("/auth/refresh", (req: Request, res: Response) => {
 	const { refreshToken } = req.body || {};
 	if (!refreshToken || !refreshTokens.has(refreshToken)) {
 		return res.status(401).json({ error: "Invalid refresh token" });
@@ -290,13 +489,13 @@ app.post("/auth/refresh", (req, res) => {
 	return res.json({ accessToken, expiresIn: 900 });
 });
 
-app.post("/auth/logout", (req, res) => {
+app.post("/auth/logout", (req: Request, res: Response) => {
 	const { refreshToken } = req.body || {};
 	if (refreshToken) refreshTokens.delete(refreshToken);
 	return res.json({ ok: true });
 });
 
-app.post("/feedback", requireAuth, (req, res) => {
+app.post("/feedback", requireAuth, (req: Request, res: Response) => {
 	const { query, answer, rating } = req.body || {};
 	if (!query || typeof query !== "string" || query.length > 400) {
 		return res.status(400).json({ error: "Invalid query" });
@@ -311,7 +510,7 @@ app.post("/feedback", requireAuth, (req, res) => {
 	return res.json({ ok: true });
 });
 
-app.post("/elysia-love", requireAuth, (req, res) => {
+app.post("/elysia-love", requireAuth, (req: Request, res: Response) => {
 	const token = res.locals.token as string;
 	const { messages, mode = "sweet" } = req.body || {};
 	if (!Array.isArray(messages) || messages.length === 0) {
@@ -334,6 +533,16 @@ app.post("/elysia-love", requireAuth, (req, res) => {
 		return res.status(429).json({ error: "Rate limit exceeded" });
 	}
 
+	const { issues, severity } = detectPromptInjection(contents);
+	recordAiEvent({
+		id: crypto.randomUUID(),
+		timestamp: new Date().toISOString(),
+		severity,
+		issues,
+		messages: contents,
+		ragContext: typeof req.body?.ragContext === "string" ? req.body.ragContext : undefined,
+	});
+
 	metricsCollector.incrementChatRequests();
 	res.setHeader("Content-Type", "text/event-stream");
 	res.setHeader("Cache-Control", "no-cache");
@@ -342,11 +551,11 @@ app.post("/elysia-love", requireAuth, (req, res) => {
 	res.end();
 });
 
-app.get("/swagger", (_req, res) => {
+app.get("/swagger", (_req: Request, res: Response) => {
 	res.status(200).type("text/html").send("<html>swagger</html>");
 });
 
-app.get("/swagger/json", (_req, res) => {
+app.get("/swagger/json", (_req: Request, res: Response) => {
 	res.json({
 		openapi: "3.0.0",
 		info: { title: "Elysia AI", version: "1.0.0" },
@@ -354,7 +563,7 @@ app.get("/swagger/json", (_req, res) => {
 	});
 });
 
-app.use((req, res) => {
+app.use((req: Request, res: Response) => {
 	res.status(404).json({ error: "Not found" });
 });
 
