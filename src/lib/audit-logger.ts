@@ -277,7 +277,7 @@ class AuditLoggerService {
 				log.method,
 				log.path,
 				log.ipAddress,
-				log.statusCode.toString(),
+				(log.statusCode ?? 200).toString(),
 			]);
 
 			return [headers.join(","), ...rows.map((row) => row.join(","))].join(
