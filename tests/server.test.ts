@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import axios from "axios";
+import { ensureTestServer } from "./helpers/test-server";
 
 const BASE_URL = "http://localhost:3000";
 const RAG_URL = "http://localhost:8000";
@@ -8,7 +9,7 @@ describe("Elysia AI Server Tests", () => {
 	beforeAll(async () => {
 		// サーバーを起動
 		console.log("🚀 Starting test server...");
-		// Note: 実際の環境ではサーバーが既に起動していることを想定
+		ensureTestServer();
 	});
 
 	afterAll(async () => {
@@ -45,13 +46,28 @@ describe("Elysia AI Server Tests", () => {
 
 	test("Chat endpoint accepts POST requests", async () => {
 		try {
+			const auth = await axios.post(
+				`${BASE_URL}/auth/token`,
+				{
+					username: process.env.AUTH_USERNAME || "elysia",
+					password: process.env.AUTH_PASSWORD || "elysia-dev-password",
+				},
+				{
+					validateStatus: () => true,
+				},
+			);
+			const token = auth.data?.accessToken;
+
 			const response = await axios.post(
 				`${BASE_URL}/elysia-love`,
 				{
 					messages: [{ role: "user", content: "こんにちは" }],
 				},
 				{
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+						...(token ? { Authorization: `Bearer ${token}` } : {}),
+					},
 					timeout: 30000,
 					validateStatus: () => true, // すべてのステータスコードを受け入れ
 				},
