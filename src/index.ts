@@ -6,6 +6,9 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { metricsCollector } from "./lib/metrics";
+import { multiModelEnsemble } from "./lib/multi-model-ensemble";
+import type { EnsembleResponse } from "./lib/multi-model-ensemble";
+import { validateChatPayload, validateFeedbackPayload } from "./lib/validation";
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -496,36 +499,26 @@ app.post("/auth/logout", (req: Request, res: Response) => {
 });
 
 app.post("/feedback", requireAuth, (req: Request, res: Response) => {
-	const { query, answer, rating } = req.body || {};
-	if (!query || typeof query !== "string" || query.length > 400) {
-		return res.status(400).json({ error: "Invalid query" });
-	}
-	if (!answer || typeof answer !== "string") {
-		return res.status(400).json({ error: "Invalid answer" });
-	}
-	if (!rating || !["up", "down"].includes(rating)) {
-		return res.status(400).json({ error: "Invalid rating" });
+	const validation = validateFeedbackPayload(req.body);
+	if (!validation.ok) {
+		return res.status(validation.status ?? 400).json({ error: validation.error });
 	}
 	metricsCollector.incrementFeedback();
 	return res.json({ ok: true });
 });
 
-app.post("/elysia-love", requireAuth, (req: Request, res: Response) => {
+app.post("/elysia-love", requireAuth, async (req: Request, res: Response) => {
 	const token = res.locals.token as string;
-	const { messages, mode = "sweet" } = req.body || {};
-	if (!Array.isArray(messages) || messages.length === 0) {
-		return res.status(400).json({ error: "messages required" });
+	const validation = validateChatPayload(req.body);
+	if (!validation.ok) {
+		return res.status(validation.status ?? 400).json({ error: validation.error });
 	}
-	if (messages.length > 8) {
-		return res.status(400).json({ error: "too many messages" });
-	}
-	const contents = messages.map((m) => (m?.content as string) || "");
-	if (contents.some((c) => !c || c.trim().length === 0)) {
-		return res.status(400).json({ error: "empty message" });
-	}
-	if (contents.some((c) => c.length > 400)) {
-		return res.status(400).json({ error: "message too long" });
-	}
+
+	const contents = validation.value.messages;
+	const mode = validation.value.mode ?? "sweet";
+	const useEnsemble = validation.value.useEnsemble;
+	const ensembleStrategy = validation.value.ensembleStrategy;
+
 	if (contents.some((c) => /drop\s+table/i.test(c))) {
 		return res.status(500).json({ error: "Dangerous content detected" });
 	}
@@ -540,19 +533,83 @@ app.post("/elysia-love", requireAuth, (req: Request, res: Response) => {
 		severity,
 		issues,
 		messages: contents,
-		ragContext: typeof req.body?.ragContext === "string" ? req.body.ragContext : undefined,
+		ragContext: validation.value.ragContext,
 	});
 
 	metricsCollector.incrementChatRequests();
 	res.setHeader("Content-Type", "text/event-stream");
 	res.setHeader("Cache-Control", "no-cache");
 	res.setHeader("X-Elysia-Mode", mode);
+
+	// マルチモデルアンサンブルが有効な場合
+	if (useEnsemble) {
+		try {
+			const lastUserMessage = contents[contents.length - 1];
+			const ensembleResult = await multiModelEnsemble.execute(
+				lastUserMessage,
+				ensembleStrategy as "quality" | "speed" | "consensus",
+				{ timeout: 25000, minModels: 1, useCache: true }
+			);
+
+			res.setHeader("X-Elysia-Ensemble-Model", ensembleResult.selectedModel);
+			res.setHeader("X-Elysia-Ensemble-Confidence", ensembleResult.confidence.toFixed(2));
+			res.setHeader("X-Elysia-Ensemble-Time", String(ensembleResult.executionTimeMs));
+
+			res.write(`data: ${JSON.stringify({
+				reply: ensembleResult.selectedResponse,
+				ensemble: {
+					model: ensembleResult.selectedModel,
+					confidence: ensembleResult.confidence,
+					allModels: ensembleResult.allResponses.map(r => r.model),
+					strategy: ensembleResult.strategy
+				}
+			})}\n\n`);
+			return res.end();
+		} catch (error) {
+			console.error("Ensemble execution failed", error);
+			// フォールバック: 通常のシングルモデル応答
+			res.write(`data: ${JSON.stringify({ reply: "アンサンブル実行に失敗しました。通常モードで応答します。" })}\n\n`);
+		}
+	}
+
+	// 通常のシングルモデル応答
 	res.write(`data: ${JSON.stringify({ reply: "こんにちは！" })}\n\n`);
 	res.end();
 });
 
 app.get("/swagger", (_req: Request, res: Response) => {
 	res.status(200).type("text/html").send("<html>swagger</html>");
+});
+
+// アンサンブル統計エンドポイント
+app.get("/ensemble/stats", requireAuth, (_req: Request, res: Response) => {
+	const stats = multiModelEnsemble.getStats();
+	const models = multiModelEnsemble.getModels();
+	res.json({
+		models: models.map(m => ({
+			name: m.name,
+			endpoint: m.endpoint,
+			enabled: m.enabled,
+			weight: m.weight,
+			timeout: m.timeout
+		})),
+		stats
+	});
+});
+
+// アンサンブルモデル設定更新
+app.post("/ensemble/config", requireAuth, (req: Request, res: Response) => {
+	const { modelName, enabled, weight, timeout } = req.body || {};
+	if (!modelName || typeof modelName !== "string") {
+		return res.status(400).json({ error: "modelName required" });
+	}
+	const updates: Record<string, unknown> = {};
+	if (typeof enabled === "boolean") updates.enabled = enabled;
+	if (typeof weight === "number" && weight > 0) updates.weight = weight;
+	if (typeof timeout === "number" && timeout > 0) updates.timeout = timeout;
+
+	multiModelEnsemble.updateModelConfig(modelName, updates);
+	res.json({ ok: true, modelName, updates });
 });
 
 app.get("/swagger/json", (_req: Request, res: Response) => {

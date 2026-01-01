@@ -183,3 +183,12 @@
 {"id":"audit-1767267297299-7","timestamp":"2026-01-01T11:34:57.299Z","userId":"user123","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test","statusCode":200}
 {"id":"audit-1767267297365-8","timestamp":"2026-01-01T11:34:57.365Z","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test","statusCode":200}
 {"id":"audit-1767267297371-9","timestamp":"2026-01-01T11:34:57.371Z","action":"UPDATE","resource":"feedback","resourceId":"456","method":"PUT","path":"/feedback/456","ipAddress":"127.0.0.1","userAgent":"test","statusCode":200}
+{"id":"audit-1767267301187-1","timestamp":"2026-01-01T11:35:01.187Z","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1767267301188-2","timestamp":"2026-01-01T11:35:01.188Z","userId":"testuser","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1767267301189-3","timestamp":"2026-01-01T11:35:01.189Z","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1767267301189-4","timestamp":"2026-01-01T11:35:01.189Z","action":"CREATE","resource":"test","method":"POST","path":"/test","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":201}
+{"id":"audit-1767267301189-5","timestamp":"2026-01-01T11:35:01.189Z","action":"READ","resource":"feedback","resourceId":"123","method":"GET","path":"/feedback/123","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1767267301190-6","timestamp":"2026-01-01T11:35:01.190Z","action":"AUTH","resource":"auth","method":"POST","path":"/auth/login","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1767267301190-7","timestamp":"2026-01-01T11:35:01.190Z","userId":"user123","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test","statusCode":200}
+{"id":"audit-1767267301246-8","timestamp":"2026-01-01T11:35:01.246Z","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test","statusCode":200}
+{"id":"audit-1767267301256-9","timestamp":"2026-01-01T11:35:01.256Z","action":"UPDATE","resource":"feedback","resourceId":"456","method":"PUT","path":"/feedback/456","ipAddress":"127.0.0.1","userAgent":"test","statusCode":200}

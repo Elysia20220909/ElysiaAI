@@ -157,6 +157,19 @@
         <p class="text-sm">p95: <span id="rag-p95" class="font-semibold">0</span>s</p>
       </div>
     </section>
+
+    <section class="bg-white shadow rounded-lg p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-semibold">マルチモデルアンサンブル</h2>
+        <button id="refresh-ensemble" class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded">更新</button>
+      </div>
+      <div class="grid grid-cols-1 gap-3">
+        <div id="ensemble-models" class="space-y-2">
+          <p class="text-sm text-gray-500">読込中...</p>
+        </div>
+        <div id="ensemble-stats" class="mt-3 space-y-1 text-sm text-gray-600"></div>
+      </div>
+    </section>
   </div>
 
   <script>
@@ -341,6 +354,53 @@
       }
     }
 
+    async function loadEnsembleStats() {
+      if (!state.accessToken) return;
+      try {
+        const res = await fetch('/ensemble/stats', {
+          headers: { Authorization: `Bearer ${state.accessToken}` }
+        });
+        if (!res.ok) throw new Error('アンサンブル統計取得失敗');
+        const data = await res.json();
+        renderEnsemble(data);
+      } catch (err) {
+        console.warn('Ensemble stats:', err);
+      }
+    }
+
+    function renderEnsemble(data) {
+      const modelsDiv = document.getElementById('ensemble-models');
+      const statsDiv = document.getElementById('ensemble-stats');
+
+      if (!data.models || data.models.length === 0) {
+        modelsDiv.innerHTML = '<p class="text-sm text-gray-500">モデル未設定</p>';
+        return;
+      }
+
+      modelsDiv.innerHTML = data.models.map(m => `
+        <div class="p-3 border rounded ${m.enabled ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-sm">${m.name}</span>
+            <span class="text-xs px-2 py-1 rounded ${m.enabled ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'}">${m.enabled ? '有効' : '無効'}</span>
+          </div>
+          <p class="text-xs text-gray-600 mt-1">重み: ${m.weight} | タイムアウト: ${m.timeout}ms</p>
+          <p class="text-xs text-gray-500 truncate">${m.endpoint}</p>
+        </div>
+      `).join('');
+
+      if (data.stats && data.stats.length > 0) {
+        statsDiv.innerHTML = '<h3 class="font-semibold text-sm mb-2">パフォーマンス統計</h3>' +
+          data.stats.map(s => `
+            <div class="flex items-center justify-between text-xs">
+              <span>${s.model}</span>
+              <span>成功率: ${(s.successRate * 100).toFixed(1)}% | 平均: ${s.avgLatencyMs}ms | 回数: ${s.totalRequests}</span>
+            </div>
+          `).join('');
+      } else {
+        statsDiv.innerHTML = '<p class="text-xs text-gray-500">統計なし（未実行）</p>';
+      }
+    }
+
     async function runLocust() {
       if (!state.accessToken) {
         const ok = await login();
@@ -406,8 +466,11 @@
     document.getElementById('connect-btn').addEventListener('click', connect);
     document.getElementById('disconnect-btn').addEventListener('click', disconnect);
     document.getElementById('refresh-ai').addEventListener('click', loadAiDiagnostics);
+    document.getElementById('refresh-ensemble').addEventListener('click', loadEnsembleStats);
     document.getElementById('locust-run').addEventListener('click', runLocust);
     setInterval(loadAiDiagnostics, 5000);
+    setInterval(loadEnsembleStats, 10000);
+    loadEnsembleStats();
   </script>
 </body>
 </html>
