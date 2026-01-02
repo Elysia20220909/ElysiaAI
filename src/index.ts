@@ -16,34 +16,33 @@ const SERVER_STARTED_AT = Date.now();
 
 app.use(express.json());
 
-// simple security headers
+// Apply security headers to prevent common attacks
 app.use((req: Request, res: Response, next: NextFunction) => {
 	res.setHeader("X-Content-Type-Options", "nosniff");
 	res.setHeader("X-Frame-Options", "DENY");
 	next();
 });
 
-// request timing + metrics capture
+// Track request timing and record metrics for monitoring
 app.use((req: Request, res: Response, next: NextFunction) => {
-	const start = process.hrtime.bigint();
+	const startTime = process.hrtime.bigint();
 	res.on("finish", () => {
-		const durationNs = Number(process.hrtime.bigint() - start);
-		const durationSeconds = durationNs / 1_000_000_000;
-		const status = res.statusCode;
-		metricsCollector.incrementRequest(req.method, req.path, status);
-		metricsCollector.recordRequestDuration(req.method, req.path, durationSeconds);
-		if (status >= 400) {
-			metricsCollector.incrementError(req.method, req.path, String(status));
+		const elapsedNs = Number(process.hrtime.bigint() - startTime);
+		const elapsedSeconds = elapsedNs / 1_000_000_000;
+		const statusCode = res.statusCode;
+
+		metricsCollector.incrementRequest(req.method, req.path, statusCode);
+		metricsCollector.recordRequestDuration(req.method, req.path, elapsedSeconds);
+		if (statusCode >= 400) {
+			metricsCollector.incrementError(req.method, req.path, String(statusCode));
 		}
 	});
 	next();
 });
 
-// in-memory auth/token store
-const envUsername = process.env.AUTH_USERNAME;
-const envPassword = process.env.AUTH_PASSWORD;
-const validUsername = envUsername || "elysia";
-const validPassword = envPassword || "elysia-dev-password";
+// Load authentication credentials from environment, or use development defaults
+const validUsername = process.env.AUTH_USERNAME || "elysia";
+const validPassword = process.env.AUTH_PASSWORD || "elysia-dev-password";
 const activeTokens = new Set<string>();
 const refreshTokens = new Set<string>();
 const rateLimitCounter = new Map<string, number>();
@@ -415,15 +414,16 @@ app.get("/diagnostics/ai", requireAuth, (_req: Request, res: Response) => {
 
 app.get("/diagnostics/security", requireAuth, (_req: Request, res: Response) => {
 	const warnings: string[] = [];
-	if (!envUsername || !envPassword) {
-		warnings.push("AUTH_USERNAME/AUTH_PASSWORD が未設定です");
+	const usesEnvCreds = Boolean(process.env.AUTH_USERNAME && process.env.AUTH_PASSWORD);
+	if (!usesEnvCreds) {
+		warnings.push("AUTH_USERNAME/AUTH_PASSWORD が未設定です（デフォルト認証情報を使用中）");
 	}
 	if (!ALERT_WEBHOOK_URL) {
 		warnings.push("ALERT_WEBHOOK_URL が未設定のため外部通知なし");
 	}
 	res.json({
 		rateLimitThreshold,
-		jwtConfigured: Boolean(envUsername && envPassword),
+		jwtConfigured: usesEnvCreds,
 		alertsWebhookEnabled: Boolean(ALERT_WEBHOOK_URL),
 		warnings,
 		redis: "ok",
