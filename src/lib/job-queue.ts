@@ -49,17 +49,14 @@ class JobQueueManager {
 			const redisPassword =
 				process.env.REDIS_PASSWORD || new URL(this.REDIS_URL).password;
 			const redisUsername =
-				process.env.REDIS_USERNAME ||
-				new URL(this.REDIS_URL).username ||
-				"default";
+				process.env.REDIS_USERNAME || new URL(this.REDIS_URL).username || "";
 			const useTLS = process.env.REDIS_TLS === "true";
 
 			const connection: Record<string, unknown> = {
 				host: redisHost,
 				port: redisPort,
 				password: redisPassword,
-				username: redisUsername,
-				maxRetriesPerRequest: Number(process.env.REDIS_MAX_RETRIES) || 5,
+				maxRetriesPerRequest: null, // BullMQ 推奨設定
 				connectTimeout: Number(process.env.REDIS_CONNECT_TIMEOUT) || 10000,
 				retryStrategy: (times: number) => {
 					const delay = Math.min(
@@ -70,6 +67,11 @@ class JobQueueManager {
 					return delay;
 				},
 			};
+
+			// Redis 6+ でのみ username を付与（5系ではエラーになる）
+			if (redisUsername) {
+				connection.username = redisUsername;
+			}
 
 			// TLS有効化（redis.cloudで必須）
 			if (useTLS) {
