@@ -205,8 +205,10 @@ export class MultiModelEnsemble {
 		// キャッシュに保存（最大100件）
 		if (options?.useCache !== false) {
 			if (this.historyCache.size >= 100) {
-				const firstKey = this.historyCache.keys().next().value;
-				this.historyCache.delete(firstKey);
+				const firstKey = this.historyCache.keys().next().value as string | undefined;
+				if (firstKey) {
+					this.historyCache.delete(firstKey);
+				}
 			}
 			this.historyCache.set(cacheKey, ensembleResponse);
 		}
@@ -273,12 +275,8 @@ export class MultiModelEnsemble {
 				},
 			};
 		} catch (error) {
-			const latency = Date.now() - startTime;
-			logger.error("Model execution error", {
-				model: model.name,
-				error: String(error),
-				latency,
-			});
+			const errorMsg = error instanceof Error ? error.message : String(error);
+			logger.error(`Model execution error in ${model.name}: ${errorMsg}`);
 			throw error;
 		}
 	}
