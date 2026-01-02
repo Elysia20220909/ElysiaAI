@@ -68,7 +68,7 @@
     "gcp:deploy": "cd cloud/gcp && bash deploy.sh"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.86",
+    "@ai-sdk/openai": "^3.0.1",
     "@elysiajs/cors": "^1.4.0",
     "@elysiajs/html": "^1.4.0",
     "@elysiajs/openapi": "^1.4.11",
@@ -82,7 +82,7 @@
     "@types/cron": "^2.4.3",
     "@types/ws": "^8.18.1",
     "@zilliz/milvus2-sdk-node": "^2.6.7",
-    "ai": "^5.0.113",
+    "ai": "^6.0.3",
     "alpinejs": "^3.15.2",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
@@ -106,7 +106,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.8",
+    "@biomejs/biome": "2.3.10",
     "@elysiajs/eden": "^1.4.5",
     "@playwright/test": "^1.57.0",
     "@types/bcryptjs": "^3.0.0",
