@@ -354,6 +354,7 @@
       }
     }
 
+<<<<<<< HEAD
     async function loadEnsembleStats() {
       if (!state.accessToken) return;
       try {
@@ -401,6 +402,8 @@
       }
     }
 
+=======
+>>>>>>> f214f5b01c2603109bf84e024f684bd320010826
     async function runLocust() {
       if (!state.accessToken) {
         const ok = await login();
@@ -466,11 +469,16 @@
     document.getElementById('connect-btn').addEventListener('click', connect);
     document.getElementById('disconnect-btn').addEventListener('click', disconnect);
     document.getElementById('refresh-ai').addEventListener('click', loadAiDiagnostics);
+<<<<<<< HEAD
     document.getElementById('refresh-ensemble').addEventListener('click', loadEnsembleStats);
     document.getElementById('locust-run').addEventListener('click', runLocust);
     setInterval(loadAiDiagnostics, 5000);
     setInterval(loadEnsembleStats, 10000);
     loadEnsembleStats();
+=======
+    document.getElementById('locust-run').addEventListener('click', runLocust);
+    setInterval(loadAiDiagnostics, 5000);
+>>>>>>> f214f5b01c2603109bf84e024f684bd320010826
   </script>
 </body>
 </html>
