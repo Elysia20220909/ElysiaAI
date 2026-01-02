@@ -1,4 +1,7 @@
-// Prometheus Metrics Module
+/**
+ * Prometheus-compatible metrics collector.
+ * Tracks HTTP request statistics, performance, and application health.
+ */
 export interface Metrics {
 	http_requests_total: Map<string, number>;
 	http_request_duration_seconds: Map<string, number[]>;
@@ -12,6 +15,10 @@ export interface Metrics {
 	rag_query_duration_seconds: number[];
 }
 
+/**
+ * Collects and exports Prometheus metrics for monitoring.
+ * Maintains in-memory counters and provides text-format export.
+ */
 class MetricsCollector {
 	private metrics: Metrics = {
 		http_requests_total: new Map(),
@@ -26,12 +33,18 @@ class MetricsCollector {
 		rag_query_duration_seconds: [],
 	};
 
+	/**
+	 * Record successful HTTP request by method, path, and status code.
+	 */
 	incrementRequest(method: string, path: string, status: number) {
 		const key = `${method}:${path}:${status}`;
 		const current = this.metrics.http_requests_total.get(key) || 0;
 		this.metrics.http_requests_total.set(key, current + 1);
 	}
 
+	/**
+	 * Track request latency. Keeps last 1000 measurements.
+	 */
 	recordRequestDuration(method: string, path: string, duration: number) {
 		const key = `${method}:${path}`;
 		const durations = this.metrics.http_request_duration_seconds.get(key) || [];
@@ -40,6 +53,9 @@ class MetricsCollector {
 		this.metrics.http_request_duration_seconds.set(key, durations);
 	}
 
+	/**
+	 * Record error by error type.
+	 */
 	incrementError(method: string, path: string, errorType: string) {
 		const key = `${method}:${path}:${errorType}`;
 		const current = this.metrics.http_errors_total.get(key) || 0;
@@ -65,6 +81,9 @@ class MetricsCollector {
 		this.metrics.feedback_submissions_total++;
 	}
 
+	/**
+	 * Track authentication success/failure rate.
+	 */
 	incrementAuthAttempt(success: boolean) {
 		const key = success ? "success" : "failure";
 		const current = this.metrics.auth_attempts_total.get(key) || 0;
@@ -79,6 +98,9 @@ class MetricsCollector {
 		this.metrics.rag_queries_total++;
 	}
 
+	/**
+	 * Track RAG query latency. Keeps last 1000 measurements.
+	 */
 	recordRAGDuration(duration: number) {
 		this.metrics.rag_query_duration_seconds.push(duration);
 		if (this.metrics.rag_query_duration_seconds.length > 1000) {
@@ -90,9 +112,14 @@ class MetricsCollector {
 		return { ...this.metrics };
 	}
 
+	/**
+	 * Export metrics in Prometheus text format.
+	 * Calculates percentiles (p50, p95, p99) for histogram metrics.
+	 */
 	toPrometheusFormat(): string {
 		const lines: string[] = [];
 
+		// HTTP request counter (total requests per endpoint and status)
 		lines.push("# HELP http_requests_total Total HTTP requests");
 		lines.push("# TYPE http_requests_total counter");
 		for (const [key, value] of this.metrics.http_requests_total) {
@@ -102,6 +129,7 @@ class MetricsCollector {
 			);
 		}
 
+		// Request latency histogram with percentiles
 		lines.push(
 			"# HELP http_request_duration_seconds HTTP request duration in seconds",
 		);
@@ -128,6 +156,7 @@ class MetricsCollector {
 			);
 		}
 
+		// Error counter per endpoint and error type
 		lines.push("# HELP http_errors_total Total HTTP errors");
 		lines.push("# TYPE http_errors_total counter");
 		for (const [key, value] of this.metrics.http_errors_total) {
@@ -151,6 +180,7 @@ class MetricsCollector {
 			`feedback_submissions_total ${this.metrics.feedback_submissions_total}`,
 		);
 
+		// Track authentication success vs failure rate
 		lines.push("# HELP auth_attempts_total Total authentication attempts");
 		lines.push("# TYPE auth_attempts_total counter");
 		for (const [result, value] of this.metrics.auth_attempts_total) {
@@ -167,6 +197,7 @@ class MetricsCollector {
 		lines.push("# TYPE rag_queries_total counter");
 		lines.push(`rag_queries_total ${this.metrics.rag_queries_total}`);
 
+		// RAG query latency histogram
 		if (this.metrics.rag_query_duration_seconds.length > 0) {
 			lines.push("# HELP rag_query_duration_seconds RAG query duration");
 			lines.push("# TYPE rag_query_duration_seconds histogram");

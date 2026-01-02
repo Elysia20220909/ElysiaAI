@@ -1,4 +1,5 @@
-// Comprehensive Test Suite - Unit Tests
+// Test suite for Elysia AI API
+// Covers: health checks, authentication, validation, rate limiting, and chat endpoints
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { treaty } from "@elysiajs/eden";
 import { ensureTestServer } from "./helpers/test-server";
@@ -9,6 +10,7 @@ type App = typeof app;
 const API_URL = "http://localhost:3000";
 
 describe("Health Endpoints", () => {
+	// Verify basic connectivity
 	it("should return OK for /ping", async () => {
 		const response = await fetch(`${API_URL}/ping`);
 		const data = await response.json();
@@ -17,6 +19,7 @@ describe("Health Endpoints", () => {
 		expect(data.ok).toBe(true);
 	});
 
+	// Ensure all dependencies are reachable
 	it("should return health status for /health", async () => {
 		const response = await fetch(`${API_URL}/health`);
 		const data = await response.json();
@@ -32,6 +35,7 @@ describe("Health Endpoints", () => {
 });
 
 describe("Metrics Endpoint", () => {
+	// Validate Prometheus format metrics
 	it("should return Prometheus metrics", async () => {
 		const response = await fetch(`${API_URL}/metrics`);
 		const text = await response.text();
@@ -48,6 +52,7 @@ describe("Authentication", () => {
 	let accessToken: string;
 	let refreshToken: string;
 
+	// Verify invalid credentials are rejected
 	it("should reject invalid credentials", async () => {
 		const response = await fetch(`${API_URL}/auth/token`, {
 			method: "POST",
@@ -63,6 +68,7 @@ describe("Authentication", () => {
 		expect(data.error).toBe("Invalid credentials");
 	});
 
+	// Verify JWT tokens are issued for valid credentials
 	it("should issue tokens for valid credentials", async () => {
 		const response = await fetch(`${API_URL}/auth/token`, {
 			method: "POST",
@@ -83,6 +89,7 @@ describe("Authentication", () => {
 		refreshToken = data.refreshToken;
 	});
 
+	// Verify refresh token can renew access token
 	it("should refresh access token", async () => {
 		const response = await fetch(`${API_URL}/auth/refresh`, {
 			method: "POST",
@@ -96,6 +103,7 @@ describe("Authentication", () => {
 		expect(data.expiresIn).toBe(900);
 	});
 
+	// Verify protected endpoints require authentication
 	it("should reject requests without token", async () => {
 		const response = await fetch(`${API_URL}/feedback`, {
 			method: "POST",
@@ -110,6 +118,7 @@ describe("Authentication", () => {
 		expect(response.status).toBe(401);
 	});
 
+	// Verify authenticated requests are accepted
 	it("should accept requests with valid token", async () => {
 		const response = await fetch(`${API_URL}/feedback`, {
 			method: "POST",
@@ -134,6 +143,7 @@ describe("Input Validation", () => {
 	let token: string;
 
 	beforeAll(async () => {
+		// Get auth token for validation tests
 		const response = await fetch(`${API_URL}/auth/token`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -146,6 +156,7 @@ describe("Input Validation", () => {
 		token = data.accessToken;
 	});
 
+	// Verify long input is rejected
 	it("should reject too long queries", async () => {
 		const response = await fetch(`${API_URL}/feedback`, {
 			method: "POST",
@@ -163,6 +174,7 @@ describe("Input Validation", () => {
 		expect(response.status).toBe(400);
 	});
 
+	// Verify enum values are validated
 	it("should reject invalid rating", async () => {
 		const response = await fetch(`${API_URL}/feedback`, {
 			method: "POST",
@@ -185,6 +197,7 @@ describe("Rate Limiting", () => {
 	let token: string;
 
 	beforeAll(async () => {
+		// Get token for rate limit tests
 		const response = await fetch(`${API_URL}/auth/token`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -197,6 +210,7 @@ describe("Rate Limiting", () => {
 		token = data.accessToken;
 	});
 
+	// Verify rate limiter kicks in after threshold
 	it("should enforce rate limits", async () => {
 		const requests = Array.from({ length: 70 }, () =>
 			fetch(`${API_URL}/elysia-love`, {
@@ -222,6 +236,7 @@ describe("Chat API", () => {
 	let token: string;
 
 	beforeAll(async () => {
+		// Get token for chat tests
 		const response = await fetch(`${API_URL}/auth/token`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -234,6 +249,7 @@ describe("Chat API", () => {
 		token = data.accessToken;
 	});
 
+	// Verify minimum message requirement is enforced
 	it("should reject empty messages", async () => {
 		const response = await fetch(`${API_URL}/elysia-love`, {
 			method: "POST",
@@ -247,6 +263,7 @@ describe("Chat API", () => {
 		expect(response.status).toBe(400);
 	});
 
+	// Verify maximum message limit is enforced
 	it("should reject too many messages", async () => {
 		const response = await fetch(`${API_URL}/elysia-love`, {
 			method: "POST",
@@ -262,6 +279,7 @@ describe("Chat API", () => {
 		expect(response.status).toBe(400);
 	});
 
+	// Verify valid requests return SSE stream
 	it("should accept valid chat request", async () => {
 		const response = await fetch(`${API_URL}/elysia-love`, {
 			method: "POST",
@@ -279,6 +297,7 @@ describe("Chat API", () => {
 		expect(response.headers.get("content-type")).toContain("text/event-stream");
 	});
 
+	// Verify all chat modes are accepted
 	it("should support different modes", async () => {
 		for (const mode of ["sweet", "normal", "professional"]) {
 			const response = await fetch(`${API_URL}/elysia-love`, {

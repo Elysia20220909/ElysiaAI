@@ -1,21 +1,26 @@
 /**
- * マルチモデルアンサンブルシステム
- * 複数のLLMを並列実行し、最良の回答を自動選択
+ * Multi-model LLM ensemble system.
+ * Executes queries against multiple models in parallel and selects best response
+ * based on configured strategy (quality, speed, or consensus).
  */
 
 import { logger } from "./logger";
 
-// モデル設定型
+/**
+ * LLM endpoint configuration.
+ */
 export type ModelConfig = {
 	name: string;
 	endpoint: string;
 	apiKey?: string;
 	timeout: number;
-	weight: number; // 評価時の重み
+	weight: number; // Influence on quality scoring
 	enabled: boolean;
 };
 
-// アンサンブル応答型
+/**
+ * Final ensemble result with selected response and metadata.
+ */
 export type EnsembleResponse = {
 	selectedModel: string;
 	selectedResponse: string;
@@ -25,7 +30,9 @@ export type EnsembleResponse = {
 	strategy: "quality" | "speed" | "consensus";
 };
 
-// 各モデルの応答型
+/**
+ * Response from individual model.
+ */
 export type ModelResponse = {
 	model: string;
 	response: string;
@@ -38,7 +45,9 @@ export type ModelResponse = {
 	};
 };
 
-// 品質評価基準
+/**
+ * Quality evaluation criteria for response scoring.
+ */
 type QualityMetrics = {
 	length: number;
 	sentiment: number;
@@ -56,13 +65,15 @@ export class MultiModelEnsemble {
 	}
 
 	/**
-	 * デフォルトモデル設定を初期化
+	 * Load model endpoints from environment variables.
+	 * Falls back to primary Ollama endpoint if secondary/tertiary not configured.
 	 */
 	private initializeModels() {
 		const primaryEndpoint = process.env.RAG_API_URL || "http://localhost:8000";
 		const secondaryEndpoint = process.env.SECONDARY_MODEL_ENDPOINT || "";
 		const tertiaryEndpoint = process.env.TERTIARY_MODEL_ENDPOINT || "";
 
+		// Primary model always enabled
 		this.models = [
 			{
 				name: "primary-ollama",
@@ -73,6 +84,7 @@ export class MultiModelEnsemble {
 			},
 		];
 
+		// Add secondary model if configured
 		if (secondaryEndpoint) {
 			this.models.push({
 				name: "secondary-model",
@@ -84,6 +96,7 @@ export class MultiModelEnsemble {
 			});
 		}
 
+		// Add tertiary model if configured
 		if (tertiaryEndpoint) {
 			this.models.push({
 				name: "tertiary-model",
@@ -102,7 +115,11 @@ export class MultiModelEnsemble {
 	}
 
 	/**
-	 * アンサンブル実行（複数モデルを並列実行）
+	 * Execute query against all enabled models in parallel.
+	 * Returns best response based on selected strategy.
+	 * @param query - User query to execute
+	 * @param strategy - Selection method: quality (best scored), speed (fastest), consensus (most agreement)
+	 * @param options - Optional execution settings
 	 */
 	async execute(
 		query: string,
@@ -116,7 +133,7 @@ export class MultiModelEnsemble {
 		const startTime = Date.now();
 		const cacheKey = `${query}:${strategy}`;
 
-		// キャッシュチェック
+		// Return cached result if available
 		if (options?.useCache && this.historyCache.has(cacheKey)) {
 			logger.info("Returning cached ensemble response", { query });
 			return this.historyCache.get(cacheKey)!;
@@ -133,12 +150,12 @@ export class MultiModelEnsemble {
 			modelsCount: enabledModels.length,
 		});
 
-		// 並列実行
+		// Execute all models in parallel
 		const promises = enabledModels.map((model) =>
 			this.executeModel(model, query, options?.timeout)
 		);
 
-		// 全モデルの結果を待つ（失敗は無視）
+		// Collect results (including failures)
 		const results = await Promise.allSettled(promises);
 		const responses: ModelResponse[] = [];
 
@@ -163,7 +180,7 @@ export class MultiModelEnsemble {
 			}
 		}
 
-		// 最低限のモデル数チェック
+		// Verify minimum successful responses
 		const validResponses = responses.filter((r) => !r.error);
 		const minRequired = options?.minModels || 1;
 		if (validResponses.length < minRequired) {
@@ -172,7 +189,7 @@ export class MultiModelEnsemble {
 			);
 		}
 
-		// 戦略に基づいて最良の回答を選択
+		// Select best response according to strategy
 		const selected = this.selectBestResponse(responses, strategy);
 		const executionTime = Date.now() - startTime;
 
