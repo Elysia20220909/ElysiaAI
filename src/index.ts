@@ -670,6 +670,232 @@ app.post("/api/demo/voice", (req: Request, res: Response) => {
 	return res.json({ text, audioUrl: mockUrl, provider: "mock" });
 });
 
+// ==================== Neuro Integration Routes ====================
+const FASTAPI_HOST = process.env.DATABASE_CONFIG?.RAG_API_URL || "http://127.0.0.1:8000";
+
+interface NeuroMemoryResponse {
+	id: string;
+	document: string;
+	metadata: Record<string, unknown>;
+	distance?: number;
+}
+
+// Query memories with semantic search
+app.post("/api/neuro/memory/query", async (req: Request, res: Response) => {
+	try {
+		const { query, limit } = req.body || {};
+		if (!query || typeof query !== "string") {
+			return res.status(400).json({ error: "query is required" });
+		}
+
+		const response = await fetch(`${FASTAPI_HOST}/neuro/memory/query`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ query, limit: limit || 5 }),
+		});
+
+		if (!response.ok) {
+			throw new Error(`FastAPI error: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+		return res.json(data);
+	} catch (error) {
+		console.error("❌ Neuro memory query failed:", error);
+		return res.status(503).json({
+			error: "Neuro service unavailable",
+			details: String(error),
+		});
+	}
+});
+
+// Create a new memory
+app.post("/api/neuro/memory/create", async (req: Request, res: Response) => {
+	try {
+		const { document, metadata } = req.body || {};
+		if (!document || typeof document !== "string") {
+			return res.status(400).json({ error: "document is required" });
+		}
+
+		const response = await fetch(`${FASTAPI_HOST}/neuro/memory/create`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ document, metadata }),
+		});
+
+		if (!response.ok) {
+			throw new Error(`FastAPI error: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+		return res.json(data);
+	} catch (error) {
+		console.error("❌ Neuro memory creation failed:", error);
+		return res.status(503).json({
+			error: "Neuro service unavailable",
+			details: String(error),
+		});
+	}
+});
+
+// Delete a memory
+app.delete("/api/neuro/memory/:id", async (req: Request, res: Response) => {
+	try {
+		const { id } = req.params;
+		if (!id) {
+			return res.status(400).json({ error: "id is required" });
+		}
+
+		const response = await fetch(`${FASTAPI_HOST}/neuro/memory/${id}`, {
+			method: "DELETE",
+		});
+
+		if (!response.ok) {
+			throw new Error(`FastAPI error: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+		return res.json(data);
+	} catch (error) {
+		console.error("❌ Neuro memory deletion failed:", error);
+		return res.status(503).json({
+			error: "Neuro service unavailable",
+			details: String(error),
+		});
+	}
+});
+
+// Get all memories
+app.get("/api/neuro/memory/all", async (req: Request, res: Response) => {
+	try {
+		const response = await fetch(`${FASTAPI_HOST}/neuro/memory/all`);
+
+		if (!response.ok) {
+			throw new Error(`FastAPI error: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+		return res.json(data);
+	} catch (error) {
+		console.error("❌ Neuro fetch all memories failed:", error);
+		return res.status(503).json({
+			error: "Neuro service unavailable",
+			details: String(error),
+		});
+	}
+});
+
+// Clear memories by type
+app.post("/api/neuro/memory/clear", async (req: Request, res: Response) => {
+	try {
+		const { type } = req.body || {};
+		const params = new URLSearchParams();
+		if (type) {
+			params.append("memory_type", type);
+		}
+
+		const response = await fetch(
+			`${FASTAPI_HOST}/neuro/memory/clear?${params.toString()}`,
+			{ method: "POST" }
+		);
+
+		if (!response.ok) {
+			throw new Error(`FastAPI error: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+		return res.json(data);
+	} catch (error) {
+		console.error("❌ Neuro clear memories failed:", error);
+		return res.status(503).json({
+			error: "Neuro service unavailable",
+			details: String(error),
+		});
+	}
+});
+
+// Export memories to JSON
+app.post("/api/neuro/memory/export", async (req: Request, res: Response) => {
+	try {
+		const { path } = req.body || {};
+		const params = new URLSearchParams();
+		if (path) {
+			params.append("output_path", path);
+		}
+
+		const response = await fetch(
+			`${FASTAPI_HOST}/neuro/memory/export?${params.toString()}`,
+			{ method: "POST" }
+		);
+
+		if (!response.ok) {
+			throw new Error(`FastAPI error: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+		return res.json(data);
+	} catch (error) {
+		console.error("❌ Neuro export memories failed:", error);
+		return res.status(503).json({
+			error: "Neuro service unavailable",
+			details: String(error),
+		});
+	}
+});
+
+// Import memories from JSON
+app.post("/api/neuro/memory/import", async (req: Request, res: Response) => {
+	try {
+		const { path } = req.body || {};
+		if (!path || typeof path !== "string") {
+			return res.status(400).json({ error: "path is required" });
+		}
+
+		const params = new URLSearchParams();
+		params.append("input_path", path);
+
+		const response = await fetch(
+			`${FASTAPI_HOST}/neuro/memory/import?${params.toString()}`,
+			{ method: "POST" }
+		);
+
+		if (!response.ok) {
+			throw new Error(`FastAPI error: ${response.statusText}`);
+		}
+
+		const data = await response.json();
+		return res.json(data);
+	} catch (error) {
+		console.error("❌ Neuro import memories failed:", error);
+		return res.status(503).json({
+			error: "Neuro service unavailable",
+			details: String(error),
+		});
+	}
+});
+
+// Neuro health check
+app.get("/api/neuro/health", async (req: Request, res: Response) => {
+	try {
+		const response = await fetch(`${FASTAPI_HOST}/docs`, {
+			method: "HEAD",
+			timeout: 5000 as any,
+		});
+
+		return res.json({
+			status: response.ok ? "ok" : "error",
+			backend: "fastapi",
+			timestamp: new Date().toISOString(),
+		});
+	} catch (error) {
+		return res.json({
+			status: "error",
+			message: "FastAPI backend is unavailable",
+			timestamp: new Date().toISOString(),
+		});
+	}
+});
+
 app.use((req: Request, res: Response) => {
 	res.status(404).json({ error: "Not found" });
 });
