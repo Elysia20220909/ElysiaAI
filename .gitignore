@@ -98,6 +98,10 @@ bun.log
 /mobile/.expo/
 /mobile/dist/
 
+# Tauri build artifacts
+/tauri-app/target/
+/tauri-app/node_modules/
+
 # desktop
 /desktop/node_modules/
 /desktop/dist/
