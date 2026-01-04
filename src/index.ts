@@ -693,4 +693,8 @@ if (process.env.AUTO_START_SERVER === "true" || process.env.NODE_ENV === "test")
 	startServer();
 }
 
+if (import.meta.main) {
+	startServer();
+}
+
 export default app;
