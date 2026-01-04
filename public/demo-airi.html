@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elysia Demo (Vue + UnoCSS)</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime/uno.global.js"></script>
+  <style>
+    body { background: radial-gradient(circle at 20% 20%, #ffe1f0, #f8f0ff 35%, #f1f4ff); }
+    .card { box-shadow: 0 12px 35px rgba(255, 105, 180, 0.18); }
+  </style>
+</head>
+<body class="font-sans text-slate-800">
+  <div id="app" class="min-h-screen flex items-center justify-center px-4 py-10">
+    <div class="card w-full max-w-3xl bg-white/90 rounded-3xl p-6 md:p-8 backdrop-blur">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-2xl bg-pink-500 text-white grid place-items-center text-xl">♡</div>
+        <div>
+          <p class="text-xs uppercase tracking-wide text-slate-500">AIRI-inspired sandbox</p>
+          <h1 class="text-2xl font-bold text-slate-900">Elysia Web Demo</h1>
+        </div>
+        <div class="ml-auto text-xs text-slate-500">Vue 3 + UnoCSS runtime</div>
+      </div>
+
+      <div class="space-y-3 mb-4 max-h-72 overflow-y-auto pr-1" ref="logRef">
+        <div v-if="messages.length === 0" class="text-slate-500 text-sm">まだメッセージがありません。何か話しかけてみてね。</div>
+        <div v-for="(m,i) in messages" :key="i" class="flex gap-2" :class="m.role==='user' ? 'justify-end' : 'justify-start'">
+          <div :class="[
+              'px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap break-words max-w-[80%]',
+              m.role==='user' ? 'bg-pink-500 text-white shadow-pink-200 shadow-lg' : 'bg-slate-50 text-slate-800 border border-slate-100'
+            ]">
+            <div v-if="m.model" class="text-[11px] opacity-70 mb-1">{{ m.model }}</div>
+            {{ m.content }}
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-3 md:grid-cols-3">
+        <div class="md:col-span-2 flex gap-2">
+          <textarea v-model="input" @keydown.ctrl.enter.prevent="send" rows="2"
+            class="flex-1 text-sm px-3 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-400"
+            placeholder="メッセージを入力 (Ctrl+Enterで送信)" />
+          <button @click="send" :disabled="loading || !input.trim()"
+            class="px-4 py-3 rounded-2xl text-white text-sm font-semibold bg-pink-500 hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition">
+            送信
+          </button>
+        </div>
+        <div class="flex gap-2">
+          <button @click="playVoice" :disabled="messages.length===0 || loading"
+            class="flex-1 px-3 py-3 rounded-2xl border text-sm font-semibold transition"
+            :class="voicePlaying ? 'bg-emerald-100 border-emerald-200 text-emerald-700' : 'bg-slate-50 border-slate-200 text-slate-700'">
+            🔊 ボイス試聴
+          </button>
+          <button @click="reset"
+            class="w-28 px-3 py-3 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-600">リセット</button>
+        </div>
+      </div>
+
+      <p class="text-[11px] text-slate-500 mt-3">エンドポイント: /api/demo/chat / /api/demo/voice — 本番系の認証とは分離したテスト用モックです。</p>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, onMounted, ref, watch } = Vue;
+
+    createApp({
+      setup() {
+        const messages = ref([]);
+        const input = ref("");
+        const loading = ref(false);
+        const voicePlaying = ref(false);
+        const logRef = ref(null);
+
+        const scrollToBottom = () => {
+          const el = logRef.value;
+          if (!el) return;
+          requestAnimationFrame(() => {
+            el.scrollTop = el.scrollHeight;
+          });
+        };
+
+        watch(messages, scrollToBottom, { deep: true });
+
+        const send = async () => {
+          const text = input.value.trim();
+          if (!text || loading.value) return;
+          messages.value.push({ role: "user", content: text });
+          input.value = "";
+          loading.value = true;
+          try {
+            const res = await fetch("/api/demo/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+            messages.value.push({ role: "assistant", content: data.reply ?? "(no reply)", model: data.model });
+          } catch (e) {
+            messages.value.push({ role: "assistant", content: `エラー: ${e}` });
+          } finally {
+            loading.value = false;
+          }
+        };
+
+        const playVoice = async () => {
+          if (!messages.value.length) return;
+          const last = messages.value[messages.value.length - 1];
+          voicePlaying.value = true;
+          try {
+            const res = await fetch("/api/demo/voice", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: last.content })
+            });
+            const data = await res.json();
+            if (data.audioUrl) {
+              const audio = new Audio(data.audioUrl);
+              audio.play();
+            }
+          } finally {
+            voicePlaying.value = false;
+          }
+        };
+
+        const reset = () => {
+          messages.value = [];
+          input.value = "";
+        };
+
+        onMounted(() => scrollToBottom());
+
+        return { messages, input, loading, voicePlaying, send, playVoice, reset, logRef };
+      }
+    }).mount("#app");
+  </script>
+</body>
+</html>
