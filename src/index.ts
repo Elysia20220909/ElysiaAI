@@ -16,6 +16,9 @@ const SERVER_STARTED_AT = Date.now();
 
 app.use(express.json());
 
+// Serve static demo assets (Vue + UnoCSS sandbox etc.)
+app.use(express.static(path.join(__dirname, "../public")));
+
 // Apply security headers to prevent common attacks
 app.use((req: Request, res: Response, next: NextFunction) => {
 	res.setHeader("X-Content-Type-Options", "nosniff");
@@ -618,6 +621,53 @@ app.get("/swagger/json", (_req: Request, res: Response) => {
 		info: { title: "Elysia AI", version: "1.0.0" },
 		paths: {},
 	});
+});
+
+// --- Demo endpoints (for Vue + UnoCSS sandbox, voice/LLM test wiring) ---
+app.post("/api/demo/chat", async (req: Request, res: Response) => {
+	const { message, strategy = "quality" } = req.body || {};
+	if (!message || typeof message !== "string") {
+		return res.status(400).json({ error: "message is required" });
+	}
+
+	try {
+		const ensemble = await multiModelEnsemble.execute(message, strategy, {
+			useCache: true,
+			minModels: 1,
+			timeout: 15000,
+		});
+
+		return res.json({
+			reply: ensemble.selectedResponse,
+			model: ensemble.selectedModel,
+			confidence: ensemble.confidence,
+			allModels: ensemble.allResponses.map((r) => ({
+				model: r.model,
+				latencyMs: r.latencyMs,
+				error: r.error,
+			})),
+		});
+	} catch (error) {
+		console.error("demo chat failed", error);
+		return res.json({
+			reply: "(demo) こんにちは！アンサンブルがまだ準備中だから、モック応答を返すね。",
+			model: "mock",
+			confidence: 0.2,
+			allModels: [],
+		});
+	}
+});
+
+app.post("/api/demo/voice", (req: Request, res: Response) => {
+	const { text } = req.body || {};
+	if (!text || typeof text !== "string") {
+		return res.status(400).json({ error: "text is required" });
+	}
+
+	// Voice/TTS 実装がまだ無い場合のモックレスポンス。
+	// 将来的には unspeech や各 TTS プロバイダへの委譲に差し替える。
+	const mockUrl = `data:text/plain;base64,${Buffer.from(`VOICE:${text}`).toString("base64")}`;
+	return res.json({ text, audioUrl: mockUrl, provider: "mock" });
 });
 
 app.use((req: Request, res: Response) => {
