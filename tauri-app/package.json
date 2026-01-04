@@ -1,0 +1,15 @@
+{
+  "name": "elysia-ai-tauri",
+  "version": "1.0.0",
+  "description": "Elysia AI - Tauri Desktop App (lightweight, fast, secure)",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "build:debug": "tauri build --debug"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0"
+  }
+}
