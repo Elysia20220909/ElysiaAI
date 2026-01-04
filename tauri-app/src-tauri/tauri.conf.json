@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "identifier": "ai.elysia.desktop",
   "build": {
-    "beforeDevCommand": "",
+    "beforeDevCommand": "cd .. && bun run dev",
     "beforeBuildCommand": "",
     "devUrl": "http://localhost:3000/demo-airi.html",
     "frontendDist": "../public"
