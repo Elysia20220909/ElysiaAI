@@ -104,11 +104,34 @@
 - SSE 入出力に対し、プロンプトインジェクション防御と safe_filter の強化を検討。
 - PII/秘密はログに残さず、.env はコミットしない。Ollama/Milvus は内部ネットワーク + 認証/TLS で保護。
 
+### 11.1 JWT + Redis 化の設計メモ
+
+- トークン: アクセス JWT（短寿命）＋リフレッシュ JWT。`jti` を必ず付与し、Redis にホワイトリスト保存。
+- クレーム: `sub`（ユーザ ID）、`iat`、`exp`、`jti`。ローテーション時は旧 `jti` を失効させ新トークンを保存。
+- 検証: Elysia 側で `jose` などを使って署名検証。失効リストは Redis を参照。
+- 署名鍵: `JWT_SECRET`/`JWT_REFRESH_SECRET` を環境変数で渡し、Vault/Key Vault で管理。
+- レート制限: Redis のトークンバケット/スライディングウィンドウで `ip + sub` をキーにする。Redis ダウン時はポリシーに従いフェイルオープン or フェイルクローズ。
+
+### 11.2 safe_filter 強化の方向性
+
+- 出力フィルタ: コードブロック・インラインコードの除去に加え、URL/秘密情報誘発フレーズ（password/api key/secret/token 等）をフィルタリング。
+- 入力フィルタ: 危険コマンド/プロンプトインジェクションをルール＋スコアリングで判定。高リスクは拒否・中リスクは要確認ラベル。
+- ロギング: フィルタ適用前後の差分をメトリクス化（何件フィルタされたか）。
+
 ## 12. 監視と運用
 
 - メトリクス: HTTP 数/レイテンシ/エラー、認証試行、RAG レイテンシ、レートリミット超過、SSE 接続数。
 - アラート（組み込みロジック）: p95 > 1.2s warn / > 2s crit、エラー総数 > 5 warn / > 20 crit、LoadAvg 1m > 1.5 warn / > 2.5 crit。クリティカル時は自己防衛でレートしきい値を 50→30。
 - 可視化: /metrics を Prometheus でスクレイプし Grafana へ。軽量用途は public/admin-extended.html の SSE ダッシュボード。
+
+### 12.1 Grafana パネル例
+
+- HTTP レイテンシ: `histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, path))`
+- エラーレート: `sum(rate(http_errors_total[5m])) / sum(rate(http_requests_total[5m]))`
+- RAG レイテンシ p95: `histogram_quantile(0.95, sum(rate(rag_query_duration_seconds_bucket[5m])) by (le))`
+- レートリミット超過: `rate(rate_limit_exceeded_total[5m])`
+- SSE 接続数: `connections_current`
+- アラート案: p95 > 1.2s (warn) / > 2s (crit), error rate >1% (warn) / >5% (crit)
 
 ## 13. デプロイのヒント
 
@@ -118,6 +141,15 @@
 - Milvus: USE_MILVUS=true なら mTLS/認証とネットワーク隔離を前提に。
 - 環境変数: AUTH*\*, DATABASE_CONFIG.RAG_API_URL, OLLAMA*\*, USE_MILVUS, MILVUS_URI/TOKEN を環境ごとに分離。
 
+### 13.1 アンサンブルの詳細チューニング
+
+- モデル例: `fast-small` (weight 1.0, timeout 6s), `balanced` (1.2, 12s), `high-quality` (1.5, 20s)
+- 戦略:
+  - quality: 全モデルを走らせ重み付きスコアで選択
+  - speed: 最初に返った応答で閾値（例 0.55）を超えたら採用
+  - consensus: 2/3 以上の一致（類似度や n-gram 近接）なら採用、なければ quality にフォールバック
+- 計測: モデル別成功/失敗、p50/p95 レイテンシ、タイムアウト件数、選択率、信頼度分布をメトリクス化し Grafana で可視化
+
 ## 14. 付録
 
 - よくあるエラー: FastAPI が上がらない（venv/ポート競合）、Ollama 接続不可（サービス未起動/モデル未 pull）、p95 悪化（負荷やバックエンド遅延を確認）。
@@ -126,4 +158,4 @@
 
 ---
 
-※ 本書はドラフトです。セキュリティ強化（JWT+Redis 化、safe_filter 拡張）、監視ダッシュボード（Grafana パネル例）、アンサンブルの詳細チューニングなどは今後の加筆候補です。
+※ 本書はドラフトです。構成やパラメータは運用結果に応じて随時アップデートしてください。
