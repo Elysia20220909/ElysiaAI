@@ -1,6 +1,6 @@
 # 💜 Elysia AI への貢献
 
-まず、このプロジェクトへの貢献を検討いただきありがとうございます！🦊
+**概要**: 参加前に行動規範を確認し、Issue/PR では再現手順と背景を明確にしてください。セットアップは `bun install` と `bun run dev`、Python 連携は scripts/setup-python.\* を利用します。問い合わせ: [maintainers@elysia.ai](mailto:maintainers@elysia.ai)
 
 ## 📜 行動規範
 
@@ -10,7 +10,7 @@
 
 ### 🐛 バグ報告
 
-バグを発見した場合は、以下の情報を含めてIssueを作成してください：
+バグを発見した場合は、以下の情報を含めて Issue を作成してください：
 
 - **明確なタイトル**: 問題を簡潔に説明
 - **再現手順**: 問題を再現するための詳細な手順
@@ -34,22 +34,26 @@
 
 ### 🚀 プルリクエスト
 
-1. **Forkしてブランチを作成**
+1. **Fork してブランチを作成**
+
    ```bash
    git checkout -b feature/amazing-feature
    ```
 
 2. **コードを変更**
+
    - コーディング規約に従う (Biome を使用)
    - テストを追加/更新
    - ドキュメントを更新
 
 3. **コミット**
+
    ```bash
    git commit -m "feat: add amazing feature"
    ```
-   
+
    コミットメッセージは [Conventional Commits](https://www.conventionalcommits.org/) に従ってください：
+
    - `feat:` 新機能
    - `fix:` バグ修正
    - `docs:` ドキュメントのみの変更
@@ -60,6 +64,7 @@
    - `chore:` ビルドプロセスやツールの変更
 
 4. **プッシュ**
+
    ```bash
    git push origin feature/amazing-feature
    ```
@@ -74,17 +79,17 @@
 ### 前提条件
 
 - [Bun](https://bun.sh/) v1.0 以上
-- Python 3.10 以上 (RAG機能用)
-- Docker (オプション、Redis用)
-- [Ollama](https://ollama.ai/) (LLM用)
+- Python 3.10 以上 (RAG 機能用)
+- Docker (オプション、Redis 用)
+- [Ollama](https://ollama.ai/) (LLM 用)
 - [VOICEVOX](https://voicevox.hiroshiba.jp/) (音声合成用)
 
 ### セットアップ手順
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/chloeamethyst/ElysiaJS.git
-cd ElysiaJS
+git clone https://github.com/Elysia20220909/ElysiaAI.git
+cd ElysiaAI
 
 # 依存関係をインストール
 bun install
@@ -155,11 +160,13 @@ bun test --coverage
 1. `CHANGELOG.md` を更新
 2. `package.json` のバージョンを更新
 3. コミットしてタグを作成
+
    ```bash
    git commit -am "chore: release v1.x.x"
    git tag v1.x.x
    git push origin main --tags
    ```
+
 4. GitHub Release を作成
 5. npm に公開 (自動)
 
@@ -167,7 +174,7 @@ bun test --coverage
 
 - **GitHub Issues**: バグ報告や機能リクエスト
 - **Discussions**: 一般的な質問や議論
-- **Email**: [プロジェクトメールアドレス]
+- **Email**: [maintainers@elysia.ai](mailto:maintainers@elysia.ai)
 
 ## ライセンス
 
