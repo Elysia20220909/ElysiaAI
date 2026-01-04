@@ -5,24 +5,30 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript)](https://typescriptlang.org)
 
-**エルゴノミックなAIチャット with RAG** - 超高速、型安全、そして楽しい 🦊
+**エルゴノミックな AI チャット with RAG** - 超高速、型安全、そして楽しい 🦊
 
 [English](./README.en.md) • [日本語](./README.ja.md)
 
 ---
 
+## TL;DR
+
+- Bun + Elysia の軽量ゲートウェイが FastAPI ベースの RAG と Ollama を中継するシンプル構成。
+- ローカル開発は `bun run dev` だけで FastAPI → Elysia が起動（.env をコピーして最小設定）。
+- セキュリティは基本認証 + レート制限をデフォルトとし、JWT/Redis 化や safe_filter 強化は今後の拡張余地あり。
+
 ## ✨ これが Elysia AI
 
 ```typescript
-import { Elysia } from 'elysia'
+import { Elysia } from "elysia";
 
 new Elysia()
-  .get('/chat', async ({ query }) => {
+  .get("/chat", async ({ query }) => {
     // 型安全、自動検証、超高速 ⚡
-    const response = await ai.chat(query.message)
-    return { reply: response }
+    const response = await ai.chat(query.message);
+    return { reply: response };
   })
-  .listen(3000)
+  .listen(3000);
 ```
 
 **妥協なし**: 速さ ⚡、型安全 🛡️、そして作っていて楽しい 💜
@@ -50,25 +56,25 @@ bun run dev
 
 ## 📦 機能
 
-### 🧠 **インテリジェントRAGシステム**
+### 🧠 **インテリジェント RAG システム**
 
 - **ベクトル検索**: Milvus Lite with `all-MiniLM-L6-v2` 埋め込み
 - **コンテキスト取得**: セマンティック類似性マッチング
-- **スマートキャッシング**: Redisベースのレスポンスキャッシュ
+- **スマートキャッシング**: Redis ベースのレスポンスキャッシュ
 
-### ⚡ **Elysia駆動**
+### ⚡ **Elysia 駆動**
 
-- **型安全**: Eden Treatyでエンドツーエンド TypeScript
-- **高速**: 最適化されたBunランタイム
-- **エルゴノミック**: 直感的なAPI設計、最小限のボイラープレート
+- **型安全**: Eden Treaty でエンドツーエンド TypeScript
+- **高速**: 最適化された Bun ランタイム
+- **エルゴノミック**: 直感的な API 設計、最小限のボイラープレート
 
-### 🤖 **LLM統合**
+### 🤖 **LLM 統合**
 
 - **Ollama**: ローカル `llama3.2` モデルとストリーミング
 - **リアルタイム**: Server-Sent Events (SSE) によるライブレスポンス
 - **柔軟**: モデルとプロバイダーの簡単な切り替え
 
-### 🎨 **美しいUI**
+### 🎨 **美しい UI**
 
 - **Alpine.js**: リアクティブで軽量なフロントエンド
 - **レスポンシブ**: モバイルフレンドリーデザイン
@@ -76,16 +82,16 @@ bun run dev
 
 ### 🔐 **セキュリティ第一**
 
-- リフレッシュトークン付きJWT認証
-- レート制限（ユーザーあたり60リクエスト/分）
-- AES-256-GCM暗号化
-- 5つの権限レベルを持つRBAC
-- XSS/SQLインジェクション防止
+- デフォルトは BASIC 相当の認証（環境変数で資格情報を必須設定）
+- シンプルなレート制限（自己防衛でしきい値を動的変更）
+- 入出力フィルタでプロンプトインジェクション/危険ワードを軽減
+- JWT + Redis ベースの強化認証は拡張候補（docs 参照）
+- XSS/SQL インジェクション対策の入力バリデーション/サニタイズ
 
 ### 📊 **可観測性**
 
-- Prometheusメトリクス
-- Grafanaダッシュボード
+- Prometheus メトリクス
+- Grafana ダッシュボード
 - 構造化ログ
 - ヘルスチェック＆レディネスプローブ
 
@@ -121,17 +127,17 @@ bun run dev
 
 ## 🔄 ロードマップ
 
-**v2.0 (2026年Q1)**: Kubernetes • マルチテナント • GraphQL • リアルタイムコラボレーション  
-**v2.1 (2026年Q2)**: 音声入出力 • 画像生成 • 高度なRAG  
-**v3.0 (2026年Q3)**: エージェントフレームワーク • 関数呼び出し • マルチモーダルAI
+**v2.0 (2026 年 Q1)**: Kubernetes • マルチテナント • GraphQL • リアルタイムコラボレーション  
+**v2.1 (2026 年 Q2)**: 音声入出力 • 画像生成 • 高度な RAG  
+**v3.0 (2026 年 Q3)**: エージェントフレームワーク • 関数呼び出し • マルチモーダル AI
 
 ---
 
 ## 📄 ライセンス
 
-### MITライセンス
+### MIT ライセンス
 
-Copyright (c) 2025 chloeamethyst
+Copyright (c) 2026 ElysiaAI contributors
 
 このソフトウェアおよび関連文書ファイル（以下「ソフトウェア」）のコピーを取得した人は、
 無償でソフトウェアを制限なく扱うことができます。これには、使用、複製、修正、統合、
@@ -153,8 +159,8 @@ Copyright (c) 2025 chloeamethyst
 
 ## 🤝 サポート
 
-- **イシュー**: [GitHub Issues](https://github.com/chloeamethyst/ElysiaJS/issues)
-- **ディスカッション**: [GitHub Discussions](https://github.com/chloeamethyst/ElysiaJS/discussions)
+- **イシュー**: [GitHub Issues](https://github.com/Elysia20220909/ElysiaAI/issues)
+- **ディスカッション**: [GitHub Discussions](https://github.com/Elysia20220909/ElysiaAI/discussions)
 - **セキュリティ**: [SECURITY.md](docs/SECURITY.md) を参照
 
 ---
@@ -167,4 +173,4 @@ Copyright (c) 2025 chloeamethyst
 
 ❤️ で作成 by [chloeamethyst](https://github.com/chloeamethyst)
 
-⭐ **GitHubでスターをください！**
+⭐ **GitHub でスターをください！**
