@@ -17,8 +17,12 @@
 - [9. スクリプトと運用](#9-スクリプトと運用)
 - [10. 品質とテスト](#10-品質とテスト)
 - [11. セキュリティ実務](#11-セキュリティ実務)
+  - [11.1 JWT + Redis 化の設計メモ](#111-jwt--redis-化の設計メモ)
+  - [11.2 safe_filter 強化の方向性](#112-safe_filter-強化の方向性)
 - [12. 監視と運用](#12-監視と運用)
+  - [12.1 Grafana パネル例](#121-grafana-パネル例)
 - [13. デプロイのヒント](#13-デプロイのヒント)
+  - [13.1 アンサンブルの詳細チューニング](#131-アンサンブルの詳細チューニング)
 - [14. 付録](#14-付録)
 
 ## 1. はじめに
@@ -43,6 +47,7 @@
   - DATABASE_CONFIG.RAG_API_URL（例: <http://127.0.0.1:8000>）
   - OLLAMA_HOST, OLLAMA_MODEL（例: <http://127.0.0.1:11434>, llama3.2）
   - USE_MILVUS, MILVUS_URI, MILVUS_TOKEN（任意）
+  - セキュリティ/レート制限系: JWT_SECRET, JWT_REFRESH_SECRET, REDIS_ENABLED, REDIS_URL, RATE_LIMIT_RPM（詳細版は `config/.env.example` を参照）
 - 起動
   - `bun run dev` で FastAPI → Elysia の順に起動（ログは logs/）。
   - ヘルス確認: <http://localhost:3000/health>, <http://127.0.0.1:8000/health>
@@ -118,6 +123,13 @@
 - 入力フィルタ: 危険コマンド/プロンプトインジェクションをルール＋スコアリングで判定。高リスクは拒否・中リスクは要確認ラベル。
 - ロギング: フィルタ適用前後の差分をメトリクス化（何件フィルタされたか）。
 
+#### 実装ルールと環境変数の整合
+
+- 現行実装: access/refresh はメモリ発行で access 15 分（900s）・refresh は明示期限なし。Redis 障害時もフェイルオープン（インメモリ）で継続し、自己防衛時のみレートしきい値を 50→30 に落とす。
+- JWT 化する場合の環境変数: `JWT_SECRET`, `JWT_REFRESH_SECRET`（必須で強度ある文字列）, `REDIS_ENABLED`, `REDIS_URL`（Redis 併用時）, `RATE_LIMIT_RPM`（実装側が参照する場合に設定）。
+- ポリシー: Redis を有効にしてもダウン時はインメモリへフォールバックするフェイルオープン運用を前提にし、アラートや自己防衛の閾値は運用実績に合わせて調整する。
+- テンプレート: `config/.env.example`（詳細版）とリポジトリ直下の `.env.example` を同期させること。
+
 ## 12. 監視と運用
 
 - メトリクス: HTTP 数/レイテンシ/エラー、認証試行、RAG レイテンシ、レートリミット超過、SSE 接続数。
@@ -132,6 +144,8 @@
 - レートリミット超過: `rate(rate_limit_exceeded_total[5m])`
 - SSE 接続数: `connections_current`
 - アラート案: p95 > 1.2s (warn) / > 2s (crit), error rate >1% (warn) / >5% (crit)
+
+※ 閾値は本番の平常値＋余裕（例: 平常 p95 の 1.2 倍）に合わせて逐次チューニングする。
 
 ## 13. デプロイのヒント
 
