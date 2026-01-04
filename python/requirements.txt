@@ -4,7 +4,9 @@ fastapi>=0.115.6
 uvicorn[standard]>=0.34.0
 sentence-transformers>=3.3.1
 # Pin to patched version for CVE fixes (GHSA-w853-jp5j-5j7f)
-filelock>=3.20.1
+filelock>=3.13.0
+# Neuro module integration - Memory & RAG
+chromadb>=0.5.0
 # network_simulation dependencies
 inputimeout==1.0.4
 networkx>=3.2
@@ -15,3 +17,6 @@ tweepy>=4.14.0
 python-dotenv>=1.0.0
 requests>=2.32.0
 requests-oauthlib>=2.0.0
+# Optional: Neuro audio features (voice STT/TTS)
+# realtimestt>=0.1.0  # Uncomment for voice input support
+# realtimetts>=0.1.0  # Uncomment for voice output support

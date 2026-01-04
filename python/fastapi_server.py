@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Elysia AI - RAG Server with FastAPI + Milvus Lite
-エリシアちゃんのセリフ検索システム♡
+Elysia AI - RAG Server with FastAPI + Milvus Lite + Neuro Integration
+エリシアちゃんのセリフ検索システム♡ with Neuro Memory
 """
 from typing import Dict, List, Any, Optional
 from fastapi import FastAPI, Body, HTTPException
@@ -15,6 +15,14 @@ import numpy as np
 import httpx
 import json
 import asyncio
+
+# ==================== Neuro Module インポート ====================
+try:
+    from neuro_module import MemoryHandler, NeuroConfig
+    NEURO_AVAILABLE = True
+except ImportError:
+    NEURO_AVAILABLE = False
+    logging.warning("⚠️  Neuro module not available. Memory features disabled.")
 
 # ==================== 設定 ====================
 CONFIG = {
@@ -62,6 +70,17 @@ except Exception as e:
 milvus_client = None
 embeddings_store: List[np.ndarray] = []
 quotes_store: List[str] = []
+
+# Neuro Memory Handler初期化
+memory_handler = None
+if NEURO_AVAILABLE:
+    try:
+        neuro_config = NeuroConfig()
+        memory_handler = MemoryHandler(neuro_config)
+        logger.info("✅ Neuro Memory Handler initialized")
+    except Exception as e:
+        logger.warning(f"⚠️ Failed to initialize Neuro Memory Handler: {e}")
+        memory_handler = None
 
 # Milvus接続（環境変数で有効化）
 if CONFIG["USE_MILVUS"]:
@@ -154,6 +173,26 @@ class ChatResponse(BaseModel):
     response: str
     context: str
     quotes: List[str]
+
+# ==================== Neuro Memory Models ====================
+class MemoryQuery(BaseModel):
+    query: str
+    limit: Optional[int] = 5
+
+class MemoryCreateRequest(BaseModel):
+    document: str
+    metadata: Optional[Dict[str, Any]] = None
+
+class MemoryResponse(BaseModel):
+    id: str
+    document: str
+    metadata: Dict[str, Any]
+    distance: Optional[float] = None
+
+class MemoriesResponse(BaseModel):
+    memories: List[MemoryResponse]
+    query: Optional[str] = None
+    count: int
 
 @app.on_event("startup")
 async def init_db() -> None:
@@ -421,7 +460,209 @@ async def chat_with_elysia(request: ChatRequest):
             detail=f"Chat failed: {str(e)}"
         )
 
-# ==================== メイン実行 ====================
+# ==================== Neuro Memory APIs ====================
+@app.post("/neuro/memory/query", response_model=MemoriesResponse)
+async def query_memories(request: MemoryQuery = Body(...)) -> Dict[str, Any]:
+    """
+    Query Neuro memories using semantic search
+
+    Args:
+        request: MemoryQuery with query text and optional limit
+
+    Returns:
+        List of relevant memories with similarity scores
+    """
+    if not memory_handler:
+        raise HTTPException(
+            status_code=503,
+            detail="Neuro memory service not available"
+        )
+
+    try:
+        results = memory_handler.query_memories(
+            query_text=request.query,
+            n_results=request.limit
+        )
+
+        return MemoriesResponse(
+            memories=[
+                MemoryResponse(
+                    id=m["id"],
+                    document=m["document"],
+                    metadata=m["metadata"],
+                    distance=m.get("distance")
+                )
+                for m in results["memories"]
+            ],
+            query=request.query,
+            count=len(results["memories"])
+        )
+
+    except Exception as e:
+        logger.error(f"❌ Memory query error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Memory query failed: {str(e)}"
+        )
+
+@app.post("/neuro/memory/create", response_model=Dict[str, str])
+async def create_memory(request: MemoryCreateRequest = Body(...)) -> Dict[str, Any]:
+    """
+    Create a new Neuro memory entry
+
+    Args:
+        request: MemoryCreateRequest with document and optional metadata
+
+    Returns:
+        Dictionary with created memory ID
+    """
+    if not memory_handler:
+        raise HTTPException(
+            status_code=503,
+            detail="Neuro memory service not available"
+        )
+
+    try:
+        memory_id = memory_handler.create_memory(
+            document=request.document,
+            metadata=request.metadata
+        )
+
+        return {"id": memory_id, "status": "created"}
+
+    except Exception as e:
+        logger.error(f"❌ Memory creation error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Memory creation failed: {str(e)}"
+        )
+
+@app.delete("/neuro/memory/{memory_id}")
+async def delete_memory(memory_id: str) -> Dict[str, str]:
+    """Delete a Neuro memory by ID"""
+    if not memory_handler:
+        raise HTTPException(
+            status_code=503,
+            detail="Neuro memory service not available"
+        )
+
+    try:
+        success = memory_handler.delete_memory(memory_id)
+        if success:
+            return {"status": "deleted", "id": memory_id}
+        else:
+            raise HTTPException(status_code=404, detail="Memory not found")
+
+    except Exception as e:
+        logger.error(f"❌ Memory deletion error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Memory deletion failed: {str(e)}"
+        )
+
+@app.get("/neuro/memory/all")
+async def get_all_memories() -> Dict[str, Any]:
+    """Retrieve all Neuro memories"""
+    if not memory_handler:
+        raise HTTPException(
+            status_code=503,
+            detail="Neuro memory service not available"
+        )
+
+    try:
+        memories = memory_handler.get_all_memories()
+        return {
+            "memories": [
+                {
+                    "id": m["id"],
+                    "document": m["document"],
+                    "metadata": m["metadata"]
+                }
+                for m in memories
+            ],
+            "count": len(memories)
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Get memories error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get memories: {str(e)}"
+        )
+
+@app.post("/neuro/memory/clear")
+async def clear_memories(memory_type: Optional[str] = None) -> Dict[str, str]:
+    """
+    Clear Neuro memories by type
+
+    Args:
+        memory_type: Type of memory to clear ("short-term", "long-term", or None for all)
+    """
+    if not memory_handler:
+        raise HTTPException(
+            status_code=503,
+            detail="Neuro memory service not available"
+        )
+
+    try:
+        success = memory_handler.clear_memories(memory_type)
+        if success:
+            return {"status": "cleared", "type": memory_type or "all"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to clear memories")
+
+    except Exception as e:
+        logger.error(f"❌ Clear memories error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to clear memories: {str(e)}"
+        )
+
+@app.post("/neuro/memory/export")
+async def export_memories(output_path: str = "data/memories_export.json") -> Dict[str, str]:
+    """Export all memories to JSON file"""
+    if not memory_handler:
+        raise HTTPException(
+            status_code=503,
+            detail="Neuro memory service not available"
+        )
+
+    try:
+        success = memory_handler.export_memories(output_path)
+        if success:
+            return {"status": "exported", "path": output_path}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to export memories")
+
+    except Exception as e:
+        logger.error(f"❌ Export memories error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to export memories: {str(e)}"
+        )
+
+@app.post("/neuro/memory/import")
+async def import_memories(input_path: str) -> Dict[str, str]:
+    """Import memories from JSON file"""
+    if not memory_handler:
+        raise HTTPException(
+            status_code=503,
+            detail="Neuro memory service not available"
+        )
+
+    try:
+        success = memory_handler.import_memories(input_path)
+        if success:
+            return {"status": "imported", "path": input_path}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to import memories")
+
+    except Exception as e:
+        logger.error(f"❌ Import memories error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to import memories: {str(e)}"
+        )
 if __name__ == "__main__":
     logger.info("🌸 Starting Elysia RAG Server...")
     logger.info(f"📍 API: http://{CONFIG['HOST']}:{CONFIG['PORT']}")
