@@ -36,7 +36,13 @@
     "docker:up": "docker compose -f config/docker/docker-compose.yml up -d",
     "aws:deploy": "echo Deploying to AWS...",
     "gcp:deploy": "echo Deploying to GCP...",
-    "test": "bun test"
+    "test": "bun test",
+    "launch:all": "pwsh -File scripts/launch-all.ps1",
+    "test:all": "pwsh -File scripts/test-all.ps1",
+    "test:quick": "pwsh -File scripts/test-all.ps1 -Quick",
+    "desktop:electron": "cd desktop && npm start",
+    "desktop:tauri": "cd tauri-app && npm run dev",
+    "mobile": "cd mobile && npm start"
   },
   "keywords": [],
   "author": "",
