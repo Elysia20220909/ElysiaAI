@@ -663,6 +663,200 @@ async def import_memories(input_path: str) -> Dict[str, str]:
             status_code=500,
             detail=f"Failed to import memories: {str(e)}"
         )
+# ==================== VOICEVOX 音声合成エンドポイント ====================
+
+class VoiceSynthesisRequest(BaseModel):
+    """音声合成リクエスト"""
+    text: str = Field(..., description="合成対象テキスト")
+    speaker_id: int = Field(default=2, description="VOICEVOX スピーカー ID")
+    speed: float = Field(default=1.0, description="再生速度（0.5～2.0）")
+    pitch: float = Field(default=1.0, description="ピッチ（-0.15～0.15）")
+    intonation: float = Field(default=1.0, description="イントネーション（0.0～2.0）")
+
+
+@app.post(
+    "/synthesize",
+    summary="VOICEVOX でテキストを音声に合成",
+    tags=["Voice"],
+    response_description="WAV 形式の音声バイナリデータ"
+)
+async def synthesize_voice(request: VoiceSynthesisRequest):
+    """
+    テキストを VOICEVOX で音声に合成します。
+
+    **パラメータ:**
+    - `text`: 合成するテキスト（日本語推奨）
+    - `speaker_id`: VOICEVOX スピーカー ID（デフォルト: 2 - ハナコ）
+    - `speed`: 再生速度（デフォルト: 1.0）
+    - `pitch`: ピッチシフト（デフォルト: 1.0）
+    - `intonation`: イントネーション（デフォルト: 1.0）
+
+    **戻り値:** WAV 形式の音声ファイル
+    """
+    voicevox_host = os.getenv("VOICEVOX_BASE_URL", "http://127.0.0.1:50021")
+
+    try:
+        # Step 1: オーディオクエリ作成
+        query_url = f"{voicevox_host}/audio_query"
+        query_params = {
+            "text": request.text,
+            "speaker": request.speaker_id,
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            query_response = await client.post(query_url, params=query_params)
+
+            if query_response.status_code != 200:
+                logger.error(f"❌ VOICEVOX query failed: {query_response.status_code}")
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"VOICEVOX query failed: {query_response.status_code}"
+                )
+
+            query_json = query_response.json()
+
+            # パラメータ調整
+            query_json["speedScale"] = request.speed
+            query_json["pitchScale"] = request.pitch
+            query_json["intonationScale"] = request.intonation
+
+            # Step 2: 音声合成
+            synthesis_url = f"{voicevox_host}/synthesis"
+            synthesis_params = {"speaker": request.speaker_id}
+
+            synthesis_response = await client.post(
+                synthesis_url,
+                json=query_json,
+                params=synthesis_params,
+                headers={"Content-Type": "application/json"},
+            )
+
+            if synthesis_response.status_code != 200:
+                logger.error(f"❌ VOICEVOX synthesis failed: {synthesis_response.status_code}")
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"VOICEVOX synthesis failed: {synthesis_response.status_code}"
+                )
+
+            # オーディオデータを返す
+            return StreamingResponse(
+                iter([synthesis_response.content]),
+                media_type="audio/wav",
+                headers={
+                    "Content-Disposition": f'attachment; filename="speech_{request.speaker_id}.wav"',
+                    "X-Audio-Duration": str(len(synthesis_response.content)),
+                }
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Voice synthesis error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Voice synthesis failed: {str(e)}"
+        )
+
+
+@app.post(
+    "/synthesize-lipsync",
+    summary="音声合成とリップシンクデータを取得",
+    tags=["Voice"],
+    response_description="{'audio_url': str, 'lipsync_data': list}"
+)
+async def synthesize_with_lipsync(request: VoiceSynthesisRequest):
+    """
+    テキストを音声に合成し、リップシンク用タイミングデータを返します。
+
+    **戻り値:**
+    ```json
+    {
+        "audio_url": "/synthesize?text=...&speaker_id=...",
+        "duration_ms": 3000,
+        "lipsync_data": [
+            {"timestamp": 0, "mouth_open": 0.8, "mouth_shape": "a"},
+            {"timestamp": 100, "mouth_open": 0.5, "mouth_shape": "i"},
+            ...
+        ]
+    }
+    ```
+    """
+    voicevox_host = os.getenv("VOICEVOX_BASE_URL", "http://127.0.0.1:50021")
+
+    try:
+        # オーディオクエリ作成
+        query_url = f"{voicevox_host}/audio_query"
+        query_params = {
+            "text": request.text,
+            "speaker": request.speaker_id,
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            query_response = await client.post(query_url, params=query_params)
+
+            if query_response.status_code != 200:
+                raise HTTPException(
+                    status_code=502,
+                    detail="VOICEVOX query failed"
+                )
+
+            query_json = query_response.json()
+
+            # パラメータ調整
+            query_json["speedScale"] = request.speed
+            query_json["pitchScale"] = request.pitch
+            query_json["intonationScale"] = request.intonation
+
+            # 音声長を計算（フレーム数 × フレーム時間）
+            accent_phrases = query_json.get("accentPhrases", [])
+            total_frames = sum(
+                phrase.get("duration", 0) +
+                sum(mora.get("duration", 0) for mora in phrase.get("moras", []))
+                for phrase in accent_phrases
+            )
+            duration_ms = int(total_frames * 1000 / 24000)  # 24kHz サンプルレート
+
+            # リップシンクデータを生成（簡易版）
+            lipsync_data = []
+            phoneme_map = {
+                "あ": {"mouth_open": 1.0, "mouth_shape": "a"},
+                "い": {"mouth_open": 0.3, "mouth_shape": "i"},
+                "う": {"mouth_open": 0.4, "mouth_shape": "u"},
+                "え": {"mouth_open": 0.8, "mouth_shape": "e"},
+                "お": {"mouth_open": 0.9, "mouth_shape": "o"},
+                "ん": {"mouth_open": 0.1, "mouth_shape": "neutral"},
+            }
+
+            # 簡易的なリップシンク生成（テキストベース）
+            chars_per_frame = len(request.text) / (duration_ms / 50)  # 50ms 単位
+            frame_idx = 0
+            for i, char in enumerate(request.text):
+                timestamp = int((i * chars_per_frame) * 50)
+                if timestamp > duration_ms:
+                    break
+
+                phoneme_data = phoneme_map.get(char, {"mouth_open": 0.2, "mouth_shape": "neutral"})
+                lipsync_data.append({
+                    "timestamp": timestamp,
+                    **phoneme_data,
+                })
+
+            return {
+                "audio_url": f"/synthesize?text={request.text}&speaker_id={request.speaker_id}&speed={request.speed}&pitch={request.pitch}&intonation={request.intonation}",
+                "duration_ms": duration_ms,
+                "lipsync_data": lipsync_data,
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Lipsync generation error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Lipsync generation failed: {str(e)}"
+        )
+
+
 if __name__ == "__main__":
     logger.info("🌸 Starting Elysia RAG Server...")
     logger.info(f"📍 API: http://{CONFIG['HOST']}:{CONFIG['PORT']}")
