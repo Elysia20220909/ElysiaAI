@@ -81,10 +81,12 @@ if (containsDangerousKeywords(cleaned)) {
 #### FastAPI バックエンド
 
 ```python
-dangerous_keywords = ["drop","delete","exec","eval","system","__import__"]
+dangerous_keywords = ["drop", "delete", "exec", "eval", "system", "__import__"]
 if any(kw in user_message.lower() for kw in dangerous_keywords):
     raise HTTPException(400, "にゃん♡ いたずらはダメだよぉ〜？")
 ```
+
+````
 
 **効果**: SQL インジェクション、コマンドインジェクション、Python コードインジェクション防止
 
@@ -101,7 +103,7 @@ const slidingWindow = rateLimiter.checkSlidingWindow(ip, 60, 1);
 
 // 3. Token Bucket - バースト許容
 const tokenBucket = rateLimiter.checkTokenBucket(ip, 60, 10, 2);
-```
+````
 
 **特徴**:
 
@@ -254,7 +256,7 @@ MILVUS_TOKEN=your_secure_token_here
 
 #### 1. `/config/private/` - 環境変数と認証情報
 
-```
+```plaintext
 config/private/
 ├── .env              # 本番環境変数（Git管理外）
 ├── .env.example      # 環境変数テンプレート
@@ -274,7 +276,7 @@ config/private/
 
 #### 2. `/src/config/internal/` - 内部設定
 
-```
+```plaintext
 src/config/internal/
 └── llm-config.ts     # LLMモデル設定とプロンプト
 ```
@@ -287,7 +289,7 @@ src/config/internal/
 
 #### 3. `/src/core/security/` - セキュリティモジュール
 
-```
+```plaintext
 src/core/security/
 ├── index.ts          # エクスポート集約
 ├── jwt.ts            # JWT認証ロジック
@@ -302,7 +304,7 @@ src/core/security/
 
 #### 4. `/.internal/` - 最高機密（オプション）
 
-```
+```plaintext
 .internal/
 ├── security/              # セキュリティモジュール (SUPER_ADMIN)
 │   ├── config-manager.ts  # セキュリティ設定ローダー
@@ -341,8 +343,8 @@ icacls ".internal" /grant:r "SYSTEM:(OI)(CI)F"
 icacls ".internal" /grant:r "Administrators:(OI)(CI)F"
 
 # シークレットディレクトリをさらに制限
-icacls ".internal\secrets" /inheritance:r
-icacls ".internal\secrets" /grant:r "SYSTEM:(OI)(CI)F"
+icacls ".internal\\secrets" /inheritance:r
+icacls ".internal\\secrets" /grant:r "SYSTEM:(OI)(CI)F"
 ```
 
 ### Layer 2: バージョン管理保護
@@ -405,8 +407,8 @@ enum AccessLevel {
 
 ```powershell
 # リポジトリをクローン
-git clone https://github.com/chloeamethyst/ElysiaJS.git
-cd ElysiaJS
+git clone https://github.com/Elysia20220909/ElysiaAI.git
+cd ElysiaAI
 
 # 保護ディレクトリの作成（既存の場合はスキップ）
 New-Item -ItemType Directory -Force -Path config/private
@@ -756,13 +758,13 @@ XSSも、SQLインジェクションも、DoS攻撃も、
 
 脆弱性を発見した場合は以下で報告してください:
 
-- **GitHub Issues**: [ElysiaJS](https://github.com/chloeamethyst/ElysiaJS/issues)
-- **Email**: security@your-domain.com
+- **GitHub Issues**: [ElysiaAI](https://github.com/Elysia20220909/ElysiaAI/issues)
+- **Email**: [security@elysia.ai](mailto:security@elysia.ai)
 - **緊急**: インシデント対応手順を使用
 
 ---
 
-**分類**: CONFIDENTIAL  
-**最終更新**: 2025 年 12 月 3 日  
-**次回レビュー**: 2026 年 1 月 3 日  
-**バージョン**: 2.0.0 (統合版)
+**分類**: CONFIDENTIAL
+**最終更新**: 2026 年 1 月 5 日
+**次回レビュー**: 2026 年 4 月 5 日
+**バージョン**: 2.1.0
