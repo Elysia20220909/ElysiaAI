@@ -72,7 +72,7 @@ jobs:
           RUN_E2E_TESTS: false
 
       - name: カバレッジレポートアップロード
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-report
           path: coverage/
