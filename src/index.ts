@@ -432,7 +432,7 @@ app.get("/diagnostics/security", requireAuth, (_req: Request, res: Response) => 
 	if (!ALERT_WEBHOOK_URL) {
 		warnings.push("ALERT_WEBHOOK_URL が未設定のため外部通知なし");
 	}
-	
+
 	// クライアントには最小限の情報のみ返す（具体的な設定値は隠蔽）
 	res.json({
 		// 具体的な数値は返さない（攻撃者にヒントを与えない）
@@ -681,7 +681,7 @@ app.post("/api/demo/voice", (req: Request, res: Response) => {
 });
 
 // ==================== Neuro Integration Routes ====================
-const FASTAPI_HOST = process.env.DATABASE_CONFIG?.RAG_API_URL || "http://127.0.0.1:8000";
+const FASTAPI_HOST = (process.env.DATABASE_CONFIG ? JSON.parse(process.env.DATABASE_CONFIG).RAG_API_URL : undefined) || process.env.FASTAPI_HOST || "http://127.0.0.1:8000";
 
 interface NeuroMemoryResponse {
 	id: string;
@@ -887,10 +887,13 @@ app.post("/api/neuro/memory/import", async (req: Request, res: Response) => {
 // Neuro health check
 app.get("/api/neuro/health", async (req: Request, res: Response) => {
 	try {
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 5000);
 		const response = await fetch(`${FASTAPI_HOST}/docs`, {
 			method: "HEAD",
-			timeout: 5000 as any,
+			signal: controller.signal,
 		});
+		clearTimeout(timeoutId);
 
 		return res.json({
 			status: response.ok ? "ok" : "error",
@@ -929,7 +932,7 @@ if (process.env.AUTO_START_SERVER === "true" || process.env.NODE_ENV === "test")
 	startServer();
 }
 
-if (import.meta.main) {
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
 	startServer();
 }
 
