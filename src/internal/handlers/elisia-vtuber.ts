@@ -46,6 +46,25 @@ export function registerElisiaVTuberRoutes(app: Elysia): Elysia {
       // ユーザーの最後のメッセージを取得
       const userMessage = messages[messages.length - 1].content;
 
+      // サーバーサイドでの入力検証（クライアントは信用しない）
+      if (userMessage.length > 1000) {
+        return { error: 'メッセージが長すぎます', status: 400 };
+      }
+
+      // 危険なコンテンツパターンの検出
+      const dangerousPatterns = [
+        /\<script[^>]*\>/gi,
+        /javascript:/gi,
+        /on\w+\s*=/gi,
+        /(\{\{|\{%|\<\?)/gi, // テンプレートインジェクション
+      ];
+
+      for (const pattern of dangerousPatterns) {
+        if (pattern.test(userMessage)) {
+          return { error: '不正な入力が検出されました', status: 400 };
+        }
+      }
+
       // 感情検出
       const emotion = detectEmotionFromText(userMessage);
 

@@ -20,14 +20,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        # docker/setup-buildx-action@v3.0.0
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
+        # docker/login-action@v3.0.0
+uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
@@ -42,7 +44,8 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Build & Push Game Server
-        uses: docker/build-push-action@v4
+        # docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
         with:
           context: .
           file: ./ElysiaAI/game/Dockerfile
@@ -55,7 +58,8 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Build & Push FastAPI Server
-        uses: docker/build-push-action@v4
+        # docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
         with:
           context: ./python
           file: ./python/Dockerfile
@@ -69,7 +73,8 @@ jobs:
         continue-on-error: true
 
       - name: Update Docker Hub Description
-        uses: peter-evans/dockerhub-description@v3
+        # peter-evans/dockerhub-description@v4.0.0
+        uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
@@ -86,14 +91,16 @@ jobs:
 
     steps:
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        # aquasecurity/trivy-action@0.16.1
+        uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d
         with:
           image-ref: '${{ secrets.DOCKER_HUB_USERNAME }}/elysia-game:latest'
           format: 'sarif'
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy results to GitHub
-        uses: github/codeql-action/upload-sarif@v2
+        # github/codeql-action/upload-sarif@v3.27.5
+        uses: github/codeql-action/upload-sarif@aa578102511db1f4524ed59b8cc2bae4f6e88195
         with:
           sarif_file: 'trivy-results.sarif'
 
@@ -126,8 +133,8 @@ jobs:
 
     steps:
       - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
+        # docker/login-action@v3.0.0
+uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
@@ -150,7 +157,9 @@ jobs:
 
     steps:
       - name: Send Slack notification
-        uses: slackapi/slack-github-action@v1.24.0
+        # slackapi/slack-github-action@v1.24.0
+
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e
         with:
           webhook-url: ${{ secrets.SLACK_WEBHOOK }}
           payload: |
@@ -167,3 +176,7 @@ jobs:
               ]
             }
         continue-on-error: true
+
+
+
+

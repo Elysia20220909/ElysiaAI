@@ -16,19 +16,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Run npm audit
         run: npm audit --audit-level=moderate
         continue-on-error: true
 
       - name: Cargo audit (Rust)
-        uses: rustsec/audit-check-action@v1
+        # rustsec/audit-check@v1.4.1
+        uses: rustsec/audit-check@69366f33c96575abad1ee0dba8212ae896fbb8d5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Snyk Security Scan
-        uses: snyk/actions/setup@master
+        # snyk/actions/setup@0.4.0
+        uses: snyk/actions/setup@806182742461562b67788a64410098c9d9b96adb
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         continue-on-error: true
@@ -39,18 +42,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        # github/codeql-action/init@v3.27.5
+        uses: github/codeql-action/init@aa578102511db1f4524ed59b8cc2bae4f6e88195
         with:
           languages: ['cpp', 'javascript', 'python']
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
+        # github/codeql-action/autobuild@v3.27.5
+        uses: github/codeql-action/autobuild@aa578102511db1f4524ed59b8cc2bae4f6e88195
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        # github/codeql-action/analyze@v3.27.5
+        uses: github/codeql-action/analyze@aa578102511db1f4524ed59b8cc2bae4f6e88195
 
   # Secret scanning
   secret-scan:
@@ -58,12 +65,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           fetch-depth: 0
 
       - name: TruffleHog Secret Scan
-        uses: trufflesecurity/trufflehog@main
+        # trufflesecurity/trufflehog@v3.63.7
+        uses: trufflesecurity/trufflehog@4100a9214a8d3c48dcc77ad6bc2e848a9c31c8ba
         with:
           path: ./
           base: ${{ github.event.repository.default_branch }}
@@ -76,21 +85,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Build container image
         run: |
           docker build -t elysia:scan -f ElysiaAI/game/Dockerfile .
 
       - name: Scan with Trivy
-        uses: aquasecurity/trivy-action@master
+        # aquasecurity/trivy-action@0.16.1
+        uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d
         with:
           image-ref: 'elysia:scan'
           format: 'sarif'
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v2
+        # github/codeql-action/upload-sarif@v3.27.5
+        uses: github/codeql-action/upload-sarif@aa578102511db1f4524ed59b8cc2bae4f6e88195
         with:
           sarif_file: 'trivy-results.sarif'
 
@@ -100,10 +112,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Setup SonarQube
-        uses: SonarSource/sonarqube-scan-action@master
+        # SonarSource/sonarqube-scan-action@v2.0.2
+        uses: SonarSource/sonarqube-scan-action@884b79409bbd464b2a59edc326a4b77dc56b2195
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -114,10 +128,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Check licenses
-        uses: fossas/fossa-action@main
+        # fossas/fossa-action@v1.3.3
+        uses: fossas/fossa-action@47ef11b1e1e3812e88dae062b8b949d4b8e8acce
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
 
@@ -129,7 +145,8 @@ jobs:
     if: always()
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Create security report
         run: |
@@ -156,7 +173,9 @@ jobs:
           EOF
 
       - name: Upload report
-        uses: actions/upload-artifact@v4
+        # actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
         with:
           name: security-report
           path: SECURITY_REPORT.md
+

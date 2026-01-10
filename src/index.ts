@@ -46,6 +46,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Load authentication credentials from environment, or use development defaults
 const validUsername = process.env.AUTH_USERNAME || "elysia";
 const validPassword = process.env.AUTH_PASSWORD || "elysia-dev-password";
+
+// 本番環境でデフォルト認証情報を使用していないか確認
+if (process.env.NODE_ENV === 'production' && (!process.env.AUTH_USERNAME || !process.env.AUTH_PASSWORD)) {
+	console.error('⚠️ 致命的エラー: 本番環境でデフォルト認証情報が使用されています！');
+	console.error('AUTH_USERNAMEとAUTH_PASSWORDを環境変数で設定してください。');
+	process.exit(1);
+}
+
 const activeTokens = new Set<string>();
 const refreshTokens = new Set<string>();
 const rateLimitCounter = new Map<string, number>();
@@ -424,14 +432,16 @@ app.get("/diagnostics/security", requireAuth, (_req: Request, res: Response) => 
 	if (!ALERT_WEBHOOK_URL) {
 		warnings.push("ALERT_WEBHOOK_URL が未設定のため外部通知なし");
 	}
+	
+	// クライアントには最小限の情報のみ返す（具体的な設定値は隠蔽）
 	res.json({
-		rateLimitThreshold,
-		jwtConfigured: usesEnvCreds,
-		alertsWebhookEnabled: Boolean(ALERT_WEBHOOK_URL),
+		// 具体的な数値は返さない（攻撃者にヒントを与えない）
+		rateLimitEnabled: true,
+		authConfigured: usesEnvCreds,
+		alertsEnabled: Boolean(ALERT_WEBHOOK_URL),
 		warnings,
-		redis: "ok",
-		fastapi: "ok",
-		ollama: "ok",
+		// 内部サービスの詳細な状態は返さない
+		servicesStatus: "operational",
 	});
 });
 
