@@ -50,7 +50,8 @@ export class JWTManager {
 
   async initialize(): Promise<void> {
     try {
-      const redis = await import('redis').catch(() => null);
+      // @ts-ignore - redis is optional dependency
+      const redis = (await import('redis').catch(() => null)) as any;
       if (!redis) {
         logger.warn('Redis未インストール。トークン無効化機能が制限されます。');
         return;

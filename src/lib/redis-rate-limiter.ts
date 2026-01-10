@@ -26,7 +26,8 @@ export class RedisRateLimiter {
 
   async initialize(): Promise<void> {
     try {
-      const redis = await import('redis').catch(() => null);
+      // @ts-ignore - redis is optional dependency
+      const redis = (await import('redis').catch(() => null)) as any;
       if (!redis) {
         logger.warn('Redis パッケージが未インストール。レート制限は無効です。');
         return;
