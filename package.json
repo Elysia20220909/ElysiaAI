@@ -45,7 +45,11 @@
     "test:quick": "pwsh -File scripts/test-all.ps1 -Quick",
     "desktop:electron": "cd desktop && npm start",
     "desktop:tauri": "cd tauri-app && npm run dev",
-    "mobile": "cd mobile && npm start"
+    "mobile": "cd mobile && npm start",
+    "security:audit": "pwsh -File scripts/security-audit.ps1",
+    "security:audit:unix": "bash scripts/security-audit.sh",
+    "audit": "bun audit",
+    "audit:fix": "bun audit --fix"
   },
   "keywords": [],
   "author": "",

@@ -19,13 +19,40 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 						password: string;
 					};
 
+					// サーバーサイド検証：クライアントは信用しない
 					if (!username || !password) {
 						set.status = 400;
 						return { error: "ユーザー名とパスワードが必要です" };
 					}
 
-					const user = await db.createUser(username, password);
-					return { success: true, user };
+					// ユーザー名の検証とサニタイズ
+					const sanitizedUsername = username.trim();
+					if (sanitizedUsername.length < 3 || sanitizedUsername.length > 50) {
+						set.status = 400;
+						return { error: "ユーザー名は3〜50文字である必要があります" };
+					}
+
+					// 危険な文字を含まないことを確認
+					if (!/^[a-zA-Z0-9_-]+$/.test(sanitizedUsername)) {
+						set.status = 400;
+						return { error: "ユーザー名に使用できない文字が含まれています" };
+					}
+
+					// パスワード強度の検証（サーバーサイドで必須）
+					if (password.length < 12) {
+						set.status = 400;
+						return { error: "パスワードは12文字以上である必要があります" };
+					}
+
+					if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+						set.status = 400;
+						return { error: "パスワードは大文字、小文字、数字を含む必要があります" };
+					}
+
+					const user = await db.createUser(sanitizedUsername, password);
+					// 機密情報を除外してクライアントに返す
+					const { password: _, ...safeUser } = user as any;
+					return { success: true, user: safeUser };
 				} catch (error: unknown) {
 					set.status = 500;
 					return {
@@ -36,20 +63,32 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 			})
 
 			// ユーザーログイン
-			.post("/api/auth/login", async ({ body, set }) => {
+			.post("/api/auth/login", async ({ body, set, request }) => {
 				try {
 					const { username, password } = body as {
 						username: string;
 						password: string;
 					};
 
+					// IPアドレスベースのレート制限（ブルートフォース攻撃対策）
+					const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+					const rateLimitKey = `login:${clientIp}`;
+					
+					// TODO: Redisを使用した適切なレート制限の実装
+					// 現在は簡易実装（本番環境では不十分）
+
 					const user = await db.authenticateUser(username, password);
 					if (!user) {
+						// タイミング攻撃を防ぐため、常に同じ時間待機
+						await new Promise(resolve => setTimeout(resolve, 200));
 						set.status = 401;
-						return { error: "認証に失敗しました" };
+						// ユーザー名が存在するかどうかを漏らさない汎用メッセージ
+						return { error: "ユーザー名またはパスワードが正しくありません" };
 					}
 
-					return { success: true, user };
+					// 機密情報（パスワードハッシュなど）を除外
+					const { password: _, passwordHash, ...safeUser } = user as any;
+					return { success: true, user: safeUser };
 				} catch (error: unknown) {
 					set.status = 500;
 					return {

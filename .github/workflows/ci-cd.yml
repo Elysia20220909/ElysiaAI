@@ -23,10 +23,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        # oven-sh/setup-bun@v1.2.2
+
+        uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5
         with:
           bun-version: latest
 
@@ -50,10 +54,14 @@ jobs:
         bun-version: ['1.0.20', 'latest']
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        # oven-sh/setup-bun@v1.2.2
+
+        uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5
         with:
           bun-version: ${{ matrix.bun-version }}
 
@@ -68,7 +76,8 @@ jobs:
 
       - name: Upload artifacts
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v5
+        # actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
         with:
           name: build-${{ matrix.bun-version }}
           path: dist/
@@ -87,10 +96,14 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        # oven-sh/setup-bun@v1.2.2
+
+        uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5
         with:
           bun-version: ${{ matrix.bun-version }}
 
@@ -106,7 +119,8 @@ jobs:
 
       - name: Upload coverage
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.bun-version == 'latest' && env.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@v4
+        # codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/coverage-final.json
@@ -117,10 +131,14 @@ jobs:
     needs: build
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Run Trivy scanner
-        uses: aquasecurity/trivy-action@master
+        # aquasecurity/trivy-action@0.28.0
+
+        uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -129,7 +147,8 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload results
-        uses: github/codeql-action/upload-sarif@v4
+        # github/codeql-action/upload-sarif@v3.27.5
+        uses: github/codeql-action/upload-sarif@aa578102511db1f4524ed59b8cc2bae4f6e88195
         with:
           sarif_file: 'trivy-results.sarif'
 
@@ -140,13 +159,17 @@ jobs:
     if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/elysia')
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        # docker/setup-buildx-action@v3.0.0
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226
 
       - name: Log in to registry
-        uses: docker/login-action@v3
+        # docker/login-action@v3.0.0
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -154,7 +177,8 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        # docker/metadata-action@v5.5.0
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -163,7 +187,8 @@ jobs:
             type=sha
 
       - name: Build and push
-        uses: docker/build-push-action@v5
+        # docker/build-push-action@v5.1.0
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
         with:
           context: .
           file: ./config/docker/Dockerfile.production
@@ -187,7 +212,9 @@ jobs:
       SERVER_USER: ${{ secrets.SERVER_USER }}
 
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.1.1
+
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Deploy via SSH
         env:
@@ -211,3 +238,9 @@ jobs:
         run: |
           sleep 10
           curl -f ${{ secrets.SERVER_HOST }}/health || exit 1
+
+
+
+
+
+

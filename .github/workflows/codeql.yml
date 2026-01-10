@@ -19,26 +19,31 @@ jobs:
     name: Analyze
     runs-on: ubuntu-latest
     timeout-minutes: 360
-    
+
     strategy:
       fail-fast: false
       matrix:
         language: [ 'javascript', 'python' ]
-    
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        # github/codeql-action/init@v3.27.5
+        uses: github/codeql-action/init@aa578102511db1f4524ed59b8cc2bae4f6e88195
         with:
           languages: ${{ matrix.language }}
           queries: +security-and-quality
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
+        # github/codeql-action/autobuild@v3.27.5
+        uses: github/codeql-action/autobuild@aa578102511db1f4524ed59b8cc2bae4f6e88195
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+        # github/codeql-action/analyze@v3.27.5
+        uses: github/codeql-action/analyze@aa578102511db1f4524ed59b8cc2bae4f6e88195
         with:
           category: "/language:${{ matrix.language }}"
+
