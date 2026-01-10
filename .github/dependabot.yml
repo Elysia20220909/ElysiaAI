@@ -1,17 +1,16 @@
 version: 2
 
+enable-beta-ecosystems: true
+
 updates:
   # Bun/npm dependencies
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
       time: "09:00"
       timezone: "Asia/Tokyo"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "chloeamethyst"
+    open-pull-requests-limit: 15
     labels:
       - "dependencies"
     commit-message:
@@ -48,13 +47,10 @@ updates:
   - package-ecosystem: "pip"
     directory: "/python"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
       time: "10:00"
       timezone: "Asia/Tokyo"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "chloeamethyst"
+    open-pull-requests-limit: 10
     labels:
       - "dependencies"
       - "python"
@@ -66,13 +62,10 @@ updates:
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "daily"
       time: "11:00"
       timezone: "Asia/Tokyo"
-    open-pull-requests-limit: 3
-    reviewers:
-      - "chloeamethyst"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "docker"
@@ -84,12 +77,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
+      day: "wednesday"
       time: "12:00"
       timezone: "Asia/Tokyo"
-    open-pull-requests-limit: 3
-    reviewers:
-      - "chloeamethyst"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "ci-cd"
