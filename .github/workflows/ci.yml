@@ -77,13 +77,9 @@ jobs:
     environment:
       name: production
     steps:
-      - name: Manual approval for production deployment
-        # trstringer/manual-approval@v1.9.1
-        uses: trstringer/manual-approval@662b3ddbc7685f897992051e87e1b4e82ba3a8e6
-        with:
-          secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: chloeamethyst
-          minimum-approvals: 1
+      - name: Await environment approval
+        run: echo "Awaiting environment approval via GitHub Environments"
+        shell: bash
 
   deploy-production:
     needs: approve-production
