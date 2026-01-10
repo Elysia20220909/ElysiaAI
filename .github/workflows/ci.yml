@@ -17,11 +17,11 @@ jobs:
 
     steps:
       - name: リポジトリをチェックアウト
-        uses: actions/checkout@v6
-
+        # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
       - name: Bunをセットアップ
-        uses: oven-sh/setup-bun@v2
-        with:
+        # oven-sh/setup-bun@v1.2.2
+uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5         with:
           bun-version: ${{ matrix.bun-version }}
 
       - name: 依存関係をインストール
@@ -46,7 +46,8 @@ jobs:
           done
           echo "Server did not start in time"; echo "--- server.log ---"; cat server.log; exit 1
       - name: Pythonをセットアップ
-        uses: actions/setup-python@v5
+        # actions/setup-python@v5.0.0
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
         with:
           python-version: '3.10'
 
@@ -72,15 +73,16 @@ jobs:
           RUN_E2E_TESTS: false
 
       - name: カバレッジレポートアップロード
-        uses: actions/upload-artifact@v3
+        # actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
         with:
           name: coverage-report
           path: coverage/
 
       - name: Slack通知（失敗時のみ）
         if: failure()
-        uses: 8398a7/action-slack@v3
-        with:
+        # 8398a7/action-slack@v3.16.0
+uses: 8398a7/action-slack@28ba43ae48961b90635b50953d216767a6bea486         with:
           status: ${{ job.status }}
           fields: repo,commit,author,job,ref,workflow
         env:
@@ -96,14 +98,14 @@ jobs:
 
     steps:
       - name: リポジトリをチェックアウト
-        uses: actions/checkout@v6
-
+        # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
       - name: Docker Buildxをセットアップ
-        uses: docker/setup-buildx-action@v3
-
+        # docker/setup-buildx-action@v3.0.0
+uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 
       - name: Dockerイメージをビルド
-        uses: docker/build-push-action@v6
-        with:
+        # docker/build-push-action@v5.1.0
+uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56         with:
           context: .
           file: ./Dockerfile.production
           push: false
@@ -118,10 +120,12 @@ jobs:
 
     steps:
       - name: リポジトリをチェックアウト
-        uses: actions/checkout@v6
-
+        # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
       - name: 依存関係の脆弱性スキャン
-        uses: aquasecurity/trivy-action@master
+        # aquasecurity/trivy-action@0.28.0
+
+        uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -136,11 +140,11 @@ jobs:
 
     steps:
       - name: リポジトリをチェックアウト
-        uses: actions/checkout@v6
-
+        # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
       - name: Bunをセットアップ
-        uses: oven-sh/setup-bun@v2
-
+        # oven-sh/setup-bun@v1.2.2
+uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 
       - name: 依存関係をインストール
         run: bun install
 
@@ -149,3 +153,7 @@ jobs:
 
       - name: 型チェック
         run: bunx tsc --noEmit || echo "Type errors detected"
+
+
+
+

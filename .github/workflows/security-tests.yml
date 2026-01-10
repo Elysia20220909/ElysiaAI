@@ -19,16 +19,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        # oven-sh/setup-bun@v1.2.2
+uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 
 
       - name: Install dependencies (Bun)
         run: bun install
 
       - name: Trivy file system scan
-        uses: aquasecurity/trivy-action@master
+        # aquasecurity/trivy-action@0.28.0
+
+        uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -39,6 +43,8 @@ jobs:
         continue-on-error: true
 
       - name: Snyk vulnerability scan
+        # snyk/actions/node (continue-on-error: true)
+
         uses: snyk/actions/node@master
         if: github.event_name == 'schedule'
         env:
@@ -48,6 +54,8 @@ jobs:
         continue-on-error: true
 
       - name: OWASP Dependency-Check
+        # dependency-check/Dependency-Check_Action (continue-on-error: true)
+
         uses: dependency-check/Dependency-Check_Action@main
         if: github.event_name == 'schedule'
         with:
@@ -59,7 +67,8 @@ jobs:
         continue-on-error: true
 
       - name: Upload dependency-check results
-        uses: actions/upload-artifact@v5
+        # actions/upload-artifact@v4.3.1
+uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 
         with:
           name: dependency-check-report
           path: reports/
@@ -74,10 +83,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        # oven-sh/setup-bun@v1.2.2
+uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 
 
       - name: Install dependencies (Bun)
         run: bun install
@@ -87,7 +98,8 @@ jobs:
         continue-on-error: true
 
       - name: Upload test results
-        uses: actions/upload-artifact@v5
+        # actions/upload-artifact@v4.3.1
+uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 
         with:
           name: test-results
           path: test-results/
@@ -102,10 +114,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        # oven-sh/setup-bun@v1.2.2
+uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 
 
       - name: Install dependencies (Bun)
         run: bun install
@@ -120,7 +134,9 @@ jobs:
 
       - name: SonarQube scan
         if: ${{ secrets.SONAR_TOKEN != '' }}
-        uses: SonarSource/sonarcloud-github-action@master
+        # SonarSource/sonarcloud-github-action@v3.1.0
+
+        uses: SonarSource/sonarcloud-github-action@eb211723266fe8e83102bac7361f0a05c3ac1d1b
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -147,10 +163,12 @@ jobs:
           - 5001:5001
 
     steps:
-      - uses: actions/checkout@v6
+      - # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        # actions/setup-node@v4.0.2
+uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 
         with:
           node-version: "20"
 
@@ -178,7 +196,8 @@ jobs:
           ab -n 500 -c 25 -q http://localhost:5001/health | tee -a ab-results.txt
 
       - name: Upload load test results
-        uses: actions/upload-artifact@v5
+        # actions/upload-artifact@v4.3.1
+uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 
         with:
           name: load-test-results
           path: ab-results.txt
@@ -194,10 +213,13 @@ jobs:
     if: github.event_name == 'schedule' || contains(github.event.head_commit.message, '[security]')
 
     steps:
-      - uses: actions/checkout@v6
+      - # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
 
       - name: Run OWASP ZAP scan
-        uses: zaproxy/action-baseline@v0.15.0
+        # zaproxy/action-baseline@v0.15.0
+
+        uses: zaproxy/action-baseline@4800ad7f7c84d67c168bdd016f2b8bb8bc85ee65
         with:
           target: "http://localhost:5001"
           rules_file_name: ".zap/rules.tsv"
@@ -205,7 +227,8 @@ jobs:
         continue-on-error: true
 
       - name: Upload ZAP report
-        uses: actions/upload-artifact@v5
+        # actions/upload-artifact@v4.3.1
+uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 
         with:
           name: zap-report
           path: report_html.html
@@ -221,16 +244,19 @@ jobs:
     needs: [security-scan, unit-tests, code-quality]
 
     steps:
-      - uses: actions/checkout@v6
+      - # actions/checkout@v4.1.1
+uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        # actions/setup-node@v4.0.2
+uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8 
         with:
           node-version: "20"
           cache: "npm"
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        # oven-sh/setup-bun@v1.2.2
+uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5 
 
       - name: Install dependencies
         run: bun install
@@ -259,7 +285,8 @@ jobs:
           EOF
 
       - name: Upload security report
-        uses: actions/upload-artifact@v5
+        # actions/upload-artifact@v4.3.1
+uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3 
         with:
           name: security-report
           path: SECURITY_REPORT.md
@@ -276,7 +303,8 @@ jobs:
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v7
+        # actions/download-artifact@v4.1.2
+uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 
 
       - name: Create summary
         run: |
@@ -290,7 +318,9 @@ jobs:
 
       - name: Post comment on PR
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v8
+        # actions/github-script@v7.0.1
+
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
         with:
           script: |
             const fs = require('fs');
@@ -301,3 +331,8 @@ jobs:
               repo: context.repo.repo,
               body: summary
             });
+
+
+
+
+
