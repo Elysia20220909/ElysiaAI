@@ -1,5 +1,8 @@
 name: Elysia AI Security & Performance Tests
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [master]
