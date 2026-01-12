@@ -642,14 +642,12 @@ const app = new Elysia()
 			}
 			return state;
 		},
-		{
 			body: t.Union([
 				// オセロ用ペイロード
 				t.Object({ x: t.Number(), y: t.Number(), player: t.Number() }),
 				// ネットワークゲーム用ペイロード
 				t.Object({ agentId: t.String(), to: t.String(), userId: t.String() }),
-			]),
-		},
+			]),,
 	);
 // Elysiaチェーン末尾にAPI宣言
 app
