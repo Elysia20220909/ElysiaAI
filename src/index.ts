@@ -13,12 +13,9 @@ app.post(
 	"/sessions/:id/clear",
 	async ({ params, request }) => {
 		const auth = request.headers.get("authorization") || "";
-		if (!auth.startsWith("Bearer "))
-			return jsonError(401, "Missing Bearer token");
-		try {
-			jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
-		} catch {
-			return jsonError(401, "Invalid token");
+		const tokenValidation = await validateBearerToken(auth);
+		if (!tokenValidation.valid) {
+			return jsonError(401, "Invalid or missing token");
 		}
 
 		const success = await chatSessionService.clearSessionMessages(params.id);
@@ -48,6 +45,13 @@ import axios from "axios";
 import { t } from "elysia";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
+
+// 新しいセキュリティモジュール（OpenSSL非依存）
+import { secureJwtManager } from "../../src/lib/secure-jwt-manager";
+import { passwordManager } from "../../src/lib/password-manager";
+import { securityUtils } from "../../src/lib/security-utils";
+import { tlsConfigManager } from "../../src/lib/tls-config";
+import { createSecurityPlugin } from "../../src/lib/security-middleware";
 import {
 	checkRateLimitRedis,
 	revokeRefreshToken,
@@ -91,6 +95,14 @@ checkEnvironmentOrExit();
 backupScheduler.start();
 healthMonitor.start();
 logCleanupManager.start();
+
+// セキュアJWT管理を初期化
+try {
+	await secureJwtManager.initialize();
+	logger.info("✅ Secure JWT Manager initialized");
+} catch (error) {
+	logger.warn("⚠️ Secure JWT Manager initialization failed, continuing...", error);
+}
 
 // ジョブキューとCronスケジューラーを初期化
 if (process.env.REDIS_ENABLED === "true") {
@@ -185,6 +197,38 @@ async function checkRateLimit(key: string) {
 		logger.warn("Rate limit fallback: Redis unavailable");
 		return true; // fallback: allow
 	}
+}
+
+/**
+ * セキュアJWT検証ヘルパー
+ * Bearerトークンを検証し、有効な場合はpayloadを返す
+ */
+async function validateBearerToken(authHeader: string | null): Promise<{
+	valid: boolean;
+	userId?: string;
+	username?: string;
+	roles?: string[];
+}> {
+	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+		return { valid: false };
+	}
+
+	const token = authHeader.substring(7);
+	try {
+		const validation = await secureJwtManager.validateAccessToken(token);
+		if (validation.valid && validation.payload) {
+			return {
+				valid: true,
+				userId: validation.payload.userId,
+				username: validation.payload.username,
+				roles: validation.payload.role ? [validation.payload.role] : [],
+			};
+		}
+	} catch (error) {
+		logger.debug("Token validation failed:", error);
+	}
+
+	return { valid: false };
 }
 
 function containsDangerousKeywords(text: string) {
@@ -303,7 +347,15 @@ app
 		return jsonError(status, message, traceId);
 	})
 	.onAfterHandle(({ set, request, response }) => {
-		set.headers["X-Content-Type-Options"] = "nosniff";
+		// 包括的なセキュリティヘッダーを追加（SecurityUtilsから）
+		const securityHeaders = securityUtils.generateSecurityHeaders();
+		Object.entries(securityHeaders).forEach(([key, value]) => {
+			set.headers[key] = value as string;
+		});
+
+		// CSPは既存のbuildCSPを使用（カスタマイズ済み）
+		const csp = buildCSP(request.url);
+		set.headers["Content-Security-Policy"] = csp;
 		set.headers["X-Frame-Options"] = "DENY";
 		// 追加の推奨セキュリティヘッダ
 		set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
@@ -623,27 +675,29 @@ app
 				return jsonError(401, "Invalid credentials");
 
 			const userId = username;
-			const accessToken = jwt.sign(
-				{ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) },
-				CONFIG.JWT_SECRET,
-				{ expiresIn: "15m" },
-			);
-			const refreshToken = jwt.sign(
-				{
-					iss: "elysia-ai-refresh",
+
+			// 新しいセキュアJWTマネージャーを使用（Ed25519署名 + AES-256-GCM暗号化）
+			try {
+				const tokenPair = await secureJwtManager.generateTokenPair({
 					userId,
-					iat: Math.floor(Date.now() / 1000),
-				},
-				CONFIG.JWT_REFRESH_SECRET,
-				{ expiresIn: "7d" },
-			);
-			await storeRefreshToken(userId, refreshToken, 7 * 24 * 60 * 60);
-			return new Response(
-				JSON.stringify({ accessToken, refreshToken, expiresIn: 900 }),
-				{
-					headers: { "content-type": "application/json" },
-				},
-			);
+					username,
+					role: 'user',
+				});
+
+				return new Response(
+					JSON.stringify({
+						accessToken: tokenPair.accessToken,
+						refreshToken: tokenPair.refreshToken,
+						expiresIn: 900, // 15分
+					}),
+					{
+						headers: { "content-type": "application/json" },
+					},
+				);
+			} catch (error) {
+				logger.error("Token generation failed:", error as Error);
+				return jsonError(500, "Failed to generate token");
+			}
 		},
 		{
 			body: t.Object({
@@ -664,29 +718,29 @@ app
 		"/auth/refresh",
 		async ({ body }) => {
 			const { refreshToken } = body as { refreshToken: string };
-			let payload: jwt.JwtPayload;
+
+			// 新しいセキュアJWTマネージャーでトークンをリフレッシュ
 			try {
-				payload = jwt.verify(
-					refreshToken,
-					CONFIG.JWT_REFRESH_SECRET,
-				) as jwt.JwtPayload;
-			} catch {
-				return jsonError(401, "Invalid or expired refresh token");
+				const newTokenPair = await secureJwtManager.refreshTokens(refreshToken);
+
+				if (!newTokenPair) {
+					return jsonError(401, "Invalid or expired refresh token");
+				}
+
+				return new Response(
+					JSON.stringify({
+						accessToken: newTokenPair.accessToken,
+						refreshToken: newTokenPair.refreshToken,
+						expiresIn: 900,
+					}),
+					{
+						headers: { "content-type": "application/json" },
+					},
+				);
+			} catch (error) {
+				logger.error("Token refresh failed:", error as Error);
+				return jsonError(401, "Token refresh failed");
 			}
-			const userId = (payload as { userId?: string }).userId || "default-user";
-			const isValid = await verifyStoredRefreshToken(userId, refreshToken);
-			if (!isValid) return jsonError(401, "Refresh token not found or revoked");
-			const newAccessToken = jwt.sign(
-				{ iss: "elysia-ai", userId, iat: Math.floor(Date.now() / 1000) },
-				CONFIG.JWT_SECRET,
-				{ expiresIn: "15m" },
-			);
-			return new Response(
-				JSON.stringify({ accessToken: newAccessToken, expiresIn: 900 }),
-				{
-					headers: { "content-type": "application/json" },
-				},
-			);
 		},
 		{
 			body: t.Object({ refreshToken: t.String({ minLength: 20 }) }),
@@ -705,21 +759,21 @@ app
 		async ({ body }) => {
 			const { refreshToken } = body as { refreshToken: string };
 			try {
-				const payload = jwt.verify(
-					refreshToken,
-					CONFIG.JWT_REFRESH_SECRET,
-				) as jwt.JwtPayload;
-				const userId =
-					(payload as { userId?: string }).userId || "default-user";
-				await revokeRefreshToken(userId);
+				// 新しいセキュアJWTマネージャーでトークンを無効化
+				const validation = await secureJwtManager.validateAccessToken(refreshToken);
+				if (validation.valid && validation.payload?.userId) {
+					await secureJwtManager.revokeAllUserTokens(validation.payload.userId);
+				}
+
 				return new Response(
 					JSON.stringify({ message: "Logged out successfully" }),
 					{
 						headers: { "content-type": "application/json" },
 					},
 				);
-			} catch {
-				return jsonError(400, "Invalid refresh token");
+			} catch (error) {
+				logger.error("Logout failed:", error as Error);
+				return jsonError(400, "Logout failed");
 			}
 		},
 		{
