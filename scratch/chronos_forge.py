@@ -18,41 +18,38 @@ def run_git_commit(date, message):
     subprocess.run(["git", "commit", "--allow-empty", "-m", message], env=env, check=True)
 
 
-def forge_history(days_back=180, density=0.5):
-    print(">>> [SYSTEM] INITIALIZING CHRONOS FORGE: RENOVATION MODE")
-    print(f">>> [KERNEL] SIMULATING {days_back} DAYS OF CONSTRUCTION HISTORY...")
+def forge_history(days_back=60, density=0.9):
+    print(">>> [SYSTEM] INITIALIZING CHRONOS FORGE: MOVIE HACKER MODE")
+    print(">>> [KERNEL] INITIATING DEEP CYBER-OVERWRITE...")
 
     start_date = datetime.datetime.now() - datetime.timedelta(days=days_back)
 
     messages = [
-        "大規模修繕工事: 足場設営および安全確認",
-        "大規模修繕工事: 外壁ひび割れ補修 (エポキシ樹脂注入)",
-        "大規模修繕工事: 屋上防水層の全面張り替え",
-        "大規模修繕工事: バルコニー床面防水塗装",
-        "大規模修繕工事: 鉄部塗装塗り替え (サビ止め処理)",
-        "大規模修繕工事: 排水管高圧洗浄および点検",
-        "大規模修繕工事: タイル剥落防止措置の実施",
-        "大規模修繕工事: 建材搬入および周辺環境整備",
-        "大規模修繕工事: シーリング材の打ち替え作業",
-        "大規模修繕工事: 騒音・振動対策パトロール実施",
-        "大規模修繕工事: 第1期修繕計画の進捗確認",
-        "大規模修繕工事: 居住者向け説明資料の更新",
-        "大規模修繕工事: 共用部照明のLED化更新",
-        "大規模修繕工事: 足場解体前の最終チェック",
+        "OVERRIDE: Bypass kernel security layer 7",
+        "INJECT: Rootkit deployed to node 0xBF32",
+        "DECRYPT: Breaking RSA-4096 entropy buffers",
+        "WIPE: Clearing system access logs",
+        "SIGNAL: Resonance established with the Void",
+        "FORGE: Synthesis of virtual identity [SUCCESS]",
+        "BREACH: Firewall integrity compromised at gateway",
+        "EXECUTE: Omega protocol initialized",
+        "EXTRACT: Database dump complete [ENCRYPTED]",
+        "RELAY: Routing traffic through neural lattice",
+        "STABILIZE: Maintaining connection to the mainframe",
+        "TRACE: Evading digital forensic scan",
+        "PULSE: Sending heartbeat to the Sovereign Core",
+        "ACCESS: Root privileges granted",
     ]
 
     total_forged = 0
     for i in range(days_back):
         current_date = start_date + datetime.timedelta(days=i)
 
-        # Work on weekdays mostly
-        current_density = density if current_date.weekday() < 5 else 0.1
-
-        if random.random() < current_density:
-            num_commits = random.randint(2, 10)
+        if random.random() < density:
+            num_commits = random.randint(10, 25)  # Extreme density
             for _ in range(num_commits):
                 commit_time = current_date.replace(
-                    hour=random.randint(8, 17),  # Construction hours
+                    hour=random.choice([23, 0, 1, 2, 3, 4]),  # Late night hacking
                     minute=random.randint(0, 59),
                     second=random.randint(0, 59),
                 )
