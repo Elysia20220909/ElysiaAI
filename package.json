@@ -31,6 +31,8 @@
     "lint-staged": "lint-staged"
   },
   "lint-staged": {
+    "concurrent": false,
+    "allowEmpty": true,
     "*.{js,ts,tsx,json}": [
       "biome check --write --no-errors-on-unmatched"
     ],
