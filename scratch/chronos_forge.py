@@ -14,6 +14,10 @@ def run_git_commit(date, message):
     date_str = date.strftime("%Y-%m-%dT%H:%M:%S")
     env["GIT_AUTHOR_DATE"] = date_str
     env["GIT_COMMITTER_DATE"] = date_str
+    env["GIT_AUTHOR_NAME"] = "Berry_Void"
+    env["GIT_AUTHOR_EMAIL"] = "candy_shell@elysia.os"
+    env["GIT_COMMITTER_NAME"] = "Berry_Void"
+    env["GIT_COMMITTER_EMAIL"] = "candy_shell@elysia.os"
 
     subprocess.run(["git", "commit", "--allow-empty", "--no-verify", "-m", message], env=env, check=True)
 
