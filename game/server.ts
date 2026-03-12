@@ -300,9 +300,9 @@ const app = new Elysia()
 					turn: 1,
 					history: [],
 					passCount: 0,
-					aiEnabled: body && body.aiEnabled ? true : false,
+					aiEnabled: body?.aiEnabled ?? false,
 					aiLevel:
-						body && (body.aiLevel === "strong" || body.aiLevel === "god")
+						body?.aiLevel === "strong" || body?.aiLevel === "god"
 							? body.aiLevel
 							: "random",
 					userIds: body?.userIds ? body.userIds : ["user1", "user2"],
@@ -379,7 +379,7 @@ const app = new Elysia()
 				}
 				// 手番更新
 				state.turn = (currentTurn + 1) % state.agents.length;
-				clients.forEach((ws) => ws.send(JSON.stringify(state)));
+				clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
 				return state;
 			}
 			if (state.winner) return state;
@@ -400,7 +400,7 @@ const app = new Elysia()
 					state.history.push(`連続パスで終了: 黒${b} 白${w}`);
 				}
 				state.turn = (player === 1 ? 2 : 1) as Player;
-				clients.forEach((ws) => ws.send(JSON.stringify(state)));
+				clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
 				return state;
 			}
 			state.board = result.board;
@@ -440,7 +440,7 @@ const app = new Elysia()
 					}
 				}
 			}
-			clients.forEach((ws) => ws.send(JSON.stringify(state)));
+			clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
 			// AI対戦
 			if (state.aiEnabled && !state.winner && state.turn === 2) {
 				setTimeout(() => {
@@ -474,7 +474,7 @@ const app = new Elysia()
 								state.history.push(`連続パスで終了: 黒${b} 白${w}`);
 							}
 							state.turn = (aiAction.player === 1 ? 2 : 1) as Player;
-							clients.forEach((ws) => ws.send(JSON.stringify(state)));
+							clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
 							return;
 						}
 						state.board = result.board;
@@ -515,7 +515,7 @@ const app = new Elysia()
 								}
 							}
 						}
-						clients.forEach((ws) => ws.send(JSON.stringify(state)));
+						clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
 					}
 				}, 500);
 			}
@@ -707,7 +707,7 @@ app
 							state.history.push(`連続パスで終了: 黒${b} 白${w}`);
 						}
 						state.turn = (action.player === 1 ? 2 : 1) as Player;
-						clients.forEach((ws) => ws.send(JSON.stringify(state)));
+						clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
 						return;
 					}
 					state.board = result.board;
@@ -748,7 +748,7 @@ app
 							}
 						}
 					}
-					clients.forEach((ws) => ws.send(JSON.stringify(state)));
+					clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
 				}
 			} catch {}
 		},
