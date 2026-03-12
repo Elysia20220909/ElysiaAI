@@ -45,20 +45,20 @@ import axios from "axios";
 import { t } from "elysia";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-import { passwordManager } from "../../src/lib/password-manager";
+import { passwordManager } from "./lib/password-manager.ts";
 // 新しいセキュリティモジュール（OpenSSL非依存）
-import { secureJwtManager } from "../../src/lib/secure-jwt-manager";
-import { createSecurityPlugin } from "../../src/lib/security-middleware";
-import { securityUtils } from "../../src/lib/security-utils";
-import { tlsConfigManager } from "../../src/lib/tls-config";
+import { secureJwtManager } from "./lib/secure-jwt-manager.ts";
+import { createSecurityPlugin } from "./lib/security-middleware.ts";
+import { securityUtils } from "./lib/security-utils.ts";
+import { tlsConfigManager } from "./lib/tls-config.ts";
 import {
 	checkRateLimitRedis,
 	revokeRefreshToken,
 	storeRefreshToken,
 	verifyStoredRefreshToken,
-} from "./config/internal/auth.ts";
-import { DATABASE_CONFIG } from "./config/internal/db.ts";
-import { DEFAULT_MODE, ELYSIA_MODES } from "./config/internal/llm-config.ts";
+} from "../config/internal/auth.ts";
+import { DATABASE_CONFIG } from "../config/internal/db.ts";
+import { DEFAULT_MODE, ELYSIA_MODES } from "../config/internal/llm-config.ts";
 import { abTestManager } from "./lib/ab-testing.ts";
 import { apiKeyManager } from "./lib/api-key-manager.ts";
 import { auditLogger } from "./lib/audit-logger.ts";
