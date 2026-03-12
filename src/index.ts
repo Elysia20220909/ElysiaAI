@@ -86,10 +86,9 @@ try {
 	// await secureJwtManager.initialize(); // secureJwtManager is removed
 	logger.info("✅ Secure JWT Manager initialized (skipped)");
 } catch (error) {
-	logger.warn(
-		"⚠️ Secure JWT Manager initialization failed, continuing...",
-		{ error: error instanceof Error ? error.message : String(error) },
-	);
+	logger.warn("⚠️ Secure JWT Manager initialization failed, continuing...", {
+		error: error instanceof Error ? error.message : String(error),
+	});
 }
 
 // ジョブキューとCronスケジューラーを初期化
@@ -214,7 +213,9 @@ async function validateBearerToken(authHeader: string | null): Promise<{
 			};
 		}
 	} catch (error) {
-		logger.debug("Token validation failed:", { error: error instanceof Error ? error.message : String(error) });
+		logger.debug("Token validation failed:", {
+			error: error instanceof Error ? error.message : String(error),
+		});
 	}
 
 	return { valid: false };
@@ -390,7 +391,11 @@ app
 		}
 		// Audit middleware - log successful requests
 		try {
-			auditMiddleware.afterHandle?.({ request, set: set as any, response } as any);
+			auditMiddleware.afterHandle?.({
+				request,
+				set: set as any,
+				response,
+			} as any);
 		} catch {}
 	})
 
@@ -409,7 +414,8 @@ app
 		async ({ request }) => {
 			try {
 				const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
-				const fastAPIBaseUrl = process.env.FASTAPI_BASE_URL || "http://localhost:8000"; // DATABASE_CONFIG.FASTAPI_BASE_URL is removed
+				const fastAPIBaseUrl =
+					process.env.FASTAPI_BASE_URL || "http://localhost:8000"; // DATABASE_CONFIG.FASTAPI_BASE_URL is removed
 				const health = await performHealthCheck(
 					redisUrl,
 					fastAPIBaseUrl,
@@ -787,7 +793,9 @@ app
 				) as jwt.JwtPayload;
 				if (payload && payload.userId) {
 					// In a real app, you'd revoke the refresh token in a database/Redis
-					logger.info(`User ${payload.userId} logged out (refresh token revoked conceptually)`);
+					logger.info(
+						`User ${payload.userId} logged out (refresh token revoked conceptually)`,
+					);
 				}
 
 				return new Response(
@@ -850,7 +858,8 @@ app
 					if (!rateLimitOk) return jsonError(429, "Rate limit exceeded");
 
 					const mode = body.mode || "normal"; // DEFAULT_MODE is removed
-					const llmConfig = { // ELYSIA_MODES is removed, using a dummy config
+					const llmConfig = {
+						// ELYSIA_MODES is removed, using a dummy config
 						systemPrompt: "You are a helpful AI assistant.",
 						temperature: 0.7,
 						model: CONFIG.MODEL_NAME,
@@ -1850,7 +1859,11 @@ app.post("/admin/jobs/email", async ({ request }) => {
 		subject: string;
 		html: string;
 	};
-	const job = (await jobQueue.sendEmail(body.to, body.subject, body.html)) as unknown as {
+	const job = (await jobQueue.sendEmail(
+		body.to,
+		body.subject,
+		body.html,
+	)) as unknown as {
 		id: string;
 	};
 	return { success: true, jobId: job.id };

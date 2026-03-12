@@ -124,10 +124,9 @@ export async function fetchWithRetry<T>(
 			return await fetchFn();
 		} catch (error) {
 			lastError = error instanceof Error ? error : new Error(String(error));
-			logger.warn(
-				`上流サービス呼び出し失敗 (試行 ${attempt}/${maxRetries})`,
-				{ error: lastError.message },
-			);
+			logger.warn(`上流サービス呼び出し失敗 (試行 ${attempt}/${maxRetries})`, {
+				error: lastError.message,
+			});
 
 			if (attempt < maxRetries) {
 				// 指数バックオフ
