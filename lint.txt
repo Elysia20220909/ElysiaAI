@@ -1,0 +1,388 @@
+$ biome check .
+config\internal\biome.json:2:13 deserialize ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i The configuration schema version does not match the CLI version 2.3.11
+  
+    1 │ {
+  > 2 │ 	"$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+      │ 	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    3 │ 	"root": false
+    4 │ }
+  
+  i   Expected:                     2.3.11
+      Found:                        2.3.8
+  
+  
+  i Run the command biome migrate to migrate the configuration file.
+  
+
+game\server.ts:303:17 lint/complexity/noUselessTernary  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  i Unnecessary use of boolean literals in conditional expression.
+  
+    301 │ 					history: [],
+    302 │ 					passCount: 0,
+  > 303 │ 					aiEnabled: body && body.aiEnabled ? true : false,
+        │ 					           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    304 │ 					aiLevel:
+    305 │ 						body && (body.aiLevel === "strong" || body.aiLevel === "god")
+  
+  i Simplify your code by directly assigning the result without using a ternary operator.
+  
+  i If your goal is negation, you may use the logical NOT (!) or double NOT (!!) operator for clearer and concise code.
+     Check for more details about NOT operator.
+  
+  i Unsafe fix: Remove the conditional expression with
+  
+    301 301 │   					history: [],
+    302 302 │   					passCount: 0,
+    303     │ - → → → → → aiEnabled:·body·&&·body.aiEnabled·?·true·:·false,
+        303 │ + → → → → → aiEnabled:·!!(body·&&·body.aiEnabled·),
+    304 304 │   					aiLevel:
+    305 305 │   						body && (body.aiLevel === "strong" || body.aiLevel === "god")
+  
+
+game\server.ts:18:20 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    16 │ 	aiEnabled: false,
+    17 │ };
+  > 18 │ const clients: Set<any> = new Set();
+       │                    ^^^
+    19 │ 
+    20 │ import { cors } from "@elysiajs/cors";
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+game\server.ts:287:35 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    285 │ 					nodes: body.nodes,
+    286 │ 					agents: body.agents,
+  > 287 │ 					userIds: body.agents.map((a: any) => a.userId),
+        │ 					                             ^^^
+    288 │ 				};
+    289 │ 			} else {
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+game\server.ts:347:22 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    345 │ 	.post(
+    346 │ 		"/game/action",
+  > 347 │ 		({ body }: { body: any }) => {
+        │ 		                   ^^^
+    348 │ 			// ネットワークゲームのアクション（エージェント移動）
+    349 │ 			if (
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+game\server.ts:676:12 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    674 │ 	.get("/game/ranking", () => ranking)
+    675 │ 	.ws("/game/ws", {
+  > 676 │ 		open(ws: any) {
+        │ 		         ^^^
+    677 │ 			clients.add(ws);
+    678 │ 			ws.send(JSON.stringify(state));
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+game\server.ts:680:13 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    678 │ 			ws.send(JSON.stringify(state));
+    679 │ 		},
+  > 680 │ 		close(ws: any) {
+        │ 		          ^^^
+    681 │ 			clients.delete(ws);
+    682 │ 		},
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+game\server.ts:683:16 lint/suspicious/noExplicitAny ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Unexpected any. Specify a different type.
+  
+    681 │ 			clients.delete(ws);
+    682 │ 		},
+  > 683 │ 		message(_ws: any, msg: string) {
+        │ 		             ^^^
+    684 │ 			try {
+    685 │ 				const action = JSON.parse(typeof msg === "string" ? msg : "");
+  
+  i any disables many type checking rules. Its use should be avoided.
+  
+
+game\server.ts:276:8 lint/complexity/useOptionalChain  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Change to an optional chain.
+  
+    274 │ 		({ body }) => {
+    275 │ 			// ネットワークゲーム（graph/agents）開始か、オセロ開始かを判定
+  > 276 │ 			if (body && body.nodes && body.agents) {
+        │ 			    ^^^^^^^^^^^^^^^^^^
+    277 │ 				state = {
+    278 │ 					board: Array.from({ length: 8 }, () =>
+  
+  i Unsafe fix: Change to an optional chain.
+  
+    274 274 │   		({ body }) => {
+    275 275 │   			// ネットワークゲーム（graph/agents）開始か、オセロ開始かを判定
+    276     │ - → → → if·(body·&&·body.nodes·&&·body.agents)·{
+        276 │ + → → → if·(body?.nodes·&&·body.agents)·{
+    277 277 │   				state = {
+    278 278 │   					board: Array.from({ length: 8 }, () =>
+  
+
+game\server.ts:303:17 lint/complexity/useOptionalChain  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Change to an optional chain.
+  
+    301 │ 					history: [],
+    302 │ 					passCount: 0,
+  > 303 │ 					aiEnabled: body && body.aiEnabled ? true : false,
+        │ 					           ^^^^^^^^^^^^^^^^^^^^^^
+    304 │ 					aiLevel:
+    305 │ 						body && (body.aiLevel === "strong" || body.aiLevel === "god")
+  
+  i Unsafe fix: Change to an optional chain.
+  
+    301 301 │   					history: [],
+    302 302 │   					passCount: 0,
+    303     │ - → → → → → aiEnabled:·body·&&·body.aiEnabled·?·true·:·false,
+        303 │ + → → → → → aiEnabled:·body?.aiEnabled·?·true·:·false,
+    304 304 │   					aiLevel:
+    305 305 │   						body && (body.aiLevel === "strong" || body.aiLevel === "god")
+  
+
+game\server.ts:350:5 lint/complexity/useOptionalChain  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Change to an optional chain.
+  
+    348 │ 			// ネットワークゲームのアクション（エージェント移動）
+    349 │ 			if (
+  > 350 │ 				body &&
+        │ 				^^^^^^^
+  > 351 │ 				body.agentId &&
+        │ 				^^^^^^^^^^^^
+    352 │ 				body.to &&
+    353 │ 				body.userId &&
+  
+  i Unsafe fix: Change to an optional chain.
+  
+    348 348 │   			// ネットワークゲームのアクション（エージェント移動）
+    349 349 │   			if (
+    350     │ - → → → → body·&&
+    351     │ - → → → → body.agentId·&&
+        350 │ + → → → → body?.agentId·&&
+    352 351 │   				body.to &&
+    353 352 │   				body.userId &&
+  
+
+src\lib\audit-middleware.ts:28:3 lint/correctness/noUnusedVariables ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This variable includeBody is unused.
+  
+    26 │ 		excludePaths = ["/health", "/metrics", "/swagger"],
+    27 │ 		excludeMethods = ["OPTIONS"],
+  > 28 │ 		includeBody = false,
+       │ 		^^^^^^^^^^^
+    29 │ 	} = options;
+    30 │ 
+  
+  i Unused variables are often the result of typos, incomplete refactors, or other sources of bugs.
+  
+
+game\cli-client.ts:41:27 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    39 │ 		console.log(`ターン: ${state.turn === 1 ? "黒(●)" : "白(○)"}`);
+    40 │ 		console.log("履歴:");
+  > 41 │ 		state.history.slice(-5).forEach((h: string) => console.log(`  ${h}`));
+       │ 		                        ^^^^^^^
+    42 │ 		if (mode === "3") {
+    43 │ 			await new Promise((r) => setTimeout(r, 1500));
+  
+  i Either remove this return or remove the returned value.
+  
+    39 │ 		console.log(`ターン: ${state.turn === 1 ? "黒(●)" : "白(○)"}`);
+    40 │ 		console.log("履歴:");
+  > 41 │ 		state.history.slice(-5).forEach((h: string) => console.log(`  ${h}`));
+       │ 		                                               ^^^^^^^^^^^^^^^^^^^^^
+    42 │ 		if (mode === "3") {
+    43 │ 			await new Promise((r) => setTimeout(r, 1500));
+  
+
+game\server.ts:382:13 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    380 │ 				// 手番更新
+    381 │ 				state.turn = (currentTurn + 1) % state.agents.length;
+  > 382 │ 				clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 				        ^^^^^^^
+    383 │ 				return state;
+    384 │ 			}
+  
+  i Either remove this return or remove the returned value.
+  
+    380 │ 				// 手番更新
+    381 │ 				state.turn = (currentTurn + 1) % state.agents.length;
+  > 382 │ 				clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 				                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    383 │ 				return state;
+    384 │ 			}
+  
+
+game\server.ts:403:13 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    401 │ 				}
+    402 │ 				state.turn = (player === 1 ? 2 : 1) as Player;
+  > 403 │ 				clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 				        ^^^^^^^
+    404 │ 				return state;
+    405 │ 			}
+  
+  i Either remove this return or remove the returned value.
+  
+    401 │ 				}
+    402 │ 				state.turn = (player === 1 ? 2 : 1) as Player;
+  > 403 │ 				clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 				                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    404 │ 				return state;
+    405 │ 			}
+  
+
+game\server.ts:443:12 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    441 │ 				}
+    442 │ 			}
+  > 443 │ 			clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 			        ^^^^^^^
+    444 │ 			// AI対戦
+    445 │ 			if (state.aiEnabled && !state.winner && state.turn === 2) {
+  
+  i Either remove this return or remove the returned value.
+  
+    441 │ 				}
+    442 │ 			}
+  > 443 │ 			clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 			                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    444 │ 			// AI対戦
+    445 │ 			if (state.aiEnabled && !state.winner && state.turn === 2) {
+  
+
+game\server.ts:477:16 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    475 │ 							}
+    476 │ 							state.turn = (aiAction.player === 1 ? 2 : 1) as Player;
+  > 477 │ 							clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 							        ^^^^^^^
+    478 │ 							return;
+    479 │ 						}
+  
+  i Either remove this return or remove the returned value.
+  
+    475 │ 							}
+    476 │ 							state.turn = (aiAction.player === 1 ? 2 : 1) as Player;
+  > 477 │ 							clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 							                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    478 │ 							return;
+    479 │ 						}
+  
+
+game\server.ts:518:15 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    516 │ 							}
+    517 │ 						}
+  > 518 │ 						clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 						        ^^^^^^^
+    519 │ 					}
+    520 │ 				}, 500);
+  
+  i Either remove this return or remove the returned value.
+  
+    516 │ 							}
+    517 │ 						}
+  > 518 │ 						clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 						                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    519 │ 					}
+    520 │ 				}, 500);
+  
+
+game\server.ts:710:15 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    708 │ 						}
+    709 │ 						state.turn = (action.player === 1 ? 2 : 1) as Player;
+  > 710 │ 						clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 						        ^^^^^^^
+    711 │ 						return;
+    712 │ 					}
+  
+  i Either remove this return or remove the returned value.
+  
+    708 │ 						}
+    709 │ 						state.turn = (action.player === 1 ? 2 : 1) as Player;
+  > 710 │ 						clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 						                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    711 │ 						return;
+    712 │ 					}
+  
+
+game\server.ts:751:14 lint/suspicious/useIterableCallbackReturn ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × This callback passed to forEach() iterable method should not return a value.
+  
+    749 │ 						}
+    750 │ 					}
+  > 751 │ 					clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 					        ^^^^^^^
+    752 │ 				}
+    753 │ 			} catch {}
+  
+  i Either remove this return or remove the returned value.
+  
+    749 │ 						}
+    750 │ 					}
+  > 751 │ 					clients.forEach((ws) => ws.send(JSON.stringify(state)));
+        │ 					                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    752 │ 				}
+    753 │ 			} catch {}
+  
+
+The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.
+Diagnostics not shown: 24.
+Checked 94 files in 157ms. No fixes applied.
+Found 12 errors.
+Found 30 warnings.
+Found 2 infos.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
+error: script "lint" exited with code 1
