@@ -10,7 +10,9 @@
     "types": ["bun-types", "node"],
     "downlevelIteration": true,
     "declaration": false,
-    "sourceMap": true
+    "sourceMap": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true
   },
   "include": ["src/**/*", "tests/**/*", "start-server.ts"],
   "exclude": [
