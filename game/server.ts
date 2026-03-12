@@ -275,7 +275,9 @@ const app = new Elysia()
 			// ネットワークゲーム（graph/agents）開始か、オセロ開始かを判定
 			if (body && body.nodes && body.agents) {
 				state = {
-					board: Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => 0)),
+					board: Array.from({ length: 8 }, () =>
+						Array.from({ length: 8 }, () => 0),
+					),
 					turn: 0,
 					history: [],
 					passCount: 0,
@@ -293,7 +295,7 @@ const app = new Elysia()
 								: (y === 3 && x === 4) || (y === 4 && x === 3)
 									? 1
 									: 0,
-							),
+						),
 					),
 					turn: 1,
 					history: [],
@@ -313,7 +315,13 @@ const app = new Elysia()
 			body: t.Optional(
 				t.Object({
 					aiEnabled: t.Optional(t.Boolean()),
-					aiLevel: t.Optional(t.Union([t.Literal("random"), t.Literal("strong"), t.Literal("god")])),
+					aiLevel: t.Optional(
+						t.Union([
+							t.Literal("random"),
+							t.Literal("strong"),
+							t.Literal("god"),
+						]),
+					),
 					userIds: t.Optional(t.Array(t.String())),
 					nodes: t.Optional(
 						t.Array(
@@ -338,7 +346,15 @@ const app = new Elysia()
 		"/game/action",
 		({ body }: { body: any }) => {
 			// ネットワークゲームのアクション（エージェント移動）
-			if (body && body.agentId && body.to && body.userId && state.mode === "network" && state.agents && state.nodes) {
+			if (
+				body &&
+				body.agentId &&
+				body.to &&
+				body.userId &&
+				state.mode === "network" &&
+				state.agents &&
+				state.nodes
+			) {
 				const currentTurn = Number(state.turn || 0);
 				const agentIndex = state.agents.findIndex((a) => a.id === body.agentId);
 				if (agentIndex === -1) return state;
@@ -422,6 +438,8 @@ const app = new Elysia()
 						ranking[u1].draw++;
 						ranking[u2].draw++;
 					}
+				}
+			}
 			clients.forEach((ws) => ws.send(JSON.stringify(state)));
 			// AI対戦
 			if (state.aiEnabled && !state.winner && state.turn === 2) {
@@ -642,12 +660,14 @@ const app = new Elysia()
 			}
 			return state;
 		},
+		{
 			body: t.Union([
 				// オセロ用ペイロード
 				t.Object({ x: t.Number(), y: t.Number(), player: t.Number() }),
 				// ネットワークゲーム用ペイロード
 				t.Object({ agentId: t.String(), to: t.String(), userId: t.String() }),
-			]),,
+			]),
+		},
 	);
 // Elysiaチェーン末尾にAPI宣言
 app
