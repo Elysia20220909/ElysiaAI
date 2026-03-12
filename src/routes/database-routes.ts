@@ -4,9 +4,9 @@
  */
 
 import type { Elysia } from "elysia";
-import * as db from "@/lib/database-utils";
+import * as db from "../lib/database-utils.ts";
 
-export const setupDatabaseRoutes = (app: Elysia): Elysia => {
+export const setupDatabaseRoutes = (app: Elysia) => {
 	return (
 		app
 			// ==================== ユーザー管理 ====================
@@ -87,7 +87,7 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 				try {
 					const { sessionId, role, content } = body as {
 						sessionId: string;
-						role: string;
+						role: "user" | "assistant" | "system";
 						content: string;
 					};
 
@@ -137,7 +137,7 @@ export const setupDatabaseRoutes = (app: Elysia): Elysia => {
 						userId?: string;
 						query: string;
 						answer: string;
-						rating: string;
+						rating: "up" | "down";
 						reason?: string;
 					};
 

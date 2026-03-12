@@ -3,7 +3,7 @@
  * カジュアルモードでのWeb検索統合をテスト
  */
 
-import { generateCasualResponse } from "./src/lib/casual-chat";
+import { generateCasualResponse } from "../../src/lib/casual-chat.ts";
 
 async function testWebSearchIntegration() {
 	console.log("🧪 Web Search Integration Test\n");
