@@ -363,15 +363,15 @@ export const prisma = {
 		query: TemplateStringsArray | string,
 		...params: unknown[]
 	): Promise<T> {
-		const sql = Array.isArray(query) ? query.join("") : query;
+		const sql = Array.isArray(query) ? query.join("") : (query as string);
 		const trimmed = sql.trim();
 		const stmt = db.prepare(trimmed);
 
 		if (trimmed.toUpperCase().startsWith("SELECT")) {
-			return stmt.all(...params) as T;
+			return stmt.all(...(params as any[])) as T;
 		}
 
-		stmt.run(...params);
+		stmt.run(...(params as any[]));
 		return [] as T;
 	},
 };

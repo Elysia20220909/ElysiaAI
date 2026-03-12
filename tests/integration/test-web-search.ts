@@ -11,7 +11,7 @@ import {
 	searchWeb,
 	searchWikipedia,
 	type WebSearchResult,
-} from "./src/lib/web-search";
+} from "../../src/lib/web-search.ts";
 
 async function testWebSearch() {
 	console.log("=== Web検索機能テスト ===\n");

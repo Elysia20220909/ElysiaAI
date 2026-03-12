@@ -25,7 +25,7 @@ export const prisma = new PrismaClient({
 });
 
 // ログイベントリスナー
-prisma.$on("query", (e) => {
+prisma.$on("query", (e: any) => {
 	if (process.env.DEBUG_SQL === "true") {
 		logger.debug(`Query: ${e.query}`);
 		logger.debug(`Params: ${JSON.stringify(e.params)}`);
@@ -48,7 +48,7 @@ export async function initializePrisma(): Promise<void> {
 		// テーブル統計
 		await logTableStats();
 	} catch (error) {
-		logger.error("❌ Prisma 初期化エラー:", error);
+		logger.error("❌ Prisma 初期化エラー:", error instanceof Error ? error : new Error(String(error)));
 		throw error;
 	}
 }
@@ -75,7 +75,7 @@ async function checkSchema(): Promise<void> {
 		];
 
 		const missingTables = expectedTables.filter(
-			(t) => !tables.some((table) => table.name === t),
+			(t) => !tables.some((table: { name: string }) => table.name === t),
 		);
 
 		if (missingTables.length > 0) {
@@ -84,7 +84,7 @@ async function checkSchema(): Promise<void> {
 			logger.info(`✅ スキーマ: 全テーブル確認 (${tables.length})`);
 		}
 	} catch (error) {
-		logger.warn("⚠️ スキーマ確認スキップ:", error);
+		logger.warn("⚠️ スキーマ確認スキップ:", { error: error instanceof Error ? error.message : String(error) });
 	}
 }
 
@@ -117,7 +117,7 @@ export async function disconnectPrisma(): Promise<void> {
 		await prisma.$disconnect();
 		logger.info("✅ Prisma: 接続終了");
 	} catch (error) {
-		logger.error("❌ Prisma 切断エラー:", error);
+		logger.error("❌ Prisma 切断エラー:", error instanceof Error ? error : new Error(String(error)));
 		throw error;
 	}
 }

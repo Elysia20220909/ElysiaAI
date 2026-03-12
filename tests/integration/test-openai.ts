@@ -10,7 +10,7 @@ import {
 	listAvailableModels,
 	type OpenAIChatMessage,
 	simpleChat,
-} from "./src/lib/openai-integration";
+} from "../../src/lib/openai-integration.ts";
 
 async function testOpenAI() {
 	console.log("=== OpenAI API統合テスト ===\n");
