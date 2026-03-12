@@ -25,7 +25,6 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 	const {
 		excludePaths = ["/health", "/metrics", "/swagger"],
 		excludeMethods = ["OPTIONS"],
-		includeBody = false,
 	} = options;
 
 	return {
