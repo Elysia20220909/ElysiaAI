@@ -15,7 +15,8 @@ let state: OthelloState = {
 	passCount: 0,
 	aiEnabled: false,
 };
-const clients: Set<any> = new Set();
+type GameClient = { send: (message: string) => void };
+const clients: Set<GameClient> = new Set();
 
 import { cors } from "@elysiajs/cors";
 import { fromTypes, openapi } from "@elysiajs/openapi";
@@ -273,7 +274,7 @@ const app = new Elysia()
 		"/game/start",
 		({ body }) => {
 			// ネットワークゲーム（graph/agents）開始か、オセロ開始かを判定
-			if (body && body.nodes && body.agents) {
+			if (body?.nodes && body?.agents) {
 				state = {
 					board: Array.from({ length: 8 }, () =>
 						Array.from({ length: 8 }, () => 0),
@@ -284,7 +285,7 @@ const app = new Elysia()
 					mode: "network",
 					nodes: body.nodes,
 					agents: body.agents,
-					userIds: body.agents.map((a: any) => a.userId),
+					userIds: body.agents.map((a: { userId: string }) => a.userId),
 				};
 			} else {
 				state = {
@@ -344,13 +345,12 @@ const app = new Elysia()
 	)
 	.post(
 		"/game/action",
-		({ body }: { body: any }) => {
+		({ body }) => {
 			// ネットワークゲームのアクション（エージェント移動）
 			if (
-				body &&
-				body.agentId &&
-				body.to &&
-				body.userId &&
+				body?.agentId &&
+				body?.to &&
+				body?.userId &&
 				state.mode === "network" &&
 				state.agents &&
 				state.nodes
@@ -379,7 +379,9 @@ const app = new Elysia()
 				}
 				// 手番更新
 				state.turn = (currentTurn + 1) % state.agents.length;
-				clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
+				for (const ws of clients) {
+					ws.send(JSON.stringify(state));
+				}
 				return state;
 			}
 			if (state.winner) return state;
@@ -400,7 +402,9 @@ const app = new Elysia()
 					state.history.push(`連続パスで終了: 黒${b} 白${w}`);
 				}
 				state.turn = (player === 1 ? 2 : 1) as Player;
-				clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
+				for (const ws of clients) {
+					ws.send(JSON.stringify(state));
+				}
 				return state;
 			}
 			state.board = result.board;
@@ -440,7 +444,9 @@ const app = new Elysia()
 					}
 				}
 			}
-			clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
+			for (const ws of clients) {
+				ws.send(JSON.stringify(state));
+			}
 			// AI対戦
 			if (state.aiEnabled && !state.winner && state.turn === 2) {
 				setTimeout(() => {
@@ -474,7 +480,9 @@ const app = new Elysia()
 								state.history.push(`連続パスで終了: 黒${b} 白${w}`);
 							}
 							state.turn = (aiAction.player === 1 ? 2 : 1) as Player;
-							clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
+							for (const ws of clients) {
+								ws.send(JSON.stringify(state));
+							}
 							return;
 						}
 						state.board = result.board;
@@ -515,7 +523,9 @@ const app = new Elysia()
 								}
 							}
 						}
-						clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
+						for (const ws of clients) {
+							ws.send(JSON.stringify(state));
+						}
 					}
 				}, 500);
 			}
@@ -673,14 +683,14 @@ const app = new Elysia()
 app
 	.get("/game/ranking", () => ranking)
 	.ws("/game/ws", {
-		open(ws: any) {
-			clients.add(ws);
-			ws.send(JSON.stringify(state));
+		open(ws: unknown) {
+			clients.add(ws as GameClient);
+			(ws as GameClient).send(JSON.stringify(state));
 		},
-		close(ws: any) {
-			clients.delete(ws);
+		close(ws: unknown) {
+			clients.delete(ws as GameClient);
 		},
-		message(_ws: any, msg: string) {
+		message(_ws: unknown, msg: string) {
 			try {
 				const action = JSON.parse(typeof msg === "string" ? msg : "");
 				if (
@@ -707,7 +717,9 @@ app
 							state.history.push(`連続パスで終了: 黒${b} 白${w}`);
 						}
 						state.turn = (action.player === 1 ? 2 : 1) as Player;
-						clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
+						for (const ws of clients) {
+							ws.send(JSON.stringify(state));
+						}
 						return;
 					}
 					state.board = result.board;
@@ -748,7 +760,9 @@ app
 							}
 						}
 					}
-					clients.forEach((ws) => { ws.send(JSON.stringify(state)); });
+					for (const ws of clients) {
+						ws.send(JSON.stringify(state));
+					}
 				}
 			} catch {}
 		},

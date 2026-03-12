@@ -38,7 +38,9 @@ async function main() {
 		}
 		console.log(`ターン: ${state.turn === 1 ? "黒(●)" : "白(○)"}`);
 		console.log("履歴:");
-		state.history.slice(-5).forEach((h: string) => console.log(`  ${h}`));
+		for (const h of state.history.slice(-5)) {
+			console.log(`  ${h}`);
+		}
 		if (mode === "3") {
 			await new Promise((r) => setTimeout(r, 1500));
 			continue;
