@@ -139,3 +139,6 @@ prisma.config.mjs.bak
 # Test results
 /test-results/
 /playwright-report/
+
+# External untracked dependencies
+/elysia/
