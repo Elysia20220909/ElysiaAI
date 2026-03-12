@@ -14,7 +14,7 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "tests/**/*", "start-server.ts"],
+  "include": ["src/**/*", "game/**/*", "tests/**/*", "start-server.ts"],
   "exclude": [
     "node_modules",
     "dist",

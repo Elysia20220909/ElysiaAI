@@ -45,8 +45,11 @@ client.on("connect", () => {
 
 		await client.disconnect();
 		console.log("✅ 接続を切断しました");
-	} catch (error: any) {
-		console.error("❌ エラー:", error.message);
+	} catch (error) {
+		console.error(
+			"❌ エラー:",
+			error instanceof Error ? error.message : String(error),
+		);
 		process.exit(1);
 	}
 })();

@@ -177,6 +177,7 @@ async function checkRateLimit(key: string) {
 				userId: key.split(":")[0],
 				action: "rate_limit_exceeded",
 				resource: key,
+				// biome-ignore lint/suspicious/noExplicitAny: Log entry object needs a cast in this context
 			} as any);
 		}
 		return allowed;
@@ -312,6 +313,7 @@ app
 			action: "error",
 			resource: url.pathname,
 			error: errorMsg,
+			// biome-ignore lint/suspicious/noExplicitAny: Log entry object needs a cast in this context
 		} as any);
 		const span = (request as unknown as ExtendedRequest).__span;
 		if (span) {
@@ -322,6 +324,7 @@ app
 		}
 		// Audit middleware - log failed requests
 		try {
+			// biome-ignore lint/suspicious/noExplicitAny: complex object needs cast
 			(auditMiddleware.onError as any)({ request, error, set });
 		} catch {}
 		const message =
@@ -393,8 +396,10 @@ app
 		try {
 			auditMiddleware.afterHandle?.({
 				request,
+				// biome-ignore lint/suspicious/noExplicitAny: complex object needs cast
 				set: set as any,
 				response,
+				// biome-ignore lint/suspicious/noExplicitAny: complex object needs cast
 			} as any);
 		} catch {}
 	})
@@ -475,9 +480,12 @@ app
 	.get(
 		"/",
 		() =>
+			// biome-ignore lint/suspicious/noExplicitAny: Bun global check
 			typeof (globalThis as any).Bun !== "undefined" &&
+			// biome-ignore lint/suspicious/noExplicitAny: Bun global check
 			typeof (globalThis as any).Bun.file === "function"
-				? (globalThis as any).Bun.file("public/index.html")
+				? // biome-ignore lint/suspicious/noExplicitAny: Bun global check
+					(globalThis as any).Bun.file("public/index.html")
 				: undefined,
 		{
 			detail: {
@@ -631,9 +639,12 @@ app
 						headers: { "content-type": "application/json" },
 					});
 				const file =
+					// biome-ignore lint/suspicious/noExplicitAny: Bun global check
 					typeof (globalThis as any).Bun !== "undefined" &&
+					// biome-ignore lint/suspicious/noExplicitAny: Bun global check
 					typeof (globalThis as any).Bun.file === "function"
-						? await (globalThis as any).Bun.file("data/knowledge.jsonl").text()
+						? // biome-ignore lint/suspicious/noExplicitAny: Bun global check
+							await (globalThis as any).Bun.file("data/knowledge.jsonl").text()
 						: "";
 				const lines = file.trim().split("\n").filter(Boolean);
 				const last = lines
@@ -791,7 +802,7 @@ app
 					refreshToken,
 					CONFIG.JWT_REFRESH_SECRET,
 				) as jwt.JwtPayload;
-				if (payload && payload.userId) {
+				if (payload?.userId) {
 					// In a real app, you'd revoke the refresh token in a database/Redis
 					logger.info(
 						`User ${payload.userId} logged out (refresh token revoked conceptually)`,
@@ -2103,12 +2114,14 @@ if (import.meta.main) {
 		});
 
 		// Bun環境ではWebSocketサーバーをスキップ
+		// biome-ignore lint/suspicious/noExplicitAny: Bun global check
 		const isBun = typeof (globalThis as any).Bun !== "undefined";
 		if (!isBun) {
 			// WebSocketの初期化（HTTPサーバー取得後）
 			const httpServer = server.server;
 			if (httpServer) {
 				const { wsManager } = await import("./lib/websocket-manager");
+				// biome-ignore lint/suspicious/noExplicitAny: httpServer type cast
 				wsManager.initialize(httpServer as any);
 				logger.info("WebSocket server initialized");
 			}

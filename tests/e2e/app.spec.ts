@@ -190,6 +190,7 @@ test.describe("Error Handling", () => {
 		// Check for error message in the chat - Vue app displays "エラー:" prefix
 		// Use .last() to get the most recent message
 		const errorMessage = page.locator('div:has-text("エラー:")').last();
+		await expect(errorMessage).toBeVisible();
 		await context.setOffline(false);
 	});
 });
