@@ -45,13 +45,12 @@ import axios from "axios";
 import { t } from "elysia";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-
+import { passwordManager } from "../../src/lib/password-manager";
 // 新しいセキュリティモジュール（OpenSSL非依存）
 import { secureJwtManager } from "../../src/lib/secure-jwt-manager";
-import { passwordManager } from "../../src/lib/password-manager";
+import { createSecurityPlugin } from "../../src/lib/security-middleware";
 import { securityUtils } from "../../src/lib/security-utils";
 import { tlsConfigManager } from "../../src/lib/tls-config";
-import { createSecurityPlugin } from "../../src/lib/security-middleware";
 import {
 	checkRateLimitRedis,
 	revokeRefreshToken,
@@ -101,7 +100,10 @@ try {
 	await secureJwtManager.initialize();
 	logger.info("✅ Secure JWT Manager initialized");
 } catch (error) {
-	logger.warn("⚠️ Secure JWT Manager initialization failed, continuing...", error);
+	logger.warn(
+		"⚠️ Secure JWT Manager initialization failed, continuing...",
+		error,
+	);
 }
 
 // ジョブキューとCronスケジューラーを初期化
@@ -681,7 +683,7 @@ app
 				const tokenPair = await secureJwtManager.generateTokenPair({
 					userId,
 					username,
-					role: 'user',
+					role: "user",
 				});
 
 				return new Response(
@@ -760,7 +762,8 @@ app
 			const { refreshToken } = body as { refreshToken: string };
 			try {
 				// 新しいセキュアJWTマネージャーでトークンを無効化
-				const validation = await secureJwtManager.validateAccessToken(refreshToken);
+				const validation =
+					await secureJwtManager.validateAccessToken(refreshToken);
 				if (validation.valid && validation.payload?.userId) {
 					await secureJwtManager.revokeAllUserTokens(validation.payload.userId);
 				}
