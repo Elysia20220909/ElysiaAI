@@ -3,8 +3,7 @@
  * ストリーミング、上流サービス障害、タイムアウトなどの包括的な処理
  */
 
-import type { Response } from "elysia";
-import { logger } from "./logger";
+import { logger } from "./logger.ts";
 
 export interface ErrorResponse {
 	error: string;
@@ -21,7 +20,7 @@ export function createErrorResponse(
 	message: string,
 	code?: string,
 	requestId?: string,
-): Response {
+): globalThis.Response {
 	const errorBody: ErrorResponse = {
 		error: message,
 		code: code || `ERROR_${status}`,
@@ -29,7 +28,7 @@ export function createErrorResponse(
 		requestId,
 	};
 
-	return new Response(JSON.stringify(errorBody), {
+	return new globalThis.Response(JSON.stringify(errorBody), {
 		status,
 		headers: { "content-type": "application/json" },
 	});
@@ -58,7 +57,7 @@ export async function* handleStreamingWithFallback<T>(
 	} catch (error) {
 		logger.error(
 			"ストリーミング中にエラーが発生しました",
-			error instanceof Error ? error : undefined,
+			error instanceof Error ? error : new Error(String(error)),
 		);
 
 		// エラーメッセージをストリームに含める
@@ -127,7 +126,7 @@ export async function fetchWithRetry<T>(
 			lastError = error instanceof Error ? error : new Error(String(error));
 			logger.warn(
 				`上流サービス呼び出し失敗 (試行 ${attempt}/${maxRetries})`,
-				lastError,
+				{ error: lastError.message },
 			);
 
 			if (attempt < maxRetries) {

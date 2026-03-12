@@ -66,7 +66,7 @@ describeLive("Elysia Network Game API", () => {
 		});
 		expect(res.status).toBe(200);
 		expect(res.data.winner).toBe("user1");
-		expect(res.data.history.some((h) => h.includes("Winner: user1"))).toBe(
+		expect(res.data.history.some((h: string) => h.includes("Winner: user1"))).toBe(
 			true,
 		);
 	});
