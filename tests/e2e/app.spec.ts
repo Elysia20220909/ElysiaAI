@@ -39,7 +39,7 @@ test.describe("Chat Functionality", () => {
 				// If @click is gone, Vue has compiled the template
 				return !body.includes("@click");
 			},
-			{ timeout: 10000 }
+			{ timeout: 10000 },
 		);
 
 		// Type a message
@@ -69,7 +69,7 @@ test.describe("Chat Functionality", () => {
 		await sendButton.click();
 
 		// Wait for AI response - look for assistant message
-		const assistantMessage = page.locator('div.bg-slate-50').first();
+		const assistantMessage = page.locator("div.bg-slate-50").first();
 		await expect(assistantMessage).toBeVisible({ timeout: 15000 });
 	});
 });
@@ -188,8 +188,8 @@ test.describe("Error Handling", () => {
 		await sendButton.click();
 
 		// Check for error message in the chat - Vue app displays "エラー:" prefix
-            // Use .last() to get the most recent message
-            const errorMessage = page.locator('div:has-text("エラー:")').last();
+		// Use .last() to get the most recent message
+		const errorMessage = page.locator('div:has-text("エラー:")').last();
 		await context.setOffline(false);
 	});
 });
