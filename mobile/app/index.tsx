@@ -4,6 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	ActivityIndicator,
+	Alert,
+	Animated,
 	KeyboardAvoidingView,
 	Platform,
 	ScrollView,
@@ -21,6 +23,7 @@ export default function IndexScreen() {
 	const [input, setInput] = useState("");
 	const [localApiUrl, setLocalApiUrl] = useState(apiUrl);
 	const scrollViewRef = useRef<ScrollView>(null);
+	const fadeAnim = useRef(new Animated.Value(0)).current;
 
 	// Bottom Sheet setup
 	const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -36,16 +39,51 @@ export default function IndexScreen() {
 		setLocalApiUrl(apiUrl);
 	}, [apiUrl]);
 
+	// Premium animation for thinking state
+	useEffect(() => {
+		if (loading) {
+			Animated.loop(
+				Animated.sequence([
+					Animated.timing(fadeAnim, {
+						toValue: 1,
+						duration: 800,
+						useNativeDriver: true,
+					}),
+					Animated.timing(fadeAnim, {
+						toValue: 0.3,
+						duration: 800,
+						useNativeDriver: true,
+					}),
+				]),
+			).start();
+		} else {
+			fadeAnim.setValue(0);
+		}
+	}, [loading, fadeAnim]);
+
 	const handleSend = async () => {
 		if (!input.trim() || loading) return;
 		const text = input.trim();
 		setInput("");
-		await sendMessage(text);
+		try {
+			await sendMessage(text);
+		} catch (error) {
+			Alert.alert("エラー", "メッセージの送信に失敗したよ…(´;ω;｀)");
+			console.error(error);
+		}
 	};
 
 	const handleSaveSettings = async () => {
-		const success = await saveApiUrl(localApiUrl);
-		if (success) handleCloseModal();
+		try {
+			const success = await saveApiUrl(localApiUrl);
+			if (success) {
+				handleCloseModal();
+				Alert.alert("成功", "設定を保存したよ！✨");
+			}
+		} catch (error) {
+			Alert.alert("エラー", "設定の保存に失敗しちゃった…");
+			console.error(error);
+		}
 	};
 
 	return (
@@ -88,10 +126,10 @@ export default function IndexScreen() {
 								</View>
 							))}
 							{loading && (
-								<View style={styles.loadingContainer}>
+								<Animated.View style={[styles.loadingContainer, { opacity: fadeAnim }]}>
 									<ActivityIndicator size="small" color="#FF69B4" />
 									<Text style={styles.loadingText}>エリシアが考え中…♡</Text>
-								</View>
+								</Animated.View>
 							)}
 						</ScrollView>
 

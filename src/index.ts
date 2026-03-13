@@ -36,7 +36,8 @@ app.post(
 );
 
 import { existsSync, mkdirSync } from "node:fs";
-// Secure Elysia AI Server with JWT, Redis rate limiting, and refresh tokens
+import { helmet } from 'elysia-helmet';
+import { compress } from 'elysia-compress';
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { fromTypes, openapi } from "@elysiajs/openapi";
@@ -267,6 +268,8 @@ const auditMiddleware = createAuditMiddleware({
 });
 
 app
+	.use(helmet())
+	.use(compress())
 	.use(
 		cors({
 			origin: CONFIG.ALLOWED_ORIGINS,
