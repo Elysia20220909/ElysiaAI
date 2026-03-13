@@ -1,6 +1,7 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useChat } from "../hooks/useChat";
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetView } from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	ActivityIndicator,
 	KeyboardAvoidingView,
@@ -12,149 +13,57 @@ import {
 	TouchableOpacity,
 	View,
 } from "react-native";
-
-const API_URL_KEY = "@elysia_api_url";
-const DEFAULT_API_URL = "http://192.168.1.100:3000"; // Replace with your local IP
-
-type Message = {
-	role: "user" | "assistant";
-	content: string;
-};
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Markdown from "react-native-markdown-display";
 
 export default function IndexScreen() {
-	const [messages, setMessages] = useState<Message[]>([]);
+	const { messages, loading, apiUrl, saveApiUrl, sendMessage } = useChat();
 	const [input, setInput] = useState("");
-	const [loading, setLoading] = useState(false);
-	const [apiUrl, setApiUrl] = useState(DEFAULT_API_URL);
-	const [showSettings, setShowSettings] = useState(false);
+	const [localApiUrl, setLocalApiUrl] = useState(apiUrl);
 	const scrollViewRef = useRef<ScrollView>(null);
 
-	useEffect(() => {
-		const loadApiUrl = async () => {
-			try {
-				const saved = await AsyncStorage.getItem(API_URL_KEY);
-				if (saved) setApiUrl(saved);
-			} catch (e) {
-				console.error("Failed to load API URL", e);
-			}
-		};
-		loadApiUrl();
+	// Bottom Sheet setup
+	const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+	const snapPoints = useMemo(() => ["25%", "50%"], []);
+	const handlePresentModalPress = useCallback(() => {
+		bottomSheetModalRef.current?.present();
+	}, []);
+	const handleCloseModal = useCallback(() => {
+		bottomSheetModalRef.current?.dismiss();
 	}, []);
 
-	const saveApiUrl = async (url: string) => {
-		try {
-			await AsyncStorage.setItem(API_URL_KEY, url);
-			setApiUrl(url);
-			setShowSettings(false);
-		} catch (e) {
-			console.error("Failed to save API URL", e);
-		}
-	};
+	useEffect(() => {
+		setLocalApiUrl(apiUrl);
+	}, [apiUrl]);
 
-	const sendMessage = async () => {
+	const handleSend = async () => {
 		if (!input.trim() || loading) return;
-
-		const userMessage: Message = { role: "user", content: input.trim() };
-		const newMessages = [...messages, userMessage];
-		setMessages(newMessages);
+		const text = input.trim();
 		setInput("");
-		setLoading(true);
-
-		try {
-			const response = await fetch(`${apiUrl}/elysia-love`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ messages: newMessages }),
-			});
-
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}`);
-			}
-
-			// Handle streaming response
-			const reader = response.body?.getReader();
-			const decoder = new TextDecoder();
-			let assistantContent = "";
-
-			if (reader) {
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) break;
-
-					const chunk = decoder.decode(value, { stream: true });
-					assistantContent += chunk;
-
-					// Update assistant message in real-time
-					setMessages([...newMessages, { role: "assistant", content: assistantContent }]);
-				}
-			}
-
-			setMessages([
-				...newMessages,
-				{ role: "assistant", content: assistantContent || "応答がありません" },
-			]);
-		} catch (error) {
-			console.error("API Error:", error);
-			setMessages([
-				...newMessages,
-				{
-					role: "assistant",
-					content: `ごめんね…エラーが起きちゃった💦\n${error instanceof Error ? error.message : String(error)}`,
-				},
-			]);
-		} finally {
-			setLoading(false);
-		}
+		await sendMessage(text);
 	};
 
-	if (showSettings) {
-		return (
-			<View style={styles.container}>
-				<LinearGradient colors={["#FFB7D5", "#FF8AC6"]} style={styles.gradient}>
-					<View style={styles.settingsContainer}>
-						<Text style={styles.settingsTitle}>API設定</Text>
-						<Text style={styles.settingsLabel}>サーバーURL:</Text>
-						<TextInput
-							style={styles.settingsInput}
-							value={apiUrl}
-							onChangeText={setApiUrl}
-							placeholder="http://192.168.1.100:3000"
-							autoCapitalize="none"
-							autoCorrect={false}
-						/>
-						<Text style={styles.settingsHint}>
-							ヒント: コンピューターのローカルIPアドレスを使用してください。
-							{"\n"}
-							`ipconfig` (Windows) または `ifconfig` (Mac/Linux) で確認できます。
-						</Text>
-						<TouchableOpacity style={styles.saveButton} onPress={() => saveApiUrl(apiUrl)}>
-							<Text style={styles.saveButtonText}>保存して閉じる</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.cancelButton} onPress={() => setShowSettings(false)}>
-							<Text style={styles.cancelButtonText}>キャンセル</Text>
-						</TouchableOpacity>
-					</View>
-				</LinearGradient>
-			</View>
-		);
-	}
+	const handleSaveSettings = async () => {
+		const success = await saveApiUrl(localApiUrl);
+		if (success) handleCloseModal();
+	};
 
 	return (
-		<KeyboardAvoidingView
-			style={styles.container}
-			behavior={Platform.OS === "ios" ? "padding" : "height"}
-			keyboardVerticalOffset={100}
-		>
-			<LinearGradient colors={["#FFB7D5", "#FF8AC6"]} style={styles.gradient}>
-				<ScrollView
-					ref={scrollViewRef}
-					style={styles.messagesContainer}
-					contentContainerStyle={styles.messagesContent}
-					onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+		<GestureHandlerRootView style={{ flex: 1 }}>
+			<BottomSheetModalProvider>
+				<KeyboardAvoidingView
+					style={styles.container}
+					behavior={Platform.OS === "ios" ? "padding" : "height"}
+					keyboardVerticalOffset={100}
 				>
-					{messages.length === 0 && (
+					<LinearGradient colors={["#FFB7D5", "#FF8AC6"]} style={styles.gradient}>
+						<ScrollView
+							ref={scrollViewRef}
+							style={styles.messagesContainer}
+							contentContainerStyle={styles.messagesContent}
+							onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+						>
+							{messages.length === 0 && (
 						<View style={styles.welcomeContainer}>
 							<Text style={styles.welcomeText}>
 								ฅ(՞៸៸&gt; ᗜ &lt;៸៸՞)ฅ♡{"\n\n"}
@@ -162,50 +71,86 @@ export default function IndexScreen() {
 								何でも話してね〜！
 							</Text>
 						</View>
-					)}
-					{messages.map((msg, idx) => (
-						<View
-							key={`${msg.role}-${idx}-${msg.content.slice(0, 20)}`}
-							style={[
-								styles.messageBubble,
-								msg.role === "user" ? styles.userBubble : styles.assistantBubble,
-							]}
-						>
-							<Text style={styles.messageText}>{msg.content}</Text>
-						</View>
-					))}
-					{loading && (
-						<View style={styles.loadingContainer}>
-							<ActivityIndicator size="small" color="#FF69B4" />
-							<Text style={styles.loadingText}>エリシアが考え中…♡</Text>
-						</View>
-					)}
-				</ScrollView>
+							)}
+							{messages.map((msg, idx) => (
+								<View
+									key={`${msg.role}-${idx}-${msg.content.slice(0, 20)}`}
+									style={[
+										styles.messageBubble,
+										msg.role === "user" ? styles.userBubble : styles.assistantBubble,
+									]}
+								>
+									{msg.role === "assistant" ? (
+										<Markdown style={markdownStyles}>{msg.content}</Markdown>
+									) : (
+										<Text style={styles.messageText}>{msg.content}</Text>
+									)}
+								</View>
+							))}
+							{loading && (
+								<View style={styles.loadingContainer}>
+									<ActivityIndicator size="small" color="#FF69B4" />
+									<Text style={styles.loadingText}>エリシアが考え中…♡</Text>
+								</View>
+							)}
+						</ScrollView>
 
-				<View style={styles.inputContainer}>
-					<TouchableOpacity style={styles.settingsIconButton} onPress={() => setShowSettings(true)}>
-						<Text style={styles.settingsIcon}>⚙️</Text>
-					</TouchableOpacity>
-					<TextInput
-						style={styles.input}
-						value={input}
-						onChangeText={setInput}
-						placeholder="メッセージを入力…♡"
-						placeholderTextColor="#999"
-						multiline
-						maxLength={500}
-						editable={!loading}
-					/>
-					<TouchableOpacity
-						style={[styles.sendButton, loading && styles.sendButtonDisabled]}
-						onPress={sendMessage}
-						disabled={loading || !input.trim()}
-					>
-						<Text style={styles.sendButtonText}>💌</Text>
-					</TouchableOpacity>
-				</View>
-			</LinearGradient>
-		</KeyboardAvoidingView>
+						<View style={styles.inputContainer}>
+							<TouchableOpacity style={styles.settingsIconButton} onPress={handlePresentModalPress}>
+								<Text style={styles.settingsIcon}>⚙️</Text>
+							</TouchableOpacity>
+							<TextInput
+								style={styles.input}
+								value={input}
+								onChangeText={setInput}
+								placeholder="メッセージを入力…♡"
+								placeholderTextColor="#999"
+								multiline
+								maxLength={500}
+								editable={!loading}
+							/>
+							<TouchableOpacity
+								style={[styles.sendButton, loading && styles.sendButtonDisabled]}
+								onPress={handleSend}
+								disabled={loading || !input.trim()}
+							>
+								<Text style={styles.sendButtonText}>💌</Text>
+							</TouchableOpacity>
+						</View>
+					</LinearGradient>
+				</KeyboardAvoidingView>
+
+				<BottomSheetModal
+					ref={bottomSheetModalRef}
+					index={1}
+					snapPoints={snapPoints}
+					backgroundStyle={styles.bottomSheetBackground}
+					handleIndicatorStyle={{ backgroundColor: "#fff" }}
+				>
+					<BottomSheetView style={styles.bottomSheetContent}>
+						<Text style={styles.settingsTitle}>API設定</Text>
+						<Text style={styles.settingsLabel}>サーバーURL:</Text>
+						<TextInput
+							style={styles.settingsInput}
+							value={localApiUrl}
+							onChangeText={setLocalApiUrl}
+							placeholder="http://192.168.1.100:3000"
+							autoCapitalize="none"
+							autoCorrect={false}
+						/>
+						<Text style={styles.settingsHint}>
+							ヒント: コンピューターのローカルIPアドレスを使用してください。
+						</Text>
+						<TouchableOpacity style={styles.saveButton} onPress={handleSaveSettings}>
+							<Text style={styles.saveButtonText}>保存して閉じる</Text>
+						</TouchableOpacity>
+						<TouchableOpacity style={styles.cancelButton} onPress={handleCloseModal}>
+							<Text style={styles.cancelButtonText}>キャンセル</Text>
+						</TouchableOpacity>
+					</BottomSheetView>
+				</BottomSheetModal>
+			</BottomSheetModalProvider>
+		</GestureHandlerRootView>
 	);
 }
 
@@ -351,5 +296,27 @@ const styles = StyleSheet.create({
 	cancelButtonText: {
 		fontSize: 16,
 		color: "#fff",
+	},
+	bottomSheetBackground: {
+		backgroundColor: "#FF8AC6",
+	},
+	bottomSheetContent: {
+		flex: 1,
+		padding: 24,
+	},
+});
+
+const markdownStyles = StyleSheet.create({
+	body: {
+		color: "#333",
+		fontSize: 16,
+	},
+	link: {
+		color: "#FF69B4",
+		textDecorationLine: "underline",
+	},
+	strong: {
+		fontWeight: "bold",
+		color: "#FF1493",
 	},
 });
