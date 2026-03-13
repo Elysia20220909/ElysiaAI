@@ -5,32 +5,27 @@
 形式は[Keep a Changelog](https://keepachangelog.com/ja/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/lang/ja/)に準拠しています。
 
-## [未リリース]
+## [1.1.0] - 2026-03-13
 
 ### 追加
 
-- Prisma 7 ORM統合とLibSQLアダプタ
-- SQLite開発データベース（起動時自動作成）
-- サーバー起動時の自動データベーススキーマ作成
-- 改善されたヘルスモニタリング（database、ollama、disk_space）
-- データベースファイルと一時的な成果物のための強化された.gitignore
-- 最新技術スタックを反映したREADME.md更新
+- **モバイルアプリ強化 (The "Elysia Love" Update)**:
+  - `@gorhom/bottom-sheet` を利用したプレミアムな設定UIの統合
+  - `react-native-markdown-display` によるAIメッセージのリッチテキスト表示
+  - `useChat` カスタムフックによる、通信ロジックとUIの完全分離
+  - サーバー接続失敗時のユーザー向けアラート通知
+  - 「考え中」状態へのふわふわとしたフェードアニメーションの追加
+- **リポジトリ品質向上 (Senior Maintainer Audit)**:
+  - `ARCHITECTURE.md` (Mermaid図解付) および `SECURITY.md` の新規作成
+  - `elysia-helmet` による強力なHTTPセキュリティヘッダーの導入
+  - `elysia-compress` によるレスポンス圧縮通信のサポート
 
 ### 変更
 
-- 開発環境をPostgreSQLからSQLiteに移行
-- LibSQLアダプタを使用したデータベース接続に更新
-- ヘルスチェックシステムにLibSQLアダプタを適用
-- Redis v5認証警告回避のため開発環境でRedisを無効化
-- モダンなグラスモーフィズムデザインでUIを完全リニューアル
+- `biome.json` をアーキテクチャ設計に基づき `config/internal/` へ移動
+- GitHub Actions (CI/CD) のアクションを特定のSHAに固定し、CodeQL解析を追加
 
-### 修正
-
-- Bunランタイムとの Prisma v7 互換性問題
-- データベースヘルスチェック失敗問題
-- Redis v5認証警告
-
-## [1.0.51] - 2025年12月3日
+## [1.0.51] - 2025-12-03
 
 ### 追加
 
@@ -103,6 +98,6 @@
 - **Fixed**: Bug fixes
 - **Security**: Security improvements
 
-[Unreleased]: https://github.com/chloeamethyst/ElysiaJS/compare/v1.0.51...HEAD
+[1.1.0]: https://github.com/chloeamethyst/ElysiaJS/compare/v1.0.51...v1.1.0
 [1.0.51]: https://github.com/chloeamethyst/ElysiaJS/releases/tag/v1.0.51
 [1.0.0]: https://github.com/chloeamethyst/ElysiaJS/releases/tag/v1.0.0
