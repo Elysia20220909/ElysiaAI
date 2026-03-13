@@ -1,0 +1,1 @@
+bun lint && bun run scripts/security-scan.ts
