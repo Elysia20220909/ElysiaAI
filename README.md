@@ -59,30 +59,40 @@ npx eslint ElysiaAI/src/**/*.ts --fix
 
 **これだけ！** 🎉 <http://localhost:3000> を開く
 
-### 📱 モバイルアプリ (NEW!)
+### 🚀 Getting Started
 
-`mobile/` ディレクトリには、最新の React Native (Expo) アプリが含まれています。
+This project is organized as a **Bun Monorepo**.
+
+### Prerequisites
+- [Bun](https://bun.sh/) (v1.0.0 or higher)
+
+### Setup
 
 ```bash
-# モバイルディレクトリに移動
-cd mobile
-
-# 依存関係のインストール
+# Install all dependencies (Monorepo)
 bun install
 
-# 開発サーバーの起動
+# Run the server
+bun dev:server
+
+# Start the mobile app
+cd packages/mobile
 bun start
 ```
 
-- **機能**: 🦊 とのリアルタイムチャット、マークダウン表示、設定メニュー。
-- **設定**: アプリ内の⚙️から、稼働中のサーバーIPアドレスを設定してください。
+## 📂 Repository Structure
+
+- `packages/server`: Elysia.js Backend
+- `packages/mobile`: Expo/React Native App
+- `packages/game`: Multiplayer Game Server
+- `packages/shared`: Shared Types and Utilities
 
 ### 📡 利用可能なエンドポイント
 
-- **メイン**: http://localhost:3000/
-- **Swagger API**: http://localhost:3000/swagger
-- **Health Check**: http://localhost:3000/health
-- **Metrics**: http://localhost:3000/metrics
+- **メイン**: <http://localhost:3000/>
+- **Swagger API**: <http://localhost:3000/swagger>
+- **Health Check**: <http://localhost:3000/health>
+- **Metrics**: <http://localhost:3000/metrics>
 
 > 注意: 開発直後は `FASTAPI_BASE_URL` や Redis を未起動の場合が多く、`/health` は 503 (Service Unavailable) を返すことがあります。Ollama のみ稼働中でも `/metrics` と `/swagger` は利用可能です。完全な 200 (healthy) を得るには FastAPI と Redis を起動してください（Redis は `.env` の `REDIS_ENABLED=false` で無効化したままでも可）。
 
