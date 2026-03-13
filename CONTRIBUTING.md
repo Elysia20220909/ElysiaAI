@@ -170,7 +170,7 @@ bun test --coverage
 
 - **GitHub Issues**: バグ報告や機能リクエスト
 - **Discussions**: 一般的な質問や議論
-- **Email**: [プロジェクトメールアドレス]
+- **Security**: 脆弱性に関する報告は [SECURITY.md](SECURITY.md) を参照してください。
 
 ## ライセンス
 
