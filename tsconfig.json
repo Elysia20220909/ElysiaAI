@@ -1,29 +1,15 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "types": ["bun-types", "node"],
-    "downlevelIteration": true,
-    "declaration": false,
-    "sourceMap": true,
-    "allowImportingTsExtensions": true,
-    "noEmit": true
+    "baseUrl": ".",
+    "paths": {
+      "@elysia-ai/shared": ["packages/shared/src/index.ts"]
+    },
+    "types": ["bun-types"]
   },
-  "include": ["src/**/*", "game/**/*", "tests/**/*", "start-server.ts"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "mobile",
-    "desktop",
-    "native",
-    "cuda",
-    "python",
-    "scripts",
-    "dev"
-  ]
+  "include": ["packages/**/*"]
 }
