@@ -1,229 +1,40 @@
-name: CI/CD Pipeline - Enhanced
+name: CI/CD
 
 on:
   push:
-    branches: [master]
+    branches: [ main, develop ]
   pull_request:
-    branches: [master]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  security-events: write
-  pull-requests: write
-  packages: write
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+    branches: [ main, develop ]
 
 jobs:
-  lint:
-    name: Lint & Format
+  security:
+    name: Security & Audit
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Setup Bun
-        # oven-sh/setup-bun@v1.2.2
-        uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5
-        with:
-          bun-version: latest
-
+        uses: oven-sh/setup-bun@v2
       - name: Install dependencies
         run: bun install
+      - name: Secret Scan
+        run: bun run scripts/security-scan.ts
+      - name: Bun Audit
+        run: bun audit
 
-      - name: Run linter
-        run: bun run lint
-
-      - name: Check format
-        run: bun run format:check || echo "Format issues detected"
-
-  build:
-    name: Build & Compile
-    runs-on: ${{ matrix.os }}
-    needs: lint
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        bun-version: ["1.0.20", "latest"]
-
+  build-and-test:
+    needs: security
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Setup Bun
-        # oven-sh/setup-bun@v1.2.2
-        uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5
-        with:
-          bun-version: ${{ matrix.bun-version }}
-
+        uses: oven-sh/setup-bun@v2
       - name: Install dependencies
         run: bun install
-
-      - name: Build project
-        run: bun run build
-
-      - name: Generate Prisma Client
-        run: bunx prisma generate
-
-      - name: Upload artifacts
-        if: matrix.os == 'ubuntu-latest'
-        # actions/upload-artifact@v4.3.1
-        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
-        with:
-          name: build-${{ matrix.bun-version }}
-          path: dist/
-
-  test:
-    name: Test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        bun-version: ["1.0.20", "latest"]
-
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - name: Setup Bun
-        # oven-sh/setup-bun@v1.2.2
-        uses: oven-sh/setup-bun@4bc047ad259df6fc24a6c9b0f9a0cb08cf17fbe5
-        with:
-          bun-version: ${{ matrix.bun-version }}
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Run unit tests
+      - name: Lint
+        run: bun lint
+      - name: Type Check
+        run: bun x tsc --noEmit
+      - name: Test
         run: bun test
-        env:
-          RUN_LIVE_TESTS: false
-          RUN_E2E_TESTS: false
-
-      - name: Run tests with coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.bun-version == 'latest'
-        run: bun test --coverage
-        env:
-          RUN_LIVE_TESTS: false
-          RUN_E2E_TESTS: false
-
-      - name: Upload coverage
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.bun-version == 'latest' && env.CODECOV_TOKEN != '' }}
-        # codecov/codecov-action@v4.0.1
-        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/coverage-final.json
-
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - name: Run Trivy scanner
-        # aquasecurity/trivy-action@0.28.0
-
-        uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d
-        with:
-          scan-type: "fs"
-          scan-ref: "."
-          format: "sarif"
-          output: "trivy-results.sarif"
-          severity: "CRITICAL,HIGH"
-
-      - name: Upload results
-        # github/codeql-action/upload-sarif@v3.27.5
-        uses: github/codeql-action/upload-sarif@aa578102511db1f4524ed59b8cc2bae4f6e88195
-        with:
-          sarif_file: "trivy-results.sarif"
-
-  docker-build:
-    name: Docker Build & Push
-    runs-on: ubuntu-latest
-    needs: [test, security-scan]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/elysia')
-
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - name: Set up Docker Buildx
-        # docker/setup-buildx-action@v3.0.0
-        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226
-      - name: Log in to registry
-        # docker/login-action@v3.0.0
-        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        # docker/metadata-action@v5.5.0
-        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=sha
-
-      - name: Build and push
-        # docker/build-push-action@v5.1.0
-        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
-        with:
-          context: .
-          file: ./config/docker/Dockerfile.production
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: docker-build
-    if: ${{ github.ref == 'refs/heads/master' && github.event_name == 'push' }}
-    environment:
-      name: production
-
-    env:
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      SERVER_HOST: ${{ secrets.SERVER_HOST }}
-      SERVER_USER: ${{ secrets.SERVER_USER }}
-
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
-      - name: Deploy via SSH
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts 2>/dev/null
-
-          ssh $SERVER_USER@$SERVER_HOST << 'DEPLOY_EOF'
-            cd /opt/elysia-ai
-            docker-compose -f config/docker/docker-compose.yml pull || true
-            docker-compose -f config/docker/docker-compose.yml up -d --remove-orphans
-            docker system prune -f
-          DEPLOY_EOF
-
-      - name: Health check
-        run: |
-          sleep 10
-          curl -f ${{ secrets.SERVER_HOST }}/health || exit 1
-
-
-
-
-

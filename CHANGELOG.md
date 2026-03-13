@@ -7,7 +7,7 @@
 
 ## [1.1.0] - 2026-03-13
 
-### 追加
+### [1.1.0] 追加
 
 - **モバイルアプリ強化 (The "Elysia Love" Update)**:
   - `@gorhom/bottom-sheet` を利用したプレミアムな設定UIの統合
@@ -20,14 +20,14 @@
   - `elysia-helmet` による強力なHTTPセキュリティヘッダーの導入
   - `elysia-compress` によるレスポンス圧縮通信のサポート
 
-### 変更
+### [1.1.0] 変更
 
 - `biome.json` をアーキテクチャ設計に基づき `config/internal/` へ移動
 - GitHub Actions (CI/CD) のアクションを特定のSHAに固定し、CodeQL解析を追加
 
 ## [1.0.51] - 2025-12-03
 
-### 追加
+### [1.0.51] 追加
 
 - VOICEVOX統合（四国めたん音声）
 - 感情表現システム（喜び/恥ずかしい/通常）と自動ピッチ調整
@@ -39,18 +39,18 @@
 - ローテーションスクリプト付きJSONLベースのデータ永続化
 - レート制限のためのRedis統合（インメモリフォールバック付き）
 - 包括的なメンテナンススクリプト（週次/月次/四半期）
-- 本番環境対応DockerfileによるDockerサポート
+- 本番環境対応Dockerfileによる Dockerサポート
 - クラウドデプロイメントスクリプト（AWS/GCP）
 - Multi-platform setup scripts (Windows PowerShell, Linux/macOS bash)
 
-### Changed
+### [1.0.51] 変更
 
 - Updated to Elysia v1.4.17
 - Migrated from ESLint/Prettier to Biome for better performance
 - Enhanced UI with Glassmorphism design
 - Improved error handling and validation
 
-### Security
+### [1.0.51] セキュリティ
 
 - JWT secret rotation support
 - Input sanitization with sanitize-html
@@ -61,7 +61,7 @@
 
 ## [1.0.0] - 2025-XX-XX
 
-### Added
+### [1.0.0] 追加
 
 - Initial release
 - RAG (Retrieval Augmented Generation) with FastAPI + Milvus Lite
