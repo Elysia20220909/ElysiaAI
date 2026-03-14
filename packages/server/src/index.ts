@@ -36,6 +36,11 @@ app.post(
 );
 
 import { existsSync, mkdirSync } from "node:fs";
+<<<<<<< HEAD
+=======
+import { helmet } from 'elysia-helmet';
+import compress from 'elysia-compress';
+>>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { fromTypes, openapi } from "@elysiajs/openapi";
@@ -111,6 +116,12 @@ if (process.env.REDIS_ENABLED === "true") {
 }
 cronScheduler.initializeDefaultTasks();
 
+<<<<<<< HEAD
+=======
+import type { Message, ChatRequest } from "@elysia-ai/shared";
+
+
+>>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 // Extended Request type for middleware data
 interface ExtendedRequest extends Request {
 	__span?: {
@@ -1315,10 +1326,12 @@ app
 				return jsonError(401, "Missing Bearer token");
 
 			try {
+				// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
 				const payload = jwt.verify(
 					auth.substring(7),
 					CONFIG.JWT_SECRET,
-				) as jwt.JwtPayload;
+				// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
+				) as any;
 				const userId = (payload as { userId?: string }).userId;
 				if (!userId) return jsonError(401, "Invalid token");
 
@@ -1378,7 +1391,11 @@ app
 	// セッションエクスポート（JSON/Markdown）
 	.get(
 		"/sessions/:id/export",
+<<<<<<< HEAD
 		// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference at scale
+=======
+			// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference at scale
+>>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 		async ({ params, query }: any) => {
 			const format = (query?.format as string) || "json";
 			const sessionId = params.id;
@@ -1387,7 +1404,11 @@ app
 				const data = await chatSessionService.exportSessionAsJSON(sessionId);
 				if (!data) return jsonError(404, "Session not found");
 
+<<<<<<< HEAD
 				// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference at scale
+=======
+			// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference at scale
+>>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 				return new Response(data as any, {
 					headers: {
 						"content-type": "application/json",
