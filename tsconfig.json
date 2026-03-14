@@ -6,10 +6,16 @@
     "strict": true,
     "skipLibCheck": true,
     "baseUrl": ".",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "paths": {
-      "@elysia-ai/shared": ["packages/shared/src/index.ts"]
+      "@elysia-ai/shared": ["packages/shared/src/index.ts"],
+      "@/*": ["packages/server/src/*"]
     },
     "types": ["bun-types"]
   },
-  "include": ["packages/**/*"]
+  "include": [
+    "packages/**/*",
+    "scripts/**/*"
+  ]
 }
