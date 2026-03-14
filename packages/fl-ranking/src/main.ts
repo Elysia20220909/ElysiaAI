@@ -27,14 +27,34 @@ function renderApp() {
         </div>
       </nav>
 
-      <main id="mainContent" class="leaderboard-container fade-in" style="animation-delay: 0.1s">
-        <div class="glass-card">
-          <div class="leaderboard-header">
-            <h2>Season Standings</h2>
-            <div class="player-meta">Top 100 Players • Updated Live</div>
-          </div>
-          
-          <div id="leaderboardView" class="table-wrapper">
+      <div class="map-hero fade-in">
+        <div class="map-overlay"></div>
+        <div class="map-content">
+          <div class="map-tag">ACTIVE SECTOR</div>
+          <h1 class="map-name">ONSAL HAKAIR (DANSUIGEN)</h1>
+          <p class="map-description">Strategic territory control with randomized high-value targets. Engage the Au Ra tribes and secure the Ovoos.</p>
+          <div class="map-timer">Rerolls in: <span>14:25:03</span></div>
+        </div>
+      </div>
+
+      <main id="mainContent" class="dashboard-grid fade-in" style="animation-delay: 0.1s">
+        <div class="side-panel">
+            <div class="glass-card meta-card">
+              <h3>Job Meta Analysis</h3>
+              <div class="meta-list">
+                ${renderJobMeta(mockPlayers)}
+              </div>
+            </div>
+        </div>
+
+        <div class="main-panel">
+            <div class="glass-card">
+              <div class="leaderboard-header">
+                <h2>Season Standings</h2>
+                <div class="player-meta">Top 100 Players • Updated Live</div>
+              </div>
+              
+              <div id="leaderboardView" class="table-wrapper">
             <table>
               <thead>
                 <tr>
@@ -74,11 +94,17 @@ function renderLeaderboard(players: PlayerStats[]) {
         <td>
           <div class="player-info">
             <span class="player-name">${player.name}</span>
+            <span class="player-job">${player.job}</span>
             <span class="player-meta">${player.world} • ${player.dataCenter}</span>
           </div>
         </td>
         <td style="color: ${getGCColor(player.grandCompany)}">${player.grandCompany}</td>
-        <td><span class="win-rate">${player.winRate}%</span></td>
+        <td>
+            <div class="win-rate-container">
+                <span class="win-rate">${player.winRate}%</span>
+                <div class="streak-dots">${renderStreak(player.lastMatches.map(m => m.result))}</div>
+            </div>
+        </td>
         <td>${player.kda}</td>
         <td>${(player.avgDamage / 1000).toFixed(1)}k</td>
         <td>${player.totalMatches}</td>
@@ -122,24 +148,54 @@ function showPlayerProfile(player: PlayerStats) {
       <div class="stat-card">
         <label>Lifetime Win Rate</label>
         <div class="stat-value blue">${player.winRate}%</div>
+        <div class="stat-sub">Top Tier Performance</div>
       </div>
       <div class="stat-card">
-        <label>K/D/A</label>
+        <label>K/D/A Ratio</label>
         <div class="stat-value">${player.kda}</div>
+        <div class="stat-sub">High Frag Capability</div>
       </div>
       <div class="stat-card">
         <label>Avg. Damage</label>
         <div class="stat-value">${(player.avgDamage / 1000).toFixed(0)}k</div>
+        <div class="stat-sub">Team Carry Lead</div>
       </div>
       <div class="stat-card">
         <label>Battle High Avg</label>
         <div class="stat-value gold">${player.battleHighAvg}</div>
+        <div class="stat-sub">Rank S Dominance</div>
       </div>
     </div>
 
-    <div class="chart-container fade-in" style="animation-delay: 0.2s">
-      <h3>Recent Performance (Damage Done)</h3>
-      <canvas id="performanceChart"></canvas>
+    <div class="profile-content-grid fade-in" style="animation-delay: 0.2s">
+        <div class="chart-section glass-card">
+          <h3>Damage Output Trends</h3>
+          <canvas id="performanceChart"></canvas>
+        </div>
+
+        <div class="history-section glass-card">
+          <h3>Recent Match History</h3>
+          <div class="match-list">
+            ${player.lastMatches
+							.map(
+								(m) => `
+                <div class="match-item ${m.result.toLowerCase()}">
+                    <div class="match-main">
+                        <span class="match-result-tag">${m.result}</span>
+                        <span class="match-time">${m.time}</span>
+                    </div>
+                    <div class="match-stats">
+                        <span class="m-stat">K <strong>${m.kills}</strong></span>
+                        <span class="m-stat">D <strong>${m.deaths}</strong></span>
+                        <span class="m-stat">A <strong>${m.assists}</strong></span>
+                        <span class="m-dmg">${(m.damage / 1000).toFixed(0)}k Damage</span>
+                    </div>
+                </div>
+            `,
+							)
+							.join("")}
+          </div>
+        </div>
     </div>
   `;
 
@@ -222,6 +278,41 @@ function attachRowListeners() {
 			if (player) showPlayerProfile(player);
 		});
 	});
+}
+
+function renderJobMeta(players: PlayerStats[]) {
+	const jobCounts: Record<string, number> = {};
+	for (const p of players) {
+		jobCounts[p.job] = (jobCounts[p.job] || 0) + 1;
+	}
+
+	return Object.entries(jobCounts)
+		.sort(([, a], [, b]) => b - a)
+		.slice(0, 5)
+		.map(([job, count]) => {
+			const percentage = Math.round((count / players.length) * 100);
+			return `
+            <div class="meta-item">
+                <div class="meta-info">
+                    <span class="meta-job">${job}</span>
+                    <span class="meta-count">${percentage}%</span>
+                </div>
+                <div class="meta-bar-bg">
+                    <div class="meta-bar-fill" style="width: ${percentage}%"></div>
+                </div>
+            </div>
+        `;
+		})
+		.join("");
+}
+
+function renderStreak(results: ("Win" | "Loss" | "Draw")[]) {
+	return results
+		.slice(0, 5)
+		.map(
+			(r) => `<span class="streak-dot ${r.toLowerCase()}" title="${r}"></span>`,
+		)
+		.join("");
 }
 
 renderApp();

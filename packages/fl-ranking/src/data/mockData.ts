@@ -4,6 +4,7 @@ export interface PlayerStats {
 	world: string;
 	dataCenter: string;
 	grandCompany: "Maelstrom" | "Twin Adder" | "Immortal Flames";
+	job: "PLD" | "WAR" | "DRK" | "GNB" | "WHM" | "SCH" | "AST" | "SGE" | "MNK" | "DRG" | "NIN" | "SAM" | "RPR" | "BRD" | "MCH" | "DNC" | "BLM" | "SMN" | "RDM";
 	rank: number;
 	winRate: number;
 	totalMatches: number;
@@ -12,12 +13,14 @@ export interface PlayerStats {
 	avgHealing: number;
 	battleHighAvg: number;
 	lastMatches: {
+		id: string;
 		result: "Win" | "Loss" | "Draw";
 		kills: number;
 		deaths: number;
 		assists: number;
 		damage: number;
 		healing: number;
+		time: string;
 	}[];
 }
 
@@ -28,6 +31,7 @@ export const mockPlayers: PlayerStats[] = [
 		world: "Bahamut",
 		dataCenter: "Gaia",
 		grandCompany: "Maelstrom",
+		job: "WHM",
 		rank: 1,
 		winRate: 68.5,
 		totalMatches: 450,
@@ -37,28 +41,34 @@ export const mockPlayers: PlayerStats[] = [
 		battleHighAvg: 85,
 		lastMatches: [
 			{
+				id: "m1",
 				result: "Win",
 				kills: 8,
 				deaths: 0,
 				assists: 15,
 				damage: 920000,
 				healing: 1400000,
+				time: "2 hours ago",
 			},
 			{
+				id: "m2",
 				result: "Win",
 				kills: 5,
 				deaths: 1,
 				assists: 20,
 				damage: 780000,
 				healing: 1100000,
+				time: "5 hours ago",
 			},
 			{
+				id: "m3",
 				result: "Loss",
 				kills: 3,
 				deaths: 2,
 				assists: 10,
 				damage: 650000,
 				healing: 900000,
+				time: "1 day ago",
 			},
 		],
 	},
@@ -68,6 +78,7 @@ export const mockPlayers: PlayerStats[] = [
 		world: "Chocobo",
 		dataCenter: "Mana",
 		grandCompany: "Twin Adder",
+		job: "GNB",
 		rank: 2,
 		winRate: 64.2,
 		totalMatches: 380,
@@ -77,20 +88,24 @@ export const mockPlayers: PlayerStats[] = [
 		battleHighAvg: 70,
 		lastMatches: [
 			{
+				id: "m4",
 				result: "Win",
 				kills: 12,
 				deaths: 2,
 				assists: 8,
 				damage: 1400000,
 				healing: 60000,
+				time: "1 hour ago",
 			},
 			{
+				id: "m5",
 				result: "Win",
 				kills: 10,
 				deaths: 1,
 				assists: 5,
 				damage: 1100000,
 				healing: 40000,
+				time: "3 hours ago",
 			},
 		],
 	},
@@ -100,6 +115,7 @@ export const mockPlayers: PlayerStats[] = [
 		world: "Titan",
 		dataCenter: "Gaia",
 		grandCompany: "Immortal Flames",
+		job: "SGE",
 		rank: 3,
 		winRate: 61.8,
 		totalMatches: 520,
@@ -109,12 +125,14 @@ export const mockPlayers: PlayerStats[] = [
 		battleHighAvg: 40,
 		lastMatches: [
 			{
+				id: "m6",
 				result: "Win",
 				kills: 2,
 				deaths: 1,
 				assists: 25,
 				damage: 500000,
 				healing: 2800000,
+				time: "45 mins ago",
 			},
 		],
 	},
@@ -124,6 +142,7 @@ export const mockPlayers: PlayerStats[] = [
 		world: "Titan",
 		dataCenter: "Gaia",
 		grandCompany: "Immortal Flames",
+		job: "RDM",
 		rank: 4,
 		winRate: 60.5,
 		totalMatches: 510,
@@ -133,12 +152,14 @@ export const mockPlayers: PlayerStats[] = [
 		battleHighAvg: 95,
 		lastMatches: [
 			{
+				id: "m7",
 				result: "Win",
 				kills: 15,
 				deaths: 4,
 				assists: 10,
 				damage: 1800000,
 				healing: 120000,
+				time: "2 hours ago",
 			},
 		],
 	},
@@ -148,6 +169,7 @@ export const mockPlayers: PlayerStats[] = [
 		world: "Ifrit",
 		dataCenter: "Gaia",
 		grandCompany: "Maelstrom",
+		job: "PLD",
 		rank: 5,
 		winRate: 59.2,
 		totalMatches: 300,
@@ -163,6 +185,7 @@ export const mockPlayers: PlayerStats[] = [
 		world: "Garuda",
 		dataCenter: "Elemental",
 		grandCompany: "Maelstrom",
+		job: "DRG",
 		rank: 6,
 		winRate: 58.0,
 		totalMatches: 600,
@@ -178,6 +201,7 @@ export const mockPlayers: PlayerStats[] = [
 		world: "Ramuh",
 		dataCenter: "Elemental",
 		grandCompany: "Twin Adder",
+		job: "AST",
 		rank: 7,
 		winRate: 57.5,
 		totalMatches: 420,
