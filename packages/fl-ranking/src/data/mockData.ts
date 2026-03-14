@@ -4,7 +4,26 @@ export interface PlayerStats {
 	world: string;
 	dataCenter: string;
 	grandCompany: "Maelstrom" | "Twin Adder" | "Immortal Flames";
-	job: "PLD" | "WAR" | "DRK" | "GNB" | "WHM" | "SCH" | "AST" | "SGE" | "MNK" | "DRG" | "NIN" | "SAM" | "RPR" | "BRD" | "MCH" | "DNC" | "BLM" | "SMN" | "RDM";
+	job:
+		| "PLD"
+		| "WAR"
+		| "DRK"
+		| "GNB"
+		| "WHM"
+		| "SCH"
+		| "AST"
+		| "SGE"
+		| "MNK"
+		| "DRG"
+		| "NIN"
+		| "SAM"
+		| "RPR"
+		| "BRD"
+		| "MCH"
+		| "DNC"
+		| "BLM"
+		| "SMN"
+		| "RDM";
 	rank: number;
 	winRate: number;
 	totalMatches: number;
