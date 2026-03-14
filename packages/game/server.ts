@@ -358,9 +358,13 @@ const app = new Elysia()
 				state.nodes
 			) {
 				const currentTurn = Number(state.turn || 0);
+<<<<<<< HEAD
 				const agentIndex = state.agents.findIndex(
 					(a) => a.id === actionBody.agentId,
 				);
+=======
+				const agentIndex = state.agents.findIndex((a) => a.id === actionBody.agentId);
+>>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 				if (agentIndex === -1) return state;
 				const agent = state.agents[agentIndex];
 				// 手番ユーザー確認
@@ -369,9 +373,13 @@ const app = new Elysia()
 				// 移動可能チェック
 				const node = state.nodes.find((n) => n.id === agent.position);
 				if (!node || !node.connected.includes(actionBody.to)) {
+<<<<<<< HEAD
 					state.history.push(
 						`invalid move: ${agent.id} tried ${actionBody.to}`,
 					);
+=======
+					state.history.push(`invalid move: ${agent.id} tried ${actionBody.to}`);
+>>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 					return state;
 				}
 				// 移動実行 + スコア加算
