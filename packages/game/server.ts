@@ -358,13 +358,9 @@ const app = new Elysia()
 				state.nodes
 			) {
 				const currentTurn = Number(state.turn || 0);
-<<<<<<< HEAD
 				const agentIndex = state.agents.findIndex(
 					(a) => a.id === actionBody.agentId,
 				);
-=======
-				const agentIndex = state.agents.findIndex((a) => a.id === actionBody.agentId);
->>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 				if (agentIndex === -1) return state;
 				const agent = state.agents[agentIndex];
 				// 手番ユーザー確認
@@ -373,14 +369,9 @@ const app = new Elysia()
 				// 移動可能チェック
 				const node = state.nodes.find((n) => n.id === agent.position);
 				if (!node || !node.connected.includes(actionBody.to)) {
-<<<<<<< HEAD
 					state.history.push(
 						`invalid move: ${agent.id} tried ${actionBody.to}`,
 					);
-=======
-					state.history.push(`invalid move: ${agent.id} tried ${actionBody.to}`);
->>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
-					return state;
 				}
 				// 移動実行 + スコア加算
 				agent.position = actionBody.to;
@@ -413,7 +404,7 @@ const app = new Elysia()
 					if (b > w) state.winner = "黒";
 					else if (w > b) state.winner = "白";
 					else state.winner = "引き分け";
-					state.history.push(`連続パスで終了: 黒${b} 白${w}`);
+					state.history.push(`連続パスで終了: 黒$b白$w`);
 				}
 				state.turn = (player === 1 ? 2 : 1) as Player;
 				for (const ws of clients) {
@@ -425,7 +416,7 @@ const app = new Elysia()
 			// 角ボーナス
 			const bonus = (x === 0 || x === 7) && (y === 0 || y === 7) ? 2 : 0;
 			state.history.push(
-				`Player ${player === 1 ? "黒" : "白"}: (${x},${y}) 反転${result.flipped}個${bonus ? " 角ボーナス+2" : ""}`,
+				`Player ${p === 1 ? "黒" : "白"}: (${x},${y}) 反転${result.flipped}個${bonus ? " 角ボーナス+2" : ""}`,
 			);
 			state.turn = (p === 1 ? 2 : 1) as Player;
 			state.passCount = 0;
@@ -440,7 +431,7 @@ const app = new Elysia()
 					state.winner = "白";
 					_winnerId = state.userIds ? state.userIds[1] : "user2";
 				} else state.winner = "引き分け";
-				state.history.push(`勝負終了: 黒${b} 白${w}`);
+				state.history.push(`勝負終了: 黒${b}白${w}`);
 				// ランキング記録
 				if (state.userIds) {
 					const [u1, u2] = state.userIds;
@@ -491,7 +482,7 @@ const app = new Elysia()
 								if (b > w) state.winner = "黒";
 								else if (w > b) state.winner = "白";
 								else state.winner = "引き分け";
-								state.history.push(`連続パスで終了: 黒${b} 白${w}`);
+								state.history.push(`連続パスで終了: 黒${b}白${w}`);
 							}
 							state.turn = (aiAction.player === 1 ? 2 : 1) as Player;
 							for (const ws of clients) {
@@ -520,7 +511,7 @@ const app = new Elysia()
 								state.winner = "白";
 								_winnerId = state.userIds ? state.userIds[1] : "user2";
 							} else state.winner = "引き分け";
-							state.history.push(`勝負終了: 黒${b} 白${w}`);
+							state.history.push(`勝負終了: 黒${b}白${w}`);
 							if (state.userIds) {
 								const [u1, u2] = state.userIds;
 								if (!ranking[u1]) ranking[u1] = { win: 0, lose: 0, draw: 0 };
@@ -589,7 +580,7 @@ app
 							if (b > w) state.winner = "黒";
 							else if (w > b) state.winner = "白";
 							else state.winner = "引き分け";
-							state.history.push(`連続パスで終了: 黒${b} 白${w}`);
+							state.history.push(`連続パスで終了: 黒${b}白${w}`);
 						}
 						state.turn = (action.player === 1 ? 2 : 1) as Player;
 						for (const ws of clients) {
@@ -618,7 +609,7 @@ app
 							state.winner = "白";
 							_winnerId = state.userIds ? state.userIds[1] : "user2";
 						} else state.winner = "引き分け";
-						state.history.push(`勝負終了: 黒${b} 白${w}`);
+						state.history.push(`勝負終了: 黒$b白$w`);
 						if (state.userIds) {
 							const [u1, u2] = state.userIds;
 							if (!ranking[u1]) ranking[u1] = { win: 0, lose: 0, draw: 0 };
