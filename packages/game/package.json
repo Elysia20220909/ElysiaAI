@@ -8,9 +8,9 @@
 		"test": "bun test"
 	},
 	"dependencies": {
-		"elysia": "^1.2.0",
-		"@elysiajs/cors": "^1.2.0",
-		"@elysiajs/swagger": "^1.2.0"
+		"elysia": "1.1.26",
+		"@elysiajs/cors": "1.1.0",
+		"@elysiajs/swagger": "1.1.0"
 	},
 	"devDependencies": {
 		"bun-types": "latest"
