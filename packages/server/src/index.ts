@@ -4,144 +4,66 @@ import dotenv from "dotenv";
 
 dotenv.config({ override: true });
 
-import { Elysia } from "elysia";
-
-const app = new Elysia();
-
-// チャットクリア（セッション内メッセージ全削除）
-app.post(
-	"/sessions/:id/clear",
-	async ({ params, request }) => {
-		const auth = request.headers.get("authorization") || "";
-		const tokenValidation = await validateBearerToken(auth);
-		if (!tokenValidation.valid) {
-			return jsonError(401, "Invalid or missing token");
-		}
-
-		const success = await chatSessionService.clearSessionMessages(params.id);
-		if (!success) return jsonError(500, "Failed to clear chat messages");
-
-		return new Response(JSON.stringify({ success: true }), {
-			headers: { "content-type": "application/json" },
-		});
-	},
-	{
-		detail: {
-			tags: ["sessions"],
-			summary: "チャット履歴をクリア（セッション内メッセージ全削除）",
-			description: "指定セッションのメッセージ履歴を全て削除します。JWT必須。",
-			security: [{ bearerAuth: [] }],
-		},
-	},
-);
-
 import { existsSync, mkdirSync } from "node:fs";
-
+import { helmet } from 'elysia-helmet';
 import { cors } from "@elysiajs/cors";
-import { html } from "@elysiajs/html";
-import { fromTypes, openapi } from "@elysiajs/openapi";
+import { swagger } from "@elysiajs/swagger";
 import { staticPlugin } from "@elysiajs/static";
+import { html } from "@elysiajs/html";
+import { Elysia, t } from "elysia";
 import axios from "axios";
-import { t } from "elysia";
-import compress from "elysia-compress";
-import { helmet } from "elysia-helmet";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-import { abTestManager } from "./lib/ab-testing";
-import { apiKeyManager } from "./lib/api-key-manager";
-import { auditLogger } from "./lib/audit-logger";
+
+// Import services and utilities
 import { createAuditMiddleware } from "./lib/audit-middleware";
-import { backupScheduler } from "./lib/backup-scheduler";
-import * as casualChat from "./lib/casual-chat";
-import * as chatSessionService from "./lib/chat-session";
-import { cronScheduler } from "./lib/cron-scheduler";
-import * as customization from "./lib/customization";
-import { feedbackService, knowledgeService, userService } from "./lib/database";
-import { checkEnvironmentOrExit } from "./lib/env-validator";
-import { fileUploadManager } from "./lib/file-upload";
-import { performHealthCheck } from "./lib/health";
-import { healthMonitor } from "./lib/health-monitor";
-import { jobQueue } from "./lib/job-queue";
-import { logCleanupManager } from "./lib/log-cleanup";
-import { logger } from "./lib/logger";
+import { telemetry, getTraceContextFromRequest } from "./lib/telemetry";
 import { metricsCollector } from "./lib/metrics";
-import * as openaiIntegration from "./lib/openai-integration";
-import { sessionManager } from "./lib/session-manager";
-import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
-import * as webSearch from "./lib/web-search";
+import { logger } from "./lib/logger";
+import { auditLogger } from "./lib/audit-logger";
+import { feedbackService, knowledgeService, userService, chatService } from "./lib/database";
+import * as chatSessionService from "./lib/chat-session";
+import { performHealthCheck } from "./lib/health";
+import { apiKeyManager } from "./lib/api-key-manager";
+import { backupScheduler } from "./lib/backup-scheduler";
+import { healthMonitor } from "./lib/health-monitor";
+import { abTestManager } from "./lib/ab-testing";
+import { logCleanupManager } from "./lib/log-cleanup";
+import { jobQueue } from "./lib/job-queue";
+import { cronScheduler } from "./lib/cron-scheduler";
+import { generateCasualResponse, getRandomTopic } from "./lib/casual-chat";
+import { searchRelevantInfo } from "./lib/web-search";
+import { streamChatWithOpenAI } from "./lib/openai-integration";
+import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
+import * as customization from "./lib/customization";
 import { webhookManager } from "./lib/webhook-events";
+import { sessionManager } from "./lib/session-manager";
+import { fileUploadManager } from "./lib/file-upload";
 
-// 環境変数検証（起動時）
-checkEnvironmentOrExit();
+const auditMiddleware = createAuditMiddleware();
+const casualChat = { generateCasualResponse, getRandomTopic };
+const webSearch = { searchRelevantInfo };
+const openaiIntegration = { streamChatWithOpenAI };
+const checkRateLimit = (ip: string) => advancedRateLimiter.checkRateLimit(ip, "default").allowed;
 
-// 自動化機能を開始
-backupScheduler.start();
-healthMonitor.start();
-logCleanupManager.start();
-
-// セキュアJWT管理を初期化
-try {
-	// await secureJwtManager.initialize(); // secureJwtManager is removed
-	logger.info("✅ Secure JWT Manager initialized (skipped)");
-} catch (error) {
-	logger.warn("⚠️ Secure JWT Manager initialization failed, continuing...", {
-		error: error instanceof Error ? error.message : String(error),
-	});
-}
-
-// ジョブキューとCronスケジューラーを初期化
-if (process.env.REDIS_ENABLED === "true") {
-	try {
-		await jobQueue.initialize();
-		logger.info("Job queue enabled with Redis");
-	} catch (error) {
-		logger.warn(
-			"Job queue initialization failed, continuing without job queue",
-			{
-				error:
-					error instanceof Error ? (error as Error).message : String(error),
-			},
-		);
-	}
-} else {
-	logger.info("Job queue disabled (REDIS_ENABLED=false)");
-}
-cronScheduler.initializeDefaultTasks();
-
-import type { ChatRequest, Message } from "@elysia-ai/shared";
-
-// Extended Request type for middleware data
-interface ExtendedRequest extends Request {
-	__span?: {
-		spanId: string;
-		traceId: string;
-	};
-	__startTime?: number;
-}
-
-// ---------------- Config ----------------
 const CONFIG = {
 	PORT: Number(process.env.PORT) || 3000,
-	RAG_API_URL: process.env.RAG_API_URL || "http://localhost:8000/chat", // DATABASE_CONFIG.RAG_API_URL is removed
-	RAG_TIMEOUT: Number(process.env.RAG_TIMEOUT) || 60000, // DATABASE_CONFIG.RAG_TIMEOUT is removed
-	MODEL_NAME: process.env.MODEL_NAME || "llama3.2",
-	OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
-	MAX_REQUESTS_PER_MINUTE: Number(process.env.RATE_LIMIT_RPM) || 60,
-	ALLOWED_ORIGINS: (process.env.ALLOWED_ORIGINS?.split(",") || [
-		"http://localhost:3000",
-	]) as string[],
+	JWT_SECRET: process.env.JWT_SECRET || "default-secret-key-change-it",
+	JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || "default-refresh-secret-key",
 	AUTH_USERNAME: process.env.AUTH_USERNAME || "elysia",
-	AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysia-dev-password",
-	JWT_SECRET: process.env.JWT_SECRET || "dev-secret",
-	JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || "dev-refresh-secret",
+	AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysia-password",
+	OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+	MODEL_NAME: process.env.OLLAMA_MODEL || "llama3.2",
+	RAG_API_URL: process.env.FASTAPI_BASE_URL ? `${process.env.FASTAPI_BASE_URL}/query` : "http://localhost:8000/query",
+	RAG_TIMEOUT: 60000,
 };
 
-// ---------------- Helpers ----------------
-function jsonError(status: number, message: string, traceId?: string) {
+const jsonError = (status: number, message: string, traceId?: string) => {
 	return new Response(
 		JSON.stringify({
 			error: message,
-			traceId: traceId || undefined,
+			status,
+			traceId,
 			timestamp: new Date().toISOString(),
 		}),
 		{
@@ -149,125 +71,41 @@ function jsonError(status: number, message: string, traceId?: string) {
 			headers: { "content-type": "application/json" },
 		},
 	);
+};
+
+const buildCSP = (_url: string) => {
+	return "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:;";
+};
+
+function containsDangerousKeywords(text: string): boolean {
+	const dangerousKeywords = ["<script", "javascript:", "onerror", "onload", "eval("];
+	return dangerousKeywords.some(keyword => text.toLowerCase().includes(keyword));
 }
 
-async function checkRateLimit(key: string) {
-	try {
-		// checkRateLimitRedis is removed, using a dummy check
-		const allowed = true; // await checkRateLimitRedis(
-		// 	key,
-		// 	CONFIG.MAX_REQUESTS_PER_MINUTE,
-		// );
-		if (!allowed) {
-			logger.warn(`Rate limit exceeded for key: ${key}`);
-			auditLogger.log({
-				userId: key.split(":")[0],
-				action: "rate_limit_exceeded",
-				resource: key,
-				// biome-ignore lint/suspicious/noExplicitAny: Log entry object needs a cast in this context
-			} as any);
-		}
-		return allowed;
-	} catch {
-		logger.warn("Rate limit fallback: Redis unavailable");
-		return true; // fallback: allow
-	}
-}
+type ExtendedRequest = {
+	__span?: any;
+	__startTime?: number;
+	method: string;
+	url: string;
+	headers: any;
+};
 
-/**
- * セキュアJWT検証ヘルパー
- * Bearerトークンを検証し、有効な場合はpayloadを返す
- */
-async function validateBearerToken(authHeader: string | null): Promise<{
-	valid: boolean;
-	userId?: string;
-	username?: string;
-	roles?: string[];
-}> {
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
-		return { valid: false };
-	}
+type Message = {
+	role: "user" | "assistant" | "system";
+	content: string;
+};
 
-	const token = authHeader.substring(7);
-	try {
-		// secureJwtManager is removed, using jwt.verify as a fallback
-		const payload = jwt.verify(token, CONFIG.JWT_SECRET) as jwt.JwtPayload;
-		if (payload) {
-			return {
-				valid: true,
-				userId: payload.userId as string,
-				username: payload.username as string,
-				roles: payload.role ? [payload.role as string] : [],
-			};
-		}
-	} catch (error) {
-		logger.debug("Token validation failed:", {
-			error: error instanceof Error ? error.message : String(error),
-		});
-	}
-
-	return { valid: false };
-}
-
-function containsDangerousKeywords(text: string) {
-	const bad = [/\b(drop|delete)\b/i, /<script/i];
-	return bad.some((r) => r.test(text));
-}
-
-// Build a Content-Security-Policy header value based on configured upstreams
-function buildCSP(_requestUrl: string): string {
-	// Collect connect-src origins (SSE/Ollama/FastAPI/WebSocket)
-	const connect = new Set<string>(["'self'", "ws:", "wss:"]);
-	const addOrigin = (u?: string) => {
-		try {
-			if (!u) return;
-			const origin = new URL(u).origin;
-			if (origin && origin !== "null") connect.add(origin);
-		} catch {}
-	};
-	addOrigin(CONFIG.OLLAMA_BASE_URL);
-	addOrigin(process.env.FASTAPI_BASE_URL || "http://localhost:8000"); // DATABASE_CONFIG.FASTAPI_BASE_URL is removed
-
-	// Conservative defaults; allow data: for images/fonts used by UI
-	const csp = [
-		"default-src 'self'",
-		"base-uri 'self'",
-		"object-src 'none'",
-		"frame-ancestors 'none'",
-		"script-src 'self'",
-		"style-src 'self' 'unsafe-inline'",
-		"img-src 'self' data:",
-		"font-src 'self' data:",
-		`connect-src ${Array.from(connect).join(" ")}`,
-		// Form submissions remain local
-		"form-action 'self'",
-	];
-	return csp.join("; ");
-}
-
-// ---------------- App ----------------
-// Create audit middleware
-const auditMiddleware = createAuditMiddleware({
-	excludePaths: ["/ping", "/health", "/metrics", "/swagger"],
-	excludeMethods: ["OPTIONS"],
-	includeBody: false,
-});
+const app = new Elysia();
 
 app
 	.use(helmet())
-	.use(compress())
-	.use(
-		cors({
-			origin: CONFIG.ALLOWED_ORIGINS,
-			credentials: true,
-			allowedHeaders: ["Authorization", "Content-Type"],
-			methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-			// preflightContinue: false, // 型未対応のため削除
-		}),
-	)
+	.use(cors())
+	.use(swagger())
+	.use(staticPlugin({
+		assets: existsSync("public") ? "public" : "../../public",
+		prefix: ""
+	}))
 	.use(html())
-	.use(staticPlugin({ assets: "public" }))
-	.use(openapi({ path: "/swagger", references: fromTypes() }))
 	// Telemetry and metrics middleware
 	// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
 	.onBeforeHandle(({ request }: any) => {
@@ -470,14 +308,21 @@ app
 	// Index page
 	.get(
 		"/",
-		() =>
+		() => {
+			const publicPaths = ["public/index.html", "../../public/index.html"];
 			// biome-ignore lint/suspicious/noExplicitAny: Bun global check
-			typeof (globalThis as any).Bun !== "undefined" &&
-			// biome-ignore lint/suspicious/noExplicitAny: Bun global check
-			typeof (globalThis as any).Bun.file === "function"
-				? // biome-ignore lint/suspicious/noExplicitAny: Bun global check
-					(globalThis as any).Bun.file("public/index.html")
-				: undefined,
+			if (typeof (globalThis as any).Bun !== "undefined" &&
+				// biome-ignore lint/suspicious/noExplicitAny: Bun global check
+				typeof (globalThis as any).Bun.file === "function") {
+
+				for (const p of publicPaths) {
+					if (existsSync(p)) {
+						return (globalThis as any).Bun.file(p);
+					}
+				}
+			}
+			return undefined;
+		},
 		{
 			detail: {
 				tags: ["ui"],
@@ -853,7 +698,7 @@ app
 						model: CONFIG.MODEL_NAME,
 					};
 
-					const sanitizedMessages = body.messages.map((m) => {
+					const sanitizedMessages = body.messages.map((m: any) => {
 						const cleaned = sanitizeHtml(m.content, {
 							allowedTags: [],
 							allowedAttributes: {},
@@ -1912,7 +1757,8 @@ app.post("/upload", async ({ request }) => {
 	}
 
 	const formData = await request.formData();
-	const file = formData.get("file") as File;
+	// biome-ignore lint/suspicious/noExplicitAny: Workaround for FormData type
+	const file = (formData as any).get("file") as any;
 	if (!file) {
 		return jsonError(400, "No file provided");
 	}
