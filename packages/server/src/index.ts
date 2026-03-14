@@ -36,11 +36,7 @@ app.post(
 );
 
 import { existsSync, mkdirSync } from "node:fs";
-<<<<<<< HEAD
-=======
-import { helmet } from 'elysia-helmet';
-import compress from 'elysia-compress';
->>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
+
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { fromTypes, openapi } from "@elysiajs/openapi";
@@ -51,33 +47,29 @@ import compress from "elysia-compress";
 import { helmet } from "elysia-helmet";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-import { abTestManager } from "./lib/ab-testing.ts";
-import { apiKeyManager } from "./lib/api-key-manager.ts";
-import { auditLogger } from "./lib/audit-logger.ts";
-import { createAuditMiddleware } from "./lib/audit-middleware.ts";
-import { backupScheduler } from "./lib/backup-scheduler.ts";
-import * as casualChat from "./lib/casual-chat.ts";
-import * as chatSessionService from "./lib/chat-session.ts";
-import { cronScheduler } from "./lib/cron-scheduler.ts";
-import * as customization from "./lib/customization.ts";
-import {
-	feedbackService,
-	knowledgeService,
-	userService,
-} from "./lib/database.ts";
-import { checkEnvironmentOrExit } from "./lib/env-validator.ts";
-import { fileUploadManager } from "./lib/file-upload.ts";
-import { performHealthCheck } from "./lib/health.ts";
-import { healthMonitor } from "./lib/health-monitor.ts";
-import { jobQueue } from "./lib/job-queue.ts";
-import { logCleanupManager } from "./lib/log-cleanup.ts";
-import { logger } from "./lib/logger.ts";
-import { metricsCollector } from "./lib/metrics.ts";
-import * as openaiIntegration from "./lib/openai-integration.ts";
-import { sessionManager } from "./lib/session-manager.ts";
-import { getTraceContextFromRequest, telemetry } from "./lib/telemetry.ts";
-import * as webSearch from "./lib/web-search.ts";
-import { webhookManager } from "./lib/webhook-events.ts";
+import { abTestManager } from "./lib/ab-testing";
+import { apiKeyManager } from "./lib/api-key-manager";
+import { auditLogger } from "./lib/audit-logger";
+import { createAuditMiddleware } from "./lib/audit-middleware";
+import { backupScheduler } from "./lib/backup-scheduler";
+import * as casualChat from "./lib/casual-chat";
+import * as chatSessionService from "./lib/chat-session";
+import { cronScheduler } from "./lib/cron-scheduler";
+import * as customization from "./lib/customization";
+import { feedbackService, knowledgeService, userService } from "./lib/database";
+import { checkEnvironmentOrExit } from "./lib/env-validator";
+import { fileUploadManager } from "./lib/file-upload";
+import { performHealthCheck } from "./lib/health";
+import { healthMonitor } from "./lib/health-monitor";
+import { jobQueue } from "./lib/job-queue";
+import { logCleanupManager } from "./lib/log-cleanup";
+import { logger } from "./lib/logger";
+import { metricsCollector } from "./lib/metrics";
+import * as openaiIntegration from "./lib/openai-integration";
+import { sessionManager } from "./lib/session-manager";
+import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
+import * as webSearch from "./lib/web-search";
+import { webhookManager } from "./lib/webhook-events";
 
 // 環境変数検証（起動時）
 checkEnvironmentOrExit();
@@ -116,12 +108,8 @@ if (process.env.REDIS_ENABLED === "true") {
 }
 cronScheduler.initializeDefaultTasks();
 
-<<<<<<< HEAD
-=======
-import type { Message, ChatRequest } from "@elysia-ai/shared";
+import type { ChatRequest, Message } from "@elysia-ai/shared";
 
-
->>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 // Extended Request type for middleware data
 interface ExtendedRequest extends Request {
 	__span?: {
@@ -1330,7 +1318,7 @@ app
 				const payload = jwt.verify(
 					auth.substring(7),
 					CONFIG.JWT_SECRET,
-				// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
+					// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
 				) as any;
 				const userId = (payload as { userId?: string }).userId;
 				if (!userId) return jsonError(401, "Invalid token");
@@ -1391,11 +1379,7 @@ app
 	// セッションエクスポート（JSON/Markdown）
 	.get(
 		"/sessions/:id/export",
-<<<<<<< HEAD
 		// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference at scale
-=======
-			// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference at scale
->>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 		async ({ params, query }: any) => {
 			const format = (query?.format as string) || "json";
 			const sessionId = params.id;
@@ -1404,11 +1388,7 @@ app
 				const data = await chatSessionService.exportSessionAsJSON(sessionId);
 				if (!data) return jsonError(404, "Session not found");
 
-<<<<<<< HEAD
 				// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference at scale
-=======
-			// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference at scale
->>>>>>> 9b18ad410eda46b5782a6881e9b0d61d11be7572
 				return new Response(data as any, {
 					headers: {
 						"content-type": "application/json",
