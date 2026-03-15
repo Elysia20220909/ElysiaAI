@@ -1,5 +1,4 @@
 import "./style.css";
-import Chart from "chart.js/auto";
 import type { PlayerStats } from "./data/mockData";
 import { LocalStorageDataService } from "./dataService.ts";
 
@@ -277,11 +276,13 @@ function setupEventListeners() {
 			name: (fd.get("name") as string) || "Unknown",
 			world: (fd.get("world") as string) || "Unknown",
 			dataCenter: (fd.get("dataCenter") as string) || "Unknown",
+			// biome-ignore lint/suspicious/noExplicitAny: cast to match type
 			grandCompany: (fd.get("grandCompany") as string as any) || "Maelstrom",
+			// biome-ignore lint/suspicious/noExplicitAny: cast to match type
 			job: (fd.get("job") as string as any) || "PLD",
-			rank: parseInt((fd.get("rank") as string) || "0"),
+			rank: parseInt((fd.get("rank") as string) || "0", 10),
 			winRate: parseFloat((fd.get("winRate") as string) || "0"),
-			avgDamage: parseInt((fd.get("avgDamage") as string) || "0"),
+			avgDamage: parseInt((fd.get("avgDamage") as string) || "0", 10),
 			totalMatches: 0,
 			kda: "0.0 / 0.0 / 0.0",
 			avgHealing: 0,
@@ -290,7 +291,7 @@ function setupEventListeners() {
 		};
 		await dataService.addPlayer(newPlayer);
 		form.reset();
-		overlay!.style.display = "none";
+		if (overlay) overlay.style.display = "none";
 		renderApp();
 	});
 
@@ -309,7 +310,7 @@ function attachRowListeners(players: PlayerStats[]) {
 
 	document.querySelectorAll(".delete-btn").forEach((btn) => {
 		btn.addEventListener("click", async () => {
-			const id = (btn as HTMLElement).dataset.id!;
+			const id = (btn as HTMLElement).dataset.id || "";
 			if (confirm("Delete this record?")) {
 				await dataService.deletePlayer(id);
 				renderApp();
