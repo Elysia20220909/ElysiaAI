@@ -60,7 +60,7 @@ async function scanFile(filePath: string) {
 				}
 			}
 		}
-	} catch (error) {
+	} catch (_error) {
 		// Skip unreadable files
 	}
 }

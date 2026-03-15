@@ -5,56 +5,59 @@ import dotenv from "dotenv";
 dotenv.config({ override: true });
 
 import { existsSync, mkdirSync } from "node:fs";
-import { helmet } from 'elysia-helmet';
 import { cors } from "@elysiajs/cors";
-import { swagger } from "@elysiajs/swagger";
-import { staticPlugin } from "@elysiajs/static";
 import { html } from "@elysiajs/html";
-import { Elysia, t } from "elysia";
+import { staticPlugin } from "@elysiajs/static";
+import { swagger } from "@elysiajs/swagger";
 import axios from "axios";
+import { Elysia, t } from "elysia";
+import { helmet } from "elysia-helmet";
 import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
-
+import { abTestManager } from "./lib/ab-testing";
+import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
+import { apiKeyManager } from "./lib/api-key-manager";
+import { auditLogger } from "./lib/audit-logger";
 // Import services and utilities
 import { createAuditMiddleware } from "./lib/audit-middleware";
-import { telemetry, getTraceContextFromRequest } from "./lib/telemetry";
-import { metricsCollector } from "./lib/metrics";
-import { logger } from "./lib/logger";
-import { auditLogger } from "./lib/audit-logger";
-import { feedbackService, knowledgeService, userService, chatService } from "./lib/database";
-import * as chatSessionService from "./lib/chat-session";
-import { performHealthCheck } from "./lib/health";
-import { apiKeyManager } from "./lib/api-key-manager";
 import { backupScheduler } from "./lib/backup-scheduler";
-import { healthMonitor } from "./lib/health-monitor";
-import { abTestManager } from "./lib/ab-testing";
-import { logCleanupManager } from "./lib/log-cleanup";
-import { jobQueue } from "./lib/job-queue";
-import { cronScheduler } from "./lib/cron-scheduler";
 import { generateCasualResponse, getRandomTopic } from "./lib/casual-chat";
-import { searchRelevantInfo } from "./lib/web-search";
-import { streamChatWithOpenAI } from "./lib/openai-integration";
-import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
+import * as chatSessionService from "./lib/chat-session";
+import { cronScheduler } from "./lib/cron-scheduler";
 import * as customization from "./lib/customization";
-import { webhookManager } from "./lib/webhook-events";
-import { sessionManager } from "./lib/session-manager";
+import { feedbackService, knowledgeService, userService } from "./lib/database";
 import { fileUploadManager } from "./lib/file-upload";
+import { performHealthCheck } from "./lib/health";
+import { healthMonitor } from "./lib/health-monitor";
+import { jobQueue } from "./lib/job-queue";
+import { logCleanupManager } from "./lib/log-cleanup";
+import { logger } from "./lib/logger";
+import { metricsCollector } from "./lib/metrics";
+import { streamChatWithOpenAI } from "./lib/openai-integration";
+import { sessionManager } from "./lib/session-manager";
+import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
+import { searchRelevantInfo } from "./lib/web-search";
+import { webhookManager } from "./lib/webhook-events";
 
 const auditMiddleware = createAuditMiddleware();
 const casualChat = { generateCasualResponse, getRandomTopic };
 const webSearch = { searchRelevantInfo };
 const openaiIntegration = { streamChatWithOpenAI };
-const checkRateLimit = (ip: string) => advancedRateLimiter.checkRateLimit(ip, "default").allowed;
+const checkRateLimit = (ip: string) =>
+	advancedRateLimiter.checkRateLimit(ip, "default").allowed;
 
 const CONFIG = {
 	PORT: Number(process.env.PORT) || 3000,
 	JWT_SECRET: process.env.JWT_SECRET || "default-secret-key-change-it",
-	JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || "default-refresh-secret-key",
+	JWT_REFRESH_SECRET:
+		process.env.JWT_REFRESH_SECRET || "default-refresh-secret-key",
 	AUTH_USERNAME: process.env.AUTH_USERNAME || "elysia",
 	AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysia-password",
 	OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
 	MODEL_NAME: process.env.OLLAMA_MODEL || "llama3.2",
-	RAG_API_URL: process.env.FASTAPI_BASE_URL ? `${process.env.FASTAPI_BASE_URL}/query` : "http://localhost:8000/query",
+	RAG_API_URL: process.env.FASTAPI_BASE_URL
+		? `${process.env.FASTAPI_BASE_URL}/query`
+		: "http://localhost:8000/query",
 	RAG_TIMEOUT: 60000,
 };
 
@@ -78,15 +81,25 @@ const buildCSP = (_url: string) => {
 };
 
 function containsDangerousKeywords(text: string): boolean {
-	const dangerousKeywords = ["<script", "javascript:", "onerror", "onload", "eval("];
-	return dangerousKeywords.some(keyword => text.toLowerCase().includes(keyword));
+	const dangerousKeywords = [
+		"<script",
+		"javascript:",
+		"onerror",
+		"onload",
+		"eval(",
+	];
+	return dangerousKeywords.some((keyword) =>
+		text.toLowerCase().includes(keyword),
+	);
 }
 
 type ExtendedRequest = {
+	// biome-ignore lint/suspicious/noExplicitAny: complex object needs cast
 	__span?: any;
 	__startTime?: number;
 	method: string;
 	url: string;
+	// biome-ignore lint/suspicious/noExplicitAny: complex object needs cast
 	headers: any;
 };
 
@@ -101,10 +114,12 @@ app
 	.use(helmet())
 	.use(cors())
 	.use(swagger())
-	.use(staticPlugin({
-		assets: existsSync("public") ? "public" : "../../public",
-		prefix: ""
-	}))
+	.use(
+		staticPlugin({
+			assets: existsSync("public") ? "public" : "../../public",
+			prefix: "",
+		}),
+	)
 	.use(html())
 	// Telemetry and metrics middleware
 	// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
@@ -310,13 +325,15 @@ app
 		"/",
 		() => {
 			const publicPaths = ["public/index.html", "../../public/index.html"];
-			// biome-ignore lint/suspicious/noExplicitAny: Bun global check
-			if (typeof (globalThis as any).Bun !== "undefined" &&
+			if (
 				// biome-ignore lint/suspicious/noExplicitAny: Bun global check
-				typeof (globalThis as any).Bun.file === "function") {
-
+				typeof (globalThis as any).Bun !== "undefined" &&
+				// biome-ignore lint/suspicious/noExplicitAny: Bun global check
+				typeof (globalThis as any).Bun.file === "function"
+			) {
 				for (const p of publicPaths) {
 					if (existsSync(p)) {
+						// biome-ignore lint/suspicious/noExplicitAny: Bun global check
 						return (globalThis as any).Bun.file(p);
 					}
 				}
@@ -698,6 +715,7 @@ app
 						model: CONFIG.MODEL_NAME,
 					};
 
+					// biome-ignore lint/suspicious/noExplicitAny: type inference hack
 					const sanitizedMessages = body.messages.map((m: any) => {
 						const cleaned = sanitizeHtml(m.content, {
 							allowedTags: [],
@@ -1159,11 +1177,10 @@ app
 				return jsonError(401, "Missing Bearer token");
 
 			try {
-				// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
 				const payload = jwt.verify(
 					auth.substring(7),
 					CONFIG.JWT_SECRET,
-					// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
+					// biome-ignore lint/suspicious/noExplicitAny: cast
 				) as any;
 				const userId = (payload as { userId?: string }).userId;
 				if (!userId) return jsonError(401, "Invalid token");
