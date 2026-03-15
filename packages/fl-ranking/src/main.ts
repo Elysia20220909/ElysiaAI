@@ -280,9 +280,9 @@ function setupEventListeners() {
 			grandCompany: (fd.get("grandCompany") as string as any) || "Maelstrom",
 			// biome-ignore lint/suspicious/noExplicitAny: cast to match type
 			job: (fd.get("job") as string as any) || "PLD",
-			rank: parseInt((fd.get("rank") as string) || "0", 10),
-			winRate: parseFloat((fd.get("winRate") as string) || "0"),
-			avgDamage: parseInt((fd.get("avgDamage") as string) || "0", 10),
+			rank: Number.parseInt((fd.get("rank") as string) || "0", 10),
+			winRate: Number.parseFloat((fd.get("winRate") as string) || "0"),
+			avgDamage: Number.parseInt((fd.get("avgDamage") as string) || "0", 10),
 			totalMatches: 0,
 			kda: "0.0 / 0.0 / 0.0",
 			avgHealing: 0,
