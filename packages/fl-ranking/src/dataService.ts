@@ -66,7 +66,7 @@ export class MockDataService implements DataService {
 	async getPlayers(): Promise<PlayerStats[]> {
 		/* ... */ return mockPlayers;
 	}
-	async searchPlayers(query: string): Promise<PlayerStats[]> {
+	async searchPlayers(_query: string): Promise<PlayerStats[]> {
 		/* ... */ return mockPlayers;
 	}
 	async addPlayer() {}
