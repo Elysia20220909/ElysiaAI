@@ -3,19 +3,23 @@ src/.dev/
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+**/node_modules/
+.pnp
 .pnp.js
 
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
 # production
-/build
+build/
+**/build/
+dist/
+**/dist/
+out/
+**/out/
+.next/
+**/ .next/
 
 # misc
 .DS_Store
@@ -75,10 +79,7 @@ package-lock.json
 # project extras to ignore and keep Biome quiet
 /network_simulation/
 /python/venv/
-/python/*.db
 /python/**/*.db
-/dist/
-/logs/
 /outputs/
 
 # Temporary and log files
@@ -93,27 +94,12 @@ node.log
 detailed.log
 bun.log
 
-# mobile
-/mobile/node_modules/
-/mobile/.expo/
-/mobile/dist/
-
-# desktop
-/desktop/node_modules/
-/desktop/dist/
-/desktop/bun.lock
-
-# native C++ modules
-/native/node_modules/
-/native/build/
-/native/bun.lock
-
-# CUDA modules
-/cuda/node_modules/
-/cuda/build/
-/cuda/*.dll
-/cuda/*.obj
-/cuda/bun.lock
+# native and mobile
+.expo/
+**/node_modules/
+**/dist/
+**/build/
+**/bun.lock
 /src/generated/prisma
 
 # Database files
