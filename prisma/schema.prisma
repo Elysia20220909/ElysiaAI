@@ -64,6 +64,7 @@ model Message {
   id        String   @id @default(cuid())
   sessionId String
   role      String // user, assistant, system
+  persona   String   @default("elysia") // elysia or cyrene
   content   String
   createdAt DateTime @default(now())
 
