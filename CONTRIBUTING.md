@@ -98,10 +98,13 @@ bun install
 
 # 環境変数を設定
 cp .env.example .env
-# .env を編集して必要な値を設定
+# .env を編集して必要な値を設定 (Gemini APIキーなど)
 
-# 開発サーバーを起動
+# 開発サーバーの起動 (Local)
 bun run dev
+
+# 開発環境の起動 (Dockerを利用して全体を立ち上げる場合)
+docker-compose up -d --build
 ```
 
 ## コーディング規約
@@ -141,6 +144,26 @@ bun test --coverage
 ```
 
 新機能には必ずテストを追加してください。
+
+## プルリクエスト (PR) テンプレート案
+
+PRを作成する際は、以下のテンプレートを参考に説明を記述してください：
+
+```markdown
+## 概要
+(このPRが解決する課題や追加する機能の概要を記載してください)
+
+## 変更内容
+- [ ] 機能Aを追加
+- [ ] バグBを修正
+
+## 確認手順
+1. 環境構築後、`docker-compose up`
+2. `http://localhost:8000/xxx` にアクセスし、YYYが表示されることを確認
+
+## 関連Issue
+Fixes # (Issue番号)
+```
 
 ## ドキュメント
 

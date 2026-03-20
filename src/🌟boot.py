@@ -30,6 +30,12 @@ except ImportError as e:
     console.print(f"[bold red]Error loading Memory Vault: {e}[/bold red]")
     sys.exit(1)
 
+try:
+    from rag_memory import VectorVault
+except ImportError as e:
+    console.print(f"[bold yellow]Warning: RAG Memory Vault unavailable ({e})[/bold yellow]")
+    VectorVault = None
+
 def get_psutil():
     try:
         import psutil
@@ -77,6 +83,8 @@ def boot_sequence():
         console.print(Panel(f"[bold magenta]{surprise}[/bold magenta]", border_style="bright_magenta"))
         
     vault = MemoryVault()
+    api_key = engine.get_api_key() or os.environ.get("GEMINI_API_KEY")
+    vector_vault = VectorVault(api_key=api_key) if (VectorVault and api_key) else None
     
     console.print(f"\n{persona.CoreAura.PINK_ELF}[接続完了] どうしたの、Chloeさん？いつでも話しかけてね。{persona.CoreAura.RESET}\n")
     
@@ -96,6 +104,14 @@ def boot_sequence():
                 
             # 直近の記憶を取得
             recent_memories = [m[2] for m in vault.get_recent_memories(limit=5)]
+            
+            # 長期記憶（RAG）から類似コンテキストを取得して追加
+            if vector_vault:
+                long_term_context = vector_vault.retrieve_similar(user_input, n_results=1)
+                if long_term_context:
+                    # 過去の記憶として文脈に統合
+                    recent_memories.insert(0, f"【深く刻まれた記憶】 {long_term_context[0]}")
+            
             prompt = engine.generate_prompt(user_input, recent_memories)
             
             # AI返答の生成
@@ -120,6 +136,10 @@ def boot_sequence():
             
             # MemoryVaultに保存
             vault.save_memory(user_input, response_text)
+            
+            # VectorVault (RAG) に記憶を刻む
+            if vector_vault:
+                vector_vault.store_memory(user_input, response_text)
             
             # 遊び心：特定のキーワードをハイライト
             highlighted_response = response_text
