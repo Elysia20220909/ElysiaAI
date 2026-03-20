@@ -135,10 +135,11 @@ services:
     stdin_open: true # docker run -i
     tty: true        # docker run -t
     volumes:
-      - ../../src:/app/src
+      - ../../:/app
       - ../../data:/app/data
     environment:
       - ELYSIA_MEMORY_DB=/app/data/elysia_memory.db
+      - ELYSIA_VECTOR_DB=/app/data/vector
     working_dir: /app
     command: sh -c "pip install -q -r requirements.txt && python src/🌟boot.py"
 
