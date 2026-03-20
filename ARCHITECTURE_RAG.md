@@ -37,8 +37,10 @@ sequenceDiagram
 ```
 
 ## Data Persistence
+
 - 短期的な会話は `data/memory/historical.db` (SQLite) に即座に保存されます。
 - バックグラウンドワーカー（または非同期タスク）がバッチとしてSQLiteのテキストをEmbeddingに変換し、ローカルの `data/vector/` 領域へ保持します。
 
 ## Security & Privacy
+
 すべての生体データおよび会話ログはローカル環境（Dockerコンテナ内部）から外部ネットワーク（API送信時を除く）へ流出しない設計です。

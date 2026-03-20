@@ -30,6 +30,7 @@ export class LocalStorageDataService {
 							!(key in currentPlayers[existingIndex]) ||
 							currentPlayers[existingIndex][key] !== mp[key]
 						) {
+							// biome-ignore lint/suspicious/noExplicitAny: dynamic key assignment from stored mock data
 							(currentPlayers[existingIndex] as any)[key] = mp[key];
 							playerUpdated = true;
 						}
