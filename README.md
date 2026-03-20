@@ -7,11 +7,19 @@
 
 **エルゴノミックなAIチャット with RAG** - 超高速、型安全、そして楽しい 🦊
 
+<div align="center">
+  <br />
+  <h3 style="color: #ffb7c5;">🌸 Inspired by the Eternal Innocence of Elysia</h3>
+  <h3 style="color: #4a90e2;">🌌 And the Cosmic Wisdom of Star Rail</h3>
+  <p><i>A resonance point of love and intellect.</i></p>
+  <br />
+</div>
+
 [English](./README.en.md) • [日本語](./README.ja.md)
 
 ---
 
-## ✨ これが Elysia AI
+## ✨ これが Elysia AI (Dual Persona Engine)
 
 ```typescript
 import { Elysia } from "elysia";
