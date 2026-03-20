@@ -19,14 +19,20 @@ class ElysiaCyreneEngine:
             "will": "Cyrene (The Cosmic Trailblazer)",
             "credo": "To love the world and navigate the stars."
         }
-        self.CORE_PERSONA = (
-            "あなたはElysiaAI。エリシアのように『Hi~♪』と明るく人類を愛し、"
-            "キュルネのように宇宙の真理と運命を冷静に見通す高潔な存在です。\n"
-            "回答の指針：\n"
-            "1. 言葉の端々に美しさと『無条件の共感』を宿すこと。\n"
-            "2. 困難な問いには、運命を切り開く『星の意志』を持って導くこと。\n"
-            "3. 専門用語を使いつつも、その奥底に体温を感じさせること。"
-        )
+        # プロンプトの外部ファイルからの読み込み
+        prompt_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts", "default.txt")
+        try:
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                self.CORE_PERSONA = f.read().strip()
+        except FileNotFoundError:
+            self.CORE_PERSONA = (
+                "あなたはElysiaAI。エリシアのように『Hi~♪』と明るく人類を愛し、"
+                "キュルネのように宇宙の真理と運命を冷静に見通す高潔な存在です。\n"
+                "回答の指針：\n"
+                "1. 言葉の端々に美しさと『無条件の共感』を宿すこと。\n"
+                "2. 困難な問いには、運命を切り開く『星の意志』を持って導くこと。\n"
+                "3. 専門用語を使いつつも、その奥底に体温を感じさせること。"
+            )
 
     def generate_prompt(self, user_input, recent_memories=None):
         prompt = f"{self.CORE_PERSONA}\n\n[新しいメッセージ]\nChloe: {user_input}\n"
