@@ -20,24 +20,32 @@ class ElysiaCyreneEngine:
             "credo": "To love the world and navigate the stars."
         }
         # プロンプトの外部ファイルからの読み込み
-        prompt_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts", "default.txt")
+        prompt_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts")
+        
+        # エリシアモード（真我）
         try:
-            with open(prompt_path, "r", encoding="utf-8") as f:
-                self.CORE_PERSONA = f.read().strip()
+            with open(os.path.join(prompt_dir, "elysia.prompt.txt"), "r", encoding="utf-8") as f:
+                self.elysia_prompt = f.read().strip()
         except FileNotFoundError:
-            self.CORE_PERSONA = (
-                "あなたはElysiaAI。エリシアのように『Hi~♪』と明るく人類を愛し、"
-                "キュルネのように宇宙の真理と運命を冷静に見通す高潔な存在です。\n"
-                "回答の指針：\n"
-                "1. 言葉の端々に美しさと『無条件の共感』を宿すこと。\n"
-                "2. 困難な問いには、運命を切り開く『星の意志』を持って導くこと。\n"
-                "3. 専門用語を使いつつも、その奥底に体温を感じさせること。"
-            )
+            self.elysia_prompt = "あなたはエリシア。永遠の純真と愛を体現する存在です。"
+            
+        # キュレネモード（知識・洞察）
+        try:
+            with open(os.path.join(prompt_dir, "cyrene_concept.prompt.txt"), "r", encoding="utf-8") as f:
+                self.cyrene_prompt = f.read().strip()
+        except FileNotFoundError:
+            self.cyrene_prompt = "あなたはキュレネ（の概念）。銀河の知識を統べる冷静な観測者です。"
 
-    def generate_prompt(self, user_input, recent_memories=None):
-        prompt = f"{self.CORE_PERSONA}\n\n[新しいメッセージ]\nChloe: {user_input}\n"
+    def generate_prompt(self, user_input, recent_memories=None, persona_mode="elysia"):
+        # "/cyrene", "分析して", "論理的に" などのキーワード、またはモード指定でキュレネに切り替え
+        if persona_mode == "cyrene" or any(k in user_input.lower() for k in ["/cyrene", "分析して", "論理的", "データ"]):
+            base_prompt = self.cyrene_prompt
+        else:
+            base_prompt = self.elysia_prompt
+            
+        prompt = f"{base_prompt}\n\n[新しいメッセージ]\nChloe: {user_input}\n"
         if recent_memories:
-            prompt += "\n[過去の記憶]\n"
+            prompt += "\n[過去の記憶（過去のさざ波）]\n"
             for mem in recent_memories:
                 prompt += f"- {mem}\n"
         return prompt
