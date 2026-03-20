@@ -181,11 +181,13 @@ Fixes # (Issue番号)
 1. `CHANGELOG.md` を更新
 2. `package.json` のバージョンを更新
 3. コミットしてタグを作成
+
    ```bash
    git commit -am "chore: release v1.x.x"
    git tag v1.x.x
    git push origin main --tags
    ```
+
 4. GitHub Release を作成
 5. npm に公開 (自動)
 
