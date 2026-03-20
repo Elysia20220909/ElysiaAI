@@ -1,10 +1,18 @@
-FROM python:3.11-slim
+FROM python:3.11-alpine
 
 WORKDIR /app
+
+# Alpine用にビルド依存とcurlをインストール
+RUN apk add --no-cache curl gcc musl-dev linux-headers
+
 # 依存ファイルのみ先にコピーし、キャッシュを活用
 COPY requirements.txt .
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# データベース（SQLite）の永続化パス設定
+RUN mkdir -p /app/data
+ENV ELYSIA_MEMORY_DB=/app/data/historical.db
+
 # アプリ本体をコピー
 COPY . .
 

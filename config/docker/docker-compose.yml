@@ -126,6 +126,22 @@ services:
       timeout: 10s
       retries: 3
 
+  # ==================== Elysia OS (Terminal Interface) ====================
+  elysia-os:
+    image: python:3.11-slim
+    container_name: elysia-os
+    profiles:
+      - os
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    volumes:
+      - ../../src:/app/src
+      - ../../data:/app/data
+    environment:
+      - ELYSIA_MEMORY_DB=/app/data/elysia_memory.db
+    working_dir: /app
+    command: sh -c "pip install -q -r requirements.txt && python src/🌟boot.py"
+
 volumes:
   ollama-data:
     driver: local
