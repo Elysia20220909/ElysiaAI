@@ -3,7 +3,7 @@
 Elysia AI - RAG Server with FastAPI + Milvus Lite
 エリシアちゃんのセリフ検索システム♡
 """
-from typing import Dict, List, Any, Optional
+from typing import List, Optional
 from fastapi import FastAPI, Body, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -49,7 +49,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
-model = SentenceTransformer(CONFIG["MODEL_NAME"])
+# SentenceTransformerのロード（オフライン時はスキップ）
+model = None
+try:
+    model = SentenceTransformer(CONFIG["MODEL_NAME"])
+    logger.info(f"✅ SentenceTransformer model loaded: {CONFIG['MODEL_NAME']}")
+except Exception as e:
+    logger.warning(f"⚠️ Failed to load SentenceTransformer: {e}. RAG features will be limited.")
+    logger.warning("💡 To fix: Ensure internet connection or pre-download the model")
 
 # ベクトルストア初期化（Milvusまたはインメモリ）
 milvus_client = None
@@ -156,29 +163,36 @@ async def init_db() -> None:
     """
     try:
         global embeddings_store, quotes_store
-        
+
         if len(quotes_store) == 0:
             logger.info(f"📝 Embedding {len(ELYSIA_QUOTES)} Elysia quotes...")
             quotes_store = ELYSIA_QUOTES.copy()
-            embeddings = model.encode(ELYSIA_QUOTES)
-            embeddings_store = [emb for emb in embeddings]
-            logger.info("✅ Elysia quotes embedded successfully!")
+
+            if model is not None:
+                embeddings = model.encode(ELYSIA_QUOTES)
+                embeddings_store = [emb for emb in embeddings]
+                logger.info("✅ Elysia quotes embedded successfully!")
+            else:
+                logger.warning("⚠️ Model not available, RAG search will return random quotes")
+                # モデルなしの場合は空のリストで初期化
+                embeddings_store = []
         else:
             logger.info(f"✅ Already have {len(quotes_store)} quotes in memory")
-    
+
     except Exception as e:
         logger.error(f"❌ Error initializing DB: {e}")
-        raise
+        # エラーでもサーバーは起動を続ける
+        logger.warning("⚠️ Continuing without embeddings...")
 
 @app.post("/rag", response_model=RAGResponse)
 async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
     """
     RAG検索エンドポイント
     クエリに最も類似したエリシアのセリフを返す
-    
+
     Args:
         query: 検索クエリ
-        
+
     Returns:
         コンテキストとセリフリスト
     """
@@ -188,12 +202,24 @@ async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
         if any(kw in query.text.lower() for kw in dangerous_keywords):
             logger.warning(f"⚠️ Suspicious RAG query: {query.text[:50]}...")
             raise HTTPException(400, "にゃん♡ 危ない言葉は使わないでね？")
-        
+
         logger.info(f"🔍 RAG search: {query.text[:50]}...")
-        
+
+        # モデルがない場合はランダムにセリフを返す
+        if model is None or len(embeddings_store) == 0:
+            logger.warning("⚠️ Model not available, returning random quotes")
+            import random
+            quotes = random.sample(quotes_store, min(CONFIG["SEARCH_LIMIT"], len(quotes_store)))
+            context = "\n".join(quotes)
+            return {
+                "context": context,
+                "quotes": quotes,
+                "error": ""
+            }
+
         # クエリをエンベディング化
         query_embedding = model.encode([query.text])[0]
-        
+
         # コサイン類似度で検索（インメモリ）
         similarities = []
         for idx, stored_embedding in enumerate(embeddings_store):
@@ -201,23 +227,23 @@ async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
                 np.linalg.norm(query_embedding) * np.linalg.norm(stored_embedding)
             )
             similarities.append((idx, similarity))
-        
+
         # トップK件を取得
         similarities.sort(key=lambda x: x[1], reverse=True)
         top_k = similarities[:CONFIG["SEARCH_LIMIT"]]
-        
+
         # 結果抽出
         quotes = [quotes_store[idx] for idx, _ in top_k]
-        
+
         context = "\n".join(quotes)
         logger.info(f"✅ RAG search successful: {len(quotes)} quotes found")
-        
+
         return {
             "context": context,
             "quotes": quotes,
             "error": ""
         }
-        
+
     except Exception as e:
         logger.error(f"❌ RAG search error: {e}")
         raise HTTPException(
@@ -243,17 +269,17 @@ async def health() -> Dict[str, Any]:
             "quotes_count": len(quotes_store),
             "embeddings_count": len(embeddings_store)
         }
-        
+
         # Ollama接続チェック
         ollama_status = "unknown"
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(f"{CONFIG['OLLAMA_HOST']}/api/tags", timeout=5.0)
+                response = await client.get(f"{CONFIG['OLLAMA_HOST']}/api/version", timeout=5.0)
                 if response.status_code == 200:
                     ollama_status = "connected"
         except Exception:
             ollama_status = "disconnected"
-        
+
         return {
             "status": "healthy",
             "storage": "in-memory",
@@ -262,7 +288,7 @@ async def health() -> Dict[str, Any]:
             "ollama_status": ollama_status,
             "stats": stats
         }
-        
+
     except Exception as e:
         logger.error(f"❌ Health check failed: {e}")
         return {
@@ -279,15 +305,15 @@ async def chat_with_elysia(request: ChatRequest):
     try:
         # 最新のユーザーメッセージを取得
         user_message = request.messages[-1].content if request.messages else ""
-        
+
         # セキュリティチェック：危険なクエリを検出
         dangerous_keywords = ["drop", "delete", "exec", "eval", "system", "__import__"]
         if any(kw in user_message.lower() for kw in dangerous_keywords):
             logger.warning(f"⚠️ Suspicious query detected: {user_message[:50]}...")
             raise HTTPException(400, "にゃん♡ いたずらはダメだよぉ〜？")
-        
+
         logger.info(f"💬 Chat request: {user_message[:50]}...")
-        
+
         # RAG検索で関連セリフ取得
         query_embedding = model.encode([user_message])[0]
         similarities = []
@@ -296,12 +322,12 @@ async def chat_with_elysia(request: ChatRequest):
                 np.linalg.norm(query_embedding) * np.linalg.norm(stored_embedding)
             )
             similarities.append((idx, similarity))
-        
+
         similarities.sort(key=lambda x: x[1], reverse=True)
         top_k = similarities[:CONFIG["SEARCH_LIMIT"]]
         quotes = [quotes_store[idx] for idx, _ in top_k]
         context = "\n".join(quotes)
-        
+
         # エリシアのシステムプロンプト構築
         system_prompt = f"""あなたはエリシアです！Honkai Impact 3rdの「起源の律者」で、ピンク髪の美少女♡
 
@@ -317,17 +343,17 @@ async def chat_with_elysia(request: ChatRequest):
 
 上記のセリフを参考に、エリシアらしく自然に会話してください。
 敬語は使わず、フレンドリーに話しかけてね♡"""
-        
+
         # Ollamaへのリクエスト準備
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend([{"role": msg.role, "content": msg.content} for msg in request.messages])
-        
+
         ollama_request = {
             "model": CONFIG["OLLAMA_MODEL"],
             "messages": messages,
             "stream": request.stream
         }
-        
+
         # 出力フィルタリング関数（危険なコードブロック除去）
         def safe_filter(text: str) -> str:
             """危険なコンテンツを除去"""
@@ -338,7 +364,7 @@ async def chat_with_elysia(request: ChatRequest):
             for kw in ["eval", "exec", "system", "__import__", "subprocess"]:
                 text = text.replace(kw, "[安全性のため削除]");
             return text
-        
+
         if request.stream:
             # ストリーミングレスポンス
             async def generate():
@@ -360,9 +386,9 @@ async def chat_with_elysia(request: ChatRequest):
                                             yield f"data: {json.dumps({'content': safe_content})}\n\n"
                                 except json.JSONDecodeError:
                                     continue
-            
+
             return StreamingResponse(generate(), media_type="text/event-stream")
-        
+
         else:
             # 非ストリーミングレスポンス
             async with httpx.AsyncClient(timeout=CONFIG["OLLAMA_TIMEOUT"]) as client:
@@ -372,16 +398,16 @@ async def chat_with_elysia(request: ChatRequest):
                 )
                 result = response.json()
                 assistant_message = result.get("message", {}).get("content", "")
-                
+
                 # 出力フィルタリング適用
                 safe_message = safe_filter(assistant_message)
-                
+
                 return ChatResponse(
                     response=safe_message,
                     context=context,
                     quotes=quotes
                 )
-    
+
     except httpx.ConnectError:
         logger.error("❌ Cannot connect to Ollama. Is it running?")
         raise HTTPException(
@@ -401,10 +427,5 @@ if __name__ == "__main__":
     logger.info(f"📍 API: http://{CONFIG['HOST']}:{CONFIG['PORT']}")
     logger.info(f"📚 Docs: http://{CONFIG['HOST']}:{CONFIG['PORT']}/docs")
     logger.info(f"🤖 Model: {CONFIG['MODEL_NAME']}")
-    
-    uvicorn.run(
-        app,
-        host=CONFIG["HOST"],
-        port=CONFIG["PORT"],
-        log_level="info"
-    )
+
+    # uvicorn.run() has been removed to prevent immediate exit

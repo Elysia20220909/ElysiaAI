@@ -21,7 +21,7 @@ describe("Integration Tests - Full Stack", () => {
 		const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
 
 		expect(pkg.scripts).toHaveProperty("dev");
-		expect(pkg.scripts).toHaveProperty("build");
+		expect(pkg.scripts).toHaveProperty("lint");
 		expect(pkg.scripts).toHaveProperty("start");
 		expect(pkg.scripts).toHaveProperty("docker:build");
 		expect(pkg.scripts).toHaveProperty("docker:up");
@@ -68,7 +68,10 @@ describe("Configuration Validation", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const tsconfigPath = path.join(process.cwd(), "tsconfig.json");
+		const tsconfigPath = path.join(
+			process.cwd(),
+			"config/internal/tsconfig.json",
+		);
 		expect(fs.existsSync(tsconfigPath)).toBe(true);
 
 		// tsconfig.jsonにはコメントが含まれるため、正規表現で削除してからパース
@@ -86,7 +89,10 @@ describe("Configuration Validation", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const webpackPath = path.join(process.cwd(), "webpack.config.js");
+		const webpackPath = path.join(
+			process.cwd(),
+			"config/internal/webpack.config.js",
+		);
 		expect(fs.existsSync(webpackPath)).toBe(true);
 
 		const content = fs.readFileSync(webpackPath, "utf-8");

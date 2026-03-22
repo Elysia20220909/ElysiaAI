@@ -1,76 +1,76 @@
 {
-	"version": "0.2.1",
-	"defaults": {},
-	"configurations": [
-		{
-			"type": "node",
-			"request": "launch",
-			"name": "🚀 Launch Elysia Server",
-			"program": "${workspaceFolder}/src/index.ts",
-			"runtimeExecutable": "bun",
-			"runtimeArgs": ["run", "--watch"],
-			"cwd": "${workspaceFolder}",
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen",
-			"env": {
-				"NODE_ENV": "development"
-			}
-		},
-		{
-			"type": "node",
-			"request": "launch",
-			"name": "🧪 Debug Current Test File",
-			"program": "${file}",
-			"runtimeExecutable": "bun",
-			"runtimeArgs": ["test"],
-			"cwd": "${workspaceFolder}",
-			"console": "integratedTerminal"
-		},
-		{
-			"type": "node",
-			"request": "launch",
-			"name": "🧪 Debug All Tests",
-			"runtimeExecutable": "bun",
-			"runtimeArgs": ["test"],
-			"cwd": "${workspaceFolder}",
-			"console": "integratedTerminal"
-		},
-		{
-			"type": "node",
-			"request": "launch",
-			"name": "🔨 Debug Build Process",
-			"runtimeExecutable": "bun",
-			"runtimeArgs": ["run", "build"],
-			"cwd": "${workspaceFolder}",
-			"console": "integratedTerminal"
-		},
-		{
-			"type": "python",
-			"request": "launch",
-			"name": "🐍 Launch FastAPI Server",
-			"program": "${workspaceFolder}/python/fastapi_server.py",
-			"console": "integratedTerminal",
-			"cwd": "${workspaceFolder}/python",
-			"env": {
-				"PYTHONPATH": "${workspaceFolder}/python"
-			},
-			"justMyCode": true
-		},
-		{
-			"type": "node",
-			"request": "attach",
-			"name": "🔌 Attach to Running Server",
-			"port": 9229,
-			"restart": true,
-			"localRoot": "${workspaceFolder}",
-			"remoteRoot": "${workspaceFolder}"
-		}
-	],
-	"compounds": [
-		{
-			"name": "🎯 Full Stack Debug",
-			"configurations": ["🚀 Launch Elysia Server", "🐍 Launch FastAPI Server"],
-			"stopAll": true
-		}
-	]
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "🚀 Launch Elysia Server",
+      "program": "${workspaceFolder}/src/index.ts",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--watch"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "🧪 Debug Current Test File",
+      "program": "${file}",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["test"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "🧪 Debug All Tests",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["test"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "🔨 Debug Build Process",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "build"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "python",
+      "request": "launch",
+      "name": "🐍 Launch FastAPI Server",
+      "program": "${workspaceFolder}/python/fastapi_server.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/python",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python"
+      },
+      "justMyCode": true
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "🔌 Attach to Running Server",
+      "port": 9229,
+      "restart": true,
+      "localRoot": "${workspaceFolder}",
+      "remoteRoot": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🎯 Full Stack Debug",
+      "configurations": ["🚀 Launch Elysia Server", "🐍 Launch FastAPI Server"],
+      "stopAll": true
+    }
+  ]
 }

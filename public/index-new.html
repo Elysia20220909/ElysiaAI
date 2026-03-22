@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="ja" data-theme="cupcake">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>エリシアちゃん♡ AI Chat</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"
+      defer
+    ></script>
+  </head>
+  <body
+    class="bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 min-h-screen"
+  >
+    <div
+      class="container mx-auto p-4 h-screen flex flex-col max-w-5xl"
+      x-data="elysiaChat()"
+    >
+      <!-- Header -->
+      <div
+        class="navbar bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-box shadow-xl mb-4"
+      >
+        <div class="flex-1">
+          <div class="flex items-center gap-3">
+            <div class="avatar placeholder">
+              <div class="bg-white text-pink-500 rounded-full w-12">
+                <span class="text-2xl">🌸</span>
+              </div>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold">エリシアちゃん AI Chat</h1>
+              <p class="text-xs opacity-90">
+                ฅ(՞៸៸> ᗜ <៸៸՞)ฅ おにいちゃん、お話ししよ〜♪
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="flex-none gap-2">
+          <div class="badge badge-success badge-sm">RAG</div>
+          <div class="badge badge-success badge-sm">Ollama</div>
+        </div>
+      </div>
+
+      <!-- Chat Container -->
+      <div class="card bg-base-100 shadow-xl flex-1 flex flex-col">
+        <div class="card-body p-4 flex flex-col h-full">
+          <!-- Messages Area -->
+          <div class="flex-1 overflow-y-auto space-y-3 mb-4" id="chatContainer">
+            <!-- Welcome Message -->
+            <div class="flex justify-center" x-show="messages.length === 0">
+              <div class="alert alert-info max-w-md">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  class="stroke-current shrink-0 w-6 h-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                <div>
+                  <h3 class="font-bold">にゃん♪ ようこそ〜♡</h3>
+                  <div class="text-xs">
+                    エリシアに何でも聞いてね！優しく答えるから安心して♪
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Messages -->
+            <template x-for="msg in messages" :key="msg.id">
+              <div
+                :class="msg.role === 'user' ? 'chat chat-end' : 'chat chat-start'"
+              >
+                <div class="chat-image avatar">
+                  <div
+                    class="w-10 rounded-full"
+                    :class="msg.role === 'user' ? 'bg-blue-500' : 'bg-pink-500'"
+                  >
+                    <div class="flex items-center justify-center h-full">
+                      <span
+                        x-text="msg.role === 'user' ? '👤' : '💕'"
+                        class="text-lg"
+                      ></span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="chat-header text-xs opacity-50"
+                  x-text="msg.role === 'user' ? 'あなた' : 'エリシアちゃん'"
+                ></div>
+                <div
+                  class="chat-bubble"
+                  :class="msg.role === 'user' ? 'chat-bubble-primary' : 'chat-bubble-secondary'"
+                  x-text="msg.content"
+                ></div>
+              </div>
+            </template>
+
+            <!-- Loading -->
+            <div class="chat chat-start" x-show="loading">
+              <div class="chat-image avatar">
+                <div class="w-10 rounded-full bg-pink-500">
+                  <div class="flex items-center justify-center h-full">
+                    <span class="text-lg">💕</span>
+                  </div>
+                </div>
+              </div>
+              <div class="chat-bubble chat-bubble-secondary">
+                <span class="loading loading-dots loading-sm"></span>
+                考え中...
+              </div>
+            </div>
+          </div>
+
+          <!-- Input Area -->
+          <div class="card-actions">
+            <form @submit.prevent="sendMessage" class="w-full">
+              <div class="join w-full">
+                <input
+                  type="text"
+                  x-model="input"
+                  :disabled="loading"
+                  placeholder="エリシアちゃんに話しかけてね♡"
+                  class="input input-bordered input-primary join-item flex-1"
+                />
+                <button
+                  type="submit"
+                  :disabled="loading || !input.trim()"
+                  class="btn btn-primary join-item"
+                >
+                  <span x-show="!loading">送信 💌</span>
+                  <span
+                    x-show="loading"
+                    class="loading loading-spinner loading-sm"
+                  ></span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button
+              @click="setQuickMessage('こんにちは！')"
+              class="btn btn-sm btn-outline btn-primary"
+            >
+              👋 挨拶
+            </button>
+            <button
+              @click="setQuickMessage('今日の調子はどう？')"
+              class="btn btn-sm btn-outline btn-secondary"
+            >
+              💭 気分
+            </button>
+            <button
+              @click="setQuickMessage('面白い話して！')"
+              class="btn btn-sm btn-outline btn-accent"
+            >
+              🎭 面白話
+            </button>
+            <button
+              @click="setQuickMessage('エリシアちゃんのこと教えて！')"
+              class="btn btn-sm btn-outline btn-info"
+            >
+              ✨ 自己紹介
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings & Self-Learning -->
+      <div class="collapse collapse-arrow bg-base-200 mt-4">
+        <input type="checkbox" />
+        <div class="collapse-title font-medium">
+          🧠 自己学習（Feedback & Knowledge）
+        </div>
+        <div class="collapse-content">
+          <div class="flex flex-wrap gap-2 mt-2">
+            <button @click="sendFeedback('up')" class="btn btn-sm btn-success">
+              👍 良い
+            </button>
+            <button @click="sendFeedback('down')" class="btn btn-sm btn-error">
+              👎 改善
+            </button>
+            <button @click="upsertKnowledge()" class="btn btn-sm btn-secondary">
+              ➕ ナレッジ登録
+            </button>
+            <button @click="loadKnowledgeReview()" class="btn btn-sm btn-info">
+              📚 レビュー取得
+            </button>
+          </div>
+          <pre
+            x-text="reviewJson"
+            class="bg-base-300 p-3 rounded mt-3 text-xs overflow-auto max-h-40"
+          ></pre>
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="stats stats-horizontal shadow mt-4 bg-base-100">
+        <div class="stat py-2">
+          <div class="stat-title text-xs">システム</div>
+          <div class="stat-value text-sm">🎀 Elysia</div>
+        </div>
+        <div class="stat py-2">
+          <div class="stat-title text-xs">RAG API</div>
+          <div class="stat-value text-sm text-success">✓</div>
+        </div>
+        <div class="stat py-2">
+          <div class="stat-title text-xs">Ollama</div>
+          <div class="stat-value text-sm text-success">✓</div>
+        </div>
+        <div class="stat py-2">
+          <div class="stat-title text-xs">学習済み</div>
+          <div class="stat-value text-sm">50+</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function elysiaChat() {
+        return {
+          messages: [],
+          input: "",
+          loading: false,
+          reviewJson: "",
+
+          setQuickMessage(message) {
+            if (!this.loading) {
+              this.input = message;
+              this.$nextTick(() => this.sendMessage());
+            }
+          },
+
+          async sendMessage() {
+            if (!this.input.trim() || this.loading) return;
+
+            const userMessage = this.input.trim();
+            this.messages.push({
+              id: Date.now(),
+              role: "user",
+              content: userMessage,
+            });
+            this.input = "";
+            this.loading = true;
+
+            this.$nextTick(() => {
+              const container = document.getElementById("chatContainer");
+              container.scrollTop = container.scrollHeight;
+            });
+
+            try {
+              let accessToken = localStorage.getItem("elysia_access_token");
+              let refreshToken = localStorage.getItem("elysia_refresh_token");
+
+              if (!accessToken || !refreshToken) {
+                const username =
+                  prompt("👤 ユーザー名 (default: elysia)") || "elysia";
+                const pwd =
+                  prompt("🔐 パスワード (default: elysia-dev-password)") ||
+                  "elysia-dev-password";
+                const authRes = await fetch("/auth/token", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ username, password: pwd }),
+                });
+                if (!authRes.ok) throw new Error("認証失敗");
+                const authJson = await authRes.json();
+                accessToken = authJson.accessToken;
+                refreshToken = authJson.refreshToken;
+                localStorage.setItem("elysia_access_token", accessToken);
+                localStorage.setItem("elysia_refresh_token", refreshToken);
+              }
+
+              let response = await fetch("/elysia-love", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                  messages: this.messages.map((m) => ({
+                    role: m.role,
+                    content: m.content,
+                  })),
+                }),
+              });
+
+              if (response.status === 401) {
+                const refreshRes = await fetch("/auth/refresh", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ refreshToken }),
+                });
+                if (!refreshRes.ok) {
+                  localStorage.removeItem("elysia_access_token");
+                  localStorage.removeItem("elysia_refresh_token");
+                  throw new Error("セッション期限切れ");
+                }
+                const refreshJson = await refreshRes.json();
+                accessToken = refreshJson.accessToken;
+                localStorage.setItem("elysia_access_token", accessToken);
+                response = await fetch("/elysia-love", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                  body: JSON.stringify({
+                    messages: this.messages.map((m) => ({
+                      role: m.role,
+                      content: m.content,
+                    })),
+                  }),
+                });
+              }
+
+              if (!response.ok)
+                throw new Error(`HTTP error! status: ${response.status}`);
+
+              const reader = response.body.getReader();
+              const decoder = new TextDecoder();
+
+              const assistantMessage = {
+                id: Date.now() + 1,
+                role: "assistant",
+                content: "",
+              };
+              this.messages.push(assistantMessage);
+
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split("\n");
+
+                for (const line of lines) {
+                  if (line.startsWith("data: ")) {
+                    try {
+                      const data = JSON.parse(line.slice(6));
+                      if (data.content) {
+                        assistantMessage.content += data.content;
+                      }
+                    } catch {}
+                  }
+                }
+
+                this.$nextTick(() => {
+                  const container = document.getElementById("chatContainer");
+                  container.scrollTop = container.scrollHeight;
+                });
+              }
+            } catch (error) {
+              console.error("Error:", error);
+              this.messages.push({
+                id: Date.now() + 1,
+                role: "assistant",
+                content:
+                  "ごめんね〜♡ エラーが起きちゃった…\n\nFastAPIサーバーとOllamaが起動してるか確認してね！",
+              });
+            } finally {
+              this.loading = false;
+              this.$nextTick(() => {
+                const container = document.getElementById("chatContainer");
+                container.scrollTop = container.scrollHeight;
+              });
+            }
+          },
+
+          async ensureLogin() {
+            let accessToken = localStorage.getItem("elysia_access_token");
+            let refreshToken = localStorage.getItem("elysia_refresh_token");
+            if (accessToken && refreshToken)
+              return { accessToken, refreshToken };
+            const username = prompt("👤 ユーザー名") || "elysia";
+            const pwd = prompt("🔐 パスワード") || "elysia-dev-password";
+            const authRes = await fetch("/auth/token", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, password: pwd }),
+            });
+            if (!authRes.ok) throw new Error("認証失敗");
+            const authJson = await authRes.json();
+            accessToken = authJson.accessToken;
+            refreshToken = authJson.refreshToken;
+            localStorage.setItem("elysia_access_token", accessToken);
+            localStorage.setItem("elysia_refresh_token", refreshToken);
+            return { accessToken, refreshToken };
+          },
+
+          async sendFeedback(rating) {
+            try {
+              const { accessToken } = await this.ensureLogin();
+              const payload = {
+                query:
+                  this.messages.filter((m) => m.role === "user").slice(-1)[0]
+                    ?.content || "",
+                answer:
+                  this.messages
+                    .filter((m) => m.role === "assistant")
+                    .slice(-1)[0]?.content || "",
+                rating,
+                reason: rating === "down" ? "needs improvement" : "good",
+              };
+              const resp = await fetch("/feedback", {
+                method: "POST",
+                headers: {
+                  "content-type": "application/json",
+                  authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify(payload),
+              });
+              if (!resp.ok) throw new Error(`Feedback failed: ${resp.status}`);
+              alert("✨ フィードバックを保存したよ！");
+            } catch (e) {
+              alert("⚠️ フィードバックでエラー: " + e.message);
+            }
+          },
+
+          async upsertKnowledge() {
+            try {
+              const { accessToken } = await this.ensureLogin();
+              const summary = prompt(
+                "登録する要約を入力してね♡",
+                "Elysia knowledge note",
+              );
+              if (!summary) return;
+              const payload = {
+                summary,
+                sourceUrl: location.href,
+                tags: ["ui"],
+                confidence: 0.9,
+              };
+              const resp = await fetch("/knowledge/upsert", {
+                method: "POST",
+                headers: {
+                  "content-type": "application/json",
+                  authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify(payload),
+              });
+              if (!resp.ok) throw new Error(`Upsert failed: ${resp.status}`);
+              alert("✨ ナレッジを保存したよ！");
+            } catch (e) {
+              alert("⚠️ ナレッジ登録でエラー: " + e.message);
+            }
+          },
+
+          async loadKnowledgeReview() {
+            try {
+              const { accessToken } = await this.ensureLogin();
+              const resp = await fetch("/knowledge/review?n=10", {
+                headers: { authorization: `Bearer ${accessToken}` },
+              });
+              if (!resp.ok) throw new Error(`Review failed: ${resp.status}`);
+              const data = await resp.json();
+              this.reviewJson = JSON.stringify(data, null, 2);
+            } catch (e) {
+              alert("⚠️ レビュー取得でエラー: " + e.message);
+            }
+          },
+        };
+      }
+    </script>
+  </body>
+</html>

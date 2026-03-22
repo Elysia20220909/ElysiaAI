@@ -1,0 +1,382 @@
+next_id: 35
+issues:
+  - id: 1
+    title: Test issue
+    status: done
+    owner: "test-session"
+    created: "2026-02-21T09:59:59Z"
+    updated: "2026-02-21T10:01:03Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - infra
+    description: ""
+  - id: 2
+    title: Debian 12 自動インストール & Proxmox VE セットアップ
+    status: done
+    owner: "debian-pve-setup"
+    created: "2026-02-21T12:59:55Z"
+    updated: "2026-02-21T16:53:15Z"
+    blocked_by: ""
+    report: "report/2026-02-22_015123_debian_proxmox_setup.md"
+    labels:
+      - infra
+    description: Supermicro SYS-6019U-TN4R4T に Debian 12 を Redfish VirtualMedia 経由で自動インストールし、Proxmox VE をセットアップする
+  - id: 3
+    title: Debian 13 + PVE 9 再構築
+    status: done
+    owner: "session-rebuild-d13"
+    created: "2026-02-21T17:03:53Z"
+    updated: "2026-02-21T17:56:13Z"
+    blocked_by: ""
+    report: "report/2026-02-22_025453_debian13_pve9_rebuild.md"
+    labels:
+      - infra
+    description: Debian 13 (Trixie) + Proxmox VE 9 でサーバを再構築。SOL プライマリ化改善含む
+  - id: 4
+    title: 'remaster-debian-iso.sh: 相対パスを渡すと Docker エラー'
+    status: done
+    owner: ""
+    created: "2026-02-23T06:24:23Z"
+    updated: "2026-02-23T14:43:51Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - script
+    description: "相対パス (preseed/preseed-generated.cfg) を渡すと Docker が -v オプションをローカルボリューム名と解釈し 'includes invalid characters for a local volume name' エラーで失敗する。スクリプト内で realpath 等により絶対パスに変換すべき。"
+  - id: 5
+    title: oplog.sh のパス解決を統一する
+    status: done
+    owner: ""
+    created: "2026-02-23T06:24:24Z"
+    updated: "2026-02-23T14:43:52Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - script
+    description: "CLAUDE.md では oplog.sh と記載しているが PATH に含まれないため ./oplog.sh が必要。CLAUDE.md の記載と SKILL の呼び出しパスを統一する。"
+  - id: 6
+    title: pve-lock.sh を実装する
+    status: done
+    owner: ""
+    created: "2026-02-23T06:24:24Z"
+    updated: "2026-02-23T14:43:52Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - infra
+    description: "CLAUDE.md で pve-lock.sh による排他制御が規定されているが未実装。PVE クラスタ操作・IPMI 状態変更操作の競合を防ぐために実装が必要。"
+  - id: 7
+    title: Phase 7 (pve-install) のフェーズマーク漏れ対策
+    status: done
+    owner: ""
+    created: "2026-02-23T06:24:25Z"
+    updated: "2026-02-23T14:43:53Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - script
+    description: "テスト3回目で Phase 7 完了時に os-setup-phase.sh mark pve-install が実行されず pending のまま残った。SKILL.md の手順を明確化するか、Phase 8 開始時にフェーズマーク状態をチェックするガードを追加すべき。"
+  - id: 8
+    title: SOL バックグラウンド監視の代替方式を検討する
+    status: done
+    owner: ""
+    created: "2026-02-23T06:24:26Z"
+    updated: "2026-02-23T14:43:53Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - ipmi
+    description: "ipmitool sol activate はインタラクティブなため Bash ツールの run_in_background と非互換で即時終了する。SKILL.md で SOL バックグラウンド監視は推奨しない旨を記載し、PowerState ポーリング等の代替方式を明記すべき。"
+  - id: 9
+    title: SSH リブート後の接続待ち時間の目安を SKILL.md に記載する
+    status: done
+    owner: ""
+    created: "2026-02-23T06:25:48Z"
+    updated: "2026-02-23T14:43:54Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - doc
+    description: "リブート後 SSH 到達まで最大5回リトライ (約2.5分) かかった。現状のリトライで動作しているが、最大待機時間の目安を SKILL.md に記載すると次回セッションで迷わない。"
+  - id: 10
+    title: SSH 経由コマンドで Perl locale 警告が毎回出力される
+    status: done
+    owner: ""
+    created: "2026-02-23T06:25:49Z"
+    updated: "2026-02-23T14:43:54Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - infra
+    description: "SSH 経由で pveversion 等を実行すると perl: warning: Setting locale failed. が毎回出力される (通しテスト中94回検出)。動作影響なしだが出力が汚染される。pve-setup-remote.sh で locale 設定を追加するか SSH 接続時に LC_ALL=C を設定すべき。"
+  - id: 11
+    title: インストール最大待機時間の目安を SKILL.md に記載する
+    status: done
+    owner: ""
+    created: "2026-02-23T06:25:50Z"
+    updated: "2026-02-23T14:43:54Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - doc
+    description: "テスト3回目で Phase 5 のインストール完了まで通常より長くかかった (POST code 0x01 で10分以上待機)。インストール時間のばらつきは許容範囲だが、最大待機時間の目安を SKILL.md に記載すると安心。"
+  - id: 12
+    title: 'pve-setup-remote.sh: locale 設定をスクリプト冒頭に移動する'
+    status: done
+    owner: "4fbd93e9"
+    created: "2026-02-23T14:47:26Z"
+    updated: "2026-02-23T16:04:36Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - script
+    description: post-reboot フェーズ実行中、カーネル削除の dpkg postrm で locale 警告が出る。locale 設定がスクリプト末尾にあるため。apt 操作前に移動すれば解消する。影響は表面的（再起動後は解消）。
+  - id: 13
+    title: pve-lock.sh + SSH でパイプ出力が欠落する場合がある
+    status: done
+    owner: ""
+    created: "2026-02-23T14:47:28Z"
+    updated: "2026-02-24T13:45:13Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - script
+    description: Run 1 で pve-lock.sh run ssh ... post-reboot の出力が空になった。SSH 直接実行では正常。flock の fd 管理と SSH の stdin/stdout の干渉が疑われる。Run 2, 3 では再発せず散発的。
+  - id: 14
+    title: SOL ログイン接続のタイミング改善
+    status: done
+    owner: "a87c228d"
+    created: "2026-02-23T14:47:30Z"
+    updated: "2026-02-23T16:34:29Z"
+    blocked_by: ""
+    report: "report/2026-02-24_013340_sol_login_boot_stage_detection.md"
+    labels:
+      - ipmi
+    description: Run 1 Phase 6 で SOL 接続が GRUB メニュー表示中にあたり、コマンドが login ではなく GRUB に送られた。60秒追加待機で回復したが、login プロンプト出現を確認するロジックの追加が望ましい。
+  - id: 15
+    title: Phase 5 インストール監視で SOL ログを活用する
+    status: done
+    owner: "17cc085d"
+    created: "2026-02-23T14:51:14Z"
+    updated: "2026-02-23T16:50:51Z"
+    blocked_by: ""
+    report: "sol-monitor.py 作成、SKILL.md Phase 5 書き換え、reference.md 更新、オフラインテスト通過"
+    labels:
+      - script
+      - ipmi
+    description: '現在 Phase 5 のインストール監視は POST code + PowerState ポーリングのみで粗い粒度。SOL 経由でインストーラーの詳細ログ（パッケージ展開、ネットワーク設定等）が見えることはテスト #4 で確認済み。SOL 出力をパースして進捗を把握する仕組みを検討する。課題 #8 で SOL バックグラウンド監視を非推奨としたのはセッション管理の複雑さが理由であり、信頼性の高い方式（例: expect/Python subprocess でのフォアグラウンド監視、ログファイルへの記録）であれば活用可能。'
+  - id: 16
+    title: 'sol-monitor.py: パワーサイクル直後の PowerState Off 誤検出'
+    status: done
+    owner: "65968776"
+    created: "2026-02-23T18:55:43Z"
+    updated: "2026-02-24T06:09:37Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - script
+    description: "scripts/sol-monitor.py が PowerState を60秒間隔でポーリングしているが、パワーサイクル（ForceOff→On）直後にポーリングが走ると、まだ電源が入っていない状態の Off を検出してインストール完了と誤判断し exit 0 で終了する。対策案: (1) 起動前に PowerState On を確認してからポーリングを開始 (2) 初回ポーリングの Off を無視するロジック追加 (3) Off 検出後に一定時間待機して再確認"
+  - id: 17
+    title: bmc-virtualmedia.sh mount 後に Redfish で Inserted 確認を追加
+    status: done
+    owner: "07e102fa"
+    created: "2026-02-24T09:17:50Z"
+    updated: "2026-02-24T10:29:18Z"
+    blocked_by: ""
+    report: "report/2026-02-24_192754_os_setup_virtualmedia_verify_test.md"
+    labels:
+      - script
+      - ipmi
+    description: "bmc-virtualmedia.sh の mount コマンドが CGI API から VMCOMCODE=001 (成功) を受け取っても、実際にはマウントされていないケースがある。原因は CGI セッション (CSRF トークン) の暗黙的な失効で、失効後も CGI API はエラーを返さず成功レスポンスを返す。対策: mount 後に Redfish API (GET /redfish/v1/Managers/1/VirtualMedia/CD1) で Inserted=true を確認するステップを追加し、false なら BMC 再ログイン→再マウント→再確認のリトライを行う。2026-02-24 の通しテスト Phase 4 で発見 (report/2026-02-24_150952_os_setup_issue16_fix_test.md 参照)。"
+  - id: 18
+    title: SKILL.md Phase 4 の SMB パス組み立てを yq 読み取りに統一し二重バックスラッシュのデグレを防止
+    status: done
+    owner: "f99d6c0b"
+    created: "2026-02-24T10:35:56Z"
+    updated: "2026-02-24T12:28:29Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - script
+    description: "Phase 4 で SMB パスをシェルリテラルでハードコードすると、シングルクォート内の \\\\public が二重バックスラッシュとしてCGI APIに送信され、CGIは成功(VMCOMCODE=001)を返すが実際にはマウントされないsilent failureが発生する。Issue #17のテストで発見。対策: (1) SKILL.md Phase 4 に警告コメントを追加（SMBパスは必ず yq で読み取り、シェルリテラルでバックスラッシュをハードコードしない旨） (2) bmc-virtualmedia.sh の cmd_config() にコメントで注意点を記載（パスに二重バックスラッシュが含まれるとsilent failureになる旨） (3) SKILL.md のコード例を yq による動的組み立てに修正"
+  - id: 19
+    title: Phase 6 post-install-config に POST 92 スタックのリカバリ手順を追加
+    status: done
+    owner: "0b5ddf19"
+    created: "2026-02-24T12:15:17Z"
+    updated: "2026-02-24T13:13:26Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - script
+    description: "Phase 6 (post-install-config) で Power On 後に POST code 92 (DXE--BIOS PCI Bus Enumeration) で散発的にスタックする。Phase 7 にはリカバリ手順が記載済みだが Phase 6 には未記載。Issue #17 テストで Phase 6 に約4分のスタックが発生し sol-login.py が 180秒タイムアウトで失敗した。ForceOff + 20秒待機 + Power On + 3分待機で回復。対策: (1) SKILL.md Phase 6 ステップ2 (Power On) の後に POST 92 スタック検出とリカバリ手順を追加 (2) sol-login.py のタイムアウト時に POST code を自動チェックするガイダンスを追記"
+  - id: 20
+    title: Redfish POST code API が stale 値を返す問題の調査と対策
+    status: done
+    owner: "4e039071"
+    created: "2026-02-24T12:15:18Z"
+    updated: "2026-02-24T13:35:53Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - ipmi
+      - script
+    description: "Redfish POST code API (GET /redfish/v1/Systems/1) の CurrentBootProgress.OemPostCode が実際の POST 状態と乖離する場合がある。Issue #17 テストの Phase 6 で KVM スクリーンショットは POST code 92 (PCI Bus Enumeration) 画面を表示しているにもかかわらず、API は 0x00 (POST complete) を返した。POST code だけでスタック判定すると見逃す可能性がある。対策候補: (1) bmc-power.sh postcode にスクリーンショット併用の注意コメント追加 (2) POST code と PowerState の組み合わせ判定（On + 0x00 が長時間続く場合はスタック疑い） (3) KVM スクリーンショットによる視覚的確認をフォールバック手段として SKILL.md に記載"
+  - id: 21
+    title: SX6036 内蔵 SM 不具合調査
+    status: done
+    owner: "f99d6c0b"
+    created: "2026-02-25T12:49:03Z"
+    updated: "2026-02-25T13:47:43Z"
+    blocked_by: ""
+    report: "report/2026-02-25_224551_sx6036_sm_investigation.md"
+    labels:
+      - infra
+    description: ""
+  - id: 22
+    title: SX6036 ファームウェア更新・フラッシュ修復
+    status: done
+    owner: "4856b189"
+    created: "2026-02-25T14:06:48Z"
+    updated: "2026-02-25T16:29:48Z"
+    blocked_by: ""
+    report: "report/2026-02-26_011138_sx6036_firmware_update.md"
+    labels:
+      - infra
+    description: ""
+  - id: 23
+    title: LINSTOR thin vs thick-stripe ベンチマーク実行と比較レポート作成
+    status: done
+    owner: "88d64294"
+    created: "2026-02-26T02:13:13Z"
+    updated: "2026-02-26T04:10:31Z"
+    blocked_by: ""
+    report: "report/2026-02-26_130844_linstor_thin_vs_thick_stripe_benchmark.md"
+    labels:
+      - bench
+    description: ""
+  - id: 24
+    title: LINSTOR/DRBD ノード離脱実験 — 5号機離脱後の4号機単独運用継続検証
+    status: done
+    owner: "fe65793d"
+    created: "2026-02-26T14:02:54Z"
+    updated: "2026-02-26T15:54:43Z"
+    blocked_by: ""
+    report: "report/2026-02-27_005307_linstor_node_departure_experiment.md"
+    labels:
+      - bench
+    description: ""
+  - id: 25
+    title: LINSTOR/DRBD ノード離脱・復帰実験 (完全サイクル)
+    status: done
+    owner: "4404adab"
+    created: "2026-02-26T21:02:46Z"
+    updated: "2026-02-27T02:13:58Z"
+    blocked_by: ""
+    report: "report/2026-02-27_111056_linstor_node_departure_rejoin_experiment.md"
+    labels:
+      - bench
+    description: ""
+  - id: 26
+    title: LINSTOR LVM RAID10 ディスク障害実験
+    status: done
+    owner: "e930c835"
+    created: "2026-02-27T05:31:50Z"
+    updated: "2026-02-27T11:33:48Z"
+    blocked_by: ""
+    report: "report/2026-02-27_203200_linstor_lvm_raid10_disk_failure_experiment.md"
+    labels:
+      - bench
+    description: LVM RAID10 (-i2 -m1) で1ノード内冗長化を構築し、ディスク障害をエミュレートして耐障害性を検証する
+  - id: 27
+    title: linstor-node-ops スキルに minIoSize 不一致の回避手順を追記
+    status: done
+    owner: "0892122b"
+    created: "2026-02-27T15:30:52Z"
+    updated: "2026-02-27T16:29:16Z"
+    blocked_by: ""
+    report: "report/2026-02-28_010338_linstor_lvm_raid_operational_concerns.md"
+    labels:
+      - script
+    description: 異なる physical block size のディスクが混在する環境で、LINSTOR の StorDriver/internal/minIoSize がノード間で不一致になり rejoin 時にリソース作成が失敗する。VG 作成時の PV 順序で minIoSize が決まるため、両ノードで同じ block size のディスクを先頭に配置する必要がある。linstor-node-ops スキルの rejoin 手順にこの回避策を追記する。
+  - id: 28
+    title: LINSTOR minIoSize 固定指定による不一致回避の調査・実験
+    status: done
+    owner: "f98e694b"
+    created: "2026-02-27T17:38:20Z"
+    updated: "2026-02-27T18:47:00Z"
+    blocked_by: ""
+    report: "report/2026-02-28_034507_linstor_miniosize_fixed_value_experiment.md"
+    labels:
+      - infra
+    description: ""
+  - id: 29
+    title: DRBD/LINSTOR マルチリージョン per-connection protocol 実験
+    status: done
+    owner: "232ac286"
+    created: "2026-02-28T18:43:51Z"
+    updated: "2026-02-28T20:26:40Z"
+    blocked_by: ""
+    report: "report/2026-03-01_051957_linstor_multi_region_protocol_experiment.md"
+    labels:
+      - infra
+    description: ""
+  - id: 30
+    title: 3ノード LINSTOR クラスタ構築・ベンチマーク・離脱テスト
+    status: blocked
+    owner: "b38b3c37"
+    created: "2026-03-01T12:36:01Z"
+    updated: "2026-03-01T16:19:46Z"
+    blocked_by: "6号機 CWDM4 光モジュールが SX6036 の電力制限 (2W/port) を超過。DAC ケーブル交換が必要"
+    report: "report/2026-03-02_011809_3node_linstor_cluster_attempt.md"
+    labels:
+      - infra
+      - bench
+    description: ""
+  - id: 31
+    title: R320 OS再インストール + PVE セットアップ通しテスト (SOL検証)
+    status: done
+    owner: "15e76796"
+    created: "2026-03-05T15:41:04Z"
+    updated: "2026-03-05T19:31:08Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - infra
+    description: ""
+  - id: 32
+    title: 4号機/5号機 同時 os-setup (R320 デグレ確認)
+    status: done
+    owner: "38ce6813"
+    created: "2026-03-05T18:22:25Z"
+    updated: "2026-03-05T22:07:47Z"
+    blocked_by: ""
+    report: "report/2026-03-06_070624_parallel_os_setup_regression_test.md"
+    labels:
+      - infra
+    description: ""
+  - id: 33
+    title: 4ノード・マルチリージョン LINSTOR 構築・ベンチマーク
+    status: done
+    owner: "d075b1ee"
+    created: "2026-03-06T21:19:09Z"
+    updated: "2026-03-07T12:02:32Z"
+    blocked_by: ""
+    report: "report/2026-03-07_210011_linstor_4node_multiregion.md"
+    labels:
+      - infra
+      - bench
+    description: ""
+  - id: 34
+    title: LINSTOR マルチリージョン実運用テスト (2+1, ライブ/コールドマイグレーション)
+    status: done
+    owner: "26107bcc"
+    created: "2026-03-08T14:13:13Z"
+    updated: "2026-03-08T16:10:21Z"
+    blocked_by: ""
+    report: ""
+    labels:
+      - infra
+      - bench
+    description: ""

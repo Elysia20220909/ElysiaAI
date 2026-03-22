@@ -49,23 +49,27 @@
 VS Codeコマンドパレット (`Ctrl+Shift+P`) から `Tasks: Run Task` を選択:
 
 ### 開発タスク
+
 - `🚀 Dev Server` - 開発サーバー起動 (ホットリロード)
 - `🔨 Build` - 本番ビルド
 - `🧪 Run Tests` - テスト実行
 - `🧪 Run Tests (Watch)` - テスト監視モード
 
 ### コード品質
+
 - `🎨 Format Code` - コードフォーマット
 - `🔍 Lint Code` - Lintチェック
 - `🔧 Fix Issues` - 自動修正
 
 ### Docker
+
 - `🐳 Docker Build` - イメージビルド
 - `🐳 Docker Compose Up` - コンテナ起動
 - `🐳 Docker Compose Down` - コンテナ停止
 - `🐳 Docker Logs` - ログ表示
 
 ### その他
+
 - `🐍 Python FastAPI Server` - FastAPI起動
 - `📦 Install Dependencies` - 依存関係インストール
 - `🧹 Clean Build` - クリーンビルド
@@ -73,6 +77,7 @@ VS Codeコマンドパレット (`Ctrl+Shift+P`) から `Tasks: Run Task` を選
 ## 🔥 ブレークポイント
 
 ### TypeScript/JavaScript
+
 ```typescript
 // ブレークポイントを設定したい行をクリック
 const response = await streamText({
@@ -82,6 +87,7 @@ const response = await streamText({
 ```
 
 ### Python
+
 ```python
 # ブレークポイントを設定
 @app.post("/rag")
@@ -93,11 +99,13 @@ async def rag_endpoint(query: Query):  # ← ここにブレークポイント
 ## 🎨 推奨設定
 
 ### 保存時の自動処理
+
 - フォーマット自動適用
 - Importの自動整理
 - Biome Lintの実行
 
 ### エディタ
+
 - タブサイズ: スペース (プロジェクト設定に従う)
 - 末尾の空白削除
 - 改行コード: LF
@@ -105,10 +113,12 @@ async def rag_endpoint(query: Query):  # ← ここにブレークポイント
 ## 📦 推奨拡張機能
 
 必須:
+
 - **Biome** - Linter & Formatter
 - **Bun for Visual Studio Code** - Bun サポート
 
 開発体験向上:
+
 - **Python** - Python 開発
 - **Pylance** - Python 型チェック
 - **Docker** - Docker サポート
@@ -117,6 +127,7 @@ async def rag_endpoint(query: Query):  # ← ここにブレークポイント
 ## 🚀 クイックスタート
 
 1. **初回セットアップ**
+
    ```bash
    bun install
    ```
@@ -137,19 +148,27 @@ async def rag_endpoint(query: Query):  # ← ここにブレークポイント
 ## 🔧 トラブルシューティング
 
 ### デバッガーが起動しない
+
 1. Bunがインストールされているか確認: `bun --version`
+
 2. 依存関係をインストール: `bun install`
 
 ### テストが失敗する
+
 1. サーバーを起動: `bun run dev`
+
 2. テストを実行: `bun test`
 
 ### Pythonデバッガーが動かない
+
 1. Python拡張機能がインストールされているか確認
+
 2. Pythonパスを確認: `.vscode/settings.json`
 
 ### ホットリロードが効かない
+
 1. `--watch` フラグが有効か確認
+
 2. ファイルが保存されているか確認
 
 ## 📚 関連ドキュメント

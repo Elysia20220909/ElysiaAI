@@ -1,5 +1,5 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Elysia AI - AWS Infrastructure (ECS Fargate + ALB + RDS)'
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Elysia AI - AWS Infrastructure (ECS Fargate + ALB + RDS)"
 
 # ==================== Parameters ====================
 Parameters:
@@ -20,7 +20,7 @@ Parameters:
   ContainerImage:
     Type: String
     Description: Docker image URI (ECR)
-    Default: 'your-account.dkr.ecr.us-east-1.amazonaws.com/elysia-ai:latest'
+    Default: "your-account.dkr.ecr.us-east-1.amazonaws.com/elysia-ai:latest"
 
   ContainerPort:
     Type: Number
@@ -67,7 +67,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.1.0/24
-      AvailabilityZone: !Select [0, !GetAZs '']
+      AvailabilityZone: !Select [0, !GetAZs ""]
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -78,7 +78,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
-      AvailabilityZone: !Select [1, !GetAZs '']
+      AvailabilityZone: !Select [1, !GetAZs ""]
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -221,8 +221,8 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: '512'
-      Memory: '1024'
+      Cpu: "512"
+      Memory: "1024"
       ExecutionRoleArn: !Ref ECSTaskExecutionRole
       ContainerDefinitions:
         - Name: elysia-ai

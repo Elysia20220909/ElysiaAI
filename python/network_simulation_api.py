@@ -5,12 +5,11 @@ Blackwall Simulation統合用のFastAPIラッパー
 """
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
-import sys
+from typing import Optional
 import os
 
 # network_simulationをパスに追加
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "network_simulation"))
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "network_simulation"))
 
 app = FastAPI(title="Network Simulation API", version="1.0.0")
 

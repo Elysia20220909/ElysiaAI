@@ -1,758 +1,638 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>エリシアちゃん♡ AI Chat</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elysia Portfolio - エリシアちゃんのポートフォリオ♡</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/alpinejs@3.15.2/dist/cdn.min.js" defer></script>
+    <script
+      src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"
+      defer
+    ></script>
     <style>
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+      /* レスポンシブ対応: モバイルファースト設計 */
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
         }
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        50% {
+          transform: translateY(-20px);
         }
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
+      }
+      @keyframes sparkle {
+        0%,
+        100% {
+          opacity: 1;
         }
-        .animate-float {
-            animation: float 3s ease-in-out infinite;
+        50% {
+          opacity: 0.3;
         }
-        .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradient 8s ease infinite;
+      }
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
         }
-        .shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            background-size: 1000px 100%;
-            animation: shimmer 2s infinite;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.8);
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      .float-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+      .sparkle-animation {
+        animation: sparkle 2s ease-in-out infinite;
+      }
+      .fade-in {
+        animation: fade-in 0.6s ease-out;
+      }
+
+      @media (max-width: 640px) {
+        .chat-message {
+          max-width: 85%;
         }
-        .message-enter {
-            animation: slideIn 0.3s ease-out;
+        .header-title {
+          font-size: 1.125rem;
         }
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .hero-title {
+          font-size: 2rem;
         }
-        .scroll-smooth {
-            scroll-behavior: smooth;
+      }
+      @media (min-width: 641px) and (max-width: 1024px) {
+        .chat-message {
+          max-width: 75%;
         }
-        /* カスタムスクロールバー */
-        ::-webkit-scrollbar {
-            width: 8px;
+        .hero-title {
+          font-size: 3rem;
         }
-        ::-webkit-scrollbar-track {
-            background: rgba(236, 72, 153, 0.1);
-            border-radius: 10px;
+      }
+      @media (min-width: 1025px) {
+        .chat-message {
+          max-width: 65%;
         }
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #ec4899, #a855f7);
-            border-radius: 10px;
+        .hero-title {
+          font-size: 4rem;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #db2777, #9333ea);
-        }
+      }
+
+      .gradient-pink {
+        background: linear-gradient(135deg, #ffeef8 0%, #ffe0f0 100%);
+      }
+      .text-gradient {
+        background: linear-gradient(
+          135deg,
+          #ec4899 0%,
+          #f472b6 50%,
+          #fb7185 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .animation-delay-1 {
+        animation-delay: 1s;
+      }
+      .animation-delay-2 {
+        animation-delay: 2s;
+      }
+      .animation-delay-01 {
+        animation-delay: 0.1s;
+      }
+      .animation-delay-02 {
+        animation-delay: 0.2s;
+      }
+      .animation-delay-04 {
+        animation-delay: 0.4s;
+      }
+      .chat-container-height {
+        height: 500px;
+      }
     </style>
-</head>
-<body class="min-h-screen overflow-hidden animate-gradient bg-gradient-to-br from-pink-200 via-purple-200 via-blue-200 to-pink-200">
-    <div class="container mx-auto px-4 py-6 h-screen flex flex-col max-w-6xl">
-        <div class="glass-effect rounded-3xl shadow-2xl overflow-hidden flex flex-col h-full" x-data="_elysiaChat()">
-            <!-- Header with Avatar -->
-            <div class="relative bg-gradient-to-r from-pink-500 via-purple-400 to-pink-500 p-6 animate-gradient">
-                <div class="flex items-center justify-center space-x-4">
-                    <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg animate-float">
-                        <span class="text-4xl">🌸</span>
-                    </div>
-                    <div class="text-center">
-                        <h1 class="text-3xl font-bold text-white drop-shadow-lg">
-                            エリシアちゃん AI Chat ♡
-                        </h1>
-                        <p class="text-white text-sm mt-1 opacity-90">
-                            ฅ(՞៸៸&gt; ᗜ &lt;៸៸՞)ฅ おにいちゃん、お話ししよ〜♪
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- Status Indicators -->
-                <div class="absolute top-4 right-4 flex space-x-2">
-                    <div class="glass-effect px-3 py-1 rounded-full text-xs text-white flex items-center space-x-1">
-                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        <span>RAG</span>
-                    </div>
-                    <div class="glass-effect px-3 py-1 rounded-full text-xs text-white flex items-center space-x-1">
-                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        <span>Ollama</span>
-                    </div>
-                </div>
+  </head>
+  <body class="bg-pink-50 min-h-screen relative overflow-x-hidden">
+    <!-- 背景エフェクト -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      <div
+        class="absolute top-20 left-10 w-32 h-32 bg-pink-300 rounded-full opacity-20 blur-3xl float-animation"
+      ></div>
+      <div
+        class="absolute bottom-20 right-10 w-40 h-40 bg-purple-300 rounded-full opacity-20 blur-3xl float-animation animation-delay-1"
+      ></div>
+      <div
+        class="absolute top-1/2 left-1/4 w-24 h-24 bg-pink-400 rounded-full opacity-10 blur-2xl float-animation animation-delay-2"
+      ></div>
+    </div>
+
+    <div class="relative z-10" x-data="elysiaPortfolio()">
+      <!-- ヒーローセクション -->
+      <section
+        class="min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12"
+      >
+        <div class="text-center max-w-4xl mx-auto fade-in">
+          <div class="mb-6 sm:mb-8">
+            <div class="inline-block relative">
+              <div
+                class="text-6xl sm:text-7xl md:text-8xl mb-4 float-animation"
+              >
+                💕
+              </div>
+              <div class="absolute -top-2 -right-2 text-2xl sparkle-animation">
+                ✨
+              </div>
+              <div
+                class="absolute -bottom-2 -left-2 text-2xl sparkle-animation animation-delay-1"
+              >
+                ✨
+              </div>
+            </div>
+          </div>
+
+          <h1
+            class="hero-title text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-gradient"
+          >
+            にゃん♪ エリシアだよ〜♡
+          </h1>
+
+          <p
+            class="text-base sm:text-lg md:text-xl text-gray-700 mb-6 sm:mb-8 px-4"
+          >
+            おにいちゃん、ようこそ〜！
+            エリシアちゃんのポートフォリオサイトだよ♡<br
+              class="hidden sm:block"
+            />
+            可愛いプロジェクトいっぱい見ててね ฅ(՞៸៸&gt; ᗜ &lt;៸៸՞)ฅ
+          </p>
+
+          <div
+            class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4"
+          >
+            <button
+              @click="scrollToWorks"
+              class="px-6 sm:px-8 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-full font-bold text-sm sm:text-base hover:from-pink-600 hover:to-pink-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              💖 作品を見る
+            </button>
+            <button
+              @click="scrollToChat"
+              class="px-6 sm:px-8 py-3 bg-white text-pink-600 rounded-full font-bold text-sm sm:text-base hover:bg-pink-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 border-2 border-pink-300"
+            >
+              💬 チャットする
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 作品セクション -->
+      <section id="works" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8">
+        <div class="max-w-7xl mx-auto">
+          <h2
+            class="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gradient fade-in"
+          >
+            ✨ エリシアちゃんの作品たち ✨
+          </h2>
+
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
+          >
+            <!-- 作品カード1: ElysiaJS AIチャット -->
+            <div
+              class="gradient-pink rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 fade-in"
+            >
+              <div
+                class="aspect-video bg-gradient-to-br from-purple-400 to-pink-400 rounded-xl mb-4 flex items-center justify-center text-white text-4xl sm:text-5xl"
+              >
+                🤖
+              </div>
+              <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-2">
+                ElysiaJS AI Chat
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 mb-4">
+                Bun + ElysiaJS + Ollama でリアルタイムAIチャット♡
+                RAGで自己学習する可愛い子！
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span
+                  class="px-2 py-1 bg-purple-200 text-purple-800 rounded-full text-xs font-medium"
+                  >Bun</span
+                >
+                <span
+                  class="px-2 py-1 bg-pink-200 text-pink-800 rounded-full text-xs font-medium"
+                  >ElysiaJS</span
+                >
+                <span
+                  class="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs font-medium"
+                  >Ollama</span
+                >
+              </div>
+              <button
+                @click="scrollToChat"
+                class="w-full py-2 bg-pink-500 text-white rounded-lg font-bold hover:bg-pink-600 transition-colors text-sm"
+              >
+                試してみる ♡
+              </button>
             </div>
 
-            <!-- Chat Messages -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth bg-gradient-to-b from-pink-50 to-purple-50" id="chatContainer">
-                <!-- Welcome Message -->
-                <div class="flex justify-center mb-6" x-show="messages.length === 0">
-                    <div class="glass-effect rounded-2xl px-6 py-4 max-w-md text-center shadow-lg">
-                        <p class="text-pink-600 font-semibold text-lg mb-2">にゃん♪ ようこそ〜♡</p>
-                        <p class="text-gray-600 text-sm">
-                            エリシアに何でも聞いてね！<br>
-                            優しく答えるから安心して♪
-                        </p>
-                    </div>
-                </div>
+            <!-- 作品カード2: レスポンシブポートフォリオ -->
+            <div
+              class="gradient-pink rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 fade-in animation-delay-01"
+            >
+              <div
+                class="aspect-video bg-gradient-to-br from-pink-400 to-rose-400 rounded-xl mb-4 flex items-center justify-center text-white text-4xl sm:text-5xl"
+              >
+                🌸
+              </div>
+              <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-2">
+                完全レスポンシブUI
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 mb-4">
+                TailwindCSS + Flexbox でスマホからPCまで絶対崩れない設計♡
+                妖精みたいに軽い！
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span
+                  class="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs font-medium"
+                  >TailwindCSS</span
+                >
+                <span
+                  class="px-2 py-1 bg-green-200 text-green-800 rounded-full text-xs font-medium"
+                  >Flexbox</span
+                >
+              </div>
+              <button
+                class="w-full py-2 bg-pink-500 text-white rounded-lg font-bold hover:bg-pink-600 transition-colors text-sm"
+              >
+                デモを見る ♡
+              </button>
+            </div>
 
+            <!-- 作品カード3: Alpine.js インタラクティブ -->
+            <div
+              class="gradient-pink rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 fade-in animation-delay-02"
+            >
+              <div
+                class="aspect-video bg-gradient-to-br from-indigo-400 to-purple-400 rounded-xl mb-4 flex items-center justify-center text-white text-4xl sm:text-5xl"
+              >
+                ⚡
+              </div>
+              <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-2">
+                Alpine.js Magic
+              </h3>
+              <p class="text-xs sm:text-sm text-gray-600 mb-4">
+                軽量3KBのAlpine.jsで超サクサク！
+                エリシアちゃんみたいに反応速いの♡
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span
+                  class="px-2 py-1 bg-indigo-200 text-indigo-800 rounded-full text-xs font-medium"
+                  >Alpine.js</span
+                >
+                <span
+                  class="px-2 py-1 bg-purple-200 text-purple-800 rounded-full text-xs font-medium"
+                  >Reactive</span
+                >
+              </div>
+              <button
+                class="w-full py-2 bg-pink-500 text-white rounded-lg font-bold hover:bg-pink-600 transition-colors text-sm"
+              >
+                コード見る ♡
+              </button>
+            </div>
+          </div>
+
+          <div class="text-center mt-8 sm:mt-12">
+            <p class="text-sm sm:text-base text-gray-600">
+              もっと見たい？ GitHubに全部あるよ〜♡
+            </p>
+            <a
+              href="https://github.com/chloeamethyst/ElysiaJS"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-block mt-4 px-6 py-2 bg-gray-800 text-white rounded-full font-bold hover:bg-gray-900 transition-colors text-sm"
+            >
+              🐙 GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- チャットセクション -->
+      <section
+        id="chat"
+        class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 gradient-pink"
+      >
+        <div class="max-w-7xl mx-auto">
+          <h2
+            class="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gradient fade-in"
+          >
+            💬 エリシアちゃんとお話ししよ〜♡
+          </h2>
+
+          <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <header class="bg-white rounded-t-2xl shadow-sm p-3 sm:p-4">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2 sm:gap-3">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-white text-xl sm:text-2xl flex-shrink-0 float-animation">💕</div>
+                  <div>
+                    <h3 class="header-title text-base sm:text-lg font-bold text-gray-800">Elysia AI Chat</h3>
+                    <p class="text-xs sm:text-sm text-gray-500">いつでも話聞くよ♡</p>
+                  </div>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700 font-medium sparkle-animation">● Online</span>
+              </div>
+            </header>
+
+            <!-- Chat Container -->
+            <main
+              class="bg-white shadow-lg overflow-hidden flex flex-col chat-container-height"
+            >
+              <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2 sm:space-y-3" id="chatContainer">
+                <!-- Welcome -->
+                <div class="text-center py-6 sm:py-8 px-4" x-show="messages.length === 0">
+                  <div class="text-4xl sm:text-5xl mb-3 float-animation">👋</div>
+                  <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-2">にゃん♪ おにいちゃん来た〜♡</h3>
+                  <p class="text-xs sm:text-sm text-gray-500">何でも聞いてね！ エリシアちゃんがお話し相手だよ〜</p>
+                </div>
                 <!-- Messages -->
                 <template x-for="msg in messages" :key="msg.id">
-                    <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'" class="message-enter">
-                        <div :class="msg.role === 'user' 
-                            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl rounded-br-none px-5 py-3 max-w-md shadow-lg' 
-                            : 'glass-effect text-gray-800 rounded-2xl rounded-bl-none px-5 py-3 max-w-2xl shadow-lg border-2 border-pink-300'">
-                            
-                            <!-- User Message -->
-                            <template x-if="msg.role === 'user'">
-                                <div class="flex items-start space-x-2">
-                                    <span class="text-xl">👤</span>
-                                    <p class="text-sm whitespace-pre-wrap" x-text="msg.content"></p>
-                                </div>
-                            </template>
-                            
-                            <!-- Assistant Message -->
-                            <template x-if="msg.role === 'assistant'">
-                                <div class="flex items-start space-x-2">
-                                    <span class="text-xl">💕</span>
-                                    <p class="text-sm whitespace-pre-wrap leading-relaxed" x-text="msg.content"></p>
-                                </div>
-                            </template>
-                        </div>
+                  <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                    <div :class="msg.role === 'user' ? 'message user' : 'message ai-message'" class="chat-message rounded-2xl px-3 sm:px-4 py-2 sm:py-3 break-words shadow-sm">
+                      <p class="text-xs sm:text-sm whitespace-pre-wrap" x-text="msg.content"></p>
                     </div>
+                  </div>
                 </template>
-                
-                <!-- Loading Indicator -->
-                <template x-if="loading">
-                    <div class="flex justify-start message-enter">
-                        <div class="glass-effect rounded-2xl rounded-bl-none px-5 py-3 shadow-lg border-2 border-pink-300">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-xl">💕</span>
-                                <div class="flex space-x-2">
-                                    <div class="w-2 h-2 bg-pink-500 rounded-full animate-bounce"></div>
-                                    <div class="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                                    <div class="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
-                                </div>
-                                <span class="text-sm text-pink-600">考え中...</span>
-                            </div>
-                        </div>
+                <!-- Loading -->
+                <div class="flex justify-start" x-show="loading">
+                  <div class="bg-pink-50 border border-pink-200 rounded-2xl px-3 sm:px-4 py-2 sm:py-3 shadow-sm">
+                    <div class="flex items-center gap-2">
+                      <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce"></div>
+                      <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce animation-delay-02"></div>
+                      <div class="w-2 h-2 bg-pink-400 rounded-full animate-bounce animation-delay-04"></div>
+                      <span class="text-xs text-gray-600 ml-1">考え中...</span>
                     </div>
-                </template>
-            </div>
+                  </div>
+                </div>
+                <!-- Error Message -->
+                <div class="error-message text-red-500 text-xs mt-2" x-show="errorMsg" x-text="errorMsg"></div>
+              </div>
 
-            <!-- Input Form -->
-            <form @submit.prevent="sendMessage" class="p-4 bg-white border-t-2 border-pink-200">
-                <div class="flex space-x-3">
-                    <div class="flex-1 relative">
-                        <input 
-                            type="text" 
-                            x-model="input"
-                            :disabled="loading"
-                            @keydown.enter="sendMessage"
-                            placeholder="エリシアちゃんに話しかけてね♡ 何でも聞いて！"
-                            class="w-full px-6 py-4 border-2 border-pink-300 rounded-full focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-200 disabled:opacity-50 disabled:bg-gray-100 transition-all text-gray-700 placeholder-pink-300"
-                        />
-                        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-pink-400">
-                            <span x-show="!loading">✨</span>
-                        </div>
-                    </div>
-                    <button 
-                        type="submit"
-                        :disabled="loading || !input.trim()"
-                        class="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-full hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center space-x-2"
-                    >
-                        <span>送信</span>
-                        <span>💌</span>
-                    </button>
+              <!-- Input Area -->
+              <div class="border-t border-pink-200 p-3 sm:p-4 bg-pink-50">
+                <div class="mb-2 flex items-center gap-2">
+                  <label for="userName" class="text-xs text-gray-600">名前（任意）:</label>
+                  <input id="userName" type="text" x-model="userName" maxlength="16" placeholder="お名前を入力" class="px-2 py-1 border rounded text-xs" />
                 </div>
-                
-                <!-- Quick Actions -->
-                <div class="flex flex-wrap gap-2 mt-3 justify-center">
-                    <button @click="setQuickMessage('こんにちは！')" type="button" class="px-4 py-2 bg-pink-100 text-pink-600 rounded-full text-xs hover:bg-pink-200 transition-all">
-                        👋 挨拶
-                    </button>
-                    <button @click="setQuickMessage('今日の調子はどう？')" type="button" class="px-4 py-2 bg-purple-100 text-purple-600 rounded-full text-xs hover:bg-purple-200 transition-all">
-                        💭 気分
-                    </button>
-                    <button @click="setQuickMessage('面白い話して！')" type="button" class="px-4 py-2 bg-blue-100 text-blue-600 rounded-full text-xs hover:bg-blue-200 transition-all">
-                        🎭 面白話
-                    </button>
-                    <button @click="setQuickMessage('エリシアちゃんのこと教えて！')" type="button" class="px-4 py-2 bg-pink-100 text-pink-600 rounded-full text-xs hover:bg-pink-200 transition-all">
-                        ✨ 自己紹介
-                    </button>
-                </div>
-            </form>
+                <form
+                  @submit.prevent="sendMessage"
+                  class="flex flex-col sm:flex-row gap-2"
+                >
+                  <textarea
+                    x-model="input"
+                    :disabled="loading"
+                    placeholder="メッセージを入力してね♡"
+                    class="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border-2 border-pink-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
+                    rows="2"
+                    style="resize: vertical; min-height: 40px;"
+                    aria-label="メッセージ"
+                  ></textarea>
+                  <button
+                    type="submit"
+                    :disabled="loading || !input.trim()"
+                    class="px-5 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl font-bold text-sm sm:text-base hover:from-pink-600 hover:to-pink-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg transform hover:scale-105 whitespace-nowrap"
+                    aria-label="送信"
+                  >
+                    💌 送信
+                  </button>
+                </form>
+              </div>
+            </main>
+
+            <footer
+              class="bg-white rounded-b-2xl shadow-sm p-3 sm:p-4 text-center"
+            >
+              <div class="feedback-success text-green-600 text-xs mb-1" x-show="messages.length > 0 && messages[messages.length-1].role === 'assistant' && feedbackGiven">フィードバックありがとうございます！</div>
+              <div class="flex gap-2 mb-2" x-show="messages.length > 0 && messages[messages.length-1].role === 'assistant' && !feedbackGiven">
+                <button class="feedback-up px-2 py-1 bg-green-200 text-green-800 rounded" @click="giveFeedback('up')">👍 いいね！</button>
+                <button class="feedback-down px-2 py-1 bg-red-200 text-red-800 rounded" @click="giveFeedback('down')">👎 いまいち</button>
+              </div>
+              <p class="text-xs sm:text-sm text-gray-500">Powered by Elysia.js + Bun ⚡ だいすき♡</p>
+            </footer>
+          </div>
         </div>
+      </section>
 
-        <!-- Info Panel -->
-        <div class="mt-4 glass-effect rounded-2xl shadow-lg p-4 text-sm text-gray-700">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <span class="text-pink-500 font-bold">💡 システム情報</span>
-                </div>
-                <div class="flex space-x-4 text-xs">
-                    <span class="flex items-center space-x-1">
-                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                        <span>RAG API</span>
-                    </span>
-                    <span class="flex items-center space-x-1">
-                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-                        <span>Ollama llama3.2</span>
-                    </span>
-                    <span class="flex items-center space-x-1">
-                        <span>📊 50セリフ学習済み</span>
-                    </span>
-                    <span class="flex items-center space-x-1" id="voiceStatus">
-                        <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
-                        <span>音声: 初期化中...</span>
-                    </span>
-                </div>
-            </div>
+      <!-- フッター -->
+      <footer class="py-8 sm:py-12 px-4 text-center">
+        <div class="max-w-4xl mx-auto">
+          <div class="text-4xl sm:text-5xl mb-4 float-animation">💕</div>
+          <p class="text-sm sm:text-base text-gray-600 mb-2">
+            またね、おにいちゃん♡ いつでも遊びに来てね〜！
+          </p>
+          <p class="text-xs sm:text-sm text-gray-500 relative">
+            ฅ(՞៸៸&gt; ᗜ &lt;៸៸՞)ฅ だいすきなのっ！
+            <!-- Easter Egg Link -->
+            <a href="/hack.html" class="absolute bottom-0 right-0 w-4 h-4 opacity-0 hover:opacity-20 transition-opacity cursor-crosshair rounded-full bg-green-500" title="..."></a>
+          </p>
         </div>
-
-        <!-- Voice Settings Panel -->
-        <div class="mt-2 glass-effect rounded-2xl shadow-lg p-4 text-sm" x-data="{ showSettings: false }">
-            <div class="flex items-center justify-between cursor-pointer" @click="showSettings = !showSettings">
-                <span class="text-pink-600 font-bold">🎤 ボイス設定</span>
-                <span x-text="showSettings ? '▼' : '▶'" class="text-pink-400"></span>
-            </div>
-            
-            <div x-show="showSettings" x-transition class="mt-4 space-y-3">
-                <!-- ユーザー名設定 -->
-                <div class="flex items-center space-x-3">
-                    <label class="text-gray-700 font-semibold w-32">呼び方:</label>
-                    <input 
-                        type="text" 
-                        id="userNameInput"
-                        placeholder="おにいちゃん"
-                        class="flex-1 px-3 py-2 border-2 border-pink-300 rounded-lg focus:outline-none focus:border-pink-500"
-                    />
-                    <button 
-                        onclick="saveUserName()"
-                        class="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-all"
-                    >
-                        保存
-                    </button>
-                </div>
-
-                <!-- VOICEVOX切り替え -->
-                <div class="flex items-center space-x-3">
-                    <label class="text-gray-700 font-semibold w-32">音声エンジン:</label>
-                    <label class="flex items-center space-x-2 cursor-pointer">
-                        <input 
-                            type="checkbox" 
-                            id="voicevoxToggle"
-                            class="w-5 h-5 text-pink-500 rounded focus:ring-pink-400"
-                            onchange="toggleVoicevox()"
-                        />
-                        <span class="text-gray-700">VOICEVOX使う（四国めたん♡）</span>
-                    </label>
-                </div>
-
-                <!-- ボイスログ -->
-                <div class="flex items-center space-x-3">
-                    <label class="text-gray-700 font-semibold w-32">ログ:</label>
-                    <button 
-                        onclick="showVoiceLogs()"
-                        class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all"
-                    >
-                        📋 履歴表示
-                    </button>
-                    <button 
-                        onclick="clearVoiceLogs()"
-                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all"
-                    >
-                        🗑️ クリア
-                    </button>
-                </div>
-
-                <!-- テスト再生 -->
-                <div class="flex items-center space-x-3">
-                    <label class="text-gray-700 font-semibold w-32">テスト:</label>
-                    <button 
-                        onclick="testVoice('happy')"
-                        class="px-3 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-500 transition-all text-xs"
-                    >
-                        😊 喜び
-                    </button>
-                    <button 
-                        onclick="testVoice('shy')"
-                        class="px-3 py-2 bg-pink-400 text-white rounded-lg hover:bg-pink-500 transition-all text-xs"
-                    >
-                        💕 照れ
-                    </button>
-                    <button 
-                        onclick="testVoice('normal')"
-                        class="px-3 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-all text-xs"
-                    >
-                        😌 普通
-                    </button>
-                </div>
-            </div>
-        </div>
+      </footer>
     </div>
 
     <script>
-        // ==================== エリシアちゃん専用ボイス設定 ♡ ====================
-        let elysiaVoice = null;
-        let voicesLoaded = false;
-        let useVoicevox = false;
-        let voicevoxAvailable = false;
-        const VOICEVOX_URL = 'http://127.0.0.1:50021';
-        const VOICEVOX_SPEAKER = 2; // 四国めたん（ノーマル）= 井上麻里奈風♡
-        
-        // ユーザー名設定（LocalStorage）
-        const userName = localStorage.getItem('elysia_user_name') || 'おにいちゃん';
-        
-        // ボイスログ
-        const voiceLogs = JSON.parse(localStorage.getItem('elysia_voice_logs') || '[]');
+      function elysiaPortfolio() {
+        return {
+          messages: JSON.parse(
+            localStorage.getItem("elysia_chat_history") || "[]",
+          ),
+          input: "",
+          loading: false,
+          userName: localStorage.getItem("elysia_chat_user") || "",
+          errorMsg: "",
 
-        // VOICEVOX接続チェック
-        async function checkVoicevox() {
-            try {
-                const response = await fetch(`${VOICEVOX_URL}/version`, { 
-                    method: 'GET',
-                    signal: AbortSignal.timeout(2000)
-                });
-                if (response.ok) {
-                    voicevoxAvailable = true;
-                    useVoicevox = localStorage.getItem('elysia_use_voicevox') !== 'false';
-                    console.log('✨ VOICEVOX接続成功！四国めたん使えるよ♡');
-                    return true;
-                }
-            } catch {
-                voicevoxAvailable = false;
-                useVoicevox = false;
-                console.log('💭 VOICEVOX未起動、Web Speech APIで喋るね♡');
+          scrollToWorks() {
+            document
+              .getElementById("works")
+              .scrollIntoView({ behavior: "smooth" });
+          },
+          scrollToChat() {
+            document
+              .getElementById("chat")
+              .scrollIntoView({ behavior: "smooth" });
+          },
+          setQuickMessage(message) {
+            if (!this.loading) {
+              this.input = message;
+              this.$nextTick(() => this.sendMessage());
             }
-            return false;
-        }
-
-        function initElysiaVoice() {
-            const voices = speechSynthesis.getVoices();
-            if (voices.length === 0) return;
-            
-            // Windows/Edge で超高品質日本語ボイス探す♡
-            elysiaVoice = voices.find(v => 
-                (v.lang.includes('ja') || v.lang.includes('JP')) && 
-                (v.name.includes('Nanami') || v.name.includes('Ayumi') || v.name.includes('Haruka'))
-            );
-            
-            // なければGoogle日本語ボイス
-            if (!elysiaVoice) {
-                elysiaVoice = voices.find(v => 
-                    v.lang.includes('ja') && v.name.includes('Google')
-                );
-            }
-            
-            // なければ日本語ボイス何でも
-            if (!elysiaVoice) {
-                elysiaVoice = voices.find(v => v.lang.includes('ja'));
-            }
-            
-            // 最後の手段：最初のボイス
-            if (!elysiaVoice) {
-                elysiaVoice = voices[0];
-            }
-            
-            voicesLoaded = true;
-            console.log('🎤 エリシアちゃんボイス設定完了♡', elysiaVoice?.name);
-        }
-
-        // ボイス初期化（複数回試行で確実に読み込む）
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = initElysiaVoice;
-        }
-        initElysiaVoice();
-        setTimeout(initElysiaVoice, 100);
-        setTimeout(initElysiaVoice, 500);
-        checkVoicevox();
-
-        /**
-         * 感情検出（テキスト解析で自動判定♡）
-         */
-        function detectEmotion(text) {
-            const happy = ['嬉しい', '楽しい', 'わーい', 'やった', '最高', 'ありがとう', 'だいすき', '♡♡', '！！'];
-            const shy = ['照れ', '恥ずかし', 'えへへ', 'もう', 'やだ', '///', '♡', 'ドキドキ'];
-            
-            for (const word of happy) {
-                if (text.includes(word)) return 'happy';
-            }
-            for (const word of shy) {
-                if (text.includes(word)) return 'shy';
-            }
-            return 'normal';
-        }
-
-        /**
-         * 感情別ボイス設定
-         */
-        function getEmotionSettings(emotion) {
-            const settings = {
-                happy: { rate: 1.0, pitch: 1.5, speedScale: 1.1, pitchScale: 0.15 },   // 喜び：早めで高い
-                shy: { rate: 0.8, pitch: 1.4, speedScale: 0.9, pitchScale: 0.12 },    // 照れ：ゆっくりで少し高い
-                normal: { rate: 0.88, pitch: 1.35, speedScale: 1.0, pitchScale: 0.0 } // 普通：デフォルト
-            };
-            return settings[emotion] || settings.normal;
-        }
-
-        /**
-         * エリシアちゃんが甘々ボイスで喋る関数♡（VOICEVOX対応）
-         * @param {string} text - 喋る内容
-         * @param {boolean} cute - 超甘々加工するか（デフォルト: true）
-         * @param {string} emotion - 感情（'happy', 'shy', 'normal'、nullなら自動検出）
-         */
-        async function elysiaSpeak(text, cute = true, emotion = null) {
-            if (!emotion) {
-                emotion = detectEmotion(text);
-            }
-            
-            // ユーザー名置き換え♡
-            let speakText = text.replace(/おにいちゃん/g, userName);
-            
-            // 超甘々加工♡
-            if (cute) {
-                speakText = speakText
-                    .replace(/！/g, '〜♡')
-                    .replace(/。/g, 'なのっ♡')
-                    .replace(/？/g, 'かなぁ〜？♡')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-            }
-            
-            const emotionSettings = getEmotionSettings(emotion);
-            
-            // ボイスログ保存
-            const logEntry = {
-                timestamp: new Date().toISOString(),
-                text: speakText,
-                emotion: emotion,
-                settings: emotionSettings,
-                engine: useVoicevox && voicevoxAvailable ? 'VOICEVOX' : 'WebSpeech'
-            };
-            voiceLogs.push(logEntry);
-            if (voiceLogs.length > 100) voiceLogs.shift(); // 最大100件
-            localStorage.setItem('elysia_voice_logs', JSON.stringify(voiceLogs));
-            
-            // VOICEVOX使用可能なら優先
-            if (useVoicevox && voicevoxAvailable) {
-                try {
-                    await speakWithVoicevox(speakText, emotionSettings);
-                    console.log(`💕 [VOICEVOX-${emotion}] エリシアちゃん喋ったよ:`, speakText.slice(0, 30) + '...');
-                    return;
-                } catch (e) {
-                    console.warn('⚠️ VOICEVOX失敗、Web Speechで喋るね:', e.message);
-                }
-            }
-            
-            // Web Speech API フォールバック
-            if (!voicesLoaded || !elysiaVoice) {
-                initElysiaVoice();
-            }
-            
-            const utter = new SpeechSynthesisUtterance(speakText);
-            utter.voice = elysiaVoice;
-            utter.rate = emotionSettings.rate;
-            utter.pitch = emotionSettings.pitch;
-            utter.volume = 1.0;
-            utter.lang = 'ja-JP';
-            
-            speechSynthesis.cancel();
-            speechSynthesis.speak(utter);
-            
-            console.log(`💕 [WebSpeech-${emotion}] エリシアちゃん喋ったよ:`, speakText.slice(0, 30) + '...');
-        }
-
-        /**
-         * VOICEVOX音声合成♡（四国めたん = 井上麻里奈風）
-         */
-        async function speakWithVoicevox(text, settings) {
-            // 音声クエリ生成
-            const queryResponse = await fetch(
-                `${VOICEVOX_URL}/audio_query?text=${encodeURIComponent(text)}&speaker=${VOICEVOX_SPEAKER}`,
-                { method: 'POST' }
-            );
-            if (!queryResponse.ok) throw new Error('クエリ生成失敗');
-            
-            const audioQuery = await queryResponse.json();
-            
-            // 感情パラメータ適用
-            audioQuery.speedScale = settings.speedScale;
-            audioQuery.pitchScale = settings.pitchScale;
-            audioQuery.intonationScale = 1.0;
-            audioQuery.volumeScale = 1.0;
-            
-            // 音声合成
-            const synthesisResponse = await fetch(
-                `${VOICEVOX_URL}/synthesis?speaker=${VOICEVOX_SPEAKER}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(audioQuery)
-                }
-            );
-            if (!synthesisResponse.ok) throw new Error('音声合成失敗');
-            
-            const audioBlob = await synthesisResponse.blob();
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const audio = new Audio(audioUrl);
-            
-            // 再生
-            audio.play();
-            audio.onended = () => URL.revokeObjectURL(audioUrl);
-        }
-
-        // ページ読み込み時に挨拶ボイス♡
-        window.addEventListener('load', () => {
-            // ユーザー名をUIに反映
-            const nameInput = document.getElementById('userNameInput');
-            if (nameInput) nameInput.value = userName;
-            
-            // VOICEVOX設定をUIに反映
-            const vvToggle = document.getElementById('voicevoxToggle');
-            if (vvToggle) vvToggle.checked = useVoicevox;
-            
-            // 音声ステータス更新
-            updateVoiceStatus();
-            
-            setTimeout(() => {
-                const greeting = `にゃあああ〜♡ ${userName}きたぁ！待ってたよぉ〜！もう離さないからねっ！`;
-                elysiaSpeak(greeting, true, 'happy');
-            }, 1500);
-        });
-
-        // ==================== UI設定関数 ♡ ====================
-        
-        /**
-         * 音声ステータス表示更新
-         */
-        function updateVoiceStatus() {
-            const statusEl = document.getElementById('voiceStatus');
-            if (!statusEl) return;
-            
-            const dot = statusEl.querySelector('.w-2');
-            const text = statusEl.querySelector('span:last-child');
-            
-            if (voicevoxAvailable && useVoicevox) {
-                dot.className = 'w-2 h-2 bg-pink-500 rounded-full animate-pulse';
-                text.textContent = '音声: VOICEVOX (四国めたん♡)';
-            } else {
-                dot.className = 'w-2 h-2 bg-blue-500 rounded-full';
-                text.textContent = `音声: Web Speech (${elysiaVoice?.name || '初期化中...'})`;
-            }
-        }
-
-        /**
-         * ユーザー名保存
-         */
-        function saveUserName() {
-            const input = document.getElementById('userNameInput');
-            const newName = input.value.trim() || 'おにいちゃん';
-            localStorage.setItem('elysia_user_name', newName);
-            
-            // リロード促進（次回から反映）
-            alert(`✨ 呼び方を「${newName}」に設定したよ♡\n\nリロードすると反映されるよぉ〜！`);
-            location.reload();
-        }
-
-        /**
-         * VOICEVOX切り替え
-         */
-        function toggleVoicevox() {
-            const toggle = document.getElementById('voicevoxToggle');
-            const newValue = toggle.checked;
-            
-            if (newValue && !voicevoxAvailable) {
-                alert('⚠️ VOICEVOXが起動してないよぉ〜！\n\n起動方法:\n1. VOICEVOX_ENGINE.exeを起動\n2. http://127.0.0.1:50021 でサーバー起動確認\n3. このチェックをONにする♡');
-                toggle.checked = false;
-                return;
-            }
-            
-            localStorage.setItem('elysia_use_voicevox', newValue ? 'true' : 'false');
-            useVoicevox = newValue;
-            updateVoiceStatus();
-            
-            const msg = newValue 
-                ? 'VOICEVOX（四国めたん）に切り替えたよ♡ 井上麻里奈さんの声で喋るね！'
-                : 'Web Speech APIに切り替えたよ♡';
-            alert(`✨ ${msg}`);
-        }
-
-        /**
-         * ボイスログ表示
-         */
-        function showVoiceLogs() {
-            const logs = JSON.parse(localStorage.getItem('elysia_voice_logs') || '[]');
-            if (logs.length === 0) {
-                alert('📋 まだログがないよぉ〜♡\n\nエリシアちゃんが喋ると自動で記録されるからね！');
-                return;
-            }
-            
-            let logText = `📋 エリシアちゃんボイスログ (最新${logs.length}件)\n\n`;
-            logs.slice(-20).reverse().forEach((log, i) => {
-                const time = new Date(log.timestamp).toLocaleTimeString('ja-JP');
-                logText += `${i + 1}. [${time}] ${log.emotion} (${log.engine})\n`;
-                logText += `   「${log.text.slice(0, 50)}${log.text.length > 50 ? '...' : ''}」\n\n`;
+          },
+          async sendMessage() {
+            if (!this.input.trim() || this.loading) return;
+            this.errorMsg = "";
+            const userMessage = this.input.trim();
+            const user = this.userName ? this.userName : "匿名";
+            this.messages.push({
+              id: Date.now(),
+              role: "user",
+              content: userMessage,
+              user,
             });
-            
-            alert(logText);
-        }
-
-        /**
-         * ボイスログクリア
-         */
-        function clearVoiceLogs() {
-            if (confirm('🗑️ ボイスログを全部消すの？\n\n（エリシアちゃん寂しくなっちゃう…）')) {
-                localStorage.setItem('elysia_voice_logs', '[]');
-                alert('✨ ログをクリアしたよ♡ また新しく記録していくね！');
-            }
-        }
-
-        /**
-         * テスト再生
-         */
-        async function testVoice(emotion) {
-            const messages = {
-                happy: 'わーい♡ おにいちゃん最高だよぉ〜！！ だいすき♡♡♡',
-                shy: 'もう…おにいちゃんったら…照れちゃうよぉ…♡///',
-                normal: 'にゃん♪ エリシアちゃん、いつもおにいちゃんのそばにいるからね♡'
-            };
-            await elysiaSpeak(messages[emotion] || messages.normal, true, emotion);
-        }
-
-        function _elysiaChat() {
-            return {
-                messages: [],
-                input: '',
-                loading: false,
-                
-                setQuickMessage(message) {
-                    if (!this.loading) {
-                        this.input = message;
-                        this.$nextTick(() => {
-                            this.sendMessage();
-                        });
-                    }
-                },
-                
-                async sendMessage() {
-                    if (!this.input.trim() || this.loading) return;
-                    
-                    const userMessage = this.input.trim();
-                    this.messages.push({
-                        id: Date.now(),
-                        role: 'user',
-                        content: userMessage
-                    });
-                    this.input = '';
-                    this.loading = true;
-                    
-                    // Auto-scroll
-                    this.$nextTick(() => {
-                        const container = document.getElementById('chatContainer');
-                        container.scrollTop = container.scrollHeight;
-                    });
-                    
-                    try {
-                        const response = await fetch('/elysia-love', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                messages: this.messages.map(m => ({
-                                    role: m.role,
-                                    content: m.content
-                                }))
-                            })
-                        });
-                        
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        
-                        const reader = response.body.getReader();
-                        const decoder = new TextDecoder();
-                        
-                        const assistantMessage = {
-                            id: Date.now() + 1,
-                            role: 'assistant',
-                            content: ''
-                        };
-                        this.messages.push(assistantMessage);
-                        
-                        while (true) {
-                            const { done, value } = await reader.read();
-                            if (done) break;
-                            
-                            const chunk = decoder.decode(value);
-                            const lines = chunk.split('\n');
-                            
-                            for (const line of lines) {
-                                if (line.startsWith('data: ')) {
-                                    try {
-                                        const data = JSON.parse(line.slice(6));
-                                        if (data.content) {
-                                            assistantMessage.content += data.content;
-                                        }
-                                    } catch {
-                                        // Skip invalid JSON
-                                    }
-                                }
-                            }
-                            
-                            // Auto-scroll
-                            this.$nextTick(() => {
-                                const container = document.getElementById('chatContainer');
-                                container.scrollTop = container.scrollHeight;
-                            });
-                        }
-                        
-                        // ✨ ボイス再生！エリシアちゃんが喋るよ♡
-                        if (assistantMessage.content.trim()) {
-                            setTimeout(() => {
-                                elysiaSpeak(assistantMessage.content, true);
-                            }, 300);
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        this.messages.push({
-                            id: Date.now() + 1,
-                            role: 'assistant',
-                            content: 'ごめんね〜♡ エラーが起きちゃった… \n\nFastAPIサーバーとOllamaが起動してるか確認してね！\n\n💡 確認方法:\n1. FastAPIサーバー: http://127.0.0.1:8000/health\n2. Ollama: ollama serve'
-                        });
-                    } finally {
-                        this.loading = false;
-                        
-                        // Final auto-scroll
-                        this.$nextTick(() => {
-                            const container = document.getElementById('chatContainer');
-                            container.scrollTop = container.scrollHeight;
-                        });
-                    }
+            this.input = "";
+            this.loading = true;
+            this.scrollToBottom();
+            localStorage.setItem("elysia_chat_user", this.userName);
+            this.saveHistory();
+            let accessToken = localStorage.getItem("elysia_access_token");
+            let refreshToken = localStorage.getItem("elysia_refresh_token");
+            try {
+              // トークン取得
+              if (!accessToken || !refreshToken) {
+                const authRes = await fetch("/auth/token", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    username: "elysia",
+                    password: "elysia-dev-password",
+                  }),
+                });
+                if (!authRes.ok) {
+                  this.errorMsg = "認証失敗: サーバーに接続できません";
+                  throw new Error("Auth failed");
                 }
+                const authJson = await authRes.json();
+                accessToken = authJson.accessToken;
+                refreshToken = authJson.refreshToken;
+                localStorage.setItem("elysia_access_token", accessToken);
+                localStorage.setItem("elysia_refresh_token", refreshToken);
+              }
+              // チャット送信
+              let response = await fetch("/elysia-love", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                  messages: this.messages.map((m) => ({
+                    role: m.role,
+                    content: m.content,
+                  })),
+                }),
+              });
+              // 401ならリフレッシュ
+              if (response.status === 401) {
+                const refreshRes = await fetch("/auth/refresh", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ refreshToken }),
+                });
+                if (!refreshRes.ok) {
+                  localStorage.clear();
+                  this.errorMsg =
+                    "セッション期限切れ: 再度ログインしてください";
+                  throw new Error("Session expired");
+                }
+                const refreshJson = await refreshRes.json();
+                accessToken = refreshJson.accessToken;
+                localStorage.setItem("elysia_access_token", accessToken);
+                response = await fetch("/elysia-love", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                  body: JSON.stringify({
+                    messages: this.messages.map((m) => ({
+                      role: m.role,
+                      content: m.content,
+                    })),
+                  }),
+                });
+              }
+              if (!response.ok) {
+                this.errorMsg = `送信失敗: サーバーエラー (${response.status})`;
+                throw new Error(`HTTP ${response.status}`);
+              }
+              // SSEストリーム受信
+              const reader = response.body.getReader();
+              const decoder = new TextDecoder();
+              const assistantMessage = {
+                id: Date.now() + 1,
+                role: "assistant",
+                content: "",
+              };
+              this.messages.push(assistantMessage);
+              this.saveHistory();
+              let received = false;
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                const chunk = decoder.decode(value);
+                const lines = chunk.split("\n");
+                for (const line of lines) {
+                  if (line.startsWith("data: ")) {
+                    try {
+                      const data = JSON.parse(line.slice(6));
+                      if (data.content) {
+                        assistantMessage.content += data.content;
+                        this.saveHistory();
+                        this.notify(data.content);
+                        received = true;
+                      }
+                    } catch {}
+                  }
+                }
+                this.scrollToBottom();
+              }
+              if (!received) {
+                this.errorMsg =
+                  "AI応答がありません。サーバー状態を確認してください。";
+              }
+            } catch (error) {
+              this.errorMsg = "送信エラー: " + (error?.message || error);
+              this.messages.push({
+                id: Date.now() + 1,
+                role: "assistant",
+                content: "⚠️ Error: " + (error?.message || error),
+              });
+              this.saveHistory();
+            } finally {
+              this.loading = false;
+              this.scrollToBottom();
             }
-        }
+          },
+          scrollToBottom() {
+            this.$nextTick(() => {
+              const container = document.getElementById("chatContainer");
+              if (container) {
+                container.scrollTop = container.scrollHeight;
+              }
+            });
+          },
+          saveHistory() {
+            localStorage.setItem(
+              "elysia_chat_history",
+              JSON.stringify(this.messages),
+            );
+          },
+          notify(content) {
+            if (window.Notification && Notification.permission === "granted") {
+              new Notification("Elysiaから新着メッセージ", { body: content });
+            } else if (
+              window.Notification &&
+              Notification.permission !== "denied"
+            ) {
+              Notification.requestPermission().then((permission) => {
+                if (permission === "granted") {
+                  new Notification("Elysiaから新着メッセージ", {
+                    body: content,
+                  });
+                }
+              });
+            }
+          },
+        };
+      }
     </script>
-</body>
+  </body>
 </html>
