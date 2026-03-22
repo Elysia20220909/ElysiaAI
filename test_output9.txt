@@ -1,0 +1,217 @@
+bun test v1.3.4 (5eb2145b)
+
+tests\api.test.ts:
+(skip) Health Endpoints > should return OK for /ping
+(skip) Health Endpoints > should return health status for /health
+(skip) Metrics Endpoint > should return Prometheus metrics
+(skip) Authentication > should reject invalid credentials
+(skip) Authentication > should issue tokens for valid credentials
+(skip) Authentication > should refresh access token
+(skip) Authentication > should reject requests without token
+(skip) Authentication > should accept requests with valid token
+(skip) Input Validation > (unnamed)
+(skip) Input Validation > should reject too long queries
+(skip) Input Validation > should reject invalid rating
+(skip) Rate Limiting > (unnamed)
+(skip) Rate Limiting > should enforce rate limits
+(skip) Chat API > (unnamed)
+(skip) Chat API > should accept valid chat request
+(skip) Chat API > should support different modes
+(skip) Security Headers > should include security headers
+
+tests\chat-comprehensive.test.ts:
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> (unnamed)
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 騾壼ｸｸ縺ｮ繝√Ε繝・ヨ繝｡繝・そ繝ｼ繧ｸ縺梧ｭ｣蟶ｸ縺ｫ蜃ｦ逅・＆繧後ｋ
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 髟ｷ譁・け繧ｨ繝ｪ・・00譁・ｭ怜宛髯撰ｼ峨・繝舌Μ繝・・繧ｷ繝ｧ繝ｳ縺梧ｩ溯・縺吶ｋ
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 蜊ｱ髯ｺ縺ｪ繧ｭ繝ｼ繝ｯ繝ｼ繝会ｼ・QL豕ｨ蜈･遲会ｼ峨′讀懷・縺輔ｌ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> XSS謾ｻ謦・′繧ｵ繝九ち繧､繧ｺ縺輔ｌ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 隱崎ｨｼ縺ｪ縺励〒繝√Ε繝・ヨAPI縺ｫ繧｢繧ｯ繧ｻ繧ｹ縺吶ｋ縺ｨ繧ｨ繝ｩ繝ｼ縺ｫ縺ｪ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 辟｡蜉ｹ縺ｪ繝医・繧ｯ繝ｳ縺梧拠蜷ｦ縺輔ｌ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 繝√Ε繝・ヨ繝｢繝ｼ繝会ｼ・weet/normal/professional・峨′驕ｩ逕ｨ縺輔ｌ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 繝｡繝・そ繝ｼ繧ｸ謨ｰ蛻ｶ髯撰ｼ域怙螟ｧ8莉ｶ・峨′讖溯・縺吶ｋ
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 遨ｺ縺ｮ繝｡繝・そ繝ｼ繧ｸ縺梧拠蜷ｦ縺輔ｌ繧・(pass) 繧ｨ繝ｩ繝ｼ繝上Φ繝峨Μ繝ｳ繧ｰ - 荳頑ｵ√し繝ｼ繝薙せ髫懷ｮｳ > FastAPI/Ollama譛ｪ襍ｷ蜍墓凾縺ｮ繧ｰ繝ｬ繝ｼ繧ｹ繝輔Ν繝・げ繝ｬ繝ｼ繝・(pass) 繧ｨ繝ｩ繝ｼ繝上Φ繝峨Μ繝ｳ繧ｰ - 荳頑ｵ√し繝ｼ繝薙せ髫懷ｮｳ > 繧ｿ繧､繝繧｢繧ｦ繝亥・逅・′驕ｩ蛻・↓讖溯・縺吶ｋ
+邃ｹ・・ 荳頑ｵ√し繝ｼ繝薙せ髫懷ｮｳ譎ゅ・繝・せ繝医・謇句虚縺ｧ遒ｺ隱肴耳螂ｨ・・astAPI蛛懈ｭ｢ 竊・繝√Ε繝・ヨ隧ｦ陦鯉ｼ・邃ｹ・・ 繧ｿ繧､繝繧｢繧ｦ繝医ユ繧ｹ繝医・螳溽腸蠅・〒遒ｺ隱肴耳螂ｨ・・AG_TIMEOUT險ｭ螳壹ｒ遏ｭ縺上＠縺ｦ隧ｦ陦鯉ｼ・邃ｹ・・ 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ繝・せ繝医・locustfile.py繧剃ｽｿ逕ｨ縺励※螳滓命謗ｨ螂ｨ
+(pass) 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ繝・せ繝・> 100莉ｶ縺ｮ遏ｭ縺・Γ繝・そ繝ｼ繧ｸ繧帝ｫ倬溷・逅・〒縺阪ｋ
+
+tests\docker.test.ts:
+'docker' is not recognized as an internal or external command,
+operable program or batch file.
+笞・・ Docker not available (OK for CI environments)
+(pass) Docker Validation Tests > Docker is available [62.00ms]
+笨・Dockerfile.production syntax valid
+(pass) Docker Validation Tests > Dockerfile.production syntax is valid
+   - 3 FROM stages
+   - WORKDIR: true
+   - EXPOSE: true
+笨・docker-compose.yml syntax valid
+   - Has healthcheck: true
+   - Has restart policy: true
+(pass) Docker Validation Tests > docker-compose.yml syntax is valid
+笨・.dockerignore properly configured
+(pass) Docker Validation Tests > .dockerignore is properly configured
+103 | 			"Dockerfile",
+104 | 		];
+105 | 
+106 | 		for (const file of requiredFiles) {
+107 | 			const exists = fs.existsSync(file);
+108 | 			expect(exists).toBe(true);
+                        ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\docker.test.ts:108:19)
+(fail) Docker Validation Tests > Docker build would succeed (dry run)
+笨・Service 'elysia' defined
+笨・Service 'ollama' defined
+笨・Service 'redis' defined
+(pass) Multi-Service Architecture Tests > docker-compose defines multiple profiles
+笨・Docker network properly configured
+(pass) Multi-Service Architecture Tests > Network configuration is present
+笨・Docker volumes configured
+(pass) Multi-Service Architecture Tests > Volume mounts are configured
+
+tests\game.test.ts:
+(skip) Elysia Network Game API > 繧ｲ繝ｼ繝蛻晄悄蛹泡PI縺梧ｭ｣蟶ｸ縺ｫ蜍穂ｽ懊☆繧・(skip) Elysia Network Game API > 繧ｨ繝ｼ繧ｸ繧ｧ繝ｳ繝育ｧｻ蜍輔〒繧ｿ繝ｼ繝ｳ繝ｻ螻･豁ｴ繝ｻ繧ｹ繧ｳ繧｢縺梧峩譁ｰ縺輔ｌ繧・(skip) Elysia Network Game API > 繧ｹ繧ｳ繧｢10轤ｹ縺ｧ蜍晁・′豎ｺ螳壹☆繧・
+tests\integration.test.ts:
+笨・Build output valid
+(pass) Integration Tests - Full Stack > TypeScript build produces valid output
+20 | 		const pkgPath = path.join(process.cwd(), "package.json");
+21 | 		const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+22 | 
+23 | 		expect(pkg.scripts).toHaveProperty("dev");
+24 | 		expect(pkg.scripts).toHaveProperty("lint");
+25 | 		expect(pkg.scripts).toHaveProperty("start");
+                           ^
+error: expect(received).toHaveProperty(path)
+
+Expected path: "start"
+
+Unable to find property
+
+      at <anonymous> (C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\integration.test.ts:25:23)
+(fail) Integration Tests - Full Stack > Package.json has all required scripts
+笨・Bun runtime available: 1.3.4
+(pass) Integration Tests - Full Stack > Environment can handle TypeScript compilation [47.00ms]
+笨・Python requirements documented
+(pass) Integration Tests - Full Stack > Python FastAPI dependencies are documented
+笨・TypeScript configuration valid
+(pass) Configuration Validation > TypeScript config is valid
+笨・Webpack configuration valid
+(pass) Configuration Validation > Webpack config is valid
+笨・Biome configuration present
+(pass) Configuration Validation > Biome config exists
+笨・deploy.sh has proper shebang
+笨・deploy.sh has proper shebang
+(pass) Deployment Files Validation > All deployment scripts are executable (on Unix)
+笨・README.md exists and has content
+笨・README.md exists and has content
+(pass) Deployment Files Validation > Documentation files exist [15.00ms]
+
+tests\phase5.test.ts:
+[32m[INFO][0m 2026-03-22T05:08:16.596Z Audit logs loaded {
+  count: 54,
+}
+(pass) Phase 5 Features > Audit Logger > should log API requests automatically
+(pass) Phase 5 Features > Audit Logger > should extract userId from JWT token
+(pass) Phase 5 Features > Audit Logger > should detect action from HTTP method
+(pass) Phase 5 Features > Audit Logger > should extract resource from URL path
+(pass) Phase 5 Features > Audit Logger > should detect AUTH action for login endpoint [15.00ms]
+(pass) Phase 5 Features > Audit Logger > should get user activity from audit logs
+(pass) Phase 5 Features > WebSocket Integration > should initialize WebSocket server with HTTP server
+(pass) Phase 5 Features > WebSocket Integration > should handle WebSocket connections
+(pass) Phase 5 Features > WebSocket Integration > should broadcast messages to rooms
+[32m[INFO][0m 2026-03-22T05:08:16.620Z Job queue initialized {
+  host: "localhost",
+  port: 6379,
+  tls: false,
+}
+[32m[INFO][0m 2026-03-22T05:08:16.695Z Cron task added {
+  name: "db-backup",
+  cronTime: "0 3 * * *",
+}
+[32m[INFO][0m 2026-03-22T05:08:16.700Z Cron task added {
+  name: "log-cleanup",
+  cronTime: "0 4 * * *",
+}
+[32m[INFO][0m 2026-03-22T05:08:16.708Z Cron task added {
+  name: "file-cleanup",
+  cronTime: "0 5 * * 0",
+}
+[32m[INFO][0m 2026-03-22T05:08:16.709Z Cron scheduler initialized {
+  tasks: 7,
+}
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+It is highly recommended to use a minimum Redis version of 6.2.0
+             Current: 5.0.14.1
+(pass) Phase 5 Features > Admin Dashboard API > should return job queue statistics [31.00ms]
+(pass) Phase 5 Features > Admin Dashboard API > should return cron task statistics [16.00ms]
+(pass) Phase 5 Features > Admin Dashboard API > should return audit log statistics
+(pass) Phase 5 Features > Admin Dashboard API > should search audit logs with filters
+(pass) Phase 5 Features > Admin Dashboard API > should export audit logs in JSON format
+(pass) Phase 5 Features > Admin Dashboard API > should export audit logs in CSV format
+(pass) Phase 5 Features > Admin Dashboard API > should add jobs to queue [15.00ms]
+(pass) Phase 5 Features > Admin Dashboard API > should list cron tasks
+(pass) Phase 5 Features > Admin Dashboard API > should get resource history from audit logs [16.00ms]
+[32m[INFO][0m 2026-03-22T05:08:16.780Z Old audit logs cleaned up {
+  deleted: 0,
+  remaining: 63,
+  maxAgeDays: 365,
+}
+(pass) Phase 5 Features > Admin Dashboard API > should cleanup old logs
+
+tests\prisma-integration.test.ts:
+[31m[ERROR][0m 2026-03-22T05:08:16.802Z Job failed 
+(pass) Prisma Database Integration Tests > 繝ｦ繝ｼ繧ｶ繝ｼ菴懈・: 譁ｰ隕上Θ繝ｼ繧ｶ繝ｼ繧剃ｽ懈・縺ｧ縺阪ｋ [218.00ms]
+(pass) Prisma Database Integration Tests > 繝ｦ繝ｼ繧ｶ繝ｼ隱崎ｨｼ: 豁｣縺励＞繝代せ繝ｯ繝ｼ繝峨〒隱崎ｨｼ謌仙粥 [672.00ms]
+(pass) Prisma Database Integration Tests > 繝ｦ繝ｼ繧ｶ繝ｼ隱崎ｨｼ: 髢馴＆縺｣縺溘ヱ繧ｹ繝ｯ繝ｼ繝峨〒隱崎ｨｼ螟ｱ謨・[235.00ms]
+(pass) Prisma Database Integration Tests > 繝√Ε繝・ヨ: 繧ｻ繝・す繝ｧ繝ｳ菴懈・
+(pass) Prisma Database Integration Tests > 繝√Ε繝・ヨ: 繝｡繝・そ繝ｼ繧ｸ菫晏ｭ・[15.00ms]
+(pass) Prisma Database Integration Tests > 繝√Ε繝・ヨ: 隍・焚繝｡繝・そ繝ｼ繧ｸ菫晏ｭ・[16.00ms]
+(pass) Prisma Database Integration Tests > 繝輔ぅ繝ｼ繝峨ヰ繝・け: 繝昴ず繝・ぅ繝冶ｩ穂ｾ｡繧剃ｿ晏ｭ・(pass) Prisma Database Integration Tests > 繝輔ぅ繝ｼ繝峨ヰ繝・け: 繝阪ぎ繝・ぅ繝冶ｩ穂ｾ｡繧剃ｿ晏ｭ・(pass) Prisma Database Integration Tests > 繝輔ぅ繝ｼ繝峨ヰ繝・け: 邨ｱ險域ュ蝣ｱ繧貞叙蠕・[15.00ms]
+(pass) Database Health Checks > 繝・・繧ｿ繝吶・繧ｹ謗･邯夂｢ｺ隱・(pass) Database Health Checks > 繝・・繝悶Ν蟄伜惠遒ｺ隱・
+tests\server.test.ts:
+(skip) Elysia AI Server Tests > (unnamed)
+(skip) Elysia AI Server Tests > Health check endpoint returns 200
+(skip) Elysia AI Server Tests > Static HTML is served
+(skip) Elysia AI Server Tests > Chat endpoint accepts POST requests
+(skip) Elysia AI Server Tests > (unnamed)
+(skip) RAG API Tests (if available) > RAG endpoint is reachable
+笨・繝・せ繝医ョ繝ｼ繧ｿ繧ｯ繝ｪ繧｢螳御ｺ・笨・繝・せ繝医け繝ｪ繝ｼ繝ｳ繧｢繝・・螳御ｺ・笨・Dockerfile.production valid
+(pass) Docker Configuration Tests > Dockerfile.production exists and is valid
+笨・docker-compose.yml valid
+(pass) Docker Configuration Tests > docker-compose.yml exists and is valid
+笨・AWS CloudFormation template valid
+(pass) Cloud Configuration Tests > AWS CloudFormation template exists [16.00ms]
+笨・GCP Cloud Build config valid
+(pass) Cloud Configuration Tests > GCP Cloud Build config exists
+(skip) Swift Integration Tests > Swift Package.swift exists
+(skip) Swift Integration Tests > Swift client source exists
+
+tests\unit.test.ts:
+(pass) Metrics Collector > should increment request counter
+(pass) Metrics Collector > should record request duration
+(pass) Metrics Collector > should increment error counter
+(pass) Metrics Collector > should track active connections
+[32m[INFO][0m 2026-03-22T05:08:18.142Z Test info message 
+(pass) Metrics Collector > should generate Prometheus format
+[32m[INFO][0m 2026-03-22T05:08:18.143Z Test with context {
+  userId: "123",
+  action: "test",
+}
+[31m[ERROR][0m 2026-03-22T05:08:18.144Z Error occurred 
+[32m[INFO][0m 2026-03-22T05:08:18.146Z GET /test 200 
+(pass) Logger > should log info messages
+(pass) Logger > should log with context
+(pass) Logger > should log errors with stack trace
+(pass) Logger > should log HTTP requests
+(pass) Cache Manager > should set and get value [16.00ms]
+(pass) Cache Manager > should return null for non-existent key
+(pass) Cache Manager > should delete key
+(pass) Cache Manager > should check if key exists
+(pass) Cache Manager > should respect TTL [1500.00ms]
+(pass) Cache Manager > should increment counter [16.00ms]
+(pass) Cache Manager > should use getOrSet pattern
+(pass) Cache Manager > should invalidate by pattern
+
+tests\e2e\app.spec.ts:
+Skipping Playwright E2E tests; set RUN_E2E_TESTS=true to enable.
