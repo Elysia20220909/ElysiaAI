@@ -100,7 +100,7 @@ describe("Docker Validation Tests", () => {
 			"config/internal/tsconfig.json",
 			"config/internal/webpack.config.js",
 			"src/index.ts",
-			"config/docker/Dockerfile.production",
+			"Dockerfile",
 		];
 
 		for (const file of requiredFiles) {

@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "bun:test";
-import { auditLogger } from "../src/lib/audit-logger";
-import { cronScheduler } from "../src/lib/cron-scheduler";
-import { jobQueue } from "../src/lib/job-queue";
+import { auditLogger } from "../packages/server/src/lib/audit-logger";
+import { cronScheduler } from "../packages/server/src/lib/cron-scheduler";
+import { jobQueue } from "../packages/server/src/lib/job-queue";
 
 describe("Phase 5 Features", () => {
 	describe("Audit Logger", () => {
@@ -130,7 +130,9 @@ describe("Phase 5 Features", () => {
 	describe("WebSocket Integration", () => {
 		it("should initialize WebSocket server with HTTP server", async () => {
 			// WebSocket manager is initialized in src/index.ts
-			const { wsManager } = await import("../src/lib/websocket-manager");
+			const { wsManager } = await import(
+				"../packages/server/src/lib/websocket-manager"
+			);
 
 			expect(wsManager).toBeDefined();
 			expect(typeof wsManager.getStats).toBe("function");
@@ -141,14 +143,18 @@ describe("Phase 5 Features", () => {
 		});
 
 		it("should handle WebSocket connections", async () => {
-			const { wsManager } = await import("../src/lib/websocket-manager");
+			const { wsManager } = await import(
+				"../packages/server/src/lib/websocket-manager"
+			);
 
 			const initialStats = wsManager.getStats();
 			expect(initialStats.totalClients).toBeGreaterThanOrEqual(0);
 		});
 
 		it("should broadcast messages to rooms", async () => {
-			const { wsManager } = await import("../src/lib/websocket-manager");
+			const { wsManager } = await import(
+				"../packages/server/src/lib/websocket-manager"
+			);
 
 			// Test broadcast functionality
 			wsManager.broadcast({

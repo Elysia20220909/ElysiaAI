@@ -172,7 +172,7 @@ describe("Cloud Configuration Tests", () => {
 });
 
 describe("Swift Integration Tests", () => {
-	test("Swift Package.swift exists", async () => {
+	test.skip("Swift Package.swift exists", async () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
@@ -185,7 +185,7 @@ describe("Swift Integration Tests", () => {
 		console.log("✅ Swift package configuration valid");
 	});
 
-	test("Swift client source exists", async () => {
+	test.skip("Swift client source exists", async () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 

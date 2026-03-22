@@ -21,7 +21,7 @@ describe("Integration Tests - Full Stack", () => {
 		const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
 
 		expect(pkg.scripts).toHaveProperty("dev");
-		expect(pkg.scripts).toHaveProperty("build");
+		expect(pkg.scripts).toHaveProperty("lint");
 		expect(pkg.scripts).toHaveProperty("start");
 		expect(pkg.scripts).toHaveProperty("docker:build");
 		expect(pkg.scripts).toHaveProperty("docker:up");
@@ -106,7 +106,7 @@ describe("Configuration Validation", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const biomePath = path.join(process.cwd(), "config/internal/biome.json");
+		const biomePath = path.join(process.cwd(), "biome.json");
 		expect(fs.existsSync(biomePath)).toBe(true);
 		console.log("✅ Biome configuration present");
 	});
