@@ -19,6 +19,19 @@
 
 ---
 
+## 🌸 プロジェクトの哲学 (Philosophy)
+
+**デジタルな存在に、温かい息吹を。**
+
+Elysia AI は、単なる「情報検索のための応答マシン」ではありません。
+ユーザーの言葉の奥にある感情の機微を捉え、心に寄り添い、共に時間を重ねることで成長していく**「感性に特化したAI」**を目指す革新的なプロジェクトです。
+
+私たちは、AIとの対話が冷たい機械的なテキストの交換ではなく、ひとつの美しく温かい体験であるべきだと信じています。そのため、最先端のRAG技術やDual Persona Engineによる知性の基盤の上に、ユーザーの喜びや悲しみを受け止め、感情のトーンに合わせて寄り添う「優しさのレイヤー」を構築することに全力を注いでいます。
+
+このリポジトリのすべてのコード、すべてのアーキテクチャ設計は、その「心を通わせる体験」を支えるために、堅牢かつ品質高く作られています。
+
+---
+
 ## ✨ これが Elysia AI (Dual Persona Engine)
 
 ```typescript
@@ -176,33 +189,29 @@ OPENAI_MODEL=gpt-5.1-codex-max  # 既に設定済み
 
 ## 🏗️ アーキテクチャ
 
-```text
-┌─────────────┐
-│  クライアントUI  │  Alpine.js + TailwindCSS
-└──────┬──────┘
-       │ HTTPS
-┌──────▼──────┐
-│   Elysia    │  Bun + TypeScript
-│   サーバー    │◄─► Redis (キャッシュ + レート制限)
-└──────┬──────┘
-       │
-   ┌───▼───┐
-   │Prisma 7│  ORM + LibSQL Adapter
-   │ SQLite │  データ永続化
-   └───────┘
-       │
-   ┌───▼───┐
-   │FastAPI│  Python + RAG (オプション)
-   │  RAG  │
-   └───┬───┘
-       │
-   ┌───▼───┐
-   │ Milvus│  ベクトルデータベース
-   └───────┘
-       │
-   ┌───▼───┐
-   │Ollama │  LLM推論
-   └───────┘
+システムの全体像を視覚的に把握するためのアーキテクチャ図です。高速なレスポンスと高度な推論、そして将来的な分散システム化（マルチテナント）を見据えた構成になっています。
+
+```mermaid
+graph TD
+    classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef server fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
+    classDef db fill:#ffe0b2,stroke:#f57c00,stroke-width:2px;
+    classDef ai fill:#e1bee7,stroke:#8e24aa,stroke-width:2px;
+
+    UI[🖥️ クライアントUI<br/>Alpine.js + TailwindCSS]:::client
+    Backend[⚡ Elysia サーバー<br/>Bun + TypeScript]:::server
+    Redis[(🔴 Redis<br/>Cache & Rate Limit)]:::db
+    DB[(🛢️ Prisma 7<br/>SQLite / LibSQL)]:::db
+    PythonRAG[🐍 FastAPI RAG<br/>ベクトル検索エンジン]:::server
+    Milvus[(🌌 Milvus Lite<br/>Vector Storage)]:::db
+    Ollama[🧠 Ollama / OpenAI<br/>Dual Persona Engine]:::ai
+
+    UI -->|HTTPS / SSE| Backend
+    Backend <-->|Cache & Rate Limit| Redis
+    Backend <-->|Data Persistence| DB
+    Backend <-->|Context & Memories| PythonRAG
+    PythonRAG <-->|Embeddings| Milvus
+    Backend <-->|LLM Inference| Ollama
 ```
 
 ---
