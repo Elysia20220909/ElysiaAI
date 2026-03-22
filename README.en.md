@@ -268,11 +268,11 @@ cd cloud/gcp && ./deploy.sh
 
 ## 📚 Documentation
 
-- 📖 [Architecture Guide](docs/ARCHITECTURE.md)
+- 📖 [Architecture Guide](docs/architecture/ARCHITECTURE.md)
 - 🔌 [API Reference](docs/API.md)
 - 🔐 [Security Best Practices](docs/SECURITY.md)
 - 🚀 [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
-- 🤝 [Contributing Guidelines](CONTRIBUTING.md)
+- 🤝 [Contributing Guidelines](docs/community/CONTRIBUTING.md)
 - 📝 [Changelog](CHANGELOG.md)
 
 ---
