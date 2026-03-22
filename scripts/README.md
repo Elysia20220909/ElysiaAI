@@ -1,0 +1,52 @@
+# 📜 スクリプトディレクトリ
+
+このディレクトリには、自動化スクリプトが含まれています。
+
+## 📁 構成
+
+```plaintext
+scripts/
+├── verification/          # 検証スクリプト
+│   ├── verify-*.bat      # Windows検証
+│   ├── verify-*.ps1      # PowerShell検証
+│   ├── verify-*.sh       # Linux検証
+│   ├── auto-verify.bat   # 自動検証
+│   └── *test*.sh         # テストシェルスクリプト
+├── security/             # セキュリティスクリプト
+│   ├── firewall-setup.sh
+│   ├── ssl-setup.sh
+│   └── complete-security-setup.sh
+├── dev-*.ts              # 開発用スクリプト
+├── setup-*.ts            # セットアップスクリプト
+└── maintenance-*.ps1     # メンテナンススクリプト
+```
+
+## 🎯 主な機能
+
+### 🔧 セットアップ
+
+- `setup-database.ts` - データベース初期化
+- `setup-python.ps1` - Python環境構築
+- `setup-production.sh` - 本番環境セットアップ
+
+### 🛡️ セキュリティ
+
+- `complete-security-setup.sh` - 完全なセキュリティ設定
+- `firewall-setup.sh` - ファイアウォール設定
+- `ssl-setup.sh` - SSL/TLS証明書設定
+
+### 🔍 検証
+
+- `verify-services.ps1` - サービス動作確認
+- `verify-curl.bat` - API接続確認
+- `auto-verify.bat` - 自動検証実行
+
+### 🔄 メンテナンス
+
+- `maintenance-weekly.ps1` - 週次メンテナンス
+- `maintenance-monthly.ps1` - 月次メンテナンス
+- `backup.ps1` - バックアップ実行
+
+---
+
+Made with 💜 by Elysia AI

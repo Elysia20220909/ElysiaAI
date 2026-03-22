@@ -1,19 +1,25 @@
+# 隠蔽ディレクトリ
+src/.dev/
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+**/node_modules/
+.pnp
 .pnp.js
 
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
 # production
-/build
+build/
+**/build/
+dist/
+**/dist/
+out/
+**/out/
+.next/
+**/ .next/
 
 # misc
 .DS_Store
@@ -32,6 +38,33 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Protected configuration directory (legacy)
+/config/private/
+
+# Secure internal configurations (legacy)
+/src/config/internal/
+/src/core/security/
+/src/database/config/
+
+# Deep-hidden secure files - CRITICAL SECURITY
+/.internal/
+/.internal/**
+.internal/secrets/
+.internal/security/
+.internal/private/
+
+# Security-sensitive files
+**/secrets/
+**/private/
+**/.env.secrets
+**/*.pem
+**/*.key
+**/*.crt
+**/*.p12
+**/*.pfx
+**/service-account*.json
+**/credentials*.json
+
 # vercel
 .vercel
 
@@ -46,30 +79,52 @@ package-lock.json
 # project extras to ignore and keep Biome quiet
 /network_simulation/
 /python/venv/
-/python/*.db
 /python/**/*.db
-/dist/
-/logs/
 /outputs/
 
-# mobile
-/mobile/node_modules/
-/mobile/.expo/
-/mobile/dist/
+# Temporary and log files
+*.log
+*.tmp
+*.cache
+*-debug.log
+auth-debug.log
+server-swagger.log
+server.log
+node.log
+detailed.log
+bun.log
 
-# desktop
-/desktop/node_modules/
-/desktop/dist/
-/desktop/bun.lock
+# native and mobile
+.expo/
+**/node_modules/
+**/dist/
+**/build/
+**/bun.lock
+/src/generated/prisma
 
-# native C++ modules
-/native/node_modules/
-/native/build/
-/native/bun.lock
+# Database files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+dev.db
+prisma/dev.db
 
-# CUDA modules
-/cuda/node_modules/
-/cuda/build/
-/cuda/*.dll
-/cuda/*.obj
-/cuda/bun.lock
+# Prisma temp files
+prisma.config.bak
+prisma.config.mjs.bak
+
+# Backup files
+/backups/
+*.backup
+
+# Upload files
+/uploads/
+/temp/
+
+# Test results
+/test-results/
+/playwright-report/
+
+# External untracked dependencies
+/elysia/

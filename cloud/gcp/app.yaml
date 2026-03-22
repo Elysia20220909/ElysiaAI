@@ -43,9 +43,9 @@ readiness_check:
 
 # Environment variables
 env_variables:
-  NODE_ENV: 'production'
-  PORT: '3000'
-  PYTHON_PORT: '8000'
+  NODE_ENV: "production"
+  PORT: "3000"
+  PYTHON_PORT: "8000"
 
 # Beta features
 beta_settings:

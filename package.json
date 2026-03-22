@@ -1,76 +1,39 @@
 {
-	"name": "elysia-ai",
-	"version": "1.0.50",
-	"license": "MIT",
-	"description": "Elysia(Bun) + FastAPI + Milvus Lite + Ollama によるRAG AIチャット",
-	"private": false,
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/chloeamethyst/ElysiaJS.git"
-	},
-	"homepage": "https://github.com/chloeamethyst/ElysiaJS",
-	"bugs": {
-		"url": "https://github.com/chloeamethyst/ElysiaJS/issues"
-	},
-	"keywords": [
-		"Elysia",
-		"Bun",
-		"RAG",
-		"Ollama",
-		"Milvus",
-		"FastAPI",
-		"AI"
-	],
-	"author": "chloeamethyst",
-	"scripts": {
-		"test": "bun test",
-		"test:watch": "bun test --watch",
-		"dev": "bun run --watch src/index.ts",
-		"build": "webpack --config webpack.config.js --mode=production",
-		"start": "node dist/index.js",
-		"pack:zip": "powershell -NoProfile -Command \"if(Test-Path dist.zip){Remove-Item dist.zip -Force}; Compress-Archive -Path dist/* -DestinationPath dist.zip -Force\"",
-		"prepublishOnly": "bun run build",
-		"lint": "biome check .",
-		"format": "biome format --write .",
-		"fix": "biome check --write .",
-		"docker:build": "docker build -f Dockerfile.production -t elysia-ai:latest .",
-		"docker:up": "docker-compose up -d",
-		"docker:down": "docker-compose down",
-		"docker:logs": "docker-compose logs -f",
-		"aws:deploy": "cd cloud/aws && bash deploy.sh",
-		"gcp:deploy": "cd cloud/gcp && bash deploy.sh"
-	},
-	"dependencies": {
-		"@ai-sdk/openai": "^2.0.74",
-		"@elysiajs/cors": "^1.4.0",
-		"@elysiajs/html": "^1.4.0",
-		"@elysiajs/static": "^1.4.7",
-		"@zilliz/milvus2-sdk-node": "^2.6.5",
-		"ai": "^5.0.104",
-		"alpinejs": "^3.15.2",
-		"axios": "^1.13.2",
-		"elysia": "latest",
-		"htmx.org": "^2.0.8",
-		"ollama": "^0.6.3",
-		"ollama-ai-provider": "^1.2.0",
-		"sanitize-html": "^2.17.0"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "2.3.8",
-		"@types/node": "^24.10.1",
-		"@types/sanitize-html": "^2.16.0",
-		"bun-types": "latest",
-		"ts-loader": "^9.5.4",
-		"typescript": "^5.9.3",
-		"webpack": "^5.103.0",
-		"webpack-cli": "^6.0.1",
-		"webpack-node-externals": "^3.0.0"
-	},
-	"main": "dist/index.js",
-	"files": [
-		"dist",
-		"README.md",
-		"LICENSE"
-	],
-	"module": "src/index.js"
+  "name": "elysia-ai-monorepo",
+  "version": "1.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "bun test",
+    "dev": "bun --filter \"*\" dev",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "fix": "biome check --write .",
+    "clean": "powershell -ExecutionPolicy Bypass -File ./scripts/clean.ps1 -Deep",
+    "db:init": "bun --filter \"@elysia-ai/server\" db:init",
+    "db:migrate": "bun --filter \"@elysia-ai/server\" db:migrate",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,json}": [
+      "biome check --write"
+    ],
+    "*": [
+      "bun run scripts/security-scan.ts"
+    ]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.11",
+    "@playwright/test": "^1.58.2",
+    "axios": "^1.13.6",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "prisma": "^7.5.0",
+    "react-test-renderer": "19.2.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.5.0"
+  }
 }

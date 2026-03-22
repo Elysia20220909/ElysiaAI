@@ -1,0 +1,215 @@
+bun test v1.3.4 (5eb2145b)
+
+tests\api.test.ts:
+(skip) Health Endpoints > should return OK for /ping
+(skip) Health Endpoints > should return health status for /health
+(skip) Metrics Endpoint > should return Prometheus metrics
+(skip) Authentication > should reject invalid credentials
+(skip) Authentication > should issue tokens for valid credentials
+(skip) Authentication > should refresh access token
+(skip) Authentication > should reject requests without token
+(skip) Authentication > should accept requests with valid token
+(skip) Input Validation > (unnamed)
+(skip) Input Validation > should reject too long queries
+(skip) Input Validation > should reject invalid rating
+(skip) Rate Limiting > (unnamed)
+(skip) Rate Limiting > should enforce rate limits
+(skip) Chat API > (unnamed)
+(skip) Chat API > should accept valid chat request
+(skip) Chat API > should support different modes
+(skip) Security Headers > should include security headers
+
+tests\chat-comprehensive.test.ts:
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> (unnamed)
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 騾壼ｸｸ縺ｮ繝√Ε繝・ヨ繝｡繝・そ繝ｼ繧ｸ縺梧ｭ｣蟶ｸ縺ｫ蜃ｦ逅・＆繧後ｋ
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 髟ｷ譁・け繧ｨ繝ｪ・・00譁・ｭ怜宛髯撰ｼ峨・繝舌Μ繝・・繧ｷ繝ｧ繝ｳ縺梧ｩ溯・縺吶ｋ
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 蜊ｱ髯ｺ縺ｪ繧ｭ繝ｼ繝ｯ繝ｼ繝会ｼ・QL豕ｨ蜈･遲会ｼ峨′讀懷・縺輔ｌ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> XSS謾ｻ謦・′繧ｵ繝九ち繧､繧ｺ縺輔ｌ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 隱崎ｨｼ縺ｪ縺励〒繝√Ε繝・ヨAPI縺ｫ繧｢繧ｯ繧ｻ繧ｹ縺吶ｋ縺ｨ繧ｨ繝ｩ繝ｼ縺ｫ縺ｪ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 辟｡蜉ｹ縺ｪ繝医・繧ｯ繝ｳ縺梧拠蜷ｦ縺輔ｌ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 繝√Ε繝・ヨ繝｢繝ｼ繝会ｼ・weet/normal/professional・峨′驕ｩ逕ｨ縺輔ｌ繧・(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 繝｡繝・そ繝ｼ繧ｸ謨ｰ蛻ｶ髯撰ｼ域怙螟ｧ8莉ｶ・峨′讖溯・縺吶ｋ
+(skip) 繝√Ε繝・ヨ讖溯・ - 蛹・峡逧・ユ繧ｹ繝・> 遨ｺ縺ｮ繝｡繝・そ繝ｼ繧ｸ縺梧拠蜷ｦ縺輔ｌ繧・(pass) 繧ｨ繝ｩ繝ｼ繝上Φ繝峨Μ繝ｳ繧ｰ - 荳頑ｵ√し繝ｼ繝薙せ髫懷ｮｳ > FastAPI/Ollama譛ｪ襍ｷ蜍墓凾縺ｮ繧ｰ繝ｬ繝ｼ繧ｹ繝輔Ν繝・げ繝ｬ繝ｼ繝・(pass) 繧ｨ繝ｩ繝ｼ繝上Φ繝峨Μ繝ｳ繧ｰ - 荳頑ｵ√し繝ｼ繝薙せ髫懷ｮｳ > 繧ｿ繧､繝繧｢繧ｦ繝亥・逅・′驕ｩ蛻・↓讖溯・縺吶ｋ
+邃ｹ・・ 荳頑ｵ√し繝ｼ繝薙せ髫懷ｮｳ譎ゅ・繝・せ繝医・謇句虚縺ｧ遒ｺ隱肴耳螂ｨ・・astAPI蛛懈ｭ｢ 竊・繝√Ε繝・ヨ隧ｦ陦鯉ｼ・邃ｹ・・ 繧ｿ繧､繝繧｢繧ｦ繝医ユ繧ｹ繝医・螳溽腸蠅・〒遒ｺ隱肴耳螂ｨ・・AG_TIMEOUT險ｭ螳壹ｒ遏ｭ縺上＠縺ｦ隧ｦ陦鯉ｼ・邃ｹ・・ 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ繝・せ繝医・locustfile.py繧剃ｽｿ逕ｨ縺励※螳滓命謗ｨ螂ｨ
+(pass) 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ繝・せ繝・> 100莉ｶ縺ｮ遏ｭ縺・Γ繝・そ繝ｼ繧ｸ繧帝ｫ倬溷・逅・〒縺阪ｋ
+
+tests\docker.test.ts:
+'docker' is not recognized as an internal or external command,
+operable program or batch file.
+笞・・ Docker not available (OK for CI environments)
+(pass) Docker Validation Tests > Docker is available [31.00ms]
+笨・Dockerfile.production syntax valid
+   - 3 FROM stages
+   - WORKDIR: true
+   - EXPOSE: true
+(pass) Docker Validation Tests > Dockerfile.production syntax is valid
+笨・docker-compose.yml syntax valid
+   - Has healthcheck: true
+   - Has restart policy: true
+(pass) Docker Validation Tests > docker-compose.yml syntax is valid
+笨・.dockerignore properly configured
+(pass) Docker Validation Tests > .dockerignore is properly configured
+103 | 			"config/docker/Dockerfile.production",
+104 | 		];
+105 | 
+106 | 		for (const file of requiredFiles) {
+107 | 			const exists = fs.existsSync(file);
+108 | 			expect(exists).toBe(true);
+                        ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\docker.test.ts:108:19)
+(fail) Docker Validation Tests > Docker build would succeed (dry run)
+笨・Service 'elysia' defined
+笨・Service 'ollama' defined
+笨・Service 'redis' defined
+(pass) Multi-Service Architecture Tests > docker-compose defines multiple profiles
+笨・Docker network properly configured
+(pass) Multi-Service Architecture Tests > Network configuration is present
+(pass) Multi-Service Architecture Tests > Volume mounts are configured
+笨・Docker volumes configured
+
+tests\game.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: Cannot find package 'axios' from 'C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\game.test.ts'
+-------------------------------
+
+
+tests\integration.test.ts:
+(pass) Integration Tests - Full Stack > TypeScript build produces valid output
+笨・Build output valid
+19 | 
+20 | 		const pkgPath = path.join(process.cwd(), "package.json");
+21 | 		const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+22 | 
+23 | 		expect(pkg.scripts).toHaveProperty("dev");
+24 | 		expect(pkg.scripts).toHaveProperty("build");
+                           ^
+error: expect(received).toHaveProperty(path)
+
+Expected path: "build"
+
+Unable to find property
+
+      at <anonymous> (C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\integration.test.ts:24:23)
+(fail) Integration Tests - Full Stack > Package.json has all required scripts
+(pass) Integration Tests - Full Stack > Environment can handle TypeScript compilation [32.00ms]
+笨・Bun runtime available: 1.3.4
+笨・Python requirements documented
+(pass) Integration Tests - Full Stack > Python FastAPI dependencies are documented
+笨・TypeScript configuration valid
+(pass) Configuration Validation > TypeScript config is valid
+笨・Webpack configuration valid
+(pass) Configuration Validation > Webpack config is valid
+105 | 	test("Biome config exists", async () => {
+106 | 		const fs = await import("node:fs");
+107 | 		const path = await import("node:path");
+108 | 
+109 | 		const biomePath = path.join(process.cwd(), "config/internal/biome.json");
+110 | 		expect(fs.existsSync(biomePath)).toBe(true);
+                                         ^
+error: expect(received).toBe(expected)
+
+Expected: true
+Received: false
+
+      at <anonymous> (C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\integration.test.ts:110:36)
+(fail) Configuration Validation > Biome config exists
+笨・deploy.sh has proper shebang
+笨・deploy.sh has proper shebang
+(pass) Deployment Files Validation > All deployment scripts are executable (on Unix)
+笨・README.md exists and has content
+笨・README.md exists and has content
+(pass) Deployment Files Validation > Documentation files exist [15.00ms]
+
+tests\phase5.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: Cannot find module '../src/lib/audit-logger' from 'C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\phase5.test.ts'
+-------------------------------
+
+
+tests\prisma-integration.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: Cannot find module '../src/lib/database-utils' from 'C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\prisma-integration.test.ts'
+-------------------------------
+
+
+tests\server.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: Cannot find package 'axios' from 'C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\server.test.ts'
+-------------------------------
+
+
+tests\unit.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: Cannot find module '../src/lib/cache' from 'C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\unit.test.ts'
+-------------------------------
+
+
+tests\e2e\app.spec.ts:
+
+# Unhandled error between tests
+-------------------------------
+error: Cannot find module '@playwright/test' from 'C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\tests\e2e\app.spec.ts'
+-------------------------------
+
+
+tests\integration\api.test.ts:
+(skip) Health Endpoints > GET /health - should return healthy status
+(skip) Health Endpoints > GET /metrics - should return Prometheus metrics
+(skip) API Root > GET / - should return HTML (landing page)
+(skip) Swagger Documentation > GET /swagger - should return Swagger UI
+(skip) Swagger Documentation > GET /swagger/json - should return OpenAPI spec
+(skip) Authentication Endpoints > POST /auth/token - should login and get tokens
+(skip) Authentication Endpoints > POST /auth/refresh - should refresh access token
+(skip) Authentication Endpoints > POST /auth/logout - should revoke refresh token
+(skip) Error Handling > GET /nonexistent - should return 404
+(skip) Error Handling > POST /auth/token - should return 401 for invalid credentials
+(skip) Rate Limiting > should enforce rate limits on repeated requests
+
+tests\performance\api-performance.test.ts:
+(skip) API Performance Tests > Health endpoint should respond within 100ms
+(skip) API Performance Tests > Root endpoint should respond within 50ms
+(skip) API Performance Tests > Swagger JSON should respond within 200ms
+(skip) API Performance Tests > Should handle concurrent health checks
+(skip) API Performance Tests > Database query performance (via profile endpoint)
+(skip) API Performance Tests > Memory usage should remain stable
+(skip) Load Testing (Light) > Should handle 100 requests within 5 seconds
+(skip) Load Testing (Light) > Should handle sequential requests efficiently
+(skip) Response Size Optimization > Health endpoint response should be compact
+(skip) Response Size Optimization > Swagger JSON should have reasonable size
+
+packages\mobile\hooks\useChat.test.ts:
+
+# Unhandled error between tests
+-------------------------------
+25 |   } catch {
+26 |     return null;
+27 |   }
+28 | }
+29 | if (!process.env.RNTL_SKIP_DEPS_CHECK) {
+30 |   ensurePeerDeps();
+       ^
+error: Incorrect version of "react-test-renderer" detected. Expected "19.2.3", but found "19.2.0".
+
+Fix it by running:
+npm install -D react-test-renderer@19.2.3
+      at <anonymous> (C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\node_modules\.bun\@testing-library+react-native@13.3.3+e9f4ff35851af302\node_modules\@testing-library\react-native\build\helpers\ensure-peer-deps.js:30:3)
+      at <anonymous> (C:\Users\hosih\OneDrive\繝峨く繝･繝｡繝ｳ繝・GitHub\ElysiaAI\node_modules\.bun\@testing-library+react-native@13.3.3+e9f4ff35851af302\node_modules\@testing-library\react-native\build\index.js:5:2)
+-------------------------------
+
+
+ 17 pass
+ 48 skip
+ 10 fail
+ 7 errors
+ 40 expect() calls
+Ran 75 tests across 13 files. [189.00ms]

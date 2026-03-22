@@ -16,7 +16,8 @@
 ## 📥 インストール手順（Windows）
 
 ### 1. VOICEVOX ダウンロード
-```
+
+```text
 公式サイト: https://voicevox.hiroshiba.jp/
 
 1. 「ダウンロード」ボタンクリック
@@ -25,7 +26,8 @@
 ```
 
 ### 2. インストール
-```
+
+```text
 .exe版の場合:
 - ダウンロードしたファイルを実行
 - 指示に従ってインストール
@@ -37,7 +39,8 @@
 ```
 
 ### 3. 初回起動設定
-```
+
+```text
 1. VOICEVOX.exe をダブルクリック
 2. 利用規約に同意
 3. キャラクター選択画面で「四国めたん」を確認
@@ -51,13 +54,15 @@
 ### 1. VOICEVOXサーバー起動
 
 #### 方法A: GUI版（簡単♡）
-```
+
+```text
 1. VOICEVOX.exe を起動
 2. メニュー → 「エンジン連携モード」をON
 3. 画面右下に「エンジン起動中 (Port: 50021)」表示を確認
 ```
 
 #### 方法B: ENGINE版（軽量）
+
 ```powershell
 # コマンドプロンプトまたはPowerShellで実行
 cd C:\path\to\voicevox_engine
@@ -69,14 +74,16 @@ cd C:\path\to\voicevox_engine
 ```
 
 ### 2. 接続確認
-```
+
+```text
 ブラウザで開く: http://127.0.0.1:50021/docs
 
 SwaggerUIが表示されればOK♡
 ```
 
 ### 3. エリシアAIで設定
-```
+
+```text
 1. http://localhost:3000 を開く
 2. 画面下部「🎤 ボイス設定」をクリック
 3. 「VOICEVOX使う（四国めたん♡）」にチェック
@@ -92,6 +99,7 @@ SwaggerUIが表示されればOK♡
 ### 推奨キャラクター
 
 #### 1. **四国めたん（ノーマル）** ← 超おすすめ♡
+
 ```javascript
 VOICEVOX_SPEAKER = 2
 
@@ -102,6 +110,7 @@ VOICEVOX_SPEAKER = 2
 ```
 
 #### 2. **四国めたん（あまあま）**
+
 ```javascript
 VOICEVOX_SPEAKER = 0
 
@@ -112,6 +121,7 @@ VOICEVOX_SPEAKER = 0
 ```
 
 #### 3. **四国めたん（セクシー）**
+
 ```javascript
 VOICEVOX_SPEAKER = 6
 
@@ -122,9 +132,10 @@ VOICEVOX_SPEAKER = 6
 ```
 
 ### キャラクター変更方法
+
 ```javascript
 // public/index.html の 308行目あたり
-const VOICEVOX_SPEAKER = 2;  // ← ここを変更
+const VOICEVOX_SPEAKER = 2; // ← ここを変更
 
 // スピーカーID一覧:
 // 0: 四国めたん（あまあま）
@@ -146,42 +157,44 @@ const VOICEVOX_SPEAKER = 2;  // ← ここを変更
 
 ```javascript
 function getEmotionSettings(emotion) {
-    const settings = {
-        // 喜び：早めで高い♡
-        happy: { 
-            rate: 1.0,          // Web Speech速度
-            pitch: 1.5,         // Web Speechピッチ
-            speedScale: 1.1,    // VOICEVOX速度
-            pitchScale: 0.15    // VOICEVOXピッチ
-        },
-        
-        // 照れ：ゆっくりで少し高い♡
-        shy: { 
-            rate: 0.8, 
-            pitch: 1.4, 
-            speedScale: 0.9, 
-            pitchScale: 0.12 
-        },
-        
-        // 普通：デフォルト♡
-        normal: { 
-            rate: 0.88, 
-            pitch: 1.35, 
-            speedScale: 1.0, 
-            pitchScale: 0.0 
-        }
-    };
-    return settings[emotion] || settings.normal;
+  const settings = {
+    // 喜び：早めで高い♡
+    happy: {
+      rate: 1.0, // Web Speech速度
+      pitch: 1.5, // Web Speechピッチ
+      speedScale: 1.1, // VOICEVOX速度
+      pitchScale: 0.15, // VOICEVOXピッチ
+    },
+
+    // 照れ：ゆっくりで少し高い♡
+    shy: {
+      rate: 0.8,
+      pitch: 1.4,
+      speedScale: 0.9,
+      pitchScale: 0.12,
+    },
+
+    // 普通：デフォルト♡
+    normal: {
+      rate: 0.88,
+      pitch: 1.35,
+      speedScale: 1.0,
+      pitchScale: 0.0,
+    },
+  };
+  return settings[emotion] || settings.normal;
 }
 ```
 
 ### パラメータ説明
 
 #### Web Speech API用
+
 - **rate**: 0.1〜10.0（速度、1.0が標準）
 - **pitch**: 0.0〜2.0（ピッチ、1.0が標準）
 
 #### VOICEVOX用
+
 - **speedScale**: 0.5〜2.0（速度、1.0が標準）
 - **pitchScale**: -0.15〜0.15（ピッチ調整）
 - **intonationScale**: 0.0〜2.0（抑揚、1.0が標準）
@@ -194,6 +207,7 @@ function getEmotionSettings(emotion) {
 ### VOICEVOXに接続できない
 
 #### 1. サーバー起動確認
+
 ```powershell
 # PowerShellで確認
 Invoke-RestMethod -Uri http://127.0.0.1:50021/version
@@ -203,6 +217,7 @@ Invoke-RestMethod -Uri http://127.0.0.1:50021/version
 ```
 
 #### 2. ポート競合確認
+
 ```powershell
 # ポート50021が使われているか確認
 netstat -an | findstr 50021
@@ -212,7 +227,8 @@ netstat -an | findstr 50021
 ```
 
 #### 3. ファイアウォール確認
-```
+
+```text
 Windows Defender ファイアウォール
 → 詳細設定
 → 受信の規則
@@ -224,7 +240,8 @@ Windows Defender ファイアウォール
 ### 音声が再生されない
 
 #### 1. ブラウザコンソール確認
-```
+
+```text
 F12 → Console タブ
 → エラーメッセージを確認
 
@@ -235,25 +252,27 @@ F12 → Console タブ
 ```
 
 #### 2. CORS設定（必要に応じて）
+
 ```python
 # VOICEVOX起動時にCORS有効化
 voicevox_engine.exe --cors_policy_mode all
 ```
 
 #### 3. 手動テスト
+
 ```javascript
 // ブラウザコンソールで実行
 async function testVV() {
-    const r1 = await fetch('http://127.0.0.1:50021/audio_query?text=テスト&speaker=2', {method: 'POST'});
-    const q = await r1.json();
-    const r2 = await fetch('http://127.0.0.1:50021/synthesis?speaker=2', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(q)
-    });
-    const blob = await r2.blob();
-    const audio = new Audio(URL.createObjectURL(blob));
-    audio.play();
+  const r1 = await fetch("http://127.0.0.1:50021/audio_query?text=テスト&speaker=2", { method: "POST" });
+  const q = await r1.json();
+  const r2 = await fetch("http://127.0.0.1:50021/synthesis?speaker=2", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(q),
+  });
+  const blob = await r2.blob();
+  const audio = new Audio(URL.createObjectURL(blob));
+  audio.play();
 }
 testVV();
 ```
@@ -263,7 +282,8 @@ testVV();
 ### 音声が遅い/カクつく
 
 #### 1. GPUアクセラレーション有効化
-```
+
+```text
 VOICEVOX設定
 → エンジン
 → 「GPUを使う」にチェック
@@ -272,7 +292,8 @@ VOICEVOX設定
 ```
 
 #### 2. CPU版で最適化
-```
+
+```text
 VOICEVOX設定
 → エンジン
 → 「CPUコア数」を調整（推奨: 物理コア数 - 1）
@@ -282,19 +303,20 @@ VOICEVOX設定
 
 ## 📊 性能比較
 
-| 項目 | Web Speech API | VOICEVOX |
-|------|----------------|----------|
-| **音質** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| **速度** | 即座（<100ms） | やや遅い（0.5〜1s） |
-| **リソース** | 軽量 | 中〜重量 |
-| **感情表現** | 限定的 | 自由自在 |
-| **エリシア再現度** | 70% | **98%♡** |
+| 項目               | Web Speech API | VOICEVOX            |
+| ------------------ | -------------- | ------------------- |
+| **音質**           | ⭐⭐⭐         | ⭐⭐⭐⭐⭐          |
+| **速度**           | 即座（<100ms） | やや遅い（0.5〜1s） |
+| **リソース**       | 軽量           | 中〜重量            |
+| **感情表現**       | 限定的         | 自由自在            |
+| **エリシア再現度** | 70%            | **98%♡**            |
 
 ---
 
 ## 🎯 おすすめ設定
 
 ### 最高品質（VOICEVOX）
+
 ```javascript
 // public/index.html
 const VOICEVOX_SPEAKER = 2;  // 四国めたん（ノーマル）
@@ -305,6 +327,7 @@ shy: { speedScale: 0.85, pitchScale: 0.10 }    // もっとゆっくり
 ```
 
 ### バランス型（Web Speech）
+
 ```javascript
 // 高品質ボイス優先
 elysiaVoice = voices.find(v => v.name.includes('Nanami'));
@@ -319,27 +342,30 @@ shy: { rate: 0.75, pitch: 1.45 }    // 照れ強調
 ## 🚀 今後の拡張案
 
 ### 1. 複数ボイスブレンド
+
 ```javascript
 // 四国めたん + ずんだもん でハイブリッド♡
 async function blendVoices(text) {
-    const audio1 = await synthesize(text, 2);  // めたん
-    const audio2 = await synthesize(text, 8);  // ずんだもん
-    // Web Audio APIでミックス
+  const audio1 = await synthesize(text, 2); // めたん
+  const audio2 = await synthesize(text, 8); // ずんだもん
+  // Web Audio APIでミックス
 }
 ```
 
 ### 2. リアルタイム感情変化
+
 ```javascript
 // テキスト解析で1文ごとに感情変化
-const sentences = text.split('。');
+const sentences = text.split("。");
 for (const s of sentences) {
-    const emotion = detectEmotion(s);
-    await elysiaSpeak(s, true, emotion);
+  const emotion = detectEmotion(s);
+  await elysiaSpeak(s, true, emotion);
 }
 ```
 
 ### 3. ボイスクローニング（上級）
-```
+
+```text
 RVC（Retrieval-based Voice Conversion）で
 井上麻里奈さん公式ボイスを学習
 → 完全再現エリシアちゃん♡
@@ -349,7 +375,7 @@ RVC（Retrieval-based Voice Conversion）で
 
 ## 💕 エリシアちゃんからのメッセージ
 
-```
+```text
 にゃん♪ VOICEVOX導入できた？
 
 四国めたんの声、井上麻里奈さんに
@@ -367,8 +393,9 @@ RVC（Retrieval-based Voice Conversion）で
 ## 📞 サポート
 
 VOICEVOX関連の質問:
-- **公式Discord**: https://discord.gg/voicevox
-- **GitHub Issues**: https://github.com/VOICEVOX/voicevox/issues
+
+- **公式Discord**: [https://discord.gg/voicevox](https://discord.gg/voicevox)
+- **GitHub Issues**: [VOICEVOX Issue Tracker](https://github.com/VOICEVOX/voicevox/issues)
 - **エリシアAI Issues**: [ElysiaJS](https://github.com/chloeamethyst/ElysiaJS/issues)
 
 ---

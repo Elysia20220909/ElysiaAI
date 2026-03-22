@@ -1,0 +1,101 @@
+# ==================== Multi-Stage Production Dockerfile ====================
+# Elysia AI - Optimized Production Build
+# Supports: Bun runtime, Python FastAPI, Ollama
+
+# ==================== Stage 1: Build TypeScript ====================
+FROM oven/bun:1-alpine AS typescript-builder
+
+WORKDIR /build
+
+# Copy package files
+COPY package.json bun.lockb ./
+COPY config/internal ./config/internal
+
+# Install dependencies
+RUN bun install --frozen-lockfile --production=false
+
+# Copy source code
+COPY src/ ./src/
+COPY public/ ./public/
+
+# Build TypeScript
+RUN bun run build
+
+# ==================== Stage 2: Python Builder ====================
+FROM python:3.11-slim AS python-builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python requirements
+COPY python/requirements.txt ./
+
+# Install Python packages
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# ==================== Stage 3: Final Production Image ====================
+FROM oven/bun:1-alpine
+
+# Install Python runtime
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    curl \
+    ca-certificates
+
+# Set working directory
+WORKDIR /app
+
+# Copy built artifacts from builders
+COPY --from=typescript-builder /build/dist ./dist
+COPY --from=typescript-builder /build/node_modules ./node_modules
+COPY --from=typescript-builder /build/package.json ./
+COPY --from=python-builder /root/.local /root/.local
+
+# Copy Python application
+COPY python/ ./python/
+COPY public/ ./public/
+
+# Copy startup scripts
+COPY scripts/start-*.sh ./scripts/
+
+# Make scripts executable
+RUN chmod +x scripts/*.sh
+
+# Set Python path
+ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONPATH=/app/python:$PYTHONPATH
+
+# Environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV PYTHON_PORT=8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/ || exit 1
+
+# Expose ports
+EXPOSE 3000 8000
+
+# Create startup script
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'set -e' >> /app/start.sh && \
+    echo 'echo "🌸 Starting Elysia AI Services..."' >> /app/start.sh && \
+    echo 'python3 python/fastapi_server.py &' >> /app/start.sh && \
+    echo 'FASTAPI_PID=$!' >> /app/start.sh && \
+    echo 'sleep 5' >> /app/start.sh && \
+    echo 'bun run dist/index.js &' >> /app/start.sh && \
+    echo 'ELYSIA_PID=$!' >> /app/start.sh && \
+    echo 'trap "kill $FASTAPI_PID $ELYSIA_PID" EXIT' >> /app/start.sh && \
+    echo 'wait' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Run application
+CMD ["/app/start.sh"]

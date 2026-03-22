@@ -1,77 +1,77 @@
 {
-	"version": "0.2.0",
-	"configurations": [
-		{
-			"name": "🚀 Debug Elysia Server (Bun)",
-			"type": "node",
-			"request": "launch",
-			"runtimeExecutable": "bun",
-			"runtimeArgs": ["run", "--watch", "src/index.ts"],
-			"cwd": "${workspaceFolder}",
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen",
-			"skipFiles": ["<node_internals>/**"],
-			"env": {
-				"NODE_ENV": "development"
-			}
-		},
-		{
-			"name": "🧪 Debug Tests",
-			"type": "node",
-			"request": "launch",
-			"runtimeExecutable": "bun",
-			"runtimeArgs": ["test", "${file}"],
-			"cwd": "${workspaceFolder}",
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen"
-		},
-		{
-			"name": "🧪 Debug All Tests",
-			"type": "node",
-			"request": "launch",
-			"runtimeExecutable": "bun",
-			"runtimeArgs": ["test"],
-			"cwd": "${workspaceFolder}",
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen"
-		},
-		{
-			"name": "🔨 Debug Build",
-			"type": "node",
-			"request": "launch",
-			"runtimeExecutable": "bun",
-			"runtimeArgs": ["run", "build"],
-			"cwd": "${workspaceFolder}",
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen"
-		},
-		{
-			"name": "🐳 Debug Docker Container",
-			"type": "docker",
-			"request": "launch",
-			"preLaunchTask": "docker-run: debug",
-			"platform": "node"
-		},
-		{
-			"name": "🐍 Debug Python FastAPI",
-			"type": "debugpy",
-			"request": "launch",
-			"program": "${workspaceFolder}/python/fastapi_server.py",
-			"console": "integratedTerminal",
-			"cwd": "${workspaceFolder}/python",
-			"env": {
-				"PYTHONPATH": "${workspaceFolder}/python"
-			}
-		}
-	],
-	"compounds": [
-		{
-			"name": "🎯 Debug Full Stack",
-			"configurations": [
-				"🚀 Debug Elysia Server (Bun)",
-				"🐍 Debug Python FastAPI"
-			],
-			"stopAll": true
-		}
-	]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🚀 Debug Elysia Server (Bun)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--watch", "src/index.ts"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "name": "🧪 Debug Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["test", "${file}"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "🧪 Debug All Tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["test"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "🔨 Debug Build",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "build"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "🐳 Debug Docker Container",
+      "type": "docker",
+      "request": "launch",
+      "preLaunchTask": "docker-run: debug",
+      "platform": "node"
+    },
+    {
+      "name": "🐍 Debug Python FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/python/fastapi_server.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/python",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/python"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "🎯 Debug Full Stack",
+      "configurations": [
+        "🚀 Debug Elysia Server (Bun)",
+        "🐍 Debug Python FastAPI"
+      ],
+      "stopAll": true
+    }
+  ]
 }

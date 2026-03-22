@@ -1,0 +1,55 @@
+name: ElysiaAI CI (Guardian)
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  lint-and-check:
+    name: "✨ 楽園のコードチェック"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ==============================
+      # 1. Bun & TypeScript (ElysiaJS)
+      # ==============================
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install JS/TS Dependencies
+        run: bun install
+
+      - name: Run Biome (Format & Lint Check)
+        run: bun run lint
+        # もし `bun run lint` がエラーになる場合は、`bunx @biomejs/biome check .` を使用
+        continue-on-error: true # 週末の個人開発なので、最初は厳しすぎない設定に
+
+      # ==============================
+      # 2. Python (FastAPI & OS)
+      # ==============================
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: "**/requirements.txt"
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black
+
+      - name: Run Ruff (Linter)
+        run: ruff check .
+        continue-on-error: true
+
+      - name: Run Black (Formatter Check)
+        run: black --check .
+        continue-on-error: true

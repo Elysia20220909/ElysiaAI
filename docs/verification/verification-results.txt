@@ -1,0 +1,24 @@
+===========================================
+
+   FINAL SERVICE VERIFICATION   
+
+===========================================
+
+Checking Redis (6379)... OK
+Checking FastAPI (8000)... OK
+  - Quotes: 50
+  - Ollama: connected
+Checking Ollama (11434)... OK
+  - Models: 2
+
+Testing RAG Search... OK
+  - Found: 3 quotes
+  - Top: 私に会いたくなった？このエリシア、いつでも期待に応えるわ♡...
+
+===========================================
+
+  RESULT: 4/4 services operational
+
+===========================================
+
+FastAPI Job Status:
