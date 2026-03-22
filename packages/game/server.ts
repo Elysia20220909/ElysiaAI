@@ -1,0 +1,640 @@
+// グローバル変数宣言
+const ranking: Ranking = {};
+let state: OthelloState = {
+	board: Array.from({ length: 8 }, (_, y) =>
+		Array.from({ length: 8 }, (_, x) =>
+			(y === 3 && x === 3) || (y === 4 && x === 4)
+				? 2
+				: (y === 3 && x === 4) || (y === 4 && x === 3)
+					? 1
+					: 0,
+		),
+	),
+	turn: 1,
+	history: [],
+	passCount: 0,
+	aiEnabled: false,
+};
+type GameClient = { send: (message: string) => void };
+const clients: Set<GameClient> = new Set();
+
+import { cors } from "@elysiajs/cors";
+import { fromTypes, openapi } from "@elysiajs/openapi";
+import { Elysia, t } from "elysia";
+
+// 型定義
+type Cell = 0 | 1 | 2; // 0:空, 1:黒, 2:白
+type Board = Cell[][];
+type Player = 1 | 2; // 1:黒, 2:白
+type OthelloState = {
+	board: Board;
+	turn: Player | number;
+	history: string[];
+	winner?: string;
+	passCount: number;
+	aiEnabled?: boolean;
+	aiLevel?: "random" | "strong" | "god";
+	userIds?: string[];
+	mode?: "othello" | "network";
+	nodes?: { id: string; connected: string[] }[];
+	agents?: { id: string; position: string; userId: string; score: number }[];
+};
+type Ranking = {
+	[userId: string]: { win: number; lose: number; draw: number };
+};
+
+// ゲームロジック関数
+function placeOthello(
+	board: Board,
+	x: number,
+	y: number,
+	player: Player,
+): { board: Board; flipped: number } {
+	if (board[y][x] !== 0) return { board, flipped: 0 };
+	const dirs = [
+		[-1, -1],
+		[0, -1],
+		[1, -1],
+		[-1, 0],
+		[1, 0],
+		[-1, 1],
+		[0, 1],
+		[1, 1],
+	];
+	let flipped = 0;
+	const newBoard = board.map((row) => [...row]);
+	for (const [dx, dy] of dirs) {
+		let nx = x + dx,
+			ny = y + dy,
+			line: [number, number][] = [];
+		while (
+			nx >= 0 &&
+			nx < 8 &&
+			ny >= 0 &&
+			ny < 8 &&
+			newBoard[ny][nx] === (player === 1 ? 2 : 1)
+		) {
+			line.push([nx, ny]);
+			nx += dx;
+			ny += dy;
+		}
+		if (
+			line.length &&
+			nx >= 0 &&
+			nx < 8 &&
+			ny >= 0 &&
+			ny < 8 &&
+			newBoard[ny][nx] === player
+		) {
+			for (const [fx, fy] of line) {
+				newBoard[fy][fx] = player;
+				flipped++;
+			}
+		}
+	}
+	if (flipped) newBoard[y][x] = player;
+	return { board: newBoard, flipped };
+}
+function isGameOver(board: Board): boolean {
+	if (board.flat().every((c) => c !== 0)) return true;
+	for (const p of [1, 2] as Player[]) {
+		for (let y = 0; y < 8; ++y)
+			for (let x = 0; x < 8; ++x)
+				if (placeOthello(board, x, y, p).flipped) return false;
+	}
+	return true;
+}
+function countStones(board: Board): [number, number] {
+	let b = 0,
+		w = 0;
+	for (const row of board)
+		for (const c of row) {
+			if (c === 1) b++;
+			else if (c === 2) w++;
+		}
+	return [b, w];
+}
+function evaluateBoard(board: Board, player: Player): number {
+	let score = 0;
+	for (let y = 0; y < 8; ++y)
+		for (let x = 0; x < 8; ++x) {
+			if (board[y][x] === player) {
+				score += 1;
+				if ((x === 0 || x === 7) && (y === 0 || y === 7)) score += 5;
+			}
+		}
+	return score;
+}
+function alphabeta(
+	board: Board,
+	player: Player,
+	depth: number,
+	maximizing: boolean,
+	alpha: number,
+	beta: number,
+	origPlayer: Player,
+): number {
+	if (depth === 0 || isGameOver(board)) return evaluateBoard(board, origPlayer);
+	if (maximizing) {
+		let maxEval = -Infinity;
+		for (let y = 0; y < 8; ++y)
+			for (let x = 0; x < 8; ++x) {
+				if (placeOthello(board, x, y, player).flipped) {
+					const nextPlayer = player === 1 ? 2 : 1;
+					const evalScore = alphabeta(
+						placeOthello(board, x, y, player).board,
+						nextPlayer,
+						depth - 1,
+						false,
+						alpha,
+						beta,
+						origPlayer,
+					);
+					maxEval = Math.max(maxEval, evalScore);
+					alpha = Math.max(alpha, evalScore);
+					if (beta <= alpha) break;
+				}
+			}
+		return maxEval;
+	} else {
+		let minEval = Infinity;
+		for (let y = 0; y < 8; ++y)
+			for (let x = 0; x < 8; ++x) {
+				if (placeOthello(board, x, y, player).flipped) {
+					const nextPlayer = player === 1 ? 2 : 1;
+					const evalScore = alphabeta(
+						placeOthello(board, x, y, player).board,
+						nextPlayer,
+						depth - 1,
+						true,
+						alpha,
+						beta,
+						origPlayer,
+					);
+					minEval = Math.min(minEval, evalScore);
+					beta = Math.min(beta, evalScore);
+					if (beta <= alpha) break;
+				}
+			}
+		return minEval;
+	}
+}
+function getStrongAIMove(
+	board: Board,
+	player: Player,
+): { x: number; y: number } | null {
+	let bestScore = -Infinity,
+		bestMove = null;
+	for (let y = 0; y < 8; ++y)
+		for (let x = 0; x < 8; ++x) {
+			if (placeOthello(board, x, y, player).flipped) {
+				const nextPlayer = player === 1 ? 2 : 1;
+				const score = alphabeta(
+					placeOthello(board, x, y, player).board,
+					nextPlayer,
+					1,
+					false,
+					-Infinity,
+					Infinity,
+					player,
+				);
+				if (score > bestScore) {
+					bestScore = score;
+					bestMove = { x, y };
+				}
+			}
+		}
+	return bestMove;
+}
+function getGodAIMove(
+	board: Board,
+	player: Player,
+): { x: number; y: number } | null {
+	const corners = [
+		{ x: 0, y: 0 },
+		{ x: 0, y: 7 },
+		{ x: 7, y: 0 },
+		{ x: 7, y: 7 },
+	];
+	for (const c of corners) {
+		if (placeOthello(board, c.x, c.y, player).flipped) return c;
+	}
+	let bestScore = -Infinity,
+		bestMove = null;
+	for (let y = 0; y < 8; ++y)
+		for (let x = 0; x < 8; ++x) {
+			if (placeOthello(board, x, y, player).flipped) {
+				const nextPlayer = player === 1 ? 2 : 1;
+				const score = alphabeta(
+					placeOthello(board, x, y, player).board,
+					nextPlayer,
+					3,
+					false,
+					-Infinity,
+					Infinity,
+					player,
+				);
+				if (score > bestScore) {
+					bestScore = score;
+					bestMove = { x, y };
+				}
+			}
+		}
+	return bestMove;
+}
+function getRandomLegalMove(
+	board: Board,
+	player: Player,
+): { x: number; y: number } | null {
+	const moves: { x: number; y: number }[] = [];
+	for (let y = 0; y < 8; ++y)
+		for (let x = 0; x < 8; ++x)
+			if (placeOthello(board, x, y, player).flipped) moves.push({ x, y });
+	if (moves.length === 0) return null;
+	return moves[Math.floor(Math.random() * moves.length)];
+}
+
+const app = new Elysia()
+	.use(
+		cors({
+			origin: "*",
+			allowedHeaders: ["Content-Type"],
+			methods: ["GET", "POST"],
+		}),
+	)
+	.onAfterHandle(({ set }) => {
+		set.headers["X-Content-Type-Options"] = "nosniff";
+		set.headers["X-Frame-Options"] = "DENY";
+		set.headers["X-XSS-Protection"] = "1; mode=block";
+	})
+	.use(openapi({ path: "/swagger", references: fromTypes() }))
+	.get("/", () => ({ status: "ok", service: "elysia-game", version: 1 }))
+	.get("/game/state", () => state)
+	.post(
+		"/game/start",
+		({ body }) => {
+			// ネットワークゲーム（graph/agents）開始か、オセロ開始かを判定
+			if (body?.nodes && body?.agents) {
+				state = {
+					board: Array.from({ length: 8 }, () =>
+						Array.from({ length: 8 }, () => 0),
+					),
+					turn: 0,
+					history: [],
+					passCount: 0,
+					mode: "network",
+					nodes: body.nodes,
+					agents: body.agents,
+					userIds: body.agents.map((a: { userId: string }) => a.userId),
+				};
+			} else {
+				state = {
+					board: Array.from({ length: 8 }, (_, y) =>
+						Array.from({ length: 8 }, (_, x) =>
+							(y === 3 && x === 3) || (y === 4 && x === 4)
+								? 2
+								: (y === 3 && x === 4) || (y === 4 && x === 3)
+									? 1
+									: 0,
+						),
+					),
+					turn: 1,
+					history: [],
+					passCount: 0,
+					aiEnabled: body?.aiEnabled ?? false,
+					aiLevel:
+						body?.aiLevel === "strong" || body?.aiLevel === "god"
+							? body.aiLevel
+							: "random",
+					userIds: body?.userIds ? body.userIds : ["user1", "user2"],
+					mode: "othello",
+				};
+			}
+			return state;
+		},
+		{
+			body: t.Optional(
+				t.Object({
+					aiEnabled: t.Optional(t.Boolean()),
+					aiLevel: t.Optional(
+						t.Union([
+							t.Literal("random"),
+							t.Literal("strong"),
+							t.Literal("god"),
+						]),
+					),
+					userIds: t.Optional(t.Array(t.String())),
+					nodes: t.Optional(
+						t.Array(
+							t.Object({ id: t.String(), connected: t.Array(t.String()) }),
+						),
+					),
+					agents: t.Optional(
+						t.Array(
+							t.Object({
+								id: t.String(),
+								position: t.String(),
+								userId: t.String(),
+								score: t.Number(),
+							}),
+						),
+					),
+				}),
+			),
+		},
+	)
+	.post(
+		"/game/action",
+		({ body }) => {
+			// ネットワークゲームのアクション（エージェント移動）
+			// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
+			const actionBody = body as any;
+			if (
+				actionBody?.agentId &&
+				actionBody?.to &&
+				actionBody?.userId &&
+				state.mode === "network" &&
+				state.agents &&
+				state.nodes
+			) {
+				const currentTurn = Number(state.turn || 0);
+				const agentIndex = state.agents.findIndex(
+					(a) => a.id === actionBody.agentId,
+				);
+				if (agentIndex === -1) return state;
+				const agent = state.agents[agentIndex];
+				// 手番ユーザー確認
+				if (agentIndex !== currentTurn) return state;
+				if (agent.userId !== actionBody.userId) return state;
+				// 移動可能チェック
+				const node = state.nodes.find((n) => n.id === agent.position);
+				if (!node || !node.connected.includes(actionBody.to)) {
+					state.history.push(
+						`invalid move: ${agent.id} tried ${actionBody.to}`,
+					);
+				}
+				// 移動実行 + スコア加算
+				agent.position = actionBody.to;
+				agent.score = (agent.score || 0) + 1;
+				state.history.push(`${agent.id} moved to ${actionBody.to}`);
+				// 勝者判定（10点）
+				if (agent.score >= 10) {
+					state.winner = agent.userId;
+					state.history.push(`Winner: ${agent.userId}`);
+				}
+				// 手番更新
+				state.turn = (currentTurn + 1) % state.agents.length;
+				for (const ws of clients) {
+					ws.send(JSON.stringify(state));
+				}
+				return state;
+			}
+			if (state.winner) return state;
+			const { x, y, player } = body as { x: number; y: number; player: number };
+			const p = player as Player;
+			if (state.mode === "othello" && p !== state.turn) return state;
+			// 合法手判定と石を裏返す
+			const result = placeOthello(state.board, x, y, p);
+			if (!result.flipped) {
+				state.passCount++;
+				state.history.push(`不正な手/パス: (${x},${y}) by ${player}`);
+				// 連続パスで終了
+				if (state.passCount >= 2) {
+					const [b, w] = countStones(state.board);
+					if (b > w) state.winner = "黒";
+					else if (w > b) state.winner = "白";
+					else state.winner = "引き分け";
+					state.history.push(`連続パスで終了: 黒$b白$w`);
+				}
+				state.turn = (player === 1 ? 2 : 1) as Player;
+				for (const ws of clients) {
+					ws.send(JSON.stringify(state));
+				}
+				return state;
+			}
+			state.board = result.board;
+			// 角ボーナス
+			const bonus = (x === 0 || x === 7) && (y === 0 || y === 7) ? 2 : 0;
+			state.history.push(
+				`Player ${p === 1 ? "黒" : "白"}: (${x},${y}) 反転${result.flipped}個${bonus ? " 角ボーナス+2" : ""}`,
+			);
+			state.turn = (p === 1 ? 2 : 1) as Player;
+			state.passCount = 0;
+			// 勝敗判定
+			if (isGameOver(state.board)) {
+				const [b, w] = countStones(state.board);
+				let _winnerId = "";
+				if (b > w) {
+					state.winner = "黒";
+					_winnerId = state.userIds ? state.userIds[0] : "user1";
+				} else if (w > b) {
+					state.winner = "白";
+					_winnerId = state.userIds ? state.userIds[1] : "user2";
+				} else state.winner = "引き分け";
+				state.history.push(`勝負終了: 黒${b}白${w}`);
+				// ランキング記録
+				if (state.userIds) {
+					const [u1, u2] = state.userIds;
+					if (!ranking[u1]) ranking[u1] = { win: 0, lose: 0, draw: 0 };
+					if (!ranking[u2]) ranking[u2] = { win: 0, lose: 0, draw: 0 };
+					if (b > w) {
+						ranking[u1].win++;
+						ranking[u2].lose++;
+					} else if (w > b) {
+						ranking[u2].win++;
+						ranking[u1].lose++;
+					} else {
+						ranking[u1].draw++;
+						ranking[u2].draw++;
+					}
+				}
+			}
+			for (const ws of clients) {
+				ws.send(JSON.stringify(state));
+			}
+			// AI対戦
+			if (state.aiEnabled && !state.winner && state.turn === 2) {
+				setTimeout(() => {
+					let aiMove = null;
+					if (state.aiLevel === "god") {
+						aiMove = getGodAIMove(state.board, 2);
+					} else if (state.aiLevel === "strong") {
+						aiMove = getStrongAIMove(state.board, 2);
+					} else {
+						aiMove = getRandomLegalMove(state.board, 2);
+					}
+					if (aiMove) {
+						// 直接actionロジックを呼び出す
+						const aiAction = { x: aiMove.x, y: aiMove.y, player: 2 as Player };
+						const result = placeOthello(
+							state.board,
+							aiAction.x,
+							aiAction.y,
+							aiAction.player,
+						);
+						if (!result.flipped) {
+							state.passCount++;
+							state.history.push(
+								`不正な手/パス: (${aiAction.x},${aiAction.y}) by ${aiAction.player}`,
+							);
+							if (state.passCount >= 2) {
+								const [b, w] = countStones(state.board);
+								if (b > w) state.winner = "黒";
+								else if (w > b) state.winner = "白";
+								else state.winner = "引き分け";
+								state.history.push(`連続パスで終了: 黒${b}白${w}`);
+							}
+							state.turn = (aiAction.player === 1 ? 2 : 1) as Player;
+							for (const ws of clients) {
+								ws.send(JSON.stringify(state));
+							}
+							return;
+						}
+						state.board = result.board;
+						const bonus =
+							(aiAction.x === 0 || aiAction.x === 7) &&
+							(aiAction.y === 0 || aiAction.y === 7)
+								? 2
+								: 0;
+						state.history.push(
+							`Player ${aiAction.player === 1 ? "黒" : "白"}: (${aiAction.x},${aiAction.y}) 反転${result.flipped}個${bonus ? " 角ボーナス+2" : ""}`,
+						);
+						state.turn = (aiAction.player === 1 ? 2 : 1) as Player;
+						state.passCount = 0;
+						if (isGameOver(state.board)) {
+							const [b, w] = countStones(state.board);
+							let _winnerId = "";
+							if (b > w) {
+								state.winner = "黒";
+								_winnerId = state.userIds ? state.userIds[0] : "user1";
+							} else if (w > b) {
+								state.winner = "白";
+								_winnerId = state.userIds ? state.userIds[1] : "user2";
+							} else state.winner = "引き分け";
+							state.history.push(`勝負終了: 黒${b}白${w}`);
+							if (state.userIds) {
+								const [u1, u2] = state.userIds;
+								if (!ranking[u1]) ranking[u1] = { win: 0, lose: 0, draw: 0 };
+								if (!ranking[u2]) ranking[u2] = { win: 0, lose: 0, draw: 0 };
+								if (b > w) {
+									ranking[u1].win++;
+									ranking[u2].lose++;
+								} else if (w > b) {
+									ranking[u2].win++;
+									ranking[u1].lose++;
+								} else {
+									ranking[u1].draw++;
+									ranking[u2].draw++;
+								}
+							}
+						}
+						for (const ws of clients) {
+							ws.send(JSON.stringify(state));
+						}
+					}
+				}, 500);
+			}
+			return state;
+		},
+		{
+			body: t.Union([
+				// オセロ用ペイロード
+				t.Object({ x: t.Number(), y: t.Number(), player: t.Number() }),
+				// ネットワークゲーム用ペイロード
+				t.Object({ agentId: t.String(), to: t.String(), userId: t.String() }),
+			]),
+		},
+	);
+// Elysiaチェーン末尾にAPI宣言
+app
+	.get("/game/ranking", () => ranking)
+	.ws("/game/ws", {
+		open(ws: unknown) {
+			clients.add(ws as GameClient);
+			(ws as GameClient).send(JSON.stringify(state));
+		},
+		close(ws: unknown) {
+			clients.delete(ws as GameClient);
+		},
+		message(_ws: unknown, msg: string) {
+			try {
+				const action = JSON.parse(typeof msg === "string" ? msg : "");
+				if (
+					typeof action.x === "number" &&
+					typeof action.y === "number" &&
+					typeof action.player === "number"
+				) {
+					const result = placeOthello(
+						state.board,
+						action.x,
+						action.y,
+						action.player,
+					);
+					if (!result.flipped) {
+						state.passCount++;
+						state.history.push(
+							`不正な手/パス: (${action.x},${action.y}) by ${action.player}`,
+						);
+						if (state.passCount >= 2) {
+							const [b, w] = countStones(state.board);
+							if (b > w) state.winner = "黒";
+							else if (w > b) state.winner = "白";
+							else state.winner = "引き分け";
+							state.history.push(`連続パスで終了: 黒${b}白${w}`);
+						}
+						state.turn = (action.player === 1 ? 2 : 1) as Player;
+						for (const ws of clients) {
+							ws.send(JSON.stringify(state));
+						}
+						return;
+					}
+					state.board = result.board;
+					const bonus =
+						(action.x === 0 || action.x === 7) &&
+						(action.y === 0 || action.y === 7)
+							? 2
+							: 0;
+					state.history.push(
+						`Player ${action.player === 1 ? "黒" : "白"}: (${action.x},${action.y}) 反転${result.flipped}個${bonus ? " 角ボーナス+2" : ""}`,
+					);
+					state.turn = (action.player === 1 ? 2 : 1) as Player;
+					state.passCount = 0;
+					if (isGameOver(state.board)) {
+						const [b, w] = countStones(state.board);
+						let _winnerId = "";
+						if (b > w) {
+							state.winner = "黒";
+							_winnerId = state.userIds ? state.userIds[0] : "user1";
+						} else if (w > b) {
+							state.winner = "白";
+							_winnerId = state.userIds ? state.userIds[1] : "user2";
+						} else state.winner = "引き分け";
+						state.history.push(`勝負終了: 黒$b白$w`);
+						if (state.userIds) {
+							const [u1, u2] = state.userIds;
+							if (!ranking[u1]) ranking[u1] = { win: 0, lose: 0, draw: 0 };
+							if (!ranking[u2]) ranking[u2] = { win: 0, lose: 0, draw: 0 };
+							if (b > w) {
+								ranking[u1].win++;
+								ranking[u2].lose++;
+							} else if (w > b) {
+								ranking[u2].win++;
+								ranking[u1].lose++;
+							} else {
+								ranking[u1].draw++;
+								ranking[u2].draw++;
+							}
+						}
+					}
+					for (const ws of clients) {
+						ws.send(JSON.stringify(state));
+					}
+				}
+			} catch {}
+		},
+	});
+
+// サーバ起動（既定ポート: 3001）
+const GAME_PORT = Number(process.env.GAME_PORT || 3001);
+app.listen(GAME_PORT);
+console.log(`[game] Othello server listening on http://localhost:${GAME_PORT}`);
