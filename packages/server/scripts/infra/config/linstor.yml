@@ -1,0 +1,100 @@
+# LINSTOR / DRBD configuration for pvese project
+# 4-node multi-region setup
+
+# LINSTOR controller
+controller_node: ayase-web-service-4
+controller_ip: 10.10.10.204
+controller_port: 3370
+
+# Nodes
+nodes:
+  - name: ayase-web-service-4
+    ip: 10.10.10.204
+    ib_ip: 192.168.100.1
+    role: controller+satellite
+    storage_disks:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+    lvcreate_options: "-i4 -I64"
+  - name: ayase-web-service-5
+    ip: 10.10.10.205
+    ib_ip: 192.168.100.2
+    role: satellite
+    storage_disks:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+    lvcreate_options: "-i4 -I64"
+  - name: ayase-web-service-6
+    ip: 10.10.10.206
+    role: satellite
+    storage_disks:
+      - /dev/sda
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+    lvcreate_options: "-i4 -I64"
+  - name: ayase-web-service-7
+    ip: 10.10.10.207
+    role: satellite
+    storage_disks:
+      - /dev/sdb
+      - /dev/sdc
+      - /dev/sdd
+      - /dev/sde
+      - /dev/sdf
+      - /dev/sdg
+    lvcreate_options: "-i6 -I64"
+
+# Regions (multi-region DR)
+regions:
+  region-a:
+    - ayase-web-service-4
+    - ayase-web-service-5
+  region-b:
+    - ayase-web-service-6
+    - ayase-web-service-7
+
+# Storage pool
+vg_name: linstor_vg
+storage_pool_name: striped-pool
+storage_pool_type: lvm
+lvcreate_options: "-i4 -I64"
+
+# Resource group
+resource_group: pve-rg
+place_count: 2
+
+# DRBD
+drbd_protocol: C
+drbd_transport: tcp
+drbd_interface: ib0
+
+# Migration
+migration:
+  topology: "2+1"          # primary 2 replicas + 1 DR replica
+  dr_protocol: A           # inter-region protocol
+  intra_protocol: C        # intra-region protocol
+  cpu_type: kvm64           # required for heterogeneous hardware live migration
+  cross_region_interface: default  # node-connection path interface (bypass PrefNic=ib0)
+
+# Benchmark
+benchmark:
+  vm_id: 100
+  vm_name: bench-vm
+  vm_cores: 4
+  vm_memory: 4096
+  vm_disk_size: 32G
+  vm_bridge: vmbr1
+  vm_mgmt_bridge: vmbr0
+  vm_mgmt_ip: 10.10.10.210
+  vm_mgmt_prefix: 8
+  vm_user: debian
+  vm_password: password
+  cloud_image: /var/lib/vz/template/debian-cloud.qcow2
+  fio_runtime: 60
+  fio_size: 1G
+  fio_seq_size: 4G

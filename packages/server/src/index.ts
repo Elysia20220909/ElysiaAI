@@ -16,6 +16,7 @@ import jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
 import { abTestManager } from "./lib/ab-testing";
 import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
+import { getPersonaConfig } from "./lib/ai-personas";
 import { apiKeyManager } from "./lib/api-key-manager";
 import { auditLogger } from "./lib/audit-logger";
 // Import services and utilities
@@ -34,6 +35,7 @@ import { logCleanupManager } from "./lib/log-cleanup";
 import { logger } from "./lib/logger";
 import { metricsCollector } from "./lib/metrics";
 import { streamChatWithOpenAI } from "./lib/openai-integration";
+import { applySecurityHeaders } from "./lib/security-utils";
 import { sessionManager } from "./lib/session-manager";
 import { getTraceContextFromRequest, telemetry } from "./lib/telemetry";
 import { searchRelevantInfo } from "./lib/web-search";
@@ -74,10 +76,6 @@ const jsonError = (status: number, message: string, traceId?: string) => {
 			headers: { "content-type": "application/json" },
 		},
 	);
-};
-
-const buildCSP = (_url: string) => {
-	return "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:;";
 };
 
 function containsDangerousKeywords(text: string): boolean {
@@ -181,41 +179,7 @@ app
 		return jsonError(status, message, traceId);
 	})
 	.onAfterHandle(({ set, request, response }) => {
-		// 包括的なセキュリティヘッダーを追加（SecurityUtilsから）
-		// const securityHeaders = securityUtils.generateSecurityHeaders(); // securityUtils is removed
-		const securityHeaders = {
-			"X-Content-Type-Options": "nosniff",
-			"X-Permitted-Cross-Domain-Policies": "none",
-			"Referrer-Policy": "no-referrer",
-		};
-		Object.entries(securityHeaders).forEach(([key, value]) => {
-			set.headers[key] = value as string;
-		});
-
-		// CSPは既存のbuildCSPを使用（カスタマイズ済み）
-		const csp = buildCSP(request.url);
-		set.headers["Content-Security-Policy"] = csp;
-		set.headers["X-Frame-Options"] = "DENY";
-		// 追加の推奨セキュリティヘッダ
-		set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-		set.headers["X-XSS-Protection"] = "1; mode=block";
-		set.headers["Cross-Origin-Opener-Policy"] = "same-origin";
-		const reqUrl = new URL(request.url);
-		// Swaggerは外部アセットを用いる可能性があるためCSP適用を除外
-		if (!reqUrl.pathname.startsWith("/swagger")) {
-			set.headers["Content-Security-Policy"] = buildCSP(request.url);
-		}
-		if ((request.url || "").startsWith("https://")) {
-			set.headers["Strict-Transport-Security"] =
-				"max-age=31536000; includeSubDomains";
-		}
-		// 追加の推奨セキュリティヘッダ
-		set.headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-		set.headers["X-XSS-Protection"] = "1; mode=block";
-		if ((request.url || "").startsWith("https://")) {
-			set.headers["Strict-Transport-Security"] =
-				"max-age=31536000; includeSubDomains";
-		}
+		applySecurityHeaders(set, request.url);
 		const extReq = request as unknown as ExtendedRequest;
 		const span = extReq.__span;
 		if (span) {
@@ -246,6 +210,42 @@ app
 			} as any);
 		} catch {}
 	})
+
+	// InfraOps Integration (AIOps Core)
+	.group("/infra", (app) =>
+		app
+			.get(
+				"/issues",
+				async () => {
+					const { getInfraIssues } = await import("./lib/infra-ops");
+					return getInfraIssues();
+				},
+				{
+					detail: { tags: ["infra"], summary: "List pvese issues" },
+				},
+			)
+			// biome-ignore lint/suspicious/noExplicitAny: Elysia typings trick
+			.get(
+				"/status/:node",
+				async ({ params: { node } }: any) => {
+					const { getPowerStatus } = await import("./lib/infra-ops");
+					return getPowerStatus(node);
+				},
+				{
+					detail: { tags: ["infra"], summary: "Get server BMC power status" },
+				},
+			)
+			.get(
+				"/linstor",
+				async () => {
+					const { getLinstorStatus } = await import("./lib/infra-ops");
+					return getLinstorStatus();
+				},
+				{
+					detail: { tags: ["infra"], summary: "Get LINSTOR cluster status" },
+				},
+			),
+	)
 
 	// Health
 	.get("/ping", () => ({ ok: true }), {
@@ -520,9 +520,7 @@ app
 
 			const userId = username;
 
-			// 新しいセキュアJWTマネージャーを使用（Ed25519署名 + AES-256-GCM暗号化）
 			try {
-				// secureJwtManager is removed, using jwt.sign as a fallback
 				const accessToken = jwt.sign(
 					{ userId, username, role: "user" },
 					CONFIG.JWT_SECRET,
@@ -570,9 +568,7 @@ app
 		async ({ body }: any) => {
 			const { refreshToken } = body as { refreshToken: string };
 
-			// 新しいセキュアJWTマネージャーでトークンをリフレッシュ
 			try {
-				// secureJwtManager is removed, using jwt.verify and jwt.sign as a fallback
 				const payload = jwt.verify(
 					refreshToken,
 					CONFIG.JWT_REFRESH_SECRET,
@@ -634,7 +630,6 @@ app
 		async ({ body }: any) => {
 			const { refreshToken } = body as { refreshToken: string };
 			try {
-				// secureJwtManager is removed, using jwt.verify as a fallback
 				const payload = jwt.verify(
 					refreshToken,
 					CONFIG.JWT_REFRESH_SECRET,
@@ -707,11 +702,11 @@ app
 					const rateLimitOk = await checkRateLimit(clientKey);
 					if (!rateLimitOk) return jsonError(429, "Rate limit exceeded");
 
-					const mode = body.mode || "normal"; // DEFAULT_MODE is removed
+					const mode = body.mode || "normal";
+					const personaContext = getPersonaConfig(mode);
 					const llmConfig = {
-						// ELYSIA_MODES is removed, using a dummy config
-						systemPrompt: "You are a helpful AI assistant.",
-						temperature: 0.7,
+						systemPrompt: personaContext.systemPrompt,
+						temperature: personaContext.temperature,
 						model: CONFIG.MODEL_NAME,
 					};
 
