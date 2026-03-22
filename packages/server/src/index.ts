@@ -17,6 +17,7 @@ import sanitizeHtml from "sanitize-html";
 import { abTestManager } from "./lib/ab-testing";
 import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
 import { getPersonaConfig } from "./lib/ai-personas";
+import { streamChatWithAIOps } from "./lib/aiops-chat";
 import { apiKeyManager } from "./lib/api-key-manager";
 import { auditLogger } from "./lib/audit-logger";
 // Import services and utilities
@@ -44,7 +45,6 @@ import { webhookManager } from "./lib/webhook-events";
 const auditMiddleware = createAuditMiddleware();
 const casualChat = { generateCasualResponse, getRandomTopic };
 const webSearch = { searchRelevantInfo };
-const openaiIntegration = { streamChatWithOpenAI };
 const checkRateLimit = (ip: string) =>
 	advancedRateLimiter.checkRateLimit(ip, "default").allowed;
 
@@ -224,10 +224,9 @@ app
 					detail: { tags: ["infra"], summary: "List pvese issues" },
 				},
 			)
-			// biome-ignore lint/suspicious/noExplicitAny: Elysia typings trick
 			.get(
 				"/status/:node",
-				async ({ params: { node } }: any) => {
+				async ({ params: { node } }) => {
 					const { getPowerStatus } = await import("./lib/infra-ops");
 					return getPowerStatus(node);
 				},
@@ -776,7 +775,7 @@ app
 								const stream = new ReadableStream({
 									async start(controller) {
 										try {
-											for await (const chunk of openaiIntegration.streamChatWithOpenAI(
+											for await (const chunk of streamChatWithAIOps(
 												openaiMessages,
 												{
 													model: llmConfig.model,
