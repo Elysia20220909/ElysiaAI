@@ -14,7 +14,7 @@ import {
 	prisma,
 	saveFeedback,
 	saveMessage,
-} from "../src/lib/database-utils";
+} from "../packages/server/src/lib/database-utils";
 
 // ========== テストスイート ==========
 
