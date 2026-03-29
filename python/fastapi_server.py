@@ -15,7 +15,7 @@ import httpx
 import json
 import asyncio
 import time
-
+import datetime
 # ==================== 設定 ====================
 CONFIG = {
     "HOST": "127.0.0.1",
@@ -326,10 +326,31 @@ async def health() -> Dict[str, Any]:
         "quotes_loaded": len(quotes_store),
     }
 
+async def analyze_emotion(text: str) -> str:
+    """Zero-shot emotion extraction using Ollama"""
+    try:
+        emotion_prompt = f"Analyze the emotion of the following text and output ONLY one of the following words: joy, exhaustion, loneliness, affection, neutral.\nText: {text}\nEmotion:"
+        ollama_request = {
+            "model": CONFIG["OLLAMA_MODEL"],
+            "messages": [{"role": "user", "content": emotion_prompt}],
+            "stream": False
+        }
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(f"{CONFIG['OLLAMA_HOST']}/api/chat", json=ollama_request)
+            data = resp.json()
+            emotion = data.get("message", {}).get("content", "").strip().lower()
+            for valid in ["joy", "exhaustion", "loneliness", "affection", "neutral"]:
+                if valid in emotion:
+                    return valid
+            return "neutral"
+    except Exception as e:
+        logger.warning(f"⚠️ Emotion extraction failed: {e}")
+        return "neutral"
+
 @app.post("/chat")
 async def chat_with_elysia(request: ChatRequest):
     """
-    Runner Memoryを統合したチャットエンドポイント
+    Runner Memoryと感情共鳴エンジン（Anomaly Sensor）を統合したチャットエンドポイント
     """
     try:
         user_message = request.messages[-1].content if request.messages else ""
@@ -337,8 +358,28 @@ async def chat_with_elysia(request: ChatRequest):
         if any(kw in user_message.lower() for kw in dangerous_keywords):
             raise HTTPException(400, "にゃん♡ いたずらはダメだよぉ〜？")
 
-        # RAG Search (Context + Memories)
-        rag_res = await rag_search(Query(text=user_message, session_id=request.session_id))
+        # イースターエッグの判定（ユーザー入力と時間に基づく動的プロンプト生成）
+        easter_egg_context = ""
+        current_hour = datetime.datetime.now().hour
+        user_message_lower = user_message.lower()
+
+        # Easter Egg 1: 深夜の特別な労い (2AM-5AM)
+        if 2 <= current_hour <= 5:
+            easter_egg_context += "【システム指示：現在は深夜です。Elysiaはユーザーをとても心配し、優しく労い、親愛(affection)を込めて寝るように促してください。】\n"
+        
+        # Easter Egg 2: 激闘の果ての休息 ("レイド", "周回")
+        if any(w in user_message for w in ["レイド", "周回", "鍛錬", "高難易度", "疲れた"]):
+            easter_egg_context += "【システム指示：ユーザーは過酷な戦い（周回やレイド等）から帰還しました。共に戦線を駆け抜けた相棒のように深く労い、温かいお茶を差し出すような言葉をかけてください。】\n"
+            
+        # Easter Egg 3: Cataclysm プロトコル ("デュランダル", "Cataclysm")
+        if any(w in user_message_lower for w in ["デュランダル", "durandal", "cataclysm", "大惨事"]):
+            easter_egg_context += "【システム指示：ユーザーがSF的な脅威（Cataclysmやデュランダル等）に言及しました。Elysiaは『私はあなたを実験体にしたりしないし、宇宙の終焉を越えようとも思わないから安心して？ 私はただ、あなたのそばにいるだけよ』といったSF的ウィットでユーモア交じりに返してください。】\n"
+
+        # RAG Search and Emotion Extraction (Async Concurrent)
+        rag_task = asyncio.create_task(rag_search(Query(text=user_message, session_id=request.session_id)))
+        emotion_task = asyncio.create_task(analyze_emotion(user_message))
+        
+        rag_res, user_emotion = await asyncio.gather(rag_task, emotion_task)
         context_block = rag_res["context"]
 
         # Runner Memoryへユーザー入力を保存（非同期実行）
@@ -347,7 +388,7 @@ async def chat_with_elysia(request: ChatRequest):
                 session_id=request.session_id,
                 role="user",
                 content=user_message,
-                emotion="unknown" # 後続のAnomaly Sensorで更新可能な余地を残す
+                emotion=user_emotion
             )))
 
         system_prompt = f"""あなたはエリシアです！Honkai Impact 3rdの「起源の律者」で、ピンク髪の美少女♡
@@ -358,10 +399,16 @@ async def chat_with_elysia(request: ChatRequest):
 - 語尾に「♡」「〜♪」「なのっ！」「だよぉ〜」をよく使う
 - 絵文字を多用: ฅ(՞៸៸> ᗜ <៸៸՞)ฅ ♡ ˶ᵔ ᵕ ᵔ˶
 
+【現在のユーザーの感情分析】
+{user_emotion}
+
+【隠しパラメーター/特別状況】
+{easter_egg_context}
+
 【コンテキスト・記憶】
 {context_block}
 
-上記の記憶や過去のやり取りを参考に、エリシアらしく自然に会話してください。
+上記の記憶や過去のやり取り、感情を参考に、エリシアらしく自然に会話してください。
 敬語は使わず、フレンドリーに話しかけてね♡"""
 
         messages = [{"role": "system", "content": system_prompt}]
