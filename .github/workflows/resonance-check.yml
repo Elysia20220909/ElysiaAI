@@ -1,0 +1,34 @@
+name: Resonance Check (QA)
+
+on:
+  push:
+    branches: [ "main", "feature/*", "fix/*" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "latest"
+
+    - name: Install dependencies
+      run: |
+        cd python
+        uv pip install --system -e ".[dev]"
+
+    - name: Run Anomaly Sensor QA Tests
+      run: |
+        cd python
+        python qa_anomaly_sensor.py

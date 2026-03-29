@@ -69,11 +69,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+from fastapi.middleware.cors import CORSMiddleware
+
 # ==================== モデル＆DB初期化 ====================
 app = FastAPI(
     title="Elysia RAG API (Runner Memory Enabled)",
     description="エリシアちゃんの長期記憶と感情トラッキング ♡",
     version="2.0.0"
+)
+
+# Epic 7: フロントエンドとの統合 (CORS許可)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # 1. Embedding Provider Load
@@ -186,6 +197,7 @@ class ChatResponse(BaseModel):
     response: str
     context: str
     quotes: List[str]
+    emotion: str = "neutral"  # Epic 7: フロントエンドへ感情を送信
 
 class MemoryAddRequest(BaseModel):
     session_id: str
@@ -248,6 +260,29 @@ async def init_db() -> None:
             embeddings_store.append(await get_embedding(q))
         logger.info("✅ Baseline quotes embedded.")
 
+async def apply_oblivion_protocol():
+    """Epic 6: Runner Memoryが閾値を超過した際に古い記憶を忘却する"""
+    if not milvus_client: return
+    try:
+        stats = milvus_client.get_collection_stats(collection_name=CONFIG["COLLECTION_NAME"])
+        row_count = stats.get("row_count", 0)
+        MAX_MEMORY = 100
+        if row_count > MAX_MEMORY:
+            delete_count = row_count - MAX_MEMORY
+            res = milvus_client.query(
+                collection_name=CONFIG["COLLECTION_NAME"],
+                filter="",
+                output_fields=["id", "timestamp"],
+                limit=row_count
+            )
+            sorted_res = sorted(res, key=lambda x: x["timestamp"])
+            ids_to_delete = [x["id"] for x in sorted_res[:delete_count]]
+            if ids_to_delete:
+                milvus_client.delete(collection_name=CONFIG["COLLECTION_NAME"], ids=ids_to_delete)
+                logger.info(f"🧹 Oblivion Protocol: Forgotten {len(ids_to_delete)} oldest memories.")
+    except Exception as e:
+        logger.warning(f"⚠️ Oblivion Protocol check failed: {e}")
+
 @app.post("/memory/add")
 async def add_memory(req: MemoryAddRequest) -> Dict[str, Any]:
     """Runner Memoryに新しい記憶（コンテキスト/感情）を追加"""
@@ -266,6 +301,10 @@ async def add_memory(req: MemoryAddRequest) -> Dict[str, Any]:
         }
         milvus_client.insert(collection_name=CONFIG["COLLECTION_NAME"], data=[data])
         logger.info(f"💾 Memory saved for session [{req.session_id}] ({req.emotion})")
+        
+        # 忘却プロトコルの発動
+        await apply_oblivion_protocol()
+        
         return {"status": "success", "message": "Memory added to the Vault."}
     except Exception as e:
         logger.error(f"❌ Failed to add memory: {e}")
@@ -449,6 +488,9 @@ async def chat_with_elysia(request: ChatRequest):
         if request.stream:
             async def generate():
                 full_response = ""
+                # 初回チャンクで感情データのみ送信 (Epic 7)
+                yield f"data: {json.dumps({'emotion': user_emotion})}\n\n"
+
                 async with httpx.AsyncClient(timeout=CONFIG["OLLAMA_TIMEOUT"]) as client:
                     async with client.stream("POST", f"{CONFIG['OLLAMA_HOST']}/api/chat", json=ollama_request) as response:
                         async for line in response.aiter_lines():
@@ -492,7 +534,8 @@ async def chat_with_elysia(request: ChatRequest):
                 return ChatResponse(
                     response=safe_filter(assistant_message),
                     context=context_block,
-                    quotes=rag_res["quotes"]
+                    quotes=rag_res["quotes"],
+                    emotion=user_emotion
                 )
 
     except Exception as e:
