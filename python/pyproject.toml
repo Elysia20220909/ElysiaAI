@@ -1,0 +1,26 @@
+[project]
+name = "elysia-ai-backend"
+version = "2.0.0"
+description = "Elysia AI - The Anomaly in the Void (Runner Memory & Emotion Resonance backend)"
+readme = "../README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.6",
+    "uvicorn[standard]>=0.34.0",
+    "pymilvus[lite]>=2.5.10",
+    "openai>=1.59.6",
+    "sentence-transformers>=3.3.1",
+    "pydantic-settings>=2.0.0",
+    "httpx>=0.25.0",
+    "numpy>=1.26"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
