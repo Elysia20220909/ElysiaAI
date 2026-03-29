@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Connect to the host's Ollama instance to leverage host GPU
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      # Default Security Key (Vault Defenses)
+      - API_KEY=ELYSIATEST-001
+    volumes:
+      # Persist the Runner Memory Vector Database
+      - ./milvus_data:/app/milvus_data
+    # Required for Windows/Mac to access localhost of the host machine
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "3000:80"
+    volumes:
+      # Mount the static web UI
+      - ./public:/usr/share/nginx/html:ro

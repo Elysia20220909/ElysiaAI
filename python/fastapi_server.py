@@ -4,7 +4,8 @@ Elysia AI - RAG Server with FastAPI + Milvus Lite (Runner Memory)
 エリシアちゃんのセリフ検索＆長期記憶(Runner Memory)統合システム♡
 """
 from typing import List, Dict, Any, Optional
-from fastapi import FastAPI, Body, HTTPException
+from fastapi import FastAPI, Body, HTTPException, Depends, Request
+from fastapi.security import APIKeyHeader
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 import uvicorn
@@ -26,6 +27,8 @@ class Settings(BaseSettings):
     OLLAMA_HOST: str = "http://127.0.0.1:11434"
     OLLAMA_MODEL: str = "llama3.2"
     OLLAMA_TIMEOUT: float = 60.0
+    API_KEY: str = "ELYSIATEST-001"
+    RATE_LIMIT_BLOCK_TIME: int = 60
     
     # Embedding Configuration (Dual Support)
     EMBEDDING_PROVIDER: str = "local" # "local" or "openai"
@@ -283,7 +286,29 @@ async def apply_oblivion_protocol():
     except Exception as e:
         logger.warning(f"⚠️ Oblivion Protocol check failed: {e}")
 
-@app.post("/memory/add")
+# ==================== Vault Defenses Phase 2 ====================
+api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
+
+def verify_api_key(api_key: str = Depends(api_key_header)):
+    if api_key != CONFIG.get("API_KEY", "ELYSIATEST-001"):
+        raise HTTPException(status_code=403, detail="Vault Defenses Activated: Invalid API Key.")
+
+from collections import defaultdict
+request_logs = defaultdict(list)
+RATE_LIMIT_COUNT = 5
+RATE_LIMIT_WINDOW = 10 # seconds
+
+async def rate_limiter(request: Request):
+    client_ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    request_logs[client_ip] = [t for t in request_logs[client_ip] if now - t < RATE_LIMIT_WINDOW]
+    if len(request_logs[client_ip]) >= RATE_LIMIT_COUNT:
+        raise HTTPException(status_code=429, detail="Vault Defenses Activated: Rate limit exceeded.")
+    request_logs[client_ip].append(now)
+
+vault_defenses = [Depends(verify_api_key), Depends(rate_limiter)]
+
+@app.post("/memory/add", dependencies=vault_defenses)
 async def add_memory(req: MemoryAddRequest) -> Dict[str, Any]:
     """Runner Memoryに新しい記憶（コンテキスト/感情）を追加"""
     if not milvus_client:
@@ -310,7 +335,7 @@ async def add_memory(req: MemoryAddRequest) -> Dict[str, Any]:
         logger.error(f"❌ Failed to add memory: {e}")
         raise HTTPException(500, str(e))
 
-@app.post("/rag", response_model=RAGResponse)
+@app.post("/rag", response_model=RAGResponse, dependencies=vault_defenses)
 async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
     """
     RAG検索エンドポイント
@@ -405,7 +430,7 @@ async def analyze_emotion(text: str) -> str:
         logger.warning(f"⚠️ Emotion extraction failed: {e}")
         return "neutral"
 
-@app.post("/chat")
+@app.post("/chat", dependencies=vault_defenses)
 async def chat_with_elysia(request: ChatRequest):
     """
     Runner Memoryと感情共鳴エンジン（Anomaly Sensor）を統合したチャットエンドポイント
