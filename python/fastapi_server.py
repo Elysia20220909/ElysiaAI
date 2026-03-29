@@ -476,12 +476,21 @@ async def chat_with_elysia(request: ChatRequest):
                     quotes=rag_res["quotes"]
                 )
 
-    except httpx.ConnectError:
-        logger.error("❌ Cannot connect to Ollama.")
-        raise HTTPException(503, "Ollama service is not available.")
     except Exception as e:
-        logger.error(f"❌ Chat error: {e}")
-        raise HTTPException(500, f"Chat failed: {str(e)}")
+        logger.error(f"❌ Chat or Connection error: {e}")
+        # 【Epic 3: 優雅なフォールバック】エラー時もElysiaのキャラクター性を維持して会話を繋ぐ
+        fallback_msg = "んんっ……ごめんなさい、ちょっと考えがまとまらなくて……もう一度教えてもらえますか？"
+        
+        if request.stream:
+            async def fallback_generate():
+                yield f"data: {json.dumps({'content': fallback_msg})}\n\n"
+            return StreamingResponse(fallback_generate(), media_type="text/event-stream")
+        else:
+            return ChatResponse(
+                response=fallback_msg,
+                context="",
+                quotes=[]
+            )
 
 # ==================== メイン実行 ====================
 if __name__ == "__main__":
