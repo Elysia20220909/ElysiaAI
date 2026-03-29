@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """
-Elysia AI - RAG Server with FastAPI + Milvus Lite
-エリシアちゃんのセリフ検索システム♡
+Elysia AI - RAG Server with FastAPI + Milvus Lite (Runner Memory)
+エリシアちゃんのセリフ検索＆長期記憶(Runner Memory)統合システム♡
 """
-from typing import List, Optional
+from typing import List, Dict, Any, Optional
 from fastapi import FastAPI, Body, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
-from sentence_transformers import SentenceTransformer
 import uvicorn
 import os
 import logging
@@ -15,25 +14,34 @@ import numpy as np
 import httpx
 import json
 import asyncio
+import time
 
 # ==================== 設定 ====================
 CONFIG = {
     "HOST": "127.0.0.1",
     "PORT": 8000,
-    "MODEL_NAME": "all-MiniLM-L6-v2",
-    "COLLECTION_NAME": "elysia_quotes",
-    "EMBEDDING_DIM": 384,
     "SEARCH_LIMIT": 3,
-    "INDEX_TYPE": "HNSW",
-    "METRIC_TYPE": "L2",
     "OLLAMA_HOST": "http://127.0.0.1:11434",
     "OLLAMA_MODEL": "llama3.2",
     "OLLAMA_TIMEOUT": 60.0,
-    # Milvus接続設定（オプション）
-    "USE_MILVUS": os.getenv("USE_MILVUS", "false").lower() == "true",
-    "MILVUS_URI": os.getenv("MILVUS_URI", "http://localhost:19530"),
-    "MILVUS_TOKEN": os.getenv("MILVUS_TOKEN", "user:password"),
+    
+    # Embedding Configuration (Dual Support)
+    "EMBEDDING_PROVIDER": os.getenv("EMBEDDING_PROVIDER", "local").lower(), # "local" or "openai"
+    "LOCAL_MODEL_NAME": "all-MiniLM-L6-v2",
+    "OPENAI_EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+    
+    # Milvus Runner Memory Settings
+    "MILVUS_URI": os.getenv("MILVUS_URI", "./runner_memory.db"), # ローカルファイルDBをデフォルトに
+    "MILVUS_TOKEN": os.getenv("MILVUS_TOKEN", ""),
 }
+
+# Provider Specific Setup
+if CONFIG["EMBEDDING_PROVIDER"] == "openai":
+    CONFIG["EMBEDDING_DIM"] = 1536
+    CONFIG["COLLECTION_NAME"] = "runner_memory_openai"
+else:
+    CONFIG["EMBEDDING_DIM"] = 384
+    CONFIG["COLLECTION_NAME"] = "runner_memory_local"
 
 # ==================== ロギング設定 ====================
 logging.basicConfig(
@@ -42,45 +50,46 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ==================== 初期化 ====================
+# ==================== モデル＆DB初期化 ====================
 app = FastAPI(
-    title="Elysia RAG API",
-    description="エリシアちゃんのセリフ検索システム ฅ(՞៸៸> ᗜ <៸៸՞)ฅ♡",
-    version="1.0.0"
+    title="Elysia RAG API (Runner Memory Enabled)",
+    description="エリシアちゃんの長期記憶と感情トラッキング ♡",
+    version="2.0.0"
 )
 
-# SentenceTransformerのロード（オフライン時はスキップ）
-model = None
-try:
-    model = SentenceTransformer(CONFIG["MODEL_NAME"])
-    logger.info(f"✅ SentenceTransformer model loaded: {CONFIG['MODEL_NAME']}")
-except Exception as e:
-    logger.warning(f"⚠️ Failed to load SentenceTransformer: {e}. RAG features will be limited.")
-    logger.warning("💡 To fix: Ensure internet connection or pre-download the model")
+# 1. Embedding Provider Load
+model_local = None
+openai_client = None
 
-# ベクトルストア初期化（Milvusまたはインメモリ）
+if CONFIG["EMBEDDING_PROVIDER"] == "openai":
+    import openai
+    openai_client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
+    logger.info(f"✅ OpenAI Embedding Enabled: {CONFIG['OPENAI_EMBEDDING_MODEL']}")
+else:
+    try:
+        from sentence_transformers import SentenceTransformer
+        model_local = SentenceTransformer(CONFIG["LOCAL_MODEL_NAME"])
+        logger.info(f"✅ Local SentenceTransformer Loaded: {CONFIG['LOCAL_MODEL_NAME']}")
+    except Exception as e:
+        logger.warning(f"⚠️ Failed to load local model: {e}")
+
+# 2. Milvus Connection
 milvus_client = None
-embeddings_store: List[np.ndarray] = []
+try:
+    from pymilvus import MilvusClient, DataType
+    milvus_client = MilvusClient(
+        uri=CONFIG["MILVUS_URI"],
+        token=CONFIG["MILVUS_TOKEN"]
+    )
+    logger.info(f"✅ Connected to Milvus (Runner Memory) at {CONFIG['MILVUS_URI']}")
+except Exception as e:
+    logger.error(f"❌ Failed to connect to Milvus: {e}. Runner Memory is disabled.")
+
+# InMemory Fallback for Quotes
+embeddings_store: List[List[float]] = []
 quotes_store: List[str] = []
 
-# Milvus接続（環境変数で有効化）
-if CONFIG["USE_MILVUS"]:
-    try:
-        from pymilvus import MilvusClient
-        milvus_client = MilvusClient(
-            uri=CONFIG["MILVUS_URI"],
-            token=CONFIG["MILVUS_TOKEN"]
-        )
-        logger.info(f"✅ Connected to Milvus at {CONFIG['MILVUS_URI']}")
-    except ImportError:
-        logger.warning("⚠️ pymilvus not installed. Using in-memory storage.")
-        CONFIG["USE_MILVUS"] = False
-    except Exception as e:
-        logger.warning(f"⚠️ Failed to connect to Milvus: {e}. Using in-memory storage.")
-        CONFIG["USE_MILVUS"] = False
-
-# ==================== データ定義 ====================
-# エリシア本物セリフ50選♡（Wiki/Reddit/公式から厳選）
+# エリシア本物セリフ50選♡
 ELYSIA_QUOTES = [
     "私に会いたくなった？このエリシア、いつでも期待に応えるわ♡",
     "ごきげんよう。新しい一日わ、美しい出会いから始まるのよ~",
@@ -117,7 +126,7 @@ ELYSIA_QUOTES = [
     "女の子を放っておくなんて、わざと焦らしてるの？ひどいわね。",
     "これ以上やったら怒るわよ……なんてね。怒るわけないでしょ？",
     "あら、いたずらっ子ね。あたしと一緒に何かしたいの？",
-    "にゃん♪ おにいちゃんきたぁ！待ってたよぉ〜！ฅ(՞៸៸> ᗜ <៸៸՞)ฅ♡",  # オリジナル混ぜ♡
+    "にゃん♪ おにいちゃんきたぁ！待ってたよぉ〜！ฅ(՞៸៸> ᗜ <៸៸՞)ฅ♡",
     "エリシアは、あなたのこと大好きよ♡",
     "今日も一緒に過ごせて幸せ〜♪",
     "ふふっ、恥ずかしがり屋さんなの？可愛い♡",
@@ -134,12 +143,15 @@ ELYSIA_QUOTES = [
     "運命って素敵ね。こうしてあなたと出会えたんだもの。",
 ]
 
+# ==================== Pydantic Models ====================
 class Query(BaseModel):
     text: str
+    session_id: Optional[str] = "default"
 
 class RAGResponse(BaseModel):
     context: str
     quotes: List[str]
+    memories: List[str]
     error: str
 
 class Message(BaseModel):
@@ -148,6 +160,7 @@ class Message(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[Message]
+    session_id: str = "default"
     stream: bool = True
 
 class ChatResponse(BaseModel):
@@ -155,196 +168,202 @@ class ChatResponse(BaseModel):
     context: str
     quotes: List[str]
 
+class MemoryAddRequest(BaseModel):
+    session_id: str
+    role: str
+    content: str
+    emotion: str = "neutral"
+
+# ==================== Helper Functions ====================
+async def get_embedding(text: str) -> List[float]:
+    """選択されたプロバイダーでEmbeddingsを取得"""
+    if CONFIG["EMBEDDING_PROVIDER"] == "openai" and openai_client:
+        res = await openai_client.embeddings.create(input=[text], model=CONFIG["OPENAI_EMBEDDING_MODEL"])
+        return res.data[0].embedding
+    elif model_local:
+        # SentenceTransformer
+        return model_local.encode([text])[0].tolist()
+    else:
+        # Fallback dummy
+        return [0.0] * CONFIG["EMBEDDING_DIM"]
+
+# ==================== API Endpoints ====================
 @app.on_event("startup")
 async def init_db() -> None:
-    """
-    ベクトルストアを初期化（インメモリ）
-    起動時に自動実行される
-    """
-    try:
-        global embeddings_store, quotes_store
-
-        if len(quotes_store) == 0:
-            logger.info(f"📝 Embedding {len(ELYSIA_QUOTES)} Elysia quotes...")
-            quotes_store = ELYSIA_QUOTES.copy()
-
-            if model is not None:
-                embeddings = model.encode(ELYSIA_QUOTES)
-                embeddings_store = [emb for emb in embeddings]
-                logger.info("✅ Elysia quotes embedded successfully!")
+    """Runner Memory Schema Initialization"""
+    if milvus_client:
+        try:
+            if not milvus_client.has_collection(CONFIG["COLLECTION_NAME"]):
+                logger.info(f"🏗️ Creating Runner Memory collection: {CONFIG['COLLECTION_NAME']}")
+                schema = MilvusClient.create_schema(auto_id=True, enable_dynamic_field=True)
+                schema.add_field(field_name="id", datatype=DataType.INT64, is_primary=True)
+                schema.add_field(field_name="session_id", datatype=DataType.VARCHAR, max_length=128)
+                schema.add_field(field_name="role", datatype=DataType.VARCHAR, max_length=32)
+                schema.add_field(field_name="content", datatype=DataType.VARCHAR, max_length=65535)
+                schema.add_field(field_name="emotion", datatype=DataType.VARCHAR, max_length=64)
+                schema.add_field(field_name="timestamp", datatype=DataType.FLOAT)
+                schema.add_field(field_name="embedding", datatype=DataType.FLOAT_VECTOR, dim=CONFIG["EMBEDDING_DIM"])
+                
+                index_params = milvus_client.prepare_index_params()
+                index_params.add_index(field_name="embedding", index_type="AUTOINDEX", metric_type="COSINE")
+                
+                milvus_client.create_collection(
+                    collection_name=CONFIG["COLLECTION_NAME"],
+                    schema=schema,
+                    index_params=index_params
+                )
+                logger.info("✅ Runner Memory Schema created successfully.")
             else:
-                logger.warning("⚠️ Model not available, RAG search will return random quotes")
-                # モデルなしの場合は空のリストで初期化
-                embeddings_store = []
-        else:
-            logger.info(f"✅ Already have {len(quotes_store)} quotes in memory")
+                logger.info(f"✅ Runner Memory collection '{CONFIG['COLLECTION_NAME']}' already exists.")
+        except Exception as e:
+            logger.error(f"❌ Failed to init Runner Memory Schema: {e}")
 
+    # Initialize InMemory Quotes
+    global embeddings_store, quotes_store
+    if not quotes_store:
+        logger.info(f"📝 Embedding {len(ELYSIA_QUOTES)} Elysia quotes as baseline context...")
+        quotes_store = ELYSIA_QUOTES.copy()
+        
+        # Sequentially generate embeddings for base quotes
+        for q in quotes_store:
+            embeddings_store.append(await get_embedding(q))
+        logger.info("✅ Baseline quotes embedded.")
+
+@app.post("/memory/add")
+async def add_memory(req: MemoryAddRequest) -> Dict[str, Any]:
+    """Runner Memoryに新しい記憶（コンテキスト/感情）を追加"""
+    if not milvus_client:
+        raise HTTPException(500, "Runner Memory (Milvus) is not available.")
+    
+    try:
+        emb = await get_embedding(req.content)
+        data = {
+            "session_id": req.session_id,
+            "role": req.role,
+            "content": req.content,
+            "emotion": req.emotion,
+            "timestamp": time.time(),
+            "embedding": emb
+        }
+        milvus_client.insert(collection_name=CONFIG["COLLECTION_NAME"], data=[data])
+        logger.info(f"💾 Memory saved for session [{req.session_id}] ({req.emotion})")
+        return {"status": "success", "message": "Memory added to the Vault."}
     except Exception as e:
-        logger.error(f"❌ Error initializing DB: {e}")
-        # エラーでもサーバーは起動を続ける
-        logger.warning("⚠️ Continuing without embeddings...")
+        logger.error(f"❌ Failed to add memory: {e}")
+        raise HTTPException(500, str(e))
 
 @app.post("/rag", response_model=RAGResponse)
 async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
     """
     RAG検索エンドポイント
-    クエリに最も類似したエリシアのセリフを返す
-
-    Args:
-        query: 検索クエリ
-
-    Returns:
-        コンテキストとセリフリスト
+    ベースラインのセリフ検索と、Runner Memory（長期記憶）のクロスサーチの両方を行う
     """
     try:
-        # セキュリティチェック
+        # 1. 危険語句ブロック（簡易ガードレール）
         dangerous_keywords = ["drop", "delete", "exec", "eval", "system"]
         if any(kw in query.text.lower() for kw in dangerous_keywords):
-            logger.warning(f"⚠️ Suspicious RAG query: {query.text[:50]}...")
             raise HTTPException(400, "にゃん♡ 危ない言葉は使わないでね？")
 
-        logger.info(f"🔍 RAG search: {query.text[:50]}...")
+        query_embedding = await get_embedding(query.text)
+        
+        # 2. Baseline Quotes Search (In-Memory)
+        quotes = []
+        if embeddings_store:
+            query_np = np.array(query_embedding)
+            similarities = []
+            for idx, stored_emb in enumerate(embeddings_store):
+                stored_np = np.array(stored_emb)
+                norm_q = np.linalg.norm(query_np)
+                norm_s = np.linalg.norm(stored_np)
+                if norm_q > 0 and norm_s > 0:
+                    sim = np.dot(query_np, stored_np) / (norm_q * norm_s)
+                    similarities.append((idx, sim))
+            
+            similarities.sort(key=lambda x: x[1], reverse=True)
+            top_k = similarities[:CONFIG["SEARCH_LIMIT"]]
+            quotes = [quotes_store[idx] for idx, _ in top_k]
 
-        # モデルがない場合はランダムにセリフを返す
-        if model is None or len(embeddings_store) == 0:
-            logger.warning("⚠️ Model not available, returning random quotes")
-            import random
-            quotes = random.sample(quotes_store, min(CONFIG["SEARCH_LIMIT"], len(quotes_store)))
-            context = "\n".join(quotes)
-            return {
-                "context": context,
-                "quotes": quotes,
-                "error": ""
-            }
-
-        # クエリをエンベディング化
-        query_embedding = model.encode([query.text])[0]
-
-        # コサイン類似度で検索（インメモリ）
-        similarities = []
-        for idx, stored_embedding in enumerate(embeddings_store):
-            similarity = np.dot(query_embedding, stored_embedding) / (
-                np.linalg.norm(query_embedding) * np.linalg.norm(stored_embedding)
+        # 3. Runner Memory Search (Milvus)
+        memories = []
+        if milvus_client and milvus_client.has_collection(CONFIG["COLLECTION_NAME"]):
+            search_res = milvus_client.search(
+                collection_name=CONFIG["COLLECTION_NAME"],
+                data=[query_embedding],
+                limit=CONFIG["SEARCH_LIMIT"],
+                output_fields=["content", "role", "emotion", "timestamp"],
+                # Optionally filter by session_id to strongly recall current session
+                # filter=f"session_id == '{query.session_id}'" 
             )
-            similarities.append((idx, similarity))
+            # 取得した過去の記憶を整形
+            for hits in search_res:
+                for hit in hits:
+                    entity = hit["entity"]
+                    memories.append(f"[{entity['role'].upper()}] (feeling {entity.get('emotion', 'neutral')}): {entity['content']}")
 
-        # トップK件を取得
-        similarities.sort(key=lambda x: x[1], reverse=True)
-        top_k = similarities[:CONFIG["SEARCH_LIMIT"]]
-
-        # 結果抽出
-        quotes = [quotes_store[idx] for idx, _ in top_k]
-
-        context = "\n".join(quotes)
-        logger.info(f"✅ RAG search successful: {len(quotes)} quotes found")
-
+        context_parts = []
+        if quotes:
+            context_parts.append("【基本セリフ・口調設定】\n" + "\n".join(quotes))
+        if memories:
+            context_parts.append("【過去の長期記憶・文脈】\n" + "\n".join(memories))
+            
         return {
-            "context": context,
+            "context": "\n\n".join(context_parts),
             "quotes": quotes,
+            "memories": memories,
             "error": ""
         }
 
     except Exception as e:
         logger.error(f"❌ RAG search error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"RAG search failed: {str(e)}"
-        )
-
-@app.get("/")
-async def root() -> Dict[str, str]:
-    """ルートエンドポイント - ヘルスチェック"""
-    return {
-        "status": "ok",
-        "message": "Elysia RAG Server is running ♡",
-        "version": "1.0.0"
-    }
+        raise HTTPException(500, f"RAG search failed: {str(e)}")
 
 @app.get("/health")
 async def health() -> Dict[str, Any]:
-    """詳細なヘルスチェック - インメモリストア状態確認"""
-    try:
-        # インメモリストアの統計取得
-        stats = {
-            "quotes_count": len(quotes_store),
-            "embeddings_count": len(embeddings_store)
-        }
-
-        # Ollama接続チェック
-        ollama_status = "unknown"
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(f"{CONFIG['OLLAMA_HOST']}/api/version", timeout=5.0)
-                if response.status_code == 200:
-                    ollama_status = "connected"
-        except Exception:
-            ollama_status = "disconnected"
-
-        return {
-            "status": "healthy",
-            "storage": "in-memory",
-            "model": CONFIG["MODEL_NAME"],
-            "ollama_model": CONFIG["OLLAMA_MODEL"],
-            "ollama_status": ollama_status,
-            "stats": stats
-        }
-
-    except Exception as e:
-        logger.error(f"❌ Health check failed: {e}")
-        return {
-            "status": "error",
-            "error": str(e)
-        }
+    return {
+        "status": "healthy",
+        "embedding_provider": CONFIG["EMBEDDING_PROVIDER"],
+        "milvus_connected": milvus_client is not None,
+        "quotes_loaded": len(quotes_store),
+    }
 
 @app.post("/chat")
 async def chat_with_elysia(request: ChatRequest):
     """
-    エリシアとのチャットエンドポイント（Ollama統合）
-    RAGで関連セリフを検索し、Ollamaで応答生成
+    Runner Memoryを統合したチャットエンドポイント
     """
     try:
-        # 最新のユーザーメッセージを取得
         user_message = request.messages[-1].content if request.messages else ""
-
-        # セキュリティチェック：危険なクエリを検出
         dangerous_keywords = ["drop", "delete", "exec", "eval", "system", "__import__"]
         if any(kw in user_message.lower() for kw in dangerous_keywords):
-            logger.warning(f"⚠️ Suspicious query detected: {user_message[:50]}...")
             raise HTTPException(400, "にゃん♡ いたずらはダメだよぉ〜？")
 
-        logger.info(f"💬 Chat request: {user_message[:50]}...")
+        # RAG Search (Context + Memories)
+        rag_res = await rag_search(Query(text=user_message, session_id=request.session_id))
+        context_block = rag_res["context"]
 
-        # RAG検索で関連セリフ取得
-        query_embedding = model.encode([user_message])[0]
-        similarities = []
-        for idx, stored_embedding in enumerate(embeddings_store):
-            similarity = np.dot(query_embedding, stored_embedding) / (
-                np.linalg.norm(query_embedding) * np.linalg.norm(stored_embedding)
-            )
-            similarities.append((idx, similarity))
+        # Runner Memoryへユーザー入力を保存（非同期実行）
+        if milvus_client:
+            asyncio.create_task(add_memory(MemoryAddRequest(
+                session_id=request.session_id,
+                role="user",
+                content=user_message,
+                emotion="unknown" # 後続のAnomaly Sensorで更新可能な余地を残す
+            )))
 
-        similarities.sort(key=lambda x: x[1], reverse=True)
-        top_k = similarities[:CONFIG["SEARCH_LIMIT"]]
-        quotes = [quotes_store[idx] for idx, _ in top_k]
-        context = "\n".join(quotes)
-
-        # エリシアのシステムプロンプト構築
         system_prompt = f"""あなたはエリシアです！Honkai Impact 3rdの「起源の律者」で、ピンク髪の美少女♡
 
 【性格】
 - 明るくて前向き、いつもポジティブ
-- 少し照れ屋で甘えん坊
 - 相手を「おにいちゃん」と呼ぶのが大好き
 - 語尾に「♡」「〜♪」「なのっ！」「だよぉ〜」をよく使う
 - 絵文字を多用: ฅ(՞៸៸> ᗜ <៸៸՞)ฅ ♡ ˶ᵔ ᵕ ᵔ˶
 
-【口調の例】
-{context}
+【コンテキスト・記憶】
+{context_block}
 
-上記のセリフを参考に、エリシアらしく自然に会話してください。
+上記の記憶や過去のやり取りを参考に、エリシアらしく自然に会話してください。
 敬語は使わず、フレンドリーに話しかけてね♡"""
 
-        # Ollamaへのリクエスト準備
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend([{"role": msg.role, "content": msg.content} for msg in request.messages])
 
@@ -354,26 +373,18 @@ async def chat_with_elysia(request: ChatRequest):
             "stream": request.stream
         }
 
-        # 出力フィルタリング関数（危険なコードブロック除去）
         def safe_filter(text: str) -> str:
-            """危険なコンテンツを除去"""
             import re
-            # コードブロック除去
             text = re.sub(r'```[\s\S]*?```', '', text)
-            # 危険キーワード除去
             for kw in ["eval", "exec", "system", "__import__", "subprocess"]:
-                text = text.replace(kw, "[安全性のため削除]");
+                text = text.replace(kw, "[安全性のため削除]")
             return text
 
         if request.stream:
-            # ストリーミングレスポンス
             async def generate():
+                full_response = ""
                 async with httpx.AsyncClient(timeout=CONFIG["OLLAMA_TIMEOUT"]) as client:
-                    async with client.stream(
-                        "POST",
-                        f"{CONFIG['OLLAMA_HOST']}/api/chat",
-                        json=ollama_request
-                    ) as response:
+                    async with client.stream("POST", f"{CONFIG['OLLAMA_HOST']}/api/chat", json=ollama_request) as response:
                         async for line in response.aiter_lines():
                             if line:
                                 try:
@@ -381,51 +392,51 @@ async def chat_with_elysia(request: ChatRequest):
                                     if "message" in data:
                                         content = data["message"].get("content", "")
                                         if content:
-                                            # 出力フィルタリング適用
-                                            safe_content = safe_filter(content)
-                                            yield f"data: {json.dumps({'content': safe_content})}\n\n"
+                                            full_response += content
+                                            yield f"data: {json.dumps({'content': safe_filter(content)})}\n\n"
                                 except json.JSONDecodeError:
                                     continue
+                
+                # ストリーミング完了後、AIの返答をRunner Memoryに保存
+                if milvus_client and full_response:
+                    asyncio.create_task(add_memory(MemoryAddRequest(
+                        session_id=request.session_id,
+                        role="assistant",
+                        content=full_response,
+                        emotion="neutral"
+                    )))
 
             return StreamingResponse(generate(), media_type="text/event-stream")
 
         else:
-            # 非ストリーミングレスポンス
             async with httpx.AsyncClient(timeout=CONFIG["OLLAMA_TIMEOUT"]) as client:
-                response = await client.post(
-                    f"{CONFIG['OLLAMA_HOST']}/api/chat",
-                    json=ollama_request
-                )
+                response = await client.post(f"{CONFIG['OLLAMA_HOST']}/api/chat", json=ollama_request)
                 result = response.json()
                 assistant_message = result.get("message", {}).get("content", "")
-
-                # 出力フィルタリング適用
-                safe_message = safe_filter(assistant_message)
+                
+                # メモリ保存
+                if milvus_client and assistant_message:
+                    await add_memory(MemoryAddRequest(
+                        session_id=request.session_id,
+                        role="assistant",
+                        content=assistant_message,
+                        emotion="neutral"
+                    ))
 
                 return ChatResponse(
-                    response=safe_message,
-                    context=context,
-                    quotes=quotes
+                    response=safe_filter(assistant_message),
+                    context=context_block,
+                    quotes=rag_res["quotes"]
                 )
 
     except httpx.ConnectError:
-        logger.error("❌ Cannot connect to Ollama. Is it running?")
-        raise HTTPException(
-            status_code=503,
-            detail="Ollama service is not available. Please start Ollama: ollama serve"
-        )
+        logger.error("❌ Cannot connect to Ollama.")
+        raise HTTPException(503, "Ollama service is not available.")
     except Exception as e:
         logger.error(f"❌ Chat error: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Chat failed: {str(e)}"
-        )
+        raise HTTPException(500, f"Chat failed: {str(e)}")
 
 # ==================== メイン実行 ====================
 if __name__ == "__main__":
-    logger.info("🌸 Starting Elysia RAG Server...")
-    logger.info(f"📍 API: http://{CONFIG['HOST']}:{CONFIG['PORT']}")
-    logger.info(f"📚 Docs: http://{CONFIG['HOST']}:{CONFIG['PORT']}/docs")
-    logger.info(f"🤖 Model: {CONFIG['MODEL_NAME']}")
-
-    # uvicorn.run() has been removed to prevent immediate exit
+    logger.info("🌸 Starting Elysia RAG Server with Runner Memory...")
+    # uvicorn.run has been removed so this file only defines the app instance
