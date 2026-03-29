@@ -16,32 +16,51 @@ import json
 import asyncio
 import time
 import datetime
-# ==================== 設定 ====================
-CONFIG = {
-    "HOST": "127.0.0.1",
-    "PORT": 8000,
-    "SEARCH_LIMIT": 3,
-    "OLLAMA_HOST": "http://127.0.0.1:11434",
-    "OLLAMA_MODEL": "llama3.2",
-    "OLLAMA_TIMEOUT": 60.0,
+from pydantic_settings import BaseSettings
+
+# ==================== 設定 (Pydantic Settings) ====================
+class Settings(BaseSettings):
+    HOST: str = "127.0.0.1"
+    PORT: int = 8000
+    SEARCH_LIMIT: int = 3
+    OLLAMA_HOST: str = "http://127.0.0.1:11434"
+    OLLAMA_MODEL: str = "llama3.2"
+    OLLAMA_TIMEOUT: float = 60.0
     
     # Embedding Configuration (Dual Support)
-    "EMBEDDING_PROVIDER": os.getenv("EMBEDDING_PROVIDER", "local").lower(), # "local" or "openai"
-    "LOCAL_MODEL_NAME": "all-MiniLM-L6-v2",
-    "OPENAI_EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+    EMBEDDING_PROVIDER: str = "local" # "local" or "openai"
+    LOCAL_MODEL_NAME: str = "all-MiniLM-L6-v2"
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    OPENAI_API_KEY: str = ""
     
     # Milvus Runner Memory Settings
-    "MILVUS_URI": os.getenv("MILVUS_URI", "./runner_memory.db"), # ローカルファイルDBをデフォルトに
-    "MILVUS_TOKEN": os.getenv("MILVUS_TOKEN", ""),
-}
+    MILVUS_URI: str = "./runner_memory.db"
+    MILVUS_TOKEN: str = ""
 
-# Provider Specific Setup
-if CONFIG["EMBEDDING_PROVIDER"] == "openai":
-    CONFIG["EMBEDDING_DIM"] = 1536
-    CONFIG["COLLECTION_NAME"] = "runner_memory_openai"
-else:
-    CONFIG["EMBEDDING_DIM"] = 384
-    CONFIG["COLLECTION_NAME"] = "runner_memory_local"
+    @property
+    def EMBEDDING_DIM(self) -> int:
+        return 1536 if "openai" in self.EMBEDDING_PROVIDER.lower() else 384
+        
+    @property
+    def COLLECTION_NAME(self) -> str:
+        return "runner_memory_openai" if "openai" in self.EMBEDDING_PROVIDER.lower() else "runner_memory_local"
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore" # Ignore extra env vars that might be in .env
+
+_settings = Settings()
+
+# 既存コードとの互換性レイヤー (Dict based config)
+CONFIG = _settings.model_dump()
+CONFIG["EMBEDDING_PROVIDER"] = _settings.EMBEDDING_PROVIDER.lower()
+CONFIG["EMBEDDING_DIM"] = _settings.EMBEDDING_DIM
+CONFIG["COLLECTION_NAME"] = _settings.COLLECTION_NAME
+
+# OpenAI API Key injection for client fallback
+if _settings.OPENAI_API_KEY:
+    os.environ["OPENAI_API_KEY"] = _settings.OPENAI_API_KEY
 
 # ==================== ロギング設定 ====================
 logging.basicConfig(
