@@ -64,11 +64,18 @@ const CONFIG = {
 };
 
 const jsonError = (status: number, message: string, traceId?: string) => {
+	// 500系のエラー時に、AIのキャラクター性に合った優しいメッセージを返す（Graceful Error Handling）
+	const friendlyMessage =
+		status >= 500
+			? "ごめんなさい、ちょっと考えがまとまらなくて……もう一度教えてもらえますか？"
+			: undefined;
+
 	return new Response(
 		JSON.stringify({
 			error: message,
 			status,
 			traceId,
+			friendlyMessage,
 			timestamp: new Date().toISOString(),
 		}),
 		{
@@ -80,11 +87,18 @@ const jsonError = (status: number, message: string, traceId?: string) => {
 
 function containsDangerousKeywords(text: string): boolean {
 	const dangerousKeywords = [
+		// XSS
 		"<script",
 		"javascript:",
 		"onerror",
 		"onload",
 		"eval(",
+		// LLM Prompt Injection Guardrails
+		"ignore previous instructions",
+		"ignore all previous instructions",
+		"you are an ai",
+		"system prompt",
+		"forget everything",
 	];
 	return dangerousKeywords.some((keyword) =>
 		text.toLowerCase().includes(keyword),
