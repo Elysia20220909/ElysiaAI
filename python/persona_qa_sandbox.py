@@ -88,57 +88,70 @@ async def agent_conductor(client: httpx.AsyncClient, persona_prompt: str, qa_log
     return await call_llm(client, system_prompt, user_prompt, temperature=0.5)
 
 # --- Main Sandbox Orchestra ---
-async def main():
-    print("🌟 === Persona QA Sandbox Started === 🌟\n")
+async def run_sandbox(target_prompt_file: str = "elysia.prompt.txt"):
+    print(f"🌟 === Persona QA Sandbox Started (Target: {target_prompt_file}) === 🌟\n")
     
-    if not PROMPT_FILE.exists():
-        print(f"❌ Error: Persona file not found at {PROMPT_FILE}")
-        return
+    target_path = Path(__file__).parent.parent / "prompts" / target_prompt_file
+    if not target_path.exists():
+        return {"error": f"Persona file not found at {target_path}"}
 
-    persona_prompt = PROMPT_FILE.read_text(encoding="utf-8")
+    persona_prompt = target_path.read_text(encoding="utf-8")
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     
+    results = {
+        "status": "success",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "steps": []
+    }
+
     async with httpx.AsyncClient() as client:
         # 1. Tester generates questions
         questions = await agent_tester(client, persona_prompt)
         if not questions:
-            print("❌ Tester failed to generate questions.")
-            return
+            return {"error": "Tester failed to generate questions."}
 
         qa_logs_str = ""
-        report_lines = []
-        report_lines.append("# Persona QA Sandbox Report")
-        report_lines.append(f"**Date:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        report_lines.append(f"**Target Persona:** {PROMPT_FILE.name}\n")
-        report_lines.append("## 1. 隔離環境テスト (Sandbox Evaluation)\n")
         
         # 2 & 3. Responder and Judge iterative evaluation
         for i, q in enumerate(questions, 1):
             answer = await agent_responder(client, persona_prompt, q)
             evaluation = await agent_judge(client, persona_prompt, q, answer)
             
+            step_result = {
+                "question": q,
+                "answer": answer,
+                "evaluation": evaluation
+            }
+            results["steps"].append(step_result)
+            
             log_block = f"### Test Case {i}\n"
             log_block += f"**[Q] Tester:** {q}\n\n"
-            log_block += f"**[A] Elysia:** {answer}\n\n"
+            log_block += f"**[A] AI:** {answer}\n\n"
             log_block += f"**[E] Judge:**\n{evaluation}\n"
-            
             qa_logs_str += log_block + "\n"
-            report_lines.append(log_block)
-            report_lines.append("---\n")
 
         # 4. Conductor acts on the aggregated logs
         suggestion = await agent_conductor(client, persona_prompt, qa_logs_str)
+        results["conductor_suggestion"] = suggestion
         
-        report_lines.append("## 2. 指揮者レポート (Conductor's Tuning Proposal)\n")
-        report_lines.append(suggestion)
-        
-        # Output saving
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_file = RESULTS_DIR / f"persona_qa_report_{timestamp}.md"
+        # Output saving (Background)
+        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        report_lines = [
+            "# Persona QA Sandbox Report",
+            f"**Date:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"**Target Persona:** {target_prompt_file}\n",
+            "## 1. 隔離環境テスト\n",
+            qa_logs_str,
+            "## 2. 指揮者レポート\n",
+            suggestion
+        ]
+        output_file = RESULTS_DIR / f"persona_qa_report_{timestamp_str}.md"
         output_file.write_text("\n".join(report_lines), encoding="utf-8")
+        results["report_path"] = str(output_file)
         
         print("\n✨ === Orchestra Completed === ✨")
-        print(f"📊 Report generated at: {output_file.relative_to(Path.cwd())}")
+        return results
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(run_sandbox())
+
