@@ -194,9 +194,10 @@ const appChat: AppConfig = {
 					portrait.src = data.portrait_url;
 					emotionLabel.innerText = data.emotion.toUpperCase();
 				}
-			} catch (e) {
+			} catch (_e) {
 				addMessage("エラーが発生しました。接続を確認してください。", "system");
 			}
+
 		};
 
 		sendBtn.onclick = handleChat;
@@ -248,9 +249,10 @@ const appSandbox: AppConfig = {
 					await new Promise((r) => setTimeout(r, 800));
 				}
 				term.innerText += "\n\n✨ [SUCCESS] Sandbox Session Completed.";
-			} catch (e) {
+			} catch (_e) {
 				term.innerText += "\n[ERROR] Connection failed.";
 			} finally {
+
 				runBtn.disabled = false;
 			}
 		};
@@ -280,6 +282,203 @@ const appVault: AppConfig = {
 	},
 };
 
+// App: Terminal (POSIX Shell)
+const appTerminal: AppConfig = {
+	id: "terminal",
+	name: "Elysia Terminal (sh)",
+	icon: "/assets/icons/chat.png",
+	width: 600,
+	height: 400,
+	contentRenderer: (body) => {
+		body.innerHTML = `
+      <style>
+        @keyframes pulse {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(400%); }
+        }
+      </style>
+      <div class="terminal-wrapper" style="height:100%; background:#000; color:#34d399; font-family:monospace; padding:12px; overflow-y:auto; font-size:13px;">
+        <div id="term-output">ElysiaOS 1.0.0-resonance (tty1)\nLogin: hoshino\nLast login: Thu Apr  2 13:28:53 on tty1\n\n</div>
+        <div style="display:flex;">
+          <span style="color:#ffb7c5; margin-right:8px;">hoshino@elysiaAI:~$</span>
+          <input type="text" id="term-input" style="flex-grow:1; background:transparent; border:none; color:#34d399; outline:none; font-family:monospace; font-size:13px;">
+        </div>
+      </div>
+    `;
+
+		const output = body.querySelector("#term-output") as HTMLElement;
+		const input = body.querySelector("#term-input") as HTMLInputElement;
+
+		input.onkeydown = async (e) => {
+			if (e.key === "Enter") {
+				const cmd = input.value.trim();
+				input.value = "";
+				output.innerText += `hoshino@elysiaAI:~$ ${cmd}\n`;
+
+				if (cmd === "clear") {
+					output.innerText = "";
+					return;
+				}
+
+				try {
+					const response = await fetch(`${API_BASE}/system/shell`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+						body: JSON.stringify({ command: cmd }),
+					});
+					const data = await response.json();
+					output.innerText += `${data.output}\n`;
+				} catch (_err) {
+					output.innerText += "sh: connection to kernel lost\n";
+				}
+
+				output.parentElement?.scrollTo(0, output.parentElement.scrollHeight);
+			}
+		};
+		// Auto-focus terminal
+		setTimeout(() => input.focus(), 100);
+	},
+};
+
+// App: Finder (File Manager)
+const appFinder: AppConfig = {
+	id: "finder",
+	name: "Finder",
+	icon: "/assets/icons/finder.png",
+	width: 600,
+	height: 400,
+	contentRenderer: async (body) => {
+		const renderFiles = async (path = ".") => {
+			body.innerHTML = `<div style="padding:20px; color:white; font-family:'Inter', sans-serif;">
+        <h3 style="margin-bottom:16px; opacity:0.7;">ElysiaOS / ${path}</h3>
+        <div id="file-list" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap:20px;">
+          Loading...
+        </div>
+      </div>`;
+			try {
+				const res = await fetch(`${API_BASE}/system/files/list`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+					body: JSON.stringify({ path }),
+				});
+				const data = await res.json();
+				const list = body.querySelector("#file-list") as HTMLElement;
+				list.innerHTML = data.items
+					.map(
+						(item: any) => `
+          <div class="file-item" style="text-align:center; cursor:pointer;" onclick="window.dispatchEvent(new CustomEvent('finder-cd', {detail: '${path}/${item.name}'}))">
+            <div style="font-size:32px;">${item.isDir ? "📁" : "📄"}</div>
+            <div style="font-size:12px; margin-top:8px; word-break:break-all;">${item.name}</div>
+          </div>
+        `,
+					)
+					.join("");
+			} catch (_err) {
+				body.innerHTML = `<div style="padding:20px; color:#ff4d4d;">Failed to load files</div>`;
+			}
+		};
+		window.addEventListener("finder-cd", ((e: Event) => {
+			const ce = e as CustomEvent;
+			renderFiles(ce.detail);
+		}) as EventListener);
+
+		await renderFiles();
+
+	},
+};
+
+
+// App: Activity Monitor
+const appActivity: AppConfig = {
+	id: "activity",
+	name: "Activity Monitor",
+	icon: "/assets/icons/activity.png",
+	width: 500,
+	height: 350,
+	contentRenderer: (body) => {
+		const updateStatus = async () => {
+			try {
+				const res = await fetch(`${API_BASE}/system/stats`, {
+					headers: { "x-api-key": API_KEY },
+				});
+				const data = await res.json();
+				body.innerHTML = `
+          <div style="padding:24px; color:white; font-family:'Inter', sans-serif; background:rgba(0,0,0,0.3); height:100%;">
+            <h2 style="margin-bottom:20px; font-weight:300;">System Overview</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+              <div style="background:rgba(255,255,255,0.05); padding:16px; border-radius:12px;">
+                <div style="opacity:0.5; font-size:12px;">UPTIME</div>
+                <div style="font-size:20px; color:#ffb7c5;">${data.uptime}</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.05); padding:16px; border-radius:12px;">
+                <div style="opacity:0.5; font-size:12px;">KERNEL</div>
+                <div style="font-size:16px;">${data.kernel}</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.05); padding:16px; border-radius:12px;">
+                <div style="opacity:0.5; font-size:12px;">MEMORY</div>
+                <div style="font-size:20px;">${data.memory_used}</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.05); padding:16px; border-radius:12px;">
+                <div style="opacity:0.5; font-size:12px;">EMOTIONS</div>
+                <div style="font-size:20px; color:#34d399;">${data.emotions_processed}</div>
+              </div>
+            </div>
+            <div style="margin-top:24px; text-align:center;">
+              <div style="height:4px; background:rgba(255,183,197,0.2); border-radius:2px; position:relative; overflow:hidden;">
+                <div style="position:absolute; height:100%; width:30%; background:#ffb7c5; animation: pulse 2s infinite;"></div>
+              </div>
+              <div style="font-size:10px; margin-top:8px; opacity:0.5;">AGENTS ACTIVE: ${data.agents_active}</div>
+            </div>
+          </div>
+        `;
+			} catch (_err) {
+				body.innerHTML = `<div style="padding:20px; color:#ff4d4d;">Lost connection to Kernel.</div>`;
+			}
+		};
+		updateStatus();
+		setInterval(updateStatus, 3000);
+	},
+};
+
+
+// App: Console (Log Viewer)
+const appConsole: AppConfig = {
+	id: "console",
+	name: "Console",
+	icon: "/assets/icons/console.png",
+	width: 700,
+	height: 450,
+	contentRenderer: (body) => {
+		body.innerHTML = `<div class="console-wrapper" style="height:100%; background:#1a1a1a; color:#eee; font-family:monospace; padding:12px; overflow-y:auto; font-size:12px; border-top:1px solid #333;"></div>`;
+		const wrapper = body.querySelector(".console-wrapper") as HTMLElement;
+		const updateLogs = async () => {
+			try {
+				const res = await fetch(`${API_BASE}/system/logs/tail`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+					body: JSON.stringify({ lines: 100 }),
+				});
+				const data = await res.json();
+				wrapper.innerHTML = data.logs
+					.map((line: string) => {
+						let color = "#bbb";
+						if (line.includes("[ERROR]")) color = "#ff4d4d";
+						if (line.includes("[WARNING]")) color = "#fbbf24";
+						if (line.includes("elysiad")) color = "#ffb7c5";
+						return `<div style="color:${color}; margin-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.03);">${line}</div>`;
+					})
+					.join("");
+				wrapper.scrollTo(0, wrapper.scrollHeight);
+			} catch (_err) {
+				// Silent fail for logs
+			}
+		};
+
+		updateLogs();
+		setInterval(updateLogs, 2000);
+	},
+};
+
 // --- 5. Dock Interaction ---
 document.querySelectorAll(".dock-item").forEach((item) => {
 	item.addEventListener("click", () => {
@@ -287,8 +486,14 @@ document.querySelectorAll(".dock-item").forEach((item) => {
 		if (appName === "chat") wm.createWindow(appChat);
 		if (appName === "sandbox") wm.createWindow(appSandbox);
 		if (appName === "vault") wm.createWindow(appVault);
+		if (appName === "terminal") wm.createWindow(appTerminal);
+		if (appName === "finder") wm.createWindow(appFinder);
+		if (appName === "activity") wm.createWindow(appActivity);
+		if (appName === "console") wm.createWindow(appConsole);
 	});
 });
+
+
 
 // Start with Chat App open
 setTimeout(() => {

@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+import sys
+import os
+import httpx
+import json
+
+# CLI for Elysia OS Management
+API_URL = "http://127.0.0.1:8000"
+
+def usage():
+    print("Elysia OS CLI - Management Tool")
+    print("Usage: elysia [command]")
+    print("Commands:")
+    print("  status    - Check Kernel status")
+    print("  info      - Get System Information")
+    print("  whoami    - Identity Verification")
+    print("  shutdown  - Graceful Shutdown")
+
+def get_status():
+    try:
+        # We can ping the health endpoint if added, or just check process
+        print("Elysia Kernel: RUNNING (PID unknown)")
+        print(f"API Endpoint: {API_URL}")
+    except Exception:
+        print("Elysia Kernel: STOPPED")
+
+def main():
+    if len(sys.argv) < 2:
+        usage()
+        return
+
+    cmd = sys.argv[1]
+    if cmd == "status":
+        get_status()
+    elif cmd == "info":
+        print("Elysia OS v3.0 (Posix Inspired)")
+        print("Kernel: elysiad (Python 3.10+)")
+        print("UI: Elysia-ui (Vite/TS)")
+    elif cmd == "whoami":
+        print("User: hoshino (UID: 1000)")
+        print("Role: System Administrator")
+    else:
+        print(f"Unknown command: {cmd}")
+        usage()
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elysia OS | The Experience</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 1. Security Lock Screen (iOS Style) -->
+      <div id="lock-screen">
+        <div id="face-id-ui" class="faceid-scanner">
+          <div class="faceid-line"></div>
+        </div>
+        <div id="status-text" class="status-label">FaceID 認証中...</div>
+        <div class="passcode-input" id="passcode-dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+
+      <!-- 2. Elysia OS Desktop Environment -->
+      <div id="desktop" class="hidden">
+        
+        <!-- Top Menu Bar -->
+        <div class="menu-bar">
+          <div class="menu-left">
+            <img src="/logo.png" class="menu-logo" alt="Elysia Logo" />
+            <span class="menu-item bold">Elysia</span>
+            <span class="menu-item">File</span>
+            <span class="menu-item">Edit</span>
+            <span class="menu-item">View</span>
+            <span class="menu-item">Help</span>
+          </div>
+          <div class="menu-right">
+            <span class="menu-item" id="system-time">12:00</span>
+            <span class="menu-item">🔋 100%</span>
+            <span class="menu-item">📶</span>
+          </div>
+        </div>
+
+        <!-- Window Layer (Desktop Workspace) -->
+        <div id="window-layer">
+          <!-- Windows will be injected here by WindowManager -->
+        </div>
+
+        <!-- Bottom Dock -->
+        <div class="dock-container">
+          <div class="dock">
+            <div class="dock-item" data-app="chat" title="Elysia Intelligence">
+              <img src="/assets/icons/chat.png" alt="Chat" />
+            </div>
+            <div class="dock-item" data-app="sandbox" title="Sandbox Orchestra">
+              <img src="/assets/icons/sandbox.png" alt="Sandbox" />
+            </div>
+            <div class="dock-item" data-app="vault" title="Memory Vault">
+              <img src="/assets/icons/vault.png" alt="Vault" />
+            </div>
+            <div class="dock-item" data-app="terminal" title="Terminal">
+              <img src="/assets/icons/chat.png" style="filter: hue-rotate(240deg);" alt="Terminal" />
+            </div>
+            <div class="dock-divider"></div>
+            <div class="dock-item" data-app="finder" title="Finder">
+              <img src="/assets/icons/finder.png" alt="Finder" />
+            </div>
+            <div class="dock-item" data-app="activity" title="Activity Monitor">
+              <img src="/assets/icons/activity.png" alt="Activity" />
+            </div>
+            <div class="dock-item" data-app="console" title="Console">
+              <img src="/assets/icons/console.png" alt="Console" />
+            </div>
+            <div class="dock-divider"></div>
+
+
+            <div class="dock-item" data-app="settings" title="System Settings">
+              <img src="/assets/icons/settings.png" alt="Settings" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Window Templates (Hidden) -->
+      <template id="window-template">
+        <div class="window" style="z-index: 100;">
+          <div class="window-header">
+            <div class="traffic-lights">
+              <div class="light red close-btn"></div>
+              <div class="light yellow minimize-btn"></div>
+              <div class="light green maximize-btn"></div>
+            </div>
+            <div class="window-title">App Name</div>
+          </div>
+          <div class="window-body">
+            <!-- App Content Injected Here -->
+          </div>
+        </div>
+      </template>
+
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
