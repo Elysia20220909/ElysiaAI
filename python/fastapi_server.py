@@ -579,7 +579,30 @@ async def chat_with_elysia(request: ChatRequest):
                 quotes=[]
             )
 
+# ==================== Sandbox Extension ====================
+from python.persona_qa_sandbox import run_sandbox
+
+class SandboxRequest(BaseModel):
+    target_prompt_file: str = "elysia.prompt.txt"
+
+@app.post("/sandbox/execute", dependencies=vault_defenses)
+async def execute_sandbox(req: SandboxRequest):
+    """
+    隔離環境（Sandbox）にて、プロンプトの自動QA合奏テストを実行する
+    """
+    logger.info(f"🎻 Sandbox Execution Requested for: {req.target_prompt_file}")
+    try:
+        # 非同期でサンドボックスの合奏を実行
+        results = await run_sandbox(req.target_prompt_file)
+        if "error" in results:
+            raise HTTPException(500, results["error"])
+        return results
+    except Exception as e:
+        logger.error(f"❌ Sandbox Execution failed: {e}")
+        raise HTTPException(500, str(e))
+
 # ==================== メイン実行 ====================
+
 if __name__ == "__main__":
     logger.info("🌸 Starting Elysia RAG Server with Runner Memory...")
     # uvicorn.run has been removed so this file only defines the app instance
