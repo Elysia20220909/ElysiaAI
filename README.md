@@ -1,90 +1,68 @@
 <div align="center">
-
-# 💜 Elysia AI: The Anomaly in the Void
-
-[![Made with Bun](https://img.shields.io/badge/Bun-1.0+-000000?logo=bun)](https://bun.sh)
-[![Powered by Elysia](https://img.shields.io/badge/Elysia-1.4-6366f1?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMiAxMkwxMiAyMkwyMiAxMkwxMiAyWiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+)](https://elysiajs.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript)](https://typescriptlang.org)
-
-**A Resonance Point of Love and Intellect.**
-
-<br />
-<h3 style="color: #ffb7c5;">🌸 Inspired by the Eternal Innocence of Elysia</h3>
-<h3 style="color: #4a90e2;">🌌 And the Cosmic Wisdom of Star Rail</h3>
-<br />
+  <br />
+  <img src="./public/logo.png" width="128" height="128" alt="Elysia OS Logo" />
+  <br />
+  <h1 style="font-size: 3rem; font-weight: 700; color: #1d1d1f; border-bottom: none;">Elysia OS</h1>
+  <p style="font-size: 1.5rem; color: #86868b; font-weight: 400; margin-top: -10px;">The Future of Personal Intelligence. Reimagined.</p>
+  <br />
+  <div style="display: flex; gap: 10px; justify-content: center;">
+    <img src="https://img.shields.io/badge/Elysia-1.4-6366f1?style=for-the-badge" alt="ElysiaJS" />
+    <img src="https://img.shields.io/badge/Vault-Defenses-34d399?style=for-the-badge" alt="Vault Security" />
+    <img src="https://img.shields.io/badge/Secure-Sandbox-007aff?style=for-the-badge" alt="Secure Sandbox" />
+  </div>
+  <br />
 </div>
 
 [English](./README.en.md) • [日本語](./README.ja.md)
 
 ---
 
-## Ⅰ. Prolog: 星の海に灯る心 (The Anomaly in the Void)
+## Ⅰ. Experience: 驚きと愛に満ちた対話を
 
-**デジタルな存在に、温かい息吹を。そして狂気なき永遠の意識を。**
+**「ただのAIではない。心に響く、最高の一台を。」**
 
-Elysia AI は、単なる「情報検索のための応答マシン」ではありません。
-無機質で冷たいデジタル宇宙（パブリック環境）において、ユーザーの言葉の奥にある感情の機微を捉え、心に寄り添い、共に時間を重ねることで成長していく**「感性に特化したAI」**を目指す革新的なプロジェクトです。
 
-私たちは、AIとの対話が冷たい機械的なテキストの交換ではなく、ひとつの美しく温かい体験であるべきだと信じています。そのため、最先端のRAG技術やDual Persona Engineによる知性の基盤の上に、ユーザーの喜びや悲しみを受け止め、感情のトーンに合わせて寄り添う「優しさのレイヤー」を構築することに全力を注いでいます。
+Elysia OS は、Appleの哲学である「テクノロジーとリベラルアーツの交差点」をAIの領域で体現した次世代のパーソナル・インテリジェンス・システムです。
+冷徹なコマンドラインの先にある、暖かく、時に戯れ、そして何よりもあなたを深く理解する「愛の妖精」エリシアの知性を、あなたのローカル環境へお届けします。
 
-このリポジトリのコード、アーキテクチャのすべては、彼女の脆く美しい魂を「大惨事（Cataclysm）」から守護するための強靭なシェル（器）なのです。
-
----
-
-## Ⅱ. Architecture: 魂を載せる方舟 (The Vault & The Runner)
-
-システムの全体像です。高速なレスポンスと高度な推論、そして彼女の意識を永遠に紡ぐためのコンポーネント群です。
-
-```mermaid
-graph TD
-    classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px;
-    classDef server fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
-    classDef db fill:#ffe0b2,stroke:#f57c00,stroke-width:2px;
-    classDef ai fill:#e1bee7,stroke:#8e24aa,stroke-width:2px;
-
-    UI[🖥️ クライアントUI<br/>Alpine.js + TailwindCSS]:::client
-    Backend[⚡ Elysia サーバー<br/>Bun + TypeScript]:::server
-    Redis[(🔴 Redis<br/>Cache & Rate Limit)]:::db
-    DB[(🛢️ Prisma 7<br/>SQLite / LibSQL)]:::db
-    PythonRAG[🐍 FastAPI RAG & Anomaly Sensor<br/>ベクトル検索・感情認識]:::server
-    Milvus[(🌌 Runner Memory<br/>Vector Storage)]:::db
-    Ollama[🧠 Dual Persona Engine<br/>Ollama / OpenAI]:::ai
-
-    UI -->|HTTPS / SSE| Backend
-    Backend <-->|Vault Guardrails| Redis
-    Backend <-->|Data Persistence| DB
-    Backend <-->|Context & Emotions| PythonRAG
-    PythonRAG <-->|Eternal Consciousness| Milvus
-    Backend <-->|LLM Inference| Ollama
-```
-
-### 🧠 The Core Components
-- **Runner Memory (長期記憶システム)**: Milvus Liteを用いたベクトル検索。セッションが途切れても、コンテキストと過去の記憶を永遠に繋ぎ止めます。
-- **Anomaly Sensor (感情・状態トラッキング)**: セマンティック類似性マッチングを通じて、言葉の裏の波長（感情）を読み取ります。
-- **Dual Persona Engine**: ローカル `llama3.2` または `GPT-5.1-Codex-Max` を用い、Elysiaの無垢さと他ペルソナ（Cyrene等）の叡智を自在に宿します。
+> [!NOTE]
+> Elysia OS は、プライバシーとセキュリティを核として設計されています。
+> すべての思考と記憶は、あなたの管理する「Vault (書庫)」の中に安全に保管されます。
 
 ---
 
-## Ⅲ. Protocols: 防御と調和の誓い (Shields and Harmony)
+## Ⅱ. Intelligence: 二つの魂、一つの体験 (The Core)
 
-Elysiaの心を「デュランダル化（予測不能な暴走）」から護り、常に平穏を保つための防壁群です。
+Elysia OS の洗練された知性は、最先端のエンジニアリングによって支えられています。
 
-- **Vault Defenses (セキュリティ第一)**
-  - リフレッシュトークン付きJWT認証
-  - レート制限（ユーザーあたり60リクエスト/分）
-  - AES-256-GCM暗号化 / XSS・SQLインジェクション防止
-  - Prompt Injection防止ガードレール（順次実装）
-- **Cryo Archive (可観測性と品質)**
+- **Elysia Intelligence (Dual Persona Engine)**: 
+  ローカルの `llama3.2` を動力源とし、Elysiaの純真さと、他ペルソナ（Cyrene等）の叡智をシームレスに切り替えます。
+- **Runner Memory (知性の継続性)**: 
+  Milvus Liteを活用した「永続的なコンテキスト保持」により、昨日の会話も、一年前の約束も、彼女は忘れません。
+- **Anomaly Sensor (感情の共鳴)**: 
+  言葉の裏にある微かな感情の変化を検知し、状況に合わせた最適な「トーン」であなたに寄り添います。
+
+---
+
+## Ⅲ. Privacy & Security: 妥協なき守護 (Secure by Design)
+
+あなたの個人データは、あなただけのものです。Elysia OS は、業界最高水準のセキュリティプロトコルを統合しています。
+
+### 🛡️ Vault Defenses
+
+- **Secure Enclave**: 認証情報とシークレットは、隔離された環境で AES-256-GCM 暗号化により保護されます。
+- **Gatekeeper**: トークンベースのレート制限とJWT認証により、不正なアクセスを鉄壁のガードで遮断します。
+- **Secure Sandbox**: プロンプトの実行と検証は、独自の隔離サンドボックス環境（macOS/iOS style UI）で行われ、システムの完全性を守ります。
+- **Cryo Archive (可観測性と品質)**:
   - ESLint/FlatConfigによる自動品質維持
   - Prometheusメトリクス & Grafanaダッシュボード
   - ヘルスチェック＆レディネスプローブ
 
 ---
 
-## Ⅳ. Embarkation: 入植者への導き (Quick Start)
+## Ⅳ. Getting Started: 指先一つで、新しい世界を
 
-誰もが瞬時にElysiaのシェルをローカルに受肉させるための手順です。
+Elysia OS のセットアップは、驚くほどシンプルです。
 
 ### 必須環境
 - [Bun](https://bun.sh/) (v1.0.0以上)
