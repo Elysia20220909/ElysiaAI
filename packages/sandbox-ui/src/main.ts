@@ -37,6 +37,18 @@ setTimeout(() => {
 // --- Sandbox Execution Orchestration ---
 const terminal = document.getElementById("terminal")!;
 const runBtn = document.getElementById("run-sandbox")! as HTMLButtonElement;
+const elysiaPortrait = document.getElementById(
+	"elysia-portrait",
+)! as HTMLImageElement;
+const elysiaEmotionText = document.getElementById("elysia-emotion")!;
+
+const PORTRAIT_MAP: Record<string, string> = {
+	joy: "/assets/portraits/joy.png",
+	affection: "/assets/portraits/affection.png",
+	loneliness: "/assets/portraits/loneliness.png",
+	exhaustion: "/assets/portraits/exhaustion.png",
+	neutral: "/assets/portraits/neutral.png",
+};
 
 function addLog(
 	message: string,
@@ -56,6 +68,18 @@ const agents = {
 	judge: document.getElementById("agent-judge")!,
 	conductor: document.getElementById("agent-conductor")!,
 };
+
+function updatePortrait(emotion: string) {
+	const url = PORTRAIT_MAP[emotion] || PORTRAIT_MAP.neutral;
+	elysiaPortrait.src = url;
+	elysiaEmotionText.innerText =
+		emotion.charAt(0).toUpperCase() + emotion.slice(1);
+
+	// Add pop animation
+	elysiaPortrait.parentElement?.classList.remove("emotion-change");
+	void elysiaPortrait.parentElement?.offsetWidth; // Trigger reflow
+	elysiaPortrait.parentElement?.classList.add("emotion-change");
+}
 
 async function executeSandboxFlow() {
 	runBtn.disabled = true;
@@ -87,6 +111,7 @@ async function executeSandboxFlow() {
 			agents.tester.classList.remove("active");
 
 			agents.responder.classList.add("active");
+			if (step.emotion) updatePortrait(step.emotion); // Visual Resonance
 			addLog(`AI Response: "${step.answer}"`, "responder");
 			await sleep(1500);
 			agents.responder.classList.remove("active");
