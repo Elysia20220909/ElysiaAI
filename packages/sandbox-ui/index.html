@@ -2,13 +2,13 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Elysia OS | Secure Sandbox</title>
+    <title>Elysia OS | The Experience</title>
   </head>
   <body>
     <div id="app">
-      <!-- Security Lock Screen (iOS) -->
+      <!-- 1. Security Lock Screen (iOS Style) -->
       <div id="lock-screen">
         <div id="face-id-ui" class="faceid-scanner">
           <div class="faceid-line"></div>
@@ -22,59 +22,68 @@
         </div>
       </div>
 
-      <!-- macOS Dashboard -->
-      <div id="dashboard">
-            <div class="dashboard-header">
-                <div class="traffic-lights">
-                    <div class="light red"></div>
-                    <div class="light yellow"></div>
-                    <div class="light green"></div>
-                </div>
-                <div class="window-title">Elysia Intelligence - Sandbox</div>
-            </div>
-            
-            <!-- Elysia Vision Portrait -->
-            <div class="portrait-container">
-                <img id="elysia-portrait" src="/assets/portraits/neutral.png" alt="Elysia Portrait" />
-                <div class="portrait-info">
-                    <span id="elysia-emotion">Neutral</span>
-                </div>
-            </div>
-
-            <div class="dashboard-content">
-          <div class="sidebar">
-            <h2 style="font-size: 18px; margin-bottom: 24px; font-weight: 700;">Orchestra</h2>
-            
-            <div class="agent-card" id="agent-tester">
-                <h3>Tester (弦楽器)</h3>
-                <p>三段論法とエッジケースで人格を揺さぶります。</p>
-            </div>
-            <div class="agent-card" id="agent-responder">
-                <h3>Responder (ソリスト)</h3>
-                <p>Elysiaとして最善の回答を奏でます。</p>
-            </div>
-            <div class="agent-card" id="agent-judge">
-                <h3>Judge (管楽器)</h3>
-                <p>厳格に一貫性と品質を採点します。</p>
-            </div>
-            <div class="agent-card" id="agent-conductor">
-                <h3>Conductor (指揮者)</h3>
-                <p>全体の調和を分析し、改善案を提示します。</p>
-            </div>
-
-            <div style="margin-top: 32px;">
-                <button id="run-sandbox" class="btn-primary">合奏を開始する</button>
-            </div>
+      <!-- 2. Elysia OS Desktop Environment -->
+      <div id="desktop" class="hidden">
+        
+        <!-- Top Menu Bar -->
+        <div class="menu-bar">
+          <div class="menu-left">
+            <img src="/logo.png" class="menu-logo" alt="Elysia Logo" />
+            <span class="menu-item bold">Elysia</span>
+            <span class="menu-item">File</span>
+            <span class="menu-item">Edit</span>
+            <span class="menu-item">View</span>
+            <span class="menu-item">Help</span>
           </div>
-          <div class="main-view">
-            <div id="terminal" class="terminal">
-              <div class="log-entry">Welcome to Elysia OS Secure Sandbox...</div>
-              <div class="log-entry">System Status: <span style="color: #34d399;">PROTECTED</span></div>
-              <div class="log-entry">----------------------------------------</div>
+          <div class="menu-right">
+            <span class="menu-item" id="system-time">12:00</span>
+            <span class="menu-item">🔋 100%</span>
+            <span class="menu-item">📶</span>
+          </div>
+        </div>
+
+        <!-- Window Layer (Desktop Workspace) -->
+        <div id="window-layer">
+          <!-- Windows will be injected here by WindowManager -->
+        </div>
+
+        <!-- Bottom Dock -->
+        <div class="dock-container">
+          <div class="dock">
+            <div class="dock-item" data-app="chat" title="Elysia Intelligence">
+              <img src="/assets/icons/chat.png" alt="Chat" />
+            </div>
+            <div class="dock-item" data-app="sandbox" title="Sandbox Orchestra">
+              <img src="/assets/icons/sandbox.png" alt="Sandbox" />
+            </div>
+            <div class="dock-item" data-app="vault" title="Memory Vault">
+              <img src="/assets/icons/vault.png" alt="Vault" />
+            </div>
+            <div class="dock-divider"></div>
+            <div class="dock-item" data-app="settings" title="System Settings">
+              <img src="/assets/icons/settings.png" alt="Settings" />
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Window Templates (Hidden) -->
+      <template id="window-template">
+        <div class="window" style="z-index: 100;">
+          <div class="window-header">
+            <div class="traffic-lights">
+              <div class="light red close-btn"></div>
+              <div class="light yellow minimize-btn"></div>
+              <div class="light green maximize-btn"></div>
+            </div>
+            <div class="window-title">App Name</div>
+          </div>
+          <div class="window-body">
+            <!-- App Content Injected Here -->
+          </div>
+        </div>
+      </template>
+
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
