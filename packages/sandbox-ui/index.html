@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elysia OS | Secure Sandbox</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Security Lock Screen (iOS) -->
+      <div id="lock-screen">
+        <div id="face-id-ui" class="faceid-scanner">
+          <div class="faceid-line"></div>
+        </div>
+        <div id="status-text" class="status-label">FaceID 認証中...</div>
+        <div class="passcode-input" id="passcode-dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+      </div>
+
+      <!-- macOS Dashboard -->
+      <div id="dashboard">
+        <div class="title-bar">
+          <div class="traffic-lights">
+            <div class="light red"></div>
+            <div class="light yellow"></div>
+            <div class="light green"></div>
+          </div>
+          <div class="title">Persona QA Sandbox - 隔離環境</div>
+        </div>
+        <div class="content">
+          <div class="sidebar">
+            <h2 style="font-size: 18px; margin-bottom: 24px; font-weight: 700;">Orchestra</h2>
+            
+            <div class="agent-card" id="agent-tester">
+                <h3>Tester (弦楽器)</h3>
+                <p>三段論法とエッジケースで人格を揺さぶります。</p>
+            </div>
+            <div class="agent-card" id="agent-responder">
+                <h3>Responder (ソリスト)</h3>
+                <p>Elysiaとして最善の回答を奏でます。</p>
+            </div>
+            <div class="agent-card" id="agent-judge">
+                <h3>Judge (管楽器)</h3>
+                <p>厳格に一貫性と品質を採点します。</p>
+            </div>
+            <div class="agent-card" id="agent-conductor">
+                <h3>Conductor (指揮者)</h3>
+                <p>全体の調和を分析し、改善案を提示します。</p>
+            </div>
+
+            <div style="margin-top: 32px;">
+                <button id="run-sandbox" class="btn-primary">合奏を開始する</button>
+            </div>
+          </div>
+          <div class="main-view">
+            <div id="terminal" class="terminal">
+              <div class="log-entry">Welcome to Elysia OS Secure Sandbox...</div>
+              <div class="log-entry">System Status: <span style="color: #34d399;">PROTECTED</span></div>
+              <div class="log-entry">----------------------------------------</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
