@@ -84,31 +84,82 @@ CONFIG["COLLECTION_NAME"] = _settings.COLLECTION_NAME
 if _settings.OPENAI_API_KEY:
     os.environ["OPENAI_API_KEY"] = _settings.OPENAI_API_KEY
 
-# ==================== ロギング設定 (POSIX Style) ====================
+# ==================== Logging (Standardized) ====================
 if not os.path.exists(_settings.LOG_ROOT):
     os.makedirs(_settings.LOG_ROOT, exist_ok=True)
 
 log_file = os.path.join(_settings.LOG_ROOT, "system.log")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-    handlers=[
-        logging.FileHandler(log_file),
-        logging.StreamHandler()
-    ]
-)
+logging.config.dictConfig({
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": log_file,
+            "maxBytes": 1024 * 1024 * 5,  # 5MB
+            "backupCount": 5,
+            "formatter": "standard",
+        },
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+    },
+    "loggers": {
+        "": {
+            "handlers": ["file", "console"],
+            "level": "INFO",
+            "propagate": True
+        }
+    }
+})
 logger = logging.getLogger("elysiad")
 
-
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
-# ==================== モデル＆DB初期化 ====================
+# ==================== Core Orchestrator Initialize ====================
 app = FastAPI(
-    title="Elysia RAG API (Runner Memory Enabled)",
-    description="エリシアちゃんの長期記憶と感情トラッキング ♡",
-    version="2.1.0" # Version Bump for OS Evolution
+    title="Elysia OS Kernel",
+    description="The heartbeat and neural engine of Elysia AI. ♡",
+    version="2.1.1-RESONANCE"
 )
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request, exc):
+    """Global handler for HTTP exceptions to ensure consistent JSON structure."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": "error",
+            "code": exc.status_code,
+            "message": exc.detail,
+            "timestamp": datetime.datetime.now().isoformat()
+        },
+    )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    """Fallback handler for unexpected system errors."""
+    logger.error(f"❌ Critical Unhandled Exception: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "critical",
+            "code": 500,
+            "message": "Internal Paradisal Memory Error. Please check system logs.",
+            "diagnostic": str(exc) if _settings.PORT == 8000 else "redacted"
+        },
+    )
 
 # Epic 7: フロントエンドとの統合 (CORS許可)
 app.add_middleware(

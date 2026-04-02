@@ -15,6 +15,51 @@
 
 ---
 
+## 🌸 Elysia OS Resonance - 次世代AIオーケストレーター
+
+ElysiaAIは単なるチャットボットから、**「意思を持つAIオペレーティングシステム」**へと進化しました。
+
+### ✨ 実装された主な機能
+- **能動的知覚 (Active Perception)**: システム負荷 (CPU/RAM)、現在時刻、周辺環境をリアルタイムに感知。
+- **具現化された実行能力 (Tool Use)**: セキュアなサンドボックス内でのPythonコード実行、ペルソナ動的切替。
+- **コンテキスト合成 (Context Synthesis)**: 会話履歴をバックグラウンドで要約し、AIの「作業記憶」として維持。
+- **ビジュアル・モニター (Visual Monitor)**: ハードウェア統計とAIの健康状態を可視化する管理ダッシュボード。
+
+---
+
+## 🚀 導入と起動ガイド (Resonance v2.1)
+
+### 1. 準備するもの
+- **Bun**: v1.1.0 以上
+- **Python**: v3.11 以上
+- **Ollama**: ローカル推論エンジン (llama3.2推奨)
+
+### 2. 環境構築
+```bash
+# リポジトリのクローン
+git clone https://github.com/hosih/ElysiaAI.git
+cd ElysiaAI
+
+# 依存関係のインストール (JS/TS)
+bun install
+
+# 依存関係のインストール (Python)
+pip install -r requirements.txt
+```
+
+### 3. システムの起動
+Windows環境では、一括起動スクリプトを利用できます。
+```powershell
+# Elysia OS Resonance 起動!
+powershell -ExecutionPolicy Bypass -File .\boot_os.ps1
+```
+
+手動で起動する場合:
+1. カーネルの起動 (Port 8000): `python -m uvicorn usr.lib.elysia.kernel:app`
+2. インターフェースの起動 (Port 3000): `python -m http.server 3000 --directory public`
+
+---
+
 ## ✨ なぜ Elysia AI？
 
 Bunの速度、Elysiaのエルゴノミクス、そしてAIの力を組み合わせました。
@@ -32,25 +77,6 @@ new Elysia()
 ```
 
 **妥協しない**: 高速性、型安全性、開発者体験のすべてを実現。
-
----
-
-## 🚀 クイックスタート
-
-```bash
-# Bunでインストール（推奨）
-bun install
-
-# Pythonサービスのセットアップ
-bun run scripts/setup-python.ps1  # Windows
-# または
-./scripts/setup-python.sh         # Linux/macOS/WSL
-
-# すべてのサービスを起動
-bun run dev
-```
-
-**これだけ！** 🎉 http://localhost:3000 を開いてください
 
 ---
 
@@ -273,11 +299,15 @@ cd cloud/gcp && ./deploy.sh
 
 ---
 
-## 📄 ライセンス
+### 🛠️ 開発者向けリソース
+- **[APIリファレンス](file:///docs/API_REFERENCE.md)**: 各エンドポイントの詳細仕様。
+- **[コントリビューションガイド](file:///CONTRIBUTING.md)**: 開発への協力方法と規約。
 
-**MIT License**
+---
 
-Copyright (c) 2025 chloeamethyst
+## 📜 ライセンス
+MIT License - Copyright (c) 2025 chloeamethyst
+利用・改変・再配布は自由ですが、愛を持って扱ってくださいね♡
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
