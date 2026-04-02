@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+import os
+import sys
+import uvicorn
+import signal
+
+# Add the project root to sys.path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(PROJECT_ROOT, "usr", "lib"))
+
+from elysia.kernel import app, _settings
+
+def handle_sigterm(signum, frame):
+    print(f"[{os.getpid()}] SIGTERM received. Shutting down elysiad...")
+    sys.exit(0)
+
+if __name__ == "__main__":
+    # POSIX signal handling
+    signal.signal(signal.SIGTERM, handle_sigterm)
+    signal.signal(signal.SIGINT, handle_sigterm)
+
+    print(f"🌟 Elysia Kernel Daemon (elysiad) starting on {_settings.HOST}:{_settings.PORT}")
+    print(f"📜 System Log: {os.path.join(_settings.LOG_ROOT, 'system.log')}")
+    
+    uvicorn.run(app, host=_settings.HOST, port=_settings.PORT, log_level="info")
