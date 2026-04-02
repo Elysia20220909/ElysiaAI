@@ -201,6 +201,8 @@ class ChatResponse(BaseModel):
     context: str
     quotes: List[str]
     emotion: str = "neutral"  # Epic 7: フロントエンドへ感情を送信
+    portrait_url: str = "/assets/portraits/neutral.png"
+
 
 class MemoryAddRequest(BaseModel):
     session_id: str
@@ -510,14 +512,24 @@ async def chat_with_elysia(request: ChatRequest):
                 text = text.replace(kw, "[安全性のため削除]")
             return text
 
+        PORTRAIT_MAP = {
+            "joy": "/assets/portraits/joy.png",
+            "affection": "/assets/portraits/affection.png",
+            "loneliness": "/assets/portraits/loneliness.png",
+            "exhaustion": "/assets/portraits/exhaustion.png",
+            "neutral": "/assets/portraits/neutral.png"
+        }
+        user_portrait = PORTRAIT_MAP.get(user_emotion, PORTRAIT_MAP["neutral"])
+
         if request.stream:
             async def generate():
                 full_response = ""
-                # 初回チャンクで感情データのみ送信 (Epic 7)
-                yield f"data: {json.dumps({'emotion': user_emotion})}\n\n"
+                # 初回チャンクで感情データとポートレートURLを送信 (Epic 7 + Elysia Vision)
+                yield f"data: {json.dumps({'emotion': user_emotion, 'portrait_url': user_portrait})}\n\n"
 
                 async with httpx.AsyncClient(timeout=CONFIG["OLLAMA_TIMEOUT"]) as client:
                     async with client.stream("POST", f"{CONFIG['OLLAMA_HOST']}/api/chat", json=ollama_request) as response:
+
                         async for line in response.aiter_lines():
                             if line:
                                 try:
@@ -560,8 +572,10 @@ async def chat_with_elysia(request: ChatRequest):
                     response=safe_filter(assistant_message),
                     context=context_block,
                     quotes=rag_res["quotes"],
-                    emotion=user_emotion
+                    emotion=user_emotion,
+                    portrait_url=user_portrait
                 )
+
 
     except Exception as e:
         logger.error(f"❌ Chat or Connection error: {e}")

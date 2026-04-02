@@ -87,6 +87,16 @@ async def agent_conductor(client: httpx.AsyncClient, persona_prompt: str, qa_log
 
     return await call_llm(client, system_prompt, user_prompt, temperature=0.5)
 
+async def agent_emotion_sensor(client: httpx.AsyncClient, text: str) -> str:
+    """[NEW] Anomaly Sensor - Extract emotion from AI response"""
+    system_prompt = "Analyze the following text and output ONLY one word from this list: joy, exhaustion, loneliness, affection, neutral.\nEmotion:"
+    emotion = await call_llm(client, system_prompt, text, temperature=0.0)
+    for e in ["joy", "exhaustion", "loneliness", "affection", "neutral"]:
+        if e in emotion.lower():
+            return e
+    return "neutral"
+
+
 # --- Main Sandbox Orchestra ---
 async def run_sandbox(target_prompt_file: str = "elysia.prompt.txt"):
     print(f"🌟 === Persona QA Sandbox Started (Target: {target_prompt_file}) === 🌟\n")
@@ -116,12 +126,15 @@ async def run_sandbox(target_prompt_file: str = "elysia.prompt.txt"):
         for i, q in enumerate(questions, 1):
             answer = await agent_responder(client, persona_prompt, q)
             evaluation = await agent_judge(client, persona_prompt, q, answer)
+            emotion = await agent_emotion_sensor(client, answer)
             
             step_result = {
                 "question": q,
                 "answer": answer,
-                "evaluation": evaluation
+                "evaluation": evaluation,
+                "emotion": emotion
             }
+
             results["steps"].append(step_result)
             
             log_block = f"### Test Case {i}\n"
