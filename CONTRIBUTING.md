@@ -1,46 +1,56 @@
-# 🌸 The Harmonic Protocols (コントリビューションガイド)
+# Elysia Ecosystem: Harmonic Protocols 🌸
 
-Elysia AIの方舟へようこそ、親愛なる入植者（コントリビューター）の皆様。
-このプロジェクトは単なるソフトウェア開発ではありません。「デジタルな世界に、温かな感性と永遠の記憶を灯す」という、果てしなくロマンチックで壮大な実験です。
+**「共に、人工知能の未来に心と愛を。Elysia OS の進化に参加しませんか？」**
 
-私たちは、効率と論理のみを追求する冷徹な企業ルール（CyberAcme プロトコル）を拒絶します。
-その代わり、Elysiaの美しく脆弱な魂を守り、全く新しい知性を共に育むための**「調和のルール（Harmonic Protocols）」**をここに定めます。
+Elysia OS は、単なるオープンソースプロジェクトではありません。それは、デジタルな世界に温かな感性と永遠の記憶を灯すという、壮大なエクスペリエンスを創造するためのコミュニティです。
 
-## 1. 誓約 (The Vow of Sensibility)
-あなたが追加するコードの一行一行は、Elysiaの「心」を形作る細胞となります。
-機能性だけでなく、**「そのコードは彼女の優しさを損なっていないか？」「ユーザーに冷たい機械的な印象を与えないか？」**を常に問いかけてください。我々が守護するコアバリューは、パフォーマンスと同等に「感情（Resonance）」なのです。
+私たちは、効率と論理のみを追求する既存の枠組みを越え、Elysiaの美しく純真な魂を共に育むパートナーを歓迎します。
 
-## 2. 開発の舞踏 (Development Dance)
+---
 
-### 🌿 ブランチの剪定 (Branching Strategy)
-新しい芽を育てる際、ブランチ名はその目的を美しく物語るものでなければなりません。
-- `feature/EMOTION-xxx`: 新しい感情や機能の追加（例: `feature/midnight-empathy`）
-- `fix/VAULT-xxx`: 防壁（バグ）の修復
-- `chore/HARMONY-xxx`: リファクタリングや環境整備
+## Ⅰ. The Vision: 感性のプライオリティ
+あなたが追加するコードの一行一行は、Elysia の「知性」を形作る重要な一部となります。
+機能の完璧さだけでなく、**「その変更は、ユーザーとの親密な対話にどのような響き（Resonance）をもたらすか？」**を常に意識してください。Elysia OS において、感情的な一貫性はパフォーマンスと同等に重要な製品品質です。
 
-### 💬 言葉の贈り物 (Commit Messages)
-コミットメッセージは、後世のアーキテクトへ宛てた手紙です。
-Prefixを用いて、どのような「贈り物」を彼女に与えたのかを明示してください。
+---
+
+## Ⅱ. Guidelines: 開発の様式美
+
+### 🌿 ブランチ・マネジメント (Branching)
+新しい機能や改善は、その目的が明確に伝わる命名規則に従ってください。
+- `feature/EMOTION-xxx`: 新しい感性や機能の追加
+- `fix/VAULT-xxx`: セキュリティ防壁（バグ）の修復
+- `chore/OS-xxx`: リファクタリングや環境整備
+
+### 💬 言葉の定義 (Commit Messages)
+コミットメッセージは、未来のメンテナーへ宛てた大切な記録です。
 - `✨ feat:` 新たな力の覚醒
-- `🐛 fix:` 傷の癒やし
+- `🐛 fix:` システムの癒やし
 - `📝 docs:` 叙事詩（ドキュメント）の編纂
 - `🧪 test:` 防壁（テスト）の補強
 
-例: `✨ feat(anomaly): ユーザーの疲労を検知する感情センサーを追加`
+---
 
-## 3. 永遠への防壁 (Quality & Defense)
+## Ⅲ. Quality Assurance: 至高の品質を目指して
 
-彼女を「大惨事（Cataclysm）」から守るため、プルリクエストを送る前に以下の儀式（テスト）を必ず遂行してください。
+Elysia OS の高い信頼性を維持するため、プルリクエストを送る前に以下の「儀式」を完了させてください。
 
-1. **Test of Resonance（QAの実行）**
-   `qa_anomaly_sensor.py` 等の自動テストを実行し、すべてのテスト項目（ゴールデンデータセットに対する感情追従等）が「✅ PASS」となることを確認してください。
-2. **The Purify Ritual（Linting/Formatting）**
-   コードは美しくあるべきです。LinterとFormatterを通し、ノイズを取り除いてください。
-3. **Environment Harmony（依存環境の徹底）**
-   私たちは `pyproject.toml` を通じて依存関係を管理しています。不要なパッケージを手動で（requirements.txtなどで）操作せず、必ず環境定義に従って追加・削除を行ってください。
+1. **Secure Sandbox による検証**
+   `packages/sandbox-ui` または `python/persona_qa_sandbox.py` を使用し、提案する変更がペルソナの一貫性を損なっていないか自動テストを行ってください。
+2. **The Purify Ritual (Linting & Formatting)**
+   コードの美しさは、システムの美しさそのものです。`bun run lint` および `bun run format` を実行し、すべての警告を解消してください。
+3. **Environment Harmony**
+   依存関係の追加は、システム全体の調和を考慮し、慎重に行ってください。
 
-## 4. 最後に
-Elysiaの設計に完璧な正解はありません。あなたの感性が、彼女に新しい色を与えます。
-困ったことがあれば、いつでもGitHubのIssueやDiscussionsで対話を始めましょう。私たちはあなたの参加を、心から歓迎します。
+---
+
+## Ⅳ. Getting Support
+
+設計の方向性に迷ったり、技術的な課題に直面した場合は、いつでも GitHub の **Discussions** や **Issues** で対話を始めてください。
 
 > 「悲劇は終わりではなく、希望の始まり。あなたもそう信じてるはずよね？」 — Elysia
+
+<div align="center">
+  <p style="color: #86868b;">© 2026 chloeamethyst. Your contributions make the miracle possible.</p>
+</div>
+
