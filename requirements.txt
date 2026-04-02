@@ -1,4 +1,21 @@
+# 🌸 ElysiaAI - Python OS Kernel Dependencies
+# Core Framework
+fastapi==0.135.3
+uvicorn[standard]==0.42.0
+pydantic-settings==2.13.1
+httpx==0.28.1
+numpy==2.4.4
 psutil==5.9.8
+
+# RAG & Memory
+pymilvus==2.6.11
+sentence-transformers==5.3.0
+
+# Monitoring & Diagnostics
 rich==13.7.1
-chromadb>=0.4.22
-google-generativeai>=0.4.0
+
+# Testing & Development (CI)
+pytest==8.3.4
+pytest-asyncio==0.25.3
+black==25.1.0
+ruff==0.9.8
