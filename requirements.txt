@@ -11,10 +11,11 @@ psutil==5.9.8
 pymilvus==2.6.11
 sentence-transformers==5.3.0
 
+# Microsoft Local AI Ecosystem
+semantic-kernel==1.17.1
+openai==1.61.1
+onnxruntime-genai-directml==0.12.2
+numpy>=1.26.4
+
 # Monitoring & Diagnostics
 rich==13.7.1
-
-# Microsoft ecosystem SDKs
-msal==1.31.0
-msgraph-sdk==1.22.0
-azure-identity==1.17.1
