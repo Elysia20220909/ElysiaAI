@@ -109,6 +109,9 @@ bun.log
 *.db-wal
 dev.db
 prisma/dev.db
+runner_memory.db
+usr/lib/elysia/runner_memory.db
+var/lib/elysia/*.db
 
 # Prisma temp files
 prisma.config.bak

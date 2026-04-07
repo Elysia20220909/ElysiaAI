@@ -21,10 +21,19 @@ Elysia OS の核心部には、**Vault (書庫)** と呼ばれる安全な領域
 
 ## 🛡️ Reporting a Vulnerability
 
-Elysia OS の安全性向上のため、脆弱性を発見した場合は速やかにご報告ください。私たちはコミュニティと共に、この小さな楽園の平穏を守り続けたいと考えています。
+Elysia OS の安全性向上のため、脆弱性を発見した場合は速やかにご報告ください。
+特に **GlassWorm (不可視Unicodeによるサプライチェーン攻撃)** の兆候を発見した場合は、直ちに緊急連絡をお願いします。
 
-- **GitHub Security**: [Vulnerability Report](https://github.com/chloeamethyst/ElysiaAI/security/advisories/new)
-- **Direct Mail**: `security-elysia@flatt.tech`
+私たちはコミュニティと共に、この小さな楽園の平穏を守り続けたいと考えています。
+
+- **GitHub Security**: [Vulnerability Report](https://github.com/Elysia20220909/ElysiaAI/security/advisories/new)
+- **Primary Security Contact**: `rutile47103973@gmail.com`
+- **Secondary Contact**: `security-elysia@flatt.tech`
+
+### 💡 Reporting Guidelines
+1. 問題を公開のIssueに投稿せず、上記アドレスへ直接連絡してください。
+2. 再現手順、影響範囲、および可能な場合は修正案を提示してください。
+3. 私たちは報告を受けてから48時間以内に初期対応を行います。
 
 ---
 
