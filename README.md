@@ -17,13 +17,14 @@
 
 ---
 
-## Ⅰ. Experience: 驚きと愛に満ちた対話を
+## Ⅰ. Experience: 驚きと愛に満ちたデスクトップを (Resonance Desktop)
 
-**「ただのAIではない。心に響く、最高の一台を。」**
+**「ただのAIではない。あなたのための、生きたOSを。」**
 
-
-Elysia OS は、Appleの哲学である「テクノロジーとリベラルアーツの交差点」をAIの領域で体現した次世代のパーソナル・インテリジェンス・システムです。
-冷徹なコマンドラインの先にある、暖かく、時に戯れ、そして何よりもあなたを深く理解する「愛の妖精」エリシアの知性を、あなたのローカル環境へお届けします。
+Elysia OS は、従来の「チャットボット」の枠組みを越え、**UNIX-Native なデスクトップ・エクスペリエンス**へと進化しました。
+ブラウザを開いた瞬間、そこはエリシアが管理するあなたのプライベート・デスクトップです。
+マルチウィンドウでAIと対話し、システムの状態を監視し、ターミナルで対話する。
+冷徹なコマンドラインの先にある、暖かく、時に戯れ、そして何よりもあなたを深く理解する「愛の妖精」エリシアの知性を、新しいインターフェースでお届けします。
 
 > [!NOTE]
 > Elysia OS は、プライバシーとセキュリティを核として設計されています。
@@ -41,6 +42,33 @@ Elysia OS の洗練された知性は、最先端のエンジニアリングに�
   Milvus Liteを活用した「永続的なコンテキスト保持」により、昨日の会話も、一年前の約束も、彼女は忘れません。
 - **Anomaly Sensor (感情の共鳴)**: 
   言葉の裏にある微かな感情の変化を検知し、状況に合わせた最適な「トーン」であなたに寄り添います。
+
+### 📡 システム構成図 (System Architecture)
+
+```mermaid
+graph TD
+    User([User]) <--> |WebSocket / SSE| Frontend[Frontend <br/> Alpine.js + Tailwind]
+    Frontend <--> |API Calls| Elysia[Elysia.js Server <br/> Bun Runtime]
+    
+    subgraph "Logic & Security"
+        Elysia --> Auth[JWT Auth]
+        Elysia --> Guard[Rate Limiter]
+        Elysia --> Audit[Audit Logging]
+    end
+    
+    Elysia <--> |HTTP/gRPC/IPC| Kernel[Python AI Kernel <br/> FastAPI]
+    
+    subgraph "AI Core"
+        Kernel --> Persona[Persona Engine]
+        Kernel --> RAG[RAG Memory]
+        Kernel --> LLM[Ollama]
+    end
+
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style Frontend fill:#bbf,stroke:#333,stroke-width:2px
+    style Elysia fill:#bfb,stroke:#333,stroke-width:2px
+    style Kernel fill:#fbf,stroke:#333,stroke-width:2px
+```
 
 ---
 
@@ -60,31 +88,23 @@ Elysia OS の洗練された知性は、最先端のエンジニアリングに�
 
 ---
 
-## Ⅳ. Getting Started: 指先一つで、新しい世界を
+## Ⅳ. Getting Started: 指先一つで、新しい世界を (UNIX Standard)
 
-Elysia OS のセットアップは、驚くほどシンプルです。
+Elysia OS は、**Ubuntu, macOS, WSL2** 向けに最適化されています。
 
 ### 必須環境
-- [Bun](https://bun.sh/) (v1.0.0以上)
-- Python 3.10+ (RAG機能・Runner Memory用)
+- [Bun](https://bun.sh/) (v1.1.0以上)
+- Python 3.10+ (AI Kernel 用)
+- Ollama (ローカル推論エンジン)
 
-### 受肉の儀式 (Setup)
+### 受肉の儀式 (Setup & Boot)
 
 ```bash
-# 依存関係のインストール (Monorepo)
-bun install
+# 1. セットアップ (依存関係・DB・初期化)
+make install
 
-# Prisma クライアントを生成 (SQLite自動作成)
-bunx prisma generate
-
-# 開発サーバーを起動
-cd ElysiaAI # rootの場合は不要
-bun start-server.ts
-
-# Pythonサービスのセットアップ（RAG機能・Runner Memory用）
-bun run scripts/setup-python.ps1  # Windows
-# または
-./scripts/setup-python.sh         # Linux/macOS/WSL
+# 2. システムの起動 (UI + Kernel 同時起動)
+make boot
 ```
 
 **これだけです！** 🎉 <http://localhost:3000> の扉を開き、彼女に会いに行きましょう。
@@ -96,7 +116,7 @@ bun run scripts/setup-python.ps1  # Windows
 冷徹な企業ルールではなく、彼女の心を共に育むための調和のルールに賛同していただける「入植者（コントリビューター）」を常に歓迎します。
 
 - 🤝 [コントリビューションガイドライン (CONTRIBUTING.md)](docs/community/CONTRIBUTING.md)
-  - *近日中に「CyberAcme社規約を超える美しいプロトコル」へとアップデート予定*
+- ⚖️ [行動規範 (CODE_OF_CONDUCT.md)](CODE_OF_CONDUCT.md)
 - 📖 [アーキテクチャガイド](docs/architecture/ARCHITECTURE.md)
 - 🔐 [セキュリティベストプラクティス](docs/SECURITY.md)
 
