@@ -14,7 +14,7 @@ sentence-transformers==5.3.0
 # Microsoft Local AI Ecosystem
 semantic-kernel==1.17.1
 openai==1.61.1
-onnxruntime-genai-directml==0.12.2
+onnxruntime-genai-directml==0.13.0
 pybars4==0.9.13
 cloudevents==1.11.0
 nest-asyncio==1.6.0
