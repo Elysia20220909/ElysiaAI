@@ -258,25 +258,80 @@
                     this.loading = true;
                     this.scrollToBottom();
 
+                    let assistantMsg = { id: Date.now() + 1, role: 'assistant', content: '' };
+                    this.messages.push(assistantMsg);
+
                     try {
-                        const res = await fetch("http://127.0.0.1:8000/chat", {
+                        const response = await fetch("http://127.0.0.1:8000/chat", {
                             method: "POST",
-                            headers: { "Content-Type": "application/json", "x-api-key": "ELYSIATEST-001" },
+                            headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
-                                messages: this.messages,
-                                stream: false,
+                                messages: this.messages.slice(0, -1),
+                                stream: true,
                                 session_id: "desktop_user"
                             })
                         });
-                        const data = await res.json();
-                        this.messages.push({ id: Date.now() + 1, role: 'assistant', content: data.content });
+
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let buffer = '';
+
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+
+                            buffer += decoder.decode(value, { stream: true });
+                            const lines = buffer.split('\n\n');
+                            buffer = lines.pop();
+
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    const data = JSON.parse(line.substring(6));
+                                    if (data.content) {
+                                        assistantMsg.content += data.content;
+                                    }
+                                    if (data.emotion) {
+                                        this.currentEmotion = data.emotion;
+                                        this.addLog(`Emotion Shift: ${data.emotion}`);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Speak after message completes
+                        if (assistantMsg.content) {
+                            this.playVoice(assistantMsg.content);
+                        }
+                        
                         localStorage.setItem('elysia_chat_history', JSON.stringify(this.messages));
                     } catch (e) {
-                        this.messages.push({ id: Date.now() + 1, role: 'assistant', content: '⚠️ Error: ' + e.message });
+                        assistantMsg.content = '⚠️ Resonance Failure: ' + e.message;
                     } finally {
                         this.loading = false;
                         this.scrollToBottom();
                     }
+                },
+
+                async playVoice(text) {
+                    try {
+                        const res = await fetch("http://127.0.0.1:8000/tts", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ text, speaker_id: 2 })
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            const audio = new Audio("data:audio/wav;base64," + data.audio);
+                            audio.play();
+                        }
+                    } catch (e) {
+                        console.error("Voice failed", e);
+                    }
+                },
+
+                addLog(msg) {
+                    this.logHistory.unshift({ id: Date.now(), time: new Date().toLocaleTimeString(), msg });
+                    if(this.logHistory.length > 50) this.logHistory.pop();
                 },
 
                 scrollToBottom() {
