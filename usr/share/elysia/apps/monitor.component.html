@@ -1,0 +1,36 @@
+<div class="window-header" @mousedown="startDrag('monitor', $event)">
+    <div class="window-controls">
+        <div class="control-btn btn-close" @click="closeApp('monitor')"></div>
+        <div class="control-btn btn-minimize"></div>
+        <div class="control-btn btn-maximize"></div>
+    </div>
+    <div class="window-title">📊 System Telemetry</div>
+    <div class="w-12"></div>
+</div>
+<div class="window-content p-6 flex flex-col gap-6">
+    <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
+            <div class="text-[10px] uppercase text-white/40 mb-2 font-bold">CPU Workload</div>
+            <div class="text-2xl font-mono text-blue-400" x-text="(stats.system?.cpu || 0) + '%'"></div>
+            <div class="mt-2 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500 transition-all duration-500" :style="`width: ${stats.system?.cpu || 0}%`"></div>
+            </div>
+        </div>
+        <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
+            <div class="text-[10px] uppercase text-white/40 mb-2 font-bold">Memory Pulse</div>
+            <div class="text-2xl font-mono text-purple-400" x-text="(stats.system?.ram || 0) + '%'"></div>
+            <div class="mt-2 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-full bg-purple-500 transition-all duration-500" :style="`width: ${stats.system?.ram || 0}%`"></div>
+            </div>
+        </div>
+    </div>
+    <div class="flex-1 bg-black/40 rounded-xl p-3 font-mono text-[9px] overflow-y-auto border border-white/5">
+        <div class="text-pink-400/60 mb-2">>> RESONANCE_LOG_STREAM</div>
+        <template x-for="log in logHistory" :key="log.id">
+            <div class="flex gap-2 opacity-80">
+                <span class="text-white/20" x-text="log.time"></span>
+                <span class="text-white/80" x-text="log.msg"></span>
+            </div>
+        </template>
+    </div>
+</div>

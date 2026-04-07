@@ -1,0 +1,27 @@
+<div class="window-header" @mousedown="startDrag('settings', $event)">
+    <div class="window-controls">
+        <div class="control-btn btn-close" @click="closeApp('settings')"></div>
+        <div class="control-btn btn-minimize"></div>
+        <div class="control-btn btn-maximize"></div>
+    </div>
+    <div class="window-title">⚙️ OS Settings</div>
+    <div class="w-12"></div>
+</div>
+<div class="window-content p-6 space-y-4">
+    <div class="space-y-1">
+        <label class="text-[10px] uppercase text-white/40 font-bold">Resonance Persona</label>
+        <select class="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm text-white" 
+                @change="saveConfig({ai: {persona: $event.target.value}})">
+            <option value="elysia">Elysia (Default)</option>
+            <option value="sweet">Elysia (Sweet)</option>
+            <option value="professional">Elysia (Expert)</option>
+        </select>
+    </div>
+    <div class="space-y-1">
+        <label class="text-[10px] uppercase text-white/40 font-bold">Voice Synthesis</label>
+        <div class="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/10">
+            <span class="text-sm">Enabled</span>
+            <div class="w-8 h-4 bg-pink-500 rounded-full cursor-pointer"></div>
+        </div>
+    </div>
+</div>
