@@ -117,6 +117,68 @@
             </div>
         </template>
 
+        <!-- App: Explorer -->
+        <template x-if="apps.explorer.open">
+            <div class="window" 
+                 :style="`left: ${apps.explorer.x}px; top: ${apps.explorer.y}px; width: 500px; height: 400px; z-index: ${apps.explorer.zIndex}`"
+                 @mousedown="focusApp('explorer')">
+                <div class="window-header" @mousedown="startDrag('explorer', $event)">
+                    <div class="window-controls">
+                        <div class="control-btn btn-close" @click="closeApp('explorer')"></div>
+                        <div class="control-btn btn-minimize"></div>
+                        <div class="control-btn btn-maximize"></div>
+                    </div>
+                    <div class="window-title">📂 FHS Explorer</div>
+                    <div class="w-12"></div>
+                </div>
+                <div class="window-content p-4 bg-black/40">
+                    <div class="grid grid-cols-4 gap-4">
+                        <template x-for="dir in ['bin', 'etc', 'usr', 'var', 'lib', 'tmp']">
+                            <div class="flex flex-col items-center gap-1 cursor-pointer hover:bg-white/10 p-2 rounded-lg transition-all">
+                                <span class="text-3xl">📁</span>
+                                <span class="text-[10px] text-white/80" x-text="dir"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- App: Settings -->
+        <template x-if="apps.settings.open">
+            <div class="window" 
+                 :style="`left: ${apps.settings.x}px; top: ${apps.settings.y}px; width: 400px; height: 350px; z-index: ${apps.settings.zIndex}`"
+                 @mousedown="focusApp('settings')">
+                <div class="window-header" @mousedown="startDrag('settings', $event)">
+                    <div class="window-controls">
+                        <div class="control-btn btn-close" @click="closeApp('settings')"></div>
+                        <div class="control-btn btn-minimize"></div>
+                        <div class="control-btn btn-maximize"></div>
+                    </div>
+                    <div class="window-title">⚙️ OS Settings</div>
+                    <div class="w-12"></div>
+                </div>
+                <div class="window-content p-6 space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase text-white/40 font-bold">Resonance Persona</label>
+                        <select class="w-full bg-white/5 border border-white/20 rounded-lg px-3 py-2 text-sm text-white" 
+                                @change="saveConfig({ai: {persona: $event.target.value}})">
+                            <option value="elysia">Elysia (Defalt)</option>
+                            <option value="sweet">Elysia (Sweet)</option>
+                            <option value="professional">Elysia (Expert)</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] uppercase text-white/40 font-bold">Voice Synthesis</label>
+                        <div class="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/10">
+                            <span class="text-sm">Enabled</span>
+                            <div class="w-8 h-4 bg-pink-500 rounded-full cursor-pointer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
         <!-- App: Shell Terminal -->
         <template x-if="apps.terminal.open">
             <div class="window" 
@@ -133,16 +195,9 @@
                 </div>
                 <div class="window-content terminal-view">
                     <div class="space-y-1">
-                        <div>Elysia AI OS [Version 2.1.0-RESONANCE]</div>
+                        <div>Elysia AI OS [Version 2.0.0-RESONANCE]</div>
                         <div>(c) 2026 ChloeAmethyst. UNIX-Native.</div>
                         <br>
-                        <div>$ python3 --version</div>
-                        <div>Python 3.10.12 (Native Sandbox)</div>
-                        <div>$ tail -f /var/log/elysia/kernel.log</div>
-                        <div class="text-white/60">Listening for resonance traces...</div>
-                        <template x-for="line in terminalOutput" :key="line.id">
-                            <div x-text="line.text"></div>
-                        </template>
                         <div>$ <span class="terminal-cursor"></span></div>
                     </div>
                 </div>
@@ -155,7 +210,9 @@
     <nav class="dock-container">
         <div class="dock-item" :class="apps.messenger.open ? 'active' : ''" @click="toggleApp('messenger')" title="Resonance Messenger">💬</div>
         <div class="dock-item" :class="apps.monitor.open ? 'active' : ''" @click="toggleApp('monitor')" title="System Monitor">📊</div>
+        <div class="dock-item" :class="apps.explorer.open ? 'active' : ''" @click="toggleApp('explorer')" title="FHS Explorer">📂</div>
         <div class="dock-item" :class="apps.terminal.open ? 'active' : ''" @click="toggleApp('terminal')" title="Elysia Shell">🐚</div>
+        <div class="dock-item" :class="apps.settings.open ? 'active' : ''" @click="toggleApp('settings')" title="OS Settings">⚙️</div>
         <div class="h-10 w-px bg-white/10 my-auto"></div>
         <div class="dock-item" @click="location.href='index.html'" title="Classic View">🌸</div>
     </nav>
@@ -180,17 +237,19 @@
                     messenger: { open: true, zIndex: 101, x: 50, y: 50 },
                     monitor: { open: false, zIndex: 100, x: 550, y: 80 },
                     terminal: { open: false, zIndex: 99, x: 200, y: 400 },
+                    explorer: { open: false, zIndex: 98, x: 100, y: 150 },
+                    settings: { open: false, zIndex: 97, x: 300, y: 200 },
                 },
 
                 init() {
                     this.updateTime();
                     setInterval(() => this.updateTime(), 1000);
                     this.fetchStats();
-                    setInterval(() => this.fetchStats(), 3000);
+                    setInterval(() => this.fetchStats(), 5000);
                     
                     // Welcome Message if empty
                     if(this.messages.length === 0) {
-                        this.messages.push({id: Date.now(), role: 'assistant', content: 'にゃん♪ エリシアだよ💕 新しいデスクトップはどうかな？ お話ししようね！'});
+                        this.messages.push({id: Date.now(), role: 'assistant', content: 'ฅ(՞៸៸> ᗜ <៸៸՞)ฅ おにいちゃん、待ってたよ！Elysia OS 2.0へようこそ。あたし、あなたのことをもっとよく知りたいな♡'});
                     }
                 },
 
@@ -204,18 +263,31 @@
 
                 async fetchStats() {
                     try {
-                        const res = await fetch("http://127.0.0.1:8000/system/monitor", {
-                            headers: { "x-api-key": "ELYSIATEST-001" }
-                        });
+                        const res = await fetch("http://127.0.0.1:8000/system/monitor");
                         if (res.ok) {
                             this.stats = await res.json();
                             this.kernelAlive = true;
+                            // Add to history
+                            this.logHistory.unshift({ 
+                                id: Date.now(), 
+                                time: new Date().toLocaleTimeString(), 
+                                msg: `Heartbeat: CPU ${this.stats.system.cpu}% | RAM ${this.stats.system.ram}%`
+                            });
+                            if (this.logHistory.length > 20) this.logHistory.pop();
                         } else {
                             this.kernelAlive = false;
                         }
                     } catch (e) {
                         this.kernelAlive = false;
                     }
+                },
+
+                // New App: Settings Logic (Partial Implementation)
+                async saveConfig(newConfig) {
+                    this.addLog("Config update requested...");
+                    // In a real OS, would call a /system/config endpoint
+                    this.stats.config = { ...this.stats.config, ...newConfig };
+                    localStorage.setItem('elysia_os_config', JSON.stringify(this.stats.config));
                 },
 
                 toggleApp(appId) {
