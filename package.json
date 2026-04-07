@@ -14,7 +14,9 @@
     "clean": "powershell -ExecutionPolicy Bypass -File ./scripts/clean.ps1 -Deep",
     "db:init": "bun --filter \"@elysia-ai/server\" db:init",
     "db:migrate": "bun --filter \"@elysia-ai/server\" db:migrate",
-    "prepare": "husky"
+    "prepare": "husky",
+    "tauri": "bunx @tauri-apps/cli",
+    "dev:desktop": "bunx @tauri-apps/cli dev"
   },
   "lint-staged": {
     "*.{js,ts,tsx,json}": [
