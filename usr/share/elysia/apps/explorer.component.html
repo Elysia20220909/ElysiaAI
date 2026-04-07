@@ -1,0 +1,19 @@
+<div class="window-header" @mousedown="startDrag('explorer', $event)">
+    <div class="window-controls">
+        <div class="control-btn btn-close" @click="closeApp('explorer')"></div>
+        <div class="control-btn btn-minimize"></div>
+        <div class="control-btn btn-maximize"></div>
+    </div>
+    <div class="window-title">📂 FHS Explorer</div>
+    <div class="w-12"></div>
+</div>
+<div class="window-content p-4 bg-black/40">
+    <div class="grid grid-cols-4 gap-4">
+        <template x-for="dir in ['bin', 'etc', 'usr', 'var', 'lib', 'tmp']">
+            <div class="flex flex-col items-center gap-1 cursor-pointer hover:bg-white/10 p-2 rounded-lg transition-all">
+                <span class="text-3xl">📁</span>
+                <span class="text-[10px] text-white/80" x-text="dir"></span>
+            </div>
+        </template>
+    </div>
+</div>
