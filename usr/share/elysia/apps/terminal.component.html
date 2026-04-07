@@ -1,0 +1,17 @@
+<div class="window-header" @mousedown="startDrag('terminal', $event)">
+    <div class="window-controls">
+        <div class="control-btn btn-close" @click="closeApp('terminal')"></div>
+        <div class="control-btn btn-minimize"></div>
+        <div class="control-btn btn-maximize"></div>
+    </div>
+    <div class="window-title">🐚 Elysia Shell</div>
+    <div class="w-12"></div>
+</div>
+<div class="window-content terminal-view">
+    <div class="space-y-1">
+        <div>Elysia AI OS [Version 2.6.0-RESONANCE]</div>
+        <div>(c) 2026 ChloeAmethyst. UNIX-Native.</div>
+        <br>
+        <div>$ <span class="terminal-cursor"></span></div>
+    </div>
+</div>
