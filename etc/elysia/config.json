@@ -1,0 +1,23 @@
+{
+    "system": {
+        "version": "2.0.0-RESONANCE",
+        "hostname": "elysia-os",
+        "log_level": "INFO"
+    },
+    "ai": {
+        "model": "phi4",
+        "persona": "elysia",
+        "memory_enabled": true,
+        "tools_enabled": true
+    },
+    "voice": {
+        "provider": "voicevox",
+        "host": "http://127.0.0.1:50021",
+        "default_speaker": 2
+    },
+    "ui": {
+        "theme": "glassmorphism",
+        "transparency": 0.8,
+        "animations": true
+    }
+}

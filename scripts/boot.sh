@@ -5,7 +5,10 @@ set -e
 # Add bin to PATH for local execution
 export PATH=$PATH:$(pwd)/bin
 
-echo "🌟 Starting Elysia OS Resonance Cluster..."
+echo "🌟 Initializing Elysia OS Resonance Cluster..."
+
+# 0. Pre-flight Check
+python3 scripts/elysia_check.py || exit 1
 
 # 1. Start Python Kernel (elysiad) in the background
 echo "⚡ Starting Elysia Kernel Daemon (elysiad)..."
