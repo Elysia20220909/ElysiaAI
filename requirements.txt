@@ -14,8 +14,7 @@ sentence-transformers==5.3.0
 # Monitoring & Diagnostics
 rich==13.7.1
 
-# Testing & Development (CI)
-pytest==8.3.4
-pytest-asyncio==0.25.3
-black==25.1.0
-ruff==0.9.8
+# Microsoft ecosystem SDKs
+msal==1.31.0
+msgraph-sdk==1.22.0
+azure-identity==1.17.1
