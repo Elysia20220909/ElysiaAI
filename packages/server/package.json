@@ -19,7 +19,7 @@
     "@elysiajs/static": "^1.2.0",
     "@elysiajs/stream": "^1.1.0",
     "@elysiajs/swagger": "^1.2.0",
-    "@libsql/client": "^0.15.15",
+    "@libsql/client": "^0.17.2",
     "@node-redis/client": "^1.0.6",
     "@prisma/adapter-libsql": "^7.1.0",
     "@prisma/client": "^7.1.0",
