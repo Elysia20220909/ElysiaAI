@@ -17,52 +17,57 @@
 
 ## ✨ Why Elysia AI?
 
-Combining Bun's speed, Elysia's ergonomics, and the power of AI.
+ElysiaAI has evolved from a simple chatbot into a **comprehensive AI Operating System with a native Desktop Experience**.
 
-```typescript
-import { Elysia } from "elysia";
-
-new Elysia()
-  .get("/chat", async ({ query }) => {
-    // Type-safe, auto-validated, blazing fast ⚡
-    const response = await ai.chat(query.message);
-    return { reply: response };
-  })
-  .listen(3000);
-```
-
-**No compromises**: Fast, type-safe, and great developer experience.
+### ✨ Key Features (Resonance Desktop)
+- **Desktop Shell**: A full-screen workspace with floating windows for multi-tasking with AI.
+- **Active Perception**: Real-time sensing of system load (CPU/RAM) and heartbeat within the status bar.
+- **Embodied Execution**: Secure terminal app for Python code execution in a sandbox.
+- **Context Synthesis**: Intelligent background summarization to maintain AI "working memory".
+- **Visual Monitor**: Modern telemetry interface for tracking AI health and system vitals.
 
 ---
 
-## 🚀 Quick Start
+### ⚡ Quick Start (Ubuntu / Mac OS / WSL2)
+Elysia OS is optimized for UNIX-based environments.
 
 ```bash
-# Install with Bun (recommended)
-bun install
+# 1. Setup Dependencies (Bun, Python, Prisma)
+make install
 
-# Setup Python services
-python -m venv .venv
-. .\.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # Linux/macOS
-
-# Standard install
-pip install -r requirements.txt
-
-# Or, use uv (Super fast):
-# pip install uv
-# python -m uv pip install -r requirements.lock
-
-# Optional: Bun wrapper
-bun run scripts/setup-python.ps1  # Windows
-# or
-./scripts/setup-python.sh         # Linux/macOS/WSL
-
-# Start all services
-bun run dev
+# 2. Boot System (UI + Kernel)
+make boot
 ```
 
-**That's it!** 🎉 Open http://localhost:3000
+---
+
+## Ⅰ. Setup Guide (UNIX Standard)
+
+### Requirements
+- **OS**: Ubuntu 22.04+, macOS Sonoma, or WSL2 (Ubuntu 22.04)
+- **Runtime**: Bun 1.1+, Python 3.10+, Ollama
+
+### Step-by-Step
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/Elysia20220909/ElysiaAI.git
+   cd ElysiaAI
+   ```
+
+2. **Configure Environment**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **System Initialization**
+   ```bash
+   make install
+   ```
+
+4. **Launch OS Resonance**
+   ```bash
+   make boot
+   ```
 
 ## Mobile App (iOS/Android)
 
@@ -110,56 +115,63 @@ See `mobile/README.md` for details.
    ```
 3. In the app, click ⚙️ to configure server URL (default: `http://localhost:3000`)
 
-## Performance Optimization (Optional)
+## 🛠️ System Management (Makefile)
 
-### C++ Native Bindings
+- `make start`: Start Elysia Kernel Daemon (elysiad) in background.
+- `make stop`: Gracefully stop the system kernel.
+- `make status`: Check heartbeat and API health.
+- `make ui`: Start only the Elysia.js Frontend.
+- `make clean`: Clear system logs and temp caches.
 
-For high-performance text processing, you can enable C++ modules:
+---
 
-- Tokenization: Fast word splitting for large texts
-- Cosine similarity: Vector embedding comparison
-- Normalization: Text cleanup
+## 🏗️ Architecture
 
-**Requirements**: Visual Studio 2017+ ("Desktop development with C++")
+ElysiaAI is built with a hybrid architecture combining the speed of **Bun/Elysia.js** for handling communications and the power of **Python/FastAPI** for advanced AI-native logic.
 
-```bash
-./scripts/setup-native.ps1  # Requires Visual Studio
+### 📡 System Diagram
+```mermaid
+graph TD
+    User([User]) <--> |WebSocket / SSE| Frontend[Frontend <br/> Alpine.js + Tailwind]
+    Frontend <--> |API Calls| Elysia[Elysia.js Server <br/> Bun Runtime]
+    
+    subgraph "Logic & Security"
+        Elysia --> Auth[JWT Auth]
+        Elysia --> Guard[Rate Limiter]
+        Elysia --> Audit[Audit Logging]
+    end
+    
+    Elysia <--> |HTTP/gRPC/IPC| Kernel[Python AI Kernel <br/> FastAPI]
+    
+    subgraph "AI Core"
+        Kernel --> Persona[Persona Engine <br/> Dual Persona]
+        Kernel --> RAG[RAG Memory <br/> Milvus Lite]
+        Kernel --> LLM[Ollama <br/> Phi-4 / Llama 3]
+    end
+
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style Frontend fill:#bbf,stroke:#333,stroke-width:2px
+    style Elysia fill:#bfb,stroke:#333,stroke-width:2px
+    style Kernel fill:#fbf,stroke:#333,stroke-width:2px
 ```
 
-### CUDA GPU Acceleration
+### 💓 Sentiment & Context Flow
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant S as Server (Bun)
+    participant A as AI Kernel (Python)
+    participant K as Memory (Milvus)
 
-If you have an NVIDIA GPU, dramatically speed up embedding similarity computations (100x+ faster):
-
-**Requirements**:
-
-- NVIDIA GPU (CUDA Compute Capability 7.5+)
-- [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads) 11.0+
-- Visual Studio 2017+
-
-```bash
-./scripts/setup-cuda.ps1  # Requires CUDA Toolkit + Visual Studio
+    U->>S: Input Message
+    S->>S: Security Scan & Validation
+    S->>A: Context + User Message
+    A->>K: Search relevant memories (RAG)
+    K-->>A: Retrieved documents
+    A->>A: Sentiment Analysis & Tone Tuning
+    A-->>S: Generated Response (Streaming)
+    S-->>U: Formatted Markdown Output
 ```
-
-**Note**: C++/CUDA modules are optional. If builds fail, the app falls back to JavaScript implementations.
-
-## Build & Distribution
-
-```powershell
-bun run build
-bun run pack:zip
-```
-
-Attach the generated `dist.zip` to a release.
-
-## Helper Scripts (Windows)
-
-- `./scripts/start-server.ps1`: Start Elysia server (configurable `PORT`)
-- `./scripts/test-ai.ps1`: Test `POST /ai` endpoint
-- `./scripts/test-elysia-love.ps1`: Test streaming `POST /elysia-love`
-- `./scripts/test-rag.ps1`: Test FastAPI `POST /rag`
-- `./scripts/dev.ps1`: Unified runner for FastAPI → Elysia (+optional NetworkSim); press Enter to stop all
-
-## Helper Scripts (Linux/macOS/WSL)
 
 ---
 
