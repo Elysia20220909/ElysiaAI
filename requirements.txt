@@ -8,7 +8,7 @@ numpy==2.1.1
 psutil==6.0.0
 
 # Monitoring & Diagnostics
-rich==13.8.1
+rich==14.3.3
 
 # Testing
 pytest==8.3.3
