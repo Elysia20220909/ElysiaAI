@@ -42,6 +42,18 @@ new Elysia()
 bun install
 
 # Setup Python services
+python -m venv .venv
+. .\.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # Linux/macOS
+
+# Standard install
+pip install -r requirements.txt
+
+# Or, use uv (Super fast):
+# pip install uv
+# python -m uv pip install -r requirements.lock
+
+# Optional: Bun wrapper
 bun run scripts/setup-python.ps1  # Windows
 # or
 ./scripts/setup-python.sh         # Linux/macOS/WSL
