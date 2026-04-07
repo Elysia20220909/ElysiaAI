@@ -13,26 +13,31 @@ def timeout_handler(signum, frame):
     raise TimeoutException("Code execution timed out (forced termination).")
 
 def execute_code(code: str, timeout: int = 5) -> Dict[str, Any]:
-    """Execute Python code in a restricted local scope and capture output."""
+    """
+    Execute Python code in a restricted local scope and capture output.
+    
+    ⚠️ SECURITY NOTICE: This is a 'soft' sandbox for development.
+    For production, always run this inside a gVisor/Docker container 
+    or a dedicated serverless execution environment (e.g., e2b).
+    """
     output_buffer = io.StringIO()
     error = ""
     result = None
     
-    # Simple security: block built-ins that are very dangerous
-    # Note: For true security, use gVisor, Docker, or e2b.
-    restricted_globals = {
-        "__builtins__": {
-            k: v for k, v in __builtins__.items() 
-            if k not in ["eval", "exec", "open", "input", "exit", "quit", "help"]
-        },
-        "print": lambda *args, **kwargs: print(*args, file=output_buffer, **kwargs),
-        "import": __import__
+    # Advanced security: block more built-ins and prevent __import__ recursion
+    restricted_builtins = {
+        k: v for k, v in __builtins__.items() 
+        if k not in ["eval", "exec", "open", "input", "exit", "quit", "help", "getattr", "setattr", "delattr", "locals", "globals"]
     }
     
-    # Set timeout
-    if sys.platform != "win32":
-        signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(timeout)
+    restricted_globals = {
+        "__builtins__": restricted_builtins,
+        "print": lambda *args, **kwargs: print(*args, file=output_buffer, **kwargs),
+    }
+    
+    # Set timeout (UNIX/POSIX Standard)
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(timeout)
         
     try:
         with contextlib.redirect_stdout(output_buffer):
@@ -45,8 +50,7 @@ def execute_code(code: str, timeout: int = 5) -> Dict[str, Any]:
     except Exception:
         error = traceback.format_exc()
     finally:
-        if sys.platform != "win32":
-            signal.alarm(0)
+        signal.alarm(0) # Reset timer
             
     return {
         "stdout": output_buffer.getvalue(),

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elysia OS - Resonance Desktop 🌸</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="css/desktop.css">
+</head>
+<body x-data="elysiaOS()" @mousemove="handleDrag($event)" @mouseup="stopDrag()">
+    
+    <!-- 🌠 Desktop Wallpaper -->
+    <div class="fixed inset-0 pointer-events-none z-0">
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 opacity-80"></div>
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-500 rounded-full mix-blend-screen filter blur-[128px] opacity-30 animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-[128px] opacity-30 animate-pulse" style="animation-delay: 2s"></div>
+    </div>
+
+    <!-- 📊 Status Bar -->
+    <header class="status-bar">
+        <div class="flex items-center gap-4">
+            <span class="font-bold tracking-widest text-pink-400">ELYSIΛ OS</span>
+            <div class="h-4 w-px bg-white/20"></div>
+            <div class="flex items-center gap-2 text-[10px] text-white/60">
+                <span>CPU: <span class="text-blue-400" x-text="(stats.system?.cpu || 0) + '%'"></span></span>
+                <span>RAM: <span class="text-purple-400" x-text="(stats.system?.ram || 0) + '%'"></span></span>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full" :class="kernelAlive ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></span>
+                <span class="text-[10px] text-white/50" x-text="kernelAlive ? 'RESONANCE_OK' : 'OFFLINE'"></span>
+            </div>
+            <div class="text-[12px] font-mono tracking-tighter" x-text="currentTime"></div>
+        </div>
+    </header>
+
+    <!-- 🖥️ Workspace (Windows) -->
+    <main class="relative w-full h-full pt-8 pb-20 px-4">
+        
+        <!-- App: Messenger -->
+        <template x-if="apps.messenger.open">
+            <div class="window" 
+                 :style="`left: ${apps.messenger.x}px; top: ${apps.messenger.y}px; width: 480px; height: 600px; z-index: ${apps.messenger.zIndex}`"
+                 @mousedown="focusApp('messenger')">
+                <div class="window-header" @mousedown="startDrag('messenger', $event)">
+                    <div class="window-controls">
+                        <div class="control-btn btn-close" @click="closeApp('messenger')"></div>
+                        <div class="control-btn btn-minimize" @click="closeApp('messenger')"></div>
+                        <div class="control-btn btn-maximize"></div>
+                    </div>
+                    <div class="window-title">💕 Resonance Messenger</div>
+                    <div class="w-12"></div>
+                </div>
+                <div class="window-content flex flex-col">
+                    <div id="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+                        <template x-for="msg in messages" :key="msg.id">
+                            <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
+                                <div :class="msg.role === 'user' ? 'bg-pink-600/30 border border-pink-500/30' : 'bg-white/10 border border-white/10'" 
+                                     class="max-w-[85%] rounded-2xl px-4 py-3 shadow-xl backdrop-blur-md">
+                                    <p class="text-sm whitespace-pre-wrap" x-text="msg.content"></p>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="loading" class="flex justify-start">
+                            <div class="bg-white/5 border border-white/10 rounded-2xl px-4 py-2 animate-pulse">
+                                <span class="text-xs text-pink-300">Resonanting...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-black/20 border-t border-white/10">
+                        <form @submit.prevent="sendMessage()" class="flex gap-2">
+                            <input x-model="chatInput" placeholder="エリシアにメッセージを送る..." 
+                                   class="flex-1 bg-white/5 border border-white/20 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-pink-500 transition-all">
+                            <button type="submit" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg transition-colors">送信</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- App: System Monitor -->
+        <template x-if="apps.monitor.open">
+            <div class="window" 
+                 :style="`left: ${apps.monitor.x}px; top: ${apps.monitor.y}px; width: 640px; height: 400px; z-index: ${apps.monitor.zIndex}`"
+                 @mousedown="focusApp('monitor')">
+                <div class="window-header" @mousedown="startDrag('monitor', $event)">
+                    <div class="window-controls">
+                        <div class="control-btn btn-close" @click="closeApp('monitor')"></div>
+                        <div class="control-btn btn-minimize"></div>
+                        <div class="control-btn btn-maximize"></div>
+                    </div>
+                    <div class="window-title">📊 System Telemetry</div>
+                    <div class="w-12"></div>
+                </div>
+                <div class="window-content p-6 flex flex-col gap-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
+                            <div class="text-[10px] uppercase text-white/40 mb-2 font-bold">CPU Workload</div>
+                            <div class="text-3xl font-mono text-blue-400" x-text="(stats.system?.cpu || 0) + '%'"></div>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/10">
+                            <div class="text-[10px] uppercase text-white/40 mb-2 font-bold">RAM Utilization</div>
+                            <div class="text-3xl font-mono text-purple-400" x-text="(stats.system?.ram || 0) + '%'"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white/5 rounded-2xl p-4 border border-white/10 flex-1 overflow-auto">
+                        <div class="text-[10px] uppercase text-white/40 mb-2 font-bold">Kernel Activity</div>
+                        <div class="space-y-1 font-mono text-[10px] text-green-400/80">
+                            <template x-for="log in logHistory" :key="log.id">
+                                <div><span class="text-white/20" x-text="`[${log.time}]` "></span> <span x-text="log.msg"></span></div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- App: Shell Terminal -->
+        <template x-if="apps.terminal.open">
+            <div class="window" 
+                 :style="`left: ${apps.terminal.x}px; top: ${apps.terminal.y}px; width: 600px; height: 360px; z-index: ${apps.terminal.zIndex}`"
+                 @mousedown="focusApp('terminal')">
+                <div class="window-header" @mousedown="startDrag('terminal', $event)">
+                    <div class="window-controls">
+                        <div class="control-btn btn-close" @click="closeApp('terminal')"></div>
+                        <div class="control-btn btn-minimize"></div>
+                        <div class="control-btn btn-maximize"></div>
+                    </div>
+                    <div class="window-title">🐚 Elysia Shell</div>
+                    <div class="w-12"></div>
+                </div>
+                <div class="window-content terminal-view">
+                    <div class="space-y-1">
+                        <div>Elysia AI OS [Version 2.1.0-RESONANCE]</div>
+                        <div>(c) 2026 ChloeAmethyst. UNIX-Native.</div>
+                        <br>
+                        <div>$ python3 --version</div>
+                        <div>Python 3.10.12 (Native Sandbox)</div>
+                        <div>$ tail -f /var/log/elysia/kernel.log</div>
+                        <div class="text-white/60">Listening for resonance traces...</div>
+                        <template x-for="line in terminalOutput" :key="line.id">
+                            <div x-text="line.text"></div>
+                        </template>
+                        <div>$ <span class="terminal-cursor"></span></div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+    </main>
+
+    <!-- ⚓ Dock -->
+    <nav class="dock-container">
+        <div class="dock-item" :class="apps.messenger.open ? 'active' : ''" @click="toggleApp('messenger')" title="Resonance Messenger">💬</div>
+        <div class="dock-item" :class="apps.monitor.open ? 'active' : ''" @click="toggleApp('monitor')" title="System Monitor">📊</div>
+        <div class="dock-item" :class="apps.terminal.open ? 'active' : ''" @click="toggleApp('terminal')" title="Elysia Shell">🐚</div>
+        <div class="h-10 w-px bg-white/10 my-auto"></div>
+        <div class="dock-item" @click="location.href='index.html'" title="Classic View">🌸</div>
+    </nav>
+
+    <script>
+        function elysiaOS() {
+            return {
+                currentTime: '',
+                kernelAlive: true,
+                loading: false,
+                chatInput: '',
+                messages: JSON.parse(localStorage.getItem('elysia_chat_history') || '[]'),
+                stats: {},
+                logHistory: [],
+                terminalOutput: [],
+                maxZ: 100,
+                dragApp: null,
+                offsetX: 0,
+                offsetY: 0,
+
+                apps: {
+                    messenger: { open: true, zIndex: 101, x: 50, y: 50 },
+                    monitor: { open: false, zIndex: 100, x: 550, y: 80 },
+                    terminal: { open: false, zIndex: 99, x: 200, y: 400 },
+                },
+
+                init() {
+                    this.updateTime();
+                    setInterval(() => this.updateTime(), 1000);
+                    this.fetchStats();
+                    setInterval(() => this.fetchStats(), 3000);
+                    
+                    // Welcome Message if empty
+                    if(this.messages.length === 0) {
+                        this.messages.push({id: Date.now(), role: 'assistant', content: 'にゃん♪ エリシアだよ💕 新しいデスクトップはどうかな？ お話ししようね！'});
+                    }
+                },
+
+                updateTime() {
+                    const now = new Date();
+                    this.currentTime = now.toLocaleString('ja-JP', { 
+                        weekday: 'short', month: 'short', day: 'numeric', 
+                        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+                    });
+                },
+
+                async fetchStats() {
+                    try {
+                        const res = await fetch("http://127.0.0.1:8000/system/monitor", {
+                            headers: { "x-api-key": "ELYSIATEST-001" }
+                        });
+                        if (res.ok) {
+                            this.stats = await res.json();
+                            this.kernelAlive = true;
+                        } else {
+                            this.kernelAlive = false;
+                        }
+                    } catch (e) {
+                        this.kernelAlive = false;
+                    }
+                },
+
+                toggleApp(appId) {
+                    this.apps[appId].open = !this.apps[appId].open;
+                    if(this.apps[appId].open) this.focusApp(appId);
+                },
+
+                closeApp(appId) {
+                    this.apps[appId].open = false;
+                },
+
+                focusApp(appId) {
+                    this.maxZ++;
+                    this.apps[appId].zIndex = this.maxZ;
+                },
+
+                startDrag(appId, e) {
+                    this.focusApp(appId);
+                    this.dragApp = appId;
+                    this.offsetX = e.clientX - this.apps[appId].x;
+                    this.offsetY = e.clientY - this.apps[appId].y;
+                    e.preventDefault();
+                },
+
+                handleDrag(e) {
+                    if (!this.dragApp) return;
+                    this.apps[this.dragApp].x = e.clientX - this.offsetX;
+                    this.apps[this.dragApp].y = e.clientY - this.offsetY;
+                },
+
+                stopDrag() {
+                    this.dragApp = null;
+                },
+
+                async sendMessage() {
+                    if (!this.chatInput.trim() || this.loading) return;
+                    const content = this.chatInput.trim();
+                    this.messages.push({ id: Date.now(), role: 'user', content });
+                    this.chatInput = '';
+                    this.loading = true;
+                    this.scrollToBottom();
+
+                    try {
+                        const res = await fetch("http://127.0.0.1:8000/chat", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json", "x-api-key": "ELYSIATEST-001" },
+                            body: JSON.stringify({
+                                messages: this.messages,
+                                stream: false,
+                                session_id: "desktop_user"
+                            })
+                        });
+                        const data = await res.json();
+                        this.messages.push({ id: Date.now() + 1, role: 'assistant', content: data.content });
+                        localStorage.setItem('elysia_chat_history', JSON.stringify(this.messages));
+                    } catch (e) {
+                        this.messages.push({ id: Date.now() + 1, role: 'assistant', content: '⚠️ Error: ' + e.message });
+                    } finally {
+                        this.loading = false;
+                        this.scrollToBottom();
+                    }
+                },
+
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        const container = document.getElementById('chatContainer');
+                        if (container) container.scrollTop = container.scrollHeight;
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>

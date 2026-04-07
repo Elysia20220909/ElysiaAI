@@ -17,13 +17,14 @@
 
 ## 🌸 Elysia OS Resonance - 次世代AIオーケストレーター
 
-ElysiaAIは単なるチャットボットから、**「意思を持つAIオペレーティングシステム」**へと進化しました。
+ElysiaAIは単なるチャットボットから、**「デスクトップ・エクスペリエンスを備えたAIオペレーティングシステム」**へと進化しました。
 
-### ✨ 実装された主な機能
-- **能動的知覚 (Active Perception)**: システム負荷 (CPU/RAM)、現在時刻、周辺環境をリアルタイムに感知。
-- **具現化された実行能力 (Tool Use)**: セキュアなサンドボックス内でのPythonコード実行、ペルソナ動的切替。
+### ✨ 実装された主な機能 (Resonance Desktop)
+- **デスクトップ・シェル**: ブラウザ内に展開されるフルデスクトップ環境。マルチウィンドウでAIと対話可能。
+- **能動的知覚 (Active Perception)**: システム負荷 (CPU/RAM)、現在時刻をリアルタイムにステータスバーで感知。
+- **具現化された実行能力 (Tool Use)**: ターミナルアプリによるセキュアなサンドボックス内でのPythonコード実行。
 - **コンテキスト合成 (Context Synthesis)**: 会話履歴をバックグラウンドで要約し、AIの「作業記憶」として維持。
-- **ビジュアル・モニター (Visual Monitor)**: ハードウェア統計とAIの健康状態を可視化する管理ダッシュボード。
+- **ビジュアル・モニター (Visual Monitor)**: ハードウェア統計とAIの健康状態を可視化。
 
 ---
 
@@ -34,38 +35,31 @@ ElysiaAIは単なるチャットボットから、**「意思を持つAIオペ�
 - **Python**: v3.11 以上
 - **Ollama**: ローカル推論エンジン (llama3.2推奨)
 
-### 2. 環境構築
+### 2. セットアップ (Ubuntu / Mac OS / WSL2)
+Elysia OS は UNIX ベースの環境向けに最適化されています。
+
 ```bash
 # リポジトリのクローン
-git clone https://github.com/hosih/ElysiaAI.git
+git clone https://github.com/Elysia20220909/ElysiaAI.git
 cd ElysiaAI
 
-# 依存関係のインストール (JS/TS)
-bun install
+# 環境変数の設定
+cp .env.example .env
 
-# 依存関係のインストール (Python)
-python -m venv .venv
-. .\.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # Linux/macOS
-
-# 通常のインストール
-pip install -r requirements.txt
-
-# もしくは、uv（超高速）を使用する場合:
-# pip install uv
-# python -m uv pip install -r requirements.lock
+# 自動セットアップ (Bun, Python, Prisma 一括設定)
+make install
 ```
 
 ### 3. システムの起動
-Windows環境では、一括起動スクリプトを利用できます。
-```powershell
-# Elysia OS Resonance 起動!
-powershell -ExecutionPolicy Bypass -File .\boot_os.ps1
+```bash
+# システム全体 (UI + Kernel) の一括起動
+make boot
 ```
 
-手動で起動する場合:
-1. カーネルの起動 (Port 8000): `python -m uvicorn usr.lib.elysia.kernel:app`
-2. インターフェースの起動 (Port 3000): `python -m http.server 3000 --directory public`
+手動で管理する場合:
+- カーネル(Daemon)の開始: `make start`
+- フロントエンドの開始: `make ui`
+- システムの状態確認: `make status`
 
 ---
 
@@ -134,28 +128,50 @@ new Elysia()
 
 ## 🏗️ アーキテクチャ
 
+ElysiaAIは、高速な通信を担う **Bun/Elysia.js** と、高度な推論を担う **Python/FastAPI** のハイブリッド構成で構築されています。
+
+### 📡 システム構成図
+```mermaid
+graph TD
+    User([ユーザー]) <--> |WebSocket / SSE| Frontend[フロントエンド <br/> Alpine.js + Tailwind]
+    Frontend <--> |API Calls| Elysia[Elysia.js Server <br/> Bun Runtime]
+    
+    subgraph "Logic & Security"
+        Elysia --> Auth[JWT Auth]
+        Elysia --> Guard[Rate Limiter]
+        Elysia --> Audit[Audit Logging]
+    end
+    
+    Elysia <--> |HTTP/gRPC/IPC| Kernel[Python AI Kernel <br/> FastAPI]
+    
+    subgraph "AI Core"
+        Kernel --> Persona[Persona Engine <br/> Dual Persona]
+        Kernel --> RAG[RAG Memory <br/> Milvus Lite]
+        Kernel --> LLM[Ollama <br/> Phi-4 / Llama 3]
+    end
+
+    style User fill:#f9f,stroke:#333,stroke-width:2px
+    style Frontend fill:#bbf,stroke:#333,stroke-width:2px
+    style Elysia fill:#bfb,stroke:#333,stroke-width:2px
+    style Kernel fill:#fbf,stroke:#333,stroke-width:2px
 ```
-┌─────────────┐
-│  Client UI  │  Alpine.js + TailwindCSS
-└──────┬──────┘
-       │ HTTPS
-┌──────▼──────┐
-│   Elysia    │  Bun + TypeScript
-│   Server    │◄─► Redis (Cache + Rate Limit)
-└──────┬──────┘
-       │
-   ┌───▼───┐
-   │FastAPI│  Python + RAG
-   │  RAG  │
-   └───┬───┘
-       │
-   ┌───▼───┐
-   │ Milvus│  ベクトルデータベース
-   └───────┘
-       │
-   ┌───▼───┐
-   │Ollama │  LLM推論
-   └───────┘
+
+### 💓 感情とコンテキストのフロー
+```mermaid
+sequenceDiagram
+    participant U as ユーザー
+    participant S as Server (Bun)
+    participant A as AI Kernel (Python)
+    participant K as Memory (Milvus)
+
+    U->>S: メッセージ送信
+    S->>S: セキュリティチェック & 検証
+    S->>A: コンテキスト + ユーザーメッセージ
+    A->>K: 関連記憶の検索 (RAG)
+    K-->>A: 検索結果 (Memories)
+    A->>A: 感情分析 & トーン調整
+    A-->>S: 生成レスポンス (Streaming)
+    S-->>U: フォーマット済み出力
 ```
 
 ---
@@ -222,20 +238,17 @@ GET /health
 
 ---
 
-## 🧪 テストとセキュリティ
+### **テスト実行**
 
 ```bash
 # ユニットテスト
-bun test
+make test
 
-# E2Eテスト
+# E2Eテスト (Playwright)
 bunx playwright test
 
-# 負荷テスト
-./scripts/load-test.ps1
-
-# セキュリティスキャン（OWASP ZAP、Locustなど）
-./run-all-tests.sh
+# 脆弱性スキャン (GlassWorm / Secrets)
+python scripts/glassworm_lint.py
 ```
 
 **テストカバレッジ**: 80%+ 包括的なセキュリティテストスイート付き

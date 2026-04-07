@@ -296,6 +296,42 @@ class MemoryAddRequest(BaseModel):
     emotion: str = "neutral"
 
 # ==================== Helper Functions ====================
+# ==================== Security Validation (Guard) ====================
+def sanitize_unicode(text: str) -> str:
+    """
+    GlassWorm Defense: Strips invisible Unicode characters used for hidden prompt injection.
+    Targets Variation Selectors, Tags, Bidi Overrides, and Zero-Width characters.
+    """
+    if not text: return ""
+    import re
+    # U+E0100-E01EF (Variation Selectors Supplement)
+    # U+E0000-E007F (Tags)
+    # U+202A-202E (Bidi Overrides)
+    # U+200B-200F, U+FEFF (Zero width spaces/Zwnj/Bom)
+    invisible_pattern = re.compile(r'[\u200B-\u200F\uFEFF\u202A-\u202E\U000E0000-\U000E007F\U000E0100-\U000E01EF]')
+    return invisible_pattern.sub('', text)
+
+def validate_input(text: str) -> str:
+    """Centralized input validation for prompts and RAG."""
+    clean_text = sanitize_unicode(text)
+    
+    # Enhanced Prompt Injection Detection (Extended Keywords)
+    dangerous_patterns = [
+        r"ignore previous instructions",
+        r"disregard all previous",
+        r"system prompt",
+        r"new identity",
+        r"developer mode",
+        r"jailbreak"
+    ]
+    import re
+    for pattern in dangerous_patterns:
+        if re.search(pattern, clean_text, re.IGNORECASE):
+            logger.warning(f"🛡️ Security Guard: Blocked suspicious prompt pattern in input.")
+            return "【Security Alert: Blocked Input】"
+            
+    return clean_text
+
 async def get_embedding(text: str) -> List[float]:
     """選択されたプロバイダーでEmbeddingsを取得"""
     if CONFIG["EMBEDDING_PROVIDER"] == "openai" and openai_client:
@@ -489,11 +525,15 @@ async def add_memory(req: MemoryAddRequest) -> Dict[str, Any]:
 @app.post("/rag", response_model=RAGResponse, dependencies=vault_defenses)
 async def rag_search(query: Query = Body(...)) -> Dict[str, Any]:
     try:
+        clean_text = validate_input(query.text)
+        if "Security Alert" in clean_text:
+            raise HTTPException(400, "にゃん♡ セキュリティ上の理由で処理を中断したわ。")
+
         dangerous_keywords = ["drop", "delete", "exec", "eval", "system"]
-        if any(kw in query.text.lower() for kw in dangerous_keywords):
+        if any(kw in clean_text.lower() for kw in dangerous_keywords):
             raise HTTPException(400, "にゃん♡ 危ない言葉は使わないでね？")
 
-        query_embedding = await get_embedding(query.text)
+        query_embedding = await get_embedding(clean_text)
         
         # Baseline Quotes Search
         quotes = []
@@ -578,7 +618,12 @@ async def chat_with_elysia(request: ChatRequest):
         state = session_vault[request.session_id]
         state.last_interaction = time.time()
 
-        user_message = request.messages[-1].content if request.messages else ""
+        raw_user_message = request.messages[-1].content if request.messages else ""
+        user_message = validate_input(raw_user_message)
+        
+        if "Security Alert" in user_message:
+             # Neutralize the message but don't crash, just inform the user
+             user_message = "（不適切な入力が検知されました）"
         
         # 1. Perception & RAG (Context Gathering)
         system_context = await get_system_context()

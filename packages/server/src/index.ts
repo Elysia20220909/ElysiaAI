@@ -334,11 +334,16 @@ app
 		},
 	)
 
-	// Index page
+	// Index page (Resonance Desktop)
 	.get(
 		"/",
 		() => {
-			const publicPaths = ["public/index.html", "../../public/index.html"];
+			const publicPaths = [
+				"public/desktop.html",
+				"../../public/desktop.html",
+				"public/index.html",
+				"../../public/index.html",
+			];
 			if (
 				// biome-ignore lint/suspicious/noExplicitAny: Bun global check
 				typeof (globalThis as any).Bun !== "undefined" &&
@@ -357,8 +362,9 @@ app
 		{
 			detail: {
 				tags: ["ui"],
-				summary: "Portfolio index page",
-				description: "Serves the main Elysia AI portfolio and chat interface",
+				summary: "Elysia OS Resonance Desktop",
+				description:
+					"Serves the main UNIX-Native OS Desktop interface for Elysia AI",
 			},
 		},
 	)
