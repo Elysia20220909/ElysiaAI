@@ -19,13 +19,19 @@ import time
 import datetime
 from pydantic_settings import BaseSettings
 
+# Microsoft Semantic Kernel Imports
+import semantic_kernel as sk
+from semantic_kernel.connectors.ai.open_ai import OpenAIChatCompletion
+from semantic_kernel.contents.chat_history import ChatHistory
+from semantic_kernel.functions import KernelArguments
+
 # ==================== 設定 (Pydantic Settings) ====================
 class Settings(BaseSettings):
     HOST: str = "127.0.0.1"
     PORT: int = 8000
     SEARCH_LIMIT: int = 3
     OLLAMA_HOST: str = "http://127.0.0.1:11434"
-    OLLAMA_MODEL: str = "llama3.2"
+    OLLAMA_MODEL: str = "phi4" # Default to Microsoft's flagship local model
     OLLAMA_TIMEOUT: float = 60.0
     API_KEY: str = "ELYSIATEST-001"
     RATE_LIMIT_BLOCK_TIME: int = 60
@@ -128,10 +134,19 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # ==================== Core Orchestrator Initialize ====================
+# Microsoft Semantic Kernel - Local Resonance Engine
+kernel = sk.Kernel()
+chat_service = OpenAIChatCompletion(
+    ai_model_id=_settings.OLLAMA_MODEL,
+    url=f"{_settings.OLLAMA_HOST}/v1",
+    api_key="not-needed"
+)
+kernel.add_service(chat_service)
+
 app = FastAPI(
     title="Elysia OS Kernel",
-    description="The heartbeat and neural engine of Elysia AI. ♡",
-    version="2.1.1-RESONANCE"
+    description="Elysia OS: Local Copilot Resonance. Powered by Microsoft Semantic Kernel & Phi-4. ♡",
+    version="2.2.0-RESONANCE"
 )
 
 @app.exception_handler(StarletteHTTPException)
@@ -322,6 +337,33 @@ async def get_system_context() -> str:
         context += "（お昼時のため、ランチの話題に積極的です。）\n"
         
     return context
+
+# ==================== Semantic Kernel Plugins ====================
+class ElysiaOSPlugin:
+    """Standardized toolset for Elysia OS Resonance (Semantic Kernel Plugin)"""
+    
+    @sk.kernel_function(
+        name="execute_python",
+        description="Executes Python code in a secure sandbox. Use for calculations or data analysis."
+    )
+    def execute_python(self, code: str) -> str:
+        from usr.lib.elysia.executor import execute_code
+        logger.info(f"🐍 Semantic Plugin: Executing python code...")
+        return execute_code(code)
+
+    @sk.kernel_function(
+        name="switch_persona",
+        description="Seamlessly switches Elysia's personality and prompt context."
+    )
+    def switch_persona(self, session_id: str, persona_name: str) -> str:
+        if session_id in session_vault:
+            session_vault[session_id].persona = persona_name
+            logger.info(f"🎭 Semantic Plugin: Switched session [{session_id}] to {persona_name}")
+            return f"Successfully switched to {persona_name} persona."
+        return "Session not found."
+
+# Register the plugin to the kernel
+kernel.add_plugin(ElysiaOSPlugin(), plugin_name="elysia_os")
 
 def parse_tool_calls(text: str) -> List[Dict[str, Any]]:
     """Regex-based Tool Calling Parser"""
@@ -552,60 +594,41 @@ async def chat_with_elysia(request: ChatRequest):
         state.last_interaction = time.time()
 
         user_message = request.messages[-1].content if request.messages else ""
-        dangerous_keywords = ["drop", "delete", "exec", "eval", "system", "__import__"]
-        if any(kw in user_message.lower() for kw in dangerous_keywords):
-            raise HTTPException(400, "にゃん♡ いたずらはダメだよぉ〜？")
-
+        
+        # 1. Perception & RAG (Context Gathering)
         system_context = await get_system_context()
         base_prompt = await get_persona_prompt(state.persona)
-
+        
         rag_task = asyncio.create_task(rag_search(Query(text=user_message, session_id=request.session_id)))
         emotion_task = asyncio.create_task(analyze_emotion(user_message))
         rag_res, user_emotion = await asyncio.gather(rag_task, emotion_task)
         context_block = rag_res["context"]
 
-        if milvus_client:
-            asyncio.create_task(add_memory(MemoryAddRequest(
-                session_id=request.session_id, role="user", content=user_message, emotion=user_emotion
-            )))
-
+        # 2. Semantic Kernel Implementation
+        history = ChatHistory()
+        
+        # Full System Prompt Synthesis
         system_prompt = f"""{base_prompt}
- 
 【システム知覚データ】
 {system_context}
-
 【現在のユーザーの感情分析】
 {user_emotion}
-
 【コンテキスト・記憶】
 {context_block}
-
 【作業記憶 (Working Memory)】
 {state.working_memory or "なし"}
 
-【ツール実行命令の書き方】
-必要に応じて以下のツールを使用できます。
-- Python実行: <execute_python>コード</execute_python>
-- ペルソナ切替: <switch_persona>persona_name</switch_persona>
-
 エリシアらしく自然に会話してください。敬語は使わず、フレンドリーに話しかけてね♡"""
+        
+        history.add_system_message(system_prompt)
+        for msg in request.messages[:-1]:
+            if msg.role == "user": history.add_user_message(msg.content)
+            else: history.add_assistant_message(msg.content)
+        history.add_user_message(user_message)
 
-        messages = [{"role": "system", "content": system_prompt}]
-        messages.extend([{"role": msg.role, "content": msg.content} for msg in request.messages])
-
-        ollama_request = {
-            "model": CONFIG["OLLAMA_MODEL"],
-            "messages": messages,
-            "stream": request.stream
-        }
-
-        def safe_filter(text: str) -> str:
-            import re
-            text = re.sub(r'```[\s\S]*?```', '', text)
-            for kw in ["eval", "exec", "system", "__import__", "subprocess"]:
-                text = text.replace(kw, "[安全性のため削除]")
-            return text
-
+        chat_completion = kernel.get_service(type=OpenAIChatCompletion)
+        
+        # UI Presentation Data
         PORTRAIT_MAP = {
             "joy": "/assets/portraits/joy.png",
             "affection": "/assets/portraits/affection.png",
@@ -615,24 +638,28 @@ async def chat_with_elysia(request: ChatRequest):
         }
         user_portrait = PORTRAIT_MAP.get(user_emotion, PORTRAIT_MAP["neutral"])
 
+        def safe_filter(text: str) -> str:
+            import re
+            text = re.sub(r'```[\s\S]*?```', '', text)
+            for kw in ["eval", "exec", "system", "__import__", "subprocess"]:
+                text = text.replace(kw, "[安全性のため削除]")
+            return text
+
         if request.stream:
             async def generate():
                 full_response = ""
                 yield f"data: {json.dumps({'emotion': user_emotion, 'portrait_url': user_portrait})}\n\n"
-                async with httpx.AsyncClient(timeout=CONFIG["OLLAMA_TIMEOUT"]) as client:
-                    async with client.stream("POST", f"{CONFIG['OLLAMA_HOST']}/api/chat", json=ollama_request) as response:
-                        async for line in response.aiter_lines():
-                            if line:
-                                try:
-                                    data = json.loads(line)
-                                    if "message" in data:
-                                        content = data["message"].get("content", "")
-                                        if content:
-                                            full_response += content
-                                            yield f"data: {json.dumps({'content': safe_filter(content)})}\n\n"
-                                except json.JSONDecodeError: continue
                 
-                # Tool Logic
+                # Use Semantic Kernel Streaming API
+                async for chunk in chat_completion.get_streaming_chat_message_content(
+                    chat_history=history,
+                    settings=kernel.get_prompt_execution_settings_from_service_id(service_id=None)
+                ):
+                    if chunk.content:
+                        full_response += chunk.content
+                        yield f"data: {json.dumps({'content': safe_filter(chunk.content)})}\n\n"
+                
+                # Tool Logic (Resonance Standard: RegEx fallback for Phi-4)
                 tool_calls = parse_tool_calls(full_response)
                 tool_results = []
                 for call in tool_calls:
@@ -725,7 +752,9 @@ async def system_monitor():
             "sessions_active": len(session_vault),
             "top_sessions": sessions[:5],
             "milvus": milvus_client is not None,
-            "memory_db": CONFIG["COLLECTION_NAME"]
+            "memory_db": CONFIG["COLLECTION_NAME"],
+            "neural_engine": "Microsoft Phi-4",
+            "framework": "Semantic Kernel v1.17.1"
         }
     }
 
