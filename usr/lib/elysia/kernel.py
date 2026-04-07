@@ -10,7 +10,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 import uvicorn
 import os
-import logging
+import sys
+from loguru import logger
 import numpy as np
 import httpx
 import json
@@ -90,44 +91,28 @@ CONFIG["COLLECTION_NAME"] = _settings.COLLECTION_NAME
 if _settings.OPENAI_API_KEY:
     os.environ["OPENAI_API_KEY"] = _settings.OPENAI_API_KEY
 
-# ==================== Logging (Standardized) ====================
+# ==================== Logging (Advanced Resonance) ====================
 if not os.path.exists(_settings.LOG_ROOT):
     os.makedirs(_settings.LOG_ROOT, exist_ok=True)
 
-log_file = os.path.join(_settings.LOG_ROOT, "system.log")
+log_file = os.path.join(_settings.LOG_ROOT, "elysia_core.log")
 
-logging.config.dictConfig({
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "standard": {
-            "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-        },
-    },
-    "handlers": {
-        "file": {
-            "level": "INFO",
-            "class": "logging.handlers.RotatingFileHandler",
-            "filename": log_file,
-            "maxBytes": 1024 * 1024 * 5,  # 5MB
-            "backupCount": 5,
-            "formatter": "standard",
-        },
-        "console": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "standard",
-        },
-    },
-    "loggers": {
-        "": {
-            "handlers": ["file", "console"],
-            "level": "INFO",
-            "propagate": True
-        }
-    }
-})
-logger = logging.getLogger("elysiad")
+# Loguru configuration
+logger.remove() # Remove default handler
+logger.add(
+    sys.stdout,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+    level="INFO"
+)
+logger.add(
+    log_file,
+    rotation="5 MB",
+    retention="10 days",
+    level="INFO",
+    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
+)
+
+logger.info("🌸 Elysia Core Resonance Engine is initializing...")
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -348,7 +333,7 @@ class ElysiaOSPlugin:
     )
     def execute_python(self, code: str) -> str:
         from usr.lib.elysia.executor import execute_code
-        logger.info(f"🐍 Semantic Plugin: Executing python code...")
+        logger.info("🐍 <magenta>Semantic Plugin</magenta>: Executing python code...")
         return execute_code(code)
 
     @sk.kernel_function(
@@ -603,6 +588,17 @@ async def chat_with_elysia(request: ChatRequest):
         emotion_task = asyncio.create_task(analyze_emotion(user_message))
         rag_res, user_emotion = await asyncio.gather(rag_task, emotion_task)
         context_block = rag_res["context"]
+
+        # Emotional Logging
+        emotion_color = {
+            "joy": "yellow",
+            "affection": "red",
+            "loneliness": "blue",
+            "exhaustion": "black",
+            "neutral": "white"
+        }.get(user_emotion, "white")
+        
+        logger.info(f"🎭 Session <cyan>{request.session_id}</cyan> | Detected Emotion: <{emotion_color}>{user_emotion.upper()}</{emotion_color}>")
 
         # 2. Semantic Kernel Implementation
         history = ChatHistory()
