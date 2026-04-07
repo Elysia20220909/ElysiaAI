@@ -44,7 +44,16 @@ cd ElysiaAI
 bun install
 
 # 依存関係のインストール (Python)
+python -m venv .venv
+. .\.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # Linux/macOS
+
+# 通常のインストール
 pip install -r requirements.txt
+
+# もしくは、uv（超高速）を使用する場合:
+# pip install uv
+# python -m uv pip install -r requirements.lock
 ```
 
 ### 3. システムの起動
