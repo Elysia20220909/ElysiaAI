@@ -1,91 +1,115 @@
 import os
 import re
-import math
-import collections
+import logging
+from typing import List, Dict, Any, Tuple
+from pymilvus import MilvusClient
+from sentence_transformers import SentenceTransformer
+
+# ==================== Logging ====================
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("elysia.rag")
 
 class ElysiaRAG:
     """
-    Elysia OS - External Brain (RAG Lite)
-    Uses optimized TF-IDF for lightning-fast document searching within the OS. 🌸
+    Elysia OS - External Brain (Vector RAG)
+    Uses Milvus Lite and Sentence-Transformers (all-MiniLM-L6-v2) 
+    for high-performance semantic search. 🌸
     """
-    def __init__(self, docs_dir):
+    def __init__(self, docs_dir: str, db_path: str = "data/elysia_brain.db"):
         self.docs_dir = docs_dir
-        self.documents = []  # List of {path, content, tokens}
-        self.vocab = set()
-        self.idf = {}
-        self.index = [] # List of TF-IDF vectors (dicts)
+        self.db_path = db_path
+        self.collection_name = "os_docs"
+        
+        # Ensure data directory exists
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        
+        # Initialize Milvus Client (Lite mode)
+        self.client = MilvusClient(self.db_path)
+        
+        # Initialize Embedding Model
+        # This will download the model weights (~80MB) on first run
+        logger.info("Loading embedding model: all-MiniLM-L6-v2...")
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        
+        self._setup_collection()
 
-    def tokenize(self, text):
-        return re.findall(r'\w+', text.lower())
+    def _setup_collection(self):
+        """Create collection if it doesn't exist"""
+        if self.client.has_collection(self.collection_name):
+            # For development, we skip recreation. 
+            # In production, we might want to check schema or version.
+            return
+            
+        self.client.create_collection(
+            collection_name=self.collection_name,
+            dimension=384,  # Dimension for all-MiniLM-L6-v2
+            primary_field_name="id",
+            id_type="int",
+            auto_id=True
+        )
+        logger.info(f"Collection '{self.collection_name}' created in Milvus Lite.")
 
-    def index_docs(self):
-        self.documents = []
-        for root, dirs, files in os.walk(self.docs_dir):
+    def index_docs(self, force: bool = False):
+        """Scan docs_dir and index all markdown files"""
+        if not force and self.client.get_collection_stats(self.collection_name)['row_count'] > 0:
+            logger.info("Documents already indexed. Skipping (use force=True to re-index).")
+            return
+
+        data_to_insert = []
+        for root, _, files in os.walk(self.docs_dir):
             for file in files:
                 if file.endswith('.md'):
                     path = os.path.join(root, file)
                     try:
                         with open(path, 'r', encoding='utf-8') as f:
                             content = f.read()
-                            tokens = self.tokenize(content)
-                            if tokens:
-                                self.documents.append({
-                                    "path": path,
-                                    "content": content,
-                                    "tokens": tokens,
-                                    "filename": file
-                                })
-                                self.vocab.update(tokens)
-                    except:
+                            if not content.strip(): continue
+                            
+                            # Simple chunking by paragraph/section if needed
+                            # For now, we index the whole file (up to 2000 chars) as a single chunk
+                            # In V3, we should implement a proper recursive character splitter
+                            embedding = self.model.encode(content[:2000]).tolist()
+                            
+                            data_to_insert.append({
+                                "vector": embedding,
+                                "filename": file,
+                                "path": path,
+                                "content": content[:1000] # Store preview
+                            })
+                    except Exception as e:
+                        logger.error(f"Failed to index {path}: {e}")
                         continue
 
-        # Calculate IDF
-        num_docs = len(self.documents)
-        doc_counts = collections.Counter()
-        for doc in self.documents:
-            unique_tokens = set(doc["tokens"])
-            for token in unique_tokens:
-                doc_counts[token] += 1
+        if data_to_insert:
+            self.client.insert(collection_name=self.collection_name, data=data_to_insert)
+            logger.info(f"Indexed {len(data_to_insert)} documents into Milvus.")
+
+    def search(self, query: str, top_k: int = 3) -> List[Tuple[float, Dict[str, Any]]]:
+        """Perform semantic search for the query"""
+        query_vector = self.model.encode(query).tolist()
         
-        for token, count in doc_counts.items():
-            self.idf[token] = math.log(num_docs / (1 + count))
+        results = self.client.search(
+            collection_name=self.collection_name,
+            data=[query_vector],
+            limit=top_k,
+            output_fields=["filename", "path", "content"]
+        )
+        
+        formatted_results = []
+        for hits in results:
+            for hit in hits:
+                # Milvus Lite returns distance/score
+                formatted_results.append((hit['distance'], hit['entity']))
+                
+        return formatted_results
 
-        # Calculate TF-IDF vectors
-        self.index = []
-        for doc in self.documents:
-            tf = collections.Counter(doc["tokens"])
-            tfidf = {t: (count / len(doc["tokens"])) * self.idf.get(t, 0) for t, count in tf.items()}
-            self.index.append(tfidf)
-
-    def search(self, query, top_k=3):
-        query_tokens = self.tokenize(query)
-        if not query_tokens:
-            return []
-
-        # Vectorize query
-        q_tf = collections.Counter(query_tokens)
-        q_tfidf = {t: (count / len(query_tokens)) * self.idf.get(t, 0) for t, count in q_tf.items()}
-
-        results = []
-        for i, doc_tfidf in enumerate(self.index):
-            # Cosine similarity (simplified since we only care about dot product for ranking)
-            score = 0
-            for t, val in q_tfidf.items():
-                if t in doc_tfidf:
-                    score += val * doc_tfidf[t]
-            
-            if score > 0:
-                results.append((score, self.documents[i]))
-
-        results.sort(key=lambda x: x[0], reverse=True)
-        return results[:top_k]
-
-# global instance
+# Global Instance
 _brain = None
 
-def get_brain(docs_dir):
+def get_brain(docs_dir: str):
     global _brain
     if _brain is None:
         _brain = ElysiaRAG(docs_dir)
+        # We index on first retrieval if empty
         _brain.index_docs()
     return _brain

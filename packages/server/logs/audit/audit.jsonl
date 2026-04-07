@@ -1,0 +1,3 @@
+{"id":"audit-1775574943996-1","timestamp":"2026-04-07T15:15:43.996Z","action":"READ","resource":"unknown","method":"GET","path":"/","ipAddress":"127.0.0.1","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36","statusCode":200}
+{"id":"audit-1775574944039-2","timestamp":"2026-04-07T15:15:44.039Z","action":"READ","resource":"unknown","method":"GET","path":"/css/desktop.css","ipAddress":"127.0.0.1","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36","statusCode":200}
+{"id":"audit-1775574944086-3","timestamp":"2026-04-07T15:15:44.086Z","userId":"anon","action":"error","resource":"/favicon.ico","error":"NOT_FOUND"}

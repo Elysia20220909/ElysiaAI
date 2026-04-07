@@ -2,7 +2,7 @@
 
 ## Base URL
 
-```
+```text
 Development: http://localhost:3000
 Production: https://your-domain.com
 ```
@@ -11,7 +11,7 @@ Production: https://your-domain.com
 
 All protected endpoints require a JWT token in the Authorization header:
 
-```
+```text
 Authorization: Bearer <access_token>
 ```
 
@@ -75,7 +75,7 @@ Content-Type: application/json
 
 **Response:** Server-Sent Events (SSE) stream
 
-```
+```text
 data: {"chunk": "こんにちは"}
 data: {"chunk": "！"}
 data: {"chunk": "元気"}
@@ -226,10 +226,30 @@ GET /health
   "services": {
     "redis": "connected",
     "fastapi": "ok",
-    "ollama": "ok"
+    "ollama": "ok",
+    "milvus": "lite (data/elysia_brain.db)"
   }
 }
 ```
+
+## AI Kernel Skills (Resonance v2.6)
+
+The Python kernel implements the following skills available via `<skill:name(...)>` tags in AI responses:
+
+| Skill | Parameters | Description |
+| ----- | ---------- | ----------- |
+| `search_docs` | `query` | **(NEW)** Semantic search across the `docs/` directory using Milvus Lite & Vector Embeddings. |
+| `python_exec` | `code` | Executes Python code in a soft sandbox on the kernel. |
+| `memorize` | `key`, `value` | Persists a fact to the kernel's long-term memory vault. |
+| `delegate` | `agent`, `query` | Delegates the query to a specialized agent (security, debugger, writer). |
+
+## Vector RAG Architecture
+
+The RAG system in Phase 6 has been upgraded from TF-IDF to **Semantic Vector Search**:
+
+1. **Embedding Model**: `all-MiniLM-L6-v2` via Sentence-Transformers.
+2. **Vector DB**: `Milvus Lite` (locally stored in `data/elysia_brain.db`).
+3. **Indexing**: Automated indexing of all `.md` files in the repository's `docs/` folder.
 
 ## Metrics
 
