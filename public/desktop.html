@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elysia OS - Resonance Desktop 🌸</title>
+    <title>Elysia OS // NIGHT CITY EDITION 🌃</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
     <link rel="stylesheet" href="css/desktop.css">
@@ -26,21 +26,18 @@
 </head>
 <body x-data="elysiaOS()" @mousemove="handleDrag($event)" @mouseup="stopDrag()">
     
-    <!-- 🌠 Desktop Wallpaper -->
+    <!-- 🌠 Cyberpunk Backdrop -->
     <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="fixed inset-0 opacity-20" 
-             style="background: radial-gradient(circle at 50% 50%, hsla(var(--resonance-hue), 100%, 50%, 0.2) 0%, transparent 70%);"></div>
-        <div class="absolute inset-0 bg-gradient-to-br from-indigo-950 via-gray-900 to-black opacity-90"></div>
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full mix-blend-screen filter blur-[128px] opacity-20 animate-pulse" 
-             style="background: hsl(var(--resonance-hue), 80%, 50%)"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full mix-blend-screen filter blur-[128px] opacity-20 animate-pulse" 
-             style="background: hsl(var(--resonance-hue), 60%, 40%); animation-delay: 2s"></div>
+        <div class="absolute inset-0 bg-[#050505]"></div>
+        <div class="absolute inset-0 opacity-30" 
+             style="background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1), rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px);"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full mix-blend-screen filter blur-[150px] opacity-20" 
+             style="background: radial-gradient(circle, var(--cyber-red) 0%, transparent 70%);"></div>
     </div>
 
     <!-- 📊 Status Bar -->
-    <header class="status-bar">
         <div class="flex items-center gap-4">
-            <span class="font-bold tracking-widest text-pink-400">ELYSIΛ OS</span>
+            <span class="font-black italic text-2xl text-[#fcee0a]">NIGHT CITY // ELVSIΛ</span>
             <div class="h-4 w-px bg-white/20"></div>
             <div class="flex items-center gap-2 text-[10px] text-white/60">
                 <span>CPU: <span class="text-blue-400" x-text="(stats.system?.cpu || 0) + '%'"></span></span>
