@@ -50,12 +50,15 @@ class ElysiaRAG:
         logger.info(f"Collection '{self.collection_name}' created in Milvus Lite.")
 
     def index_docs(self, force: bool = False):
-        """Scan docs_dir and index all markdown files"""
+        """Scan docs_dir and index all markdown files with recursive chunking"""
         if not force and self.client.get_collection_stats(self.collection_name)['row_count'] > 0:
-            logger.info("Documents already indexed. Skipping (use force=True to re-index).")
+            logger.info("Documents already indexed. Skipping.")
             return
 
         data_to_insert = []
+        chunk_size = 1000
+        overlap = 200
+
         for root, _, files in os.walk(self.docs_dir):
             for file in files:
                 if file.endswith('.md'):
@@ -65,24 +68,29 @@ class ElysiaRAG:
                             content = f.read()
                             if not content.strip(): continue
                             
-                            # Simple chunking by paragraph/section if needed
-                            # For now, we index the whole file (up to 2000 chars) as a single chunk
-                            # In V3, we should implement a proper recursive character splitter
-                            embedding = self.model.encode(content[:2000]).tolist()
-                            
-                            data_to_insert.append({
-                                "vector": embedding,
-                                "filename": file,
-                                "path": path,
-                                "content": content[:1000] # Store preview
-                            })
+                            # Simple recursive splitting by length with overlap
+                            chunks = []
+                            for i in range(0, len(content), chunk_size - overlap):
+                                chunk = content[i:i + chunk_size]
+                                if len(chunk) > 50: # Skip tiny fragments
+                                    chunks.append(chunk)
+
+                            for i, chunk in enumerate(chunks):
+                                embedding = self.model.encode(chunk).tolist()
+                                data_to_insert.append({
+                                    "vector": embedding,
+                                    "filename": f"{file} (Part {i+1})",
+                                    "path": path,
+                                    "content": chunk
+                                })
                     except Exception as e:
                         logger.error(f"Failed to index {path}: {e}")
                         continue
 
         if data_to_insert:
+            # Batch insertion for performance
             self.client.insert(collection_name=self.collection_name, data=data_to_insert)
-            logger.info(f"Indexed {len(data_to_insert)} documents into Milvus.")
+            logger.info(f"Indexed {len(data_to_insert)} chunks into Milvus.")
 
     def search(self, query: str, top_k: int = 3) -> List[Tuple[float, Dict[str, Any]]]:
         """Perform semantic search for the query"""
