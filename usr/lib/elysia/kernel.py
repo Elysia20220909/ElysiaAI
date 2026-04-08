@@ -346,31 +346,30 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
     return results
 
 def run_system_doctor():
-    """OSの健康状態をスキャンしてレポートを生成"""
-    report = ["🍎 Elysia OS - System Doctor Report 🍎"]
-    report.append(f"Timestamp: {datetime.datetime.now()}")
+    """OSの健康状態をスキャンしてレポートを生成 (NIGHT CITY EDITION)"""
+    report = ["🏙️ NIGHT CITY // ELVSIΛ - SYSTEM DIAGNOSTIC"]
+    report.append(f"TIMESTAMP: {datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')} // AUTH_LEVEL: ROOT")
     
     # 1. Resource Check
     cpu = psutil.cpu_percent()
     ram = psutil.virtual_memory().percent
-    report.append(f" [Resonance] CPU: {cpu}%, RAM: {ram}%")
+    report.append(f" [NET_SYNC] CPU_LOAD: {cpu}%, RAM_USE: {ram}%")
     
-    # 2. Filesystem Check
+    # 2. Filesystem Check (ICE Scan)
     critical_paths = [CONFIG_PATH, APPS_DIR, os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")]
+    report.append(" [ICE_CHECK] Scanning critical sectors...")
     for p in critical_paths:
-        status = "✅ FOUND" if os.path.exists(p) else "❌ MISSING"
-        report.append(f" [Path] {os.path.basename(p)}: {status}")
+        status = "SECURE" if os.path.exists(p) else "HACKED/MISSING"
+        report.append(f"  > SECTOR: {os.path.basename(p)} -> STATUS: {status}")
         
-    # 3. Environment Check
-    report.append(f" [OS] Platform: {sys.platform}")
-    
-    # 4. Git Check
+    # 3. Network & Git Sync
     try:
         subprocess.check_call(["git", "--version"], stdout=subprocess.DEVNULL)
-        report.append(" [Git] Integration: ✅ ACTIVE")
+        report.append(" [NET_SYNC] REPO_LINK: ESTABLISHED")
     except:
-        report.append(" [Git] Integration: ⚠️ NOT FOUND (Some skills may fail)")
+        report.append(" [NET_SYNC] REPO_LINK: UNKNOWN / OFFLINE")
 
+    report.append(" [CYBER_SOUL] Resonance field stable. Connection active.")
     return "\n".join(report)
 
 @app.get("/system/reflect")
