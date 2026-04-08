@@ -1,37 +1,23 @@
----
-name: "🐛 Bug Report"
-about: "システムの不具合や不自然な挙動の報告"
-title: "[BUG] "
-labels: "bug"
-assignees: ""
----
+# 🍰 Bug Report
 
-## バグの詳細報告
+Elysia OS で問題が発生しましたか？解決のために詳細を教えてください。
 
-### バグの概要
+## 問題の概要 (Description)
+<!-- 何が起きたのかを簡潔に説明してください -->
 
-どのような不具合が発生したか、簡潔に記載してください。
+## 再現手順 (Steps to Reproduce)
+1. 
+2. 
+3. 
 
-### 再現手順
+## 期待される動作 (Expected Behavior)
+<!-- 本来どう動くべきであったか -->
 
-1. '...' に移動
-2. '...' をクリック
-3. エラーが発生
+## スクリーンショット (Screenshots)
+<!-- 可能であれば、エラー画面などを貼り付けてください -->
 
-### 期待される挙動
-
-本来どうなるべきだったかを記載してください。
-
-### スクリーンショット
-
-可能であれば、不具合箇所のスクリーンショットを添付してください。
-
-### 実行環境
-
-- OS: [e.g. Windows 11, WSL2, Ubuntu]
-- Kernel Version: [e.g. v2.6.0]
-- Browser: [e.g. Chrome, Edge]
-
-### 追加情報
-
-その他、解決に役立つと思われる情報があれば記載してください。
+## 環境情報 (Environment)
+- OS: [e.g. Windows 11 / macOS Sonoma]
+- Elysia OS Version: [e.g. v3.0.0]
+- Python Version: [e.g. 3.11.5]
+- Ollama Model: [e.g. phi-4]

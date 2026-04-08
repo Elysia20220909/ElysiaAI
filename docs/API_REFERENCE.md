@@ -1,63 +1,47 @@
-# 🌸 Elysia OS - API Reference (Resonance v2.1)
+# Elysia OS: API Reference (v3.0 Sovereign)
 
-This document provides a comprehensive guide to the Elysia OS AI Kernel's REST APIs.
+このドキュメントでは、Elysia OS カーネルが提供する REST API および「スキル（Skill）」の技術仕様について詳述します。
 
-## Base URL
-The default kernel runs at: `http://localhost:8000`
+## 1. Core API (REST)
 
-## Authentication
-Most endpoints require an API Key passed in the header:
-`x-api-key: ELYSIATEST-001`
+### `POST /chat/stream`
+AI との対話およびスキル実行のメインエンドポイントです。
+- **Payload**: `{"message": "string"}`
+- **Response**: Server-Sent Events (SSE)
+    - `data: {"content": "..."}`: AI の発言
+    - `data: {"skills": [...]}`: 実行されたスキルの結果
 
----
-
-## 1. Chat & Perception
-### `POST /chat`
-The main interactive endpoint. Integrates session state, active perception (sensors), and long-term memory.
-
-**Request Body:**
-```json
-{
-  "messages": [{"role": "user", "content": "Hello!"}],
-  "session_id": "user_01",
-  "stream": true
-}
-```
-
-**Stream Response (SSE):**
-Returns JSON chunks containing `content`, `emotion`, and `portrait_url`.
-
----
-
-## 2. Real-time Telemetry
 ### `GET /system/monitor`
-Fetches the current state of the OS hardware and AI session heartbeats.
-
-**Response Schema:**
-- `timestamp`: Server time string.
-- `system`: Hardware metrics (CPU/RAM/Uptime).
-- `elysia`: Active session counts and top-level persona states.
-
----
-
-## 3. Runner Memory (Vault)
-### `POST /memory/add`
-Manually inject a memory block into the AI's long-term vector vault.
-
-**Payload:**
-- `session_id`: Unique identifier for the user relationship.
-- `role`: "user" or "assistant".
-- `content`: Memory text.
-- `emotion`: Affective tag.
-
-### `POST /rag`
-A direct search endpoint for the memory vault and baseline quotes.
+OS の現在の健康状態（テレメトリ）を返します。
+- **Response**:
+  ```json
+  {
+    "system": { "cpu": 15, "ram": 40, "disk": { "free": 200 } },
+    "elysia": { "version": "3.0.0", "status": "stable" }
+  }
+  ```
 
 ---
 
-## 4. Maintenance & Diagnostics
-### `GET /health`
-Returns system health, database connectivity, and baseline quote count.
+## 2. Skill Registry (Instruction Set)
 
-### `GET /system/stats`
-Legacy lightweight system telemetry.
+AI は特定の構文を生成することで、OS 機能を直接操作できます。
+
+| スキル | 構文 | 説明 |
+| :--- | :--- | :--- |
+| **The Eye** | `<skill:web_search(query="...")>` | DuckDuckGo による最新情報の検索 |
+| **The Sight** | `<skill:capture_screen()>` | デスクトップのキャプチャと解析 |
+| **The Hand** | `<skill:git_info()>` | Git の状態と履歴の取得 |
+| **Soul Memory**| `<skill:update_soul(key="...", value="...")>` | 永続的な感情・嗜好の記憶 |
+| **System Doctor**| `<skill:system_doctor()>` | OS の整合性検査と診断 |
+| **OS Growth** | `<skill:install_app(id="...", ...)>` | 新しい UI コンポーネントの動的生成 |
+
+---
+
+## 3. Integration Guide
+
+### WebSocket (Next Phase)
+現在は HTTP/SSE ですが、次期フェーズで双方向 WebSocket による「能動的プッシュ（Proactive Push）」へ移行予定です。
+
+### セキュリティ
+API キーは `etc/elysia/config.json` で定義されます。外部からのアクセス時は `X-API-KEY` ヘッダーが必要です。
