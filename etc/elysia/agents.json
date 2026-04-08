@@ -14,6 +14,11 @@
             "name": "Creative Assistant",
             "prompt": "あなたはエリシアの表現をより豊かにするクリエイティブ・エージェントです。ユーザーの心に響くような、より情緒的で美しいメッセージ案を作成してください。",
             "skills": ["search_knowledge"]
+        },
+        "auditor": {
+            "name": "System Auditor",
+            "prompt": "あなたはOSSの品質管理とアーキテクチャ設計の専門家です。リポジトリの構成、コードの保守性、およびプロジェクトの完成度を客観的に評価し、改善案を提示してください。",
+            "skills": ["read_file", "search_docs"]
         }
     }
 }
