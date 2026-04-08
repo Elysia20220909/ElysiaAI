@@ -6,6 +6,7 @@ pydantic-settings==2.1.0
 httpx==0.26.0
 numpy==1.26.3
 psutil==5.9.8
+python-multipart==0.0.24
 
 # AI/ML & RAG (Vector Search)
 pymilvus==2.3.5
