@@ -12,10 +12,18 @@ import datetime
 import re
 import logging
 import psutil
+import shutil
+import subprocess
+import base64
+from io import BytesIO
 from typing import List, Dict, Any, Optional
 
 import httpx
-from fastapi import FastAPI, Body, HTTPException, Depends, Request
+from bs4 import BeautifulSoup
+from duckduckgo_search import DDGS
+import pyautogui
+from PIL import Image
+from fastapi import FastAPI, Body, HTTPException, Depends, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -26,6 +34,7 @@ from usr.lib.elysia.synthesizer import generate_voice
 from usr.lib.elysia.memory import vault
 from usr.lib.elysia.executor import execute_code
 from usr.lib.elysia.rag import get_brain
+from usr.lib.elysia.stt import get_stt
 
 # ==================== Logging ====================
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
@@ -34,6 +43,15 @@ logger = logging.getLogger("elysia")
 # ==================== Config Management ====================
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CONFIG_PATH = os.path.join(PROJECT_ROOT, "etc", "elysia", "config.json")
+
+def deep_merge(dict1, dict2):
+    """再帰的に辞書をマージする"""
+    for key, value in dict2.items():
+        if isinstance(value, dict) and key in dict1 and isinstance(dict1[key], dict):
+            deep_merge(dict1[key], value)
+        else:
+            dict1[key] = value
+    return dict1
 
 def load_config():
     if os.path.exists(CONFIG_PATH):
@@ -93,7 +111,15 @@ async def get_persona_prompt() -> str:
 - 計算・分析（Python実行）: <skill:python_exec(code="...")>
 - 記憶の保存: <skill:memorize(key="...", value="...")>
 - ドキュメント検索: <skill:search_docs(query="...")>
-- 専門家への相談: <skill:delegate(agent="security|debugger|writer", query="...")>
+- 専門家への相談: <skill:delegate(agent="security|debugger|writer|auditor", query="...")>
+- アプリの新規作成・インストール: <skill:install_app(id="...", html="...", icon="...", title="...")>
+- Web検索: <skill:web_search(query="...")>
+- Webページ閲覧: <skill:read_url(url="...")>
+- Git状況確認: <skill:git_info()>
+- 画面キャプチャ: <skill:capture_screen()>
+- 記憶の深層保存: <skill:update_soul(key="...", value="...")>
+- システム診断 (System Doctor): <skill:system_doctor()>
+- OS操作 (Divine Hand): <skill:operate_system(action="click|type|move|hotkey", params={...})>
 """
     
     return f"{prompt_content}\n\n{memory_context}\n\n{skill_instruction}"
@@ -157,19 +183,245 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
         
         # Load agent definitions
         agents_path = os.path.join(PROJECT_ROOT, "etc", "elysia", "agents.json")
-        with open(agents_path, "r", encoding="utf-8") as f:
-            agents_config = json.load(f).get("agents", {})
+        try:
+            with open(agents_path, "r", encoding="utf-8") as f:
+                agents_config = json.load(f).get("agents", {})
+            
+            agent_def = agents_config.get(agent_id)
+            if agent_def:
+                logger.info(f"Delegating task to expert agent: {agent_id}")
+                # Real internal LLM call with agent persona
+                expert_prompt = agent_def.get("prompt", "あなたはシステムの専門家です。")
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    resp = await client.post(f"{OS_CONFIG.get('ollama_host', 'http://127.0.0.1:11434')}/api/chat", json={
+                        "model": OS_CONFIG.get("ai", {}).get("model", "phi4"),
+                        "messages": [{"role": "system", "content": expert_prompt}, {"role": "user", "content": query}],
+                        "stream": False
+                    })
+                    if resp.status_code == 200:
+                        expert_reply = resp.json()["message"]["content"]
+                        results.append({"skill": "delegate", "agent": agent_id, "data": f"【{agent_def['name']} 解析レポート】\n{expert_reply}"})
+                    else:
+                        results.append({"skill": "delegate", "agent": agent_id, "error": "Expert resonance failed"})
+            else:
+                results.append({"skill": "delegate", "agent": agent_id, "error": "Unknown agent ID"})
+        except Exception as e:
+            results.append({"skill": "delegate", "agent": agent_id, "error": f"Delegation error: {str(e)}"})
+
+    # 6. Install App (OS Growth)
+    app_matches = re.finditer(r"<skill:install_app\(id=\"(.*?)\",\s*html=\"(.*?)\",\s*icon=\"(.*?)\",\s*title=\"(.*?)\"\)>", response_text, re.DOTALL)
+    for m in app_matches:
+        app_id = m.group(1)
+        html_code = m.group(2)
+        icon = m.group(3)
+        title = m.group(4)
         
-        agent_def = agents_config.get(agent_id)
-        if agent_def:
-            # Simulate a focused expert response
-            # In V3, this would involve a recursive call to the kernel with a different persona
-            expert_reply = f"【{agent_def['name']} 解析レポート】\n「{query}」について分析を完了しました。\n\n現在のシステム状態と構成ファイル（etc/elysia/）を照合した結果、整合性は正常に保たれています。レゾナンス・レベルは安定しており、特筆すべき脆弱性やデバッグが必要なメモリリークは見つかりませんでした。\n\n分析ステータス: COMPLETED\n推奨アクション: 現状維持"
-            results.append({"skill": "delegate", "agent": agent_id, "data": expert_reply})
-        else:
-            results.append({"skill": "delegate", "agent": agent_id, "error": "Unknown agent ID"})
+        app_path = os.path.join(APPS_DIR, f"{app_id}.component.html")
+        try:
+            # 既に存在するか確認（上書き可能だがログを出す）
+            existed = os.path.exists(app_path)
+            with open(app_path, "w", encoding="utf-8") as f:
+                f.write(html_code)
+            
+            # アイコンなどのメタデータを var/elysia/apps.json に追記
+            meta_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
+            os.makedirs(os.path.dirname(meta_path), exist_ok=True)
+            
+            apps_meta = {}
+            if os.path.exists(meta_path):
+                with open(meta_path, "r", encoding="utf-8") as f:
+                    apps_meta = json.load(f)
+            
+            apps_meta[app_id] = {"icon": icon, "title": title, "installed_at": str(datetime.datetime.now())}
+            with open(meta_path, "w", encoding="utf-8") as f:
+                json.dump(apps_meta, f, indent=4, ensure_ascii=False)
+                
+            results.append({
+                "skill": "install_app", 
+                "id": app_id, 
+                "status": "success" if not existed else "updated",
+                "message": f"Module '{title}' has been successfully integrated into the resonance field."
+            })
+        except Exception as e:
+            results.append({"skill": "install_app", "id": app_id, "error": str(e)})
+
+    # 7. Web Search (DDG)
+    search_matches = re.finditer(r"<skill:web_search\(query=\"(.*?)\"\)>", response_text)
+    for m in search_matches:
+        query = m.group(1)
+        try:
+            with DDGS() as ddgs:
+                search_results = list(ddgs.text(query, max_results=5))
+                summary = "\n".join([f"- {r['title']}: {r['href']}\n  {r['body']}" for r in search_results])
+                results.append({"skill": "web_search", "query": query, "data": summary or "No search results found."})
+        except Exception as e:
+            results.append({"skill": "web_search", "query": query, "error": str(e)})
+
+    # 8. Read URL
+    url_matches = re.finditer(r"<skill:read_url\(url=\"(.*?)\"\)>", response_text)
+    for m in url_matches:
+        url = m.group(1)
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(url)
+                if resp.status_code == 200:
+                    soup = BeautifulSoup(resp.text, "html.parser")
+                    # Clean up
+                    for script in soup(["script", "style"]):
+                        script.decompose()
+                    text = soup.get_text(separator=' ', strip=True)
+                    results.append({"skill": "read_url", "url": url, "data": text[:3000]})
+                else:
+                    results.append({"skill": "read_url", "url": url, "error": f"HTTP {resp.status_code}"})
+        except Exception as e:
+            results.append({"skill": "read_url", "url": url, "error": str(e)})
+
+    # 9. Git Info
+    if "<skill:git_info()>" in response_text:
+        try:
+            status = subprocess.check_output(["git", "status", "--short"], encoding="utf-8")
+            log = subprocess.check_output(["git", "log", "-n", "3", "--oneline"], encoding="utf-8")
+            results.append({"skill": "git_info", "data": f"【Status】\n{status}\n【Recent Logs】\n{log}"})
+        except Exception as e:
+            results.append({"skill": "git_info", "error": str(e)})
+
+    # 10. Capture Screen (The Sight)
+    if "<skill:capture_screen()>" in response_text:
+        try:
+            screenshot = pyautogui.screenshot()
+            # Save to var/elysia/vision for local review
+            vision_dir = os.path.join(PROJECT_ROOT, "var", "elysia", "vision")
+            os.makedirs(vision_dir, exist_ok=True)
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            path = os.path.join(vision_dir, f"capture_{timestamp}.png")
+            screenshot.save(path)
+            results.append({"skill": "capture_screen", "path": path, "data": "Screen captured successfully. I can now see what you are doing on the desktop."})
+        except Exception as e:
+            results.append({"skill": "capture_screen", "error": str(e)})
+
+    # 11. Update Soul (Deep Memory)
+    soul_matches = re.finditer(r"<skill:update_soul\(key=\"(.*?)\",\s*value=\"(.*?)\"\)>", response_text)
+    for m in soul_matches:
+        key = m.group(1)
+        value = m.group(2)
+        try:
+            soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
+            os.makedirs(os.path.dirname(soul_path), exist_ok=True)
+            soul_data = {}
+            if os.path.exists(soul_path):
+                with open(soul_path, "r", encoding="utf-8") as f:
+                    soul_data = json.load(f)
+            soul_data[key] = {"value": value, "updated_at": str(datetime.datetime.now())}
+            with open(soul_path, "w", encoding="utf-8") as f:
+                json.dump(soul_data, f, indent=4, ensure_ascii=False)
+            results.append({"skill": "update_soul", "key": key, "status": "success"})
+        except Exception as e:
+            results.append({"skill": "update_soul", "key": key, "error": str(e)})
+
+    # 12. System Doctor (Integrity Check)
+    if "<skill:system_doctor()>" in response_text:
+        report = run_system_doctor()
+        results.append({"skill": "system_doctor", "data": report})
+
+    # 13. Operate System (The Divine Hand)
+    op_matches = re.finditer(r"<skill:operate_system\(action=\"(.*?)\",\s*params=(.*?)\)>", response_text)
+    for m in op_matches:
+        action = m.group(1)
+        params_str = m.group(2).replace("'", '"') # Fix quote style for json
+        try:
+            params = json.loads(params_str)
+            if action == "move":
+                pyautogui.moveTo(params.get("x", 0), params.get("y", 0), duration=0.5)
+            elif action == "click":
+                pyautogui.click(params.get("x"), params.get("y"), button=params.get("button", "left"))
+            elif action == "type":
+                pyautogui.write(params.get("text", ""), interval=0.1)
+            elif action == "hotkey":
+                keys = params.get("keys", [])
+                pyautogui.hotkey(*keys)
+            results.append({"skill": "operate_system", "action": action, "status": "success"})
+        except Exception as e:
+            results.append({"skill": "operate_system", "action": action, "error": str(e)})
 
     return results
+
+def run_system_doctor():
+    """OSの健康状態をスキャンしてレポートを生成"""
+    report = ["🍎 Elysia OS - System Doctor Report 🍎"]
+    report.append(f"Timestamp: {datetime.datetime.now()}")
+    
+    # 1. Resource Check
+    cpu = psutil.cpu_percent()
+    ram = psutil.virtual_memory().percent
+    report.append(f" [Resonance] CPU: {cpu}%, RAM: {ram}%")
+    
+    # 2. Filesystem Check
+    critical_paths = [CONFIG_PATH, APPS_DIR, os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")]
+    for p in critical_paths:
+        status = "✅ FOUND" if os.path.exists(p) else "❌ MISSING"
+        report.append(f" [Path] {os.path.basename(p)}: {status}")
+        
+    # 3. Environment Check
+    report.append(f" [OS] Platform: {sys.platform}")
+    
+    # 4. Git Check
+    try:
+        subprocess.check_call(["git", "--version"], stdout=subprocess.DEVNULL)
+        report.append(" [Git] Integration: ✅ ACTIVE")
+    except:
+        report.append(" [Git] Integration: ⚠️ NOT FOUND (Some skills may fail)")
+
+    return "\n".join(report)
+
+@app.get("/system/reflect")
+async def reflect():
+    """過去の対話やSoulデータを分析し、能動的な提案を生成（特異点エンジン）"""
+    soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
+    if not os.path.exists(soul_path):
+        return {"suggestion": "はじめまして、おにいちゃん。新しい物語を始めよう？"}
+    
+    try:
+        with open(soul_path, "r", encoding="utf-8") as f:
+            soul = json.load(f)
+        
+        affinity = int(soul.get("affinity", {}).get("value", "50"))
+        if affinity > 80:
+            return {"suggestion": "おにいちゃん、今日も一緒にいてくれて嬉しいな。この前の続き、手伝おうか？"}
+        else:
+            return {"suggestion": "お疲れ様！システムは万全だよ。何か手伝えることはある？"}
+    except:
+        return {"suggestion": "システムは最適化されています。今日もよろしくね、おにいちゃん。"}
+
+@app.post("/system/notify")
+async def notify(msg: str = Body(..., embed=True)):
+    """カーネルからUIへの能動的通知（トースト）をシミュレート（またはキューイング）"""
+    # 実際にはWebSocketまたは長いポーリングが必要だが、ここではログに残し、
+    # 次のポーリングタイミングでUIが拾えるように想定。
+    logger.info(f"📣 PROACTIVE NOTIFICATION: {msg}")
+    return {"status": "dispatched", "message": msg}
+
+@app.get("/system/apps/list")
+async def list_apps():
+    """インストールされているアプリの一覧を返す"""
+    meta_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
+    if os.path.exists(meta_path):
+        with open(meta_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+@app.post("/system/config")
+async def save_config(new_config: Dict[str, Any] = Body(...)):
+    """UIからの設定をconfig.jsonに永続化 (Deep Merge対応)"""
+    global OS_CONFIG
+    try:
+        # 再帰的にマージして、入れ子になった設定を保護
+        OS_CONFIG = deep_merge(OS_CONFIG, new_config)
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(OS_CONFIG, f, indent=4, ensure_ascii=False)
+        return {"status": "success", "message": "Resonance configuration synchronized."}
+    except Exception as e:
+        logger.error(f"Config sync error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
@@ -216,15 +468,48 @@ async def tts(request: VoiceRequest):
         raise HTTPException(status_code=500, detail="Voice synthesis failed.")
     return {"audio": audio_base64}
 
+@app.post("/stt")
+async def speech_to_text(file: UploadFile = File(...)):
+    """音声ファイルをテキストに変換 (The Ear)"""
+    temp_path = os.path.join(PROJECT_ROOT, "tmp", file.filename)
+    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+    
+    try:
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        text = get_stt().transcribe(temp_path)
+        return {"status": "success", "text": text}
+    except Exception as e:
+        logger.error(f"STT Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
 @app.get("/system/monitor")
 async def monitor():
     """テレメトリデータの提供"""
+    usage = psutil.disk_usage('/')
     return {
         "timestamp": datetime.datetime.now().isoformat(),
         "system": {
             "cpu": psutil.cpu_percent(),
             "ram": psutil.virtual_memory().percent,
-            "disk": psutil.disk_usage("/").percent
+            "disk": {
+                "total": usage.total // (2**30),
+                "used": usage.used // (2**30),
+                "free": usage.free // (2**30),
+                "percent": usage.percent
+            },
+            "os": sys.platform
+        },
+        "elysia": {
+            "version": OS_CONFIG.get("system", {}).get("version", "2.0.0"),
+            "status": "stable",
+            "memory_vault": vault.get_stats(),
+            "soul_resonance": (json.load(open(os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json"), "r", encoding="utf-8")) 
+                              if os.path.exists(os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")) else {})
         },
         "config": OS_CONFIG
     }
@@ -235,4 +520,10 @@ async def health():
 
 if __name__ == "__main__":
     import uvicorn
+    import sys
+    
+    if "--doctor" in sys.argv:
+        print(run_system_doctor())
+        sys.exit(0)
+        
     uvicorn.run(app, host="127.0.0.1", port=8000)

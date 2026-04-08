@@ -1,0 +1,46 @@
+<div class="window-header" @mousedown="startDrag('world_link', $event)">
+    <div class="window-controls">
+        <div class="control-btn btn-close" @click="closeApp('world_link')"></div>
+        <div class="control-btn btn-minimize"></div>
+        <div class="control-btn btn-maximize"></div>
+    </div>
+    <div class="window-title">🌐 World Horizon Link</div>
+    <div class="w-12"></div>
+</div>
+<div class="window-content flex flex-col bg-[#0a0a1a]">
+    <div class="p-3 bg-white/5 border-b border-white/10 flex gap-2">
+        <div class="flex-1 bg-black/40 border border-white/20 rounded-lg px-3 py-1 text-xs text-blue-300 font-mono overflow-hidden whitespace-nowrap opacity-60">
+            https://elysia.os/horizon/search
+        </div>
+        <div class="flex gap-1">
+            <button class="p-1 px-2 bg-white/5 rounded hover:bg-white/10 text-[10px]">◀</button>
+            <button class="p-1 px-2 bg-white/5 rounded hover:bg-white/10 text-[10px]">▶</button>
+        </div>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <div class="text-center py-12">
+            <div class="text-4xl mb-4">🔍</div>
+            <div class="text-white/60 text-sm font-bold tracking-widest uppercase">Elysia Web Intelligence</div>
+            <div class="text-[10px] text-white/30 mt-1">エリシアは現在、外部ネットワークをスキャン可能です</div>
+        </div>
+        
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-4">
+            <div class="text-[10px] text-blue-400 font-bold mb-3 uppercase tracking-tighter">Connection Status</div>
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <div class="text-xs">World Bridge: <span class="text-green-400">ESTABLISHED</span></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10 transition-colors cursor-pointer">
+                <div class="text-xs font-bold">Latest AI News</div>
+                <div class="text-[9px] text-white/40 mt-1">Ask Elysia to "search AI news"</div>
+            </div>
+            <div class="bg-white/5 border border-white/10 rounded-xl p-3 hover:bg-white/10 transition-colors cursor-pointer">
+                <div class="text-xs font-bold">Tech Trends</div>
+                <div class="text-[9px] text-white/40 mt-1">"What's trending today?"</div>
+            </div>
+        </div>
+    </div>
+</div>
