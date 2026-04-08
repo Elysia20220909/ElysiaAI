@@ -5,6 +5,12 @@
 形式は[Keep a Changelog](https://keepachangelog.com/ja/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/lang/ja/)に準拠しています。
 
+## [3.0.1] - 2026-04-08
+### Fixed
+- 入出力エラーの防止: `faster-whisper` 等の重量級ライブラリ未インストール時のフォールバック処理を強化。
+- 依存関係の修正: FastAPI でのファイルアップロードに必要な `python-multipart` を要求定義に追加。
+- システム診断の深度化: `Makefile` の `make check` にて Python ライブラリの存在確認を自動化。
+
 ## [3.0.0-SOVEREIGN] - 2026-04-08
 
 ### [3.0.0-SOVEREIGN] 追加
