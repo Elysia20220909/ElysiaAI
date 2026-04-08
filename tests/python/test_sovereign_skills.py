@@ -26,12 +26,12 @@ class TestSovereignSkills(unittest.TestCase):
             shutil.rmtree(self.test_var)
 
     def test_system_doctor_output(self):
-        """System Doctor が特定のキーワードを含むレポートを生成するか"""
+        """System Doctor が Night City 風のレポートを生成するか"""
         report = run_system_doctor()
-        self.assertIn("🍎 Elysia OS - System Doctor Report 🍎", report)
-        self.assertIn("CPU:", report)
-        self.assertIn("RAM:", report)
-        self.assertIn("[Path]", report)
+        self.assertIn("NIGHT CITY // ELVSIΛ - SYSTEM DIAGNOSTIC", report)
+        self.assertIn("CPU_LOAD:", report)
+        self.assertIn("RAM_USE:", report)
+        self.assertIn("[ICE_CHECK]", report)
 
     def test_soul_vault_structure(self):
         """Soul Vault (Memory) の書き込みロジックシミュレーション"""
