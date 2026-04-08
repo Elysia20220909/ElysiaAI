@@ -5,6 +5,14 @@
 形式は[Keep a Changelog](https://keepachangelog.com/ja/1.0.0/)に基づいており、
 このプロジェクトは[セマンティックバージョニング](https://semver.org/lang/ja/)に準拠しています。
 
+## [3.1.0-NC] - 2026-04-08
+### Added
+- **Project NIGHT CITY (Cyberpunk 2077 Thematic Overhaul)**:
+    - **Visual Metamorphosis**: `Orbitron` フォント、`NIGHT CITY YELLOW` / `ARASAKA RED` の配色、グリッチ・アニメーションによる没入型インターフェース。
+    - **Cyber HUD**: 走査線（Scanlines）オーバーレイとデジタル・ブルータリズムに基づいたウィンドウ・ドックデザイン。
+    - **Arasaka-style Diagnostics**: `System Doctor` の出力をディストピアなハッキングログ形式（ICE_CHECK, NET_SYNC）へ刷新。
+- **Resilience Upgrade**: 依存ライブラリの欠落時における STT サービスの例外処理と UI への警告通知を強化。
+
 ## [3.0.1] - 2026-04-08
 ### Fixed
 - 入出力エラーの防止: `faster-whisper` 等の重量級ライブラリ未インストール時のフォールバック処理を強化。
