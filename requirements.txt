@@ -1,19 +1,29 @@
 # 🌸 ElysiaAI - Python OS Kernel Dependencies
 # Core Framework
-fastapi
-uvicorn[standard]
-pydantic-settings
-httpx
-numpy
-psutil
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic-settings==2.1.0
+httpx==0.26.0
+numpy==1.26.3
+psutil==5.9.8
 
 # AI/ML & RAG (Vector Search)
-pymilvus
-sentence-transformers
-torch
+pymilvus==2.3.5
+sentence-transformers==2.3.1
+torch==2.1.2
+faster-whisper==0.10.0
 
 # Monitoring & Diagnostics
-rich
+rich==13.7.0
+
+# Web Search & Content (The Eye)
+duckduckgo-search==4.3.0
+beautifulsoup4==4.12.3
+
+# Visual Perception (The Sight)
+Pillow==10.2.0
+pyautogui==0.9.54
 
 # Testing
-pytest
+pytest==8.0.0
+flake8==7.0.0

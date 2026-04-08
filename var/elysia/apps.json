@@ -1,0 +1,8 @@
+{
+    "messenger": { "icon": "💬", "title": "Resonance Messenger" },
+    "monitor": { "icon": "📊", "title": "System Monitor" },
+    "explorer": { "icon": "📂", "title": "FHS Explorer" },
+    "terminal": { "icon": "🐚", "title": "Elysia Shell" },
+    "settings": { "icon": "⚙️", "title": "OS Settings" },
+    "world_link": { "icon": "🌐", "title": "World Horizon Link" }
+}
