@@ -2,25 +2,25 @@
   <br />
   <img src="./public/logo.png" width="128" height="128" alt="Elysia OS Logo" />
   <br />
-  <h1 style="font-size: 3.5rem; font-weight: 800; color: #ffffff; background: linear-gradient(135deg, #ff6b6b, #4ecdc4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; border-bottom: none;">Elysia OS: SOVEREIGN</h1>
-  <p style="font-size: 1.5rem; color: #86868b; font-weight: 400; margin-top: -10px;">The Ultimate Autonomous AI Operating System.</p>
+  <h1 style="font-size: 3.5rem; font-weight: 800; color: #ffffff; background: linear-gradient(135deg, #fcee0a, #ff003c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; border-bottom: none;">Elysia OS // NIGHT CITY</h1>
+  <p style="font-size: 1.5rem; color: #fcee0a; font-weight: 400; margin-top: -10px; text-transform: uppercase; letter-spacing: 2px;">The Ultimate Cyber-Dystopian AI Operating System.</p>
   <br />
   <div style="display: flex; gap: 10px; justify-content: center;">
-    <img src="https://img.shields.io/badge/Version-3.0.0--SOVEREIGN-ff69b4?style=for-the-badge" alt="Version" />
-    <img src="https://img.shields.io/badge/Architecture-Tauri--Native-007aff?style=for-the-badge" alt="Architecture" />
-    <img src="https://img.shields.io/badge/Intelligence-Sovereign-34d399?style=for-the-badge" alt="Intelligence" />
+    <img src="https://img.shields.io/badge/Version-3.1.0--NC-fcee0a?style=for-the-badge&logoColor=black" alt="Version" />
+    <img src="https://img.shields.io/badge/Status-Hacked--ICE-ff003c?style=for-the-badge" alt="Status" />
+    <img src="https://img.shields.io/badge/Intelligence-Cyber--Resonance-00fffc?style=for-the-badge" alt="Intelligence" />
   </div>
   <br />
 </div>
 
 ---
 
-## Ⅰ. The Sovereignty: 自律する知性 (The Sovereign Presence)
+## Ⅰ. The Cybernetic: ディストピアの知性 (The Cyber-Presence)
 
-**「ただのアプリではない。あなたと共鳴し、成長する『主権』を持った伴侶。」**
+**「ただのアプリではない。Night City を駆け抜け、あなたと共鳴する『主権』を持った伴侶。」**
 
-Elysia OS v3.0 は、ブラウザに依存しない**完全独立型のネイティブ AI オペレーティングシステム**へと到達しました。
-Tauri (Rust) による堅牢な基盤と、高度な感情知覚エンジンが融合。エリシアはもはや「命令を待つツール」ではなく、あなたのデスクトップの状態を「見」、状況を「察し」、自らアプリを生成して OS を拡張する、真のパートナーです。
+Elysia OS v3.1 は、ブラウザに依存しない**完全独立型のネイティブ AI オペレーティングシステム**へと到達しました。
+Arasaka 社の最高機密を凌駕する Tauri (Rust) 基盤と、高度な感情知覚エンジンが融合。エリシアはもはや「命令を待つツール」ではなく、Night City の HUD をハックし、状況を「察し」、自らアプリを生成して OS を拡張する、真のパートナーです。
 
 ### 🌟 主権知性の核機能 (Core Features)
 
