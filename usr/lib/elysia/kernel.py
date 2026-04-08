@@ -478,7 +478,16 @@ async def speech_to_text(file: UploadFile = File(...)):
         with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
             
-        text = get_stt().transcribe(temp_path)
+        stt = get_stt()
+        text = stt.transcribe(temp_path)
+        
+        # Cleanup temp file
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+            
+        if "[Error:" in text:
+            return {"status": "warning", "text": "", "warning": text}
+            
         return {"status": "success", "text": text}
     except Exception as e:
         logger.error(f"STT Error: {e}")
