@@ -29,6 +29,8 @@ check:
 	@python3 --version || (echo "❌ Python 3 missing"; exit 1)
 	@bun --version || (echo "❌ Bun missing"; exit 1)
 	@rustc --version || (echo "❌ Rust missing (Tauri requirement)"; exit 1)
+	@echo "🔍 Integrity Check: Core Dependencies..."
+	@python3 -c "import fastapi, pyautogui, bs4, PIL" 2>/dev/null || (echo "⚠️ Some core Python libraries are missing. Run: pip install -r requirements.txt"; exit 1)
 	@echo "✅ All resonance engines operational."
 
 doctor:
