@@ -1,6 +1,12 @@
 import os
 import logging
-from faster_whisper import WhisperModel
+
+try:
+    from faster_whisper import WhisperModel
+    HAS_WHISPER = True
+except ImportError:
+    HAS_WHISPER = False
+
 
 logger = logging.getLogger("elysia.stt")
 
@@ -14,6 +20,10 @@ class ElysiaSTT:
         self.model = None
         
     def _ensure_model(self):
+        if not HAS_WHISPER:
+            logger.warning("faster-whisper is not installed. STT is disabled.")
+            return
+
         if self.model is None:
             logger.info(f"Loading Whisper model: {self.model_size}...")
             # Use 'cpu' for maximum compatibility, 'cuda' if available
@@ -21,6 +31,9 @@ class ElysiaSTT:
 
     def transcribe(self, audio_path: str) -> str:
         self._ensure_model()
+        if self.model is None:
+            return "[Error: STT Engine Offline. Please install dependencies.]"
+            
         segments, info = self.model.transcribe(audio_path, beam_size=5)
         
         text = ""
