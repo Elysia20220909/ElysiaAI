@@ -1,18 +1,16 @@
-.PHONY: help install boot start stop status ui logs clean
-
-# 🍒 Elysia OS - UNIX Management Makefile (Ubuntu/macOS) 🍒
+.PHONY: help install boot start stop status ui logs clean build check doctor
+# 🍒 Elysia OS - Ultimate Manifestation Makefile 🍒
 
 help:
-	@echo "🍎 Elysia OS UNIX Management 🍎"
+	@echo "🍎 Elysia OS Production Management 🍎"
 	@echo "  make install - System Initialization (Setup)"
 	@echo "  make boot    - Start Full OS Resonance Cluster (UI + Kernel)"
-	@echo "  make ui      - Start Desktop Environment (Bun/Vite)"
-	@echo "  make logs    - Watch Kernel logs in real-time"
-	@echo "  make start   - Start Kernel Daemon (elysiad) in background"
-	@echo "  make stop    - Stop System Kernel"
-	@echo "  make status  - Check System status"
+	@echo "  make build   - [PRODUCTION] Build Standalone OS Installer (Tauri)"
+	@echo "  make doctor  - Run System Integrity Diagnostic"
+	@echo "  make check   - Verify dependencies and environment"
+	@echo "  make clean   - Purge logs and build artifacts"
 	@echo ""
-	@echo "🎉 Environment: Ubuntu / Mac OS (POSIX Standard)"
+	@echo "🎉 Environment: UNIX (Ubuntu / Mac OS / WSL Standard)"
 
 install:
 	@chmod +x scripts/*.sh bin/*
@@ -22,25 +20,22 @@ boot:
 	@chmod +x scripts/*.sh bin/*
 	./scripts/boot.sh
 
-start:
-	@chmod +x bin/*
-	nohup python3 bin/elysiad > var/log/elysia/kernel.log 2>&1 &
-	@echo "✅ Kernel PID: $$!"
+build:
+	@echo "🚀 Initiating Ultimate Manifestation Build (Tauri Bundle)..."
+	bun run tauri build
 
-stop:
-	pkill -f elysiad || echo "⚠️ Elysia Kernel not running."
+check:
+	@echo "🔍 Integrity Check: Runtime Environment..."
+	@python3 --version || (echo "❌ Python 3 missing"; exit 1)
+	@bun --version || (echo "❌ Bun missing"; exit 1)
+	@rustc --version || (echo "❌ Rust missing (Tauri requirement)"; exit 1)
+	@echo "✅ All resonance engines operational."
 
-status:
-	python3 bin/elysia status
-
-ui:
-	bun run dev
-
-logs:
-	tail -f var/log/elysia/kernel.log
+doctor:
+	python3 usr/lib/elysia/kernel.py --doctor
 
 clean:
 	rm -rf var/log/elysia/*
 	rm -rf node_modules
-	rm -rf python/__pycache__
+	rm -rf src-tauri/target
 	@echo "🧹 System memory purged."
