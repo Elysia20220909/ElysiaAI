@@ -404,7 +404,7 @@ const app = new Elysia()
 					if (b > w) state.winner = "黒";
 					else if (w > b) state.winner = "白";
 					else state.winner = "引き分け";
-					state.history.push(`連続パスで終了: 黒$b白$w`);
+					state.history.push(`連続パスで終了: 黒${b}白${w}`);
 				}
 				state.turn = (player === 1 ? 2 : 1) as Player;
 				for (const ws of clients) {
@@ -609,7 +609,7 @@ app
 							state.winner = "白";
 							_winnerId = state.userIds ? state.userIds[1] : "user2";
 						} else state.winner = "引き分け";
-						state.history.push(`勝負終了: 黒$b白$w`);
+						state.history.push(`勝負終了: 黒${b}白${w}`);
 						if (state.userIds) {
 							const [u1, u2] = state.userIds;
 							if (!ranking[u1]) ranking[u1] = { win: 0, lose: 0, draw: 0 };

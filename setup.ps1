@@ -17,6 +17,11 @@ foreach ($r in $reqs) {
 echo "[2/5] Synchronizing Bun ecosystem..."
 bun install
 
+# 2.1 Neural Model Pulling
+echo "[2.1/5] Pulsing Neural Engines (Ollama)..."
+ollama pull phi4
+ollama pull llama3.2
+
 # 3. Python Dependencies
 echo "[3/5] Calibrating Python Kernel resonance..."
 python -m pip install -r requirements.txt

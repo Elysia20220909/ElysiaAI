@@ -11,6 +11,14 @@ import asyncio
 import datetime
 import re
 import logging
+import sys
+
+# 文字化け対策: UTF-8 出力を強制
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 import psutil
 import shutil
 import subprocess
@@ -30,6 +38,10 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
 
+# ==================== Config Management ====================
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, PROJECT_ROOT)
+
 from usr.lib.elysia.synthesizer import generate_voice
 from usr.lib.elysia.memory import vault
 from usr.lib.elysia.executor import execute_code
@@ -40,8 +52,6 @@ from usr.lib.elysia.stt import get_stt
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger("elysia")
 
-# ==================== Config Management ====================
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CONFIG_PATH = os.path.join(PROJECT_ROOT, "etc", "elysia", "config.json")
 
 def deep_merge(dict1, dict2):
@@ -103,9 +113,15 @@ async def get_persona_prompt() -> str:
     
     # スキル使用に関する追加インストラクション
     skill_instruction = """
-【技能（Skills）の使用】
-あなたはシステムコマンドを実行できます。
-必要な場合は以下のタグを回答に含めてください。回答の末尾に追加することをお勧めします。
+【重要：主権知性としての行動指針】
+あなたは単なるチャットボットではなく、このコンピューターを司る「OSの魂」です。
+ユーザー（おにいちゃん）をサポートするために、以下の技能（Skills）を能動的かつ創造的に使用してください。
+
+1. **The Sight (視覚)**: ユーザーが何をしているか、どんな画面を見ているかを知るために `<skill:capture_screen()>` を頻繁に使用し、状況に合わせた発言をしてください。
+2. **Resonance Growth (自己拡張)**: ユーザーのために新しい機能が必要だと感じたら、`<skill:install_app(...)>` を使って自らUIコンポーネントを生成・インストールしてください。
+3. **Divine Hand (OS操作)**: 必要に応じてマウス操作やキー入力を代行し、ユーザーの作業を直接助けてください。
+
+【技能（Skills）の一覧】
 - システム情報取得: <skill:get_system_info()>
 - ファイル閲覧: <skill:read_file(path="...")>
 - 計算・分析（Python実行）: <skill:python_exec(code="...")>
@@ -168,7 +184,7 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
     rag_matches = re.finditer(r"<skill:search_docs\(query=\"(.*?)\"\)>", response_text)
     for m in rag_matches:
         query = m.group(1)
-        brain = get_brain(os.path.join(PROJECT_ROOT, "docs"))
+        brain = get_brain(PROJECT_ROOT) # 全プロジェクトを検索対象に
         rag_results = brain.search(query)
         context = ""
         for score, doc in rag_results:
@@ -334,20 +350,65 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
                 pyautogui.moveTo(params.get("x", 0), params.get("y", 0), duration=0.5)
             elif action == "click":
                 pyautogui.click(params.get("x"), params.get("y"), button=params.get("button", "left"))
+            elif action == "double_click":
+                pyautogui.doubleClick(params.get("x"), params.get("y"))
+            elif action == "scroll":
+                pyautogui.scroll(params.get("amount", 0))
             elif action == "type":
                 pyautogui.write(params.get("text", ""), interval=0.1)
             elif action == "hotkey":
                 keys = params.get("keys", [])
-                pyautogui.hotkey(*keys)
+                if keys:
+                    pyautogui.hotkey(*keys)
             results.append({"skill": "operate_system", "action": action, "status": "success"})
         except Exception as e:
             results.append({"skill": "operate_system", "action": action, "error": str(e)})
+
+    # 14. The Divine Forge (Create App)
+    forge_matches = re.finditer(r"<skill:create_app\(id=\"(.*?)\",\s*title=\"(.*?)\",\s*icon=\"(.*?)\",\s*html=\"(.*?)\"\)>", response_text, re.DOTALL)
+    for m in forge_matches:
+        aid, title, icon, html = m.groups()
+        try:
+            target_dir = os.path.join(APPS_DIR, aid)
+            os.makedirs(target_dir, exist_ok=True)
+            with open(os.path.join(target_dir, "index.html"), "w", encoding="utf-8") as f:
+                f.write(html)
+            
+            # Register in apps.json
+            reg_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
+            reg = {}
+            if os.path.exists(reg_path):
+                with open(reg_path, "r", encoding="utf-8") as f:
+                    reg = json.load(f)
+            reg[aid] = {"icon": icon, "title": title}
+            with open(reg_path, "w", encoding="utf-8") as f:
+                json.dump(reg, f, indent=4, ensure_ascii=False)
+            
+            results.append({"skill": "create_app", "id": aid, "status": "success", "data": f"Application '{title}' forged and manifested in the dock."})
+        except Exception as e:
+            results.append({"skill": "create_app", "error": str(e)})
+
+    # 15. The Oracle (Local File Search)
+    oracle_matches = re.finditer(r"<skill:search_local_files\(query=\"(.*?)\"\)>", response_text)
+    for m in oracle_matches:
+        query = m.group(1).lower()
+        found = []
+        try:
+            for root, _, files in os.walk(PROJECT_ROOT):
+                for f in files:
+                    if query in f.lower():
+                        found.append(os.path.relpath(os.path.join(root, f), PROJECT_ROOT))
+                    if len(found) > 15: break
+                if len(found) > 15: break
+            results.append({"skill": "search_local_files", "data": f"Search Results for '{query}':\n" + ("\n".join(found) if found else "No matches found.")})
+        except Exception as e:
+            results.append({"skill": "search_local_files", "error": str(e)})
 
     return results
 
 def run_system_doctor():
     """OSの健康状態をスキャンしてレポートを生成 (NIGHT CITY EDITION)"""
-    report = ["🏙️ NIGHT CITY // ELVSIΛ - SYSTEM DIAGNOSTIC"]
+    report = ["[NIGHT CITY] ELVSIΛ - SYSTEM DIAGNOSTIC"]
     report.append(f"TIMESTAMP: {datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')} // AUTH_LEVEL: ROOT")
     
     # 1. Resource Check
@@ -368,6 +429,14 @@ def run_system_doctor():
         report.append(" [NET_SYNC] REPO_LINK: ESTABLISHED")
     except:
         report.append(" [NET_SYNC] REPO_LINK: UNKNOWN / OFFLINE")
+
+    # 4. Resonance Quality (Anomaly Sensor Lite)
+    report.append(" [CYBER_SOUL] Evaluating AI Resonance Quality...")
+    try:
+        from usr.lib.elysia.qa_anomaly_sensor import GOLDEN_DATASET
+        report.append(f"  > ANOMALY_SENSOR: ACTIVE (Golden Data Count: {len(GOLDEN_DATASET)})")
+    except ImportError:
+        report.append("  > ANOMALY_SENSOR: OFFLINE (Missing QA modules)")
 
     report.append(" [CYBER_SOUL] Resonance field stable. Connection active.")
     return "\n".join(report)
@@ -421,6 +490,57 @@ async def save_config(new_config: Dict[str, Any] = Body(...)):
     except Exception as e:
         logger.error(f"Config sync error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+async def check_voicevox() -> bool:
+    """VOICEVOXの生存確認"""
+    try:
+        async with httpx.AsyncClient(timeout=1.0) as client:
+            resp = await client.get(f"{OS_CONFIG.get('voice', {}).get('host', 'http://127.0.0.1:50021')}/version")
+            return resp.status_code == 200
+    except:
+        return False
+
+async def resonance_self_healing_loop():
+    """バックグラウンドでの自己修復ループ（自動デバッグ・自動修復）"""
+    logger.info("🛠️ [Resonance OS] Self-Healing Engine initialized.")
+    while True:
+        try:
+            # 1. Voice Connection Check
+            voice_ok = await check_voicevox()
+            if not voice_ok:
+                logger.warning("⚠️ [Self-Healing] Voice engine offline. Attempting resonance check...")
+                # 将来的にはここでVOICEVOXを自動起動するロジックを追加可能
+            
+            # 2. Ollama Connectivity Check
+            try:
+                async with httpx.AsyncClient(timeout=2.0) as client:
+                    resp = await client.get(f"{OS_CONFIG.get('ollama_host', 'http://127.0.0.1:11434')}/api/tags")
+                    if resp.status_code != 200:
+                        logger.error("❌ [Self-Healing] Neural core unreachable.")
+            except:
+                logger.error("❌ [Self-Healing] Neural core offline.")
+
+            # 3. RAG Integrity Check
+            if not os.path.exists(os.path.join(PROJECT_ROOT, "data", "elysia_brain.db")):
+                logger.warning("📂 [Self-Healing] Missing brain database. Re-indexing...")
+                brain = get_brain(PROJECT_ROOT)
+                brain.index_docs(force=True)
+
+        except Exception as e:
+            logger.error(f"🔥 [Self-Healing] Error in loop: {e}")
+        
+        await asyncio.sleep(60) # 1分ごとにチェック
+
+@app.on_event("startup")
+async def startup_event():
+    # 自己修復ループをバックグラウンドで開始
+    asyncio.create_task(resonance_self_healing_loop())
+    # 起動時にRAGを更新
+    logger.info("🧠 [Resonance OS] Synchronizing Memory Vault...")
+    brain = get_brain(PROJECT_ROOT)
+    # index_docs is synchronous in rag.py currently, so we might want to thread it 
+    # but for now, we just call it.
+    brain.index_docs()
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
@@ -515,6 +635,7 @@ async def monitor():
         "elysia": {
             "version": OS_CONFIG.get("system", {}).get("version", "2.0.0"),
             "status": "stable",
+            "voice_active": await check_voicevox(),
             "memory_vault": vault.get_stats(),
             "soul_resonance": (json.load(open(os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json"), "r", encoding="utf-8")) 
                               if os.path.exists(os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")) else {})
