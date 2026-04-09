@@ -6,7 +6,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["run", "--watch", "src/index.ts"],
+      "runtimeArgs": ["run", "--watch", "packages/server/src/index.ts"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
@@ -14,6 +14,21 @@
       "env": {
         "NODE_ENV": "development"
       }
+    },
+    {
+      "name": "🐍 Debug Python FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "python.fastapi_server:app",
+        "--reload",
+        "--port",
+        "8000"
+      ],
+      "jinja": true,
+      "justMyCode": true,
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "🧪 Debug Tests",

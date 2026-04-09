@@ -8,9 +8,8 @@
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
-import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+let prisma: PrismaClient;
 
 function log(level: string, message: string): void {
 	const timestamp = new Date().toISOString().substring(11, 19);
@@ -42,11 +41,22 @@ async function main(): Promise<void> {
 
 		// Generate Prisma Client
 		log("INFO", "Generating Prisma Client...");
-		execSync("bun prisma generate", { stdio: "inherit" });
+		execSync("bun prisma generate --schema ../../prisma/schema.prisma", {
+			stdio: "inherit",
+		});
+
+		// Import PrismaClient after generation
+		const { PrismaClient: GeneratedPrismaClient } = await import(
+			"@prisma/client"
+		);
+		prisma = new GeneratedPrismaClient();
 
 		// Create/update database schema
 		log("INFO", "Applying database schema...");
-		execSync("bun prisma db push --skip-generate", { stdio: "inherit" });
+		execSync(
+			"bun prisma db push --skip-generate --schema ../../prisma/schema.prisma",
+			{ stdio: "inherit" },
+		);
 
 		// Connection test
 		log("INFO", "Testing database connection...");
