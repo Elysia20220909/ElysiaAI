@@ -131,3 +131,7 @@ prisma.config.mjs.bak
 
 # External untracked dependencies
 /elysia/
+
+# Python compiled files
+__pycache__/
+*.pyc
