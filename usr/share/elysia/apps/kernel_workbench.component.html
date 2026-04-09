@@ -7,8 +7,28 @@
         </div>
         <div class="flex gap-2">
             <button @click="build('qemu')" class="text-[10px] border border-[#00ff41] px-2 py-0.5 hover:bg-[#00ff41] hover:text-black transition-all">BUILD_QEMU</button>
-            <button @click="build('rpi')" class="text-[10px] border border-[#00ff41] px-2 py-0.5 hover:bg-[#00ff41] hover:text-black transition-all">BUILD_RPI</button>
-            <button @click="runQemu()" class="text-[10px] bg-[#00ff41] text-black px-2 py-0.5 hover:bg-[#003b00] hover:text-[#00ff41] transition-all">MANIFEST_QEMU</button>
+            <button @click="build('rpi4')" class="text-[10px] border border-[#00ff41] px-2 py-0.5 hover:bg-[#00ff41] hover:text-black transition-all">BUILD_RPi4</button>
+            <button @click="runQemu()" class="text-[10px] bg-[#00ff41] text-black px-2 py-0.5 hover:bg-[#003b00] hover:text-[#00ff41] transition-all">MANIFEST_ABYSS</button>
+        </div>
+    </div>
+
+    <!-- 🟡 Telemetry HUD (New) -->
+    <div class="grid grid-cols-4 gap-4 mb-4">
+        <div class="bg-black/60 border border-[#00ff41]/30 p-2 text-center">
+            <div class="text-[8px] opacity-40">UPTIME</div>
+            <div class="text-sm font-bold" x-text="telemetry.uptime || '00000'"></div>
+        </div>
+        <div class="bg-black/60 border border-[#00ff41]/30 p-2 text-center">
+            <div class="text-[8px] opacity-40">HUMAN_SCORE</div>
+            <div class="text-sm font-bold" x-text="(telemetry.human_score || 0) + '%'"></div>
+        </div>
+        <div class="bg-black/60 border border-[#00ff41]/30 p-2 text-center">
+            <div class="text-[8px] opacity-40">TASKS_ACTIVE</div>
+            <div class="text-sm font-bold" x-text="telemetry.tasks || '0'"></div>
+        </div>
+        <div class="bg-black/60 border border-[#00ff41]/30 p-2 text-center">
+            <div class="text-[8px] opacity-40">LOAD_RESONANCE</div>
+            <div class="text-sm font-bold" x-text="(telemetry.load || 0) + '%'"></div>
         </div>
     </div>
 
@@ -50,12 +70,22 @@
             selectedFile: 'abyssrtos.c',
             sourceCode: '// LOADING_ENCRYPTED_SECTOR...',
             logs: [],
+            telemetry: {},
+            eventSource: null,
             async init() {
                 this.addLog("WORKBENCH_INITIALIZED: Resonance established.", "info");
                 this.$watch('selectedFile', async (val) => {
                     await this.loadSource(val);
                 });
                 await this.loadSource(this.selectedFile);
+                this.startTelemetryStream();
+            },
+            startTelemetryStream() {
+                if (this.eventSource) this.eventSource.close();
+                this.eventSource = new EventSource('http://localhost:8000/system/abyss/telemetry');
+                this.eventSource.onmessage = (e) => {
+                    this.telemetry = JSON.parse(e.data);
+                };
             },
             async loadSource(file) {
                 try {

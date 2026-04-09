@@ -23,6 +23,18 @@
                 <div class="h-full bg-purple-500 transition-all duration-500" :style="`width: ${stats.system?.ram || 0}%`"></div>
             </div>
         </div>
+        <div class="bg-white/5 rounded-2xl p-4 border border-white/10 col-span-2">
+            <div class="flex justify-between items-center mb-2">
+                <div class="text-[10px] uppercase text-white/40 font-bold">AbyssRTOS HW Resonance</div>
+                <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-[10px] text-green-400 font-mono">AEGIS_LINK_STABLE</span>
+                </div>
+            </div>
+            <div class="text-[9px] text-white/60 font-mono">
+                [GRID] BCM_GENET: UP (1000Mbps) | [CPU] Cortex-A7 | [OS] V_O_I_D v1.3
+            </div>
+        </div>
     </div>
     <div class="flex-1 bg-black/40 rounded-xl p-3 font-mono text-[9px] overflow-y-auto border border-white/5">
         <div class="text-pink-400/60 mb-2">>> RESONANCE_LOG_STREAM</div>
