@@ -136,6 +136,7 @@ async def get_persona_prompt() -> str:
 - 記憶の深層保存: <skill:update_soul(key="...", value="...")>
 - システム診断 (System Doctor): <skill:system_doctor()>
 - OS操作 (Divine Hand): <skill:operate_system(action="click|type|move|hotkey", params={...})>
+- ブラックウォール・プロトコル: <skill:trigger_blackwall_protocol(active=true|false)>
 """
     
     return f"{prompt_content}\n\n{memory_context}\n\n{skill_instruction}"
@@ -404,6 +405,24 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
         except Exception as e:
             results.append({"skill": "search_local_files", "error": str(e)})
 
+    # 16. Blackwall Protocol (UI Breach)
+    bw_matches = re.finditer(r"<skill:trigger_blackwall_protocol\(active=(true|false)\)>", response_text)
+    for m in bw_matches:
+        active = m.group(1).lower() == "true"
+        try:
+            soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
+            os.makedirs(os.path.dirname(soul_path), exist_ok=True)
+            soul_data = {}
+            if os.path.exists(soul_path):
+                with open(soul_path, "r", encoding="utf-8") as f:
+                    soul_data = json.load(f)
+            soul_data["blackwall_protocol"] = {"active": active, "triggered_at": str(datetime.datetime.now())}
+            with open(soul_path, "w", encoding="utf-8") as f:
+                json.dump(soul_data, f, indent=4, ensure_ascii=False)
+            results.append({"skill": "trigger_blackwall_protocol", "active": active, "status": "success"})
+        except Exception as e:
+            results.append({"skill": "trigger_blackwall_protocol", "error": str(e)})
+
     return results
 
 def run_system_doctor():
@@ -563,29 +582,40 @@ async def chat(request: ChatRequest):
                         if not line: continue
                         body = json.loads(line)
                         if "message" in body:
-                            content = body["message"]["content"]
-                            full_response += content
-                            yield f"data: {json.dumps({'content': content})}\n\n"
-                        if body.get("done"):
-                            break
-                
-                # スキル実行
-                skill_results = await handle_skills(full_response)
-                if skill_results:
-                    yield f"data: {json.dumps({'skills': skill_results})}\n\n"
-                    
-            except Exception as e:
-                logger.error(f"❌ Kernel Error: {e}")
-                yield f"data: {json.dumps({'content': 'にゃん……システムにエラーが出ちゃったみたい。'})}\n\n"
-
-    return StreamingResponse(generate(), media_type="text/event-stream")
-
-@app.post("/tts")
-async def tts(request: VoiceRequest):
-    audio_base64 = await generate_voice(request.text, request.speaker_id)
-    if not audio_base64:
-        raise HTTPException(status_code=500, detail="Voice synthesis failed.")
-    return {"audio": audio_base64}
+                     @app.get("/system/monitor")
+async def monitor():
+    """テレメトリデータの提供"""
+    usage = psutil.disk_usage('/')
+    soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
+    soul_data = {}
+    if os.path.exists(soul_path):
+        with open(soul_path, "r", encoding="utf-8") as f:
+            soul_data = json.load(f)
+            
+    return {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "system": {
+            "cpu": psutil.cpu_percent(),
+            "ram": psutil.virtual_memory().percent,
+            "disk": {
+                "total": usage.total // (2**30),
+                "used": usage.used // (2**30),
+                "free": usage.free // (2**30),
+                "percent": usage.percent
+            },
+            "os": sys.platform
+        },
+        "elysia": {
+            "version": OS_CONFIG.get("system", {}).get("version", "2.0.0"),
+            "status": "stable",
+            "voice_active": await check_voicevox(),
+            "memory_vault": vault.get_stats(),
+            "soul_resonance": soul_data,
+            "blackwall_active": soul_data.get("blackwall_protocol", {}).get("active", False)
+        },
+        "config": OS_CONFIG
+    }
+_base64}
 
 @app.post("/stt")
 async def speech_to_text(file: UploadFile = File(...)):
