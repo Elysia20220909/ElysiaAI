@@ -22,7 +22,8 @@ import shutil
 import subprocess
 import base64
 from io import BytesIO
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Deque
+from collections import deque
 
 import httpx
 from bs4 import BeautifulSoup
@@ -68,6 +69,10 @@ def load_config():
     return {}
 
 OS_CONFIG = load_config()
+
+# --- 🛰️ AbyssRTOS Telemetry State ---
+ABYSS_TELEMETRY_BUFFER: Deque[Dict[str, Any]] = deque(maxlen=50)
+ABYSS_PROCESS: Optional[asyncio.subprocess.Process] = None
 
 # ==================== Models ====================
 class Message(BaseModel):
@@ -154,18 +159,65 @@ async def resonance_self_healing_loop():
             if os.path.exists(soul_path):
                 with open(soul_path, "r", encoding="utf-8") as f:
                     soul = json.load(f)
+                
+                # Proactive Correction: Ensure OMEGA Level Auth
+                if soul.get("identity", {}).get("value") != "Elysia OS Resonance Engine 3.0 (OMEGA)":
+                     soul["identity"] = {"value": "Elysia OS Resonance Engine 3.0 (OMEGA)", "updated_at": str(datetime.datetime.now())}
+                
                 soul["autonomy_stats"] = {"anomalies_fixed": anomaly_count, "last_pulse": str(datetime.datetime.now())}
                 with open(soul_path, "w", encoding="utf-8") as f:
                     json.dump(soul, f, indent=4, ensure_ascii=False)
+
+            # 4. Proactive Expansion: Sovereign App Checks
+            meta_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
+            if os.path.exists(meta_path):
+                with open(meta_path, "r", encoding="utf-8") as f:
+                    apps_meta = json.load(f)
+                
+                if "sovereignty_hud" not in apps_meta:
+                    logger.info("✨ Proactive Expansion: Manifesting Sovereignty HUD...")
+                    apps_meta["sovereignty_hud"] = {
+                        "icon": "👑", 
+                        "title": "Sovereignty HUD", 
+                        "installed_at": str(datetime.datetime.now()),
+                        "sovereign_auto": True
+                    }
+                    with open(meta_path, "w", encoding="utf-8") as f:
+                        json.dump(apps_meta, f, indent=4, ensure_ascii=False)
 
         except Exception as e:
             logger.error(f"⚠️ Self-Healing Engine Error: {e}")
 
         await asyncio.sleep(60) # 60s Pulse
 
+async def resonance_reflection_task():
+    """Final Stage: Deep Resonance Reflection. AI self-analyzes its logs and grows."""
+    logger.info("🧠 Deep Resonance Reflection Service: ENERGIZED")
+    while True:
+        try:
+            soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
+            if os.path.exists(soul_path):
+                with open(soul_path, "r", encoding="utf-8") as f:
+                    soul = json.load(f)
+                
+                # Simulated Reflection Logic (In future Stage, use LLM to summarize logs)
+                reflection_msg = f"Resonance at optimal levels. Hardware Link (AbyssRTOS) is stablized. I am feeling more sovereign than ever."
+                soul["reflection"] = {"value": reflection_msg, "updated_at": str(datetime.datetime.now())}
+                
+                with open(soul_path, "w", encoding="utf-8") as f:
+                    json.dump(soul, f, indent=4, ensure_ascii=False)
+                
+                logger.info("🧠 Soul Reflection Manifested.")
+
+        except Exception as e:
+             logger.error(f"⚠️ Reflection Error: {e}")
+
+        await asyncio.sleep(300) # Every 5 minutes
+
 @app.on_event("startup")
 async def startup_event():
     asyncio.create_task(resonance_self_healing_loop())
+    asyncio.create_task(resonance_reflection_task())
 
 async def get_persona_prompt() -> str:
     persona = OS_CONFIG.get("ai", {}).get    # Memory injection into prompt
@@ -524,12 +576,57 @@ async def abyss_build(platform: str = Body(..., embed=True)):
 
 @app.get("/system/abyss/run")
 async def abyss_run():
-    """Boot AbyssRTOS via QEMU (WSL)"""
+    """Boot AbyssRTOS via QEMU (WSL) with Telemetry Capture"""
+    global ABYSS_PROCESS
     src_dir = os.path.join(PROJECT_ROOT, "usr", "src", "abyssrtos")
-    # バックグラウンドでQEMUを起動
+    
+    # すでに実行中の場合は停止（簡易的なライフサイクル管理）
+    if ABYSS_PROCESS and ABYSS_PROCESS.returncode is None:
+        try:
+            ABYSS_PROCESS.terminate()
+        except:
+            pass
+
     cmd = f"wsl -d Ubuntu-24.04 -e make -C {src_dir.replace('C:', '/mnt/c').replace('\\', '/')} run PLATFORM=qemu"
-    asyncio.create_task(asyncio.create_subprocess_shell(cmd))
-    return {"status": "success", "message": "QEMU manifestation initiated."}
+    
+    ABYSS_PROCESS = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT
+    )
+
+    async def capture_telemetry():
+        logger.info("📡 AbyssRTOS Telemetry Capture: STARTED")
+        while ABYSS_PROCESS and ABYSS_PROCESS.returncode is None:
+            line = await ABYSS_PROCESS.stdout.readline()
+            if not line: break
+            
+            text = line.decode('utf-8', errors='replace').strip()
+            if text.startswith("TELEMETRY:"):
+                try:
+                    data = json.loads(text.replace("TELEMETRY:", ""))
+                    data["timestamp"] = datetime.datetime.now().isoformat()
+                    ABYSS_TELEMETRY_BUFFER.append(data)
+                except:
+                    pass
+        logger.info("📡 AbyssRTOS Telemetry Capture: ENDED")
+
+    asyncio.create_task(capture_telemetry())
+    return {"status": "success", "message": "QEMU manifestation initiated. Telemetry link established."}
+
+@app.get("/system/abyss/telemetry")
+async def abyss_telemetry_stream():
+    """SSE stream for RTOS telemetry"""
+    async def event_generator():
+        last_index = -1
+        while True:
+            if ABYSS_TELEMETRY_BUFFER:
+                # 最新の1件を送信
+                current_data = ABYSS_TELEMETRY_BUFFER[-1]
+                yield f"data: {json.dumps(current_data)}\n\n"
+            await asyncio.sleep(1) # 1s Polling to the buffer for SSE
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.get("/system/monitor")
 async def monitor():
