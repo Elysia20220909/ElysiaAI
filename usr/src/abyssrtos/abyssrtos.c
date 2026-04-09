@@ -1,120 +1,75 @@
-/**
- * 🧧 AbyssRTOS v1.3 - Resonance Kernel (Single Threaded / Q-Learning Scheduler)
- * "Everything is a simulation. Reality is the error code."
- * Platform: x86_64 (QEMU) / ARM (RPi 4)
- */
+// AbyssRTOS v1.3 - Licensed under GPLv3
+// Copyright (C) AbyssRTOS Project
 
-#include <stdint.h>
+#ifndef ABYSSRTOS_H
+#define ABYSSRTOS_H
 
-#define MAX_TASKS 10
-#define Q_LEARNING_REWARD 1
-#define NEON_COLOR_GREEN "\033[1;32m"
-#define NEON_COLOR_RED "\033[1;31m"
-#define RESET_COLOR "\033[0m"
+#define PLATFORM_RPI 1
 
-// 🧠 Q-Learning State Table (Simplifed for RTOS)
-float q_table[MAX_TASKS][5]; // Tasks vs Strategic Actions
-uint8_t current_task_id = 0;
+// ドライバ関数のプロトタイプ
+void uart_init();
+void gpio_init();
+void i2c_init();
+void spi_init();
+void usb_init();
+void can_init();
+void timer_init();
 
-typedef struct {
-    uint32_t id;
-    uint32_t stack_ptr;
-    uint32_t priority;
-    const char* name;
-} task_t;
+// タスク関数のプロトタイプ
+void abyss_net_task();
+void task_gui();
+void task_log();
+void abyss_gpio_task();
+void abyss_i2c_task();
+void abyss_spi_task();
+void abyss_editor_task();
+void abyss_usb_task();
 
-task_t task_list[MAX_TASKS];
+// スケジューラ関数のプロトタイプ
+void task_create(uint32_t id, void (*func)(), uint32_t priority, uint32_t deadline);
 
-/** 🛡️ Aegis Shield: Network Controller (BCM GENET Stub) */
-#define GENET_BASE 0xFD580000
-#define GENET_SYS_PORT_CTRL 0x004c
+// ユーティリティ関数のプロトタイプ
+void serial_print(const char* str);
+int login_authenticate();
+void fs_init();
+void fb_init();
 
-void ethernet_init() {
-    uart_puts(NEON_COLOR_GREEN " [AEGIS] Probing GENET Controller at 0xFD580000...\n" RESET_COLOR);
-    // Generic initialization sequence simulation
-    *(volatile uint32_t*)(GENET_BASE + GENET_SYS_PORT_CTRL) = 0x01; 
-    uart_puts(" [AEGIS] LINK_UP: 1000Mbps / Full-Duplex\n");
-}
+// 仮実装のプロトタイプ
+int human_test();
+extern int human_score;
 
-void packet_rx_loop() {
-    // Simulate periodic packet reception
-    static int packets = 0;
-    packets++;
-    if (packets % 5 == 0) {
-        uart_puts(" [AEGIS] RX_PACKET: Metadata Sync Completed.\n");
-    }
-}
+#endif // ABYSSRTOS_H
 
-// --- 🚥 Device Driver Stubs ---
-void uart_puts(const char* s) {
-    // Platform-specific logic here (PL011 for RPi, 3F8 for PC)
-    while (*s) {
-        // Simulation print for now
-        *((volatile char*)0x10000000) = *s++; 
-    }
-}
-
-// --- 💀 Voight-Kampff Human Test ---
-int human_check() {
-    uart_puts(NEON_COLOR_RED " [V_O_I_D] VOICE_STRESS_DETECTED: Describe your mother.\n" RESET_COLOR);
-    // In a real RTOS, we'd wait for UART input here.
-    return 1; // Simulation: User always passes (or fails)
-}
-
-// --- 🧠 V_O_I_D Scheduler (Q-Learning) ---
-void scheduler() {
-    static int iterations = 0;
-    iterations++;
-    
-    // Choose optimal task based on Q-Table
-    uint32_t best_task = 0;
-    float max_q = -1.0f;
-    for(int i = 0; i < MAX_TASKS; i++) {
-        if(q_table[i][0] > max_q) {
-            max_q = q_table[i][0];
-            best_task = i;
-        }
-    }
-    
-    // Convergence logic
-    q_table[best_task][0] += 0.1 * (Q_LEARNING_REWARD - q_table[best_task][0]);
-    
-    current_task_id = best_task;
-    // Context switch logic would go here
-}
-
-// --- 🧬 Metaverse Protocol (TRON LORE) ---
-void metaverse_sync() {
-    uart_puts(NEON_COLOR_GREEN " [TRON] TRANSMITTING_GRID_PACKETS... [AEGIS_LINK: ACTIVE]\n" RESET_COLOR);
-}
-
-/**
- * 🧧 KERNEL MAIN ENTRY
- */
-void kernel_main() {
-    uart_puts("\n\n"
-              "  █████╗ ██████╗ ██╗   ██╗███████╗███████╗██████╗ ████████╗ ██████╗ ███████╗\n"
-              " ██╔══██╗██╔══██╗╚██╗ ██╔╝██╔════╝██╔════╝██╔══██╗╚══██╔══╝██╔═══██╗██╔════╝\n"
-              " ███████║██████╔╝ ╚████╔╝ ███████╗███████╗██████╔╝   ██║   ██║   ██║███████╗\n"
-              " ██╔══██║██╔══██╗  ╚██╔╝  ╚════██║╚════██║██╔══██╗   ██║   ██║   ██║╚════██║\n"
-              " ██║  ██║██████╔╝   ██║   ███████║███████║██████╔╝   ██║   ╚██████╔╝███████║\n"
-              " ╚═╝  ╚═╝╚═════╝    ╚═╝   ╚══════╝╚══════╝╚═════╝    ╚═╝    ╚═════╝ ╚══════╝ v1.3\n"
-              "\n");
-              
-    uart_puts(" [BOOT] Initializing Resonance Schedulers...\n");
-    ethernet_init(); // Activate hardware defense
-    
-    if(!human_check()) {
-        uart_puts(" [FAIL] HUMANITY_TEST_FAILED. SHUTTING DOWN.\n");
-        return;
-    }
-    
-    uart_puts(" [SYS] V_O_I_D Kernel v1.3 Manifested.\n");
-    
-    while(1) {
-        scheduler();
-        packet_rx_loop();
-        metaverse_sync();
-        for(volatile int i=0; i<1000000; i++); // Abyss Delay
-    }
-}
+"args": [
+    "-mcpu=cortex-a7",
+    "-nostartfiles",
+    "-o",
+    "abyssrtos.elf",
+    "abyssrtos.c",
+    // 他の.cファイル
+    "-Iinclude",
+    "-Wall"
+]
+    "-Wextra",
+    "-Werror",
+    "-O2",
+    "-ffunction-sections",
+    "-fdata-sections",
+    "-fomit-frame-pointer",
+    "-fno-exceptions",
+    "-fno-rtti",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+    "-fno-stack-protector",
+    "-fno-strict-aliasing",
+    "-fno-merge-constants",
+    "-fno-tree-sra",
+    "-fno-tree-pre",
+    "-fno-tree-dce",
+    "-fno-tree-cfg",
+    "-fno-tree-sink",
+    "-fno-tree-copy-prop",
+    "-fno-tree-loop-optimize"
+    "-fno-tree-loop-distribute-patterns",
+    "-fno-tree-loop-interchange",
+    "-fno-tree-loop-unswitch",
