@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
     <link rel="stylesheet" href="css/desktop.css">
+    <link rel="stylesheet" href="css/blackwall.css">
     <style>
         :root {
             --resonance-hue: 340; /* Default Elysia Pink */
@@ -24,7 +25,12 @@
         }
     </style>
 </head>
-<body x-data="elysiaOS()" @mousemove="handleDrag($event)" @mouseup="stopDrag()">
+<body x-data="elysiaOS()" 
+      @mousemove="handleDrag($event)" 
+      @mouseup="stopDrag()"
+      :class="{ 'blackwall-active': blackwallActive }">
+    
+    <div class="blackwall-overlay"></div>
     
     <!-- 🌠 Cyberpunk Backdrop -->
     <div class="fixed inset-0 pointer-events-none z-0">
@@ -134,6 +140,7 @@
                 appsRegistry: {},
                 apps: {}, // { id: {open: boolean, zIndex: number} }
                 activeApp: null,
+                blackwallActive: false,
                 systemHealth: { voice: false, brain: true },
                 diagnostics: { open: false, report: '' },
                 toasts: [],
@@ -170,6 +177,14 @@
                         
                         // Update Health State
                         this.systemHealth.voice = data.elysia.voice_active;
+                        
+                        // Sync Blackwall Protocol
+                        if (data.elysia.blackwall_active !== undefined && this.blackwallActive !== data.elysia.blackwall_active) {
+                             this.blackwallActive = data.elysia.blackwall_active;
+                             if (this.blackwallActive) {
+                                 this.showToast("CRYSTAL PALACE LINK BREACHED - BLACKWALL PROTOCOL ACTIVE", "🩹");
+                             }
+                        }
                         
                         // Affinity 0 (Blue) -> 100 (Deep Pink)
                         const hue = 200 + (affinity * 1.4); // 200 (Blue) to 340 (Pink)
