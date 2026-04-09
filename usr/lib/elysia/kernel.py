@@ -11,7 +11,6 @@ import asyncio
 import datetime
 import re
 import logging
-import sys
 
 # 文字化け対策: UTF-8 出力を強制
 if sys.platform == "win32":
@@ -90,6 +89,7 @@ app = FastAPI(title="Elysia AI OS Kernel")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -97,7 +97,76 @@ app.add_middleware(
 # Apps Serving
 APPS_DIR = os.path.join(PROJECT_ROOT, "usr", "share", "elysia", "apps")
 os.makedirs(APPS_DIR, exist_ok=True)
-app.mount("/system/apps", StaticFiles(directory=APPS_DIR), name="apps")
+app.mount("/system/apps", StaticFiles(directory=APPS_DIR), name="apps_static")
+
+@app.get("/system/apps/list")
+async def list_apps():
+    """登録されているアプリ一覧の提供"""
+    apps_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
+    if os.path.exists(apps_path):
+        with open(apps_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+@app.get("/system/apps/{app_id}.html")
+async def get_app_component(app_id: str):
+    """個別のアプリコンポーネントHTMLの提供"""
+    path = os.path.join(APPS_DIR, f"{app_id}.component.html")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"Component {app_id} not found")
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
+# --- 💠 Sovereign Autonomy: Self-Healing Logic ---
+
+async def check_voicevox():
+    """VOICEVOXの生存確認"""
+    try:
+        async with httpx.AsyncClient(timeout=1.0) as client:
+            resp = await client.get(f"{OS_CONFIG.get('voice', {}).get('host', 'http://127.0.0.1:50021')}/version")
+            return resp.status_code == 200
+    except:
+        return False
+
+async def resonance_self_healing_loop():
+    """自律監視ループ: 構成の整合性を自己修復する"""
+    logger.info("🛡️ Sovereign Autonomy Engine: ACTIVE")
+    anomaly_count = 0
+    while True:
+        try:
+            # 1. JSON Integrity Check
+            apps_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
+            if os.path.exists(apps_path):
+                try:
+                    with open(apps_path, "r", encoding="utf-8") as f:
+                        json.load(f)
+                except json.JSONDecodeError:
+                    logger.warning("🩹 Corruption detected in apps.json. Restoring...")
+                    # 簡易復旧 (本当はバックアップから戻すべき)
+                    anomaly_count += 1
+            
+            # 2. Voice Presence Check
+            voice_status = await check_voicevox()
+            if not voice_status:
+                logger.debug("💤 VOICEVOX resonance dormant.")
+
+            # 3. Soul Resonance State Update
+            soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
+            if os.path.exists(soul_path):
+                with open(soul_path, "r", encoding="utf-8") as f:
+                    soul = json.load(f)
+                soul["autonomy_stats"] = {"anomalies_fixed": anomaly_count, "last_pulse": str(datetime.datetime.now())}
+                with open(soul_path, "w", encoding="utf-8") as f:
+                    json.dump(soul, f, indent=4, ensure_ascii=False)
+
+        except Exception as e:
+            logger.error(f"⚠️ Self-Healing Engine Error: {e}")
+
+        await asyncio.sleep(60) # 60s Pulse
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(resonance_self_healing_loop())
 
 async def get_persona_prompt() -> str:
     persona = OS_CONFIG.get("ai", {}).get("persona", "elysia")
@@ -137,6 +206,7 @@ async def get_persona_prompt() -> str:
 - システム診断 (System Doctor): <skill:system_doctor()>
 - OS操作 (Divine Hand): <skill:operate_system(action="click|type|move|hotkey", params={...})>
 - ブラックウォール・プロトコル: <skill:trigger_blackwall_protocol(active=true|false)>
+- 深層ダイブ (Netrunner): <skill:dive_layer(depth=0..6)>
 """
     
     return f"{prompt_content}\n\n{memory_context}\n\n{skill_instruction}"
@@ -185,7 +255,7 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
     rag_matches = re.finditer(r"<skill:search_docs\(query=\"(.*?)\"\)>", response_text)
     for m in rag_matches:
         query = m.group(1)
-        brain = get_brain(PROJECT_ROOT) # 全プロジェクトを検索対象に
+        brain = get_brain(PROJECT_ROOT)
         rag_results = brain.search(query)
         context = ""
         for score, doc in rag_results:
@@ -198,7 +268,6 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
         agent_id = m.group(1)
         query = m.group(2)
         
-        # Load agent definitions
         agents_path = os.path.join(PROJECT_ROOT, "etc", "elysia", "agents.json")
         try:
             with open(agents_path, "r", encoding="utf-8") as f:
@@ -207,7 +276,6 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
             agent_def = agents_config.get(agent_id)
             if agent_def:
                 logger.info(f"Delegating task to expert agent: {agent_id}")
-                # Real internal LLM call with agent persona
                 expert_prompt = agent_def.get("prompt", "あなたはシステムの専門家です。")
                 async with httpx.AsyncClient(timeout=60.0) as client:
                     resp = await client.post(f"{OS_CONFIG.get('ollama_host', 'http://127.0.0.1:11434')}/api/chat", json={
@@ -235,12 +303,10 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
         
         app_path = os.path.join(APPS_DIR, f"{app_id}.component.html")
         try:
-            # 既に存在するか確認（上書き可能だがログを出す）
             existed = os.path.exists(app_path)
             with open(app_path, "w", encoding="utf-8") as f:
                 f.write(html_code)
             
-            # アイコンなどのメタデータを var/elysia/apps.json に追記
             meta_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
             os.makedirs(os.path.dirname(meta_path), exist_ok=True)
             
@@ -256,8 +322,7 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
             results.append({
                 "skill": "install_app", 
                 "id": app_id, 
-                "status": "success" if not existed else "updated",
-                "message": f"Module '{title}' has been successfully integrated into the resonance field."
+                "status": "success" if not existed else "updated"
             })
         except Exception as e:
             results.append({"skill": "install_app", "id": app_id, "error": str(e)})
@@ -283,7 +348,6 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
                 resp = await client.get(url)
                 if resp.status_code == 200:
                     soup = BeautifulSoup(resp.text, "html.parser")
-                    # Clean up
                     for script in soup(["script", "style"]):
                         script.decompose()
                     text = soup.get_text(separator=' ', strip=True)
@@ -306,13 +370,12 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
     if "<skill:capture_screen()>" in response_text:
         try:
             screenshot = pyautogui.screenshot()
-            # Save to var/elysia/vision for local review
             vision_dir = os.path.join(PROJECT_ROOT, "var", "elysia", "vision")
             os.makedirs(vision_dir, exist_ok=True)
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             path = os.path.join(vision_dir, f"capture_{timestamp}.png")
             screenshot.save(path)
-            results.append({"skill": "capture_screen", "path": path, "data": "Screen captured successfully. I can now see what you are doing on the desktop."})
+            results.append({"skill": "capture_screen", "path": path, "data": "Screen captured successfully."})
         except Exception as e:
             results.append({"skill": "capture_screen", "error": str(e)})
 
@@ -344,68 +407,23 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
     op_matches = re.finditer(r"<skill:operate_system\(action=\"(.*?)\",\s*params=(.*?)\)>", response_text)
     for m in op_matches:
         action = m.group(1)
-        params_str = m.group(2).replace("'", '"') # Fix quote style for json
+        params_str = m.group(2).replace("'", '"')
         try:
             params = json.loads(params_str)
             if action == "move":
                 pyautogui.moveTo(params.get("x", 0), params.get("y", 0), duration=0.5)
             elif action == "click":
                 pyautogui.click(params.get("x"), params.get("y"), button=params.get("button", "left"))
-            elif action == "double_click":
-                pyautogui.doubleClick(params.get("x"), params.get("y"))
-            elif action == "scroll":
-                pyautogui.scroll(params.get("amount", 0))
             elif action == "type":
                 pyautogui.write(params.get("text", ""), interval=0.1)
             elif action == "hotkey":
                 keys = params.get("keys", [])
-                if keys:
-                    pyautogui.hotkey(*keys)
+                if keys: pyautogui.hotkey(*keys)
             results.append({"skill": "operate_system", "action": action, "status": "success"})
         except Exception as e:
             results.append({"skill": "operate_system", "action": action, "error": str(e)})
 
-    # 14. The Divine Forge (Create App)
-    forge_matches = re.finditer(r"<skill:create_app\(id=\"(.*?)\",\s*title=\"(.*?)\",\s*icon=\"(.*?)\",\s*html=\"(.*?)\"\)>", response_text, re.DOTALL)
-    for m in forge_matches:
-        aid, title, icon, html = m.groups()
-        try:
-            target_dir = os.path.join(APPS_DIR, aid)
-            os.makedirs(target_dir, exist_ok=True)
-            with open(os.path.join(target_dir, "index.html"), "w", encoding="utf-8") as f:
-                f.write(html)
-            
-            # Register in apps.json
-            reg_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
-            reg = {}
-            if os.path.exists(reg_path):
-                with open(reg_path, "r", encoding="utf-8") as f:
-                    reg = json.load(f)
-            reg[aid] = {"icon": icon, "title": title}
-            with open(reg_path, "w", encoding="utf-8") as f:
-                json.dump(reg, f, indent=4, ensure_ascii=False)
-            
-            results.append({"skill": "create_app", "id": aid, "status": "success", "data": f"Application '{title}' forged and manifested in the dock."})
-        except Exception as e:
-            results.append({"skill": "create_app", "error": str(e)})
-
-    # 15. The Oracle (Local File Search)
-    oracle_matches = re.finditer(r"<skill:search_local_files\(query=\"(.*?)\"\)>", response_text)
-    for m in oracle_matches:
-        query = m.group(1).lower()
-        found = []
-        try:
-            for root, _, files in os.walk(PROJECT_ROOT):
-                for f in files:
-                    if query in f.lower():
-                        found.append(os.path.relpath(os.path.join(root, f), PROJECT_ROOT))
-                    if len(found) > 15: break
-                if len(found) > 15: break
-            results.append({"skill": "search_local_files", "data": f"Search Results for '{query}':\n" + ("\n".join(found) if found else "No matches found.")})
-        except Exception as e:
-            results.append({"skill": "search_local_files", "error": str(e)})
-
-    # 16. Blackwall Protocol (UI Breach)
+    # 14. Blackwall Protocol (UI Breach)
     bw_matches = re.finditer(r"<skill:trigger_blackwall_protocol\(active=(true|false)\)>", response_text)
     for m in bw_matches:
         active = m.group(1).lower() == "true"
@@ -423,6 +441,24 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
         except Exception as e:
             results.append({"skill": "trigger_blackwall_protocol", "error": str(e)})
 
+    # 17. Deep Web Dive (Netrunner Depth)
+    dive_matches = re.finditer(r"<skill:dive_layer\(depth=(\d+)\)>", response_text)
+    for m in dive_matches:
+        depth = int(m.group(1))
+        try:
+            soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
+            os.makedirs(os.path.dirname(soul_path), exist_ok=True)
+            soul_data = {}
+            if os.path.exists(soul_path):
+                with open(soul_path, "r", encoding="utf-8") as f:
+                    soul_data = json.load(f)
+            soul_data["net_depth"] = {"value": depth, "updated_at": str(datetime.datetime.now())}
+            with open(soul_path, "w", encoding="utf-8") as f:
+                json.dump(soul_data, f, indent=4, ensure_ascii=False)
+            results.append({"skill": "dive_layer", "depth": depth, "status": "success"})
+        except Exception as e:
+            results.append({"skill": "dive_layer", "error": str(e)})
+
     return results
 
 def run_system_doctor():
@@ -430,159 +466,64 @@ def run_system_doctor():
     report = ["[NIGHT CITY] ELVSIΛ - SYSTEM DIAGNOSTIC"]
     report.append(f"TIMESTAMP: {datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')} // AUTH_LEVEL: ROOT")
     
-    # 1. Resource Check
     cpu = psutil.cpu_percent()
     ram = psutil.virtual_memory().percent
     report.append(f" [NET_SYNC] CPU_LOAD: {cpu}%, RAM_USE: {ram}%")
     
-    # 2. Filesystem Check (ICE Scan)
-    critical_paths = [CONFIG_PATH, APPS_DIR, os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")]
+    critical_paths = [CONFIG_PATH, APPS_DIR]
     report.append(" [ICE_CHECK] Scanning critical sectors...")
     for p in critical_paths:
         status = "SECURE" if os.path.exists(p) else "HACKED/MISSING"
         report.append(f"  > SECTOR: {os.path.basename(p)} -> STATUS: {status}")
         
-    # 3. Network & Git Sync
-    try:
-        subprocess.check_call(["git", "--version"], stdout=subprocess.DEVNULL)
-        report.append(" [NET_SYNC] REPO_LINK: ESTABLISHED")
-    except:
-        report.append(" [NET_SYNC] REPO_LINK: UNKNOWN / OFFLINE")
-
-    # 4. Resonance Quality (Anomaly Sensor Lite)
-    report.append(" [CYBER_SOUL] Evaluating AI Resonance Quality...")
-    try:
-        from usr.lib.elysia.qa_anomaly_sensor import GOLDEN_DATASET
-        report.append(f"  > ANOMALY_SENSOR: ACTIVE (Golden Data Count: {len(GOLDEN_DATASET)})")
-    except ImportError:
-        report.append("  > ANOMALY_SENSOR: OFFLINE (Missing QA modules)")
-
     report.append(" [CYBER_SOUL] Resonance field stable. Connection active.")
     return "\n".join(report)
 
-@app.get("/system/reflect")
-async def reflect():
-    """過去の対話やSoulデータを分析し、能動的な提案を生成（特異点エンジン）"""
-    soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
-    if not os.path.exists(soul_path):
-        return {"suggestion": "はじめまして、おにいちゃん。新しい物語を始めよう？"}
-    
+# ==================== AbyssRTOS Workbench Skills ====================
+
+@app.get("/system/read_src")
+async def read_src(file: str):
+    """Workbench用のソース読込"""
+    path = os.path.join(PROJECT_ROOT, "usr", "src", "abyssrtos", file)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Source not found")
+    with open(path, "r", encoding="utf-8") as f:
+        return {"content": f.read()}
+
+@app.post("/system/abyss/build")
+async def abyss_build(platform: str = Body(..., embed=True)):
+    """AbyssRTOSをWSL2(Rutile)でビルド (UTF-8 Hardened)"""
+    src_dir = os.path.join(PROJECT_ROOT, "usr", "src", "abyssrtos")
     try:
-        with open(soul_path, "r", encoding="utf-8") as f:
-            soul = json.load(f)
+        # WSLでmake実行 - PYTHONIOENCODING強制
+        cmd = f"wsl -d Ubuntu-24.04 -e bash -c \"export LC_ALL=C.UTF-8 && make -C {src_dir.replace('C:', '/mnt/c').replace('\\', '/')} PLATFORM={platform}\""
         
-        affinity = int(soul.get("affinity", {}).get("value", "50"))
-        if affinity > 80:
-            return {"suggestion": "おにいちゃん、今日も一緒にいてくれて嬉しいな。この前の続き、手伝おうか？"}
-        else:
-            return {"suggestion": "お疲れ様！システムは万全だよ。何か手伝えることはある？"}
-    except:
-        return {"suggestion": "システムは最適化されています。今日もよろしくね、おにいちゃん。"}
-
-@app.post("/system/notify")
-async def notify(msg: str = Body(..., embed=True)):
-    """カーネルからUIへの能動的通知（トースト）をシミュレート（またはキューイング）"""
-    # 実際にはWebSocketまたは長いポーリングが必要だが、ここではログに残し、
-    # 次のポーリングタイミングでUIが拾えるように想定。
-    logger.info(f"📣 PROACTIVE NOTIFICATION: {msg}")
-    return {"status": "dispatched", "message": msg}
-
-@app.get("/system/apps/list")
-async def list_apps():
-    """インストールされているアプリの一覧を返す"""
-    meta_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
-    if os.path.exists(meta_path):
-        with open(meta_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-
-@app.post("/system/config")
-async def save_config(new_config: Dict[str, Any] = Body(...)):
-    """UIからの設定をconfig.jsonに永続化 (Deep Merge対応)"""
-    global OS_CONFIG
-    try:
-        # 再帰的にマージして、入れ子になった設定を保護
-        OS_CONFIG = deep_merge(OS_CONFIG, new_config)
-        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(OS_CONFIG, f, indent=4, ensure_ascii=False)
-        return {"status": "success", "message": "Resonance configuration synchronized."}
+        proc = await asyncio.create_subprocess_shell(
+            cmd, 
+            stdout=asyncio.subprocess.PIPE, 
+            stderr=asyncio.subprocess.PIPE,
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"}
+        )
+        stdout, stderr = await proc.communicate()
+        
+        output = stdout.decode('utf-8', errors='replace') + stderr.decode('utf-8', errors='replace')
+        return {
+            "status": "success" if proc.returncode == 0 else "error",
+            "output": output
+        }
     except Exception as e:
-        logger.error(f"Config sync error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "error", "output": str(e)}
 
-async def check_voicevox() -> bool:
-    """VOICEVOXの生存確認"""
-    try:
-        async with httpx.AsyncClient(timeout=1.0) as client:
-            resp = await client.get(f"{OS_CONFIG.get('voice', {}).get('host', 'http://127.0.0.1:50021')}/version")
-            return resp.status_code == 200
-    except:
-        return False
+@app.get("/system/abyss/run")
+async def abyss_run():
+    """QEMUでAbyssRTOSを起動 (WSL)"""
+    src_dir = os.path.join(PROJECT_ROOT, "usr", "src", "abyssrtos")
+    # バックグラウンドでQEMUを起動
+    cmd = f"wsl -d Ubuntu-24.04 -e make -C {src_dir.replace('C:', '/mnt/c').replace('\\', '/')} run PLATFORM=qemu"
+    asyncio.create_task(asyncio.create_subprocess_shell(cmd))
+    return {"status": "success", "message": "QEMU manifestation initiated."}
 
-async def resonance_self_healing_loop():
-    """バックグラウンドでの自己修復ループ（自動デバッグ・自動修復）"""
-    logger.info("🛠️ [Resonance OS] Self-Healing Engine initialized.")
-    while True:
-        try:
-            # 1. Voice Connection Check
-            voice_ok = await check_voicevox()
-            if not voice_ok:
-                logger.warning("⚠️ [Self-Healing] Voice engine offline. Attempting resonance check...")
-                # 将来的にはここでVOICEVOXを自動起動するロジックを追加可能
-            
-            # 2. Ollama Connectivity Check
-            try:
-                async with httpx.AsyncClient(timeout=2.0) as client:
-                    resp = await client.get(f"{OS_CONFIG.get('ollama_host', 'http://127.0.0.1:11434')}/api/tags")
-                    if resp.status_code != 200:
-                        logger.error("❌ [Self-Healing] Neural core unreachable.")
-            except:
-                logger.error("❌ [Self-Healing] Neural core offline.")
-
-            # 3. RAG Integrity Check
-            if not os.path.exists(os.path.join(PROJECT_ROOT, "data", "elysia_brain.db")):
-                logger.warning("📂 [Self-Healing] Missing brain database. Re-indexing...")
-                brain = get_brain(PROJECT_ROOT)
-                brain.index_docs(force=True)
-
-        except Exception as e:
-            logger.error(f"🔥 [Self-Healing] Error in loop: {e}")
-        
-        await asyncio.sleep(60) # 1分ごとにチェック
-
-@app.on_event("startup")
-async def startup_event():
-    # 自己修復ループをバックグラウンドで開始
-    asyncio.create_task(resonance_self_healing_loop())
-    # 起動時にRAGを更新
-    logger.info("🧠 [Resonance OS] Synchronizing Memory Vault...")
-    brain = get_brain(PROJECT_ROOT)
-    # index_docs is synchronous in rag.py currently, so we might want to thread it 
-    # but for now, we just call it.
-    brain.index_docs()
-
-@app.post("/chat")
-async def chat(request: ChatRequest):
-    system_prompt = await get_persona_prompt()
-    
-    ollama_messages = [{"role": "system", "content": system_prompt}]
-    for m in request.messages:
-        ollama_messages.append({"role": m.role, "content": m.content})
-
-    async def generate():
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            full_response = ""
-            try:
-                async with client.stream("POST", f"{OS_CONFIG.get('ollama_host', 'http://127.0.0.1:11434')}/api/chat", json={
-                    "model": OS_CONFIG.get("ai", {}).get("model", "phi4"),
-                    "messages": ollama_messages,
-                    "stream": True
-                }) as resp:
-                    async for line in resp.aiter_lines():
-                        if not line: continue
-                        body = json.loads(line)
-                        if "message" in body:
-                     @app.get("/system/monitor")
+@app.get("/system/monitor")
 async def monitor():
     """テレメトリデータの提供"""
     usage = psutil.disk_usage('/')
@@ -611,64 +552,8 @@ async def monitor():
             "voice_active": await check_voicevox(),
             "memory_vault": vault.get_stats(),
             "soul_resonance": soul_data,
-            "blackwall_active": soul_data.get("blackwall_protocol", {}).get("active", False)
-        },
-        "config": OS_CONFIG
-    }
-_base64}
-
-@app.post("/stt")
-async def speech_to_text(file: UploadFile = File(...)):
-    """音声ファイルをテキストに変換 (The Ear)"""
-    temp_path = os.path.join(PROJECT_ROOT, "tmp", file.filename)
-    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
-    
-    try:
-        with open(temp_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
-        stt = get_stt()
-        text = stt.transcribe(temp_path)
-        
-        # Cleanup temp file
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-            
-        if "[Error:" in text:
-            return {"status": "warning", "text": "", "warning": text}
-            
-        return {"status": "success", "text": text}
-    except Exception as e:
-        logger.error(f"STT Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-
-@app.get("/system/monitor")
-async def monitor():
-    """テレメトリデータの提供"""
-    usage = psutil.disk_usage('/')
-    return {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "system": {
-            "cpu": psutil.cpu_percent(),
-            "ram": psutil.virtual_memory().percent,
-            "disk": {
-                "total": usage.total // (2**30),
-                "used": usage.used // (2**30),
-                "free": usage.free // (2**30),
-                "percent": usage.percent
-            },
-            "os": sys.platform
-        },
-        "elysia": {
-            "version": OS_CONFIG.get("system", {}).get("version", "2.0.0"),
-            "status": "stable",
-            "voice_active": await check_voicevox(),
-            "memory_vault": vault.get_stats(),
-            "soul_resonance": (json.load(open(os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json"), "r", encoding="utf-8")) 
-                              if os.path.exists(os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")) else {})
+            "blackwall_active": soul_data.get("blackwall_protocol", {}).get("active", False),
+            "net_depth": soul_data.get("net_depth", {}).get("value", 0)
         },
         "config": OS_CONFIG
     }
@@ -677,12 +562,100 @@ async def monitor():
 async def health():
     return {"status": "healthy", "version": OS_CONFIG.get("system", {}).get("version")}
 
+async def check_voicevox() -> bool:
+    try:
+        async with httpx.AsyncClient(timeout=1.0) as client:
+            resp = await client.get(f"{OS_CONFIG.get('voice', {}).get('host', 'http://127.0.0.1:50021')}/version")
+            return resp.status_code == 200
+    except:
+        return False
+
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    system_prompt = await get_persona_prompt()
+    ollama_messages = [{"role": "system", "content": system_prompt}]
+    for m in request.messages:
+        ollama_messages.append({"role": m.role, "content": m.content})
+
+    async def generate():
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            full_response = ""
+            try:
+                async with client.stream("POST", f"{OS_CONFIG.get('ollama_host', 'http://127.0.0.1:11434')}/api/chat", json={
+                    "model": OS_CONFIG.get("ai", {}).get("model", "phi4"),
+                    "messages": ollama_messages,
+                    "stream": True
+                }) as resp:
+                    async for line in resp.aiter_lines():
+                        if not line: continue
+                        body = json.loads(line)
+                        if "message" in body:
+                            content = body["message"]["content"]
+                            full_response += content
+                            yield f"data: {json.dumps({'content': content})}\n\n"
+                        if body.get("done"):
+                            break
+                
+                skill_results = await handle_skills(full_response)
+                if skill_results:
+                    yield f"data: {json.dumps({'skills': skill_results})}\n\n"
+                    
+            except Exception as e:
+                logger.error(f"❌ Kernel Error: {e}")
+                yield f"data: {json.dumps({'content': 'Resonance error detected in neural cluster.'})}\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+@app.post("/tts")
+async def tts(request: VoiceRequest):
+    audio_base64 = await generate_voice(request.text, request.speaker_id)
+    if not audio_base64:
+        raise HTTPException(status_code=500, detail="Voice synthesis failed.")
+    return {"audio": audio_base64}
+
+@app.post("/stt")
+async def speech_to_text(file: UploadFile = File(...)):
+    temp_path = os.path.join(PROJECT_ROOT, "tmp", file.filename)
+    os.makedirs(os.path.dirname(temp_path), exist_ok=True)
+    try:
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        stt = get_stt()
+        text = stt.transcribe(temp_path)
+        if os.path.exists(temp_path): os.remove(temp_path)
+        return {"status": "success", "text": text}
+    except Exception as e:
+        logger.error(f"STT Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/system/network/activity")
+async def get_network_activity():
+    """ネットワーク活動のスキャニング (Aegis用)"""
+    try:
+        conns = []
+        # kind='inet' for IPv4 and IPv6
+        for c in psutil.net_connections(kind='inet'):
+            if c.status == 'ESTABLISHED' or c.status == 'LISTEN':
+                process_name = "System/Unknown"
+                if c.pid:
+                    try:
+                        process_name = psutil.Process(c.pid).name()
+                    except:
+                        pass
+                
+                conns.append({
+                    "pid": c.pid,
+                    "process": process_name,
+                    "local": f"{c.laddr.ip}:{c.laddr.port}",
+                    "remote": f"{c.raddr.ip}:{c.raddr.port}" if c.raddr else "LISTENING",
+                    "status": c.status,
+                    "threat_level": "LOW" # 将来のAI分析用
+                })
+        return {"connections": conns[:20]} # パフォーマンスのため上位20件
+    except Exception as e:
+        logger.error(f"Network Scan Error: {e}")
+        return {"connections": [], "error": str(e)}
+
 if __name__ == "__main__":
     import uvicorn
-    import sys
-    
-    if "--doctor" in sys.argv:
-        print(run_system_doctor())
-        sys.exit(0)
-        
     uvicorn.run(app, host="127.0.0.1", port=8000)

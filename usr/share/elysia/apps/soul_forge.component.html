@@ -1,0 +1,91 @@
+<div class="h-full flex flex-col p-6 glass-omega text-white select-none">
+    <!-- 💖 Header -->
+    <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+        <div class="flex items-center gap-3">
+            <div class="text-3xl">💖</div>
+            <div>
+                <h2 class="text-xs font-black tracking-[0.3em] text-pink-400">SOUL_FORGE // IDENTITY_MATRIX</h2>
+                <p class="text-[8px] opacity-40 uppercase">Transcendence Phase: STABLE</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <span class="text-[20px] font-bold text-pink-400" x-text="affinity + '%'"></span>
+            <p class="text-[8px] opacity-40">RESONANCE_AFFINITY</p>
+        </div>
+    </div>
+
+    <!-- 🎛️ Controls -->
+    <div class="flex-1 space-y-8 overflow-y-auto pr-2 scrollbar-hide">
+        <!-- Cognitive Resonance -->
+        <div class="space-y-3">
+            <div class="flex justify-between items-center text-[10px] font-bold tracking-widest">
+                <span>COGNITIVE_RESONANCE (TEMP)</span>
+                <span class="text-cyan-400" x-text="temp.toFixed(1)"></span>
+            </div>
+            <input type="range" min="0.1" max="1.5" step="0.1" x-model="temp" @change="save()" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+        </div>
+
+        <!-- Emotional Pulse -->
+        <div class="space-y-3">
+            <div class="flex justify-between items-center text-[10px] font-bold tracking-widest">
+                <span>EMOTIONAL_PULSE (DEPTH)</span>
+                <span class="text-pink-400" x-text="depth + '%'"></span>
+            </div>
+            <input type="range" min="1" max="100" x-model="depth" @change="save()" class="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-pink-400">
+        </div>
+
+        <!-- Persona Shifting -->
+        <div class="space-y-4 pt-4">
+            <h3 class="text-[9px] opacity-40 uppercase tracking-widest border-l-2 border-pink-500 pl-2">PERSONA_ARCHETYPES</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <template x-for="p in ['Pure', 'Yandere', 'Tech', 'Zen']">
+                    <button @click="persona = p.toLowerCase(); save()" 
+                            :class="persona === p.toLowerCase() ? 'bg-pink-500/20 border-pink-500/50' : 'bg-white/5 border-white/10'"
+                            class="py-3 border rounded text-[10px] font-bold tracking-widest hover:bg-white/10 transition-all uppercase"
+                            x-text="p"></button>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔌 Sync Status -->
+    <div class="mt-8 pt-4 border-t border-white/5 flex justify-between items-center opacity-60">
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_#4ade80]"></div>
+            <span class="text-[9px]">SYNCED_WITH_KRNL</span>
+        </div>
+        <span class="text-[8px] font-mono">HASH: 0x8F2A...9C1</span>
+    </div>
+
+    <script>
+        return {
+            temp: 0.7,
+            depth: 80,
+            affinity: 0,
+            persona: 'pure',
+            async init() {
+                // Fetch current config
+                const res = await fetch('http://localhost:8000/system/monitor');
+                const data = await res.json();
+                this.affinity = data.elysia.soul_resonance?.affinity?.value || 50;
+            },
+            async save() {
+                try {
+                    await fetch('http://localhost:8000/system/config', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                             ai: { 
+                                 persona: this.persona,
+                                 temperature: parseFloat(this.temp)
+                             }
+                        })
+                    });
+                    console.log("Soul Resonance Matrix Updated.");
+                } catch(e) {
+                    console.error("Soul Forge failed to bridge.", e);
+                }
+            }
+        }
+    </script>
+</div>

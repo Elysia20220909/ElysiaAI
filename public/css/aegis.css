@@ -1,0 +1,69 @@
+/* 🛡️ Aegis Shield - SF Firewall Styling 🛡️ */
+
+:root {
+    --aegis-cyan: #00f2ff;
+    --aegis-bg: rgba(0, 15, 20, 0.95);
+    --aegis-glow: 0 0 20px rgba(0, 242, 255, 0.5);
+}
+
+.aegis-window {
+    background: var(--aegis-bg) !important;
+    border: 1px solid var(--aegis-cyan) !important;
+    box-shadow: var(--aegis-glow) !important;
+    color: var(--aegis-cyan) !important;
+    font-family: 'JetBrains Mono', 'Orbitron', monospace;
+}
+
+/* 🧱 Honeycomb Defensive Grid */
+.aegis-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.1;
+    background-image: 
+        radial-gradient(circle at 50% 50%, var(--aegis-cyan) 1px, transparent 1px),
+        linear-gradient(to right, var(--aegis-cyan) 0.1px, transparent 0.1px),
+        linear-gradient(to bottom, var(--aegis-cyan) 0.1px, transparent 0.1px);
+    background-size: 40px 40px, 20px 20px, 20px 20px;
+    animation: shield-vibrate 10s infinite linear;
+}
+
+@keyframes shield-vibrate {
+    0% { background-position: 0 0; }
+    100% { background-position: 20px 20px; }
+}
+
+/* 🧬 Data Packet Animation */
+.packet-stream {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--aegis-cyan);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--aegis-cyan);
+    pointer-events: none;
+}
+
+@keyframes packet-flow-in {
+    0% { transform: translateY(-50px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(150px); opacity: 0; }
+}
+
+@keyframes packet-flow-out {
+    0% { transform: translateY(150px); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateY(-50px); opacity: 0; }
+}
+
+/* 🩸 Blackwall Resonance (Red Shift) */
+.blackwall-active .aegis-window {
+    border-color: #ff003c !important;
+    box-shadow: 0 0 25px rgba(255, 0, 60, 0.6) !important;
+    color: #ff003c !important;
+}
+
+.blackwall-active .aegis-grid {
+    background-image: radial-gradient(circle at 50% 50%, #ff003c 1.5px, transparent 1.5px);
+    opacity: 0.2;
+}

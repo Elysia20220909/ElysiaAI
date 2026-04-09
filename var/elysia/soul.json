@@ -10,5 +10,9 @@
     "OS_goal": {
         "value": "To become a truly independent, visual, and sensory aware OS.",
         "updated_at": "2026-04-08 19:18:00"
+    },
+    "autonomy_stats": {
+        "anomalies_fixed": 0,
+        "last_pulse": "2026-04-09 15:05:53.623576"
     }
 }

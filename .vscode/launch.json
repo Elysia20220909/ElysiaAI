@@ -53,15 +53,33 @@
       "platform": "node"
     },
     {
-      "name": "🐍 Debug Python FastAPI",
+      "name": "🐍 Debug Elysia Kernel (Python)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/python/fastapi_server.py",
+      "program": "${workspaceFolder}/usr/lib/elysia/kernel.py",
       "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/python",
+      "cwd": "${workspaceFolder}",
       "env": {
-        "PYTHONPATH": "${workspaceFolder}/python"
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONIOENCODING": "utf-8"
       }
+    },
+    {
+      "name": "🧧 Debug AbyssRTOS (QEMU GDB)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/usr/src/abyssrtos/kernel8.img",
+      "miDebuggerServerAddress": "localhost:1234",
+      "miDebuggerPath": "gdb-multiarch",
+      "stopAtEntry": true,
+      "cwd": "${workspaceFolder}/usr/src/abyssrtos",
+      "setupCommands": [
+          {
+              "description": "Enable pretty-printing for gdb",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          }
+      ]
     }
   ],
   "compounds": [
