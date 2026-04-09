@@ -17,9 +17,25 @@ if ! command -v uv &> /dev/null; then
     source $HOME/.cargo/env
 fi
 
+# 1.1 Linux GUI Dependencies (for 'The Sight' / pyautogui)
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "🔍 Checking Linux GUI dependencies..."
+    if ! command -v scrot &> /dev/null; then
+        echo "💡 Hint: Please install 'scrot' for screen capture: sudo apt install scrot"
+    fi
+    # Check for python-tk (standard for pyautogui)
+    if ! python3 -c "import tkinter" &> /dev/null; then
+        echo "💡 Hint: Please install 'python3-tk' for GUI operations: sudo apt install python3-tk"
+    fi
+fi
+
 # 2. Project Setup
 echo "📦 Installing Frontend Dependencies (Bun)..."
 bun install
+
+echo "🧠 Pulsing Neural Engines (Ollama)..."
+ollama pull phi4
+ollama pull llama3.2
 
 echo "🐍 Installing Kernel Dependencies (uv)..."
 # Use uv for high-speed dependency resolution

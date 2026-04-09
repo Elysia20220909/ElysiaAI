@@ -1,10 +1,10 @@
 {
-  "name": "sandbox-ui",
+  "name": "elysia-ui",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },

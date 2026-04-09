@@ -108,9 +108,7 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 			auditDataMap.delete(request);
 		},
 
-		onError: async (context: Context & { request: Request }, error: Error) => {
-			const { request } = context;
-
+		onError: async ({ request, error }: { request: Request; error: Error }) => {
 			// 監査対象外の場合はスキップ
 			const auditData = auditDataMap.get(request);
 			if (!auditData) {

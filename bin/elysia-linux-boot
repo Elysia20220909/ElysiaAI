@@ -1,0 +1,16 @@
+#!/bin/bash
+# 🌸 Elysia OS - Linux Bridge 🌸
+# Manages path resolution and resonance ignition for WSL2/Ubuntu.
+
+# 1. Path Manifestation
+export PATH="$HOME/.bun/bin:$HOME/.cargo/bin:$PATH"
+export LANG=C.UTF-8
+export LC_ALL=C.UTF-8
+export PYTHONUTF8=1
+
+# 2. Project Detection
+PROJECT_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$PROJECT_ROOT"
+
+# 3. Ignite Core Boot
+exec ./scripts/boot.sh

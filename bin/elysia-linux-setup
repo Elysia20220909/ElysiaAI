@@ -1,0 +1,23 @@
+#!/bin/bash
+# 🌸 Elysia OS - Linux Alignment Bridge 🌸
+set -e
+
+# 1. Path Manifestation
+export PATH="$HOME/.bun/bin:$HOME/.cargo/bin:$PATH"
+
+# 2. Project Detection
+PROJECT_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$PROJECT_ROOT"
+
+echo "🧬 Aligning binary resonance for Linux x64..."
+
+# 3. Bun Resonance (Native Binaries)
+echo "📦 Synchronizing Bun dependencies..."
+bun install
+
+# 4. Python Resonance (Neural Fallback-safe)
+echo "🐍 Synchronizing Python dependencies..."
+# Use flexible versions for Python 3.12+ compatibility
+pip3 install fastapi httpx psutil pydantic-settings rich sentence-transformers torch --break-system-packages || true
+
+echo "✅ Linux alignment complete. Ready for resonance."

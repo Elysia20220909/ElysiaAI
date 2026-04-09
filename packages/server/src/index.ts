@@ -594,7 +594,7 @@ app
 					CONFIG.JWT_REFRESH_SECRET,
 				) as jwt.JwtPayload;
 
-				if (!payload || !payload.userId || !payload.username || !payload.role) {
+				if (!payload?.userId || !payload.username || !payload.role) {
 					return jsonError(401, "Invalid or expired refresh token");
 				}
 

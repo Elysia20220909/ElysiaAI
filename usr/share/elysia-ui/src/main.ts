@@ -86,9 +86,9 @@ class WindowManager {
 	private focus(win: HTMLElement) {
 		this.activeZ += 1;
 		win.style.zIndex = this.activeZ.toString();
-		document
-			.querySelectorAll(".window")
-			.forEach((w) => w.classList.remove("active-window"));
+		document.querySelectorAll(".window").forEach((w) => {
+			w.classList.remove("active-window");
+		});
 		win.classList.add("active-window");
 	}
 
@@ -197,7 +197,6 @@ const appChat: AppConfig = {
 			} catch (_e) {
 				addMessage("エラーが発生しました。接続を確認してください。", "system");
 			}
-
 		};
 
 		sendBtn.onclick = handleChat;
@@ -252,7 +251,6 @@ const appSandbox: AppConfig = {
 			} catch (_e) {
 				term.innerText += "\n[ERROR] Connection failed.";
 			} finally {
-
 				runBtn.disabled = false;
 			}
 		};
@@ -323,7 +321,10 @@ const appTerminal: AppConfig = {
 				try {
 					const response = await fetch(`${API_BASE}/system/shell`, {
 						method: "POST",
-						headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+						headers: {
+							"Content-Type": "application/json",
+							"x-api-key": API_KEY,
+						},
 						body: JSON.stringify({ command: cmd }),
 					});
 					const data = await response.json();
@@ -383,10 +384,8 @@ const appFinder: AppConfig = {
 		}) as EventListener);
 
 		await renderFiles();
-
 	},
 };
-
 
 // App: Activity Monitor
 const appActivity: AppConfig = {
@@ -440,7 +439,6 @@ const appActivity: AppConfig = {
 	},
 };
 
-
 // App: Console (Log Viewer)
 const appConsole: AppConfig = {
 	id: "console",
@@ -492,8 +490,6 @@ document.querySelectorAll(".dock-item").forEach((item) => {
 		if (appName === "console") wm.createWindow(appConsole);
 	});
 });
-
-
 
 // Start with Chat App open
 setTimeout(() => {
