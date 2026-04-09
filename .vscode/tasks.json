@@ -125,12 +125,17 @@
         "panel": "dedicated"
       }
     },
-    // 🐍 Python Tasks
+    // 🧧 AbyssRTOS Tasks
     {
-      "label": "🐍 Python FastAPI Server",
+      "label": "🧧 Abyss: Build (RPi4)",
       "type": "shell",
-      "command": "python python/fastapi_server.py",
-      "problemMatcher": [],
+      "command": "make -C usr/src/abyssrtos PLATFORM=rpi4",
+      "group": "build"
+    },
+    {
+      "label": "🧧 Abyss: Run QEMU (Debug)",
+      "type": "shell",
+      "command": "qemu-system-aarch64 -M raspi3b -kernel usr/src/abyssrtos/kernel8.img -serial stdio -s -S",
       "isBackground": true,
       "presentation": {
         "reveal": "always",

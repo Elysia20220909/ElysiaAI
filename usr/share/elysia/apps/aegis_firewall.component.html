@@ -1,0 +1,102 @@
+<div class="h-full flex flex-col aegis-window overflow-hidden relative">
+    <div class="aegis-grid"></div>
+
+    <!-- 🛡️ Aegis Header -->
+    <div class="relative z-10 flex justify-between items-center bg-cyan-900/10 p-3 border-b border-cyan-500/30">
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_#00f2ff]"></div>
+            <h2 class="text-[10px] tracking-[0.3em] font-bold">AEGIS_SHIELD // DEFENSIVE_GRID_v4.2</h2>
+        </div>
+        <div class="flex gap-4 text-[9px] tracking-widest font-bold">
+            <span class="text-cyan-400" x-text="'SHIELD: ' + shieldHealth + '%'"></span>
+            <span class="text-red-400" x-text="'THREATS: ' + threatsDetected"></span>
+        </div>
+    </div>
+
+    <!-- 🧬 Grid Display -->
+    <div class="flex-1 flex gap-4 p-4 min-h-0 relative z-10">
+        <!-- Visualization Area -->
+        <div class="w-1/2 border border-cyan-500/20 bg-black/40 relative overflow-hidden flex items-center justify-center">
+            <div class="relative w-32 h-32">
+                <div class="absolute inset-0 border-2 border-cyan-400/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                <div class="absolute inset-4 border border-cyan-400/50 rounded-full animate-[spin_5s_linear_infinite_reverse]"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-[10px] text-cyan-400 font-bold">OS_CORE</span>
+                </div>
+            </div>
+            
+            <!-- Floating Packets (Randomly generated in init) -->
+            <template x-for="p in packets" :key="p.id">
+                <div class="packet-stream" :style="`left: ${p.x}%; top: ${p.y}%; animation: ${p.anim} ${p.duration}s infinite`"></div>
+            </template>
+        </div>
+
+        <!-- Connection Ledger -->
+        <div class="w-1/2 flex flex-col gap-2 min-h-0">
+            <h3 class="text-[9px] opacity-60 tracking-widest">ACTIVE_CONNECTION_LEDGER</h3>
+            <div class="flex-1 overflow-y-auto border border-cyan-500/10 bg-black/20 p-2 scrollbar-hide">
+                <table class="w-full text-[9px]">
+                    <thead class="text-white/30 text-left border-b border-cyan-500/10">
+                        <tr>
+                            <th class="py-1">PROCESS</th>
+                            <th class="py-1">REMOTE_ENDPOINT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="c in connections" :key="c.pid + c.remote">
+                            <tr class="hover:bg-cyan-400/10 transition-colors">
+                                <td class="py-1 flex items-center gap-1">
+                                    <span class="w-1 h-1 bg-cyan-400 rounded-full"></span>
+                                    <span x-text="c.process"></span>
+                                </td>
+                                <td class="py-1 opacity-70" x-text="c.remote"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔧 Status Bar -->
+    <div class="relative z-10 p-2 bg-black text-[8px] flex justify-between border-t border-cyan-500/10 px-4">
+        <span>STATUS: DEFENSIVE_RESONANCE_STABLE</span>
+        <span x-text="'LAST_SCAN: ' + new Date().toLocaleTimeString()"></span>
+    </div>
+
+    <script>
+        return {
+            connections: [],
+            packets: [],
+            shieldHealth: 98,
+            threatsDetected: 0,
+            async init() {
+                // Initial styling import
+                console.log("AEGIS_SHIELD: Initializing Defensive Grid...");
+                this.generatePackets();
+                this.refresh();
+                setInterval(() => this.refresh(), 5000);
+            },
+            generatePackets() {
+                for(let i=0; i<8; i++) {
+                    this.packets.push({
+                        id: i,
+                        x: Math.random() * 80 + 10,
+                        y: Math.random() * 80 + 10,
+                        duration: 1 + Math.random() * 2,
+                        anim: Math.random() > 0.5 ? 'packet-flow-in' : 'packet-flow-out'
+                    });
+                }
+            },
+            async refresh() {
+                try {
+                    const res = await fetch('http://localhost:8000/system/network/activity');
+                    const data = await res.json();
+                    this.connections = data.connections;
+                } catch(e) {
+                    console.error("Shield sync fail", e);
+                }
+            }
+        }
+    </script>
+</div>
