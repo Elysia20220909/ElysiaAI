@@ -14,11 +14,23 @@ help:
 
 install:
 	@chmod +x scripts/*.sh bin/*
-	./scripts/setup.sh
+	@if [ -f /proc/sys/fs/binfmt_misc/WSLInterop ]; then \
+		echo "🐧 WSL2 (Rutile) detected. Manifesting Linux dependencies..."; \
+		./scripts/setup_rutile.sh; \
+	else \
+		./scripts/setup.sh; \
+	fi
 
 boot:
-	@chmod +x scripts/*.sh bin/*
-	./scripts/boot.sh
+	@echo "🌟 Initiating Native OS Resonance..."
+	@if [ "$$(expr substr $$(uname -s) 1 5)" != "Linux" ] && [ "$$(expr substr $$(uname -s) 1 6)" != "Darwin" ]; then \
+		powershell -ExecutionPolicy Bypass -File scripts/boot.ps1; \
+	elif [ -f /proc/sys/fs/binfmt_misc/WSLInterop ]; then \
+		echo "🐧 Launching via Rutile Bridge (WSL2)..."; \
+		./bin/elysia-linux-boot; \
+	else \
+		./scripts/boot.sh; \
+	fi
 
 build:
 	@echo "🚀 Initiating Ultimate Manifestation Build (Tauri Bundle)..."
@@ -26,12 +38,14 @@ build:
 
 check:
 	@echo "🔍 Integrity Check: Runtime Environment..."
-	@python3 --version || (echo "❌ Python 3 missing"; exit 1)
+	@python3 --version || python --version || (echo "❌ Python missing"; exit 1)
 	@bun --version || (echo "❌ Bun missing"; exit 1)
 	@rustc --version || (echo "❌ Rust missing (Tauri requirement)"; exit 1)
-	@echo "🔍 Integrity Check: Core Dependencies..."
-	@python3 -c "import fastapi, pyautogui, bs4, PIL" 2>/dev/null || (echo "⚠️ Some core Python libraries are missing. Run: pip install -r requirements.txt"; exit 1)
-	@echo "✅ All resonance engines operational."
+	@echo "🔍 Integrity Check: Core & GUI Dependencies..."
+	@python3 -c "import fastapi, pyautogui, bs4, PIL" 2>/dev/null || \
+	 python -c "import fastapi, pyautogui, bs4, PIL" 2>/dev/null || \
+	 (echo "⚠️ Missing Python libraries. Run: pip install -r requirements.txt"; exit 1)
+	@echo "✅ All resonance engines operational across target platforms."
 
 doctor:
 	python3 usr/lib/elysia/kernel.py --doctor

@@ -1,6 +1,10 @@
 #!/usr/bin/env pwsh
 # 週次保守: ログファイルのローテーション
 
+# 文字化け対策
+$OutputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::InputEncoding = [System.Text.Encoding]::UTF8
+
 Write-Host "📅 週次保守作業開始..." -ForegroundColor Cyan
 Write-Host ""
 
@@ -71,6 +75,6 @@ if ($oldArchives.Count -gt 0) {
 }
 
 Write-Host ""
-Write-Host "✅ 週次保守作業が完了しました！" -ForegroundColor Green
-Write-Host "📊 次回実行: " -NoNewline
-Write-Host (Get-Date).AddDays(7).ToString("yyyy/MM/dd") -ForegroundColor Cyan
+Write-Host "Maintenance completed successfully!" -ForegroundColor Green
+$nextDate = (Get-Date).AddDays(7).ToString("yyyy/MM/dd")
+Write-Host "Next run: $nextDate" -ForegroundColor Cyan

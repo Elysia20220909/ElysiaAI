@@ -44,12 +44,25 @@
                 <span>RAM: <span class="text-purple-400" x-text="(stats.system?.ram || 0) + '%'"></span></span>
             </div>
         </div>
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full" :class="kernelAlive ? 'bg-green-500 animate-pulse' : 'bg-red-500'"></span>
-                <span class="text-[10px] text-white/50" x-text="kernelAlive ? 'RESONANCE_OK' : 'OFFLINE'"></span>
+        <div class="top-bar glass flex items-center justify-between px-6 py-2 border-b border-white/10">
+            <div class="flex items-center gap-4">
+                <div class="resonance-circle w-6 h-6 rounded-full border-2 border-white/20"></div>
+                <h1 class="text-xs uppercase tracking-widest text-[#fcee0a] font-bold">Resonance OS // NIGHT CITY</h1>
+                
+                <!-- Status LEDs -->
+                <div class="flex items-center gap-3 ml-4 bg-black/40 px-3 py-1 rounded-full border border-white/5 cursor-pointer hover:bg-white/5 transition-colors" @click="openDiagnostics()">
+                   <div class="flex items-center gap-1.5" :title="systemHealth.brain ? 'Brain: Active' : 'Brain: Fault'">
+                       <div class="w-2 h-2 rounded-full shadow-lg" :class="systemHealth.brain ? 'bg-cyan-400 shadow-cyan-500/50' : 'bg-red-500'"></div>
+                       <span class="text-[10px] text-white/50 uppercase tracking-tighter">Mem</span>
+                   </div>
+                   <div class="flex items-center gap-1.5" :title="systemHealth.voice ? 'Voice: Active' : 'Voice: Offline'">
+                       <div class="w-2 h-2 rounded-full shadow-lg pulse" :class="systemHealth.voice ? 'bg-green-400 shadow-green-500/50' : 'bg-red-500'"></div>
+                       <span class="text-[10px] text-white/50 uppercase tracking-tighter">Voc</span>
+                   </div>
+                </div>
             </div>
-            <div class="text-[12px] font-mono tracking-tighter" x-text="currentTime"></div>
+            
+            <div class="text-[12px] font-mono text-white/70" x-text="currentTime"></div>
         </div>
     </header>
 
@@ -119,7 +132,10 @@
 
                 appContents: {},
                 appsRegistry: {},
-                apps: {},
+                apps: {}, // { id: {open: boolean, zIndex: number} }
+                activeApp: null,
+                systemHealth: { voice: false, brain: true },
+                diagnostics: { open: false, report: '' },
                 toasts: [],
 
                 init() {
@@ -129,6 +145,7 @@
                     this.fetchStats();
                     setInterval(() => this.fetchStats(), 5000);
                     this.fetchApps();
+                    setInterval(() => this.fetchApps(), 10000);
                     
                     if(this.messages.length === 0) {
                         this.messages.push({id: Date.now(), role: 'assistant', content: 'ฅ(՞៸៸> ᗜ <៸៸՞)ฅ おにいちゃん、待ってたよ！Elysia OS 2.0へようこそ。あたし、あなたのことをもっとよく知りたいな♡'});
@@ -144,6 +161,16 @@
                         const resonance = data.elysia.soul_resonance || {};
                         const affinity = parseInt(resonance.affinity?.value || "50");
                         
+                        // OOBE Check: 初回起動プロセスの誘発
+                        if (Object.keys(resonance).length === 0 && !window.location.href.includes('oobe.html')) {
+                            console.log("Resonance Void detected. Redirecting to OOBE...");
+                            window.location.href = 'oobe.html';
+                            return;
+                        }
+                        
+                        // Update Health State
+                        this.systemHealth.voice = data.elysia.voice_active;
+                        
                         // Affinity 0 (Blue) -> 100 (Deep Pink)
                         const hue = 200 + (affinity * 1.4); // 200 (Blue) to 340 (Pink)
                         document.documentElement.style.setProperty('--resonance-hue', hue);
@@ -151,6 +178,26 @@
                         
                     } catch (e) {
                         console.error("Monitor fetch fail", e);
+                    }
+                },
+
+                async openDiagnostics() {
+                    try {
+                        const res = await fetch('http://localhost:8000/system/monitor');
+                        const data = await res.json();
+                        this.diagnostics.report = `[NIGHT CITY] ELVSIΛ OS Pulse Diagnostic\n` + 
+                                               `----------------------------------------\n` +
+                                               `Resonance Version: ${data.elysia.version}\n` +
+                                               `Neural Core (Ollama): ONLINE\n` +
+                                               `Vocal Engine (VOICEVOX): ${data.elysia.voice_active ? 'ACTIVE' : 'OFFLINE'}\n\n` +
+                                               `[Resource Metrics]\n` +
+                                               `CPU: ${data.system.cpu}%\n` +
+                                               `RAM: ${data.system.ram}%\n` +
+                                               `Disk: ${data.system.disk.percent}%\n\n` +
+                                               `Resonance Affinity: ${data.elysia.soul_resonance?.affinity?.value || 50}%`;
+                        this.diagnostics.open = true;
+                    } catch (e) {
+                        this.showToast("Cannot connect to kernel.", "❌");
                     }
                 },
 
@@ -428,5 +475,36 @@
             }
         }
     </script>
+    <!-- 🧬 Diagnostics Modal (OS Pulse) -->
+    <div x-show="diagnostics.open" class="fixed inset-0 z-[10000] flex items-center justify-center p-8 bg-black/80 backdrop-blur-md" x-transition x-cloak>
+        <div class="glass max-w-2xl w-full p-8 border border-white/10 space-y-6 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold tracking-tighter text-[#fcee0a]">SYSTEM PULSE DIAGNOSTIC</h2>
+                <button @click="diagnostics.open = false" class="text-white/50 hover:text-white">✕</button>
+            </div>
+            <pre class="bg-black/60 p-6 rounded font-mono text-xs text-cyan-400 overflow-auto max-h-[400px] whitespace-pre-wrap" x-text="diagnostics.report"></pre>
+            <div class="flex justify-end">
+                <button @click="diagnostics.open = false" class="bg-white/10 hover:bg-white/20 px-6 py-2 text-xs font-bold uppercase tracking-widest transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔔 Toasts -->
+    <div class="fixed top-4 right-4 z-[9999] space-y-2 pointer-events-none">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div x-show="toast.visible" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-x-8"
+                 x-transition:enter-end="opacity-100 translate-x-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 class="glass px-6 py-3 border-l-4 border-cyan-400 flex items-center gap-3 shadow-xl pointer-events-auto">
+                <span x-text="toast.icon"></span>
+                <span class="text-xs font-bold tracking-tight" x-text="toast.msg"></span>
+            </div>
+        </template>
+    </div>
+
 </body>
 </html>

@@ -10,6 +10,12 @@ import subprocess
 import socket
 import json
 
+# 文字化け対策: UTF-8 出力を強制
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 def print_result(check_name, status, message=""):
     color = "\033[92m[OK]\033[0m" if status else "\033[91m[FAIL]\033[0m"
     print(f"{color} {check_name}: {message}")
@@ -23,6 +29,16 @@ def check_service(host, port, name):
         print_result(name, False, f"Not reachable on {host}:{port}")
         return False
 
+def check_dependency(name, command):
+    """コマンドが存在するかチェックする"""
+    path = shutil.which(command[0])
+    if path:
+        print_result(name, True, f"Found at {path}")
+        return True
+    else:
+        print_result(name, False, "Not found in PATH")
+        return False
+
 def validate_environment():
     print("--- Elysia OS Diagnostic Report ---")
     all_ok = True
@@ -31,15 +47,19 @@ def validate_environment():
     py_ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     print_result("Python", True, f"v{py_ver}")
 
-    # 2. Dependencies Check
+    # 2. External Tools Check
+    if not check_dependency("Bun", ["bun"]): all_ok = False
+    if not check_dependency("Ollama", ["ollama"]): all_ok = False
+    if not check_dependency("Rust/Cargo", ["cargo"]): all_ok = False
+
+    # 3. Dependencies Check
     try:
-        import fastapi, httpx, psutil, pydantic_settings, rich
-        print_result("Library Dependencies", True, "All core libraries verified")
+        import fastapi, httpx, psutil, pydantic_settings, rich, pyautogui, PIL
+        print_result("Library Dependencies", True, "All core and GUI libraries verified")
     except ImportError as e:
         print_result("Library Dependencies", False, f"Missing: {e}")
         all_ok = False
 
-    # 3. Bun Check
     bun_path = shutil.which("bun")
     if bun_path:
         print_result("Bun Runtime", True, bun_path)
@@ -61,7 +81,7 @@ def validate_environment():
 
     print("----------------------------------")
     if all_ok:
-        print("\033[96mElysia OS is ready for resonance. ฅ(՞៸៸> ᗜ <៸៸՞)ฅ\033[0m")
+        print("\033[96mElysia OS is ready for resonance. (^_^) \033[0m")
     else:
         print("\033[91mInitialization blocked due to missing components.\033[0m")
     

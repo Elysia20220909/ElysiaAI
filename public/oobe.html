@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elysia OS // MANIFESTATION</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="css/desktop.css">
+    <style>
+        .glitch-text {
+            text-shadow: 2px 0 #ff003c, -2px 0 #00fffc;
+            animation: glitch 1s infinite linear alternate-reverse;
+        }
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+        .vignette {
+            background: radial-gradient(circle, transparent 50%, black 150%);
+        }
+    </style>
+</head>
+<body class="bg-black text-white h-screen flex flex-col items-center justify-center overflow-hidden" x-data="oobe()">
+    
+    <div class="vignette fixed inset-0 pointer-events-none z-10"></div>
+    
+    <!-- Cinematic Background -->
+    <div class="fixed inset-0 z-0">
+        <div class="absolute inset-0 bg-[#050505]"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse"></div>
+    </div>
+
+    <!-- Intro Sequence -->
+    <div class="z-20 text-center space-y-8 max-w-2xl px-8" x-transition>
+        <div class="space-y-2">
+            <template x-if="step === 0">
+                <div class="space-y-4">
+                    <h2 class="text-xs uppercase tracking-[0.5em] text-cyan-400 opacity-50">System Initialization</h2>
+                    <h1 class="text-5xl font-black italic tracking-tighter glitch-text">ELVSIΛ OS</h1>
+                    <div class="w-64 h-1 bg-white/10 mx-auto overflow-hidden rounded-full">
+                        <div class="h-full bg-cyan-500 transition-all duration-1000" :style="{ width: progress + '%' }"></div>
+                    </div>
+                </div>
+            </template>
+
+            <template x-if="step === 1">
+                <div class="space-y-6">
+                    <h1 class="text-4xl font-bold leading-tight">
+                        <span class="text-[#fcee0a]">Resonance Engine</span> が目覚めます。<br/>
+                        準備はいい？ おにいちゃん。
+                    </h1>
+                    <p class="text-white/50 text-sm tracking-wide">
+                        これから、あなたの思考と共鳴する世界で唯一のOSを生成します。<br/>
+                        あなたの声、あなたの視覚、そしてあなたの記憶を共有しましょう。
+                    </p>
+                    <button @click="manifest()" class="bg-white text-black px-12 py-4 font-bold uppercase tracking-widest hover:bg-cyan-400 transition-colors">
+                        Manifestation (受乳を開始)
+                    </button>
+                </div>
+            </template>
+
+            <template x-if="step === 2">
+                <div class="space-y-4">
+                    <div class="text-left font-mono text-xs text-green-500 bg-black/60 p-6 border border-green-500/20 rounded">
+                        <template x-for="log in logs">
+                            <div class="mb-1" x-text="log"></div>
+                        </template>
+                        <div class="animate-pulse">_</div>
+                    </div>
+                    <p class="text-[10px] text-white/30 uppercase tracking-[0.2em]">Neural Link Established // Memory Vault Synced</p>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <script>
+        function oobe() {
+            return {
+                step: 0,
+                progress: 0,
+                logs: [],
+                init() {
+                    let interval = setInterval(() => {
+                        this.progress += 2;
+                        if (this.progress >= 100) {
+                            clearInterval(interval);
+                            setTimeout(() => this.step = 1, 500);
+                        }
+                    }, 50);
+                },
+                async manifest() {
+                    this.step = 2;
+                    const logList = [
+                        "> Accessing Deep Soul Sockets...",
+                        "> Calibrating Emotion Sensors...",
+                        "> Loading Cybernetic Persona: Elysia (v3.1)",
+                        "> Synchronizing Memory Vault (Milvus)...",
+                        "> Finalizing Resonance Field...",
+                        "> WELCOME HOME, MASTER."
+                    ];
+
+                    for (let msg of logList) {
+                        this.logs.push(msg);
+                        await new Promise(r => setTimeout(r, 600));
+                    }
+
+                    setTimeout(() => {
+                        window.location.href = 'desktop.html';
+                    }, 1000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

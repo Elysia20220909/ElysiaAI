@@ -4,6 +4,14 @@ Epic 3: 品質保証（QA）とシステム防壁の構築
 Issue 3-1: 感情抽出のゴールデンデータセットと自動テスト
 """
 import asyncio
+import sys
+
+# 文字化け対策: UTF-8 出力を強制
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 from unittest.mock import patch, MagicMock
 from fastapi_server import analyze_emotion
 

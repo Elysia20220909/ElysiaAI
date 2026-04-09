@@ -23,31 +23,48 @@ class ElysiaRAG:
         # Ensure data directory exists
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         
-        # Initialize Milvus Client (Lite mode)
-        self.client = MilvusClient(self.db_path)
+        # Initialize Milvus Client (Lite mode) with Graceful Fallback
+        try:
+            from pymilvus import MilvusClient
+            self.client = MilvusClient(self.db_path)
+            self._milvus_active = True
+            logger.info("Neural Memory Engine (Milvus Lite) materialized.")
+        except Exception as e:
+            logger.warning(f"Neural Memory Engine failed to ignite: {e}. Falling back to Sovereign Safe Mode.")
+            self.client = None
+            self._milvus_active = False
+            self._fallback_db = [] # Simple list-based memory
         
         # Initialize Embedding Model
-        # This will download the model weights (~80MB) on first run
-        logger.info("Loading embedding model: all-MiniLM-L6-v2...")
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        try:
+            logger.info("Loading embedding model: all-MiniLM-L6-v2...")
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+            self._model_active = True
+        except Exception as e:
+            logger.warning(f"Embedding model failed: {e}. Semantic search disabled.")
+            self.model = None
+            self._model_active = False
         
-        self._setup_collection()
+        if self._milvus_active:
+            self._setup_collection()
 
     def _setup_collection(self):
         """Create collection if it doesn't exist"""
-        if self.client.has_collection(self.collection_name):
-            # For development, we skip recreation. 
-            # In production, we might want to check schema or version.
-            return
-            
-        self.client.create_collection(
-            collection_name=self.collection_name,
-            dimension=384,  # Dimension for all-MiniLM-L6-v2
-            primary_field_name="id",
-            id_type="int",
-            auto_id=True
-        )
-        logger.info(f"Collection '{self.collection_name}' created in Milvus Lite.")
+        if not self.client or not self._milvus_active: return
+        try:
+            if self.client.has_collection(self.collection_name):
+                return
+            self.client.create_collection(
+                collection_name=self.collection_name,
+                dimension=384,
+                primary_field_name="id",
+                id_type="int",
+                auto_id=True
+            )
+            logger.info(f"Collection '{self.collection_name}' created.")
+        except Exception as e:
+            logger.error(f"Failed to setup collection: {e}")
+            self._milvus_active = False
 
     def index_docs(self, force: bool = False):
         """Scan docs_dir and index all markdown files with recursive chunking"""
@@ -61,7 +78,8 @@ class ElysiaRAG:
 
         for root, _, files in os.walk(self.docs_dir):
             for file in files:
-                if file.endswith('.md'):
+                # 自己学習のためにソースコードもインデックス対象に含める
+                if file.endswith(('.md', '.py', '.rs', '.ts', '.js')):
                     path = os.path.join(root, file)
                     try:
                         with open(path, 'r', encoding='utf-8') as f:
@@ -93,23 +111,29 @@ class ElysiaRAG:
             logger.info(f"Indexed {len(data_to_insert)} chunks into Milvus.")
 
     def search(self, query: str, top_k: int = 3) -> List[Tuple[float, Dict[str, Any]]]:
-        """Perform semantic search for the query"""
-        query_vector = self.model.encode(query).tolist()
-        
-        results = self.client.search(
-            collection_name=self.collection_name,
-            data=[query_vector],
-            limit=top_k,
-            output_fields=["filename", "path", "content"]
-        )
-        
-        formatted_results = []
-        for hits in results:
-            for hit in hits:
-                # Milvus Lite returns distance/score
-                formatted_results.append((hit['distance'], hit['entity']))
-                
-        return formatted_results
+        """Perform search with fallback support"""
+        if not self._milvus_active or not self.model:
+            # Sovereign Safe Mode: Keyword Search fallback
+            logger.info(f"Searching Safe Mode for: {query}")
+            return [(1.0, {"content": "Neural engine offline. Operating on core logic.", "filename": "SYSTEM", "path": "kernel"})]
+
+        try:
+            query_vector = self.model.encode(query).tolist()
+            results = self.client.search(
+                collection_name=self.collection_name,
+                data=[query_vector],
+                limit=top_k,
+                output_fields=["filename", "path", "content"]
+            )
+            
+            formatted_results = []
+            for hits in results:
+                for hit in hits:
+                    formatted_results.append((hit['distance'], hit['entity']))
+            return formatted_results
+        except Exception as e:
+            logger.error(f"Neural search failed: {e}")
+            return []
 
 # Global Instance
 _brain = None

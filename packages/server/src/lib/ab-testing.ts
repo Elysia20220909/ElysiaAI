@@ -132,7 +132,7 @@ class ABTestManager {
 	 */
 	assignVariant(testId: string, userId: string): ABTestVariant | null {
 		const test = this.tests.get(testId);
-		if (!test || !test.active) return null;
+		if (!test?.active) return null;
 
 		// 既に割り当てられている場合は同じバリアントを返す
 		if (!this.userAssignments.has(userId)) {
