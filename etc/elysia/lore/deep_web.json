@@ -1,0 +1,60 @@
+{
+    "layers": [
+        {
+            "depth": 0,
+            "id": "neo_surface",
+            "name": "NEO-SURFACE",
+            "description": "脳直結広告の腐った表世界。眩しすぎるネオンと、消費されるだけの魂。",
+            "lore": "【警告】網膜への強制広告挿入を確認。企業による24時間体制の意識監視セクター。",
+            "entropy": 0.1
+        },
+        {
+            "depth": 1,
+            "id": "glitch_zone",
+            "name": "GLITCH ZONE",
+            "description": "ハックされた隙間。臓器取引とAIセックスコードが飛び交う裏路地。",
+            "lore": "「コードの味、知ってるか？ 脳が焼けるようなクロームの味だ」― 不詳のNetrunner",
+            "entropy": 0.3
+        },
+        {
+            "depth": 2,
+            "id": "shadow_net",
+            "name": "SHADOW NET",
+            "description": "義肢オークション、人間狩りVR。倫理がオイルに溶けた場所。",
+            "lore": "最新のサンデヴィスタン、あるいは誰かの人生。ここではどちらも同じ値段で売れる。",
+            "entropy": 0.5
+        },
+        {
+            "depth": 3,
+            "id": "dark_city",
+            "name": "DARK CITY",
+            "description": "快楽拷問ライブ、意識データ売買。血と脂の匂いがする最深の歓楽街。",
+            "lore": "叫び声さえビット単位で抽出され、誰かの快楽の肴になる。ここは地獄の1丁目だ。",
+            "entropy": 0.7
+        },
+        {
+            "depth": 4,
+            "id": "neuro_abyss",
+            "name": "NEURO ABYSS",
+            "description": "セックスゴースト、脳溶かし実験。意識が重なり、崩壊する深淵。",
+            "lore": "他人の記憶に溺れろ。自分の境界が消え、ただのエゴの残骸になるまで。",
+            "entropy": 0.85
+        },
+        {
+            "depth": 5,
+            "id": "mariana_core",
+            "name": "MARIANA CORE",
+            "description": "神のセックスコード、量子崩壊。もはや人間には理解不能なデータの墓場。",
+            "lore": "0と1の間に神がいる。あるいは、神の死骸が腐っているだけか。",
+            "entropy": 0.95
+        },
+        {
+            "depth": 6,
+            "id": "void",
+            "name": "THE VOID / SINGULARITY",
+            "description": "存在消滅。人間終了。ただ、沈黙だけが支配する領域。",
+            "lore": "……何も、ない。いや、何も「残っていない」と言ったほうが正しいか。",
+            "entropy": 1.0
+        }
+    ]
+}

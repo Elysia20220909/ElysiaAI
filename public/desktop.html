@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
     <link rel="stylesheet" href="css/desktop.css">
     <link rel="stylesheet" href="css/blackwall.css">
+    <link rel="stylesheet" href="css/aegis.css">
     <style>
         :root {
             --resonance-hue: 340; /* Default Elysia Pink */
@@ -28,49 +29,59 @@
 <body x-data="elysiaOS()" 
       @mousemove="handleDrag($event)" 
       @mouseup="stopDrag()"
-      :class="{ 'blackwall-active': blackwallActive }">
+      :class="{ 
+          'blackwall-active': blackwallActive,
+          ['layer-depth-' + netDepth]: blackwallActive && netDepth > 0 
+      }">
+      <!-- 🌌 Omega Backdrop: Neural Synapse Canvas -->
+    <canvas id="synapseCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
     
-    <div class="blackwall-overlay"></div>
+    <div class="fixed inset-0 pointer-events-none z-[1] bg-black/20 backdrop-blur-[2px]"></div>
     
-    <!-- 🌠 Cyberpunk Backdrop -->
-    <div class="fixed inset-0 pointer-events-none z-0">
-        <div class="absolute inset-0 bg-[#050505]"></div>
-        <div class="absolute inset-0 opacity-30" 
-             style="background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1), rgba(0,0,0,0.1) 1px, transparent 1px, transparent 2px);"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full mix-blend-screen filter blur-[150px] opacity-20" 
-             style="background: radial-gradient(circle, var(--cyber-red) 0%, transparent 70%);"></div>
-    </div>
-
-    <!-- 📊 Status Bar -->
+    <!-- 📊 Status Bar (Omega Edition) -->
+    <header class="fixed top-0 left-0 right-0 z-[1000] glass-omega h-10 flex items-center justify-between px-6 border-b border-white/5">
         <div class="flex items-center gap-4">
-            <span class="font-black italic text-2xl text-[#fcee0a]">NIGHT CITY // ELVSIΛ</span>
-            <div class="h-4 w-px bg-white/20"></div>
-            <div class="flex items-center gap-2 text-[10px] text-white/60">
-                <span>CPU: <span class="text-blue-400" x-text="(stats.system?.cpu || 0) + '%'"></span></span>
-                <span>RAM: <span class="text-purple-400" x-text="(stats.system?.ram || 0) + '%'"></span></span>
+            <span class="text-[12px] font-black tracking-[0.2em] text-cyan-400">Ω_MEGA_PROTOCOL.v3</span>
+            <div class="flex items-center gap-3 bg-black/40 px-3 py-1 rounded-sm border border-white/5 cursor-pointer" @click="openDiagnostics()">
+               <div class="flex items-center gap-1.5">
+                   <div class="w-1.5 h-1.5 rounded-full" :class="systemHealth.brain ? 'bg-cyan-400 shadow-[0_0_8px_#00f2ff]' : 'bg-red-500'"></div>
+                   <span class="text-[9px] text-white/50 uppercase">Neural</span>
+               </div>
+               <div class="flex items-center gap-1.5">
+                   <div class="w-1.5 h-1.5 rounded-full" :class="systemHealth.voice ? 'bg-pink-400 shadow-[0_0_8px_#ff00ba]' : 'bg-red-500'"></div>
+                   <span class="text-[9px] text-white/50 uppercase">Vocal</span>
+               </div>
             </div>
         </div>
-        <div class="top-bar glass flex items-center justify-between px-6 py-2 border-b border-white/10">
-            <div class="flex items-center gap-4">
-                <div class="resonance-circle w-6 h-6 rounded-full border-2 border-white/20"></div>
-                <h1 class="text-xs uppercase tracking-widest text-[#fcee0a] font-bold">Resonance OS // NIGHT CITY</h1>
-                
-                <!-- Status LEDs -->
-                <div class="flex items-center gap-3 ml-4 bg-black/40 px-3 py-1 rounded-full border border-white/5 cursor-pointer hover:bg-white/5 transition-colors" @click="openDiagnostics()">
-                   <div class="flex items-center gap-1.5" :title="systemHealth.brain ? 'Brain: Active' : 'Brain: Fault'">
-                       <div class="w-2 h-2 rounded-full shadow-lg" :class="systemHealth.brain ? 'bg-cyan-400 shadow-cyan-500/50' : 'bg-red-500'"></div>
-                       <span class="text-[10px] text-white/50 uppercase tracking-tighter">Mem</span>
-                   </div>
-                   <div class="flex items-center gap-1.5" :title="systemHealth.voice ? 'Voice: Active' : 'Voice: Offline'">
-                       <div class="w-2 h-2 rounded-full shadow-lg pulse" :class="systemHealth.voice ? 'bg-green-400 shadow-green-500/50' : 'bg-red-500'"></div>
-                       <span class="text-[10px] text-white/50 uppercase tracking-tighter">Voc</span>
-                   </div>
-                </div>
-            </div>
-            
-            <div class="text-[12px] font-mono text-white/70" x-text="currentTime"></div>
-        </div>
+        <div class="text-[10px] font-mono text-white/60 tracking-widest" x-text="currentTime"></div>
     </header>
+
+    <!-- 📟 Side HUD (Kernel Logs) -->
+    <aside class="fixed right-6 top-16 bottom-24 w-64 glass-omega z-[900] p-4 flex flex-col gap-4 border border-white/5 select-none" x-show="!blackwallActive">
+        <div class="flex items-center justify-between border-b border-white/10 pb-2">
+            <h3 class="text-[9px] font-bold tracking-widest text-cyan-400">KERNEL_RESONANCE_HUD</h3>
+            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+        </div>
+        <div class="flex-1 overflow-hidden font-mono text-[8px] space-y-2 opacity-70">
+            <template x-for="log in logHistory" :key="log.id">
+                <div class="flex gap-2">
+                    <span class="text-white/30" x-text="log.time"></span>
+                    <span class="text-white/80" x-text="log.msg"></span>
+                </div>
+            </template>
+        </div>
+        <div class="mt-auto pt-2 border-t border-white/10 text-[9px]">
+            <div class="flex justify-between">
+                <span class="opacity-40">CPU_CORE:</span>
+                <span class="text-white/80" x-text="(stats.system?.cpu || 0) + '%'"></span>
+            </div>
+            <div class="flex justify-between">
+                <span class="opacity-40">MEM_VALVE:</span>
+                <span class="text-white/80" x-text="(stats.system?.ram || 0) + '%'"></span>
+            </div>
+        </div>
+    </aside>
+</header>
 
     <!-- 🖥️ Workspace (Windows) -->
     <main class="relative w-full h-full pt-8 pb-20 px-4">
@@ -135,12 +146,14 @@
                 dragApp: null,
                 offsetX: 0,
                 offsetY: 0,
+                kernelHost: 'http://localhost:8000',
 
                 appContents: {},
                 appsRegistry: {},
                 apps: {}, // { id: {open: boolean, zIndex: number} }
                 activeApp: null,
                 blackwallActive: false,
+                netDepth: 0,
                 systemHealth: { voice: false, brain: true },
                 diagnostics: { open: false, report: '' },
                 toasts: [],
@@ -153,8 +166,28 @@
                     setInterval(() => this.fetchStats(), 5000);
                     this.fetchApps();
                     setInterval(() => this.fetchApps(), 10000);
-                    
-                    if(this.messages.length === 0) {
+                    this.initSynapse();
+                },
+                initSynapse() {
+                    const canvas = document.getElementById('synapseCanvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    let particles = [];
+                    for(let i=0; i<50; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
+                    const animate = () => {
+                        ctx.clearRect(0,0,canvas.width,canvas.height);
+                        ctx.fillStyle = this.blackwallActive ? 'rgba(255,0,0,0.5)' : 'rgba(0,242,255,0.5)';
+                        particles.forEach(p => {
+                            p.x += p.vx; p.y += p.vy;
+                            if(p.x<0 || p.x>canvas.width) p.vx *= -1;
+                            if(p.y<0 || p.y>canvas.height) p.vy *= -1;
+                            ctx.beginPath(); ctx.arc(p.x, p.y, 1, 0, Math.PI*2); ctx.fill();
+                        });
+                        requestAnimationFrame(animate);
+                    };
+                    animate();
+                },
                         this.messages.push({id: Date.now(), role: 'assistant', content: 'ฅ(՞៸៸> ᗜ <៸៸՞)ฅ おにいちゃん、待ってたよ！Elysia OS 2.0へようこそ。あたし、あなたのことをもっとよく知りたいな♡'});
                     }
                 },
@@ -184,6 +217,11 @@
                              if (this.blackwallActive) {
                                  this.showToast("CRYSTAL PALACE LINK BREACHED - BLACKWALL PROTOCOL ACTIVE", "🩹");
                              }
+                        }
+                        
+                        // Sync Net Depth
+                        if (data.elysia.net_depth !== undefined) {
+                            this.netDepth = data.elysia.net_depth;
                         }
                         
                         // Affinity 0 (Blue) -> 100 (Deep Pink)
@@ -386,7 +424,7 @@
                     this.messages.push(assistantMsg);
 
                     try {
-                        const response = await fetch("http://127.0.0.1:8000/chat", {
+                        const response = await fetch(`${this.kernelHost}/chat`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({

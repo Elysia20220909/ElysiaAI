@@ -4,5 +4,12 @@
     "explorer": { "icon": "📂", "title": "FHS Explorer" },
     "terminal": { "icon": "🐚", "title": "Elysia Shell" },
     "settings": { "icon": "⚙️", "title": "OS Settings" },
-    "world_link": { "icon": "🌐", "title": "World Horizon Link" }
+    "world_link": { "icon": "🌐", "title": "World Horizon Link" },
+    "net_navigator": { "icon": "🧬", "title": "Netrunner Terminal" },
+    "kernel_workbench": { "icon": "🟢", "title": "Kernel Workbench" },
+    "autonomy_status": { "icon": "🛡️", "title": "Autonomy Pulse" },
+    "aegis_firewall": { "icon": "🧱", "title": "Aegis Firewall" },
+    "soul_forge": { "icon": "💖", "title": "Soul Forge" },
+    "memory_vault": { "icon": "👁️", "title": "Memory Vault" },
+    "file_phantom": { "icon": "📂", "title": "File Phantom" }
 }

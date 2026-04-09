@@ -82,3 +82,22 @@
     background-size: 100% 4px !important;
     opacity: 0.3 !important;
 }
+
+/* 🎭 Layer Specific Modifiers */
+.layer-depth-1 { filter: contrast(1.1) saturate(1.2); }
+.layer-depth-2 { filter: contrast(1.3) hue-rotate(10deg); animation: abyss-drift 10s infinite alternate; }
+.layer-depth-3 { filter: contrast(1.5) invert(0.05); }
+.layer-depth-4 { filter: blur(0.5px) contrast(2); }
+.layer-depth-5 { filter: blur(2px) contrast(3) grayscale(0.5); }
+.layer-depth-6 { filter: brightness(0.1) contrast(5) grayscale(1); animation: void-collapse 0.5s infinite; }
+
+@keyframes abyss-drift {
+    from { transform: perspective(1000px) rotateX(0deg); }
+    to { transform: perspective(1000px) rotateX(2deg); }
+}
+
+@keyframes void-collapse {
+    0% { opacity: 0.1; transform: scale(1.05); }
+    50% { opacity: 0.05; transform: scale(0.95); }
+    100% { opacity: 0.1; transform: scale(1.05); }
+}
