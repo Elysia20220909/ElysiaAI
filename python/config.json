@@ -1,0 +1,10 @@
+{
+    "MAX_CYCLES": 100,
+    "THREAT_THRESHOLD": 0.8,
+    "SPREAD_PROBABILITY": 0.1,
+    "ALERT_PROBABILITY": 0.3,
+    "CHECK_INTERVAL": 0.1,
+    "NUM_NODES": 30,
+    "ENABLE_INTERACTION": true,
+    "M_VALUE": 3
+}

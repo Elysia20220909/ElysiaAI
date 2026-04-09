@@ -1,17 +1,89 @@
 #!/usr/bin/env python3
 """
 Network Simulation API Wrapper
-Blackwall Simulation統合用のFastAPIラッパー
+AbyssGrid Simulation統合用のFastAPIラッパー
 """
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import os
+import threading
+import time
+import network_simulation as ns
 
-# network_simulationをパスに追加
-# sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "network_simulation"))
+app = FastAPI(title="Network Simulation API", version="1.1.0")
 
-app = FastAPI(title="Network Simulation API", version="1.0.0")
+# グローバルシミュレーション状態
+class SimulationEngine:
+    def __init__(self):
+        self.network: Optional[ns.Network] = None
+        self.void_agent: Optional[ns.VoidAgent] = None
+        self.current_cycle = 0
+        self.is_running = False
+        self.thread: Optional[threading.Thread] = None
+        self.config = {
+            "num_nodes": 30,
+            "m_value": 3,
+            "max_cycles": 100,
+            "check_interval": 1.0,
+            "threat_threshold": 0.8
+        }
+
+    def start(self, custom_config: Optional[dict] = None):
+        if self.is_running:
+            return False
+        
+        if custom_config:
+            self.config.update(custom_config)
+            
+        self.network = ns.Network(self.config["num_nodes"], self.config["m_value"])
+        self.void_agent = ns.VoidAgent()
+        self.current_cycle = 0
+        self.is_running = True
+        
+        # 初期感染
+        threats = [
+            ns.Threat("Worm", 0.1, 0.3, 2, 10),
+            ns.Threat("Trojan", 0.05, 0.45, 1, 15),
+        ]
+        import math
+        initial_infections = max(1, int(math.log2(self.config["num_nodes"] + 1)))
+        import random
+        for _ in range(initial_infections):
+            node = random.choice(self.network.nodes)
+            if not node.is_infected:
+                threat = random.choice(threats)
+                node.infect(threat, 0)
+
+        self.thread = threading.Thread(target=self._run_loop, daemon=True)
+        self.thread.start()
+        return True
+
+    def stop(self):
+        self.is_running = False
+        if self.thread:
+            self.thread.join(timeout=1.0)
+
+    def _run_loop(self):
+        while self.is_running and self.current_cycle < self.config["max_cycles"]:
+            self.network.spread_threat(self.current_cycle, self.void_agent.neural_matrix_active)
+            alerts = self.network.generate_alerts()
+            for node in alerts:
+                self.network.isolate_node(node)
+            
+            self.void_agent.update_threat_level(self.network, self.current_cycle)
+            
+            infected = sum(1 for node in self.network.nodes if node.is_infected)
+            if infected / self.config["num_nodes"] > self.config["threat_threshold"]:
+                self.is_running = False
+                break
+                
+            time.sleep(self.config["check_interval"])
+            self.current_cycle += 1
+        
+        self.is_running = False
+
+engine = SimulationEngine()
 
 class SimulationConfig(BaseModel):
     max_cycles: int = 100
@@ -20,18 +92,25 @@ class SimulationConfig(BaseModel):
     num_nodes: int = 30
     m_value: int = 3
 
+class NodeStatus(BaseModel):
+    name: str
+    is_infected: bool
+    is_isolated: bool
+    security_level: float
+
 class SimulationStatus(BaseModel):
     cycle: int
     infected_count: int
     total_nodes: int
     threat_level: float
     is_running: bool
+    nodes: Optional[List[NodeStatus]] = None
 
 @app.get("/")
 async def root():
     return {
         "status": "ok",
-        "message": "AbyssGrid Network Simulation API",
+        "message": "AbyssGrid Network Simulation API (Real)",
         "endpoints": [
             "GET /simulation/status",
             "POST /simulation/start",
@@ -41,54 +120,67 @@ async def root():
     }
 
 @app.get("/simulation/status")
-async def get_simulation_status() -> SimulationStatus:
-    """シミュレーション状態を取得"""
+async def get_simulation_status(include_nodes: bool = False) -> SimulationStatus:
+    if not engine.network:
+        return SimulationStatus(
+            cycle=0,
+            infected_count=0,
+            total_nodes=0,
+            threat_level=0.0,
+            is_running=False
+        )
+    
+    infected_count = sum(1 for node in engine.network.nodes if node.is_infected)
+    nodes = None
+    if include_nodes:
+        nodes = [
+            NodeStatus(
+                name=node.name,
+                is_infected=node.is_infected,
+                is_isolated=node.is_isolated,
+                security_level=node.security_level
+            ) for node in engine.network.nodes
+        ]
+
     return SimulationStatus(
-        cycle=0,
-        infected_count=0,
-        total_nodes=30,
-        threat_level=0.0,
-        is_running=False
+        cycle=engine.current_cycle,
+        infected_count=infected_count,
+        total_nodes=len(engine.network.nodes),
+        threat_level=engine.void_agent.threat_level if engine.void_agent else 0.0,
+        is_running=engine.is_running,
+        nodes=nodes
     )
 
 @app.post("/simulation/start")
 async def start_simulation(config: Optional[SimulationConfig] = None):
-    """シミュレーション開始"""
-    if config:
-        return {
-            "status": "started",
-            "message": "Simulation started with custom config",
-            "config": config.dict()
-        }
+    success = engine.start(config.dict() if config else None)
+    if not success:
+        return {"status": "error", "message": "Simulation is already running"}
+    
     return {
         "status": "started",
-        "message": "Simulation started with default config"
+        "message": "AbyssGrid simulation initialized",
+        "config": engine.config
     }
 
 @app.post("/simulation/stop")
 async def stop_simulation():
-    """シミュレーション停止"""
+    engine.stop()
     return {
         "status": "stopped",
-        "message": "Simulation stopped"
+        "message": "Simulation halted"
     }
-
-@app.get("/simulation/config")
-async def get_config() -> SimulationConfig:
-    """現在の設定を取得"""
-    return SimulationConfig()
 
 @app.get("/health")
 async def health():
     return {
         "status": "healthy",
         "service": "network_simulation",
-        "version": "1.0.0"
+        "version": "1.1.0",
+        "engine_active": engine.network is not None
     }
 
 if __name__ == "__main__":
     import uvicorn
-    print("🌐 Starting Network Simulation API Server...")
-    print("📍 Access at: http://127.0.0.1:8001")
-    print("📚 Docs at: http://127.0.0.1:8001/docs")
+    print("Starting AbyssGrid Network Simulation API Server...")
     uvicorn.run(app, host="127.0.0.1", port=8001)
