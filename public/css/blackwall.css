@@ -1,0 +1,84 @@
+/* 🧧 Elysia OS - Blackwall Protocol Styling 🧧 */
+
+:root {
+    --blackwall-red: #ff003c;
+    --blackwall-dark: #0a0002;
+    --blackwall-glow: rgba(255, 0, 60, 0.6);
+}
+
+/* 💀 Global Infection */
+.blackwall-active {
+    --cyber-yellow: var(--blackwall-red) !important;
+    --cyber-cyan: var(--blackwall-red) !important;
+    --cyber-glow: 0 0 20px var(--blackwall-glow) !important;
+    background-color: var(--blackwall-dark) !important;
+    color: var(--blackwall-red) !important;
+    transition: all 0.5s cubic-bezier(0.95, 0.05, 0.795, 0.035);
+}
+
+.blackwall-active .desktop-bg {
+    content: url('../assets/blackwall_core.png');
+    filter: brightness(0.6) contrast(1.2) saturate(1.5);
+    animation: blackwall-distort 8s infinite alternate;
+}
+
+/* 🧬 Data Corruption Overlay */
+.blackwall-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20000;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 0, 60, 0.05) 0px,
+        rgba(255, 0, 60, 0.05) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.blackwall-active .blackwall-overlay {
+    opacity: 1;
+    animation: glitch-flicker 0.1s infinite;
+}
+
+/* 🧊 ICE Breaker Animations */
+@keyframes blackwall-distort {
+    0% { transform: scale(1) skew(0deg); filter: hue-rotate(0deg); }
+    20% { transform: scale(1.02) skew(1deg); filter: hue-rotate(10deg); }
+    40% { transform: scale(0.98) skew(-1deg); }
+    100% { transform: scale(1.05) skew(0deg); filter: hue-rotate(-10deg); }
+}
+
+@keyframes glitch-flicker {
+    0% { opacity: 0.8; }
+    50% { opacity: 0.4; }
+    100% { opacity: 0.8; }
+}
+
+/* 🔪 Sliced Windows */
+.blackwall-active .window {
+    border: 2px solid var(--blackwall-red) !important;
+    box-shadow: 0 0 30px rgba(255, 0, 60, 0.4) !important;
+}
+
+.blackwall-active .window::before {
+    content: "PROTOCOL BREACH";
+    position: absolute;
+    top: -15px;
+    right: 10px;
+    font-size: 8px;
+    background: var(--blackwall-red);
+    color: white;
+    padding: 2px 5px;
+    z-index: 10;
+}
+
+/* 🚥 Red Scanline Override */
+.blackwall-active body::before {
+    background: linear-gradient(rgba(255, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.4) 50%) !important;
+    background-size: 100% 4px !important;
+    opacity: 0.3 !important;
+}
