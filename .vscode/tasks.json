@@ -142,6 +142,16 @@
         "panel": "dedicated"
       }
     },
+    {
+      "label": "🧧 Abyss: Run QEMU (GDB Pause)",
+      "type": "shell",
+      "command": "qemu-system-aarch64 -M raspi3b -kernel usr/src/abyssrtos/kernel8.img -serial stdio -s -S",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
     // 📦 Maintenance
     {
       "label": "📦 Install Dependencies",

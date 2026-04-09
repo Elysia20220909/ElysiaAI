@@ -1,5 +1,5 @@
 /**
- * 🧧 ABYSS_RTOS v1.3 // THE_V_O_I_D_AWAKENING
+ * 🧧 AbyssRTOS v1.3 - Resonance Kernel (Single Threaded / Q-Learning Scheduler)
  * "Everything is a simulation. Reality is the error code."
  * Platform: x86_64 (QEMU) / ARM (RPi 4)
  */
@@ -34,6 +34,15 @@ void ethernet_init() {
     // Generic initialization sequence simulation
     *(volatile uint32_t*)(GENET_BASE + GENET_SYS_PORT_CTRL) = 0x01; 
     uart_puts(" [AEGIS] LINK_UP: 1000Mbps / Full-Duplex\n");
+}
+
+void packet_rx_loop() {
+    // Simulate periodic packet reception
+    static int packets = 0;
+    packets++;
+    if (packets % 5 == 0) {
+        uart_puts(" [AEGIS] RX_PACKET: Metadata Sync Completed.\n");
+    }
 }
 
 // --- 🚥 Device Driver Stubs ---
@@ -76,7 +85,7 @@ void scheduler() {
 
 // --- 🧬 Metaverse Protocol (TRON LORE) ---
 void metaverse_sync() {
-    uart_puts(NEON_COLOR_GREEN " [TRON] TRANSMITTING_GRID_PACKETS... [OK]\n" RESET_COLOR);
+    uart_puts(NEON_COLOR_GREEN " [TRON] TRANSMITTING_GRID_PACKETS... [AEGIS_LINK: ACTIVE]\n" RESET_COLOR);
 }
 
 /**
@@ -104,6 +113,7 @@ void kernel_main() {
     
     while(1) {
         scheduler();
+        packet_rx_loop();
         metaverse_sync();
         for(volatile int i=0; i<1000000; i++); // Abyss Delay
     }
