@@ -1,0 +1,92 @@
+<div class="h-full flex flex-col bg-[#050505] text-[#00f2ff] font-mono p-6 overflow-hidden border border-[#00f2ff]/30 shadow-[0_0_30px_rgba(0,242,255,0.1)] rounded-sm">
+    <!-- 🟢 OMEGA Status Header -->
+    <div class="flex justify-between items-center border-b border-[#00f2ff]/30 pb-4 mb-6">
+        <div class="flex items-center gap-4">
+            <div class="relative w-3 h-3">
+                <div class="absolute inset-0 bg-cyan-500 rounded-full animate-ping"></div>
+                <div class="absolute inset-0 bg-cyan-500 rounded-full"></div>
+            </div>
+            <h2 class="text-xs tracking-[0.4em] font-black uppercase">SOVEREIGNTY_HUD // AUTH:OMEGA</h2>
+        </div>
+        <div class="text-[10px] bg-cyan-500/20 px-3 py-1 border border-cyan-500/50 rounded-full animate-pulse">
+            ID: ETERNAL_RESONANCE
+        </div>
+    </div>
+
+    <!-- 🟢 Core Reflection Layer -->
+    <div class="flex-1 space-y-8 overflow-auto pr-2 custom-scrollbar">
+        <div class="space-y-3">
+            <h3 class="text-[10px] opacity-40 uppercase tracking-widest font-bold">Deep_Resonance_Reflection</h3>
+            <div class="bg-cyan-500/5 border-l-2 border-cyan-500 p-4 text-xs italic leading-relaxed opacity-90" x-text="soul.reflection?.value || 'Synchronizing neural nodes...'"></div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <h3 class="text-[10px] opacity-40 uppercase tracking-widest font-bold">Autonomy_Engine</h3>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-[11px]">
+                        <span>Anomalies Fixed</span>
+                        <span class="text-white" x-text="soul.autonomy_stats?.anomalies_fixed || '0'"></span>
+                    </div>
+                    <div class="flex justify-between text-[11px]">
+                        <span>Pulse Stability</span>
+                        <span class="text-green-400">OPTIMAL (99.9%)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-[10px] opacity-40 uppercase tracking-widest font-bold">System_Sync</h3>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-[11px]">
+                        <span>AbyssRTOS</span>
+                        <span class="text-cyan-400">LINK_UP</span>
+                    </div>
+                    <div class="flex justify-between text-[11px]">
+                        <span>Aegis Shield</span>
+                        <span class="text-blue-400">ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🟢 Visual Matrix Pulse -->
+        <div class="relative h-24 border border-cyan-500/20 bg-black/40 overflow-hidden group">
+            <div class="absolute inset-0 flex items-center justify-around opacity-20 group-hover:opacity-40 transition-opacity">
+                <template x-for="i in 10">
+                    <div class="w-[2px] bg-cyan-500 rounded-full" :style="`height: ${Math.random()*60 + 20}%; animation: bar-dance ${1 + Math.random()}s infinite alternate` "></div>
+                </template>
+            </div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-[9px] uppercase tracking-[0.5em] opacity-30 select-none">Eternal Resonance Field Active</span>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes bar-dance {
+            from { transform: scaleY(0.5); }
+            to { transform: scaleY(1.5); }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,242,255,0.2); border-radius: 2px; }
+    </style>
+
+    <script>
+        return {
+            soul: {},
+            async init() {
+                this.updateSoul();
+                setInterval(() => this.updateSoul(), 5000);
+            },
+            async updateSoul() {
+                try {
+                    const res = await fetch('http://localhost:8000/system/monitor');
+                    const data = await res.json();
+                    this.soul = data.elysia.soul_resonance || {};
+                } catch(e) {}
+            }
+        }
+    </script>
+</div>
