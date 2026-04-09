@@ -4,19 +4,19 @@ const LIVE_TESTS = process.env.RUN_LIVE_TESTS === "true";
 const describeLive = LIVE_TESTS ? describe : describe.skip;
 
 /**
- * チャット機能の包括的テスト
- * - エラーハンドリング
- * - 長文クエリ処理
- * - ストリーミング中断
- * - レート制限
+ * Comprehensive Chat Functionality Tests
+ * - Error Handling
+ * - Long Query Processing
+ * - Stream Interruption
+ * - Rate Limiting
  */
 
-describeLive("チャット機能 - 包括的テスト", () => {
+describeLive("Chat Functionality - Comprehensive Tests", () => {
 	const BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
 	let authToken: string;
 
 	beforeAll(async () => {
-		// 認証トークン取得
+		// Get Auth Token
 		try {
 			const response = await fetch(`${BASE_URL}/auth/token`, {
 				method: "POST",
@@ -30,16 +30,16 @@ describeLive("チャット機能 - 包括的テスト", () => {
 			if (response.ok) {
 				const data = await response.json();
 				authToken = data.accessToken;
-				console.log("✅ 認証成功");
+				console.log("✅ Authentication Successful");
 			}
 		} catch (_error) {
-			console.warn("⚠️  認証スキップ（サーバーが起動していない可能性）");
+			console.warn("⚠️  Authentication Skipped (Server may be offline)");
 		}
 	});
 
-	test("通常のチャットメッセージが正常に処理される", async () => {
+	test("Normal chat messages are processed correctly", async () => {
 		if (!authToken) {
-			console.log("⏭️  テストスキップ（認証トークンなし）");
+			console.log("⏭️  Test Skipped (No Auth Token)");
 			return;
 		}
 
@@ -50,22 +50,22 @@ describeLive("チャット機能 - 包括的テスト", () => {
 				Authorization: `Bearer ${authToken}`,
 			},
 			body: JSON.stringify({
-				messages: [{ role: "user", content: "こんにちは" }],
+				messages: [{ role: "user", content: "Hello" }],
 			}),
 		});
 
 		expect(response.status).toBe(200);
 		expect(response.headers.get("content-type")).toContain("text/event-stream");
-		console.log("✅ 通常のチャット応答OK");
+		console.log("✅ Normal chat response OK");
 	});
 
-	test("長文クエリ（400文字制限）のバリデーションが機能する", async () => {
+	test("Long query (400 char limit) validation works", async () => {
 		if (!authToken) {
-			console.log("⏭️  テストスキップ（認証トークンなし）");
+			console.log("⏭️  Test Skipped (No Auth Token)");
 			return;
 		}
 
-		const longMessage = "あ".repeat(401); // 制限超過
+		const longMessage = "a".repeat(401); // Exceed limit
 
 		const response = await fetch(`${BASE_URL}/elysia-love`, {
 			method: "POST",
@@ -78,13 +78,13 @@ describeLive("チャット機能 - 包括的テスト", () => {
 			}),
 		});
 
-		expect(response.status).toBe(400); // バリデーションエラー
-		console.log("✅ 長文クエリのバリデーション機能OK");
+		expect(response.status).toBe(400); // Validation Error
+		console.log("✅ Long query validation OK");
 	});
 
-	test("危険なキーワード（SQL注入等）が検出される", async () => {
+	test("Dangerous keywords (SQL injection etc) are detected", async () => {
 		if (!authToken) {
-			console.log("⏭️  テストスキップ（認証トークンなし）");
+			console.log("⏭️  Test Skipped (No Auth Token)");
 			return;
 		}
 
@@ -99,15 +99,15 @@ describeLive("チャット機能 - 包括的テスト", () => {
 			}),
 		});
 
-		expect(response.status).toBe(500); // セキュリティエラー
+		expect(response.status).toBe(500); // Security error
 		const data = await response.json();
 		expect(data.error).toContain("Dangerous content");
-		console.log("✅ 危険なキーワード検出OK");
+		console.log("✅ Dangerous keywords detection OK");
 	});
 
-	test("XSS攻撃がサニタイズされる", async () => {
+	test("XSS attacks are sanitized", async () => {
 		if (!authToken) {
-			console.log("⏭️  テストスキップ（認証トークンなし）");
+			console.log("⏭️  Test Skipped (No Auth Token)");
 			return;
 		}
 
@@ -122,26 +122,26 @@ describeLive("チャット機能 - 包括的テスト", () => {
 			}),
 		});
 
-		// スクリプトタグはサニタイズされるべき
-		// ステータスコードは200でも内容が安全であることを確認
+		// Script tags should be sanitized
+		// Status code can be 200 but content must be safe
 		expect(response.status).toBeLessThan(500);
-		console.log("✅ XSSサニタイズ機能OK");
+		console.log("✅ XSS sanitization OK");
 	});
 
-	test("認証なしでチャットAPIにアクセスするとエラーになる", async () => {
+	test("Accessing chat API without authentication results in error", async () => {
 		const response = await fetch(`${BASE_URL}/elysia-love`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				messages: [{ role: "user", content: "こんにちは" }],
+				messages: [{ role: "user", content: "Hello" }],
 			}),
 		});
 
 		expect(response.status).toBe(401); // Unauthorized
-		console.log("✅ 認証なしアクセスの拒否OK");
+		console.log("✅ Unauthorized access rejection OK");
 	});
 
-	test("無効なトークンが拒否される", async () => {
+	test("Invalid token is rejected", async () => {
 		const response = await fetch(`${BASE_URL}/elysia-love`, {
 			method: "POST",
 			headers: {
@@ -149,17 +149,17 @@ describeLive("チャット機能 - 包括的テスト", () => {
 				Authorization: "Bearer invalid-token-12345",
 			},
 			body: JSON.stringify({
-				messages: [{ role: "user", content: "こんにちは" }],
+				messages: [{ role: "user", content: "Hello" }],
 			}),
 		});
 
 		expect(response.status).toBe(401);
-		console.log("✅ 無効なトークンの拒否OK");
+		console.log("✅ Invalid token rejection OK");
 	});
 
-	test("チャットモード（sweet/normal/professional）が適用される", async () => {
+	test("Chat modes (sweet/normal/professional) are applied", async () => {
 		if (!authToken) {
-			console.log("⏭️  テストスキップ（認証トークンなし）");
+			console.log("⏭️  Test Skipped (No Auth Token)");
 			return;
 		}
 
@@ -173,20 +173,20 @@ describeLive("チャット機能 - 包括的テスト", () => {
 					Authorization: `Bearer ${authToken}`,
 				},
 				body: JSON.stringify({
-					messages: [{ role: "user", content: "自己紹介してください" }],
+					messages: [{ role: "user", content: "Please introduce yourself" }],
 					mode,
 				}),
 			});
 
 			expect(response.status).toBe(200);
 			expect(response.headers.get("x-elysia-mode")).toBe(mode);
-			console.log(`✅ チャットモード「${mode}」OK`);
+			console.log(`✅ Chat mode "${mode}" OK`);
 		}
 	});
 
-	test("メッセージ数制限（最大8件）が機能する", async () => {
+	test("Message count limit (max 8) works", async () => {
 		if (!authToken) {
-			console.log("⏭️  テストスキップ（認証トークンなし）");
+			console.log("⏭️  Test Skipped (No Auth Token)");
 			return;
 		}
 
@@ -194,7 +194,7 @@ describeLive("チャット機能 - 包括的テスト", () => {
 			.fill(null)
 			.map((_, i) => ({
 				role: i % 2 === 0 ? "user" : "assistant",
-				content: `メッセージ${i + 1}`,
+				content: `Message ${i + 1}`,
 			}));
 
 		const response = await fetch(`${BASE_URL}/elysia-love`, {
@@ -209,12 +209,12 @@ describeLive("チャット機能 - 包括的テスト", () => {
 		});
 
 		expect(response.status).toBe(400);
-		console.log("✅ メッセージ数制限機能OK");
+		console.log("✅ Message count limit OK");
 	});
 
-	test("空のメッセージが拒否される", async () => {
+	test("Empty messages are rejected", async () => {
 		if (!authToken) {
-			console.log("⏭️  テストスキップ（認証トークンなし）");
+			console.log("⏭️  Test Skipped (No Auth Token)");
 			return;
 		}
 
@@ -230,34 +230,34 @@ describeLive("チャット機能 - 包括的テスト", () => {
 		});
 
 		expect(response.status).toBe(400);
-		console.log("✅ 空メッセージの拒否OK");
+		console.log("✅ Empty message rejection OK");
 	});
 });
 
-describe("エラーハンドリング - 上流サービス障害", () => {
+describe("Error Handling - Upstream Service Failure", () => {
 	const _BASE_URL = process.env.TEST_BASE_URL || "http://localhost:3000";
 
-	test("FastAPI/Ollama未起動時のグレースフルデグレード", async () => {
-		// この場合は503 Service Unavailableが返されるべき
-		// 実際の実装では、上流サービスが利用不可の場合の動作を確認
+	test("Graceful degradation when FastAPI/Ollama is offline", async () => {
+		// Should return 503 Service Unavailable
+		// Confirm behavior when upstream service is unavailable
 
 		console.log(
-			"ℹ️  上流サービス障害時のテストは手動で確認推奨（FastAPI停止 → チャット試行）",
+			"ℹ️  Manual verification recommended for upstream failure (Stop FastAPI -> Try Chat)",
 		);
-		// 自動テストでは環境構築が難しいため、手動テスト推奨
+		// Difficult to automate environment setup, manual test suggested
 	});
 
-	test("タイムアウト処理が適切に機能する", async () => {
+	test("Timeout processing works correctly", async () => {
 		console.log(
-			"ℹ️  タイムアウトテストは実環境で確認推奨（RAG_TIMEOUT設定を短くして試行）",
+			"ℹ️  Manual verification recommended for timeout (Set RAG_TIMEOUT short)",
 		);
-		// RAG_TIMEOUT=1000（1秒）などに設定して、遅い応答をシミュレート
+		// Set RAG_TIMEOUT=1000 (1s) to simulate slow response
 	});
 });
 
-describe("パフォーマンステスト", () => {
-	test("100件の短いメッセージを高速処理できる", async () => {
-		console.log("ℹ️  パフォーマンステストはlocustfile.pyを使用して実施推奨");
-		// bun run locust でロードテスト可能
+describe("Performance Tests", () => {
+	test("Can process 100 short messages quickly", async () => {
+		console.log("ℹ️  Performance tests recommended via locustfile.py");
+		// Load test possible via bun run locust
 	});
 });

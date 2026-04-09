@@ -8,6 +8,12 @@
   "scripts": {
     "test": "bun test",
     "dev": "bun --filter \"*\" dev",
+    "start": "bun --filter @elysia-ai/server start",
+    "build": "bun build packages/server/src/index.ts --outdir ./dist --target node",
+    "docker:build": "docker build -f Dockerfile.production -t elysia-ai:latest .",
+    "docker:up": "docker-compose up -d",
+    "aws:deploy": "bash cloud/aws/deploy.sh",
+    "gcp:deploy": "bash cloud/gcp/deploy.sh",
     "lint": "biome check .",
     "format": "biome format --write .",
     "fix": "biome check --write .",

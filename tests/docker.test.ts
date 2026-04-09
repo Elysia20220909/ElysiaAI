@@ -99,7 +99,7 @@ describe("Docker Validation Tests", () => {
 			"package.json",
 			"config/internal/tsconfig.json",
 			"config/internal/webpack.config.js",
-			"src/index.ts",
+			"packages/server/src/index.ts",
 			"Dockerfile",
 		];
 

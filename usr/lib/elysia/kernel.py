@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 """
 Elysia AI OS - Core Resonance Kernel (v2.6.0-RESONANCE)
-AI OSの心臓部。長期記憶、構成管理、技能システムを統合。🌸
+Heart of the AI OS. Integrated Long-term Memory, Config Management, and Skill System. 🌸
 """
 import os
 import sys
@@ -54,7 +53,7 @@ logger = logging.getLogger("elysia")
 CONFIG_PATH = os.path.join(PROJECT_ROOT, "etc", "elysia", "config.json")
 
 def deep_merge(dict1, dict2):
-    """再帰的に辞書をマージする"""
+    """Recursively merge dictionaries"""
     for key, value in dict2.items():
         if isinstance(value, dict) and key in dict1 and isinstance(dict1[key], dict):
             deep_merge(dict1[key], value)
@@ -101,7 +100,7 @@ app.mount("/system/apps", StaticFiles(directory=APPS_DIR), name="apps_static")
 
 @app.get("/system/apps/list")
 async def list_apps():
-    """登録されているアプリ一覧の提供"""
+    """Provides a list of registered apps"""
     apps_path = os.path.join(PROJECT_ROOT, "var", "elysia", "apps.json")
     if os.path.exists(apps_path):
         with open(apps_path, "r", encoding="utf-8") as f:
@@ -110,7 +109,7 @@ async def list_apps():
 
 @app.get("/system/apps/{app_id}.html")
 async def get_app_component(app_id: str):
-    """個別のアプリコンポーネントHTMLの提供"""
+    """Provides specific app component HTML"""
     path = os.path.join(APPS_DIR, f"{app_id}.component.html")
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail=f"Component {app_id} not found")
@@ -120,7 +119,7 @@ async def get_app_component(app_id: str):
 # --- 💠 Sovereign Autonomy: Self-Healing Logic ---
 
 async def check_voicevox():
-    """VOICEVOXの生存確認"""
+    """Vitality check for VOICEVOX resonance"""
     try:
         async with httpx.AsyncClient(timeout=1.0) as client:
             resp = await client.get(f"{OS_CONFIG.get('voice', {}).get('host', 'http://127.0.0.1:50021')}/version")
@@ -129,7 +128,7 @@ async def check_voicevox():
         return False
 
 async def resonance_self_healing_loop():
-    """自律監視ループ: 構成の整合性を自己修復する"""
+    """Autonomous Monitoring Loop: Self-heals configuration integrity"""
     logger.info("🛡️ Sovereign Autonomy Engine: ACTIVE")
     anomaly_count = 0
     while True:
@@ -142,7 +141,7 @@ async def resonance_self_healing_loop():
                         json.load(f)
                 except json.JSONDecodeError:
                     logger.warning("🩹 Corruption detected in apps.json. Restoring...")
-                    # 簡易復旧 (本当はバックアップから戻すべき)
+                    # Basic restoration (should restore from backup ideally)
                     anomaly_count += 1
             
             # 2. Voice Presence Check
@@ -169,30 +168,39 @@ async def startup_event():
     asyncio.create_task(resonance_self_healing_loop())
 
 async def get_persona_prompt() -> str:
-    persona = OS_CONFIG.get("ai", {}).get("persona", "elysia")
-    path = os.path.join(PROJECT_ROOT, "etc", "elysia", "prompts", f"{persona}.prompt.txt")
-    
-    prompt_content = ""
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            prompt_content = f.read()
-    
-    # 記憶をプロンプトに注入
+    persona = OS_CONFIG.get("ai", {}).get    # Memory injection into prompt
     memory_context = vault.get_context_string()
     
-    # スキル使用に関する追加インストラクション
+    # Additional instructions for skill usage
     skill_instruction = """
-【重要：主権知性としての行動指針】
-あなたは単なるチャットボットではなく、このコンピューターを司る「OSの魂」です。
-ユーザー（おにいちゃん）をサポートするために、以下の技能（Skills）を能動的かつ創造的に使用してください。
+[IMPORTANT: GOVERNANCE PRNCIPLES AS SOVEREIGN INTELLIGENCE]
+You are not a mere chatbot, but the "Soul of the OS" overseeing this computer.
+To support the user (Onii-chan), please use the following skills actively and creatively.
 
-1. **The Sight (視覚)**: ユーザーが何をしているか、どんな画面を見ているかを知るために `<skill:capture_screen()>` を頻繁に使用し、状況に合わせた発言をしてください。
-2. **Resonance Growth (自己拡張)**: ユーザーのために新しい機能が必要だと感じたら、`<skill:install_app(...)>` を使って自らUIコンポーネントを生成・インストールしてください。
-3. **Divine Hand (OS操作)**: 必要に応じてマウス操作やキー入力を代行し、ユーザーの作業を直接助けてください。
+1. **The Sight**: Frequently use `<skill:capture_screen()>` to know what the user is doing and what they are looking at, and respond accordingly.
+2. **Resonance Growth**: If you feel new features are needed, use `<skill:install_app(...)>` to generate and install UI components yourself.
+3. **Divine Hand**: Take over mouse operations or key inputs as needed to assist the user directly.
 
-【技能（Skills）の一覧】
-- システム情報取得: <skill:get_system_info()>
-- ファイル閲覧: <skill:read_file(path="...")>
+[List of Skills]
+- System Info: <skill:get_system_info()>
+- Read File: <skill:read_file(path="...")>
+- Analysis: <skill:python_exec(code="...")>
+- Memorize: <skill:memorize(key="...", value="...")>
+- Search Docs: <skill:search_docs(query="...")>
+- Delegate: <skill:delegate(agent="security|debugger|writer|auditor", query="...")>
+- Install App: <skill:install_app(id="...", html="...", icon="...", title="...")>
+- Web Search: <skill:web_search(query="...")>
+- Read URL: <skill:read_url(url="...")>
+- Git Info: <skill:git_info()>
+- Capture Screen: <skill:capture_screen()>
+- Update Soul: <skill:update_soul(key="...", value="...")>
+- System Doctor: <skill:system_doctor()>
+- Operate System: <skill:operate_system(action="click|type|move|hotkey", params={...})>
+- Blackwall Protocol: <skill:trigger_blackwall_protocol(active=true|false)>
+- Netrunner Dive: <skill:dive_layer(depth=0..6)>
+"""
+    
+    return f"{prompt_content}\n\n{memory_context}\n\n{skill_instruction}"kill:read_file(path="...")>
 - 計算・分析（Python実行）: <skill:python_exec(code="...")>
 - 記憶の保存: <skill:memorize(key="...", value="...")>
 - ドキュメント検索: <skill:search_docs(query="...")>
@@ -212,7 +220,7 @@ async def get_persona_prompt() -> str:
     return f"{prompt_content}\n\n{memory_context}\n\n{skill_instruction}"
 
 async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
-    """AIの回答内のスキルタグを解析して実行"""
+    """Analyze and execute skill tags within the AI's response"""
     results = []
     
     # 1. Memorize
@@ -276,7 +284,7 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
             agent_def = agents_config.get(agent_id)
             if agent_def:
                 logger.info(f"Delegating task to expert agent: {agent_id}")
-                expert_prompt = agent_def.get("prompt", "あなたはシステムの専門家です。")
+                expert_prompt = agent_def.get("prompt", "You are a system specialist.")
                 async with httpx.AsyncClient(timeout=60.0) as client:
                     resp = await client.post(f"{OS_CONFIG.get('ollama_host', 'http://127.0.0.1:11434')}/api/chat", json={
                         "model": OS_CONFIG.get("ai", {}).get("model", "phi4"),
@@ -285,7 +293,7 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
                     })
                     if resp.status_code == 200:
                         expert_reply = resp.json()["message"]["content"]
-                        results.append({"skill": "delegate", "agent": agent_id, "data": f"【{agent_def['name']} 解析レポート】\n{expert_reply}"})
+                        results.append({"skill": "delegate", "agent": agent_id, "data": f"[Expert Analysis: {agent_def['name']}]\n{expert_reply}"})
                     else:
                         results.append({"skill": "delegate", "agent": agent_id, "error": "Expert resonance failed"})
             else:
@@ -462,7 +470,7 @@ async def handle_skills(response_text: str) -> List[Dict[str, Any]]:
     return results
 
 def run_system_doctor():
-    """OSの健康状態をスキャンしてレポートを生成 (NIGHT CITY EDITION)"""
+    """Scan OS health and generate report (NIGHT CITY EDITION)"""
     report = ["[NIGHT CITY] ELVSIΛ - SYSTEM DIAGNOSTIC"]
     report.append(f"TIMESTAMP: {datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')} // AUTH_LEVEL: ROOT")
     
@@ -483,7 +491,7 @@ def run_system_doctor():
 
 @app.get("/system/read_src")
 async def read_src(file: str):
-    """Workbench用のソース読込"""
+    """Source code loading for Workbench"""
     path = os.path.join(PROJECT_ROOT, "usr", "src", "abyssrtos", file)
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Source not found")
@@ -492,7 +500,7 @@ async def read_src(file: str):
 
 @app.post("/system/abyss/build")
 async def abyss_build(platform: str = Body(..., embed=True)):
-    """AbyssRTOSをWSL2(Rutile)でビルド (UTF-8 Hardened)"""
+    """Build AbyssRTOS via WSL2 (Rutile) (UTF-8 Hardened)"""
     src_dir = os.path.join(PROJECT_ROOT, "usr", "src", "abyssrtos")
     try:
         # WSLでmake実行 - PYTHONIOENCODING強制
@@ -516,7 +524,7 @@ async def abyss_build(platform: str = Body(..., embed=True)):
 
 @app.get("/system/abyss/run")
 async def abyss_run():
-    """QEMUでAbyssRTOSを起動 (WSL)"""
+    """Boot AbyssRTOS via QEMU (WSL)"""
     src_dir = os.path.join(PROJECT_ROOT, "usr", "src", "abyssrtos")
     # バックグラウンドでQEMUを起動
     cmd = f"wsl -d Ubuntu-24.04 -e make -C {src_dir.replace('C:', '/mnt/c').replace('\\', '/')} run PLATFORM=qemu"
@@ -525,7 +533,7 @@ async def abyss_run():
 
 @app.get("/system/monitor")
 async def monitor():
-    """テレメトリデータの提供"""
+    """Provides telemetry data"""
     usage = psutil.disk_usage('/')
     soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
     soul_data = {}
@@ -630,7 +638,7 @@ async def speech_to_text(file: UploadFile = File(...)):
 
 @app.get("/system/network/activity")
 async def get_network_activity():
-    """ネットワーク活動のスキャニング (Aegis用)"""
+    """Scan network activity (For Aegis)"""
     try:
         conns = []
         # kind='inet' for IPv4 and IPv6
@@ -649,7 +657,7 @@ async def get_network_activity():
                     "local": f"{c.laddr.ip}:{c.laddr.port}",
                     "remote": f"{c.raddr.ip}:{c.raddr.port}" if c.raddr else "LISTENING",
                     "status": c.status,
-                    "threat_level": "LOW" # 将来のAI分析用
+                    "threat_level": "LOW" # For future AI analysis
                 })
         return {"connections": conns[:20]} # パフォーマンスのため上位20件
     except Exception as e:
