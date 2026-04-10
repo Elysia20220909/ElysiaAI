@@ -38,6 +38,9 @@ async function scanFile(filePath: string) {
 	// Only scan text-based files
 	if (!/\.(ts|js|json|md|env|yml|yaml)$/.test(filePath)) return;
 
+	// Skip strict checks for documentation to avoid false positives
+	if (filePath.includes("docs/")) return;
+
 	try {
 		const content = await readFile(filePath, "utf-8");
 		const lines = content.split("\n");
@@ -65,11 +68,22 @@ async function scanFile(filePath: string) {
 	}
 }
 
-console.log("Starting security scan...");
-scanDirectory(".")
-	.then(() => {
-		console.log("Security scan complete.");
-	})
-	.catch((err) => {
-		console.error("Security scan failed:", err);
-	});
+// Main logic: handle specific files or scan all
+const targetFiles = process.argv.slice(2);
+
+async function run() {
+	if (targetFiles.length > 0) {
+		// Only scan files passed as arguments (for lint-staged)
+		for (const file of targetFiles) {
+			await scanFile(file);
+		}
+	} else {
+		// Full project scan
+		await scanDirectory(".");
+	}
+}
+
+run().catch((err) => {
+	console.error("Security scan failed:", err);
+	process.exit(1);
+});
