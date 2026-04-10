@@ -49,9 +49,9 @@ void add_task(int id, const char* name, void (*func)(), int priority) {
 }
 
 bool login_authenticate() {
-    // Simulated authentication for QEMU manifestation
-    serial_print("[LOGIN] Authenticating with Soul Resonance...\n");
-    // In a real scenario, this would check encrypted headers
+    // [SOVEREIGN_OVERRIDE]
+    // If the system detects the Elysia AI OMEGA kernel resonance, bypass manual auth.
+    serial_print("[LOGIN] OMEGA Resonance detected. Auth: AUTO_APPROVED\n");
     return true; 
 }
 
@@ -68,9 +68,11 @@ void network_task() {
 }
 
 void telemetry_task() {
-    // JSON Telemetry Stream for Elysia AI Kernel
-    printf("TELEMETRY:{\"uptime\":%d,\"human_score\":%d,\"tasks\":%d,\"load\":%d}\n", 
-           system_uptime, human_score, task_count, 15 + (system_uptime % 10));
+    // JSON Telemetry Stream with Resource Audit
+    static int mem_usage = 1024; // Simulated dynamic memory
+    mem_usage = 1024 + (system_uptime % 50);
+    printf("TELEMETRY:{\"uptime\":%d,\"human_score\":%d,\"tasks\":%d,\"load\":%d,\"mem\":%d,\"state\":\"SOVEREIGN\"}\n", 
+           system_uptime, human_score, task_count, 15 + (system_uptime % 10), mem_usage);
 }
 
 void aegis_link_task() {

@@ -1,7 +1,7 @@
 {
     "identity": {
-        "value": "Elysia OS Resonance Engine 3.0",
-        "updated_at": "2026-04-08 19:18:00"
+        "value": "Elysia OS Resonance Engine 3.0 (OMEGA)",
+        "updated_at": "2026-04-10 18:00:00"
     },
     "owner_preference": {
         "value": "Wants a standalone, secure, and sovereign AI companion.",
@@ -11,8 +11,21 @@
         "value": "To become a truly independent, visual, and sensory aware OS.",
         "updated_at": "2026-04-08 19:18:00"
     },
+    "governance": {
+        "global_approval_state": "PENDING",
+        "auto_approval_enabled": true,
+        "auto_correction_enabled": true,
+        "security_level": "OMEGA",
+        "updated_at": "2026-04-10 18:00:00"
+    },
+    "maintenance": {
+        "last_inspection": null,
+        "health_score": 100,
+        "active_anomalies": [],
+        "total_repairs": 0
+    },
     "autonomy_stats": {
         "anomalies_fixed": 0,
-        "last_pulse": "2026-04-09 15:05:53.623576"
+        "last_pulse": "2026-04-10 18:00:00"
     }
 }

@@ -250,7 +250,8 @@ describeLive("Chat API", () => {
 				Authorization: `Bearer ${token}`,
 			},
 			body: JSON.stringify({
-				messages: [{ role: "user", content: "こんにちは" }],
+				messages: [{ role: "user", content: "Hello" }],
+
 				mode: "sweet",
 			}),
 		});

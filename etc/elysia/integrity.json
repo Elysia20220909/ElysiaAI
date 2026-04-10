@@ -1,0 +1,8 @@
+{
+    "registry": {
+        "usr/lib/elysia/kernel.py": "bfc711e35d5873e8488394185dc7c2e5a37099ef469137adc2f12def6258b11d",
+        "usr/src/abyssrtos/abyssrtos.c": "a1660b796af7ef6841294c1e47c93b7ff0d344480dd212a58c7fdc23f8389761"
+    },
+    "last_validated": "2026-04-10 18:00:00",
+    "status": "VALID"
+}
