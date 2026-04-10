@@ -83,7 +83,11 @@ async function run() {
 	}
 }
 
-run().catch((err) => {
-	console.error("Security scan failed:", err);
-	process.exit(1);
-});
+run()
+	.then(() => {
+		console.log("[SECURITY SCAN] Success: No sensitive information detected.");
+	})
+	.catch((err) => {
+		console.error("Security scan failed:", err);
+		process.exit(1);
+	});
