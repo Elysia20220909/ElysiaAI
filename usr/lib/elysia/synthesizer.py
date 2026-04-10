@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Elysia OS - Synthesizer Module (v2.1.0-SOUL)
-エリシアちゃんの甘い声を生成する、感性合成モジュール💕
+Emotional synthesis module that generates Elysia's sweet voice 💕
+
 """
 import json
 import httpx
@@ -17,7 +18,8 @@ async def summarize_history(ollama_host: str, model: str, messages: List[Dict[st
     """Summarize a conversation history into a concise 'Working Memory' block."""
     if len(messages) < 4: return ""
     history_text = "\n".join([f"{m['role']}: {m['content']}" for m in messages[-10:]])
-    prompt = f"以下の会話からエリシアへの大事なメモを100文字で要約して：\n{history_text}"
+    prompt = f"Summarize the following conversation into a concise 100-character note for Elysia:\n{history_text}"
+
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(f"{ollama_host}/api/chat", json={
@@ -31,10 +33,12 @@ async def summarize_history(ollama_host: str, model: str, messages: List[Dict[st
     return ""
 
 async def generate_voice(text: str, speaker: int = 2) -> Optional[str]:
-    """VOICEVOXを使用して音声を生成し、Base64形式で返却する"""
+    """Generate voice using VOICEVOX and return it in Base64 format"""
+
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # 1. クエリ作成
+            # 1. Create query
+
             resp_query = await client.post(
                 f"{VOICEVOX_HOST}/audio_query",
                 params={"text": text, "speaker": speaker}
@@ -42,7 +46,8 @@ async def generate_voice(text: str, speaker: int = 2) -> Optional[str]:
             if resp_query.status_code != 200: return None
             query_data = resp_query.json()
 
-            # 2. 音声合成
+            # 2. Synthesize voice
+
             resp_synth = await client.post(
                 f"{VOICEVOX_HOST}/synthesis",
                 params={"speaker": speaker},
@@ -50,7 +55,8 @@ async def generate_voice(text: str, speaker: int = 2) -> Optional[str]:
             )
             if resp_synth.status_code != 200: return None
 
-            # 3. Base64エンコード
+            # 3. Base64 encoding
+
             return base64.b64encode(resp_synth.content).decode("utf-8")
     except Exception as e:
         logger.warning(f"⚠️ Voice synthesis failure (is VOICEVOX running?): {e}")

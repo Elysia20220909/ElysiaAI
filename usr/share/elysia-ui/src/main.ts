@@ -26,7 +26,8 @@ function bootSequence() {
 		dotCount++;
 		setTimeout(bootSequence, 200);
 	} else {
-		statusText.innerText = "FaceID 認証成功";
+		statusText.innerText = "FaceID Authentication Successful";
+
 		statusText.style.color = "#ffb7c5";
 		setTimeout(() => {
 			lockScreen.classList.add("unlocked");
@@ -44,7 +45,7 @@ function startClock() {
 	const clockEl = document.getElementById("system-time")!;
 	setInterval(() => {
 		const now = new Date();
-		clockEl.innerText = now.toLocaleTimeString("ja-JP", {
+		clockEl.innerText = now.toLocaleTimeString("en-US", {
 			hour: "2-digit",
 			minute: "2-digit",
 		});
@@ -144,7 +145,8 @@ const appChat: AppConfig = {
             <div style="opacity:0.6; font-size:12px; text-align:center; margin-bottom:20px;">Secure Chat Tunnel Established</div>
           </div>
           <div class="input-area">
-            <input type="text" class="chat-input" placeholder="エリシアとお話ししましょう..." id="chat-input-field">
+            <input type="text" class="chat-input" placeholder="Talk with Elysia..." id="chat-input-field">
+
             <button class="btn-primary" id="chat-send-btn" style="width:60px;">Send</button>
           </div>
         </div>
@@ -195,7 +197,10 @@ const appChat: AppConfig = {
 					emotionLabel.innerText = data.emotion.toUpperCase();
 				}
 			} catch (_e) {
-				addMessage("エラーが発生しました。接続を確認してください。", "system");
+				addMessage(
+					"An error occurred. Please check your connection.",
+					"system",
+				);
 			}
 		};
 
@@ -218,8 +223,9 @@ const appSandbox: AppConfig = {
       <div class="sandbox-orchestra">
         <div class="sandbox-sidebar">
           <h3>QA Orchestra</h3>
-          <p style="font-size:11px; opacity:0.6; margin-bottom:20px;">隔離環境での人格整合性テスト</p>
-          <button class="btn-primary" id="run-btn">合奏を開始</button>
+          <p style="font-size:11px; opacity:0.6; margin-bottom:20px;">Personality Integrity Test in Isolated Environment</p>
+          <button class="btn-primary" id="run-btn">Start Orchestration</button>
+
         </div>
         <div class="sandbox-terminal" id="sandbox-term">
           > Elysia OS Sandbox Console Ready...

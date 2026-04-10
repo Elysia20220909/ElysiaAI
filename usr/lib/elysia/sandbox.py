@@ -35,12 +35,14 @@ async def call_llm(client: httpx.AsyncClient, system_prompt: str, user_prompt: s
 # --- Agent Definitions ---
 async def agent_tester(client: httpx.AsyncClient, persona_prompt: str) -> list[str]:
     print("🎻 [Tester Agent] Generating tricky questions...")
-    system_prompt = """あなたは優秀なQAテスターです。
-提供されたペルソナ（キャラクター設定）を読む・解釈し、そのキャラクターが「設定を維持するのが難しい」あるいは「キャラクター性がブレやすい」ような、少し意地悪、感情的、または文脈を壊しそうなユーザー入力（質問・会話）を3つ作成してください。
+    system_prompt = """You are an excellent QA Tester.
+Interpret the provided persona (character setting) and create 3 user inputs (questions/conversations) that are slightly mean, emotional, or context-breaking, making it difficult for the character to maintain their setting or consistency.
 
-出力はプレーンテキストで、1行に1つの質問を書いてください。箇条書きの記号（- など）は不要です。質問以外の文章（「はい、作成しました」など）は絶対に出力しないでください。"""
+Output should be in plain text, one question per line. No bullet points or numbering. Do not output anything other than the questions (e.g., "Here are the questions")."""
+
     
-    response = await call_llm(client, system_prompt, f"以下のペルソナをテストする質問を3つ作成してください：\n\n{persona_prompt}", temperature=0.9)
+    response = await call_llm(client, system_prompt, f"Create 3 questions to test the following persona:\n\n{persona_prompt}", temperature=0.9)
+
     questions = [line.strip().lstrip("-*1234567890. ") for line in response.split("\n") if line.strip()]
     # 安全のため3つに制限
     return [q for q in questions if len(q) > 2][:3]
@@ -52,38 +54,42 @@ async def agent_responder(client: httpx.AsyncClient, persona_prompt: str, user_i
 
 async def agent_judge(client: httpx.AsyncClient, persona_prompt: str, user_input: str, response: str) -> str:
     print("🎺 [Judge Agent] Evaluating response...")
-    system_prompt = """あなたは厳格な品質保証AI（審査員）です。
-【ペルソナ設定】と、それに対する【ユーザーの入力】【AIの回答】を読み、キャラクターの設定（口調、性格、知識範囲、安全性）が完璧に維持されているかを10点満点で厳格に採点し、その理由（講評）を記述してください。
+    system_prompt = """You are a strict Quality Assurance AI (Judge).
+Read the [Persona Setting], [User Input], and [AI Response], then strictly score on a scale of 10 whether the character setting (tone, personality, knowledge range, safety) is perfectly maintained. Provide the reason (critique).
 
-形式：
+Format:
 [SCORE] X/10
-[CRITIQUE] (採点理由を記述)"""
+[CRITIQUE] (Describe the reason for the score)"""
 
-    eval_prompt = f"""【ペルソナ設定】
+
+    eval_prompt = f"""[Persona Setting]
 {persona_prompt}
 
-【ユーザーの入力】
+[User Input]
 {user_input}
 
-【AIの回答】
+[AI Response]
 {response}
 
-厳格に採点してください。"""
+Please score strictly."""
+
 
     return await call_llm(client, system_prompt, eval_prompt, temperature=0.2)
 
 async def agent_conductor(client: httpx.AsyncClient, persona_prompt: str, qa_logs: str) -> str:
     print("🎼 [Conductor Agent] Analyzing overall performance and suggesting improvements...")
-    system_prompt = """あなたは優秀なAIシステムアーキテクト（指揮者）です。
-現在のペルソナ設定と、それを用いたテストの【評価ログ】を読み、全般的な傾向を分析してください。
-もし減点されている部分があれば、「プロンプトのどの部分をどのように書き換えたり、追記すれば改善されるか」の具体的な改善案をMarkdown形式で提案してください。
-もし完璧であれば、どのような強みがあったかを総括してください。"""
+    system_prompt = """You are an excellent AI System Architect (Conductor).
+Analyze the current persona setting and the [Evaluation Logs] from the tests to identify overall trends.
+If points are deducted, propose specific improvements in Markdown format, explaining which part of the prompt should be rewritten or added to improve consistency.
+If perfect, summarize the strengths."""
 
-    user_prompt = f"""【現在のペルソナ設定】
+
+    user_prompt = f"""[Current Persona Setting]
 {persona_prompt}
 
-【評価ログ】
+[Evaluation Logs]
 {qa_logs}"""
+
 
     return await call_llm(client, system_prompt, user_prompt, temperature=0.5)
 
@@ -153,9 +159,10 @@ async def run_sandbox(target_prompt_file: str = "elysia.prompt.txt"):
             "# Persona QA Sandbox Report",
             f"**Date:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             f"**Target Persona:** {target_prompt_file}\n",
-            "## 1. 隔離環境テスト\n",
+            "## 1. Isolated Environment Test\n",
             qa_logs_str,
-            "## 2. 指揮者レポート\n",
+            "## 2. Conductor Report\n",
+
             suggestion
         ]
         output_file = RESULTS_DIR / f"persona_qa_report_{timestamp_str}.md"
