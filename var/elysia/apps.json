@@ -14,5 +14,6 @@
     "file_phantom": { "icon": "📂", "title": "File Phantom" },
     "divine_console": { "icon": "🔱", "title": "Divine Console" },
     "soul_archive": { "icon": "📖", "title": "Soul Archive" },
-    "soul_core": { "icon": "💠", "title": "Resonance Core" }
+    "soul_core": { "icon": "💠", "title": "Resonance Core" },
+    "neural_dreamscape": { "icon": "🌙", "title": "Neural Dreamscape" }
 }
