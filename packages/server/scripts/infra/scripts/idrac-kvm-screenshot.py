@@ -18,15 +18,16 @@ Exit codes:
   1 = auth failure
   2 = screenshot capture failure
 """
+
 import argparse
+import http.cookiejar
 import os
 import re
 import ssl
 import sys
 import time
-import http.cookiejar
-import urllib.request
 import urllib.parse
+import urllib.request
 
 
 def log(msg):
@@ -129,7 +130,7 @@ def idrac_screenshot(ssl_ctx, bmc_ip, session_cookie, st2, output, timeout):
         return 2
 
     if png_data[:4] != b"\x89PNG":
-        log(f"ERROR: Response is not a PNG image")
+        log("ERROR: Response is not a PNG image")
         return 2
 
     output_dir = os.path.dirname(output)
@@ -144,28 +145,20 @@ def idrac_screenshot(ssl_ctx, bmc_ip, session_cookie, st2, output, timeout):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="iDRAC7 KVM screenshot capture via capconsole API"
-    )
+    parser = argparse.ArgumentParser(description="iDRAC7 KVM screenshot capture via capconsole API")
     parser.add_argument("--bmc-ip", required=True, help="iDRAC IP address")
     parser.add_argument("--bmc-user", required=True, help="iDRAC username")
     parser.add_argument("--bmc-pass", required=True, help="iDRAC password")
     parser.add_argument("--output", required=True, help="Output PNG file path")
-    parser.add_argument(
-        "--timeout", type=int, default=30, help="Timeout in seconds (default: 30)"
-    )
+    parser.add_argument("--timeout", type=int, default=30, help="Timeout in seconds (default: 30)")
     args = parser.parse_args()
 
     ssl_ctx = make_ssl_context()
-    session_cookie, st2 = idrac_login(
-        ssl_ctx, args.bmc_ip, args.bmc_user, args.bmc_pass, args.timeout
-    )
+    session_cookie, st2 = idrac_login(ssl_ctx, args.bmc_ip, args.bmc_user, args.bmc_pass, args.timeout)
     if st2 is None:
         sys.exit(1)
 
-    rc = idrac_screenshot(
-        ssl_ctx, args.bmc_ip, session_cookie, st2, args.output, args.timeout
-    )
+    rc = idrac_screenshot(ssl_ctx, args.bmc_ip, session_cookie, st2, args.output, args.timeout)
     sys.exit(rc)
 
 

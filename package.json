@@ -28,6 +28,10 @@
     "*.{js,ts,tsx,json}": [
       "biome check --write --no-errors-on-unmatched"
     ],
+    "*.py": [
+      "python -m ruff check --fix --force-exclude",
+      "python -m ruff format --force-exclude"
+    ],
     "*": [
       "bun run scripts/security-scan.ts"
     ]

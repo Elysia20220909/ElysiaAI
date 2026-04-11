@@ -3,9 +3,12 @@
 Epic 3: 品質保証（QA）とシステム防壁の構築
 Issue 3-1: 感情抽出のゴールデンデータセットと自動テスト
 """
+
 import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from fastapi_server import analyze_emotion
+
 
 # 【Golden Dataset】感情抽出の正解データセット
 GOLDEN_DATASET = [
@@ -16,14 +19,15 @@ GOLDEN_DATASET = [
     ("明日の天気はどうなるかな。傘は必要かしら？", "neutral"),
 ]
 
+
 async def run_tests():
     print("==================================================")
     print("🧪 Anomaly Sensor (Emotion Resonance) QA Test")
     print("==================================================")
-    
+
     passed_tests = 0
     total_tests = len(GOLDEN_DATASET) + 1
-    
+
     # 1. 正常系テスト (Zero-shot LLM Mocking)
     print("\n[1] Golden Dataset Verification...")
     with patch("fastapi_server.httpx.AsyncClient.post") as mock_post:
@@ -32,14 +36,14 @@ async def run_tests():
             mock_response = MagicMock()
             mock_response.json.return_value = {"message": {"content": expected}}
             mock_post.return_value = mock_response
-            
+
             result = await analyze_emotion(text)
             if result == expected:
                 status = "✅ PASS"
                 passed_tests += 1
             else:
                 status = f"❌ FAIL (Expected: {expected}, Got: {result})"
-            
+
             print(f"  - [{expected.upper():<10}] Text: '{text[:15]}...' -> {status}")
 
     # 2. 異常系テスト（タイムアウト/エラー時の優雅なフォールバック）
@@ -51,15 +55,16 @@ async def run_tests():
             passed_tests += 1
         else:
             status = f"❌ FAIL (Expected neutral fallback, Got: {result})"
-            
+
         print(f"  - [API ERROR FALLBACK] Expected: neutral -> {status}")
-        
+
     print("\n==================================================")
     if passed_tests == total_tests:
         print("✨ SUCCESS: All safeguards and resonance engines are operating perfectly.")
     else:
         print(f"⚠️ WARNING: {total_tests - passed_tests} tests failed. Please review the anomaly parameters.")
     print("==================================================\n")
+
 
 if __name__ == "__main__":
     asyncio.run(run_tests())
