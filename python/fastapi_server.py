@@ -20,6 +20,8 @@ from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
+from python.core.heartbeat import elysia_heartbeat
+
 
 # ==================== 設定 (Pydantic Settings) ====================
 class Settings(BaseSettings):
@@ -270,6 +272,9 @@ async def init_db() -> None:
             embeddings_store.append(await get_embedding(q))
         logger.info("✅ Baseline quotes embedded.")
 
+    # Initialize Heartbeat Protocol
+    asyncio.create_task(elysia_heartbeat.start_pulse())
+
 
 async def apply_oblivion_protocol():
     """Epic 6: Runner Memoryが閾値を超過した際に古い記憶を忘却する"""
@@ -443,6 +448,12 @@ async def analyze_emotion(text: str) -> str:
     except Exception as e:
         logger.warning(f"⚠️ Emotion extraction failed: {e}")
         return "neutral"
+
+
+@app.get("/resonance", dependencies=vault_defenses)
+async def get_resonance() -> dict[str, Any]:
+    """Returns the current 'Eternal Heartbeat' state of Elysia OS."""
+    return elysia_heartbeat.get_current_resonance()
 
 
 @app.post("/chat", dependencies=vault_defenses)
