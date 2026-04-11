@@ -77,6 +77,33 @@
     <div class="fixed inset-0 pointer-events-none z-[1] bg-resonance"></div>
     <div class="fixed inset-0 pointer-events-none z-[2] bg-black/20 backdrop-blur-[2px]"></div>
 
+    <!-- 🔒 Visual Aegis Lock Overlay -->
+    <div class="fixed inset-0 z-[15000] backdrop-blur-3xl transition-all duration-1000 flex items-center justify-center"
+         x-show="visualLock"
+         x-transition:enter="opacity-0 scale-110"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-110"
+         x-cloak>
+        <div class="absolute inset-0 bg-black/60 mix-blend-multiply"></div>
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+        
+        <div class="relative text-center space-y-8 p-12 glass-omega border-red-500/30">
+            <div class="w-32 h-32 mx-auto rounded-full border-2 border-red-500/50 flex items-center justify-center animate-pulse">
+                <div class="text-6xl">🔒</div>
+            </div>
+            <div class="space-y-2">
+                <h2 class="text-2xl font-black text-red-500 tracking-[0.5em] uppercase">Visual_Aegis_Lock</h2>
+                <p class="text-[10px] text-white/40 uppercase tracking-widest">Scanning for authorized resonance signature...</p>
+            </div>
+            <div class="flex gap-2 justify-center">
+                <div class="w-1 h-3 bg-red-500/20 animate-bounce"></div>
+                <div class="w-1 h-3 bg-red-500/40 animate-bounce delay-75"></div>
+                <div class="w-1 h-3 bg-red-500/60 animate-bounce delay-150"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- 🚨 Blackwall Alert HUD -->
     <div class="fixed inset-0 z-[10000] pointer-events-none flex items-center justify-center opacity-0 transition-opacity duration-500"
          :class="blackwallActive ? 'opacity-100' : ''">
@@ -147,7 +174,6 @@
          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
          x-html="appContents.soul_core">
     </div>
-</header>
 
     <!-- 🖥️ Workspace (Windows) -->
     <main class="relative w-full h-full pt-8 pb-20 px-4">
@@ -186,14 +212,19 @@
     <!-- ⚓ Dock -->
     <nav class="dock-container">
         <template x-for="(meta, id) in appsRegistry" :key="id">
-            <div class="dock-item" 
-                 :class="apps[id]?.open ? 'active' : ''" 
-                 @click="toggleApp(id)" 
-                 :title="meta.title"
-                 x-text="meta.icon">
-            </div>
+            <template x-if="userRole === 'root' || !['divine_console', 'soul_forge', 'evolution_ledger', 'kernel_workbench'].includes(id)">
+                <div class="dock-item" 
+                     :class="apps[id]?.open ? 'active' : ''" 
+                     @click="toggleApp(id)" 
+                     :title="meta.title"
+                     x-text="meta.icon">
+                </div>
+            </template>
         </template>
-        <div class="h-10 w-px bg-white/10 my-auto"></div>
+        <div class="h-10 w-px bg-white/10 mx-2"></div>
+        <template x-if="maintenanceMode">
+            <div class="dock-item border border-red-500/50 bg-red-500/10 animate-pulse" title="SIP_BYPASSED">☣️</div>
+        </template>
         <div class="dock-item" @click="location.href='index.html'" title="Classic View">🌸</div>
     </nav>
 
@@ -219,6 +250,11 @@
                 apps: {}, // { id: {open: boolean, zIndex: number} }
                 activeApp: null,
                 blackwallActive: false,
+                visualLock: false, // New Phase 20
+                userEmotion: 'neutral', // New Phase 21
+                userRole: 'guest', // New Phase 24
+                currentTheme: 'cyberpunk', // New Phase 23
+                maintenanceMode: false, // New Phase 25
                 netDepth: 0,
                 systemHealth: { voice: false, brain: true },
                 diagnostics: { open: false, report: '' },
@@ -234,6 +270,7 @@
                     setInterval(() => this.fetchApps(), 10000);
                     this.initSynapse();
                     this.initStarfall();
+                    this.fetchTheme();
                     
                     // JARVIS Wake Up Sequence
                     this.fetchApps().then(() => {
@@ -242,12 +279,108 @@
                         setTimeout(() => this.greetUser(), 3000);
                     });
 
+                    // Sovereign Listeners
+                    window.addEventListener('keydown', (e) => {
+                        // Void Sequence: Ctrl+Alt+Shift+E
+                        if (e.ctrlKey && e.altKey && e.shiftKey && e.key === 'E') {
+                            this.triggerVoidSequence();
+                        }
+                    });
+
                     // Hot Manifest Sync (Phase 19)
                     window.addEventListener('elysia-manifest-stable', () => {
-                        console.log("Hot Manifest Signal Received. Syncing registry...");
                         this.fetchApps();
                         this.showToast("Registry Synchronized", "🧬");
                     });
+
+                    // Sensory Presence Listeners (Phase 20)
+                    window.addEventListener('elysia-presence-sync', (e) => {
+                        const { present, authorized } = e.detail;
+                        if (authorized && !present) {
+                            if (!this.visualLock) {
+                                this.visualLock = true;
+                                this.showToast("Visual Aegis: TARGET LOST. LOCKING.", "🔒");
+                            }
+                        } else {
+                            if (this.visualLock) {
+                                this.visualLock = false;
+                                this.showToast("Visual Aegis: AUTHORIZED.", "🔓");
+                            }
+                        }
+                        // Auto-Identify as Root if authorized present
+                        if (authorized && present) this.userRole = 'root';
+                    });
+
+                    window.addEventListener('elysia-security-breach', () => {
+                        this.blackwallActive = true;
+                        this.showToast("CRITICAL: UNAUTHORIZED ACCESS DETECTED", "🚨");
+                    });
+
+                    // Emotional Resonance (Phase 21)
+                    window.addEventListener('elysia-emotion-update', (e) => {
+                        const { emotion } = e.detail;
+                        this.userEmotion = emotion;
+                        
+                        let hue = 340; 
+                        if (emotion === 'happy') hue = 350; 
+                        if (emotion === 'tired') hue = 210; 
+                        
+                        document.documentElement.style.setProperty('--resonance-hue', hue);
+                        this.showToast(`Resonance Shift: ${emotion.toUpperCase()}`, "🎭");
+                        
+                        if (emotion === 'tired') {
+                            setTimeout(async () => {
+                                if (this.userEmotion === 'tired') {
+                                    const res = await fetch('http://localhost:8000/system/resonance/reflect?mode=CONVERSATIONAL');
+                                    const data = await res.json();
+                                    this.speak(data.reflection);
+                                }
+                            }, 5000);
+                        }
+                    });
+                },
+
+                async fetchTheme() {
+                    const res = await fetch('http://localhost:8000/system/theme');
+                    const data = await res.json();
+                    this.currentTheme = data.theme;
+                    this.maintenanceMode = data.maintenance;
+                    document.body.dataset.theme = this.currentTheme;
+                },
+
+                async applyTheme(theme) {
+                    await fetch('http://localhost:8000/system/theme', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ theme })
+                    });
+                    this.currentTheme = theme;
+                    document.body.dataset.theme = theme;
+                    this.showToast(`Aesthetic Re-Manifested: ${theme.toUpperCase()}`, "🎨");
+                },
+
+                async triggerVoidSequence() {
+                    this.showToast("VOID_SEQUENCE_DETECTED", "☣️");
+                    // Glitch Effect Simulation
+                    this.blackwallActive = true;
+                    setTimeout(() => {
+                        this.blackwallActive = false;
+                        this.unlockMaintenance();
+                    }, 1000);
+                },
+
+                async unlockMaintenance() {
+                    const res = await fetch('http://localhost:8000/system/maintenance/unlock', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ secret: 'elysia-singularity-overdrive-2026' })
+                    });
+                    const data = await res.json();
+                    if (data.status === 'unlocked') {
+                        this.maintenanceMode = true;
+                        this.applyTheme('singularity');
+                        this.showToast("SIP_OVERRIDDEN. MAINTENANCE_ON.", "🔓");
+                    }
                 },
                 async greetUser() {
                     const res = await fetch('http://localhost:8000/system/monitor');

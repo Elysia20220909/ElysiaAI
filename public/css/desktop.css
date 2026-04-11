@@ -7,12 +7,40 @@
     --cyber-blue: #007bff;
     --cyber-glow-cyan: 0 0 20px rgba(0, 242, 255, 0.4);
     --cyber-glow-pink: 0 0 20px rgba(255, 0, 186, 0.4);
-    
     --glass-bg: rgba(10, 10, 15, 0.75);
     --glass-border: rgba(255, 255, 255, 0.1);
-    
-    /* Resonance Sync */
     --resonance-hue: 340;
+    --accent-glow: var(--cyber-glow-cyan);
+}
+
+/* 🎇 LUXURY (Celebration) */
+body[data-theme="luxury"] {
+    --cyber-black: #0a0a05;
+    --cyber-cyan: #ffce00; /* Gold */
+    --cyber-pink: #d40000; /* Velvet Red */
+    --glass-bg: rgba(20, 20, 15, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --accent-glow: 0 0 30px rgba(255, 206, 0, 0.5);
+}
+
+/* 🌑 ABYSS (Tactical) */
+body[data-theme="abyss"] {
+    --cyber-black: #000000;
+    --cyber-cyan: #ff0000; /* Crimson */
+    --cyber-pink: #4a00e0; /* Deep Purple */
+    --glass-bg: rgba(0, 0, 0, 0.9);
+    --glass-border: rgba(255, 0, 0, 0.2);
+    --accent-glow: 0 0 15px rgba(255, 0, 0, 0.6);
+}
+
+/* 🌀 SINGULARITY (Hidden / Maintenance) */
+body[data-theme="singularity"] {
+    --cyber-black: #000a00;
+    --cyber-cyan: #00ff41; /* Matrix Green */
+    --cyber-pink: #003b00; 
+    --glass-bg: rgba(0, 10, 0, 0.95);
+    --glass-border: rgba(0, 255, 65, 0.3);
+    --accent-glow: 0 0 20px rgba(0, 255, 65, 0.4);
 }
 
 body {

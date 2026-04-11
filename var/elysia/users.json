@@ -1,0 +1,14 @@
+{
+    "root": {
+        "role": "SOVEREIGN",
+        "name": "Onii-chan",
+        "access_level": 100,
+        "permissions": ["all"]
+    },
+    "guest": {
+        "role": "GUEST",
+        "name": "Resident",
+        "access_level": 10,
+        "permissions": ["ui.read", "chat.basic"]
+    }
+}
