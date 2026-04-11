@@ -10,12 +10,14 @@ Exit codes:
   2 = connection error
   3 = abnormal termination
 """
+
 import argparse
 import os
 import signal
 import subprocess
 import sys
 import time
+
 
 try:
     import pexpect
@@ -27,15 +29,15 @@ except ImportError:
 # --- Installer stage definitions ---
 
 INSTALLER_STAGES = [
-    ("Loading additional components",   "LOADING_COMPONENTS"),
-    ("Detecting network hardware",      "DETECTING_NETWORK"),
-    ("Retrieving preseed file",         "RETRIEVING_PRESEED"),
-    ("Installing the base system",      "INSTALLING_BASE"),
-    ("Configuring apt",                 "CONFIGURING_APT"),
-    ("Select and install software",     "INSTALLING_SOFTWARE"),
-    ("Installing GRUB",                 "INSTALLING_GRUB"),
-    ("Installation complete",           "INSTALL_COMPLETE"),
-    ("Power down",                      "POWER_DOWN"),
+    ("Loading additional components", "LOADING_COMPONENTS"),
+    ("Detecting network hardware", "DETECTING_NETWORK"),
+    ("Retrieving preseed file", "RETRIEVING_PRESEED"),
+    ("Installing the base system", "INSTALLING_BASE"),
+    ("Configuring apt", "CONFIGURING_APT"),
+    ("Select and install software", "INSTALLING_SOFTWARE"),
+    ("Installing GRUB", "INSTALLING_GRUB"),
+    ("Installation complete", "INSTALL_COMPLETE"),
+    ("Power down", "POWER_DOWN"),
 ]
 
 
@@ -48,9 +50,17 @@ def log(msg):
 def deactivate_sol(bmc_ip, bmc_user, bmc_pass):
     """Deactivate any existing SOL session."""
     cmd = [
-        "ipmitool", "-I", "lanplus",
-        "-H", bmc_ip, "-U", bmc_user, "-P", bmc_pass,
-        "sol", "deactivate",
+        "ipmitool",
+        "-I",
+        "lanplus",
+        "-H",
+        bmc_ip,
+        "-U",
+        bmc_user,
+        "-P",
+        bmc_pass,
+        "sol",
+        "deactivate",
     ]
     try:
         subprocess.run(cmd, capture_output=True, timeout=10)
@@ -60,11 +70,8 @@ def deactivate_sol(bmc_ip, bmc_user, bmc_pass):
 
 def sol_connect(bmc_ip, bmc_user, bmc_pass):
     """Spawn ipmitool SOL connection."""
-    cmd = (
-        f"ipmitool -I lanplus -H {bmc_ip} -U {bmc_user} -P {bmc_pass} sol activate"
-    )
-    child = pexpect.spawn(cmd, timeout=30, encoding="latin-1")
-    return child
+    cmd = f"ipmitool -I lanplus -H {bmc_ip} -U {bmc_user} -P {bmc_pass} sol activate"
+    return pexpect.spawn(cmd, timeout=30, encoding="latin-1")
 
 
 def disconnect_sol(child):
@@ -199,19 +206,16 @@ def sol_connect_with_handshake(bmc_ip, bmc_user, bmc_pass):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Passive SOL monitor for Debian installer progress"
-    )
+    parser = argparse.ArgumentParser(description="Passive SOL monitor for Debian installer progress")
     parser.add_argument("--bmc-ip", required=True, help="BMC IP address")
     parser.add_argument("--bmc-user", required=True, help="BMC username")
     parser.add_argument("--bmc-pass", required=True, help="BMC password")
     parser.add_argument("--log-file", help="Path to save raw SOL output")
-    parser.add_argument("--timeout", type=int, default=2700,
-                        help="Max wait time in seconds (default: 2700 = 45min)")
-    parser.add_argument("--powerstate-interval", type=int, default=20,
-                        help="PowerState poll interval in seconds (default: 20)")
-    parser.add_argument("--max-reconnects", type=int, default=3,
-                        help="Max SOL reconnect attempts on EOF (default: 3)")
+    parser.add_argument("--timeout", type=int, default=2700, help="Max wait time in seconds (default: 2700 = 45min)")
+    parser.add_argument(
+        "--powerstate-interval", type=int, default=20, help="PowerState poll interval in seconds (default: 20)"
+    )
+    parser.add_argument("--max-reconnects", type=int, default=3, help="Max SOL reconnect attempts on EOF (default: 3)")
     args = parser.parse_args()
 
     child = None
@@ -229,7 +233,7 @@ def main():
         log_dir = os.path.dirname(args.log_file)
         if log_dir:
             os.makedirs(log_dir, exist_ok=True)
-        with open(args.log_file, "w") as f:
+        with open(args.log_file, "w"):
             pass
 
     log("Deactivating any existing SOL session")
@@ -250,9 +254,7 @@ def main():
         else:
             log(f"Reconnecting SOL (attempt {reconnects}/{args.max_reconnects})")
 
-        child, ok = sol_connect_with_handshake(
-            args.bmc_ip, args.bmc_user, args.bmc_pass
-        )
+        child, ok = sol_connect_with_handshake(args.bmc_ip, args.bmc_user, args.bmc_pass)
         if not ok:
             if reconnects == 0:
                 sys.exit(2)
@@ -264,8 +266,13 @@ def main():
 
         log("SOL connected, starting installer monitoring")
         rc = monitor_loop(
-            child, args.log_file, remaining, args.powerstate_interval,
-            args.bmc_ip, args.bmc_user, args.bmc_pass,
+            child,
+            args.log_file,
+            remaining,
+            args.powerstate_interval,
+            args.bmc_ip,
+            args.bmc_user,
+            args.bmc_pass,
         )
 
         disconnect_sol(child)
@@ -278,9 +285,7 @@ def main():
             state = check_powerstate(args.bmc_ip, args.bmc_user, args.bmc_pass)
             log(f"SOL lost, PowerState: {state}")
             if state == "Off":
-                if confirm_powerstate_off(
-                    args.bmc_ip, args.bmc_user, args.bmc_pass, "reconnect check"
-                ):
+                if confirm_powerstate_off(args.bmc_ip, args.bmc_user, args.bmc_pass, "reconnect check"):
                     log("Installation completed (PowerState Off after SOL loss)")
                     sys.exit(0)
 

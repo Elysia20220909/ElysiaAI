@@ -1,0 +1,46 @@
+# Ruff Configuration for ElysiaAI (v3.1)
+line-length = 120
+indent-width = 4
+target-version = "py311"
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "lf"
+
+[lint]
+# E: Error, F: Pyflakes, B: Bugbear, I: Isort, UP: PyUpgrade, ASYNC: Flake8-Async
+select = ["E", "F", "B", "I", "N", "UP", "ASYNC", "S", "T20", "RET"]
+ignore = [
+    "B008",    # Do not perform function call in argument defaults
+    "S101",    # Use of assert
+    "T201",    # print() found
+    "G004",    # Logging statement uses f-string
+    "E402",    # Module level import not at top (needed for sys.path hack)
+    "ASYNC230", # Blocking open in async
+    "ASYNC240", # Blocking os.path in async
+    "S311",    # Standard pseudo-random generators
+    "S603",    # subprocess check untrusted input
+    "S607",    # subprocess check PATH
+    "E501",    # Line too long
+    "B904",    # Exception chaining
+    "S113",    # Requests timeout
+    "N801",    # Class name CapWords
+    "N802",    # Function name lowercase
+    "N806",    # Variable name lowercase
+    "S104",    # Bind all interfaces
+    "S105",    # Hardcoded password (resonance phrases)
+    "S110",    # try-except-pass
+    "S310",    # URL open audit
+    "S602",    # subprocess shell=True
+    "S606",    # process without shell
+]
+
+[lint.isort]
+combine-as-imports = true
+force-single-line = false
+lines-after-imports = 2
+
+[lint.pydocstyle]
+convention = "google"

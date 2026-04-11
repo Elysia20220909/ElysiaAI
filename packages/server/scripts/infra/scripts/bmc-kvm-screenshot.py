@@ -14,15 +14,14 @@ Exit codes:
   2 = timeout
   3 = dependency error (playwright/chromium not installed)
 """
+
 import argparse
 import os
 import sys
 import time
 
-VENV_PYTHON = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    ".venv", "bin", "python"
-)
+
+VENV_PYTHON = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".venv", "bin", "python")
 
 if os.path.exists(VENV_PYTHON) and sys.executable != VENV_PYTHON:
     os.execv(VENV_PYTHON, [VENV_PYTHON] + sys.argv)
@@ -51,10 +50,7 @@ def log(msg):
 
 def capture_screenshot(bmc_ip, bmc_user, bmc_pass, output, timeout_sec):
     """Capture KVM screenshot using Playwright."""
-    kvm_url = (
-        f"https://{bmc_ip}/cgi/url_redirect.cgi"
-        f"?url_name=man_ikvm_html5_bootstrap"
-    )
+    kvm_url = f"https://{bmc_ip}/cgi/url_redirect.cgi?url_name=man_ikvm_html5_bootstrap"
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -75,8 +71,8 @@ def capture_screenshot(bmc_ip, bmc_user, bmc_pass, output, timeout_sec):
         log(f"Logging in to BMC at {bmc_ip}")
         import http.cookiejar
         import ssl
-        import urllib.request
         import urllib.parse
+        import urllib.request
 
         ssl_ctx = ssl.create_default_context()
         ssl_ctx.check_hostname = False
@@ -86,9 +82,7 @@ def capture_screenshot(bmc_ip, bmc_user, bmc_pass, output, timeout_sec):
             urllib.request.HTTPCookieProcessor(cj),
             urllib.request.HTTPSHandler(context=ssl_ctx),
         )
-        login_data = urllib.parse.urlencode(
-            {"name": bmc_user, "pwd": bmc_pass}
-        ).encode()
+        login_data = urllib.parse.urlencode({"name": bmc_user, "pwd": bmc_pass}).encode()
         try:
             resp = opener.open(
                 f"https://{bmc_ip}/cgi/login.cgi",
@@ -113,14 +107,16 @@ def capture_screenshot(bmc_ip, bmc_user, bmc_pass, output, timeout_sec):
         log(f"Login successful (SID: {sid[:8]}...)")
 
         # Set the SID cookie in the browser context
-        context.add_cookies([
-            {
-                "name": "SID",
-                "value": sid,
-                "domain": bmc_ip,
-                "path": "/",
-            }
-        ])
+        context.add_cookies(
+            [
+                {
+                    "name": "SID",
+                    "value": sid,
+                    "domain": bmc_ip,
+                    "path": "/",
+                }
+            ]
+        )
 
         # Step 2: Navigate to KVM viewer
         log("Opening KVM viewer...")
@@ -218,9 +214,7 @@ def capture_screenshot(bmc_ip, bmc_user, bmc_pass, output, timeout_sec):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="BMC KVM screenshot capture via HTML5 iKVM viewer"
-    )
+    parser = argparse.ArgumentParser(description="BMC KVM screenshot capture via HTML5 iKVM viewer")
     parser.add_argument("--bmc-ip", required=True, help="BMC IP address")
     parser.add_argument("--bmc-user", required=True, help="BMC username")
     parser.add_argument("--bmc-pass", required=True, help="BMC password")
@@ -237,9 +231,7 @@ def main():
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
 
-    rc = capture_screenshot(
-        args.bmc_ip, args.bmc_user, args.bmc_pass, args.output, args.timeout
-    )
+    rc = capture_screenshot(args.bmc_ip, args.bmc_user, args.bmc_pass, args.output, args.timeout)
     sys.exit(rc)
 
 
