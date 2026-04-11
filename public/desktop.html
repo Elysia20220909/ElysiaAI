@@ -241,6 +241,13 @@
                         this.loadApp('soul_core');
                         setTimeout(() => this.greetUser(), 3000);
                     });
+
+                    // Hot Manifest Sync (Phase 19)
+                    window.addEventListener('elysia-manifest-stable', () => {
+                        console.log("Hot Manifest Signal Received. Syncing registry...");
+                        this.fetchApps();
+                        this.showToast("Registry Synchronized", "🧬");
+                    });
                 },
                 async greetUser() {
                     const res = await fetch('http://localhost:8000/system/monitor');

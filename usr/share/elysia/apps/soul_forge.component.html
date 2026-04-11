@@ -117,7 +117,8 @@
                         this.forge_logs.push(`Matrix Stable. '${data.title}' manifested.`);
                         this.forge_logs.push("Reloading OS registry...");
                         this.forge_desc = '';
-                        // Notify system to reload apps if needed, or user can manual refresh
+                        // Notify system to reload apps (Hot Manifest Phase 19)
+                        window.dispatchEvent(new CustomEvent('elysia-manifest-stable', { detail: data }));
                     } else {
                         this.forge_logs.push("Error: Matrix collapse detected.");
                     }
