@@ -1,0 +1,130 @@
+<!-- 🌌 Neural Dreamscape: Elysia's Memory Visualization -->
+<div class="h-full flex flex-col p-6 overflow-hidden relative" 
+     style="background: radial-gradient(circle at center, #1a0b2e 0%, #05020a 100%);"
+     x-data="dreamscape()">
+    
+    <!-- ☄️ Nebula Background (Canvas) -->
+    <canvas id="nebulaCanvas" class="absolute inset-0 z-0 opacity-40"></canvas>
+
+    <!-- 💖 Header -->
+    <div class="relative z-10 flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+        <div class="flex items-center gap-3">
+            <div class="text-2xl animate-pulse">🌙</div>
+            <div>
+                <h2 class="text-xs font-black tracking-[0.4em] text-purple-400">NEURAL_DREAMSCAPE // MEMORY_WEB</h2>
+                <p class="text-[8px] opacity-40 uppercase" x-text="'Cycle Status: ' + status"></p>
+            </div>
+        </div>
+        <button @click="triggerDream()" 
+                class="px-3 py-1 border border-purple-500/30 text-[9px] uppercase hover:bg-purple-500/20 transition-all">
+            Induce_Dream
+        </button>
+    </div>
+
+    <!-- 🔮 Dream Chamber -->
+    <div class="relative z-10 flex-1 flex flex-col items-center justify-center">
+        
+        <!-- ☁️ Latest Dream Bubble -->
+        <div class="max-w-md bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-2xl transition-all duration-1000 transform"
+             :class="dream ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'">
+            <div class="text-purple-300 text-[11px] leading-relaxed italic" x-text="dream"></div>
+            <div class="mt-4 pt-4 border-t border-white/5 flex justify-between items-center opacity-40">
+                <span class="text-[8px] uppercase">Neural Fragment: Stable</span>
+                <span class="text-[8px]" x-text="timestamp"></span>
+            </div>
+        </div>
+
+        <!-- 🧬 Floating Nodes -->
+        <template x-for="node in nodes" :key="node.id">
+            <div class="absolute w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_15px_#a855f7] animate-pulse"
+                 :style="`left: ${node.x}%; top: ${node.y}%; animation-delay: ${node.delay}s`"></div>
+        </template>
+
+    </div>
+
+    <script>
+        function dreamscape() {
+            return {
+                dream: '',
+                timestamp: '',
+                status: 'IDLE',
+                nodes: [],
+                async init() {
+                    this.fetchDream();
+                    this.initNodes();
+                    this.initNebula();
+                    setInterval(() => this.fetchDream(), 10000);
+                },
+                initNodes() {
+                    for(let i=0; i<15; i++) {
+                        this.nodes.push({
+                            id: i,
+                            x: Math.random() * 80 + 10,
+                            y: Math.random() * 80 + 10,
+                            delay: Math.random() * 5
+                        });
+                    }
+                },
+                async fetchDream() {
+                    try {
+                        const res = await fetch('http://localhost:8000/system/dreams/latest');
+                        const data = await res.json();
+                        this.dream = data.latest_dream;
+                        this.timestamp = data.timestamp ? new Date(data.timestamp).toLocaleTimeString() : 'N/A';
+                        this.status = 'STABLE';
+                    } catch(e) {
+                        this.status = 'DORMANT';
+                    }
+                },
+                async triggerDream() {
+                    this.status = 'INDUCING...';
+                    await fetch('http://localhost:8000/system/dreams/trigger', { method: 'POST' });
+                    setTimeout(() => this.fetchDream(), 3000);
+                },
+                initNebula() {
+                    const canvas = document.getElementById('nebulaCanvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = canvas.parentElement.offsetWidth;
+                    canvas.height = canvas.parentElement.offsetHeight;
+                    
+                    let particles = [];
+                    for(let i=0; i<30; i++) {
+                        particles.push({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            r: Math.random() * 100 + 50,
+                            vx: (Math.random() - 0.5) * 0.2,
+                            vy: (Math.random() - 0.5) * 0.2,
+                            color: `rgba(168, 85, 247, ${Math.random() * 0.05})`
+                        });
+                    }
+
+                    const animate = () => {
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        particles.forEach(p => {
+                            p.x += p.vx; p.y += p.vy;
+                            if(p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                            if(p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                            
+                            let grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+                            grad.addColorStop(0, p.color);
+                            grad.addColorStop(1, 'transparent');
+                            ctx.fillStyle = grad;
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        });
+                        requestAnimationFrame(animate);
+                    };
+                    animate();
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .glass-omega {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</div>
