@@ -5,5 +5,12 @@
     "usr/lib/elysia/kernel.py": "C",
     "var/lib/elysia/soul.db": "A",
     "var/elysia/vision": "B",
-    "var/elysia/test1.json": "A"
+    "var/elysia/test1.json": "A",
+    "var/elysia/abyss/backups/kernel_py.bak": "A",
+    "var/elysia/abyss/backups/secure_enclave_py.bak": "A",
+    "var/elysia/abyss/backups/synthesizer_py.bak": "A",
+    "var/elysia/abyss/backups/executor_py.bak": "A",
+    "var/elysia/abyss/backups/desktop_html.bak": "A",
+    "var/elysia/abyss/backups/desktop_css.bak": "A",
+    "var/elysia/abyss/backups/blackwall_css.bak": "A"
 }
