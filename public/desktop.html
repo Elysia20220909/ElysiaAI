@@ -14,6 +14,18 @@
         :root {
             --resonance-hue: 340; /* Default Elysia Pink */
             --resonance-glow: 20px;
+            --pulse-opacity: 0.1;
+        }
+        .resonance-pulse {
+            animation: pulse-glow 2s infinite alternate;
+        }
+        @keyframes pulse-glow {
+            from { filter: drop-shadow(0 0 5px hsla(var(--resonance-hue), 100%, 50%, 0.3)); }
+            to { filter: drop-shadow(0 0 20px hsla(var(--resonance-hue), 100%, 50%, 0.6)); }
+        }
+        .bg-resonance {
+            background: radial-gradient(circle at 50% 50%, hsla(var(--resonance-hue), 100%, 50%, var(--pulse-opacity)) 0%, transparent 70%);
+            transition: all 0.5s ease;
         }
 
         body {
@@ -40,7 +52,8 @@
     <!-- ✨ Starfall Container -->
     <div id="starfall" class="sparkle-container"></div>
     
-    <div class="fixed inset-0 pointer-events-none z-[1] bg-black/20 backdrop-blur-[2px]"></div>
+    <div class="fixed inset-0 pointer-events-none z-[1] bg-resonance"></div>
+    <div class="fixed inset-0 pointer-events-none z-[2] bg-black/20 backdrop-blur-[2px]"></div>
     
     <!-- 📊 Status Bar (Omega Edition) -->
     <header class="fixed top-0 left-0 right-0 z-[1000] glass-omega h-10 flex items-center justify-between px-6 border-b border-white/5">
@@ -216,7 +229,11 @@
                     try {
                         const res = await fetch('http://localhost:8000/system/monitor');
                         const data = await res.json();
+                        this.stats = data;
                         
+                        // Update Resonance Heartbeat
+                        this.updateResonancePulse();
+
                         // Update Resonance Theme
                         const resonance = data.elysia.soul_resonance || {};
                         const affinity = parseInt(resonance.affinity?.value || "50");
@@ -249,8 +266,19 @@
                         document.documentElement.style.setProperty('--resonance-hue', hue);
                         document.documentElement.style.setProperty('--resonance-glow', `${10 + (affinity/2)}px`);
                         
-                    } catch (e) {
-                        console.error("Monitor fetch fail", e);
+                    }
+                },
+                updateResonancePulse() {
+                    const cpu = this.stats.system?.cpu || 0;
+                    const root = document.documentElement;
+                    if (cpu > 40) {
+                        // High Resonance (Excited/Intense)
+                        root.style.setProperty('--pulse-opacity', '0.25');
+                        root.style.setProperty('--resonance-glow', '40px');
+                    } else {
+                        // Normal Resonance (Calm)
+                        root.style.setProperty('--pulse-opacity', '0.08');
+                        root.style.setProperty('--resonance-glow', '15px');
                     }
                 },
 
