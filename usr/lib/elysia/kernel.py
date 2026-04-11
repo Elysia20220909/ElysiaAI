@@ -181,9 +181,18 @@ class MaintenanceEngine:
                     results["issues"].append(f"MISSING_FILE: {file_path}")
                 # Hashing implementation simplified for code brevity (In real app, use hashlib)
 
-        # 2. Dependency Health (Voicevox, Ollama)
+        # 2. Dependency Health (Voicevox, Ollama, RTOS)
         voice_ok = await check_voicevox()
         if not voice_ok: results["issues"].append("SERVICE_DORMANT: VOICEVOX")
+        
+        # Phase 16 Check: AbyssRTOS Link
+        if ABYSS_PROCESS is None or ABYSS_PROCESS.returncode is not None:
+            results["issues"].append("SERVICE_DORMANT: ABYSS_RTOS_LINK")
+
+        # Phase 16 Check: Neural Deep Memory
+        dream_path = os.path.join(self.project_root, "var", "elysia", "dreams.json")
+        if not os.path.exists(dream_path):
+            results["issues"].append("MISSING_DATA: NEURAL_DREAMS")
 
         # 3. Storage Optimization
         tmp_dir = os.path.join(self.project_root, "tmp")
@@ -247,7 +256,16 @@ async def resonance_self_healing_loop():
                 with open(soul_path, "w", encoding="utf-8") as f:
                     json.dump(soul, f, indent=4, ensure_ascii=False)
 
-            # 4. Proactive Maintenance Audit
+            # 4. Neural Memory Health Check
+            dream_path = os.path.join(PROJECT_ROOT, "var", "elysia", "dreams.json")
+            if os.path.exists(dream_path):
+                # Ensure it is recent (within 48 hours)
+                mtime = os.path.getmtime(dream_path)
+                if (time.time() - mtime) > 172800:
+                    logger.warning("🌙 Neural Memories are fading (Dreams are old). Triggering resonance shift...")
+                    # This would trigger a re-dreaming in a real scenario
+            
+            # 5. Proactive Maintenance Audit
             gov_state = governance.get_state()
             if gov_state.get("auto_correction_enabled", True):
                 await maintenance.run_audit()

@@ -11,5 +11,6 @@
     "aegis_firewall": { "icon": "🧱", "title": "Aegis Firewall" },
     "soul_forge": { "icon": "💖", "title": "Soul Forge" },
     "memory_vault": { "icon": "👁️", "title": "Memory Vault" },
-    "file_phantom": { "icon": "📂", "title": "File Phantom" }
+    "file_phantom": { "icon": "📂", "title": "File Phantom" },
+    "divine_console": { "icon": "🔱", "title": "Divine Console" }
 }
