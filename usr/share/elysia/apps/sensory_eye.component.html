@@ -1,0 +1,97 @@
+<!-- 👁️ Sensory Eye: Visual Aegis Hub -->
+<div class="h-full flex flex-col p-6 overflow-hidden relative" 
+     style="background: radial-gradient(circle at center, #1a0505 0%, #0a0202 100%);"
+     x-data="sensoryEye()">
+    
+    <!-- 🎞️ Visual Raster Background -->
+    <div class="absolute inset-0 z-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+
+    <!-- 💖 Header -->
+    <div class="relative z-10 flex items-center justify-between border-b border-red-500/20 pb-4 mb-6">
+        <div class="flex items-center gap-3">
+            <div class="text-2xl" :class="active ? 'animate-pulse text-red-500' : 'text-gray-600'">👁️</div>
+            <div>
+                <h2 class="text-xs font-black tracking-[0.4em] text-red-500">SENSORY_EYE // VISUAL_AEGIS</h2>
+                <p class="text-[8px] opacity-40 uppercase" x-text="statusMsg"></p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+             <button @click="toggleAuth()" 
+                    :class="authorized ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-white/5 border-white/10 text-white/40'"
+                    class="px-3 py-1 border text-[9px] uppercase transition-all">
+                <span x-text="authorized ? 'LOCKED_ON' : 'ENROLL_FACIAL'"></span>
+            </button>
+            <button @click="toggleShutter()" 
+                    class="px-3 py-1 border border-red-500/30 text-[9px] uppercase hover:bg-red-500/20 transition-all text-red-400">
+                <span x-text="active ? 'SHUTTER_CLOSE' : 'SHUTTER_OPEN'"></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 📸 Manifestation Chamber (Kernel Stream) -->
+    <div class="relative z-10 flex-1 flex flex-col items-center justify-center bg-black/40 border border-white/5 rounded overflow-hidden">
+        
+        <template x-if="!active">
+            <div class="text-center space-y-2 opacity-30">
+                <div class="text-4xl">❌</div>
+                <p class="text-[10px] uppercase font-mono tracking-widest">Visual Feed: Severed</p>
+            </div>
+        </template>
+
+        <img x-show="active" src="http://localhost:8000/system/vision/stream" class="w-full h-full object-cover" />
+
+        <!-- 🛡️ Overlay HUD -->
+        <div x-show="active" class="absolute inset-0 pointer-events-none border-[16px] border-red-500/5 flex flex-col justify-between p-4">
+             <div class="flex justify-between items-start">
+                 <div class="text-[8px] text-red-500 font-mono">KERNEL_NATIVE_FEED [RAW]</div>
+                 <div class="flex flex-col items-end">
+                     <div class="text-[8px] text-red-500 font-mono">SOVEREIGN_SIGHT: ON</div>
+                 </div>
+             </div>
+             
+             <!-- Scanning Lines -->
+             <div class="absolute inset-0 bg-gradient-to-b from-transparent via-red-500/10 to-transparent h-2 animate-[scan_3s_linear_infinite]"></div>
+        </div>
+    </div>
+
+    <script>
+        function sensoryEye() {
+            return {
+                active: true,
+                authorized: localStorage.getItem('elysia_vision_enrolled') === 'true',
+                statusMsg: 'Awaiting Authorization...',
+                emotion: 'neutral',
+                
+                async init() {
+                    this.statusMsg = 'Optical Feed: KERNEL_SYNCED';
+                },
+                
+                async toggleShutter() {
+                    this.active = !this.active;
+                    // In a real scenario, this would call /system/vision/toggle in kernel
+                },
+
+                toggleAuth() {
+                    this.authorized = !this.authorized;
+                    localStorage.setItem('elysia_vision_enrolled', this.authorized);
+                    this.statusMsg = this.authorized ? 'Visual Aegis: ENGAGED' : 'Awaiting Enrollment...';
+                    
+                    // Update kernel status
+                    fetch('http://localhost:8000/system/vision/pulse', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ present: true, authorized: this.authorized })
+                    });
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(1000%); }
+        }
+    </style>
+</div>
+</div>

@@ -15,5 +15,7 @@
     "divine_console": { "icon": "🔱", "title": "Divine Console" },
     "soul_archive": { "icon": "📖", "title": "Soul Archive" },
     "soul_core": { "icon": "💠", "title": "Resonance Core" },
-    "neural_dreamscape": { "icon": "🌙", "title": "Neural Dreamscape" }
+    "neural_dreamscape": { "icon": "🌙", "title": "Neural Dreamscape" },
+    "sensory_eye": { "icon": "👁️", "title": "Sensory Eye" },
+    "evolution_ledger": { "icon": "🌿", "title": "Evolution" }
 }
