@@ -12,5 +12,6 @@
     "soul_forge": { "icon": "💖", "title": "Soul Forge" },
     "memory_vault": { "icon": "👁️", "title": "Memory Vault" },
     "file_phantom": { "icon": "📂", "title": "File Phantom" },
-    "divine_console": { "icon": "🔱", "title": "Divine Console" }
+    "divine_console": { "icon": "🔱", "title": "Divine Console" },
+    "soul_archive": { "icon": "📖", "title": "Soul Archive" }
 }

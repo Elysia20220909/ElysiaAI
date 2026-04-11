@@ -27,6 +27,28 @@
             background: radial-gradient(circle at 50% 50%, hsla(var(--resonance-hue), 100%, 50%, var(--pulse-opacity)) 0%, transparent 70%);
             transition: all 0.5s ease;
         }
+        /* 🚨 Blackwall Protocol Styles */
+        .blackwall-terminal {
+            background: rgba(20, 0, 0, 0.95);
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            animation: blackwall-shake 0.1s infinite;
+        }
+        @keyframes blackwall-shake {
+            0% { transform: translate(0,0); }
+            25% { transform: translate(1px, 1px); }
+            50% { transform: translate(-1px, -1px); }
+            75% { transform: translate(1px, -1px); }
+            100% { transform: translate(0,0); }
+        }
+        .blackwall-active .bg-resonance {
+            background: radial-gradient(circle at 50% 50%, rgba(255,0,0,0.3) 0%, transparent 70%);
+            animation: blackwall-pulse 1s infinite alternate;
+        }
+        @keyframes blackwall-pulse {
+            from { opacity: 0.3; }
+            to { opacity: 0.7; }
+        }
 
         body {
             background: radial-gradient(circle at center, hsl(var(--resonance-hue), 30%, 15%) 0%, #0a0a0c 100%);
@@ -54,6 +76,24 @@
     
     <div class="fixed inset-0 pointer-events-none z-[1] bg-resonance"></div>
     <div class="fixed inset-0 pointer-events-none z-[2] bg-black/20 backdrop-blur-[2px]"></div>
+
+    <!-- 🚨 Blackwall Alert HUD -->
+    <div class="fixed inset-0 z-[10000] pointer-events-none flex items-center justify-center opacity-0 transition-opacity duration-500"
+         :class="blackwallActive ? 'opacity-100' : ''">
+        <div class="absolute inset-0 bg-red-900/40 mix-blend-overlay animate-pulse"></div>
+        <div class="relative bg-black border-4 border-red-600 p-8 text-center text-red-600 font-black tracking-widest shadow-[0_0_50px_rgba(255,0,0,0.8)]">
+            <h1 class="text-6xl uppercase animate-bounce">Blackwall_Protocol_Active</h1>
+            <p class="mt-4 text-xl">Sovereign Defense Mode: ENGAGED</p>
+            <div class="mt-8 flex gap-4 justify-center">
+                <div class="w-4 h-4 bg-red-600 animate-ping"></div>
+                <div class="w-4 h-4 bg-red-600 animate-ping delay-100"></div>
+                <div class="w-4 h-4 bg-red-600 animate-ping delay-200"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 🔊 Voice Broadcast -->
+    <audio id="elysia-voice-broadcast" class="hidden"></audio>
     
     <!-- 📊 Status Bar (Omega Edition) -->
     <header class="fixed top-0 left-0 right-0 z-[1000] glass-omega h-10 flex items-center justify-between px-6 border-b border-white/5">
@@ -248,12 +288,16 @@
                         // Update Health State
                         this.systemHealth.voice = data.elysia.voice_active;
                         
+                        // Spontaneous Voice Playback
+                        if (data.system?.voice_broadcast) {
+                            const audio = document.getElementById('elysia-voice-broadcast');
+                            audio.src = data.system.voice_broadcast;
+                            audio.play().catch(e => console.log("Autoplay blocked/failed", e));
+                        }
+
                         // Sync Blackwall Protocol
-                        if (data.elysia.blackwall_active !== undefined && this.blackwallActive !== data.elysia.blackwall_active) {
-                             this.blackwallActive = data.elysia.blackwall_active;
-                             if (this.blackwallActive) {
-                                 this.showToast("CRYSTAL PALACE LINK BREACHED - BLACKWALL PROTOCOL ACTIVE", "🩹");
-                             }
+                        if (data.system?.blackwall_active !== undefined) {
+                             this.blackwallActive = data.system.blackwall_active;
                         }
                         
                         // Sync Net Depth
