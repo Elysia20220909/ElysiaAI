@@ -11,6 +11,10 @@
         "icon": "📂",
         "title": "FHS Explorer"
     },
+    "aegis_center": {
+        "icon": "🛡️",
+        "title": "Aegis Security Center"
+    },
     "terminal": {
         "icon": "🐚",
         "title": "Elysia Shell"
