@@ -3,13 +3,16 @@
 実行: locust -f locustfile.py --host=http://localhost:5001
 """
 
-from locust import HttpUser, task, between, events
 from datetime import datetime
+
+from locust import HttpUser, between, events, task
+
 
 class ElysiaAIUser(HttpUser):
     """
     エリシアAI の典型的なユーザー行動をシミュレート
     """
+
     wait_time = between(1, 3)  # 1〜3秒の待機時間
 
     @task(weight=5)
@@ -30,17 +33,8 @@ class ElysiaAIUser(HttpUser):
     @task(weight=1)
     def chat_api(self):
         """チャットAPI (模擬)"""
-        payload = {
-            "messages": [
-                {"role": "user", "content": "こんにちは"}
-            ],
-            "mode": "normal"
-        }
-        self.client.post(
-            "/chat",
-            json=payload,
-            name="/chat"
-        )
+        payload = {"messages": [{"role": "user", "content": "こんにちは"}], "mode": "normal"}
+        self.client.post("/chat", json=payload, name="/chat")
 
     def on_start(self):
         """テスト開始時"""
@@ -55,6 +49,7 @@ class StressTestUser(HttpUser):
     """
     ストレステスト: 集中的にリクエスト送信
     """
+
     wait_time = between(0.1, 0.5)  # 高速リクエスト
 
     @task
@@ -67,6 +62,7 @@ class APIEndpointUser(HttpUser):
     """
     個別API エンドポイント用テストユーザー
     """
+
     wait_time = between(2, 5)
 
     @task
@@ -89,23 +85,24 @@ class APIEndpointUser(HttpUser):
 # イベントハンドラ
 # ============================================================================
 
+
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
     """テスト開始時"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🚀 Locust 負荷テスト開始")
     print(f"   ターゲット: {environment.host}")
     print(f"   開始時刻: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("="*70 + "\n")
+    print("=" * 70 + "\n")
 
 
 @events.test_stop.add_listener
 def on_test_stop(environment, **kwargs):
     """テスト終了時"""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("✅ Locust 負荷テスト終了")
     print(f"   終了時刻: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("="*70)
+    print("=" * 70)
 
 
 @events.quitting.add_listener

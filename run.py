@@ -1,10 +1,10 @@
-import subprocess
-import time
-import urllib.request
-import urllib.error
 import json
-import sys
 import os
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+
 
 def check_ollama(model_name="llama3.1"):
     print("🔍 [Command Center] Checking Ollama status...")
@@ -22,11 +22,12 @@ def check_ollama(model_name="llama3.1"):
         print("❌ [Error] Ollama is not reachable at http://127.0.0.1:11434.")
         print("   Please start the Ollama application before chatting with ElysiaAI.")
 
+
 if __name__ == "__main__":
     check_ollama()
-    
+
     print("\n🚀 [Command Center] Booting ElysiaAI...")
-    
+
     # Pythonが 'python' ディレクトリに存在することを確認
     if not os.path.exists("python/fastapi_server.py"):
         print("❌ Error: python/fastapi_server.py not found. Please run this script from the project root.")
@@ -34,14 +35,11 @@ if __name__ == "__main__":
 
     # Start Backend (Uvicorn)
     backend = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "fastapi_server:app", "--host", "0.0.0.0", "--port", "8000"],
-        cwd="python"
+        [sys.executable, "-m", "uvicorn", "fastapi_server:app", "--host", "0.0.0.0", "--port", "8000"], cwd="python"
     )
-    
+
     # Start Frontend (Simple HTTP Server)
-    frontend = subprocess.Popen(
-        [sys.executable, "-m", "http.server", "3000", "--directory", "public"]
-    )
+    frontend = subprocess.Popen([sys.executable, "-m", "http.server", "3000", "--directory", "public"])
 
     try:
         print("\n🌸 ElysiaAI Shell is Active!")

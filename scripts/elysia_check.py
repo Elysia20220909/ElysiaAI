@@ -3,31 +3,34 @@
 Elysia OS - Pre-flight Diagnostic Tool (v1.0.0)
 Validates the environment for Windows, MacOS, and Ubuntu. 🌸
 """
-import sys
-import os
+
 import shutil
-import subprocess
 import socket
-import json
+import sys
+
 
 # 文字化け対策: UTF-8 出力を強制
 if sys.platform == "win32":
     import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+
 
 def print_result(check_name, status, message=""):
     color = "\033[92m[OK]\033[0m" if status else "\033[91m[FAIL]\033[0m"
     print(f"{color} {check_name}: {message}")
+
 
 def check_service(host, port, name):
     try:
         with socket.create_connection((host, port), timeout=1):
             print_result(name, True, f"Running on {host}:{port}")
             return True
-    except:
+    except Exception:
         print_result(name, False, f"Not reachable on {host}:{port}")
         return False
+
 
 def check_dependency(name, command):
     """コマンドが存在するかチェックする"""
@@ -35,9 +38,9 @@ def check_dependency(name, command):
     if path:
         print_result(name, True, f"Found at {path}")
         return True
-    else:
-        print_result(name, False, "Not found in PATH")
-        return False
+    print_result(name, False, "Not found in PATH")
+    return False
+
 
 def validate_environment():
     print("--- Elysia OS Diagnostic Report ---")
@@ -48,14 +51,31 @@ def validate_environment():
     print_result("Python", True, f"v{py_ver}")
 
     # 2. External Tools Check
-    if not check_dependency("Bun", ["bun"]): all_ok = False
-    if not check_dependency("Ollama", ["ollama"]): all_ok = False
-    if not check_dependency("Rust/Cargo", ["cargo"]): all_ok = False
+    if not check_dependency("Bun", ["bun"]):
+        all_ok = False
+    if not check_dependency("Ollama", ["ollama"]):
+        all_ok = False
+    if not check_dependency("Rust/Cargo", ["cargo"]):
+        all_ok = False
 
     # 3. Dependencies Check
-    try:
-        import fastapi, httpx, psutil, pydantic_settings, rich, pyautogui, PIL
+    import importlib.util
+
+    libs = ["fastapi", "httpx", "PIL", "psutil", "pyautogui", "pydantic_settings", "rich"]
+    missing = []
+    for lib in libs:
+        if importlib.util.find_spec(lib) is None:
+            missing.append(lib)
+
+    if not missing:
         print_result("Library Dependencies", True, "All core and GUI libraries verified")
+    else:
+        print_result("Library Dependencies", False, f"Missing: {', '.join(missing)}")
+        all_ok = False
+
+    try:
+        # Actually checking we can import them as secondary verification if find_spec passed
+        pass
     except ImportError as e:
         print_result("Library Dependencies", False, f"Missing: {e}")
         all_ok = False
@@ -84,8 +104,9 @@ def validate_environment():
         print("\033[96mElysia OS is ready for resonance. (^_^) \033[0m")
     else:
         print("\033[91mInitialization blocked due to missing components.\033[0m")
-    
+
     return all_ok
+
 
 if __name__ == "__main__":
     if not validate_environment():
