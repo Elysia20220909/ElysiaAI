@@ -1,0 +1,76 @@
+<!-- 🔱 Divine Console: AbyssRTOS Command & Telemetry HUD -->
+<div class="flex flex-col h-full bg-black/80 backdrop-blur-xl border border-white/10 text-white font-mono p-4 rounded-lg shadow-2xl overflow-hidden" 
+     x-data="{ 
+        cmd: '', 
+        logs: [], 
+        sse: null,
+        init() {
+            this.connectSSE();
+        },
+        connectSSE() {
+            this.sse = new EventSource('http://localhost:8000/system/abyss/telemetry');
+            this.sse.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                this.logs.push(`[${new Date(data.timestamp).toLocaleTimeString()}] UPTIME:${data.uptime} LOAD:${data.load}% STATE:${data.state}`);
+                if (this.logs.length > 50) this.logs.shift();
+                this.$nextTick(() => {
+                    const el = document.getElementById('abyss-logs');
+                    if (el) el.scrollTop = el.scrollHeight;
+                });
+            };
+        },
+        async sendCommand() {
+            if (!this.cmd.trim()) return;
+            const res = await fetch('http://localhost:8000/system/abyss/command', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: this.cmd })
+            });
+            const data = await res.json();
+            if (data.status === 'success') {
+                this.logs.push(`🔱 COMMAND SENT: ${this.cmd}`);
+            } else {
+                this.logs.push(`❌ FAILED: ${data.message || 'Unknown error'}`);
+            }
+            this.cmd = '';
+        }
+     }">
+    
+    <!-- 🟢 Header -->
+    <div class="flex items-center justify-between border-b border-cyan-400/30 pb-2 mb-4">
+        <div class="flex items-center gap-2">
+            <span class="text-cyan-400">🔱</span>
+            <h2 class="text-xs font-black tracking-[0.3em] uppercase">Divine_Command_Link</h2>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-0.5 bg-cyan-950 border border-cyan-400/50 rounded-full">
+            <div class="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_#00f2ff]"></div>
+            <span class="text-[9px] text-cyan-400 uppercase font-black">Link_Active</span>
+        </div>
+    </div>
+
+    <!-- 📜 Log Area -->
+    <div id="abyss-logs" class="flex-1 overflow-y-auto text-[10px] space-y-1 pr-2 scrollbar-thin scrollbar-thumb-white/10">
+        <template x-for="(log, i) in logs" :key="i">
+            <div class="flex gap-2 border-l-2 border-cyan-400/20 pl-2 py-0.5 hover:bg-white/5 transition-colors">
+                <span class="text-cyan-400/50">></span>
+                <span class="text-white/80" x-text="log"></span>
+            </div>
+        </template>
+    </div>
+
+    <!-- ⌨️ Input Area -->
+    <div class="mt-4 pt-4 border-t border-white/5">
+        <div class="relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-400/20 to-transparent rounded opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
+            <input type="text" 
+                   x-model="cmd" 
+                   @keyup.enter="sendCommand()"
+                   placeholder="ENTER_COMMAND_FOR_ABYSS_RTOS..."
+                   class="relative w-full bg-black/40 border border-white/10 px-4 py-2 text-xs focus:outline-none focus:border-cyan-400 transition-all placeholder:text-white/20">
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-white/20 group-focus-within:text-cyan-400 font-bold">↵ ENTER</div>
+        </div>
+        <div class="mt-2 text-[8px] text-white/30 italic">
+            Example: help, tasks, set_priority 2 high, shutdown
+        </div>
+    </div>
+</div>
