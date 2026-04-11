@@ -20,7 +20,7 @@
         "updated_at": "2026-04-10 18:00:00"
     },
     "maintenance": {
-        "last_inspection": "2026-04-11 21:26:53.412324",
+        "last_inspection": "2026-04-11 21:30:59.555264",
         "health_score": 70,
         "active_anomalies": [
             "SERVICE_DORMANT: VOICEVOX",
@@ -31,11 +31,11 @@
     },
     "autonomy_stats": {
         "anomalies_fixed": 0,
-        "last_pulse": "2026-04-11 21:26:53.411145"
+        "last_pulse": "2026-04-11 21:30:59.554079"
     },
     "reflection": {
         "value": "システムの深淵を監視中...。すべては平穏だよ。",
-        "updated_at": "2026-04-11 21:26:26.029739"
+        "updated_at": "2026-04-11 21:31:05.920347"
     },
     "emotion": {
         "value": "SOVEREIGN_CALM",
