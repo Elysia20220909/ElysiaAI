@@ -10,8 +10,129 @@
     <link rel="stylesheet" href="css/blackwall.css">
     <link rel="stylesheet" href="css/aegis.css">
     <link rel="stylesheet" href="css/sparkle.css">
+    <link rel="stylesheet" href="css/environments/mount_hood.css">
     <style>
-        :root {
+        /* Phase 35: Event Horizon (Integrity Collapse) */
+    .event-horizon {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(0, 0, 0, 0.9) 0%, rgba(0, 255, 255, 0.1) 40%, transparent 70%);
+        box-shadow: 0 0 100px rgba(0, 255, 255, 0.2), inset 0 0 50px rgba(0, 255, 255, 0.1);
+        border-radius: 50%;
+        z-index: -2;
+        pointer-events: none;
+        animation: horizon-pulse 8s ease-in-out infinite;
+    }
+    @keyframes horizon-pulse {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); filter: contrast(1.2) brightness(1); }
+        50% { transform: translate(-50%, -50%) scale(1.1); filter: contrast(1.5) brightness(1.2); }
+    }
+
+    .system-distortion {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        pointer-events: none;
+        background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+        mix-blend-mode: overlay;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+    .integrity-panic .system-distortion {
+        opacity: 0.15;
+        animation: static-flicker 0.1s infinite;
+    }
+    @keyframes static-flicker {
+        from { transform: translate(1px, 1px); }
+        to { transform: translate(-1px, -1px); }
+    }
+
+    /* Phase 36: E.D.I.T.H. Tactical Interface */
+    .edith-grid {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background-image: 
+            linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+        background-size: 50px 50px;
+        opacity: 0;
+        transition: opacity 1s ease;
+    }
+    .edith-active .edith-grid {
+        opacity: 1;
+    }
+    .edith-scanline {
+        position: fixed;
+        left: 0;
+        width: 100%;
+        height: 100px;
+        background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.1), transparent);
+        z-index: 2;
+        pointer-events: none;
+        display: none;
+        animation: edith-scan 6s linear infinite;
+    }
+    .edith-active .edith-scanline {
+        display: block;
+    }
+    @keyframes edith-scan {
+        0% { top: -10%; }
+        100% { top: 110%; }
+    }
+
+    /* Phase 37: MARK 85 Nano-Mesh Refocuser */
+    .mk85-refocuser {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 1.5s ease;
+        background: radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.05) 0%, transparent 70%);
+    }
+    .mk85-active .mk85-refocuser {
+        opacity: 1;
+    }
+    .nano-vector {
+        position: absolute;
+        width: 2px;
+        height: 100px;
+        background: linear-gradient(to top, transparent, #ffd700, #ff0000);
+        opacity: 0.3;
+        filter: blur(1px);
+        animation: nano-float 8s infinite ease-in-out;
+    }
+    @keyframes nano-float {
+        0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.1; }
+        50% { transform: translateY(-50px) rotate(15deg); opacity: 0.4; }
+    }
+
+    /* Phase 38: Physical Sincerity LED */
+    .physical-led {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        width: 6px;
+        height: 6px;
+        background: #00ff00;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #00ff00, 0 0 15px rgba(0, 255, 0, 0.4);
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+    }
+    .led-active {
+        opacity: 1 !important;
+    }
+
+    :root {
             --resonance-hue: 340; /* Default Pink */
             --resonance-glow: 20px;
             --pulse-opacity: 0.15;
@@ -115,6 +236,42 @@
             border-color: hsla(var(--resonance-hue), 80%, 70%, 0.3);
             box-shadow: 0 0 var(--resonance-glow) hsla(var(--resonance-hue), 80%, 60%, 0.1);
         }
+
+        /* 🕶️ Phase 39: Spatial Computing (Vision Pro Mode) */
+        #workspace-container {
+            perspective: 1200px;
+            transform-style: preserve-3d;
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .vision-mode #workspace-container {
+            padding: 50px;
+        }
+        .spatial-window {
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease, filter 0.6s ease;
+            transform-style: preserve-3d;
+        }
+        .vision-mode .spatial-window {
+            box-shadow: 0 40px 100px -20px rgba(0,0,0,0.5), 0 0 20px rgba(0,242,255,0.05);
+            background: rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(25px) saturate(1.8) !important;
+        }
+        .vision-mode .spatial-window:hover {
+            transform: translateZ(60px) scale(1.02);
+            filter: brightness(1.1) contrast(1.1);
+            z-index: 1000 !important;
+            box-shadow: 0 60px 130px -30px rgba(0,0,0,0.7), 0 0 40px rgba(0,242,255,0.1);
+        }
+        .foveated-blur .spatial-window:not(:hover) {
+            filter: blur(2px) grayscale(0.3);
+            opacity: 0.7;
+            transform: translateZ(-20px);
+        }
+        .vision-mode-toggle {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body x-data="elysiaOS()" 
@@ -122,7 +279,11 @@
       @mouseup="stopDrag()"
       :class="{ 
           'blackwall-active': blackwallActive,
-          ['layer-depth-' + netDepth]: blackwallActive && netDepth > 0 
+          ['layer-depth-' + netDepth]: blackwallActive && netDepth > 0,
+          'integrity-panic': stats.sys_threat > 50,
+          'edith-active': stats.elysia?.edith?.active,
+          'vision-mode': visionMode,
+          'foveated-blur': visionMode && stats.security?.trust_score > 90
       }"
       :data-lockdown="stats.security?.lockdown?.active ? 'true' : 'false'">
     <!-- 🌌 Omega Backdrop: Neural Synapse Canvas -->
@@ -131,11 +292,23 @@
     <!-- ✨ Starfall Container -->
     <div id="starfall" class="sparkle-container"></div>
 
-    <!-- 🌀 Phase 33: Singularity Core -->
-    <div class="singularity-core" :style="{ opacity: (stats.entropy || 0.5) * 0.8 }"></div>
-    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[-1]">
-        <div class="w-64 h-64 rounded-full border border-cyan-500/10 animate-pulse"></div>
+    <!-- 🔮 Phase 35: Event Horizon Core -->
+    <div class="event-horizon" :style="{ opacity: (stats.entropy || 0.6) * 0.9 }"></div>
+    <div class="system-distortion"></div>
+
+    <!-- 🕶️ Phase 36: E.D.I.T.H. Overlay -->
+    <div class="edith-grid"></div>
+    <div class="edith-scanline"></div>
+
+    <!-- 🧤 Phase 37: MARK 85 Singularity -->
+    <div class="mk85-refocuser" :class="{ 'mk85-active': stats.elysia?.mk85?.active }">
+        <template x-for="i in 12">
+            <div class="nano-vector" :style="`left: ${i*8}%; top: ${20 + Math.random()*60}%; animation-delay: ${i*0.5}s;` "></div>
+        </template>
     </div>
+
+    <!-- 🟢 Phase 38: M5 Physical LED -->
+    <div class="physical-led" :class="{ 'led-active': stats.elysia?.sensors?.active }"></div>
     
     <div class="fixed inset-0 pointer-events-none z-[1] bg-resonance"></div>
     <div class="fixed inset-0 pointer-events-none z-[2] bg-black/20 backdrop-blur-[2px]"></div>
@@ -309,6 +482,9 @@
 
             <div class="text-[10px] font-mono text-white/60 tracking-widest" x-text="currentTime"></div>
         </div>
+
+        <!-- Phase 39: Optic ID HUD Component Integration -->
+        <div x-html="appContents.optic_id_hud || ''"></div>
     </header>
 
     <!-- 📟 Side HUD (Kernel Logs) -->
@@ -347,12 +523,12 @@
     </div>
 
     <!-- 🖥️ Workspace (Windows) -->
-    <main class="relative w-full h-full pt-8 pb-20 px-4">
+    <main id="workspace-container" class="relative w-full h-full pt-8 pb-20 px-4">
         
         <!-- Dynamic Workspace (Modular Apps) -->
         <template x-for="(app, id) in apps" :key="id">
             <template x-if="app.open">
-                <div class="window" 
+                <div class="window spatial-window" 
                      :style="`left: ${app.x}px; top: ${app.y}px; z-index: ${app.zIndex}`"
                      :class="id === 'messenger' ? 'w-[480px] h-[600px]' : (id === 'monitor' ? 'w-[640px] h-[400px]' : 'w-[500px] h-[400px]')"
                      @mousedown="focusApp(id)"
@@ -397,6 +573,12 @@
             <div class="dock-item border border-red-500/50 bg-red-500/10 animate-pulse" title="SIP_BYPASSED">☣️</div>
         </template>
         <div class="dock-item" @click="location.href='index.html'" title="Classic View">🌸</div>
+
+        <!-- Phase 39: Vision Mode Toggle -->
+        <div class="dock-item ml-2 border-l border-white/10 pl-2" 
+             @click="toggleVisionMode()" 
+             :class="visionMode ? 'text-cyan-400 bg-cyan-500/10' : 'text-white/40'"
+             title="Spatial Vision Mode">🕶️</div>
     </nav>
 
     <script>
@@ -430,6 +612,7 @@
                 systemHealth: { brain: false, voice: false, net: false },
                 securityStatus: { secure_boot: 'PENDING', panic: false, sip_active: true },
                 privacyStatus: { camera_active: false, mic_active: false, session_sealed: false },
+                visionMode: false, // Phase 39
                 pendingEntitlements: [], // Phase 28
                 toasts: [],
 
@@ -484,6 +667,13 @@
                         }
                         // Auto-Identify as Root if authorized present
                         if (authorized && present) this.userRole = 'root';
+                    });
+
+                    // Phase 39: Optic ID Resonance State Hook
+                    window.addEventListener('elysia-bio-resonance', (e) => {
+                        this.stats.elysia = this.stats.elysia || {};
+                        this.stats.elysia.security = this.stats.elysia.security || {};
+                        this.stats.elysia.security.bio_resonance_active = e.detail.active;
                     });
 
                     window.addEventListener('elysia-security-breach', () => {
@@ -593,6 +783,18 @@
                         this.maintenanceMode = true;
                         this.applyTheme('singularity');
                         this.showToast("SIP_OVERRIDDEN. MAINTENANCE_ON.", "🔓");
+                    }
+                },
+                toggleVisionMode() {
+                    this.visionMode = !this.visionMode;
+                    if (this.visionMode) {
+                        this.showToast("SPATIAL_COMPUTING: ENGAGED", "🕶️");
+                        // Add Mount Hood Env
+                        document.body.classList.add('env-mount-hood');
+                        this.playVoice("空間演算モード、起動したよ。お兄ちゃん。");
+                    } else {
+                        this.showToast("SPATIAL_COMPUTING: HALTED", "🌑");
+                        document.body.classList.remove('env-mount-hood');
                     }
                 },
                 async greetUser() {
