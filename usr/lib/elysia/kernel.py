@@ -399,6 +399,13 @@ async def resonance_self_healing_loop():
             if BLACKWALL_PROTOCOL and gov_state.get("defense_authorized", False):
                 await execute_autonomous_countermeasures(THREAT_LEVEL)
 
+            # 8. Maintenance Protocol: Auto-Lock
+            global MAINTENANCE_MODE, SIP_ACTIVE
+            if MAINTENANCE_MODE and time.time() > MAINTENANCE_EXPIRY:
+                MAINTENANCE_MODE = False
+                SIP_ACTIVE = True
+                logger.info("🔒 Maintenance Protocol: System Auto-Locked. SIP RESTORED.")
+
         except Exception as e:
             logger.error(f"⚠️ Self-Healing Engine Error: {e}")
 
@@ -1466,11 +1473,17 @@ async def force_evolution():
 
 @app.post("/system/forge/manifest")
 async def forge_manifest(request: ForgeRequest):
-    """Autonomous Architect: Manifests new system components into existence."""
+    """Autonomous Architect: Manifests new system components into existence (SIP Hardened)."""
+    # 0. SIP Check: Prevent AI from tricking the system into modifying core paths
+    if SIP_ACTIVE:
+        for p in SIP_PROTECTED_PATHS:
+            if p in request.description.lower():
+                logger.warning(f"🛡️ SIP: Blocked manifestation attempt impacting protected path: {p}")
+                raise HTTPException(status_code=403, detail="SIP_PROHIBITED_ZONE")
+
     logger.info(f"✨ Soul Forge: INITIATING MANIFESTATION ({request.description})")
     
     # 1. Deterministic Identity
-    # In a real scenario, use LLM to pick a title/icon. For now, simple logic.
     timestamp = int(time.time())
     app_id = f"forge_{timestamp}"
     title = f"Forged_{timestamp}"
