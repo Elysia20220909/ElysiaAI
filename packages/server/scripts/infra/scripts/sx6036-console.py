@@ -11,11 +11,13 @@ Exit codes:
   2 - command execution failure
   3 - serial port connection error
 """
+
 import argparse
 import re
-import serial
 import sys
 import time
+
+import serial
 
 
 def log(msg):
@@ -24,18 +26,21 @@ def log(msg):
 
 
 def strip_ansi(s):
-    s = re.sub(r'\x1b\[[^a-zA-Z]*[a-zA-Z]', '', s)
-    s = re.sub(r'\[\??\d+[hlK=><]', '', s)
-    return s
+    s = re.sub(r"\x1b\[[^a-zA-Z]*[a-zA-Z]", "", s)
+    return re.sub(r"\[\??\d+[hlK=><]", "", s)
 
 
 def serial_open(device, baudrate):
     try:
         ser = serial.Serial(
-            port=device, baudrate=baudrate,
-            bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE,
+            port=device,
+            baudrate=baudrate,
+            bytesize=serial.EIGHTBITS,
+            parity=serial.PARITY_NONE,
             stopbits=serial.STOPBITS_ONE,
-            xonxoff=False, rtscts=False, timeout=5,
+            xonxoff=False,
+            rtscts=False,
+            timeout=5,
         )
         log(f"Port opened: {ser.name}")
         return ser
@@ -199,9 +204,9 @@ def cmd_status(ser, args):
     for title, cmd in sections:
         log(f"Running: {cmd}")
         output = run_cmd(ser, cmd, timeout=args.timeout)
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  {title}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(output)
 
 
@@ -241,7 +246,7 @@ def cmd_configure(ser, args):
     time.sleep(2)
     read_until_prompt(ser, timeout=10, prompts=["(config) #", "# "])
 
-    with open(args.file, "r") as f:
+    with open(args.file) as f:
         commands = [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
     for cmd in commands:
@@ -264,9 +269,7 @@ def cmd_configure(ser, args):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="SX6036 InfiniBand switch serial console CLI"
-    )
+    parser = argparse.ArgumentParser(description="SX6036 InfiniBand switch serial console CLI")
     parser.add_argument("--device", default="/dev/ttyUSB0")
     parser.add_argument("--baudrate", type=int, default=9600)
     parser.add_argument("--user", default="admin")

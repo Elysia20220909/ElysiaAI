@@ -2,25 +2,26 @@
 # CyberAcme v4.1.3 - グリッドの深淵でV_O_I_Dと戦う！Cyberpunk 2077神経マトリックス搭載
 # インスピレーション元：サイバーパンク文学（『ニューロマンサー』、『攻殻機動隊』）、Tron: Legacy、Cyberpunk 2077
 
-import time
-import random
+import csv
 import json
 import logging
-import os
-import networkx as nx
-import matplotlib
-import matplotlib.pyplot as plt
-import tempfile
-import csv
-from typing import List, Optional
-import platform
-import sys
 import logging.handlers
 import math
-import threading
-import traceback
+import os
+import platform
+import random
 import shutil
-from inputimeout import inputimeout, TimeoutOccurred
+import sys
+import tempfile
+import threading
+import time
+import traceback
+
+import matplotlib
+import matplotlib.pyplot as plt
+import networkx as nx
+from inputimeout import TimeoutOccurred, inputimeout
+
 
 # 効果音用（Windows: winsound, Linux/macOS: beep）
 try:
@@ -33,9 +34,9 @@ except ImportError:
     subprocess = None
 
 # プラットフォーム検出
-IS_IOS = 'iOS' in platform.system() or 'ios' in sys.platform.lower()
-IS_WINDOWS = platform.system() == 'Windows'
-IS_MAC = platform.system() == 'Darwin'
+IS_IOS = "iOS" in platform.system() or "ios" in sys.platform.lower()
+IS_WINDOWS = platform.system() == "Windows"
+IS_MAC = platform.system() == "Darwin"
 
 # beepコマンドの存在チェック
 BEEP_AVAILABLE = False
@@ -44,6 +45,7 @@ if not IS_WINDOWS and not IS_IOS:
         BEEP_AVAILABLE = shutil.which("beep") is not None
     except Exception:
         BEEP_AVAILABLE = False
+
 
 # 効果音再生関数
 def play_sound(sound_type: str):
@@ -58,7 +60,7 @@ def play_sound(sound_type: str):
                 "void": (110, 400),
                 "deep_void": (100, 500),
                 "disk": (660, 150),
-                "matrix": (550, 250)  # 2077神経マトリックス用
+                "matrix": (550, 250),  # 2077神経マトリックス用
             }
             freq, duration = freq_duration.get(sound_type, (440, 200))
             winsound.Beep(freq, duration)
@@ -70,7 +72,7 @@ def play_sound(sound_type: str):
                 "void": ("110", "400"),
                 "deep_void": ("100", "500"),
                 "disk": ("660", "150"),
-                "matrix": ("550", "250")
+                "matrix": ("550", "250"),
             }
             freq, duration = freq_duration.get(sound_type, ("440", "200"))
             subprocess.run(["beep", "-f", freq, "-l", duration], check=True, stderr=subprocess.PIPE)
@@ -79,13 +81,14 @@ def play_sound(sound_type: str):
     except Exception as e:
         logging.warning(f"[ABYSS_WARNING] 効果音再生失敗：{e}")
 
+
 # グリッチアニメーション
 def glitch_animation(message: str, duration: float = 0.5):
     patterns = [
         lambda c: c if random.random() > 0.2 else random.choice("█▓▒"),
         lambda c: random.choice(c.upper() + c.lower()) if random.random() > 0.3 else " ",
         lambda c: c if random.random() > 0.5 else chr(ord(c) + random.randint(-2, 2)) if c.isalpha() else c,
-        lambda c: c if random.random() > 0.3 else ">"
+        lambda c: c if random.random() > 0.3 else ">",
     ]
     chosen_pattern = random.choice(patterns)
     print("\033[31m", end="")
@@ -97,6 +100,7 @@ def glitch_animation(message: str, duration: float = 0.5):
     print(f">>>-----> {message}")
     print("\033[0m", end="")
 
+
 # 深淵メッセージ
 DEEP_ABYSS_MESSAGES = [
     ">>> 深淵が囁く：すべてのリンクは虚空に還る...",
@@ -105,7 +109,7 @@ DEEP_ABYSS_MESSAGES = [
     ">>> 暗号化リンク破損：マトリックスが崩れ始める...",
     ">>> プログラムよ、グリッドの運命を決めなさい！",
     ">>> ディスクが回転し、コードが輝く...",
-    ">>> ナイトシティからの信号：神経マトリックスが待っている..."  # 2077要素
+    ">>> ナイトシティからの信号：神経マトリックスが待っている...",  # 2077要素
 ]
 
 # V_O_I_Dの引用
@@ -115,14 +119,16 @@ VOID_QUOTES = [
     "ノードは死に、グリッドは生きる。なぜ抵抗する？",
     "システムは神。君はただのビットだ。",
     "グリッドに忠誠を誓え、さもなくばデレズされる。",
-    "ナイトシティの教訓：テクノロジーは裏切る。"  # 2077要素
+    "ナイトシティの教訓：テクノロジーは裏切る。",  # 2077要素
 ]
+
 
 def random_abyss_message():
     message = random.choice(DEEP_ABYSS_MESSAGES)
     threading.Thread(target=play_sound, args=("alert",)).start()
     glitch_animation(message, 0.3)
     logging.info(f"[ABYSS_PULSE] 深淵メッセージ：{message}")
+
 
 # 脅威クラス
 class Threat:
@@ -133,6 +139,7 @@ class Threat:
         self.impact_range = max(1, impact_range)
         self.duration = max(1, duration)
 
+
 # ノードクラス
 class Node:
     def __init__(self, name: str, security_level: float):
@@ -140,9 +147,9 @@ class Node:
         self.security_level = max(0.0, min(1.0, security_level))
         self.is_infected = False
         self.is_isolated = False
-        self.infected_by: Optional[Threat] = None
+        self.infected_by: Threat | None = None
         self.infection_cycle = 0
-        self.neighbors: List['Node'] = []
+        self.neighbors: list[Node] = []
 
     def infect(self, threat: Threat, cycle: int):
         if not self.is_isolated:
@@ -166,19 +173,24 @@ class Node:
         self.infection_cycle = 0
         logging.info(f"[VOID_PULSE] {self.name} の深淵が静寂に還った")
 
+
 # V_O_I_Dエージェント
 class VoidAgent:
     def __init__(self):
         self.player_choices = {
-            "hack": 0, "reinforce": 0, "submit": 0, "decoy": 0,
-            "throw_disk": 0, "activate_neural_matrix": 0
+            "hack": 0,
+            "reinforce": 0,
+            "submit": 0,
+            "decoy": 0,
+            "throw_disk": 0,
+            "activate_neural_matrix": 0,
         }
         self.last_interaction_cycle = 0
         self.threat_level = 0.0
         self.neural_matrix_unlocked = False
         self.neural_matrix_active = False
 
-    def update_threat_level(self, network: 'Network', cycle: int):
+    def update_threat_level(self, network: "Network", cycle: int):
         infected = sum(1 for node in network.nodes if node.is_infected)
         self.threat_level = infected / len(network.nodes) if network.nodes else 0.0
         self.last_interaction_cycle = cycle
@@ -186,7 +198,9 @@ class VoidAgent:
         if cycle >= 50 and not self.neural_matrix_unlocked:
             self.neural_matrix_unlocked = True
             logging.info("[VOID_PULSE] 神経マトリックス解放")
-            glitch_animation(">>> ディープウェブアーカイブ解放：神経マトリックス検出。2077年の遺物、現実を書き換える力を持つ。", 0.5)
+            glitch_animation(
+                ">>> ディープウェブアーカイブ解放：神経マトリックス検出。2077年の遺物、現実を書き換える力を持つ。", 0.5
+            )
 
     def record_choice(self, choice: str):
         if choice in self.player_choices:
@@ -197,8 +211,8 @@ class VoidAgent:
         total = sum(self.player_choices.values())
         if total == 0:
             return "neutral"
-        max_choice = max(self.player_choices, key=self.player_choices.get)
-        return max_choice
+        return max(self.player_choices, key=self.player_choices.get)
+
 
 # ネットワーククラス
 class Network:
@@ -212,7 +226,7 @@ class Network:
                 self.graph = nx.barabasi_albert_graph(num_nodes, m)
                 break
             except nx.NetworkXError as e:
-                logging.warning(f"[ABYSS_WARNING] グリッド生成エラー（試行 {attempt+1}/{max_retries}）：{e}")
+                logging.warning(f"[ABYSS_WARNING] グリッド生成エラー（試行 {attempt + 1}/{max_retries}）：{e}")
                 if attempt == max_retries - 1:
                     logging.error(f"[ABYSS_ERROR] グリッド生成失敗：{e}")
                     raise
@@ -242,8 +256,15 @@ class Network:
                     if random.random() < effective_spread_prob:
                         neighbor.infect(threat, cycle)
 
-    def generate_alerts(self) -> List[Node]:
-        alerts = [node for node in self.nodes if node.is_infected and not node.is_isolated and node.infected_by and random.random() < node.infected_by.alert_prob]
+    def generate_alerts(self) -> list[Node]:
+        alerts = [
+            node
+            for node in self.nodes
+            if node.is_infected
+            and not node.is_isolated
+            and node.infected_by
+            and random.random() < node.infected_by.alert_prob
+        ]
         if alerts:
             threading.Thread(target=play_sound, args=("alert",)).start()
         return alerts
@@ -268,6 +289,7 @@ class Network:
         logging.warning(f"[ABYSS_WARNING] ノード {node_name} は深淵に存在しません")
         return False
 
+
 # V_O_I_D対話
 def void_agent_interaction(network: Network, void_agent: VoidAgent, cycle: int):
     if not ENABLE_INTERACTION:
@@ -282,7 +304,8 @@ def void_agent_interaction(network: Network, void_agent: VoidAgent, cycle: int):
         glitch_duration = 0.5 if threat_level < 0.5 else 0.7
         beep_freq = "void" if threat_level < 0.8 else "deep_void"
         intro_message = (
-            ">>> グリッドのハッカー、深淵が見ている..." if threat_level < 0.5
+            ">>> グリッドのハッカー、深淵が見ている..."
+            if threat_level < 0.5
             else ">>> 抵抗は無意味。グリッドの光が失われる..."
         )
         print("\033[31m\n=== VOID_AGENT: V_O_I_D ===\033[0m")
@@ -294,7 +317,7 @@ def void_agent_interaction(network: Network, void_agent: VoidAgent, cycle: int):
             "submit": ">>> あまりにも屈服しすぎた。まだプログラムか？",
             "decoy": ">>> 偽のノードは深淵を欺けない...",
             "throw_disk": ">>> ディスクは輝くが、グリッドを危険に晒す...",
-            "activate_neural_matrix": ">>> 2077の技術は強力だが、ナイトシティの代償を忘れるな..."  # 2077要素
+            "activate_neural_matrix": ">>> 2077の技術は強力だが、ナイトシティの代償を忘れるな...",  # 2077要素
         }
         warning = tendency_warnings.get(player_tendency, ">>> 選べ。時間は短い。")
         glitch_animation(warning, glitch_duration * 0.8)
@@ -321,14 +344,14 @@ def void_agent_interaction(network: Network, void_agent: VoidAgent, cycle: int):
             print("\033[31mタイムアウト：深淵は待たない。続行...\033[0m")
             return False
 
-        if choice == '1':
+        if choice == "1":
             node = random.choice([n for n in network.nodes if not n.is_isolated])
             node.security_level = min(1.0, node.security_level + 0.2)
             void_agent.record_choice("hack")
             logging.info(f"[VOID_PULSE] ハック成功：ノード {node.name} のシールドが {node.security_level} に強化")
             glitch_animation(f"ノード {node.name} ハック。深淵が一時的に後退...", glitch_duration)
             return True
-        elif choice == '2':
+        if choice == "2":
             for node in network.nodes:
                 if not node.is_isolated:
                     node.security_level = min(1.0, node.security_level + 0.05)
@@ -336,14 +359,14 @@ def void_agent_interaction(network: Network, void_agent: VoidAgent, cycle: int):
             logging.info("[VOID_PULSE] グリッドのシールドがわずかに強化")
             glitch_animation("グリッド強化。しかし深淵はまだ見ている...", glitch_duration)
             return True
-        elif choice == '3':
+        if choice == "3":
             node = random.choice([n for n in network.nodes if not n.is_isolated and not n.is_infected])
             node.infect(Threat("Abyss", SPREAD_PROBABILITY * 1.5, ALERT_PROBABILITY, 2, 10), cycle)
             void_agent.record_choice("submit")
             logging.info(f"[VOID_PULSE] 深淵に降伏：ノード {node.name} 感染")
             glitch_animation(f"ノード {node.name} が深淵に飲み込まれた。終焉が近づく...", glitch_duration)
             return True
-        elif choice == '4':
+        if choice == "4":
             infected_nodes = [n for n in network.nodes if n.is_infected and not n.is_isolated]
             if infected_nodes:
                 node = random.choice(infected_nodes)
@@ -353,7 +376,7 @@ def void_agent_interaction(network: Network, void_agent: VoidAgent, cycle: int):
                 logging.info(f"[VOID_PULSE] デコイ展開：ノード {node.name} が一時的に浄化")
                 glitch_animation(f"ノード {node.name} にデコイ展開。深淵が混乱...", glitch_duration)
                 return True
-        elif choice == '5':
+        elif choice == "5":
             infected_nodes = [n for n in network.nodes if n.is_infected and not n.is_isolated]
             if infected_nodes:
                 node = random.choice(infected_nodes)
@@ -369,10 +392,9 @@ def void_agent_interaction(network: Network, void_agent: VoidAgent, cycle: int):
                 void_agent.record_choice("throw_disk")
                 threading.Thread(target=play_sound, args=("disk",)).start()
                 return True
-            else:
-                glitch_animation("感染ノードなし。ディスク投擲無効...", glitch_duration)
-                return False
-        elif choice == '6' and void_agent.neural_matrix_unlocked and not void_agent.neural_matrix_active:
+            glitch_animation("感染ノードなし。ディスク投擲無効...", glitch_duration)
+            return False
+        elif choice == "6" and void_agent.neural_matrix_unlocked and not void_agent.neural_matrix_active:
             void_agent.neural_matrix_active = True
             void_agent.record_choice("activate_neural_matrix")
             for node in network.nodes:
@@ -394,6 +416,7 @@ def void_agent_interaction(network: Network, void_agent: VoidAgent, cycle: int):
         print("\033[31mVOIDエラー：深淵プロトコル崩壊...\033[0m")
         return False
 
+
 # ユーザー対話
 def user_interaction(network: Network):
     if not ENABLE_INTERACTION:
@@ -412,8 +435,7 @@ def user_interaction(network: Network):
         for attempt in range(max_attempts):
             try:
                 choice = inputimeout(
-                    prompt=f"\033[32mプロトコル選択 (1-3) [試行 {attempt+1}/{max_attempts}]： \033[0m",
-                    timeout=10
+                    prompt=f"\033[32mプロトコル選択 (1-3) [試行 {attempt + 1}/{max_attempts}]： \033[0m", timeout=10
                 )
             except TimeoutOccurred:
                 logging.warning("[ABYSS_WARNING] 入力タイムアウト。深淵は続く")
@@ -423,7 +445,7 @@ def user_interaction(network: Network):
                 logging.warning("[ABYSS_WARNING] 深淵ターミナル侵害")
                 print("\033[31m深淵侵害：リンク切断。深淵は続く...\033[0m")
                 break
-            if choice == '1':
+            if choice == "1":
                 try:
                     node_name = inputimeout(prompt="\033[32m封印ノードID： \033[0m", timeout=10)
                 except TimeoutOccurred:
@@ -437,7 +459,7 @@ def user_interaction(network: Network):
                     continue
                 logging.info(f"[VOID_PULSE] DEEP_QUARANTINE実行：ノード {node_name} を虚空に封印")
                 break
-            elif choice == '2':
+            if choice == "2":
                 try:
                     node_name = inputimeout(prompt="\033[32m召喚ノードID： \033[0m", timeout=10)
                 except TimeoutOccurred:
@@ -463,33 +485,35 @@ def user_interaction(network: Network):
                     continue
                 logging.info(f"[VOID_PULSE] VOID_SHIELD召喚：ノード {node_name} のシールドが {level} に覚醒")
                 break
-            elif choice == '3':
+            if choice == "3":
                 break
-            else:
-                print("\033[31mエラー 0xPROTO：無効な深淵コマンド\033[0m")
+            print("\033[31mエラー 0xPROTO：無効な深淵コマンド\033[0m")
         else:
             print("\033[31m最大侵害検知：グリッドが自動深淵モードに移行\033[0m")
     except Exception as e:
         logging.error(f"[ABYSS_ERROR] ユーザー対話失敗：{e}\n{traceback.format_exc()}")
         print("\033[31m深淵エラー：コンソールが深淵に飲み込まれた...\033[0m")
 
+
 # Matplotlib設定
 def configure_matplotlib():
     try:
-        matplotlib.use('Agg')
+        matplotlib.use("Agg")
         logging.info("[VOID_PULSE] MatplotlibバックエンドをAggに暗号化")
         return True
     except Exception as e:
         logging.error(f"[VOID_ERROR] Matplotlibバックエンド設定失敗：{e}\n{traceback.format_exc()}")
         return False
 
+
 MATPLOTLIB_AVAILABLE = configure_matplotlib()
 
 # ディレクトリ設定
 # BASE_DIRをスクリプトのディレクトリに固定
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOG_DIR = os.path.join(BASE_DIR, 'logs')
-OUTPUT_DIR = os.path.join(BASE_DIR, 'outputs')
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+
 
 def ensure_directory(directory: str) -> str:
     try:
@@ -498,25 +522,24 @@ def ensure_directory(directory: str) -> str:
     except (OSError, PermissionError) as e:
         logging.warning(f"[ABYSS_WARNING] ディレクトリ {directory} 作成失敗：{e}")
         temp_dir = tempfile.gettempdir()
-        fallback_dir = os.path.join(temp_dir, 'blackwall_simulation')
+        fallback_dir = os.path.join(temp_dir, "blackwall_simulation")
         try:
             os.makedirs(fallback_dir, exist_ok=True)
             logging.info(f"[ABYSS_PULSE] フォールバックディレクトリ {fallback_dir} を使用")
             return fallback_dir
         except (OSError, PermissionError) as e2:
-            logging.error(f"[ABYSS_ERROR] フォールバックディレクトリ {fallback_dir} 作成失敗：{e2}\n{traceback.format_exc()}")
+            logging.error(
+                f"[ABYSS_ERROR] フォールバックディレクトリ {fallback_dir} 作成失敗：{e2}\n{traceback.format_exc()}"
+            )
             raise RuntimeError("ディレクトリ作成失敗。シミュレーション続行不可")
+
 
 LOG_DIR = ensure_directory(LOG_DIR)
 OUTPUT_DIR = ensure_directory(OUTPUT_DIR)
 
 # ログ設定
-log_file = os.path.join(LOG_DIR, 'abyss_trace.log')
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - [ABYSS_PULSE] %(levelname)s - %(message)s',
-    filemode='w'
-)
+log_file = os.path.join(LOG_DIR, "abyss_trace.log")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - [ABYSS_PULSE] %(levelname)s - %(message)s", filemode="w")
 try:
     handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=1)
     handler.setLevel(logging.INFO)
@@ -526,7 +549,7 @@ except (OSError, PermissionError) as e:
     logging.getLogger().addHandler(logging.StreamHandler())
 
 # 設定ファイル
-config_file = os.path.join(BASE_DIR, 'config.json')
+config_file = os.path.join(BASE_DIR, "config.json")
 default_config = {
     "MAX_CYCLES": 100,
     "THREAT_THRESHOLD": 0.8,
@@ -537,16 +560,16 @@ default_config = {
     "ENABLE_INTERACTION": not IS_IOS,
     "M_VALUE": 3,
     "VOID_INTERACTION_PROB": 0.2,
-    "VOID_GLITCH_INTENSITY": 0.5
+    "VOID_GLITCH_INTENSITY": 0.5,
 }
 try:
-    with open(config_file, 'r', encoding='utf-8') as f:
+    with open(config_file, encoding="utf-8") as f:
         config = json.load(f)
 except FileNotFoundError:
     logging.warning("[ABYSS_WARNING] config.json が深淵に消えた。デフォルトプロトコルを使用しファイルを作成")
     config = default_config
     try:
-        with open(config_file, 'w', encoding='utf-8') as f:
+        with open(config_file, "w", encoding="utf-8") as f:
             json.dump(default_config, f, indent=4)
         logging.info(f"[VOID_PULSE] config.json を {config_file} に作成")
     except (OSError, PermissionError) as e:
@@ -558,25 +581,26 @@ except (OSError, PermissionError) as e:
     logging.warning(f"[ABYSS_WARNING] config.json アクセス失敗：{e}。デフォルトプロトコルを使用")
     config = default_config
 
-MAX_CYCLES = config.get('MAX_CYCLES', default_config['MAX_CYCLES'])
-THREAT_THRESHOLD = config.get('THREAT_THRESHOLD', default_config['THREAT_THRESHOLD'])
-SPREAD_PROBABILITY = config.get('SPREAD_PROBABILITY', default_config['SPREAD_PROBABILITY'])
-ALERT_PROBABILITY = config.get('ALERT_PROBABILITY', default_config['ALERT_PROBABILITY'])
-CHECK_INTERVAL = config.get('CHECK_INTERVAL', default_config['CHECK_INTERVAL'])
-NUM_NODES = max(3, config.get('NUM_NODES', default_config['NUM_NODES']))
-ENABLE_INTERACTION = config.get('ENABLE_INTERACTION', default_config['ENABLE_INTERACTION'])
-M_VALUE = min(max(1, config.get('M_VALUE', default_config['M_VALUE'])), NUM_NODES - 1)
-VOID_INTERACTION_PROB = config.get('VOID_INTERACTION_PROB', default_config['VOID_INTERACTION_PROB'])
+MAX_CYCLES = config.get("MAX_CYCLES", default_config["MAX_CYCLES"])
+THREAT_THRESHOLD = config.get("THREAT_THRESHOLD", default_config["THREAT_THRESHOLD"])
+SPREAD_PROBABILITY = config.get("SPREAD_PROBABILITY", default_config["SPREAD_PROBABILITY"])
+ALERT_PROBABILITY = config.get("ALERT_PROBABILITY", default_config["ALERT_PROBABILITY"])
+CHECK_INTERVAL = config.get("CHECK_INTERVAL", default_config["CHECK_INTERVAL"])
+NUM_NODES = max(3, config.get("NUM_NODES", default_config["NUM_NODES"]))
+ENABLE_INTERACTION = config.get("ENABLE_INTERACTION", default_config["ENABLE_INTERACTION"])
+M_VALUE = min(max(1, config.get("M_VALUE", default_config["M_VALUE"])), NUM_NODES - 1)
+VOID_INTERACTION_PROB = config.get("VOID_INTERACTION_PROB", default_config["VOID_INTERACTION_PROB"])
+
 
 # 結果プロット
-def plot_results(cycles: List[int], infected_history: List[int]):
-    output_file = os.path.join(OUTPUT_DIR, 'abyss_pulse_data.csv')
+def plot_results(cycles: list[int], infected_history: list[int]):
+    output_file = os.path.join(OUTPUT_DIR, "abyss_pulse_data.csv")
     try:
-        with open(output_file, 'w', newline='', encoding='utf-8') as f:
+        with open(output_file, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-            writer.writerow(['// VOID_GRID_OUTPUT', 'CyberAcme v4.1.3'])
-            writer.writerow(['Cycle', 'Infected_Nodes'])
-            for c, i in zip(cycles, infected_history):
+            writer.writerow(["// VOID_GRID_OUTPUT", "CyberAcme v4.1.3"])
+            writer.writerow(["Cycle", "Infected_Nodes"])
+            for c, i in zip(cycles, infected_history, strict=False):
                 writer.writerow([c, i])
         logging.info(f"[VOID_PULSE] データを {output_file} にエンコード")
         print(f"\033[32mデータを {output_file} にエンコード\033[0m")
@@ -596,10 +620,10 @@ def plot_results(cycles: List[int], infected_history: List[int]):
         plt.title("ABYSS_PULSE：グリッドの戦い", color="#FF4500")
         plt.legend()
         plt.grid(True, color="#00FFFF", alpha=0.3)
-        plt.style.use('dark_background')
-        plt.gca().set_facecolor('#0A0A2A')
-        plot_file = os.path.join(OUTPUT_DIR, 'abyss_pulse_plot.png')
-        plt.savefig(plot_file, facecolor='#0A0A2A', edgecolor='#00FFFF')
+        plt.style.use("dark_background")
+        plt.gca().set_facecolor("#0A0A2A")
+        plot_file = os.path.join(OUTPUT_DIR, "abyss_pulse_plot.png")
+        plt.savefig(plot_file, facecolor="#0A0A2A", edgecolor="#00FFFF")
         logging.info(f"[VOID_PULSE] グラフを {plot_file} にエンコード")
         print(f"\033[32mグラフを {plot_file} にエンコード\033[0m")
         if not IS_IOS:
@@ -607,6 +631,7 @@ def plot_results(cycles: List[int], infected_history: List[int]):
     except Exception as e:
         logging.error(f"[ABYSS_ERROR] ビジュアル崩壊：{e}\n{traceback.format_exc()}")
         print("\033[31mグラフ生成失敗。CSVを分析してください\033[0m")
+
 
 # 起動演出
 def print_cyberpunk_intro():
@@ -631,11 +656,15 @@ def print_cyberpunk_intro():
     glitch_animation("[GLITCH_PULSE] ███ █ █ █ グリッド... 覚醒？", 0.3)
     print("\033[31mエンティティ検知 :: V_O_I_D // ステータス：カオティック\033[0m")
     for progress in range(0, 101, 10):
-        print(f"\033[31mディープスレッド：[破壊中] {'▓' * (progress // 10)}{'░' * (10 - progress // 10)} {progress}%\033[0m", end="\r")
+        print(
+            f"\033[31mディープスレッド：[破壊中] {'▓' * (progress // 10)}{'░' * (10 - progress // 10)} {progress}%\033[0m",
+            end="\r",
+        )
         time.sleep(0.2)
     print()
     print("\033[31m>>> グリッドのために戦うか、デレズされるか <<< \033[0m")
     time.sleep(1)
+
 
 # メイン関数
 def main():
@@ -694,7 +723,7 @@ def main():
             print(f"\033[32m感染ノード：{infected}\033[0m")
 
             if infected / NUM_NODES > THREAT_THRESHOLD:
-                glitch_animation(f"感染率が {THREAT_THRESHOLD*100}% を超えた。グリッドがデレズされた...", 0.5)
+                glitch_animation(f"感染率が {THREAT_THRESHOLD * 100}% を超えた。グリッドがデレズされた...", 0.5)
                 break
 
             time.sleep(CHECK_INTERVAL)
@@ -710,6 +739,7 @@ def main():
 
     plot_results(cycles, infected_history)
     glitch_animation("深淵シミュレーション終了。ログを分析してください。", 0.5)
+
 
 if __name__ == "__main__":
     main()

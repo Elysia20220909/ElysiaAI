@@ -10,12 +10,13 @@ Exit codes:
   2 = command execution failure
   3 = connection error
 """
+
 import argparse
 import os
-import signal
 import subprocess
 import sys
 import time
+
 
 try:
     import pexpect
@@ -43,9 +44,17 @@ def log(msg):
 def deactivate_sol(bmc_ip, bmc_user, bmc_pass):
     """Deactivate any existing SOL session."""
     cmd = [
-        "ipmitool", "-I", "lanplus",
-        "-H", bmc_ip, "-U", bmc_user, "-P", bmc_pass,
-        "sol", "deactivate",
+        "ipmitool",
+        "-I",
+        "lanplus",
+        "-H",
+        bmc_ip,
+        "-U",
+        bmc_user,
+        "-P",
+        bmc_pass,
+        "sol",
+        "deactivate",
     ]
     try:
         subprocess.run(cmd, capture_output=True, timeout=10)
@@ -55,11 +64,8 @@ def deactivate_sol(bmc_ip, bmc_user, bmc_pass):
 
 def sol_connect(bmc_ip, bmc_user, bmc_pass):
     """Spawn ipmitool SOL connection."""
-    cmd = (
-        f"ipmitool -I lanplus -H {bmc_ip} -U {bmc_user} -P {bmc_pass} sol activate"
-    )
-    child = pexpect.spawn(cmd, timeout=30, encoding="latin-1")
-    return child
+    cmd = f"ipmitool -I lanplus -H {bmc_ip} -U {bmc_user} -P {bmc_pass} sol activate"
+    return pexpect.spawn(cmd, timeout=30, encoding="latin-1")
 
 
 def detect_stage(output):
@@ -115,18 +121,29 @@ def wait_for_login(child, timeout, hostname_hint=""):
             # Build expect patterns based on current stage
             patterns = [pexpect.TIMEOUT, pexpect.EOF]
             # Always look for login prompt and shell prompt
-            patterns.append("login:")    # idx 2
-            patterns.append("root@")     # idx 3 - already logged in
+            patterns.append("login:")  # idx 2
+            patterns.append("root@")  # idx 3 - already logged in
 
             if stage == STAGE_DETECTING:
-                patterns.extend(["GNU GRUB", "grub>",       # idx 4, 5
-                                 "Loading Linux", "Booting ",  # idx 6, 7
-                                 r"\[\s+\d+\.",              # idx 8
-                                 "systemd\\[1\\]:"])           # idx 9
+                patterns.extend(
+                    [
+                        "GNU GRUB",
+                        "grub>",  # idx 4, 5
+                        "Loading Linux",
+                        "Booting ",  # idx 6, 7
+                        r"\[\s+\d+\.",  # idx 8
+                        "systemd\\[1\\]:",
+                    ]
+                )  # idx 9
             elif stage == STAGE_GRUB_MENU:
-                patterns.extend(["Loading Linux", "Booting ",  # idx 4, 5
-                                 r"\[\s+\d+\.",              # idx 6
-                                 "systemd\\[1\\]:"])           # idx 7
+                patterns.extend(
+                    [
+                        "Loading Linux",
+                        "Booting ",  # idx 4, 5
+                        r"\[\s+\d+\.",  # idx 6
+                        "systemd\\[1\\]:",
+                    ]
+                )  # idx 7
             elif stage == STAGE_KERNEL_BOOT:
                 patterns.extend(["systemd\\[1\\]:", "Started "])  # idx 4, 5
             elif stage == STAGE_SYSTEMD_INIT:
@@ -143,8 +160,7 @@ def wait_for_login(child, timeout, hostname_hint=""):
                         child.sendline("")
                         detect_enter_sent += 1
                 elif stage == STAGE_GRUB_MENU:
-                    log(f"GRUB_MENU: waiting for auto-boot "
-                        f"({elapsed_in_stage:.0f}s, NO keys sent)")
+                    log(f"GRUB_MENU: waiting for auto-boot ({elapsed_in_stage:.0f}s, NO keys sent)")
                 elif stage == STAGE_SYSTEMD_INIT:
                     # Periodically send Enter to catch login prompt
                     if elapsed_in_stage > 15:
@@ -232,12 +248,11 @@ def do_login(child, root_pass):
         if idx == 0 or idx == 1:
             log("Login successful")
             return True
-        elif idx == 2 or idx == 3:
+        if idx == 2 or idx == 3:
             log("Login incorrect")
             return False
-        else:
-            log("Login timeout")
-            return False
+        log("Login timeout")
+        return False
     except (pexpect.TIMEOUT, pexpect.EOF):
         log("Login failed (timeout/EOF)")
         return False
@@ -263,9 +278,8 @@ def run_command(child, cmd, timeout=30):
             except (ValueError, TypeError):
                 rc = 0
             return rc == 0, child.before
-        else:
-            log(f"Command timeout: {cmd}")
-            return False, ""
+        log(f"Command timeout: {cmd}")
+        return False, ""
     except pexpect.EOF:
         log("Connection lost during command execution")
         return False, ""
@@ -277,7 +291,7 @@ def run_command(child, cmd, timeout=30):
 def run_commands_file(child, commands_file):
     """Execute commands from file. Returns True if all succeed."""
     try:
-        with open(commands_file, "r") as f:
+        with open(commands_file) as f:
             commands = [line.strip() for line in f if line.strip() and not line.startswith("#")]
     except FileNotFoundError:
         log(f"Commands file not found: {commands_file}")
@@ -311,9 +325,7 @@ def disconnect_sol(child, logged_in=False):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="SOL login with boot-stage detection"
-    )
+    parser = argparse.ArgumentParser(description="SOL login with boot-stage detection")
     parser.add_argument("--bmc-ip", required=True, help="BMC IP address")
     parser.add_argument("--bmc-user", required=True, help="BMC username")
     parser.add_argument("--bmc-pass", required=True, help="BMC password")

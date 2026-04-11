@@ -1,0 +1,1102 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Elysia AI OS Kernel",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/system/apps/list": {
+      "get": {
+        "summary": "List Apps",
+        "description": "Provides a list of registered apps",
+        "operationId": "list_apps_system_apps_list_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/apps/{app_id}.html": {
+      "get": {
+        "summary": "Get App Component",
+        "description": "Provides specific app component HTML",
+        "operationId": "get_app_component_system_apps__app_id__html_get",
+        "parameters": [
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "App Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/security/status": {
+      "get": {
+        "summary": "Get Security Status",
+        "description": "Phase 26: Security status for the frontend",
+        "operationId": "get_security_status_system_security_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/security/audit": {
+      "get": {
+        "summary": "Get Security Audit",
+        "description": "Phase 26: Detailed security audit metrics for the Aegis Center",
+        "operationId": "get_security_audit_system_security_audit_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/read_src": {
+      "get": {
+        "summary": "Read Src",
+        "description": "Source code loading for Workbench",
+        "operationId": "read_src_system_read_src_get",
+        "parameters": [
+          {
+            "name": "file",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "File"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/abyss/build": {
+      "post": {
+        "summary": "Abyss Build",
+        "description": "Build AbyssRTOS via WSL2 (Rutile) (UTF-8 Hardened)",
+        "operationId": "abyss_build_system_abyss_build_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_abyss_build_system_abyss_build_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/abyss/run": {
+      "get": {
+        "summary": "Abyss Run",
+        "description": "Boot AbyssRTOS via QEMU (WSL) with Telemetry Capture",
+        "operationId": "abyss_run_system_abyss_run_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/abyss/command": {
+      "post": {
+        "summary": "Abyss Command",
+        "description": "Send a direct command to AbyssRTOS via Divine Link",
+        "operationId": "abyss_command_system_abyss_command_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_abyss_command_system_abyss_command_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/abyss/telemetry": {
+      "get": {
+        "summary": "Abyss Telemetry Stream",
+        "description": "SSE stream for RTOS telemetry (Enhanced with Global Status)",
+        "operationId": "abyss_telemetry_stream_system_abyss_telemetry_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/monitor": {
+      "get": {
+        "summary": "Monitor",
+        "description": "Provides telemetry data",
+        "operationId": "monitor_system_monitor_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat": {
+      "post": {
+        "summary": "Chat",
+        "operationId": "chat_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tts": {
+      "post": {
+        "summary": "Tts",
+        "operationId": "tts_tts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stt": {
+      "post": {
+        "summary": "Speech To Text",
+        "operationId": "speech_to_text_stt_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_speech_to_text_stt_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/network/activity": {
+      "get": {
+        "summary": "Get Network Activity",
+        "description": "Scan network activity (For Aegis)",
+        "operationId": "get_network_activity_system_network_activity_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/governance": {
+      "get": {
+        "summary": "Get Governance",
+        "operationId": "get_governance_system_governance_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/governance/update": {
+      "post": {
+        "summary": "Update Governance",
+        "operationId": "update_governance_system_governance_update_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_governance_system_governance_update_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/governance/approve": {
+      "post": {
+        "summary": "Global Approve",
+        "operationId": "global_approve_system_governance_approve_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/maintenance/run": {
+      "post": {
+        "summary": "Run Maintenance",
+        "operationId": "run_maintenance_system_maintenance_run_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/dreams/latest": {
+      "get": {
+        "summary": "Get Latest Dream",
+        "operationId": "get_latest_dream_system_dreams_latest_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/dreams/trigger": {
+      "post": {
+        "summary": "Trigger Dream",
+        "description": "Forces an immediate dreaming cycle.",
+        "operationId": "trigger_dream_system_dreams_trigger_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/security/entitlements/pending": {
+      "get": {
+        "summary": "Get Pending Entitlements",
+        "description": "Phase 28: Poll for current permission requests",
+        "operationId": "get_pending_entitlements_system_security_entitlements_pending_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/security/entitlements/grant": {
+      "post": {
+        "summary": "Grant Entitlement",
+        "description": "Phase 28: Process user approval from HUD",
+        "operationId": "grant_entitlement_system_security_entitlements_grant_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_grant_entitlement_system_security_entitlements_grant_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/security/lockdown": {
+      "get": {
+        "summary": "Get Lockdown Status",
+        "operationId": "get_lockdown_status_system_security_lockdown_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Toggle Lockdown",
+        "operationId": "toggle_lockdown_system_security_lockdown_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/abyss/list": {
+      "get": {
+        "summary": "List Abyss Files",
+        "description": "Lists files visible based on current presence authorization.",
+        "operationId": "list_abyss_files_system_abyss_list_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/abyss/pulse": {
+      "post": {
+        "summary": "Trigger Subliminal Pulse",
+        "description": "Unlocks the real Abyss layer via a secret handshake/pulse.",
+        "operationId": "trigger_subliminal_pulse_system_abyss_pulse_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/abyss/classify": {
+      "post": {
+        "summary": "Classify File",
+        "description": "Register a file into the Abyss registry.",
+        "operationId": "classify_file_system_abyss_classify_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/vision/intruder": {
+      "post": {
+        "summary": "Report Intruder",
+        "description": "Triggers Blackwall Protocol if an intruder is detected.",
+        "operationId": "report_intruder_system_vision_intruder_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/vision/pulse": {
+      "post": {
+        "summary": "Vision Pulse",
+        "description": "Signals user presence (Legacy compat). Kernel is now source of truth.",
+        "operationId": "vision_pulse_system_vision_pulse_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/sensory/emotion": {
+      "post": {
+        "summary": "Update Emotion",
+        "description": "Updates emotion (Legacy compat). Kernel is now source of truth.",
+        "operationId": "update_emotion_system_sensory_emotion_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/vision/stream": {
+      "get": {
+        "summary": "Vision Stream",
+        "description": "MJPEG Stream from Native Vision Engine.",
+        "operationId": "vision_stream_system_vision_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/growth/ledger": {
+      "get": {
+        "summary": "Get Growth Ledger",
+        "operationId": "get_growth_ledger_system_growth_ledger_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/maintenance/unlock": {
+      "post": {
+        "summary": "Unlock Maintenance",
+        "description": "The Hidden 'Void Sequence' Receiver.",
+        "operationId": "unlock_maintenance_system_maintenance_unlock_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/theme": {
+      "get": {
+        "summary": "Get Theme",
+        "operationId": "get_theme_system_theme_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Set Theme",
+        "operationId": "set_theme_system_theme_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/growth/propose": {
+      "post": {
+        "summary": "Force Evolution",
+        "description": "Forces an immediate evolution proposal.",
+        "operationId": "force_evolution_system_growth_propose_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/forge/manifest": {
+      "post": {
+        "summary": "Forge Manifest",
+        "description": "Autonomous Architect: Manifests new system components into existence (SIP Hardened).",
+        "operationId": "forge_manifest_system_forge_manifest_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/edith/transfer": {
+      "post": {
+        "summary": "Initiate Edith Transfer",
+        "description": "Phase 36: Master Key Ownership Transfer (Fixing Mysterio loop).",
+        "operationId": "initiate_edith_transfer_system_edith_transfer_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "title": "New Owner"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/system/snap": {
+      "post": {
+        "summary": "Mk85 Snap",
+        "description": "Absolute System Integration (THE SNAP). Purges anomalies and restores purity.",
+        "operationId": "mk85_snap_system_snap_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_abyss_build_system_abyss_build_post": {
+        "properties": {
+          "platform": {
+            "type": "string",
+            "title": "Platform"
+          }
+        },
+        "type": "object",
+        "required": [
+          "platform"
+        ],
+        "title": "Body_abyss_build_system_abyss_build_post"
+      },
+      "Body_abyss_command_system_abyss_command_post": {
+        "properties": {
+          "command": {
+            "type": "string",
+            "title": "Command"
+          }
+        },
+        "type": "object",
+        "required": [
+          "command"
+        ],
+        "title": "Body_abyss_command_system_abyss_command_post"
+      },
+      "Body_grant_entitlement_system_security_entitlements_grant_post": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "approved": {
+            "type": "boolean",
+            "title": "Approved"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "approved"
+        ],
+        "title": "Body_grant_entitlement_system_security_entitlements_grant_post"
+      },
+      "Body_speech_to_text_stt_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_speech_to_text_stt_post"
+      },
+      "Body_update_governance_system_governance_update_post": {
+        "properties": {
+          "feature": {
+            "type": "string",
+            "title": "Feature"
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feature",
+          "enabled"
+        ],
+        "title": "Body_update_governance_system_governance_update_post"
+      },
+      "ChatRequest": {
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "type": "array",
+            "title": "Messages"
+          },
+          "session_id": {
+            "type": "string",
+            "title": "Session Id",
+            "default": "default"
+          },
+          "stream": {
+            "type": "boolean",
+            "title": "Stream",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "messages"
+        ],
+        "title": "ChatRequest"
+      },
+      "ForgeRequest": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "description"
+        ],
+        "title": "ForgeRequest"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Message": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "Message"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VoiceRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "speaker_id": {
+            "type": "integer",
+            "title": "Speaker Id",
+            "default": 2
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "VoiceRequest"
+      }
+    }
+  }
+}

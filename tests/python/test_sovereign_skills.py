@@ -1,14 +1,16 @@
+import json
 import os
+import shutil
 import sys
 import unittest
-import json
-import shutil
+
 
 # Add project root to path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.append(os.path.join(PROJECT_ROOT, "usr", "lib", "elysia"))
 
 from kernel import run_system_doctor
+
 
 class TestSovereignSkills(unittest.TestCase):
     """
@@ -37,14 +39,15 @@ class TestSovereignSkills(unittest.TestCase):
         """Soul Vault (Memory) の書き込みロジックシミュレーション"""
         soul_path = os.path.join(self.test_var, "soul.json")
         test_data = {"affinity": {"value": "high", "updated_at": "now"}}
-        
+
         with open(soul_path, "w", encoding="utf-8") as f:
             json.dump(test_data, f, indent=4)
-            
+
         self.assertTrue(os.path.exists(soul_path))
-        with open(soul_path, "r", encoding="utf-8") as f:
+        with open(soul_path, encoding="utf-8") as f:
             loaded = json.load(f)
             self.assertEqual(loaded["affinity"]["value"], "high")
+
 
 if __name__ == "__main__":
     unittest.main()
