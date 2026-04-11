@@ -23,7 +23,9 @@
 			"!**/temp",
 			"!**/elysia",
 			"!**/src/**/*.d.ts",
-			"!**/*.d.ts"
+			"!**/*.d.ts",
+			"!**/public/assets/js",
+			"!**/*.min.js"
 		]
 	},
 	"formatter": {

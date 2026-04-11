@@ -39,7 +39,7 @@ async function scanFile(filePath: string) {
 	if (!/\.(ts|js|json|md|env|yml|yaml)$/.test(filePath)) return;
 
 	// Skip strict checks for documentation to avoid false positives
-	if (filePath.includes("docs/")) return;
+	if (filePath.includes("docs/") || filePath.endsWith(".min.js")) return;
 
 	try {
 		const content = await readFile(filePath, "utf-8");
