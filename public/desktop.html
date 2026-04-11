@@ -18,7 +18,50 @@
             --lockdown-red: 0, 100%, 50%;
         }
 
-        [data-lockdown="true"] {
+        /* Phase 34: Immutable Totality (Omegon Shield) */
+    .omegon-shield {
+        color: #00ffff;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.8), 0 0 20px rgba(0, 255, 255, 0.4);
+        animation: omegon-flicker 4s linear infinite;
+    }
+    @keyframes omegon-flicker {
+        0%, 95%, 100% { opacity: 1; transform: scale(1); filter: drop-shadow(0 0 5px #00ffff); }
+        97% { opacity: 0.8; transform: scale(1.05); filter: drop-shadow(0 0 15px #00ffff); }
+        98% { opacity: 1; transform: scale(0.95); }
+    }
+
+    /* Phase 33: Singularity Core (Chaos Field) */
+    .singularity-core {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, transparent 70%);
+        filter: blur(20px);
+        z-index: -1;
+        pointer-events: none;
+        animation: singularity-swirl 10s linear infinite;
+    }
+    @keyframes singularity-swirl {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    /* Phase 32: Guardian Pulse (Heart of Iron) */
+    .guardian-pulse {
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        border-color: rgba(255, 215, 0, 0.4) !important;
+        animation: guardian-aura 3s ease-in-out infinite;
+    }
+    @keyframes guardian-aura {
+        0%, 100% { opacity: 0.8; box-shadow: 0 0 10px rgba(255, 215, 0, 0.1); }
+        50% { opacity: 1; box-shadow: 0 0 25px rgba(255, 215, 0, 0.3); }
+    }
+
+    [data-lockdown="true"] {
             --resonance-hue: 0 !important;
             --resonance-glow: 40px !important;
             filter: sepia(0.2) saturate(1.5) hue-rotate(-20deg) !important;
@@ -87,6 +130,12 @@
     
     <!-- ✨ Starfall Container -->
     <div id="starfall" class="sparkle-container"></div>
+
+    <!-- 🌀 Phase 33: Singularity Core -->
+    <div class="singularity-core" :style="{ opacity: (stats.entropy || 0.5) * 0.8 }"></div>
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[-1]">
+        <div class="w-64 h-64 rounded-full border border-cyan-500/10 animate-pulse"></div>
+    </div>
     
     <div class="fixed inset-0 pointer-events-none z-[1] bg-resonance"></div>
     <div class="fixed inset-0 pointer-events-none z-[2] bg-black/20 backdrop-blur-[2px]"></div>
@@ -235,6 +284,14 @@
             <div class="flex items-center gap-2 bg-red-600/20 px-3 py-1 rounded-full border border-red-500/30 animate-pulse" x-show="stats.security?.lockdown?.active">
                 <span class="text-[8px] text-red-400 font-black uppercase tracking-widest">Sovereign_Lockdown_Active</span>
             </div>
+
+            <!-- Phase 34: Immutable Totality (Omegon) -->
+            <div class="flex items-center gap-2 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30 omegon-shield" x-show="stats.security?.trust_score > 95">
+                <span class="text-[10px]">💎</span>
+                <span class="text-[8px] text-cyan-400 font-black uppercase tracking-widest">Immutable_Totality_Active</span>
+            </div>
+
+            <!-- Phase 32: Guardian Pulse (Heart of Iron) -->
 
             <!-- Phase 27: Privacy Shield HUD -->
             <div class="flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/5" x-show="privacyStatus">
