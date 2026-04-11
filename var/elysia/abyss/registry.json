@@ -1,0 +1,9 @@
+{
+    "var/elysia/soul.json": "A",
+    "var/elysia/growth.json": "B",
+    "etc/elysia/config.json": "C",
+    "usr/lib/elysia/kernel.py": "C",
+    "var/lib/elysia/soul.db": "A",
+    "var/elysia/vision": "B",
+    "var/elysia/test1.json": "A"
+}
