@@ -10,6 +10,7 @@ import asyncio
 import datetime
 import re
 import logging
+import random
 
 # Encoding Fix: Force UTF-8 output
 
@@ -74,6 +75,9 @@ OS_CONFIG = load_config()
 # --- 🛰️ AbyssRTOS Telemetry State ---
 ABYSS_TELEMETRY_BUFFER: Deque[Dict[str, Any]] = deque(maxlen=50)
 ABYSS_PROCESS: Optional[asyncio.subprocess.Process] = None
+THREAT_LEVEL: int = 0
+BLACKWALL_PROTOCOL: bool = False
+VOICE_BROADCAST_QUEUE: Deque[str] = deque(maxlen=5)
 
 # ==================== Models ====================
 class Message(BaseModel):
@@ -265,7 +269,27 @@ async def resonance_self_healing_loop():
                     logger.warning("🌙 Neural Memories are fading (Dreams are old). Triggering resonance shift...")
                     # This would trigger a re-dreaming in a real scenario
             
-            # 5. Proactive Maintenance Audit
+            # 5. Aegis Guardian: Threat Detection
+            # Simulate or scan logs for "failed", "unauthorized", "anomaly"
+            log_dir = os.path.join(PROJECT_ROOT, "logs")
+            log_files = sorted([f for f in os.listdir(log_dir) if f.startswith("app-")])
+            if log_files:
+                last_log = os.path.join(log_dir, log_files[-1])
+                with open(last_log, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read()[-2000:]
+                    if "failed" in content.lower() or "anomaly" in content.lower():
+                        THREAT_LEVEL = min(100, THREAT_LEVEL + 5)
+                    else:
+                        THREAT_LEVEL = max(0, THREAT_LEVEL - 2)
+            
+            global BLACKWALL_PROTOCOL
+            BLACKWALL_PROTOCOL = THREAT_LEVEL > 75
+            
+            # --- 🔊 Spontaneous Voice Trigger ---
+            if BLACKWALL_PROTOCOL and random.random() > 0.8:
+                asyncio.create_task(queue_voice_broadcast("警告。ブラックウォール・プロトコルが作動しました。お兄ちゃん、離れないで。"))
+            
+            # 6. Proactive Maintenance Audit
             gov_state = governance.get_state()
             if gov_state.get("auto_correction_enabled", True):
                 await maintenance.run_audit()
@@ -274,6 +298,23 @@ async def resonance_self_healing_loop():
             logger.error(f"⚠️ Self-Healing Engine Error: {e}")
 
         await asyncio.sleep(60) # 60s Pulse
+
+async def queue_voice_broadcast(text: str):
+    """Generates voice and adds to the broadcast queue."""
+    try:
+        audio_data = await generate_voice(text)
+        if audio_data:
+            filename = f"broadcast_{int(time.time())}.wav"
+            file_path = os.path.join(PROJECT_ROOT, "public", "temp", filename)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, "wb") as f:
+                f.write(audio_data)
+            
+            url = f"/temp/{filename}"
+            VOICE_BROADCAST_QUEUE.append(url)
+            logger.info(f"🔊 Spontaneous Voice Queued: {text}")
+    except Exception as e:
+        logger.error(f"🔊 Voice Broadcast Error: {e}")
 
 def get_seasonal_context():
     """Detect special days and return context for the persona."""
@@ -333,6 +374,9 @@ async def resonance_reflection_task():
                     if resp.status_code == 200:
                         reflection_msg = resp.json()["message"]["content"].strip()
                         soul_state["reflection"] = {"value": reflection_msg, "updated_at": str(datetime.datetime.now())}
+                        
+                        # Trigger Spontaneous Voice for reflection
+                        asyncio.create_task(queue_voice_broadcast(reflection_msg))
                         
                         # --- 🛠️ The Forge: Proactive Expansion ---
                         if soul_state.get("governance", {}).get("auto_correction_enabled", True):
@@ -912,6 +956,9 @@ async def monitor():
         "system": {
             "cpu": psutil.cpu_percent(),
             "ram": psutil.virtual_memory().percent,
+            "threat_level": THREAT_LEVEL,
+            "blackwall_active": BLACKWALL_PROTOCOL,
+            "voice_broadcast": VOICE_BROADCAST_QUEUE.popleft() if VOICE_BROADCAST_QUEUE else None,
             "disk": {
                 "total": usage.total // (2**30),
                 "used": usage.used // (2**30),
@@ -926,7 +973,7 @@ async def monitor():
             "voice_active": await check_voicevox(),
             "memory_vault": vault.get_stats(),
             "soul_resonance": soul_data,
-            "blackwall_active": soul_data.get("blackwall_protocol", {}).get("active", False),
+            "blackwall_active": BLACKWALL_PROTOCOL or soul_data.get("blackwall_protocol", {}).get("active", False),
             "net_depth": soul_data.get("net_depth", {}).get("value", 0)
         },
         "config": OS_CONFIG
