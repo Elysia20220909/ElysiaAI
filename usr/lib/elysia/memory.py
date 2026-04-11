@@ -9,6 +9,7 @@ import time
 import json
 from typing import List, Dict, Any, Optional
 from usr.lib.elysia.secure_enclave import sep # Phase 27
+from usr.lib.elysia.neural_lab import lab # Phase 32
 
 class MemoryVault:
     def __init__(self, db_path: str):
@@ -58,6 +59,8 @@ class MemoryVault:
             """, (key, sealed_value, confidence))
             conn.commit()
 
+        return facts
+
     def get_facts(self) -> Dict[str, str]:
         """覚えているすべての事実を取得 (Phase 27: SKR Decryption)"""
         facts = {}
@@ -76,6 +79,19 @@ class MemoryVault:
                     facts[key] = "[INTEGRITY_FAULT]"
         return facts
 
+    def materialize_stateless_soul(self) -> str:
+        """Phase 35: Reassembles the persona in the volatile Neural Lab."""
+        facts = self.get_facts()
+        if not facts: return ""
+        
+        soul_data = "【STATLESS_IDENTITY_RESONANCE】\n"
+        for k, v in facts.items():
+            soul_data += f"- {k}: {v}\n"
+        
+        # Inject into Neural Lab for stateless reasoning
+        lab.execute_resonance_pulse(f"IDENTITY_SYNC_{int(time.time())}", soul_data)
+        return soul_data
+
     def add_highlight(self, session_id: str, content: str, emotion: str = "neutral"):
         """重要な会話の内容を記録"""
         with sqlite3.connect(self.db_path) as conn:
@@ -87,14 +103,8 @@ class MemoryVault:
             conn.commit()
 
     def get_context_string(self) -> str:
-        """AIプロンプトに挿入するための要約テキストを生成"""
-        facts = self.get_facts()
-        if not facts: return ""
-        
-        context = "【エリシアが知っているあなたの情報】\n"
-        for k, v in facts.items():
-            context += f"- {k}: {v}\n"
-        return context
+        """AIプロンプトに挿入するための要約テキストを生成 (Phase 35: Stateless integration)"""
+        return self.materialize_stateless_soul()
 
 # Global Instance
 _db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "var", "lib", "elysia", "soul.db")

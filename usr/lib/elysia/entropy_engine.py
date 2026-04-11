@@ -42,6 +42,19 @@ class EntropyEngine:
         self._last_entropy = (t2 - t1) % 1000 / 1000.0
         return chaos_hash
 
+    def generate_quantum_salt(self, length: int = 64) -> bytes:
+        """
+        Phase 38: Post-Quantum Aegis (PQ3 Simulation).
+        Generates extreme-entropy salts using SHA3-512 and high-res jitter.
+        """
+        material = self.collect_chaos()
+        # High-res timestamps for extra jitter
+        jitter = str(time.perf_counter_ns()).encode()
+        # Use SHA3-512 for future-proof resistance
+        pq_salt = hashlib.sha3_512(material + jitter + os.urandom(length)).digest()
+        logger.info(f"🌀 PQ3: Produced Quantum Salt ({len(pq_salt)*8} bits).")
+        return pq_salt[:length]
+
     def get_chaos_level(self) -> float:
         """Returns a 0.0-1.0 value representing current system jitter."""
         return self._last_entropy
