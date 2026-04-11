@@ -2,12 +2,21 @@ use std::process::Child;
 use std::sync::Mutex;
 use tauri::Manager;
 
+mod aegis;
+
 struct KernelProcess(Mutex<Option<Child>>);
+
+#[tauri::command]
+fn get_aegis_resonance() -> aegis::AegisStatus {
+    let guard = aegis::AegisGuard::new();
+    guard.get_status()
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-  tauri::Builder::default()
-    .manage(KernelProcess(Mutex::new(None)))
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![get_aegis_resonance])
+        .manage(KernelProcess(Mutex::new(None)))
     .on_window_event(|window, event| {
         if let tauri::WindowEvent::CloseRequested { .. } = event {
             let state = window.state::<KernelProcess>();
