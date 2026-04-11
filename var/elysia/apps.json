@@ -102,5 +102,9 @@
     "abyss_vault": {
         "icon": "🌌",
         "title": "Abyss Vault"
+    },
+    "global_eye": {
+        "icon": "🕶️",
+        "title": "E.D.I.T.H. Global Eye"
     }
 }

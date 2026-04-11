@@ -112,6 +112,14 @@ PROTECTED_VOLUMES = [                         # Phase 26: SSV
     "public/css/blackwall.css"
 ]
 LOCKDOWN_MODE: bool = False                    # Phase 29: Lockdown Mode
+EVENT_HORIZON_ACTIVE: bool = True               # Phase 35: Event Horizon
+INTEGRITY_MANIFEST: Dict[str, str] = {}         # Phase 35: SSV Reprisal
+EDITH_ACTIVE: bool = True                       # Phase 36: Project E.D.I.T.H.
+THREAT_PROBABILITY: float = 0.0                 # Phase 36: Predictive Vigilance
+VIGILANCE_LOG: List[str] = []                   # Phase 36: S.G.N. Buffer
+MK85_PROTOCOL_ACTIVE: bool = True               # Phase 37: MARK 85 Singularity
+TEMPORAL_GPS_DIR = os.path.join(PROJECT_ROOT, "var", "elysia", "abyss", "temporal")
+os.makedirs(TEMPORAL_GPS_DIR, exist_ok=True)
 RSR_HASH_SNAPSHOT: Dict[str, str] = {}         # Phase 29: Rapid Security Response
 SUBLIMINAL_UNLOCKED: bool = False             # Phase 31: Subliminal Abyss
 
@@ -1434,7 +1442,16 @@ async def monitor():
             "memory_vault": vault.get_stats(),
             "soul_resonance": soul_data,
             "blackwall_active": BLACKWALL_PROTOCOL or soul_data.get("blackwall_protocol", {}).get("active", False),
-            "net_depth": soul_data.get("net_depth", {}).get("value", 0)
+            "net_depth": soul_data.get("net_depth", {}).get("value", 0),
+            "edith": {
+                "active": EDITH_ACTIVE,
+                "threat_probability": THREAT_PROBABILITY,
+                "vigilance_log": VIGILANCE_LOG
+            },
+            "mk85": {
+                "active": MK85_PROTOCOL_ACTIVE,
+                "temporal_gps": os.path.exists(os.path.join(TEMPORAL_GPS_DIR, "latest.snapshot"))
+            }
         },
         "config": OS_CONFIG
     }
@@ -1937,6 +1954,173 @@ async def startup_event():
     asyncio.create_task(rsr_integrity_loop())
     logger.info("🌸 Elysia Core Kernel: ONLINE")
 
+# ==================== 🦾 Phase 35: Self-Healing Logic ====================
+
+def compute_file_hash(path: str) -> str:
+    """Calculates SHA256 hash of a file."""
+    if not os.path.exists(path): return ""
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+async def snapshot_system_integrity():
+    """Takes a baseline snapshot of all protected volumes."""
+    for rel_path in PROTECTED_VOLUMES:
+        abs_path = os.path.join(PROJECT_ROOT, rel_path)
+        if os.path.exists(abs_path):
+            with open(abs_path, "rb") as f:
+                content = f.read()
+            # Store secure backup in Abyss
+            backup_name = os.path.basename(rel_path).replace(".", "_")
+            backup_path = f"var/elysia/abyss/backups/{backup_name}.bak"
+            pfs.write_secure(backup_path, content, level="A")
+            INTEGRITY_MANIFEST[rel_path] = compute_file_hash(abs_path)
+    logger.info("🌌 Stage 10: System Integrity Manifest SEALED.")
+
+async def integrity_watcher_loop():
+    """Continuously monitors and repairs system drift."""
+    await snapshot_system_integrity()
+    
+    while EVENT_HORIZON_ACTIVE:
+        drift_detected = False
+        for rel_path, expected_hash in INTEGRITY_MANIFEST.items():
+            current_hash = compute_file_hash(os.path.join(PROJECT_ROOT, rel_path))
+            if current_hash != expected_hash:
+                logger.critical(f"⚠️ INTEGRITY_VIOLATION: Drift detected in {rel_path}! Initiating Reprisal.")
+                drift_detected = True
+                # Self-Healing: Restore from Abyss
+                backup_name = os.path.basename(rel_path).replace(".", "_")
+                backup_path = f"var/elysia/abyss/backups/{backup_name}.bak"
+                try:
+                    original_data = pfs.read_secure(backup_path, user_present=True)
+                    with open(os.path.join(PROJECT_ROOT, rel_path), "wb") as f:
+                        f.write(original_data)
+                    logger.info(f"🧬 SELF_HEALING: {rel_path} has been restored to its Sovereign state.")
+                except Exception as e:
+                    logger.error(f"❌ REPRISAL_FAILED for {rel_path}: {e}")
+        
+        if drift_detected:
+            global THREAT_LEVEL
+            THREAT_LEVEL = min(100, THREAT_LEVEL + 30)
+            
+        await asyncio.sleep(15) # 15s Integrity Pulse
+
+# ==================== 🕶️ Phase 36: Vigilance Engine (E.D.I.T.H.) ====================
+
+async def vigilance_loop():
+    """Predictive Threat Monitoring (Stark Style)."""
+    global THREAT_PROBABILITY
+    last_io = psutil.net_io_counters()
+    
+    while EDITH_ACTIVE:
+        await asyncio.sleep(5)
+        current_io = psutil.net_io_counters()
+        
+        # Calculate I/O Jump (Spike detection)
+        io_delta = (current_io.bytes_sent + current_io.bytes_recv) - (last_io.bytes_sent + last_io.bytes_recv)
+        last_io = current_io
+        
+        # Determine Threat Probability
+        # Base probability from Threat Level
+        prob = THREAT_LEVEL / 100.0
+        
+        # Add spike factor (Simulated heuristics)
+        if io_delta > 1024 * 1024: # 1MB/s spike
+            prob += 0.15
+            VIGILANCE_LOG.append(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] SGN_DETECTION: Network surge detected (+{io_delta//1024} KB/s)")
+        
+        # Keep buffer small
+        if len(VIGILANCE_LOG) > 10: VIGILANCE_LOG.pop(0)
+        
+        THREAT_PROBABILITY = min(1.0, prob)
+
+@app.post("/system/edith/transfer")
+async def initiate_edith_transfer(new_owner: str = Body(...)):
+    """Phase 36: Master Key Ownership Transfer (Fixing Mysterio loop)."""
+    gov_state = governance.get_state()
+    
+    # 1. Biometric Resonance check (Mock)
+    if not VISION_AUTH_ACTIVE:
+        return {"status": "error", "message": "MASTER_KEY_LOCKED: Visual Aegis enrollment required."}
+    
+    # 2. Persona Evaluation (Algorithm Evaluation)
+    soul_data = vault.get_facts()
+    trust_score = 0
+    if new_owner in str(soul_data): trust_score += 50
+    if THREAT_LEVEL < 20: trust_score += 30
+    
+    if trust_score < 70:
+        logger.warning(f"🛡️ EDITH: Blocked transfer attempt to {new_owner}. Trust score Insufficient ({trust_score}).")
+        VIGILANCE_LOG.append(f"[{datetime.datetime.now().strftime('%H:%M:%S')}] MASTER_KEY_FAULT: Unauthorized transfer attempt blocked.")
+        return {"status": "error", "message": f"RESISTANCE_DETECTED: Subject {new_owner} failed persona evaluation."}
+    
+    # 3. Transfer Logic
+    logger.info(f"✨ EDITH: Ownership successfully transitioned to {new_owner}.")
+    return {"status": "success", "message": f"Welcome, {new_owner}. Even Dead, I'm The Hero."}
+
+# ==================== 🧤 Phase 37: Sovereign Singularity (MARK 85) ====================
+
+def temporal_snapshot():
+    """Creates an encrypted Quantum Snapshot of the current state for persistence."""
+    state = {
+        "timestamp": time.time(),
+        "threat_level": THREAT_LEVEL,
+        "lockdown": LOCKDOWN_MODE,
+        "edith_active": EDITH_ACTIVE,
+        "resonance_depth": governance.get_state().get("security_level", "OMEGA")
+    }
+    # Fix: SecureEnclave.seal doesn't have 'level' argument. 
+    # Use rel_path for Atomic context if needed, or default seal.
+    sealed_data = sep.seal(state, rel_path="abyss/temporal/latest.snapshot")
+    snapshot_path = os.path.join(TEMPORAL_GPS_DIR, "latest.snapshot")
+    with open(snapshot_path, "wb") as f:
+        f.write(sealed_data)
+    logger.info("🌌 MARK 85: Temporal GPS Sync Complete (Quantum Snapshot SEALED).")
+
+def resonance_anchor():
+    """Re-establishes session continuity from the latest temporal snapshot."""
+    snapshot_path = os.path.join(TEMPORAL_GPS_DIR, "latest.snapshot")
+    if os.path.exists(snapshot_path):
+        try:
+            with open(snapshot_path, "rb") as f:
+                # Need to use skip_auth=True for early boot restoration or ensure authorized
+                # Fix: Pass rel_path to use correct PFK
+                state = sep.unseal(f.read(), skip_auth=True, rationale="Temporal_Anchor_Resonance", rel_path="abyss/temporal/latest.snapshot")
+            
+            global THREAT_LEVEL, LOCKDOWN_MODE, EDITH_ACTIVE
+            THREAT_LEVEL = state.get('threat_level', THREAT_LEVEL)
+            LOCKDOWN_MODE = state.get('lockdown', LOCKDOWN_MODE)
+            EDITH_ACTIVE = state.get('edith_active', EDITH_ACTIVE)
+            
+            logger.info(f"🪐 MARK 85: Resonance Anchor established. Session restored from T-{int(time.time() - state['timestamp'])}s.")
+            return state
+        except Exception as e:
+            logger.error(f"❌ MARK 85: Resonance Anchor Failed: {e}")
+    return None
+
+@app.post("/system/snap")
+async def mk85_snap():
+    """Absolute System Integration (THE SNAP). Purges anomalies and restores purity."""
+    global THREAT_LEVEL, THREAT_PROBABILITY
+    logger.critical("💎 MARK 85: Initiating THE SNAP protocol. I AM INEVITABLE.")
+    
+    # 1. Purge Transit Data
+    lab.evaporate()
+    
+    # 2. Reset Threat Metrics
+    THREAT_LEVEL = 0
+    THREAT_PROBABILITY = 0.0
+    
+    # 3. Force SSV Reprisal
+    await snapshot_system_integrity() # Re-verify baseline
+    
+    # 4. Burn Entropy for repair
+    from usr.lib.elysia.entropy_engine import entropy
+    _ = entropy.collect_chaos()
+    
+    temporal_snapshot() # Lock the pure state
+    
+    return {"status": "success", "message": "System Purified. The universe is as it should be."}
+
 if __name__ == "__main__":
     import uvicorn
     # SSV Boot Sequence
@@ -1956,4 +2140,27 @@ if __name__ == "__main__":
         SECURE_BOOT_STATUS = "SUCCESS"
         logger.info("✅ Secure Boot: SUCCESS. System volumes signed and verified.")
 
+    # Phase 35: Manifest Integral
+    asyncio.run(snapshot_system_integrity())
+    
+    @app.route('/system/security/optic-id/check', methods=['GET'])
+    def check_optic_id():
+        """Phase 39: Biometric resonance validation for Class-A modules."""
+        # Simulation: Check if SecureEnclave is authorized with bio_status
+        is_valid = sep._bio_status and sep._boot_verified
+        if is_valid:
+            return jsonify({
+                "status": "AUTHORIZED",
+                "resonance_hash": hashlib.sha256(sep.hw_id.encode()).hexdigest(),
+                "timestamp": time.time()
+            })
+        else:
+            return jsonify({"status": "DENIED", "reason": "BIO_RESONANCE_MISMATCH"}), 403
+
+    # --- Phase 36: E.D.I.T.H. Control Endpoints ---
+    asyncio.create_task(vigilance_loop())
+    
+    # Phase 37: MARK 85 Resonance Anchor
+    resonance_anchor()
+    
     uvicorn.run(app, host="127.0.0.1", port=8000)

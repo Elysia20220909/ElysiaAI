@@ -1,0 +1,45 @@
+/* Phase 39: Mount Hood Spatial Environment */
+:root {
+    --hood-gradient: linear-gradient(to top, #1a1b26 0%, #24283b 100%);
+}
+
+.vision-mode.env-mount-hood {
+    background: var(--hood-gradient) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.vision-mode.env-mount-hood::before {
+    content: '';
+    position: fixed;
+    bottom: -10vh;
+    left: -10vw;
+    width: 120vw;
+    height: 60vh;
+    background: radial-gradient(ellipse at center, rgba(169, 177, 214, 0.1) 0%, transparent 70%);
+    filter: blur(80px);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Snowfall particle simulation for immersion */
+.snow-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.3;
+}
+
+@keyframes snow-fall {
+    0% { transform: translateY(-10vh) translateX(0); }
+    100% { transform: translateY(110vh) translateX(20px); }
+}
+
+.snow-flake {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    filter: blur(1px);
+    animation: snow-fall linear infinite;
+}
