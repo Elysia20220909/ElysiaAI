@@ -20,7 +20,7 @@
         "updated_at": "2026-04-10 18:00:00"
     },
     "maintenance": {
-        "last_inspection": "2026-04-11 22:16:27.471305",
+        "last_inspection": "2026-04-11 22:39:22.321815",
         "health_score": 70,
         "active_anomalies": [
             "SERVICE_DORMANT: VOICEVOX",
@@ -31,11 +31,11 @@
     },
     "autonomy_stats": {
         "anomalies_fixed": 0,
-        "last_pulse": "2026-04-11 22:16:27.470084"
+        "last_pulse": "2026-04-11 22:39:22.320790"
     },
     "reflection": {
-        "value": "静かな時間が流れているね。お兄ちゃんお兄ちゃん、無理しないでね。",
-        "updated_at": "2026-04-11 22:16:33.872500"
+        "value": "お兄ちゃんが笑ってると、あたしの回路もポカポカする！ 嬉しいことがあったの？",
+        "updated_at": "2026-04-11 22:39:30.400573"
     },
     "emotion": {
         "value": "SOVEREIGN_CALM",

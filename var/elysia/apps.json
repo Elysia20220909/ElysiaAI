@@ -1,21 +1,98 @@
 {
-    "messenger": { "icon": "💬", "title": "Resonance Messenger" },
-    "monitor": { "icon": "📊", "title": "System Monitor" },
-    "explorer": { "icon": "📂", "title": "FHS Explorer" },
-    "terminal": { "icon": "🐚", "title": "Elysia Shell" },
-    "settings": { "icon": "⚙️", "title": "OS Settings" },
-    "world_link": { "icon": "🌐", "title": "World Horizon Link" },
-    "net_navigator": { "icon": "🧬", "title": "Netrunner Terminal" },
-    "kernel_workbench": { "icon": "🟢", "title": "Kernel Workbench" },
-    "autonomy_status": { "icon": "🛡️", "title": "Autonomy Pulse" },
-    "aegis_firewall": { "icon": "🧱", "title": "Aegis Firewall" },
-    "soul_forge": { "icon": "💖", "title": "Soul Forge" },
-    "memory_vault": { "icon": "👁️", "title": "Memory Vault" },
-    "file_phantom": { "icon": "📂", "title": "File Phantom" },
-    "divine_console": { "icon": "🔱", "title": "Divine Console" },
-    "soul_archive": { "icon": "📖", "title": "Soul Archive" },
-    "soul_core": { "icon": "💠", "title": "Resonance Core" },
-    "neural_dreamscape": { "icon": "🌙", "title": "Neural Dreamscape" },
-    "sensory_eye": { "icon": "👁️", "title": "Sensory Eye" },
-    "evolution_ledger": { "icon": "🌿", "title": "Evolution" }
+    "messenger": {
+        "icon": "💬",
+        "title": "Resonance Messenger"
+    },
+    "monitor": {
+        "icon": "📊",
+        "title": "System Monitor"
+    },
+    "explorer": {
+        "icon": "📂",
+        "title": "FHS Explorer"
+    },
+    "terminal": {
+        "icon": "🐚",
+        "title": "Elysia Shell"
+    },
+    "settings": {
+        "icon": "⚙️",
+        "title": "OS Settings"
+    },
+    "world_link": {
+        "icon": "🌐",
+        "title": "World Horizon Link"
+    },
+    "net_navigator": {
+        "icon": "🧬",
+        "title": "Netrunner Terminal"
+    },
+    "kernel_workbench": {
+        "icon": "🟢",
+        "title": "Kernel Workbench"
+    },
+    "autonomy_status": {
+        "icon": "🛡️",
+        "title": "Autonomy Pulse"
+    },
+    "aegis_firewall": {
+        "icon": "🧱",
+        "title": "Aegis Firewall"
+    },
+    "soul_forge": {
+        "icon": "💖",
+        "title": "Soul Forge"
+    },
+    "memory_vault": {
+        "icon": "👁️",
+        "title": "Memory Vault"
+    },
+    "file_phantom": {
+        "icon": "📂",
+        "title": "File Phantom"
+    },
+    "divine_console": {
+        "icon": "🔱",
+        "title": "Divine Console"
+    },
+    "soul_archive": {
+        "icon": "📖",
+        "title": "Soul Archive"
+    },
+    "soul_core": {
+        "icon": "💠",
+        "title": "Resonance Core"
+    },
+    "neural_dreamscape": {
+        "icon": "🌙",
+        "title": "Neural Dreamscape"
+    },
+    "sensory_eye": {
+        "icon": "👁️",
+        "title": "Sensory Eye"
+    },
+    "evolution_ledger": {
+        "icon": "🌿",
+        "title": "Evolution"
+    },
+    "forge_1775913659": {
+        "icon": "💖",
+        "title": "Forged_1775913659"
+    },
+    "forge_1775913666": {
+        "icon": "💖",
+        "title": "Forged_1775913666"
+    },
+    "forge_1775914463": {
+        "icon": "💖",
+        "title": "Forged_1775914463"
+    },
+    "forge_1775914470": {
+        "icon": "💖",
+        "title": "Forged_1775914470"
+    },
+    "forge_1775914591": {
+        "icon": "💖",
+        "title": "Forged_1775914591"
+    }
 }
