@@ -1,0 +1,40 @@
+/* 🌌 Starfall Animation (NIGHT CITY EDITION) */
+.sparkle-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1; /* Above background, below windows */
+    overflow: hidden;
+}
+
+.star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0;
+    animation: starfall linear infinite;
+}
+
+@keyframes starfall {
+    0% {
+        transform: translateY(-10vh) scale(0) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.8;
+    }
+    90% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(110vh) scale(1) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+.star-sparkle {
+    box-shadow: 0 0 10px white, 0 0 20px cyan;
+}

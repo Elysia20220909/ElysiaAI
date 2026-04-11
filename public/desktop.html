@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elysia OS // NIGHT CITY EDITION 🌃</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+    <script src="assets/js/tailwind.min.js"></script>
+    <script src="assets/js/alpine.min.js" defer></script>
     <link rel="stylesheet" href="css/desktop.css">
     <link rel="stylesheet" href="css/blackwall.css">
     <link rel="stylesheet" href="css/aegis.css">
+    <link rel="stylesheet" href="css/sparkle.css">
     <style>
         :root {
             --resonance-hue: 340; /* Default Elysia Pink */
@@ -33,8 +34,11 @@
           'blackwall-active': blackwallActive,
           ['layer-depth-' + netDepth]: blackwallActive && netDepth > 0 
       }">
-      <!-- 🌌 Omega Backdrop: Neural Synapse Canvas -->
+    <!-- 🌌 Omega Backdrop: Neural Synapse Canvas -->
     <canvas id="synapseCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+    
+    <!-- ✨ Starfall Container -->
+    <div id="starfall" class="sparkle-container"></div>
     
     <div class="fixed inset-0 pointer-events-none z-[1] bg-black/20 backdrop-blur-[2px]"></div>
     
@@ -167,6 +171,22 @@
                     this.fetchApps();
                     setInterval(() => this.fetchApps(), 10000);
                     this.initSynapse();
+                    this.initStarfall();
+                },
+                initStarfall() {
+                    const container = document.getElementById('starfall');
+                    const starCount = 30;
+                    for (let i = 0; i < starCount; i++) {
+                        const star = document.createElement('div');
+                        star.className = 'star' + (Math.random() > 0.8 ? ' star-sparkle' : '');
+                        const size = Math.random() * 3 + 1;
+                        star.style.width = `${size}px`;
+                        star.style.height = `${size}px`;
+                        star.style.left = `${Math.random() * 100}vw`;
+                        star.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                        star.style.animationDelay = `${Math.random() * 10}s`;
+                        container.appendChild(star);
+                    }
                 },
                 initSynapse() {
                     const canvas = document.getElementById('synapseCanvas');
