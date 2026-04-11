@@ -118,6 +118,34 @@
             </div>
         </div>
     </div>
+
+    <!-- 💀 KERNEL_PANIC Overlay (Phase 26) -->
+    <div class="fixed inset-0 z-[20000] bg-[#050505] flex flex-col items-center justify-center p-12 text-center"
+         x-show="securityStatus.panic"
+         x-transition:enter="transition-opacity duration-100"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-cloak>
+        <div class="max-w-xl space-y-8">
+            <div class="text-[120px] leading-none mb-4">🌋</div>
+            <h1 class="text-3xl font-black text-white tracking-[0.3em] uppercase">Kernel_Panic_Detected</h1>
+            <div class="p-6 border border-white/10 bg-white/5 font-mono text-left space-y-2">
+                <div class="text-red-500 text-xs font-bold">REASON: SYSTEM_INTEGRITY_VIOLATION</div>
+                <div class="text-white/40 text-[10px]">Elysia Secure Enclave (SEP) has detected unauthorized modifications to the Signed System Volume (SSV).</div>
+                <div class="text-white/20 text-[9px] mt-4">
+                    [EXCEPTION_HASH]: <span x-text="Math.random().toString(16).slice(2)"></span><br>
+                    [BOOT_LOADER]: SSV_VERIFICATION_FAILED<br>
+                    [RECOVERY]: Please contact Onii-chan for restoration.
+                </div>
+            </div>
+            <div class="pt-8 flex flex-col items-center gap-4">
+                <div class="w-48 h-1 bg-white/10 overflow-hidden">
+                    <div class="h-full bg-white/40 animate-[loading_10s_linear_infinite]"></div>
+                </div>
+                <p class="text-[10px] text-white/30 tracking-widest uppercase animate-pulse">Waiting for sovereign intervention...</p>
+            </div>
+        </div>
+    </div>
     
     <!-- 🔊 Voice Broadcast -->
     <audio id="elysia-voice-broadcast" class="hidden"></audio>
@@ -134,6 +162,12 @@
                <div class="flex items-center gap-1.5">
                    <div class="w-1.5 h-1.5 rounded-full" :class="systemHealth.voice ? 'bg-pink-400 shadow-[0_0_8px_#ff00ba]' : 'bg-red-500'"></div>
                    <span class="text-[9px] text-white/50 uppercase">Vocal</span>
+               </div>
+               <div class="flex items-center gap-1.5 ml-2 border-l border-white/10 pl-3">
+                   <div class="flex items-center gap-1">
+                       <span class="text-[10px]" :class="securityStatus.secure_boot === 'SUCCESS' ? 'text-green-400' : 'text-red-500'">🛡️</span>
+                       <span class="text-[8px] font-bold text-white/40 uppercase tracking-tighter" x-text="securityStatus.secure_boot === 'SUCCESS' ? 'SEP_VERIFIED' : 'SEP_UNSECURE'"></span>
+                   </div>
                </div>
             </div>
         </div>
@@ -258,6 +292,7 @@
                 netDepth: 0,
                 systemHealth: { voice: false, brain: true },
                 diagnostics: { open: false, report: '' },
+                securityStatus: { secure_boot: 'PENDING', panic: false, sip_active: true, maintenance: false },
                 toasts: [],
 
                 init() {
@@ -271,6 +306,8 @@
                     this.initSynapse();
                     this.initStarfall();
                     this.fetchTheme();
+                    this.fetchSecurityStatus();
+                    setInterval(() => this.fetchSecurityStatus(), 3000);
                     
                     // JARVIS Wake Up Sequence
                     this.fetchApps().then(() => {
@@ -346,6 +383,20 @@
                     this.currentTheme = data.theme;
                     this.maintenanceMode = data.maintenance;
                     document.body.dataset.theme = this.currentTheme;
+                },
+
+                async fetchSecurityStatus() {
+                   try {
+                       const res = await fetch('http://localhost:8000/system/security/status');
+                       const data = await res.json();
+                       this.securityStatus = data;
+                       
+                       if (data.panic && !this.toasts.some(t => t.msg.includes("KERNEL PANIC"))) {
+                           this.showToast("CRITICAL: KERNEL PANIC", "💀");
+                       }
+                   } catch (e) {
+                       console.error("Security Sync Failed", e);
+                   }
                 },
 
                 async applyTheme(theme) {

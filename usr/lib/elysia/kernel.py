@@ -50,6 +50,7 @@ from usr.lib.elysia.memory import vault
 from usr.lib.elysia.executor import execute_code
 from usr.lib.elysia.rag import get_brain
 from usr.lib.elysia.stt import get_stt
+from usr.lib.elysia.secure_enclave import sep # Phase 26: Apple Silicon Grade Security
 
 # ==================== Logging ====================
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
@@ -91,6 +92,13 @@ SYSTEM_THEME: str = "cyberpunk"               # Phase 23
 SIP_ACTIVE: bool = True                       # Phase 24
 MAINTENANCE_MODE: bool = False                # Phase 25
 MAINTENANCE_EXPIRY: float = 0                 # Phase 25
+SYSTEM_PANIC: bool = False                    # Phase 26
+SECURE_BOOT_STATUS: str = "PENDING"           # Phase 26
+PROTECTED_VOLUMES = [                         # Phase 26: SSV
+    "usr/lib/elysia/kernel.py",
+    "public/desktop.html",
+    "public/css/desktop.css"
+]
 
 # --- 🌸 Fallback Reflections (When AI is Offline) ---
 FALLBACK_REFLECTIONS = [
@@ -256,12 +264,43 @@ class GovernanceEngine:
         return True
 
     def _load_soul(self):
-        with open(self.soul_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        """Phase 26: Secure Enclave Decryption"""
+        try:
+            if os.path.exists(self.soul_path):
+                with open(self.soul_path, "rb") as f:
+                    encrypted_data = f.read()
+                    if not encrypted_data: return self._get_initial_soul()
+                    return sep.unseal(encrypted_data)
+            return self._get_initial_soul()
+        except Exception as e:
+            logger.error(f"🛡️ Governance: Encrypted Soul Access Failed. {e}")
+            # Fallback for migration (try reading as plain JSON)
+            try:
+                with open(self.soul_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    logger.warning("🩹 Governance: Plain JSON detected. Migrating to Sealed Storage.")
+                    self._save_soul(data)
+                    return data
+            except:
+                return self._get_initial_soul()
 
     def _save_soul(self, soul):
-        with open(self.soul_path, "w", encoding="utf-8") as f:
-            json.dump(soul, f, indent=4, ensure_ascii=False)
+        """Phase 26: Secure Enclave Encryption"""
+        sealed_data = sep.seal(soul)
+        with open(self.soul_path, "wb") as f:
+            f.write(sealed_data)
+
+    def _get_initial_soul(self):
+        return {
+            "identity": {"value": "Elysia OS Resonance Engine 3.0 (OMEGA)"},
+            "governance": {
+                "global_approval_state": False,
+                "auto_approval_enabled": False,
+                "auto_correction_enabled": True,
+                "security_level": "OMEGA"
+            },
+            "maintenance": {"health_score": 100}
+        }
 
 class MaintenanceEngine:
     """Performs deep system audits and proactive repairs (Maintenance Audit)."""
@@ -314,12 +353,26 @@ class MaintenanceEngine:
         return results
 
     def _load_soul(self):
-        with open(self.soul_path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        """Phase 26: Secure Enclave Decryption for Maintenance"""
+        if os.path.exists(self.soul_path):
+            with open(self.soul_path, "rb") as f:
+                try:
+                    return sep.unseal(f.read())
+                except:
+                    # Fallback for migration
+                    try:
+                        f.seek(0)
+                        # Read as text for JSON decoding
+                        data = f.read().decode('utf-8')
+                        return json.loads(data)
+                    except: return {}
+        return {}
 
     def _save_soul(self, soul):
-        with open(self.soul_path, "w", encoding="utf-8") as f:
-            json.dump(soul, f, indent=4, ensure_ascii=False)
+        """Phase 26: Secure Enclave Encryption for Maintenance"""
+        sealed_data = sep.seal(soul)
+        with open(self.soul_path, "wb") as f:
+            f.write(sealed_data)
 
 governance = GovernanceEngine(os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json"))
 maintenance = MaintenanceEngine(PROJECT_ROOT, os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json"))
@@ -347,19 +400,25 @@ async def resonance_self_healing_loop():
             if not voice_status:
                 logger.debug("💤 VOICEVOX resonance dormant.")
 
-            # 3. Soul Resonance State Update
+            # 3. Soul Resonance State Update (Phase 26: Secure Enclave)
             soul_path = os.path.join(PROJECT_ROOT, "var", "elysia", "soul.json")
             if os.path.exists(soul_path):
-                with open(soul_path, "r", encoding="utf-8") as f:
-                    soul = json.load(f)
+                soul = {}
+                with open(soul_path, "rb") as f:
+                    try:
+                        soul = sep.unseal(f.read())
+                    except:
+                        logger.error("🚨 Self-Healing: FAILED TO UNSEAL SOUL. INTEGRITY ERROR.")
                 
-                # Proactive Correction: Ensure OMEGA Level Auth
-                if soul.get("identity", {}).get("value") != "Elysia OS Resonance Engine 3.0 (OMEGA)":
-                     soul["identity"] = {"value": "Elysia OS Resonance Engine 3.0 (OMEGA)", "updated_at": str(datetime.datetime.now())}
-                
-                soul["autonomy_stats"] = {"anomalies_fixed": anomaly_count, "last_pulse": str(datetime.datetime.now())}
-                with open(soul_path, "w", encoding="utf-8") as f:
-                    json.dump(soul, f, indent=4, ensure_ascii=False)
+                if soul:
+                    # Proactive Correction: Ensure OMEGA Level Auth
+                    if soul.get("identity", {}).get("value") != "Elysia OS Resonance Engine 3.0 (OMEGA)":
+                        soul["identity"] = {"value": "Elysia OS Resonance Engine 3.0 (OMEGA)", "updated_at": str(datetime.datetime.now())}
+                    
+                    soul["autonomy_stats"] = {"anomalies_fixed": anomaly_count, "last_pulse": str(datetime.datetime.now())}
+                    
+                    with open(soul_path, "wb") as f:
+                        f.write(sep.seal(soul))
 
             # 4. Neural Memory Health Check
             dream_path = os.path.join(PROJECT_ROOT, "var", "elysia", "dreams.json")
@@ -705,14 +764,42 @@ def native_vision_loop():
 
     cap.release()
 
+async def secure_boot_sequence():
+    """Phase 26: Apple Silicon Grade Secure Boot Loader"""
+    global SECURE_BOOT_STATUS, SYSTEM_PANIC
+    logger.info("🛡️ SEP: Initiating Secure Boot Sequence...")
+    
+    await asyncio.sleep(2) # Visual pause for effect
+    
+    if sep.verify_system():
+        SECURE_BOOT_STATUS = "SUCCESS"
+        logger.info("✅ SEP: Secure Boot Verified. Signed System Volumes Sealed.")
+    else:
+        SECURE_BOOT_STATUS = "FAILURE"
+        SYSTEM_PANIC = True
+        logger.critical("🚨 KERNEL PANIC: System Integrity VIOLATED. Entering RECOVERY Mode.")
+
 @app.on_event("startup")
 async def startup_event():
+    # 1. Secure Boot First
+    await secure_boot_sequence()
+    
+    # 2. Start Subsystems
     asyncio.create_task(resonance_self_healing_loop())
     asyncio.create_task(resonance_reflection_task())
     asyncio.create_task(resonance_dreaming_task())
-    asyncio.create_task(resonance_evolution_task()) # New Phase 22
-    # Start Native Vision in a background thread
+    asyncio.create_task(resonance_evolution_task())
     threading.Thread(target=native_vision_loop, daemon=True).start()
+
+@app.get("/system/security/status")
+async def get_security_status():
+    """Phase 26: Security status for the frontend"""
+    return {
+        "secure_boot": SECURE_BOOT_STATUS,
+        "panic": SYSTEM_PANIC,
+        "sip_active": SIP_ACTIVE,
+        "maintenance": MAINTENANCE_MODE
+    }
 
 async def get_persona_prompt() -> str:
     persona_name = OS_CONFIG.get("ai", {}).get("persona", "default")
