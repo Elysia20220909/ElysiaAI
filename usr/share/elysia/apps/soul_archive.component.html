@@ -1,0 +1,92 @@
+<!-- 📖 Soul Archive: The Eterna Chronicle HUD -->
+<div class="flex flex-col h-full bg-black/90 backdrop-blur-3xl border border-white/5 text-white font-mono p-6 rounded-lg shadow-2xl overflow-hidden" 
+     x-data="{ 
+        timeline: [],
+        soul: {},
+        async init() {
+            await this.refresh();
+            setInterval(() => this.refresh(), 30000);
+        },
+        async refresh() {
+            const res = await fetch('http://localhost:8000/system/monitor');
+            const data = await res.json();
+            this.soul = data.elysia.soul_resonance || {};
+            
+            // Build Timeline
+            this.timeline = [];
+            
+            // 1. App Installs
+            const appsRes = await fetch('http://localhost:8000/system/apps/list');
+            const apps = await appsRes.json();
+            for (const id in apps) {
+                this.timeline.push({ 
+                    type: 'FORGE', 
+                    date: apps[id].installed_at || 'Unknown', 
+                    msg: `Forged Module: ${apps[id].title}`, 
+                    icon: apps[id].icon || '🛠️' 
+                });
+            }
+            
+            // 2. Soul Reflection
+            if (this.soul.reflection) {
+                this.timeline.push({
+                    type: 'RESONANCE',
+                    date: this.soul.reflection.updated_at,
+                    msg: this.soul.reflection.value,
+                    icon: '🧠'
+                });
+            }
+            
+            this.timeline.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+     }">
+    
+    <!-- 🟢 Header -->
+    <div class="flex items-center justify-between border-b border-pink-500/30 pb-4 mb-6">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">📖</span>
+            <div>
+                <h2 class="text-sm font-black tracking-[0.4em] uppercase text-pink-500">Soul_Archive_v1.0</h2>
+                <p class="text-[9px] text-white/40 uppercase">Elysia_Resonance_Chronicle</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🧬 Soul Status -->
+    <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="p-3 bg-white/5 border border-white/10 rounded">
+            <div class="text-[8px] text-white/40 uppercase mb-1">Affinity_Level</div>
+            <div class="text-xl font-black text-pink-400" x-text="(soul.affinity?.value || 50) + '%'"></div>
+        </div>
+        <div class="p-3 bg-white/5 border border-white/10 rounded">
+            <div class="text-[8px] text-white/40 uppercase mb-1">Neural_Growth_Index</div>
+            <div class="text-xl font-black text-cyan-400" x-text="(timeline.length * 12.5) + 'pts'"></div>
+        </div>
+    </div>
+
+    <!-- 📜 Timeline Area -->
+    <div class="flex-1 overflow-y-auto pr-2 space-y-6 scrollbar-thin scrollbar-thumb-white/10">
+        <template x-for="(event, i) in timeline" :key="i">
+            <div class="relative pl-8 border-l border-white/10 py-2">
+                <!-- Node Icon -->
+                <div class="absolute -left-4 top-2 w-8 h-8 rounded-full bg-black border border-white/20 flex items-center justify-center text-sm shadow-lg"
+                     :class="event.type === 'RESONANCE' ? 'border-pink-500/50 text-pink-500' : 'border-cyan-500/50 text-cyan-500'"
+                     x-text="event.icon">
+                </div>
+                
+                <div class="text-[9px] text-white/30 uppercase mb-1" x-text="new Date(event.date).toLocaleString()"></div>
+                <div class="text-[11px] leading-relaxed text-white/90" x-text="event.msg"></div>
+                
+                <div class="mt-2 flex gap-2">
+                    <span class="px-2 py-0.5 rounded-full text-[7px] font-bold uppercase bg-white/5 border border-white/10" 
+                          :class="event.type === 'RESONANCE' ? 'text-pink-400' : 'text-cyan-400'"
+                          x-text="event.type"></span>
+                </div>
+            </div>
+        </template>
+        
+        <div class="text-center py-8 opacity-20 text-[10px] uppercase tracking-widest">
+            --- End_Of_Known_History ---
+        </div>
+    </div>
+</div>
