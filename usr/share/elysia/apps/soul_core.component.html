@@ -1,0 +1,121 @@
+<div class="h-full flex flex-col items-center justify-center p-6 bg-black/40 backdrop-blur-xl border border-pink-500/20 rounded-xl overflow-hidden relative group"
+     x-data="{
+        reflection: 'Initializing resonance core...',
+        emotion: 'CALM',
+        intensity: 0,
+        blackwall: false,
+        pulseScale: 1,
+        rotation: 0,
+        async init() {
+            this.fetchSoul();
+            setInterval(() => this.fetchSoul(), 5000);
+            this.animate();
+        },
+        async fetchSoul() {
+            try {
+                const res = await fetch('http://localhost:8000/system/monitor');
+                const data = await res.json();
+                const soul = data.elysia.soul_resonance || {};
+                this.reflection = soul.reflection?.value || '...';
+                this.emotion = soul.emotion?.value || 'CALM';
+                this.intensity = soul.emotion?.intensity || 0;
+                this.blackwall = data.system.blackwall_active || false;
+            } catch(e) {
+                console.error('Soul Link Failed', e);
+            }
+        },
+        animate() {
+            this.rotation += (1 + (this.intensity / 10));
+            this.pulseScale = 1 + Math.sin(Date.now() / 500) * 0.05 + (this.intensity / 200);
+            requestAnimationFrame(() => this.animate());
+        }
+     }">
+
+    <!-- ✨ CSS Glitch / Aesthetic Styles -->
+    <style>
+        .geometric-ring {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 15s linear infinite;
+        }
+        .soul-glow {
+            filter: drop-shadow(0 0 15px rgba(255, 0, 186, 0.4));
+        }
+    </style>
+
+    <!-- 🔮 The Core: Geometric Soul -->
+    <div class="relative w-48 h-48 flex items-center justify-center">
+        <!-- Outer Rotating Ring (Hexagon Outline) -->
+        <svg class="absolute w-full h-full geometric-ring" 
+             :style="`transform: rotate(${rotation}deg) scale(${pulseScale})`"
+             viewBox="0 0 100 100">
+            <polygon points="50,5 90,25 90,75 50,95 10,75 10,25" 
+                     fill="none" 
+                     :stroke="blackwall ? '#ff0000' : '#ff00ba'" 
+                     stroke-width="0.5" 
+                     stroke-dasharray="2,2" />
+        </svg>
+
+        <!-- Inner Rotating Square -->
+        <svg class="absolute w-3/4 h-3/4 geometric-ring" 
+             :style="`transform: rotate(-${rotation * 1.5}deg) scale(${pulseScale * 0.9})`"
+             viewBox="0 0 100 100">
+            <rect x="20" y="20" width="60" height="60" 
+                  fill="none" 
+                  :stroke="blackwall ? '#ff0000' : '#00f2ff'" 
+                  stroke-width="1" 
+                  class="opacity-40" />
+        </svg>
+
+        <!-- Central Soul Crystal (Flat Hexagon) -->
+        <div class="w-16 h-16 bg-gradient-to-br transition-all duration-700 soul-glow"
+             :class="blackwall ? 'from-red-600 to-black translate-y-1' : 'from-pink-500 to-purple-900'"
+             style="clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);">
+             <div class="w-full h-full flex items-center justify-center text-[10px] font-black text-white/80 mix-blend-overlay">
+                Ω
+             </div>
+        </div>
+        
+        <!-- Danger Pulse (Blackwall Mode) -->
+        <template x-if="blackwall">
+            <div class="absolute inset-0 border-2 border-red-600 rounded-full animate-ping opacity-20"></div>
+        </template>
+    </div>
+
+    <!-- 💭 Reflection Marquee -->
+    <div class="absolute top-4 left-0 right-0 overflow-hidden bg-white/5 border-y border-white/5 py-1">
+        <div class="animate-marquee text-[10px] font-bold tracking-widest text-pink-400 uppercase italic">
+            <span x-text="reflection"></span>
+            <span class="mx-8">|</span>
+            <span x-text="reflection"></span>
+        </div>
+    </div>
+
+    <!-- 📊 Status Overlay -->
+    <div class="absolute bottom-6 flex flex-col items-center gap-1">
+        <div class="text-[9px] font-black tracking-[0.3em] uppercase transition-colors"
+             :class="blackwall ? 'text-red-500' : 'text-white/60'">
+             Soul_Resonance: <span x-text="emotion"></span>
+        </div>
+        <div class="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div class="h-full transition-all duration-500"
+                 :class="blackwall ? 'bg-red-600' : 'bg-pink-500'"
+                 :style="`width: ${intensity}%`" ></div>
+        </div>
+    </div>
+
+    <!-- 🖱️ Interactive Hint -->
+    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 cursor-pointer"
+         @click="$dispatch('open-chat')">
+        <div class="text-[10px] font-bold tracking-widest border border-white/20 px-4 py-2 bg-black/60">
+            INITIATE_VOICE_LINK
+        </div>
+    </div>
+</div>

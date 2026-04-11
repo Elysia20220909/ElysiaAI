@@ -15,17 +15,30 @@
         "global_approval_state": "PENDING",
         "auto_approval_enabled": true,
         "auto_correction_enabled": true,
+        "defense_authorized": true,
         "security_level": "OMEGA",
         "updated_at": "2026-04-10 18:00:00"
     },
     "maintenance": {
-        "last_inspection": null,
-        "health_score": 100,
-        "active_anomalies": [],
+        "last_inspection": "2026-04-11 21:26:53.412324",
+        "health_score": 70,
+        "active_anomalies": [
+            "SERVICE_DORMANT: VOICEVOX",
+            "SERVICE_DORMANT: ABYSS_RTOS_LINK",
+            "MISSING_DATA: NEURAL_DREAMS"
+        ],
         "total_repairs": 0
     },
     "autonomy_stats": {
         "anomalies_fixed": 0,
-        "last_pulse": "2026-04-10 18:00:00"
+        "last_pulse": "2026-04-11 21:26:53.411145"
+    },
+    "reflection": {
+        "value": "システムの深淵を監視中...。すべては平穏だよ。",
+        "updated_at": "2026-04-11 21:26:26.029739"
+    },
+    "emotion": {
+        "value": "SOVEREIGN_CALM",
+        "intensity": 0
     }
 }

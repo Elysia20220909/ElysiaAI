@@ -13,5 +13,6 @@
     "memory_vault": { "icon": "👁️", "title": "Memory Vault" },
     "file_phantom": { "icon": "📂", "title": "File Phantom" },
     "divine_console": { "icon": "🔱", "title": "Divine Console" },
-    "soul_archive": { "icon": "📖", "title": "Soul Archive" }
+    "soul_archive": { "icon": "📖", "title": "Soul Archive" },
+    "soul_core": { "icon": "💠", "title": "Resonance Core" }
 }

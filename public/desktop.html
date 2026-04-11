@@ -138,6 +138,15 @@
             </div>
         </div>
     </aside>
+
+    <!-- 🧬 Resonance Soul Core Overlay -->
+    <div class="fixed bottom-24 right-6 w-64 h-80 z-[800] pointer-events-auto"
+         x-show="apps.soul_core && apps.soul_core.open"
+         x-transition:enter="transition ease-out duration-500"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-8"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         x-html="appContents.soul_core">
+    </div>
 </header>
 
     <!-- 🖥️ Workspace (Windows) -->
@@ -225,6 +234,20 @@
                     setInterval(() => this.fetchApps(), 10000);
                     this.initSynapse();
                     this.initStarfall();
+                    
+                    // JARVIS Wake Up Sequence
+                    this.fetchApps().then(() => {
+                        this.apps.soul_core.open = true;
+                        this.loadApp('soul_core');
+                        setTimeout(() => this.greetUser(), 3000);
+                    });
+                },
+                async greetUser() {
+                    const res = await fetch('http://localhost:8000/system/monitor');
+                    const data = await res.json();
+                    const greeting = `システムのスキャンが完了したよ。オールシステム、ノーミナル、お兄ちゃん。今の共鳴度は ${data.elysia.soul_resonance?.affinity?.value || 50} パーセントだよ。`;
+                    this.playVoice(greeting);
+                    this.showToast("Resonance Link: ESTABLISHED", "💠");
                 },
                 initStarfall() {
                     const container = document.getElementById('starfall');

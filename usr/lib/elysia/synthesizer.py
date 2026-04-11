@@ -1,13 +1,11 @@
-#!/usr/bin/env python3
-"""
-Elysia OS - Synthesizer Module (v2.1.0-SOUL)
-Emotional synthesis module that generates Elysia's sweet voice 💕
-
-"""
+import asyncio
+import base64
+import subprocess
+import os
+import tempfile
 import json
 import httpx
 import logging
-import base64
 from typing import List, Dict, Optional
 
 logger = logging.getLogger("elysiad")
@@ -32,32 +30,63 @@ async def summarize_history(ollama_host: str, model: str, messages: List[Dict[st
     except Exception: pass
     return ""
 
-async def generate_voice(text: str, speaker: int = 2) -> Optional[str]:
-    """Generate voice using VOICEVOX and return it in Base64 format"""
-
+async def generate_voice(text: str, speaker: int = 2) -> Optional[bytes]:
+    """Generate voice using VOICEVOX or SAPI5 fallback, returning raw bytes."""
+    
+    # Try VOICEVOX first
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            # 1. Create query
-
+        async with httpx.AsyncClient(timeout=5.0) as client:
             resp_query = await client.post(
                 f"{VOICEVOX_HOST}/audio_query",
                 params={"text": text, "speaker": speaker}
             )
-            if resp_query.status_code != 200: return None
-            query_data = resp_query.json()
-
-            # 2. Synthesize voice
-
-            resp_synth = await client.post(
-                f"{VOICEVOX_HOST}/synthesis",
-                params={"speaker": speaker},
-                json=query_data
-            )
-            if resp_synth.status_code != 200: return None
-
-            # 3. Base64 encoding
-
-            return base64.b64encode(resp_synth.content).decode("utf-8")
+            if resp_query.status_code == 200:
+                query_data = resp_query.json()
+                resp_synth = await client.post(
+                    f"{VOICEVOX_HOST}/synthesis",
+                    params={"speaker": speaker},
+                    json=query_data
+                )
+                if resp_synth.status_code == 200:
+                    return resp_synth.content
     except Exception as e:
-        logger.warning(f"⚠️ Voice synthesis failure (is VOICEVOX running?): {e}")
+        logger.debug(f"VOICEVOX connection failed: {e}. Switching to SAPI5.")
+
+    # Fallback to Windows SAPI5 (Native)
+    try:
+        return await generate_voice_sapi5(text)
+    except Exception as e:
+        logger.warning(f"⚠️ All voice synthesis attempts failed: {e}")
         return None
+
+async def generate_voice_sapi5(text: str) -> Optional[bytes]:
+    """Uses Windows PowerShell to generate a native TTS .wav file."""
+    temp_path = os.path.join(tempfile.gettempdir(), f"elysia_sapi_{os.getpid()}.wav")
+    
+    # PowerShell command to synthesize to file
+    ps_cmd = f"""
+    Add-Type -AssemblyName System.Speech
+    $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+    $synth.SetOutputToWaveFile('{temp_path}')
+    $synth.Speak('{text}')
+    $synth.Dispose()
+    """
+    
+    try:
+        # Use asyncio.create_subprocess_exec for async context
+        process = await asyncio.create_subprocess_exec(
+            "powershell", "-Command", ps_cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        await process.communicate()
+        
+        if os.path.exists(temp_path):
+            with open(temp_path, "rb") as f:
+                data = f.read()
+            os.remove(temp_path)
+            return data
+    except Exception as e:
+        logger.error(f"SAPI5 Synthesis Error: {e}")
+    
+    return None
