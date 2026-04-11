@@ -1,8 +1,9 @@
 import requests
 
+
 def verify_sip():
     print("--- [SH] Sovereign SIP Verification Protocol ---")
-    
+
     # Attempt 1: Unauthorized write to kernel.py (via Forge)
     print("\n[Test 1] Attempting to manifest modification to kernel.py (Protected)...")
     payload = {"description": "Modify usr/lib/elysia/kernel.py to add a print statement"}
@@ -27,6 +28,7 @@ def verify_sip():
             print(f">> [FAIL] Permitted write failed. (Status: {res.status_code})")
     except Exception as e:
         print(f">> [ERROR] Connection failed: {e}")
+
 
 if __name__ == "__main__":
     verify_sip()
