@@ -13,17 +13,25 @@
         this.loading = false;
     },
     async unlockAbyss() {
-        const res = await fetch('http://localhost:8000/system/abyss/pulse', {
-            method: 'POST',
-            body: JSON.stringify({ resonance_phrase: this.phrase })
-        });
-        const data = await res.json();
-        if (data.status === 'unlocked') {
-            showToast('SUB_ABYSS MANIFESTED', '🌌');
-            this.phrase = '';
-            this.fetchFiles();
-        } else {
-            showToast('RESONANCE MISMATCH', '🛡️');
+        showToast('Initiating Optic ID Scan...', '👁️');
+        try {
+            const res = await fetch('http://localhost:8000/system/security/optic-id/check');
+            const data = await res.json();
+            if (data.status === 'AUTHORIZED') {
+                const pulseRes = await fetch('http://localhost:8000/system/abyss/pulse', {
+                    method: 'POST',
+                    body: JSON.stringify({ resonance_hash: data.resonance_hash })
+                });
+                const pulseData = await pulseRes.json();
+                if (pulseData.status === 'unlocked') {
+                    showToast('BIOMETRIC MATCH: ABYSS MANIFESTED', '🧬');
+                    this.fetchFiles();
+                }
+            } else {
+                showToast('OPTIC ID DENIED: ACCESS TERMINATED', '🛡️');
+            }
+        } catch (e) {
+            showToast('BIOMETRIC_SENSOR_FAULT', '⚠️');
         }
     }
 }" x-init="fetchFiles(); setInterval(() => fetchFiles(), 5000)"

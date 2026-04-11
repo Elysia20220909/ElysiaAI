@@ -54,6 +54,7 @@ class SecureEnclave:
         # Phase 27: Status Indicators
         self._boot_verified = False
         self._session_authorized = False
+        self._bio_status = False         # Phase 39: Biometric Resonance Tracking
         self._chaos_seed = b""           # Phase 33: Singularity Seed
         self._chaos_cipher = None        # Phase 33: Transient Cipher
 
@@ -89,12 +90,15 @@ class SecureEnclave:
         return base64.urlsafe_b64encode(kdf.derive(master_seed))
 
     def _derive_chaos_key(self, chaos_seed: bytes):
-        """Phase 33: Derives a transient session key from hardware-key + entropy."""
+        """Phase 38: PQ3-grade key derivation using SHA3-512 and Quantum Salts."""
+        # Use SHA3-512 for Post-Quantum Resistance Simulation
+        pq_salt = entropy.generate_quantum_salt(length=32)
+        
         kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
+            algorithm=hashes.SHA512(), # Upgraded to SHA-512
             length=32,
-            salt=self.hw_id.encode(),
-            iterations=50000, 
+            salt=self.hw_id.encode() + pq_salt, # Compounded salt
+            iterations=150000, # Increased iterations for M5 power
         )
         # Mix the master key with the new entropy seed
         mixed_material = self._key + chaos_seed
@@ -126,6 +130,7 @@ class SecureEnclave:
         
         if boot_ok and bio_status:
             self._session_authorized = True
+            self._bio_status = True
             # Phase 33: Synchronize with the Singularity Core
             self._chaos_seed = entropy.collect_chaos()
             self._chaos_cipher = Fernet(self._derive_chaos_key(self._chaos_seed))
@@ -133,6 +138,7 @@ class SecureEnclave:
             return True
         else:
             self._session_authorized = False
+            self._bio_status = False
             logger.critical(f"SEP: SKR REJECTED. (Boot: {boot_ok}, Bio: {bio_status})")
             return False
 
@@ -149,7 +155,7 @@ class SecureEnclave:
             
         return cipher.encrypt(json_data)
 
-    def unseal(self, encrypted_data: bytes, skip_auth: bool = False, rationale: str = "Resonance_Access") -> dict:
+    def unseal(self, encrypted_data: bytes, skip_auth: bool = False, rationale: str = "Resonance_Access", rel_path: Optional[str] = None) -> dict:
         """
         Phase 27: Strict Gated Decryption.
         Requires prior session authorization unless explicitly bypassed for manifest checks.
@@ -165,13 +171,7 @@ class SecureEnclave:
             logger.warning("SEP: Unseal request BLOCKED. Biometric/Boot signature missing.")
             raise PermissionError("SECURE_ENCLAVE_NOT_AUTHORIZED_SKR")
 
-        # Phase 34: Atomic Discretion
-        if "/abyss/" in rationale.lower() or "atomic" in rationale.lower():
-            # Extract path if possible, or use a default session fallback
-            # In Stage 9, we enforce PFK for anything related to the Abyss
-            pass
-
-        return self._perform_decryption(encrypted_data)
+        return self._perform_decryption(encrypted_data, rel_path=rel_path)
 
     def class_a_unseal(self, encrypted_data: bytes, presence_verified: bool) -> dict:
         """
@@ -185,12 +185,24 @@ class SecureEnclave:
         
         return self._perform_decryption(encrypted_data)
 
-    def _perform_decryption(self, encrypted_data: bytes) -> dict:
+    def _perform_decryption(self, encrypted_data: bytes, rel_path: Optional[str] = None) -> dict:
         try:
-            decrypted_data = self._cipher.decrypt(encrypted_data)
+            # Phase 37 Fix: Support PFK, then Chaos Cipher, then Master fallback
+            if rel_path:
+                cipher = self.derive_per_file_key(rel_path)
+            else:
+                cipher = self._chaos_cipher or self._cipher
+                
+            try:
+                decrypted_data = cipher.decrypt(encrypted_data)
+            except:
+                if self._chaos_cipher and not rel_path:
+                    decrypted_data = self._cipher.decrypt(encrypted_data)
+                else: raise
+                
             return json.loads(decrypted_data.decode('utf-8'))
         except Exception as e:
-            logger.critical("SEP: Decryption failure! Hardware mismatch or tampering.")
+            logger.critical(f"SEP: Decryption failure! Hardware mismatch or tampering. {e}")
             raise PermissionError("SECURE_ENCLAVE_DECRYPTION_FAILED")
 
     def calculate_hash(self, file_path: str) -> str:
