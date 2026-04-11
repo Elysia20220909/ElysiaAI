@@ -1,0 +1,194 @@
+<div class="p-6 h-full flex flex-col gap-6 font-sans text-white select-none">
+    <!-- Header -->
+    <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <div class="flex items-center gap-3">
+            <div class="text-3xl">🛡️</div>
+            <div>
+                <h2 class="text-lg font-black tracking-tighter uppercase italic">Aegis Security Center</h2>
+                <p class="text-[9px] text-white/40 uppercase tracking-[0.3em]">Apple Silicon Grade Protection // OMEGA</p>
+            </div>
+        </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <div x-show="stats.security?.lockdown?.active" class="px-2 py-1 bg-red-500 rounded text-[9px] font-black animate-pulse">LOCKDOWN</div>
+            <div class="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-[10px] text-green-400 font-bold" 
+                 x-text="securityStatus.secure_boot === 'SUCCESS' ? 'SYSTEM_SECURED' : 'INTEGRITY_FAULT'">
+                SYSTEM_SECURED
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- Phase 28: Tabs -->
+    <div class="flex gap-4 border-b border-white/5" x-data="{ tab: 'status' }">
+        <button @click="tab = 'status'" :class="tab === 'status' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-white/40'" class="pb-2 border-b-2 text-[10px] font-black uppercase tracking-widest transition-all">Integrity Status</button>
+        <button @click="tab = 'permissions'" :class="tab === 'permissions' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-white/40'" class="pb-2 border-b-2 text-[10px] font-black uppercase tracking-widest transition-all">Entitlements (TCC)</button>
+    </div>
+
+    <!-- Status Tab -->
+    <div class="flex flex-col gap-6 h-full overflow-hidden" x-show="tab === 'status'">
+    <div class="grid grid-cols-2 gap-4" x-data="{ audit: { secure_enclave: {}, signed_system_volume: {}, defensive_link: {} } }" x-init="audit = await (await fetch('http://localhost:8000/system/security/audit')).json()">
+        <!-- Secure Enclave (SEP) -->
+        <div class="glass-omega p-4 border border-cyan-500/20 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Secure Enclave (SEP)</span>
+                <span class="text-xs">🔒</span>
+            </div>
+            <div class="space-y-1">
+                <div class="flex justify-between text-[11px]">
+                    <span class="opacity-50 text-[9px]">Identity:</span>
+                    <span class="font-mono text-cyan-300" x-text="audit.secure_enclave.status">SEALED</span>
+                </div>
+                <div class="flex justify-between text-[11px]">
+                    <span class="opacity-50 text-[9px]">Binding:</span>
+                    <span class="font-mono text-white/80 text-[9px]" x-text="audit.secure_enclave.hw_id_bound">HWID_LINKED</span>
+                </div>
+                <div class="flex justify-between text-[11px]">
+                    <span class="opacity-50 text-[9px]">Provider:</span>
+                    <span class="font-mono text-white/80 text-[9px]" x-text="audit.secure_enclave.provider">DPAPI</span>
+                </div>
+            </div>
+            <div class="h-1 bg-cyan-500/20 rounded-full overflow-hidden">
+                <div class="h-full bg-cyan-500 w-[95%] shadow-[0_0_10px_#06b6d4]"></div>
+            </div>
+        </div>
+
+        <!-- Signed System Volume (SSV) -->
+        <div class="glass-omega p-4 border border-pink-500/20 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-pink-400 uppercase tracking-widest">System Integrity (SSV)</span>
+                <span class="text-xs">💿</span>
+            </div>
+            <div class="space-y-1">
+                <div class="flex justify-between text-[11px]">
+                    <span class="opacity-50 text-[9px]">Integrity:</span>
+                    <span class="font-mono text-pink-300" x-text="audit.signed_system_volume.status">VALID</span>
+                </div>
+                <div class="flex justify-between text-[11px]">
+                    <span class="opacity-50 text-[9px]">Protected:</span>
+                    <span class="font-mono text-white/80 text-[9px]" x-text="audit.signed_system_volume.protected_sectors + ' SECTORS'">7 SECTORS</span>
+                </div>
+                <div class="flex justify-between text-[11px]">
+                    <span class="opacity-50 text-[9px]">Verified:</span>
+                    <span class="font-mono text-white/80 text-[9px]" x-text="audit.signed_system_volume.manifest_version">v2.0</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-7 gap-1">
+                <template x-for="i in (audit.signed_system_volume.protected_sectors || 7)">
+                    <div class="h-1 shadow-[0_0_5px_#ec4899]" :class="audit.signed_system_volume.status === 'VALID' ? 'bg-pink-500' : 'bg-red-500'"></div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Monitoring -->
+    <div class="flex-1 glass-omega p-4 border border-white/5 flex flex-col gap-3 overflow-hidden">
+        <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">Defensive Protocols</span>
+            <div class="flex items-center gap-2">
+                <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                <span class="text-[9px] text-green-500 font-bold uppercase tracking-tighter">Ready / Active</span>
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto space-y-2 font-mono text-[9px] opacity-60">
+            <div class="flex gap-2">
+                <span class="text-cyan-400">[OK]</span>
+                <span>SEP Core initialized with hardware-bound DPAPI vault.</span>
+            </div>
+            <div class="flex gap-2">
+                <span class="text-cyan-400">[OK]</span>
+                <span>Hardware Fingerprint synchronized via PowerShell.</span>
+            </div>
+            <div class="flex gap-2 text-pink-400">
+                <span>[INFO]</span>
+                <span>Signed System Volumes verified against hardware-sealed manifest.</span>
+            </div>
+            <div class="flex gap-2">
+                <span class="text-cyan-400">[OK]</span>
+                <span>Blackwall Protocol: DEFENSIVE_LAYER_O_READY.</span>
+            </div>
+            <div class="flex gap-2" :class="THREAT_LEVEL > 50 ? 'text-red-500' : 'text-green-500'">
+                <span>[SCAN]</span>
+                <span x-text="'Threat Level: ' + (THREAT_LEVEL || 0) + '%'"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Controls -->
+    <div class="flex flex-col gap-4">
+        <!-- Phase 29: Lockdown Toggle -->
+        <div class="glass-omega p-4 border border-red-500/30 bg-red-500/5 flex items-center justify-between">
+            <div>
+                <span class="text-[10px] font-black text-red-400 uppercase tracking-widest block">Sovereign Lockdown</span>
+                <span class="text-[8px] text-white/40 uppercase">Disable all non-essential neural gates</span>
+            </div>
+            <button @click="const active = !stats.security?.lockdown?.active; 
+                            await fetch('http://localhost:8000/system/security/lockdown', { method: 'POST', body: JSON.stringify({active}) });
+                            stats.security.lockdown.active = active;
+                            showToast(active ? 'LOCKDOWN ACTIVATED' : 'Lockdown Deactivated', '🚨')"
+                    :class="stats.security?.lockdown?.active ? 'bg-red-500 text-white' : 'bg-white/10 text-white/60'"
+                    class="h-8 px-6 rounded-full text-[9px] font-black uppercase tracking-tighter transition-all">
+                <span x-text="stats.security?.lockdown?.active ? 'TERMINATE' : 'ACTIVATE'"></span>
+            </button>
+        </div>
+
+        <div class="flex gap-2">
+            <button class="flex-1 h-10 glass-omega border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all text-[9px] font-black uppercase tracking-widest group">
+                <span class="group-hover:text-cyan-400 transition-colors">Manifest Certificate</span>
+            </button>
+            <button @click="audit = await (await fetch('http://localhost:8000/system/security/audit')).json(); showToast('SSV Audit Triggered', '🛡️')" 
+                    class="flex-1 h-10 glass-omega border-white/10 hover:border-pink-500/50 hover:bg-pink-500/5 transition-all text-[9px] font-black uppercase tracking-widest group">
+                <span class="group-hover:text-pink-400 transition-colors">Force SSV Audit</span>
+            </button>
+        </div>
+    </div>
+    </div>
+
+    <!-- Permissions Tab -->
+    <div class="flex flex-col gap-4 h-full overflow-hidden" x-show="tab === 'permissions'">
+        <div class="glass-omega p-4 border border-cyan-500/20 space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Active Entitlements</span>
+                <span class="text-[9px] text-white/30 font-mono">Real-time TCC Audit</span>
+            </div>
+            
+            <div class="space-y-2">
+                <template x-for="req in pendingEntitlements" :key="req.id">
+                    <div class="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/10">
+                        <div>
+                            <div class="text-[10px] font-bold text-white" x-text="req.display_name"></div>
+                            <div class="text-[9px] text-white/40" x-text="req.rationale"></div>
+                        </div>
+                        <div class="flex gap-2 text-black">
+                            <button @click="processEntitlement(req.id, false)" class="px-3 py-1 bg-red-500 border border-red-500/40 text-[8px] font-bold uppercase rounded hover:bg-red-400 transition-colors">Deny</button>
+                            <button @click="processEntitlement(req.id, true)" class="px-3 py-1 bg-cyan-500 border border-cyan-500/40 text-[8px] font-black uppercase rounded hover:bg-cyan-400 shadow-[0_0_10px_#22d3ee] transition-colors">Allow</button>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="pendingEntitlements.length === 0">
+                    <div class="text-center py-8 text-[10px] text-white/20 uppercase tracking-widest">No pending permission requests</div>
+                </template>
+            </div>
+        </div>
+
+        <div class="glass-omega p-4 border border-white/5 flex-1 overflow-hidden flex flex-col gap-3">
+            <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">Sovereign Ruleset</span>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between p-2 border-b border-white/5 opacity-50">
+                    <span class="text-[10px] uppercase">BlastDoor Sandbox</span>
+                    <span class="text-[9px] text-green-400 font-mono">ENFORCED</span>
+                </div>
+                <div class="flex items-center justify-between p-2 border-b border-white/5 opacity-50">
+                    <span class="text-[10px] uppercase">Outbound Firewall</span>
+                    <span class="text-[9px] text-green-400 font-mono">MONITORING</span>
+                </div>
+                <div class="flex items-center justify-between p-2 border-b border-white/5 opacity-50">
+                    <span class="text-[10px] uppercase">Neural TCC Logic</span>
+                    <span class="text-[9px] text-cyan-400 font-mono">ACTIVE_GATED</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

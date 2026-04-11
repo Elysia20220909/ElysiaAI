@@ -8,6 +8,7 @@ import os
 import time
 import json
 from typing import List, Dict, Any, Optional
+from usr.lib.elysia.secure_enclave import sep # Phase 27
 
 class MemoryVault:
     def __init__(self, db_path: str):
@@ -41,7 +42,10 @@ class MemoryVault:
             conn.commit()
 
     def learn_fact(self, key: str, value: str, confidence: float = 1.0):
-        """ユーザーに関する新しい事実を覚える"""
+        """ユーザーに関する新しい事実を覚える (Phase 27: Hardware Encrypted)"""
+        # Encrypt the value before storing
+        sealed_value = sep.seal({"v": value}).decode('utf-8')
+        
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -51,15 +55,26 @@ class MemoryVault:
                     value=excluded.value,
                     confidence=excluded.confidence,
                     updated_at=CURRENT_TIMESTAMP
-            """, (key, value, confidence))
+            """, (key, sealed_value, confidence))
             conn.commit()
 
     def get_facts(self) -> Dict[str, str]:
-        """覚えているすべての事実を取得"""
+        """覚えているすべての事実を取得 (Phase 27: SKR Decryption)"""
+        facts = {}
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT key, value FROM facts")
-            return {row[0]: row[1] for row in cursor.fetchall()}
+            for row in cursor.fetchall():
+                key, encrypted_val = row
+                try:
+                    # unseal requires session authorization
+                    decrypted = sep.unseal(encrypted_val.encode('utf-8'))
+                    facts[key] = decrypted.get("v", "[DECRYPTION_ERROR]")
+                except PermissionError:
+                    facts[key] = "[LOCKED SEALED_STORAGE]"
+                except:
+                    facts[key] = "[INTEGRITY_FAULT]"
+        return facts
 
     def add_highlight(self, session_id: str, content: str, emotion: str = "neutral"):
         """重要な会話の内容を記録"""
