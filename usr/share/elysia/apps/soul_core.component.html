@@ -99,15 +99,36 @@
     </div>
 
     <!-- 📊 Status Overlay -->
-    <div class="absolute bottom-6 flex flex-col items-center gap-1">
-        <div class="text-[9px] font-black tracking-[0.3em] uppercase transition-colors"
-             :class="blackwall ? 'text-red-500' : 'text-white/60'">
-             Soul_Resonance: <span x-text="emotion"></span>
-        </div>
-        <div class="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
-            <div class="h-full transition-all duration-500"
-                 :class="blackwall ? 'bg-red-600' : 'bg-pink-500'"
-                 :style="`width: ${intensity}%`" ></div>
+    <div class="absolute bottom-6 flex flex-col items-center gap-3">
+        <!-- Theme Matrix (Root Only) -->
+        <template x-if="userRole === 'root'">
+            <div class="flex gap-2">
+                <template x-for="t in [
+                    {id: 'cyberpunk', color: 'bg-pink-500', name: 'Original'},
+                    {id: 'luxury', color: 'bg-yellow-500', name: 'Luxury'},
+                    {id: 'abyss', color: 'bg-red-600', name: 'Abyss'},
+                    {id: 'shizuku', color: 'bg-blue-400', name: 'Shizuku'}
+                ]">
+                    <button @click="applyTheme(t.id)" 
+                            :class="t.color"
+                            class="w-4 h-4 rounded-sm border border-white/20 hover:scale-125 transition-transform"
+                            :title="t.name"></button>
+                </template>
+            </div>
+        </template>
+
+        <div class="flex flex-col items-center gap-1">
+            <div class="text-[9px] font-black tracking-[0.3em] uppercase transition-colors"
+                 :class="blackwall ? 'text-red-500' : 'text-white/60'">
+                 Soul_Resonance: <span x-text="emotion"></span>
+            </div>
+            <div class="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-full transition-all duration-500"
+                     :class="blackwall ? 'bg-red-600' : 'bg-pink-500'"
+                     :style="`width: ${intensity}%`" ></div>
+            </div>
+            <!-- Clearance Badge -->
+            <div class="text-[7px] font-mono text-white/30 tracking-[0.2em] mt-1" x-text="'CLEARANCE: ' + userRole.toUpperCase()"></div>
         </div>
     </div>
 
