@@ -368,7 +368,7 @@ const app = new Elysia()
 				if (agent.userId !== actionBody.userId) return state;
 				// 移動可能チェック
 				const node = state.nodes.find((n) => n.id === agent.position);
-				if (!node || !node.connected.includes(actionBody.to)) {
+				if (!node?.connected.includes(actionBody.to)) {
 					state.history.push(
 						`invalid move: ${agent.id} tried ${actionBody.to}`,
 					);

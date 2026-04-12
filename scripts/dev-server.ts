@@ -8,8 +8,8 @@ import "dotenv/config";
 import cors from "@elysiajs/cors";
 import staticServe from "@elysiajs/static";
 import { Elysia } from "elysia";
-import devConfig from "../src/dev/dev-config";
-import { devLogger } from "../src/dev/dev-logger";
+import devConfig from "../packages/server/src/dev/dev-config";
+import { devLogger } from "../packages/server/src/dev/dev-logger";
 
 console.log("Starting development server...\n");
 

@@ -9,7 +9,7 @@ import { execSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
-let prisma: PrismaClient;
+let prisma: unknown;
 
 function log(level: string, message: string): void {
 	const timestamp = new Date().toISOString().substring(11, 19);
@@ -60,19 +60,26 @@ async function main(): Promise<void> {
 
 		// Connection test
 		log("INFO", "Testing database connection...");
-		await prisma.$connect();
+		await (prisma as { $connect: () => Promise<void> }).$connect();
 		log("INFO", "Database connection succeeded");
 
 		// Check tables
-		const tables = await prisma.$queryRaw<
-			Array<{ name: string }>
-		>`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`;
+		const tables = await (
+			prisma as { $queryRaw: (q: unknown) => Promise<Array<{ name: string }>> }
+		)
+			.$queryRaw`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`;
 		log("INFO", `Tables: ${tables.map((t) => t.name).join(", ")}`);
 
 		// Verify record counts
-		const userCount = await prisma.user.count();
-		const sessionCount = await prisma.chatSession.count();
-		const messageCount = await prisma.message.count();
+		const userCount = await (
+			prisma as { user: { count: () => Promise<number> } }
+		).user.count();
+		const sessionCount = await (
+			prisma as { chatSession: { count: () => Promise<number> } }
+		).chatSession.count();
+		const messageCount = await (
+			prisma as { message: { count: () => Promise<number> } }
+		).message.count();
 
 		log("INFO", "=== Database Statistics ===");
 		log("INFO", `Users: ${userCount}`);

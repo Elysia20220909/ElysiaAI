@@ -14,6 +14,10 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
+# --- Phase 17 Resonance Cluster Initiation ---
+Write-Host "🧬 Manifesting AbyssRTOS Resonance Simulation..." -ForegroundColor Yellow
+Start-Process python -ArgumentList "scripts/abyss_rtos_sim.py" -NoNewWindow
+
 # --- Cargo Path Hardening ---
 $cargoPath = "C:\Users\hosih\.cargo\bin"
 if (!(Get-Command cargo -ErrorAction SilentlyContinue)) {

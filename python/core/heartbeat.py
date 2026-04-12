@@ -4,6 +4,8 @@ import time
 from datetime import datetime
 from typing import Any
 
+from python.core.gateway import cognitive_gateway
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +32,12 @@ class HeartbeatManager:
         while self.is_active:
             self.pulse_count += 1
             self.last_resonance_state = self._generate_pulse()
+
+            # Push to Cognitive Gateway
+            cognitive_gateway.update_signal(
+                "python_layer",
+                {"resonance": self.last_resonance_state["resonance_index"], "status": "ETERNAL_RESONANCE"},
+            )
 
             # In a real scenario, this could be pushed to a WebSocket or a log
             if self.pulse_count % 60 == 0:  # Log every hour (if 1 min interval)
