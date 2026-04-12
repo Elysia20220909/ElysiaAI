@@ -1,0 +1,123 @@
+<div class="h-full flex flex-col bg-stone-950 border border-stone-800 rounded-3xl overflow-hidden animate-in fade-in zoom-in duration-500 relative" 
+     x-data="{ 
+        status: { gdt: [], idt: [], memory: {}, vga_buffer: [], uptime: 0 },
+        loading: false,
+        async fetchKernel() {
+            try {
+                const res = await fetch('http://localhost:8000/system/kernel/status');
+                this.status = await res.json();
+            } catch(e) {}
+        },
+        async boot() {
+            this.loading = true;
+            await fetch('http://localhost:8000/system/kernel/boot', { method: 'POST' });
+            await this.fetchKernel();
+            this.loading = false;
+        },
+        async sendKey(scancode) {
+            await fetch('http://localhost:8000/system/kernel/input', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scancode })
+            });
+            await this.fetchKernel();
+        }
+     }" x-init="fetchKernel(); setInterval(() => fetchKernel(), 1000)"
+     @keydown.window="if($el.contains($event.target)) { $event.preventDefault(); /* Map keys to scancodes logic here */ }">
+
+    <!-- 🛠️ Kernel Header -->
+    <div class="p-6 bg-stone-900 border-b border-stone-800 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+            <div class="w-12 h-12 bg-orange-500/10 flex items-center justify-center border border-orange-500/40 rounded-xl shadow-inner">
+                <span class="text-2xl">⚙️</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-black tracking-widest text-stone-100 uppercase">AbyssRTOS_Workbench</h2>
+                <p class="text-[9px] text-stone-500 font-mono uppercase tracking-tighter">Architecture: x86_Simulation // Ref: pritamzope/OS</p>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button @click="boot()" :disabled="loading" class="px-6 py-2 bg-orange-600 hover:bg-orange-500 text-black text-[10px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95 disabled:opacity-50">
+                Trigger Boot
+            </button>
+            <div class="px-4 py-2 bg-stone-950 border border-stone-800 rounded-lg text-[10px] text-orange-400 font-mono" x-text="'UPTIME: ' + status.uptime.toFixed(1)"></div>
+        </div>
+    </div>
+
+    <!-- 🖥️ Core Workbench Layout -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Sidebar: Descriptors -->
+        <div class="w-80 bg-stone-950 border-r border-stone-800 p-6 overflow-y-auto custom-scrollbar">
+            <div class="mb-8">
+                <h3 class="text-[10px] font-black text-stone-500 uppercase tracking-widest mb-4 border-b border-stone-800 pb-2">GDT (Segments)</h3>
+                <div class="space-y-4">
+                    <template x-for="seg in status.gdt" :key="seg.index">
+                        <div class="p-3 bg-stone-900/50 border border-stone-800 rounded-lg group hover:border-orange-500/30 transition-all">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-[10px] font-bold text-orange-400" x-text="seg.label"></span>
+                                <span class="text-[8px] text-stone-600 font-mono" x-text="'Idx: ' + seg.index"></span>
+                            </div>
+                            <div class="text-[10px] text-stone-400 font-mono leading-tight">
+                                Base: <span class="text-stone-200" x-text="seg.base"></span><br>
+                                Limit: <span class="text-stone-200" x-text="seg.limit"></span><br>
+                                Access: <span class="text-stone-200" x-text="seg.access"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-[10px] font-black text-stone-500 uppercase tracking-widest mb-4 border-b border-stone-800 pb-2">IDT (Interrupts)</h3>
+                <div class="space-y-2">
+                    <template x-for="vec in status.idt" :key="vec.vector">
+                        <div class="flex items-center justify-between p-2 bg-stone-900 border border-stone-800 rounded-md">
+                            <span class="text-[10px] font-mono text-cyan-400" x-text="vec.vector"></span>
+                            <span class="text-[8px] font-mono text-stone-500" x-text="vec.offset"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Display: VGA Console -->
+        <div class="flex-1 flex flex-col bg-black p-10 relative group">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(249,115,22,0.05)_0%,transparent_100%)]"></div>
+            
+            <!-- VGA Text Buffer -->
+            <div class="flex-1 bg-zinc-950 border-4 border-stone-800 rounded-xl shadow-[0_0_50px_rgba(0,0,0,1)] p-6 overflow-hidden font-mono leading-tight select-none cursor-text">
+                <template x-for="(line, idx) in status.vga_buffer" :key="idx">
+                    <pre class="text-sm whitespace-pre" :style="idx === status.vga_buffer.length - 1 ? 'color: #34d399' : 'color: #d1d5db'" x-text="line"></pre>
+                </template>
+                <div class="w-2 h-5 bg-stone-400 animate-pulse inline-block" style="vertical-align: middle;"></div>
+            </div>
+
+            <!-- Memory Bitmap Visualization -->
+            <div class="mt-8 bg-stone-900/40 border border-stone-800 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-stone-500">Physical Memory Frames (PMM)</span>
+                    <span class="text-[10px] font-mono text-orange-400" x-text="status.memory.used_blocks + ' / ' + status.memory.total_blocks + ' BLOCKS'"></span>
+                </div>
+                <div class="flex flex-wrap gap-1 opacity-60">
+                    <template x-for="n in 256">
+                        <div class="w-2 h-2 rounded-sm transition-all" 
+                             :class="n < (status.memory.usage_percent * 2.56) ? 'bg-orange-500' : 'bg-stone-800'"></div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🏗️ Footer Artifact -->
+    <div class="p-4 bg-stone-900 border-t border-stone-800 text-center">
+        <p class="text-[10px] text-stone-600 uppercase tracking-[0.5em] font-black">Kernel_Space // Privilege_Level_0 // Elysia_AbyssRTOS</p>
+    </div>
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        pre { margin: 0; padding: 0; }
+    </style>
+</div>

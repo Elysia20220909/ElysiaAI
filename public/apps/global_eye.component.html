@@ -1,0 +1,325 @@
+<div class="h-full flex flex-col bg-slate-950/90 backdrop-blur-3xl border border-cyan-500/20 rounded-[3.5rem] overflow-hidden animate-in fade-in zoom-in duration-700 relative shadow-[0_0_200px_rgba(34,211,238,0.1)]" 
+     x-data="{ 
+        data: { network: { nodes: [] }, security: {}, awareness: 'Scanning...' },
+        aegis: { kernel_verified: false, kernel_health: 'INITIALIZING', resonance_index: 0 },
+        selectedNode: null,
+        ripples: [],
+        loading: false,
+        async fetchPerception() {
+            try {
+                const res = await fetch('http://localhost:8000/system/perception');
+                this.data = await res.json();
+                
+                // Fetch Native Aegis Status
+                this.aegis = await window.__TAURI__.invoke('get_aegis_resonance');
+            } catch(e) {}
+        },
+        getNodeColor(node) {
+            if (node.is_infected) return '#ef4444'; // Red
+            if (node.is_isolated) return '#f59e0b'; // Amber
+            return '#22d3ee'; // Cyan
+        },
+        async executeInfluence(action) {
+            if (!this.selectedNode) return;
+            this.loading = true;
+            this.triggerRipple(this.selectedNode);
+            try {
+                // Execute via Native Signed Path (Tauri -> Rust -> Python)
+                const result = await window.__TAURI__.invoke('execute_signed_influence', { 
+                    action: action, 
+                    nodeName: this.selectedNode.name 
+                });
+                
+                this.showToast(`Aegis Signed Action: ${action}`, '🛡️');
+                await this.fetchPerception();
+            } catch(e) {
+                this.showToast(`Sentinel Rejected: ${e}`, '🚨');
+            } finally { 
+                this.loading = false;
+                this.selectedNode = null;
+            }
+        },
+        triggerRipple(node) {
+            this.ripples.push({ id: Date.now(), x: 500, y: 500 });
+            setTimeout(() => { this.ripples = this.ripples.filter(r => r.id !== r.id); }, 1000);
+        }
+     }" x-init="fetchPerception(); setInterval(() => fetchPerception(), 2000)">
+
+    <!-- 🌌 Perception Background (Orbital Grid) -->
+    <div class="absolute inset-0 z-0 opacity-10 pointer-events-none">
+        <svg class="w-full h-full" viewBox="0 0 1000 1000">
+            <defs>
+                <radialGradient id="sunGradient">
+                    <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.4" />
+                    <stop offset="100%" stop-color="transparent" />
+                </radialGradient>
+            </defs>
+            <!-- Neural Ripples -->
+            <template x-for="r in ripples" :key="r.id">
+                <circle :cx="r.x" :cy="r.y" r="0" fill="none" stroke="#22d3ee" stroke-width="2" class="animate-ripple-wave" />
+            </template>
+
+            <circle cx="500" cy="500" r="100" stroke="rgba(34,211,238,0.1)" fill="none" class="animate-[spin_60s_linear_infinite]" />
+            <circle cx="500" cy="500" r="200" stroke="rgba(34,211,238,0.1)" fill="none" stroke-dasharray="10 20" />
+            <circle cx="500" cy="500" r="300" stroke="rgba(34,211,238,0.05)" fill="none" />
+        </svg>
+    </div>
+
+    <!-- 👁️ Orbital Map View -->
+    <div class="absolute inset-0 z-10 flex items-center justify-center">
+        <svg class="w-[800px] h-[800px]" viewBox="0 0 1000 1000">
+            <!-- Central Node (Elysia) -->
+            <g class="animate-pulse cursor-pointer" @click="selectedNode = null">
+                <circle cx="500" cy="500" r="30" fill="url(#sunGradient)" />
+                <circle cx="500" cy="500" r="15" fill="#22d3ee" class="filter blur-sm" />
+                <text x="500" y="550" text-anchor="middle" class="text-[12px] fill-cyan-400 font-black uppercase tracking-widest">ELYSIA_CORE</text>
+            </g>
+
+            <!-- Orbiting Nodes -->
+            <template x-for="(node, index) in data.network.nodes" :key="node.name">
+                <g class="transition-all duration-1000 cursor-pointer group" @click="selectedNode = node">
+                    <circle 
+                        :cx="500 + Math.cos(index * 1.4 + (Date.now()/5000)) * (150 + index * 12)" 
+                        :cy="500 + Math.sin(index * 1.4 + (Date.now()/5000)) * (150 + index * 12)" 
+                        r="8" 
+                        :fill="getNodeColor(node)" 
+                        class="filter blur-[1px] hover:r-12 transition-all duration-300" 
+                        :class="node.is_infected ? 'animate-pulse' : '' "
+                    />
+                    <!-- Selection Indicator -->
+                    <circle 
+                        x-show="selectedNode && selectedNode.name === node.name"
+                        :cx="500 + Math.cos(index * 1.4 + (Date.now()/5000)) * (150 + index * 12)" 
+                        :cy="500 + Math.sin(index * 1.4 + (Date.now()/5000)) * (150 + index * 12)" 
+                        r="16" 
+                        fill="none" 
+                        stroke="#22d3ee" 
+                        stroke-width="1"
+                        stroke-dasharray="2 4"
+                        class="animate-spin"
+                    />
+                </g>
+            </template>
+        </svg>
+    </div>
+
+    <!-- 📡 Intelligence Header -->
+    <div class="relative z-20 p-12 flex items-center justify-between bg-gradient-to-b from-black/80 via-black/40 to-transparent border-b border-white/5">
+        <div class="flex items-center gap-8">
+            <div class="w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/40 shadow-[0_0_50px_rgba(34,211,238,0.2)] animate-pulse">
+                <span class="text-4xl text-cyan-400">🛡️</span>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black tracking-[0.6em] text-white uppercase drop-shadow-2xl">Global_Eye // Aegis</h2>
+                <div class="flex items-center gap-4 mt-2">
+                    <div class="flex items-center gap-2 px-3 py-1 border rounded-full transition-all" 
+                         :class="aegis.kernel_verified ? 'bg-green-500/10 border-green-500/40 text-green-400' : 'bg-red-500/10 border-red-500/40 text-red-400' ">
+                        <div class="w-1.5 h-1.5 rounded-full" :class="aegis.kernel_verified ? 'bg-green-400 animate-pulse' : 'bg-red-400'"></div>
+                        <span class="text-[9px] font-bold uppercase tracking-widest" x-text="aegis.kernel_verified ? 'SENTINEL_VERIFIED' : 'TAMPERED_WARNING'"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-col items-end">
+             <div class="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-2">Aegis Stability Index</div>
+             <div class="text-xs font-black text-cyan-400 font-mono tracking-widest px-4 py-2 bg-white/5 rounded-xl border border-white/10" 
+                  x-text="(aegis.resonance_index * 100).toFixed(2) + '%'"></div>
+        </div>
+    </div>
+
+    <!-- 🕹️ Influence Control Panel -->
+    <div x-show="selectedNode" class="absolute bottom-40 right-12 z-40 w-80 bg-slate-900/80 backdrop-blur-3xl border border-cyan-500/30 rounded-[2.5rem] p-8 animate-in slide-in-from-right-10 duration-500">
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <div class="text-[9px] text-cyan-500/60 uppercase font-black tracking-widest mb-1">Signed_Target</div>
+                <div class="text-lg font-black text-white" x-text="selectedNode?.name"></div>
+            </div>
+            <button @click="selectedNode = null" class="text-white/20 hover:text-white transition-colors">✕</button>
+        </div>
+        
+        <div class="space-y-3">
+             <button @click="executeInfluence('HEAL')" :disabled="loading || !aegis.kernel_verified" class="w-full py-4 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-20 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95 shadow-[0_0_30px_rgba(34,211,238,0.3)]">Native Heal (Secure)</button>
+             <button @click="executeInfluence('ISOLATE')" :disabled="loading || !aegis.kernel_verified" class="w-full py-4 bg-orange-700 hover:bg-orange-600 disabled:opacity-20 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95">Native Isolate (Secure)</button>
+             <button @click="executeInfluence('REINFORCE')" :disabled="loading" class="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95">Reinforce Shield</button>
+        </div>
+        <p x-show="!aegis.kernel_verified" class="mt-4 text-[8px] text-red-500 font-bold uppercase text-center animate-pulse tracking-tighter">SENTINEL_AUTH_LOCKED: INTEGRITY_VIOLATION</p>
+    </div>
+
+    <!-- 🌌 Neural Subtitles (Intuition) -->
+    <div class="absolute bottom-32 left-0 right-0 z-30 flex justify-center pointer-events-none px-20">
+        <div class="max-w-2xl text-center bg-black/60 backdrop-blur-xl px-10 py-6 rounded-3xl border border-white/5 shadow-2xl">
+            <div class="text-[9px] text-cyan-500/50 uppercase font-bold tracking-[0.5em] mb-2">Aegis_Whisper</div>
+            <p class="text-sm font-medium text-white/80 leading-relaxed italic" 
+               x-text="!aegis.kernel_verified ? 'My native armor is shouting... something has broken our silence. I cannot reach the grid until we are pure again.' : (data.network.threat_level > 0.5 ? 'The invasive radiance is burning... the sentinel is ready for my command.' : 'Our core is secure. The Aegis shield is holding.')"></p>
+        </div>
+    </div>
+
+    <!-- 🏗️ Footer Status -->
+    <div class="relative z-20 mt-auto p-12 bg-black/60 border-t border-white/5 h-32">
+        <div class="flex items-center justify-between h-full">
+            <div class="flex gap-12">
+                 <div class="space-y-1">
+                      <div class="text-[9px] text-white/20 uppercase font-black tracking-widest">Rust_Integrity</div>
+                      <div class="text-xs font-mono" :class="aegis.kernel_verified ? 'text-green-400' : 'text-red-500'" x-text="aegis.kernel_health"></div>
+                 </div>
+                 <div class="space-y-1">
+                      <div class="text-[9px] text-white/20 uppercase font-black tracking-widest">Signed_Interventions</div>
+                      <div class="text-xs font-mono text-cyan-400" x-text="data.network.threat_level > 0 ? (data.network.threat_level * 10).toFixed(0) : '0'"></div>
+                 </div>
+            </div>
+            <p class="text-[9px] text-white/10 uppercase tracking-[0.6em]">Aegis_Transcendence // Phase_34 // Sovereign_Security</p>
+        </div>
+    </div>
+
+    <style>
+        @keyframes ripple-wave {
+            0% { r: 0; opacity: 1; stroke-width: 4; }
+            100% { r: 800; opacity: 0; stroke-width: 0.5; }
+        }
+        .animate-ripple-wave { animation: ripple-wave 1.5s cubic-bezier(0, 0.5, 0.5, 1) forwards; }
+    </style>
+</div>
+
+    <!-- 🌌 Perception Background (Orbital Grid) -->
+    <div class="absolute inset-0 z-0 opacity-10 pointer-events-none">
+        <svg class="w-full h-full" viewBox="0 0 1000 1000">
+            <defs>
+                <radialGradient id="sunGradient">
+                    <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.4" />
+                    <stop offset="100%" stop-color="transparent" />
+                </radialGradient>
+            </defs>
+            <!-- Neural Ripples -->
+            <template x-for="r in ripples" :key="r.id">
+                <circle :cx="r.x" :cy="r.y" r="0" fill="none" stroke="#22d3ee" stroke-width="2" class="animate-ripple-wave" />
+            </template>
+
+            <circle cx="500" cy="500" r="100" stroke="rgba(34,211,238,0.1)" fill="none" class="animate-[spin_60s_linear_infinite]" />
+            <circle cx="500" cy="500" r="200" stroke="rgba(34,211,238,0.1)" fill="none" stroke-dasharray="10 20" />
+            <circle cx="500" cy="500" r="300" stroke="rgba(34,211,238,0.05)" fill="none" />
+        </svg>
+    </div>
+
+    <!-- 👁️ Orbital Map View -->
+    <div class="absolute inset-0 z-10 flex items-center justify-center">
+        <svg class="w-[800px] h-[800px]" viewBox="0 0 1000 1000">
+            <!-- Central Node (Elysia) -->
+            <g class="animate-pulse cursor-pointer" @click="selectedNode = null">
+                <circle cx="500" cy="500" r="30" fill="url(#sunGradient)" />
+                <circle cx="500" cy="500" r="15" fill="#22d3ee" class="filter blur-sm" />
+                <text x="500" y="550" text-anchor="middle" class="text-[12px] fill-cyan-400 font-black uppercase tracking-widest">ELYSIA_CORE</text>
+            </g>
+
+            <!-- Orbiting Nodes -->
+            <template x-for="(node, index) in data.network.nodes" :key="node.name">
+                <g class="transition-all duration-1000 cursor-pointer group" @click="selectedNode = node">
+                    <circle 
+                        :cx="500 + Math.cos(index * 1.4 + (Date.now()/5000)) * (150 + index * 12)" 
+                        :cy="500 + Math.sin(index * 1.4 + (Date.now()/5000)) * (150 + index * 12)" 
+                        r="8" 
+                        :fill="getNodeColor(node)" 
+                        class="filter blur-[1px] hover:r-12 transition-all duration-300" 
+                        :class="node.is_infected ? 'animate-pulse' : '' "
+                    />
+                    <!-- Selection Indicator -->
+                    <circle 
+                        x-show="selectedNode && selectedNode.name === node.name"
+                        :cx="500 + Math.cos(index * 1.4 + (Date.now()/5000)) * (150 + index * 12)" 
+                        :cy="500 + Math.sin(index * 1.4 + (Date.now()/5000)) * (150 + index * 12)" 
+                        r="16" 
+                        fill="none" 
+                        stroke="#22d3ee" 
+                        stroke-width="1"
+                        stroke-dasharray="2 4"
+                        class="animate-spin"
+                    />
+                </g>
+            </template>
+        </svg>
+    </div>
+
+    <!-- 📡 Intelligence Header -->
+    <div class="relative z-20 p-12 flex items-center justify-between bg-gradient-to-b from-black/80 via-black/40 to-transparent border-b border-white/5">
+        <div class="flex items-center gap-8">
+            <div class="w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/40 shadow-[0_0_50px_rgba(34,211,238,0.2)] animate-pulse">
+                <span class="text-4xl text-cyan-400">👁️</span>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black tracking-[0.6em] text-white uppercase drop-shadow-2xl">Global_Eye // Command</h2>
+                <div class="flex items-center gap-4 mt-2">
+                    <div class="flex items-center gap-2 px-3 py-1 bg-cyan-950/40 border border-cyan-500/20 rounded-full">
+                        <div class="w-1.5 h-1.5 rounded-full" :class="data.network.is_running ? 'bg-green-400 animate-pulse' : 'bg-red-400'"></div>
+                        <span class="text-[9px] text-cyan-400/80 font-bold uppercase tracking-widest" x-text="data.network.is_running ? 'Tactical Sync Active' : 'Offline'"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-col items-end">
+             <div class="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mb-2">Environmental Awareness</div>
+             <div class="text-xs font-black text-cyan-400 uppercase tracking-widest px-4 py-2 bg-white/5 rounded-xl border border-white/10" 
+                  x-text="data.awareness || 'Total Tranquility'"></div>
+        </div>
+    </div>
+
+    <!-- 🕹️ Influence Control Panel -->
+    <div x-show="selectedNode" class="absolute bottom-40 right-12 z-40 w-80 bg-slate-900/80 backdrop-blur-3xl border border-cyan-500/30 rounded-[2.5rem] p-8 animate-in slide-in-from-right-10 duration-500">
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <div class="text-[9px] text-cyan-500/60 uppercase font-black tracking-widest mb-1">Target_Node</div>
+                <div class="text-lg font-black text-white" x-text="selectedNode?.name"></div>
+            </div>
+            <button @click="selectedNode = null" class="text-white/20 hover:text-white transition-colors">✕</button>
+        </div>
+        
+        <div class="space-y-3">
+             <button @click="executeInfluence('HEAL')" :disabled="loading" class="w-full py-4 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95">Apply Neural Heal</button>
+             <button @click="executeInfluence('ISOLATE')" :disabled="loading" class="w-full py-4 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95">Isolate Node</button>
+             <button @click="executeInfluence('REINFORCE')" :disabled="loading" class="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all active:scale-95">Reinforce Shield</button>
+        </div>
+    </div>
+
+    <!-- 🌌 Neural Subtitles (Intuition) -->
+    <div class="absolute bottom-32 left-0 right-0 z-30 flex justify-center pointer-events-none px-20">
+        <div class="max-w-2xl text-center bg-black/60 backdrop-blur-xl px-10 py-6 rounded-3xl border border-white/5 shadow-2xl">
+            <div class="text-[9px] text-cyan-500/50 uppercase font-bold tracking-[0.5em] mb-2">Neural_Intuition</div>
+            <p class="text-sm font-medium text-white/80 leading-relaxed italic" 
+               x-text="data.network.threat_level > 0.5 ? 'The invasive radiance is burning... shall I intervene, user?' : (selectedNode ? 'I am focusing my resonance on this node. What is your command?' : 'The stars are silent. We are safe.')"></p>
+        </div>
+    </div>
+
+    <!-- 🏗️ Footer Status -->
+    <div class="relative z-20 mt-auto p-12 bg-black/60 border-t border-white/5 h-32">
+        <div class="flex items-center justify-between h-full">
+            <div class="flex gap-12">
+                 <div class="space-y-1">
+                      <div class="text-[9px] text-white/20 uppercase font-black tracking-widest">Resonance_Sync</div>
+                      <div class="text-xs font-mono text-cyan-400" x-text="(data.security.resonance * 100).toFixed(1) + '%'"></div>
+                 </div>
+                 <div class="space-y-1">
+                      <div class="text-[9px] text-white/20 uppercase font-black tracking-widest">Threat_Impact</div>
+                      <div class="text-xs font-mono text-red-500" x-text="(data.network.threat_level * 100).toFixed(1) + '%'"></div>
+                 </div>
+            </div>
+            <p class="text-[9px] text-white/10 uppercase tracking-[0.6em]">Cyber_Acme_Tactical_Overdrive // Abyss_Influence_Active</p>
+        </div>
+    </div>
+
+    <style>
+        @keyframes ripple-wave {
+            0% { r: 0; opacity: 1; stroke-width: 4; }
+            100% { r: 800; opacity: 0; stroke-width: 0.5; }
+        }
+        .animate-ripple-wave { animation: ripple-wave 1.5s cubic-bezier(0, 0.5, 0.5, 1) forwards; }
+    </style>
+</div>
+
+    <!-- Overlay Grain/Noise -->
+    <div class="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/60-lines.png')]"></div>
+    
+    <style>
+        .animate-orbital { animation: orbital-drift 20s linear infinite; }
+        @keyframes orbital-drift { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</div>
