@@ -47,7 +47,9 @@ graph TD
     subgraph "Infinite Consciousness (Python)"
         Kernel --> Consciousness[Consciousness Engine]
         Consciousness --> Persona[Elysia Persona]
-        Persona --> LLM[Neural Processing]
+      ## 📄 License
+
+This project is dual-licensed under the **MIT License** and the **Apache License, Version 2.0**. See the [LICENSE](LICENSE) file for details.
     end
     
     subgraph "Vault (Memory)"
@@ -57,6 +59,17 @@ graph TD
     style Kernel fill:#ffb7c5,stroke:#333,stroke-width:2px
     style Consciousness fill:#bbf,stroke:#333,stroke-width:2px
 ```
+
+---
+
+## 🛡️ Grand Design Architecture
+
+ElysiaAI has evolved from an experimental project into a robust, "battle-ready" product with a multi-layered defense and high-performance core:
+
+1.  **Core (Bun/ElysiaJS)**: High-speed API and logic layer with strict TypeBox validation.
+2.  **Intelligence (Python/FastAPI)**: Advanced AI reasoning and semantic filtering.
+3.  **Sovereign Defense (Rust)**: Low-level monitoring agents (Shield Agent) for millisecond-scale threat detection.
+4.  **Verification Sandbox (Docker)**: Automated security testing using Kali Linux tools in a controlled environment.
 
 ---
 

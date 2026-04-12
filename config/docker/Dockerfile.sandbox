@@ -1,0 +1,31 @@
+# ==================== ElysiaAI Security Sandbox ====================
+# Kali Linux based container for security verification simulations.
+# Part of the Grand Design initiative for Sovereign Defense.
+
+FROM kalilinux/kali-rolling
+
+# Do not prompt for user input
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install security tools
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    iputils-ping \
+    nmap \
+    medusa \
+    hydra \
+    metasploit-framework \
+    sqlmap \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /sandbox
+
+# Copy some verification scripts if any (stub)
+# COPY scripts/verify-security.sh ./
+
+RUN echo "🛡️ ElysiaAI Security Sandbox Active" > /etc/motd
+RUN echo "[ $(date) ] Initialized Security Sandbox for Sovereign Defense." >> /sandbox/init.log
+
+# Keep the container alive for simulation
+CMD ["tail", "-f", "/dev/null"]

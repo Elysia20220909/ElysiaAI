@@ -1,28 +1,62 @@
 version: '3.8'
 
 services:
-  backend:
+  # ElysiaAI Core Server (Bun + Python Monolith)
+  app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: config/docker/Dockerfile.production
     ports:
-      - "8000:8000"
+      - "3000:3000" # Elysia UI & API
+      - "8000:8000" # Python FastAPI
     environment:
-      # Connect to the host's Ollama instance to leverage host GPU
-      - OLLAMA_HOST=http://host.docker.internal:11434
-      # Default Security Key (Vault Defenses)
-      - API_KEY=ELYSIATEST-001
-    volumes:
-      # Persist the Runner Memory Vector Database
-      - ./milvus_data:/app/milvus_data
-    # Required for Windows/Mac to access localhost of the host machine
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://elysia:elysia_pass@db:5432/elysiadb
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    depends_on:
+      - db
+      - redis
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  frontend:
-    image: nginx:alpine
-    ports:
-      - "3000:80"
+  # Database Layer
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=elysia
+      - POSTGRES_PASSWORD=elysia_pass
+      - POSTGRES_DB=elysiadb
     volumes:
-      # Mount the static web UI
-      - ./public:/usr/share/nginx/html:ro
+      - postgres_data:/var/lib/postgresql/data
+
+  # Cache & Rate Limiting Layer
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # Sovereign Verification Sandbox (Kali Linux)
+  security-sandbox:
+    build:
+      context: .
+      dockerfile: config/docker/Dockerfile.sandbox
+    depends_on:
+      - app
+    volumes:
+      - ./logs:/sandbox/logs
+      - ./scripts:/sandbox/scripts
+
+  # Sovereign Defense Monitor (Rust Agent)
+  shield-agent:
+    build:
+      context: .
+      dockerfile: config/docker/Dockerfile.shield
+    depends_on:
+      - app
+    volumes:
+      - ./logs:/app/logs:ro
+      - ./config/defense:/app/config/defense:rw
+
+volumes:
+  postgres_data:

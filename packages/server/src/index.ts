@@ -27,6 +27,7 @@ import * as chatSessionService from "./lib/chat-session";
 import { cronScheduler } from "./lib/cron-scheduler";
 import * as customization from "./lib/customization";
 import { feedbackService, knowledgeService, userService } from "./lib/database";
+import { defenseManager } from "./lib/defense-manager";
 import { fileUploadManager } from "./lib/file-upload";
 import { performHealthCheck } from "./lib/health";
 import { healthMonitor } from "./lib/health-monitor";
@@ -125,7 +126,24 @@ const app = new Elysia();
 app
 	.use(helmet())
 	.use(cors())
-	.use(swagger())
+	.use(
+		swagger({
+			documentation: {
+				info: {
+					title: "ElysiaAI Core System",
+					version: "1.2.0-stable",
+					description:
+						"ElysiaAI multi-layered security and intelligence API. Part of the Grand Design initiative.",
+				},
+				tags: [
+					{ name: "auth", description: "Identity and access management" },
+					{ name: "ai", description: "Artificial Intelligence interaction" },
+					{ name: "infra", description: "Infrastructure and AIOps core" },
+					{ name: "health", description: "System status and health metrics" },
+				],
+			},
+		}),
+	)
 	.use(
 		staticPlugin({
 			assets: existsSync("public") ? "public" : "../../public",
@@ -135,7 +153,17 @@ app
 	.use(html())
 	// Telemetry and metrics middleware
 	// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
-	.onBeforeHandle(({ request }: any) => {
+	.onBeforeHandle(({ request, error }: any) => {
+		const ip =
+			request.headers.get("x-forwarded-for") ||
+			request.headers.get("x-real-ip") ||
+			"anon";
+
+		if (defenseManager.isBlocked(ip)) {
+			logger.warn(`🛑 Blocked request from flagged IP: ${ip}`);
+			return error(403, "Access denied by Alpha Protocol (Shield Agent)");
+		}
+
 		const url = new URL(request.url);
 		const path = url.pathname;
 		const traceContext = getTraceContextFromRequest(request);
@@ -416,7 +444,7 @@ app
 				reason: t.Optional(t.String({ maxLength: 256 })),
 			}),
 			detail: {
-				tags: ["feedback"],
+				tags: ["ai"],
 				summary: "Submit user feedback",
 				description:
 					"Submit feedback for a query-answer pair. Requires JWT authentication.",
@@ -464,7 +492,7 @@ app
 				confidence: t.Number({ minimum: 0, maximum: 1 }),
 			}),
 			detail: {
-				tags: ["knowledge"],
+				tags: ["ai"],
 				summary: "Add or update knowledge entry",
 				description:
 					"Store a new knowledge entry with summary, source, tags, and confidence. Requires JWT.",
@@ -514,7 +542,7 @@ app
 		{
 			query: t.Object({ n: t.Optional(t.Number()) }),
 			detail: {
-				tags: ["knowledge"],
+				tags: ["ai"],
 				summary: "Get recent knowledge entries",
 				description:
 					"Retrieve the last N knowledge entries from the knowledge base. Requires JWT.",
@@ -963,7 +991,7 @@ app
 						),
 					}),
 					detail: {
-						tags: ["chat"],
+						tags: ["ai"],
 						summary: "Chat with Elysia AI (Multi-LLM)",
 						description:
 							"Send chat messages to Elysia AI with selectable personality modes (sweet/normal/professional/casual/creative/technical). Casual mode enables friendly daily conversations. Returns streaming SSE response. Requires JWT.",

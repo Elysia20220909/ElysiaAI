@@ -1,0 +1,31 @@
+# ==================== ElysiaAI Shield Agent ====================
+# Sovereign Defense Monitoring Agent (Rust)
+# Part of the Grand Design initiative.
+
+FROM rust:1.75-slim AS builder
+
+WORKDIR /build
+
+# Copy manifest and dummy source for dependency caching
+COPY packages/shield-agent/Cargo.toml ./
+RUN mkdir src && echo "fn main() {}" > src/main.rs
+RUN cargo build --release
+RUN rm -f target/release/deps/shield_agent*
+
+# Copy actual source
+COPY packages/shield-agent/src ./src
+RUN cargo build --release
+
+# Final Image
+FROM debian:bookworm-slim
+
+WORKDIR /app
+
+# Copy binary from builder
+COPY --from=builder /build/target/release/shield-agent ./
+
+# Ensure logs and config directories exist
+RUN mkdir -p /app/logs /app/config/defense
+
+# Run the agent
+CMD ["./shield-agent"]
