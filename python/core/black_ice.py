@@ -56,13 +56,15 @@ class BlackICE:
 
 class SyntheticDetector:
     """
-    Zero-Trust Telemetry (Layer 7)
+    Zero-Trust Telemetry (Layer 13)
     Monitors request timing for inhumanly perfect precision.
+    Detects tools like Hydra, Medusa, and Ncrack.
     """
 
     REQUEST_HISTORY: dict[str, list[float]] = {}
+    QUARANTINE_IPS: set[str] = set()  # L13 Sovereign Quarantine
     MIN_SAMPLES = 5
-    JITTER_THRESHOLD = 0.05  # Seconds
+    JITTER_THRESHOLD = 0.01  # L13: Increased precision (10ms)
 
     @classmethod
     def track_request(cls, ip: str) -> bool:
