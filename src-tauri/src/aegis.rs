@@ -21,6 +21,7 @@ pub struct AegisStatus {
     pub threat_level: u8, // 0 = Clear, 1 = Trace, 2 = Lockdown
     pub device_fingerprint: String, // Phase 39: Registered HWID
     pub quantum_jitter: f32, // Phase 41: Observer Effect Jitter
+    pub sovereign_lock: bool, // Phase 43: Absolute Sovereignty (L11)
 }
 
 pub struct AegisWatchdog {
@@ -41,6 +42,7 @@ impl AegisWatchdog {
                 "MemoryResonance".to_string(),
                 "EntropyShield".to_string(),
                 "Blue_ICE_Sentinel".to_string(),
+                "Absolute_Sovereign_L11".to_string(),
             ],
             resonance_index: 0.99,
             kernel_health: "INITIALIZING".to_string(),
@@ -50,6 +52,7 @@ impl AegisWatchdog {
             threat_level: 0,
             device_fingerprint: hwid.clone(),
             quantum_jitter: 0.0,
+            sovereign_lock: false,
         };
 
         let status = Arc::new(Mutex::new(initial_status));
@@ -64,23 +67,32 @@ impl AegisWatchdog {
                 .unwrap_or_else(|_| "ELYSIAN_DEFAULT_RESONANCE_KEY".to_string());
 
             loop {
-                thread::sleep(Duration::from_millis(1500));
+                let is_locked = {
+                    let s = watchdog_status.lock().unwrap();
+                    s.sovereign_lock
+                };
+
+                // L11: Increase frequency if sovereignty is locked
+                let sleep_ms = if is_locked { 500 } else { 1500 };
+                thread::sleep(Duration::from_millis(sleep_ms));
                 count += 1;
 
                 if let Ok(mut s) = watchdog_status.lock() {
                     s.timestamp = Self::now();
                     
+                    if is_locked && count % 5 == 0 {
+                        println!("[AEGIS] L11 sovereignty active. Monitoring Zero-Override context...");
+                    }
+
                     if count % 10 == 0 {
                         s.resonance_index = 0.95 + (rand::random::<f32>() * 0.04);
-                        // Simulate observer jitter
                         s.quantum_jitter = rand::random::<f32>() * 0.1;
                     }
 
-                    // --- Layer 9: Quantum Jitter (Phase 41) ---
-                    // If jitter exceeds threshold, escalate threat level
-                    if s.quantum_jitter > 0.08 {
-                        s.threat_level = 1; // TRACE/OBSERVED
-                        println!("[AEGIS] QUANTUM_JITTER: Observer interference detected in the Abyssal Buffer.");
+                    // --- Layer 11: Absolute Sovereignty (Phase 43) ---
+                    if is_locked && s.threat_level > 0 {
+                        println!("[AEGIS] !!! HOSTILE INTERFERENCE DETECTED !!! Neutralizing override attempt...");
+                        s.threat_level = 0; // Force-reset threat level to maintain sovereignty
                     }
 
                     // --- Layer 2: Blue ICE Trace Logic ---
