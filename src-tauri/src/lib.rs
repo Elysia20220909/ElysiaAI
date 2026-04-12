@@ -12,10 +12,49 @@ fn get_aegis_resonance() -> aegis::AegisStatus {
     watchdog.get_status()
 }
 
+#[tauri::command]
+async fn execute_signed_influence(action: String, node_name: String) -> Result<serde_json::Value, String> {
+    let hmac_key = std::env::var("RESONANCE_SECRET")
+        .unwrap_or_else(|_| "ELYSIAN_DEFAULT_RESONANCE_KEY".to_string());
+    
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    // Generate Signature for the influence action
+    use hmac::{Hmac, Mac};
+    use sha2::Sha256;
+    type HmacSha256 = Hmac<Sha256>;
+    
+    let payload = format!("{}:{}:{}", action, node_name, timestamp);
+    let mut mac = HmacSha256::new_from_slice(hmac_key.as_bytes()).map_err(|e| e.to_string())?;
+    mac.update(payload.as_bytes());
+    let signature = hex::encode(mac.finalize().into_bytes());
+
+    // Relay to Python server (Simulation Gateway)
+    let client = reqwest::Client::new();
+    let body = serde_json::json!({
+        "action": action,
+        "node_name": node_name,
+        "signature": signature,
+        "timestamp": timestamp
+    });
+
+    let res = client.post("http://localhost:8000/system/influence/execute")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let json: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
+    Ok(json)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_aegis_resonance])
+        .invoke_handler(tauri::generate_handler![get_aegis_resonance, execute_signed_influence])
         .manage(KernelProcess(Mutex::new(None)))
     .on_window_event(|window, event| {
         if let tauri::WindowEvent::CloseRequested { .. } = event {

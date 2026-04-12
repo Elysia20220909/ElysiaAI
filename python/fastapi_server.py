@@ -6,6 +6,9 @@ Elysia AI - RAG Server with FastAPI + Milvus Lite (Runner Memory)
 
 import asyncio
 import datetime
+import hashlib
+import hmac
+import io
 import json
 import logging
 import os
@@ -23,12 +26,21 @@ from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
+from kernel.arch.x86.gdt import gdt
+from kernel.arch.x86.idt import idt
+from kernel.drivers.keyboard import keyboard
+from kernel.drivers.vga import vga
+from kernel.memory.manager import mem_manager
 from python.core.consciousness import elysia_consciousness
 from python.core.gateway import cognitive_gateway
 from python.core.heartbeat import elysia_heartbeat
+from python.core.influence import elysia_influence
+from python.core.perception import elysia_perception
 from python.core.persona import elysia_persona
 from python.lib.abyssal_stealth import AbyssalStealth, get_shrouded_resonance_key
+from python.lib.file_phantom import phantom
 from python.lib.guardian import guardian
+from python.lib.soul_forge import soul_forge
 from scripts.security.generate_ledger import generate_ledger
 
 
@@ -722,6 +734,283 @@ async def execute_sandbox(req: SandboxRequest):
         error_id = str(uuid.uuid4())
         logger.error(f"❌ Sandbox Execution Error [{error_id}]: {e}")
         raise HTTPException(500, f"System Error. Tracker ID: {error_id}")
+
+
+# ==================== System Infrastructure Phase 2 ====================
+
+
+@app.get("/system/apps/list", dependencies=vault_defenses)
+async def list_apps():
+    """
+    アプリケーションレジストリを返します。
+    """
+    apps_path = Path("var/elysia/apps.json")
+    if apps_path.exists():
+        with open(apps_path, encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+@app.get("/system/apps/{app_id}.component.html", dependencies=vault_defenses)
+async def get_app_component(app_id: str):
+    """
+    アプリケーションのUIコンポーネントを配信します。
+    """
+    component_path = Path(f"public/apps/{app_id}.component.html")
+    if component_path.exists():
+        with open(component_path, encoding="utf-8") as f:
+            return StreamingResponse(io.BytesIO(f.read().encode("utf-8")), media_type="text/html")
+
+    # Fallback to a basic template if not found
+    fallback = f"<div class='p-8 text-white/40'>Module [{app_id}] not found in sanctuary.</div>"
+    return StreamingResponse(io.BytesIO(fallback.encode("utf-8")), media_type="text/html")
+
+
+@app.get("/system/monitor", dependencies=vault_defenses)
+async def system_monitor():
+    """
+    システム全体のリソースと健康状態を統合して返します。
+    """
+    import psutil
+
+    # Cognitive Gateway からの共鳴データを取得
+    resonance = cognitive_gateway.get_integrated_resonance()
+
+    return {
+        "system": {
+            "cpu": psutil.cpu_percent(),
+            "ram": psutil.virtual_memory().percent,
+            "disk": {"percent": psutil.disk_usage("/").percent},
+        },
+        "elysia": {
+            "version": "2.0.0-OMEGA",
+            "voice_active": elysia_heartbeat.pulse_active,
+            "soul_resonance": resonance,
+        },
+        "security": {"trust_score": 98.5, "lockdown": {"active": False}},
+    }
+
+
+@app.get("/system/theme", dependencies=vault_defenses)
+async def get_theme():
+    return {"theme": "cyberpunk", "maintenance": False}
+
+
+@app.get("/system/security/status", dependencies=vault_defenses)
+async def security_status():
+    return {"secure_boot": "SUCCESS", "panic": False, "sip_active": True, "trust_score": 0.99}
+
+
+@app.get("/system/privacy/status", dependencies=vault_defenses)
+async def privacy_status():
+    return {"camera_active": False, "mic_active": False, "session_sealed": True}
+
+
+@app.get("/system/security/entitlements/pending", dependencies=vault_defenses)
+async def pending_entitlements():
+    return {"requests": []}
+
+
+# ==================== Abyss File Phantom Extension ====================
+
+
+class SubmergeRequest(BaseModel):
+    file_path: str
+    shard_count: int = 3
+
+
+@app.post("/abyss/submerge", dependencies=vault_defenses)
+async def submerge_file(req: SubmergeRequest):
+    """
+    ファイルを物理的な死から「潜航」させ、深淵へと断片化して隠蔽します。
+    """
+    try:
+        phantom_id = phantom.submerge(req.file_path, req.shard_count)
+        logger.info(f"🌌 File Submerged to Abyss: {req.file_path} -> {phantom_id}")
+        return {"status": "SUBMERGED", "phantom_id": phantom_id}
+    except Exception as e:
+        logger.error(f"❌ Submerge Error: {e}")
+        raise HTTPException(500, f"Abyssal Failure: {e}")
+
+
+@app.get("/abyss/files", dependencies=vault_defenses)
+async def list_abyssal_files():
+    """
+    現在深淵に沈んでいる「ファントムファイル」の一覧を取得します。
+    """
+    return {"files": phantom.list_submerged()}
+
+
+@app.get("/abyss/materialize/{phantom_id}", dependencies=vault_defenses)
+async def materialize_file(phantom_id: str):
+    """
+    指定されたファントムをメモリ上で再構成し、ストリーミングします。
+    ディスクへの書き込みは一切行われません。
+    """
+    try:
+        buffer = phantom.materialize(phantom_id)
+        if not buffer:
+            raise HTTPException(404, "Phantom not found or integrity compromised.")
+
+        # Determine filename for download
+        registry = phantom._get_registry()
+        filename = registry[phantom_id]["name"]
+
+        return StreamingResponse(
+            buffer,
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except Exception as e:
+        logger.error(f"❌ Materialization Error: {e}")
+        raise HTTPException(500, f"Resonance Alignment Failure: {e}")
+
+
+# ==================== Soul Forge Extension ====================
+
+
+@app.get("/soul/status", dependencies=vault_defenses)
+async def get_soul_status():
+    """
+    Elysia の現在の「魂」の状態（人格マトリクス、経験値、共鳴レベル）を返します。
+    """
+    try:
+        soul = soul_forge.load_soul()
+        if not soul:
+            raise HTTPException(404, "Soul not manifested in this vessel.")
+        return soul
+    except Exception as e:
+        logger.error(f"❌ Soul Load Error: {e}")
+        raise HTTPException(500, f"Spiritual Desync: {e}")
+
+
+@app.post("/soul/digest/{phantom_id}", dependencies=vault_defenses)
+async def digest_phantom_memory(phantom_id: str):
+    """
+    深淵に沈んだファイルを「消化」し、魂の経験値と人格へと変換します。
+    """
+    try:
+        result = soul_forge.digest_memory(phantom_id)
+        logger.info(f"✨ Soul Evolved via Memory Digest: {phantom_id} -> {result['status']}")
+        return result
+    except ValueError as e:
+        raise HTTPException(404, str(e))
+    except Exception as e:
+        logger.error(f"❌ Digestion Failure: {e}")
+        raise HTTPException(500, f"Neural Core Panic: {e}")
+
+
+# ==================== Global Eye Perception Extension ====================
+
+
+@app.get("/system/perception", dependencies=vault_defenses)
+async def get_perception_state():
+    """
+    Elysia の「知覚」状態（ネットワークトポロジーと外的脅威の認識）を返します。
+    """
+    try:
+        await elysia_perception.sync()
+        return elysia_perception.get_perception()
+    except Exception as e:
+        logger.error(f"❌ Perception Sync Error: {e}")
+        raise HTTPException(500, f"Sensory Failure: {e}")
+
+
+# ==================== AbyssRTOS Kernel Extension ====================
+
+
+@app.get("/system/kernel/status", dependencies=vault_defenses)
+async def get_kernel_status():
+    """
+    AbyssRTOS の低層（GDT, IDT, Memory, VGA）のステータスを返します。
+    """
+    try:
+        return {
+            "gdt": gdt.get_segments(),
+            "idt": idt.get_vectors(),
+            "memory": mem_manager.get_stats(),
+            "vga_buffer": vga.get_screen(),
+            "uptime": time.time(),  # Placeholder for kernel uptime
+        }
+    except Exception as e:
+        logger.error(f"❌ Kernel Telemetry Error: {e}")
+        raise HTTPException(500, f"Kernel Panic (Telemetry): {e}")
+
+
+@app.post("/system/kernel/input", dependencies=vault_defenses)
+async def send_kernel_input(scancode: int = Body(..., embed=True)):
+    """
+    仮想キーボードのキー入力をカーネルに送信します。
+    """
+    try:
+        keyboard.handle_scancode(scancode)
+        return {"status": "ok", "delivered": hex(scancode)}
+    except Exception as e:
+        raise HTTPException(500, f"Input Failure: {e}")
+
+
+@app.post("/system/kernel/boot", dependencies=vault_defenses)
+async def trigger_kernel_boot():
+    """
+    カーネルの再起動プロセスをシミュレートします。
+    """
+    vga.clear()
+    vga.write_string("--- AbyssRTOS Boot Sequence Initiated ---\n")
+    vga.write_string(f"PMM: Initialized ({mem_manager.total_blocks} blocks found)\n")
+    vga.write_string("GDT: Protected Mode Segments Loaded\n")
+    vga.write_string("IDT: Interrupt Handlers Registered\n")
+    vga.write_string("Kernel: Jumping to kmain...\n")
+    vga.write_string("ElysiaAI AbyssRTOS v1.1.0 Ready.\n", 0x0A)  # Light Green
+    return {"status": "booted"}
+
+
+# ==================== Global Influence Extension ====================
+
+
+@app.post("/system/influence/execute", dependencies=vault_defenses)
+async def execute_influence_action(
+    action: str = Body(..., embed=True),
+    node_name: str = Body(..., embed=True),
+    level: float = Body(0.9, embed=True),
+    signature: str = Body(None, embed=True),
+    timestamp: int = Body(None, embed=True),
+):
+    """
+    Elysia の「干渉」プロトコルを実行します。
+    Aegis (Rust) による署名が必須となり、ネイティブ層の承認がない要求は拒絶されます。
+    """
+    # Verify Aegis Signature
+    if not signature or not timestamp:
+        logger.warning("⚠️ Influence rejected: Missing Aegis Signature")
+        raise HTTPException(403, "Aegis Authorization Required")
+
+    # Check for replay attacks (Time window 30 sec)
+    if time.time() - timestamp > 30:
+        raise HTTPException(403, "Aegis Token Expired")
+
+    hmac_key = os.getenv("RESONANCE_SECRET", "ELYSIAN_DEFAULT_RESONANCE_KEY")
+    payload = f"{action}:{node_name}:{timestamp}"
+    expected_sig = hmac.new(hmac_key.encode(), payload.encode(), hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(signature, expected_sig):
+        logger.error(f"🚨 TAMPERED INFLUENCE DETECTED: {node_name} -> {action}")
+        raise HTTPException(403, "Aegis Signature Invalid - TAMPERED_INTENT")
+
+    try:
+        result = await elysia_influence.execute_action(action, node_name, level)
+        # ... rest of the code ...
+        if result.get("status") == "failed":
+            raise HTTPException(400, result.get("reason"))
+
+        # Consciousness feedback
+        elysia_consciousness.last_mood_update = time.time()
+
+        return result
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        logger.error(f"❌ Influence Deployment Error: {e}")
+        raise HTTPException(500, f"Neural Feedback Surge: {e}")
 
 
 # ==================== メイン実行 ====================

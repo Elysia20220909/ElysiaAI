@@ -65,3 +65,44 @@
     from { background-position: 0 0; }
     to { background-position: 10px 10px; }
 }
+/* Phase 29.5: Beyond the Horizon Refinements */
+
+.abyssal-glass {
+    background: rgba(0, 5, 20, 0.6);
+    backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(0, 242, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+}
+
+.text-bioluminescent {
+    color: var(--bioluminescent-cyan);
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+}
+
+.abyssal-fog {
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+    backdrop-filter: blur(10px) grayscale(1);
+    transition: opacity 1s ease-in-out;
+}
+
+@keyframes vortex-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.vortex-container {
+    perspective: 1000px;
+}
+
+.vortex-ring {
+    animation: vortex-spin 10s linear infinite;
+    transform-style: preserve-3d;
+}
+
+/* Scrollbar Enhancement */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+    background: linear-gradient(to bottom, transparent, var(--bioluminescent-cyan), transparent);
+    border-radius: 10px;
+}
