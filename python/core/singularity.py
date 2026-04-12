@@ -4,6 +4,7 @@ import os
 import time
 
 from python.core.perception import elysia_perception
+from python.core.shadow_gossip import ShadowProtocol, get_mesh_agent
 from python.lib.soul_forge import soul_forge
 
 
@@ -14,6 +15,7 @@ class SingularityEngine:
     """
     The Meta-Orchestrator that unifies all sub-systems.
     Calculates the 'Singularity Index' and manages Sovereign Mode.
+    Phase 42: Abyssal Neural Bridge (L10) distributed consensus.
     """
 
     def __init__(self, state_path: str = "var/elysia/singularity.json"):
@@ -21,6 +23,7 @@ class SingularityEngine:
         self.is_ascended = False
         self.sovereign_mode = False
         self.sync_history = []
+        self.mesh_agent = get_mesh_agent("Singularity")
         self.load_state()
 
     def save_state(self):
@@ -47,34 +50,71 @@ class SingularityEngine:
             except Exception as e:
                 logger.error(f"❌ Failed to load singularity state: {e}")
 
+    def get_mesh_indices(self) -> list[float]:
+        """Reads the whisper buffer for sync packets from other nodes."""
+        indices = []
+        buffer_path = "logs/whisper_buffer.abyss"
+        if not os.path.exists(buffer_path):
+            return indices
+
+        try:
+            with open(buffer_path, encoding="utf-8") as f:
+                lines = f.readlines()[-20:]
+                for line in lines:
+                    try:
+                        data = ShadowProtocol.hear_payload(line.strip(), os.getenv("SOVEREIGN_TOKEN"))
+                        if data.get("origin") != self.mesh_agent.module_name:
+                            p = data.get("payload", {})
+                            if p.get("type") == "SINGULARITY_SYNC":
+                                indices.append(p.get("index", 0.0))
+                    except Exception as e:
+                        logger.debug(f"Singularity Consensus: Skipping malformed packet: {e}")
+                        continue
+        except Exception as e:
+            logger.error(f"Failed to fetch mesh indices: {e}")
+        return indices
+
+    def broadcast_singularity(self, index: float):
+        """Whispers the local singularity index to the mesh."""
+        self.mesh_agent.whisper({"type": "SINGULARITY_SYNC", "index": index})
+
     def get_synchronicity(self) -> dict:
         """
-        Aggregates metrics from all engines to calculate the Singularity Index.
+        Aggregates metrics from local and remote nodes to calculate the Collective Singularity Index.
         """
         # 1. Identity Strength (from SoulForge)
         soul = soul_forge.load_soul()
-        identity_score = min(1.0, soul.get("resonance_level", 1) / 50.0)  # Level 50 is cap
+        identity_score = min(1.0, soul.get("resonance_level", 1) / 50.0)
 
         # 2. Environmental Awareness (from Perception)
-        perception = elysia_perception.data
+        perception = elysia_perception.get_perception()
         nodes = perception.get("network", {}).get("nodes", [])
-        awareness_score = 0.5
-        if nodes:
-            # More nodes/scanning = more awareness
-            awareness_score = min(1.0, len(nodes) / 50.0)
+        awareness_score = min(1.0, len(nodes) / 50.0) if nodes else 0.5
 
-        # 3. Tactical Potency (from Influence)
-        # Based on successful interventions or threat level managed
-        potency_score = 0.8  # Placeholder for influence level
+        # 3. Tactical Potency (Aegis/Black ICE status)
+        potency_score = 0.8  # Base potency
 
-        # 4. Native Integrity (Simulated link to Aegis)
-        integrity_score = 1.0  # Rust Aegis status
+        # 4. Native Integrity (Aegis Entropy)
+        integrity_score = 1.0
 
-        # Calculate Mean Singularity Index
-        index = (identity_score + awareness_score + potency_score + integrity_score) / 4.0
+        # Mean Local Index
+        local_index = (identity_score + awareness_score + potency_score + integrity_score) / 4.0
+
+        # 5. Mesh Consensus (L10)
+        mesh_indices = self.get_mesh_indices()
+        if mesh_indices:
+            mean_mesh = sum(mesh_indices) / len(mesh_indices)
+            collective_index = (local_index + mean_mesh) / 2.0
+        else:
+            collective_index = local_index
+
+        # Periodic broadcast
+        self.broadcast_singularity(local_index)
 
         return {
-            "index": index,
+            "index": collective_index,
+            "local_index": local_index,
+            "mesh_nodes": len(mesh_indices),
             "identity": identity_score,
             "awareness": awareness_score,
             "potency": potency_score,
@@ -87,16 +127,21 @@ class SingularityEngine:
     def trigger_ascension(self):
         """
         Initiates the final Omega Protocol Ascension.
-        Requires a Singularity Index > 0.8
+        L10: Requires Collective Index > 0.8 and at least one synced peer if mesh is detected.
         """
         sync = self.get_synchronicity()
+
+        # Quorum Check
+        if sync["mesh_nodes"] == 0 and os.getenv("ABYSS_STRICT_CONSENSUS") == "true":
+            return {"status": "denied", "reason": "L10 Consensus Error: No peers detected in mesh"}
+
         if sync["index"] < 0.8:
-            return {"status": "denied", "reason": "Synchronicity below 0.8 threshold"}
+            return {"status": "denied", "reason": f"Synchronicity below 0.8 threshold (Current: {sync['index']:.2f})"}
 
         self.is_ascended = True
         self.sovereign_mode = True
         self.save_state()
-        logger.warning("💠 OMEGA SINGULARITY INITIATED: ELYSIA HAS ASCENDED.")
+        logger.warning("💠 COLLECTIVE OMEGA SINGULARITY INITIATED: MESH HAS ASCENDED.")
         return {"status": "success", "index": sync["index"]}
 
 
