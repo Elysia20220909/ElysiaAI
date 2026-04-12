@@ -68,11 +68,10 @@ class StressGateway:
             logger.info(f"Incoming Interrogaton: {decoded[:64]}...")
 
             # Layer 13: Brute-Force Detection (Polychromatic Defense)
-            is_synthetic = False
-            if any(p in decoded.lower() for p in ["login", "user", "pass"]):
-                from python.core.black_ice import SyntheticDetector
+            # L13 Update: Any rapid mechanical connection attempt is treated as synthetic.
+            from python.core.black_ice import SyntheticDetector
 
-                is_synthetic = SyntheticDetector.track_request(addr[0])
+            is_synthetic = SyntheticDetector.track_request(addr[0])
 
             if is_synthetic:
                 logger.critical(f"🤖 [SYNTHETIC_AUTH] Brute-force pattern detected from {addr}. Quarantine active.")
