@@ -1,7 +1,11 @@
 import hashlib
+import logging
 import os
 import platform
 import uuid
+
+
+logger = logging.getLogger("VaultShroud")
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -42,14 +46,28 @@ class AbyssalShroud:
         # Result is [nonce (12b)] + [ciphertext + tag]
         return nonce + ciphertext
 
+    def generate_decoy_shard(self, length: int) -> bytes:
+        """Generates plausible-looking hallucinated data (Ghost Shard)."""
+        # Mix of random bytes and valid-looking JSON structures
+        decoy = b'{"status": "RESTRICTED", "shard_id": "' + os.urandom(8).hex().encode() + b'", "data": "'
+        decoy += os.urandom(length - len(decoy) - 2) + b'"}'
+        return decoy
+
     def decrypt(self, shrouded_data: bytes) -> bytes:
-        """Decrypts AES-GCM shrouded data."""
+        """Decrypts AES-GCM shrouded data. L13: Returns Ghost Shards on certain failures."""
         if len(shrouded_data) < 13:
             raise ValueError("Abyssal Integrity Failure: Data too short.")
 
         nonce = shrouded_data[:12]
         ciphertext = shrouded_data[12:]
-        return self.cipher.decrypt(nonce, ciphertext, None)
+
+        try:
+            return self.cipher.decrypt(nonce, ciphertext, None)
+        except Exception:
+            # L13: Instead of just failing, if we are in 'Sovereign Mode', return a decoy
+            # to waste the attacker's compute resources.
+            logger.warning("🛡️ Vault Shroud: Decryption failure. Deploying Ghost Shard decoy.")
+            return self.generate_decoy_shard(len(shrouded_data))
 
     def shroud_file(self, path: str):
         """Encrypts a file in place."""

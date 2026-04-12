@@ -67,6 +67,19 @@ class StressGateway:
             decoded = data.decode("utf-8", errors="ignore")
             logger.info(f"Incoming Interrogaton: {decoded[:64]}...")
 
+            # Layer 13: Brute-Force Detection (Polychromatic Defense)
+            is_synthetic = False
+            if any(p in decoded.lower() for p in ["login", "user", "pass"]):
+                from python.core.black_ice import SyntheticDetector
+
+                is_synthetic = SyntheticDetector.track_request(addr[0])
+
+            if is_synthetic:
+                logger.critical(f"🤖 [SYNTHETIC_AUTH] Brute-force pattern detected from {addr}. Quarantine active.")
+                BlackICE.manifest_feedback_loop(addr[0], "SYNTHETIC_BRUTE_FORCE_L13")
+                client.send(b"ERROR: AUTH_FLOOD_DETECTED. IP QUARANTINED.\n")
+                return
+
             # Layer 12: Detect Exploit Patterns
             exploit_patterns = ["metasploit", "exploit", "\x90\x90", "shellcode", "/bin/sh"]
             is_malicious = any(p in decoded.lower() for p in exploit_patterns)
@@ -76,6 +89,8 @@ class StressGateway:
                 # Trigger Black ICE Counter-Hack
                 BlackICE.manifest_feedback_loop(addr[0], "METASPLOIT_STRESS_TEST")
                 client.send(b"ERROR: VOID_RESONANCE_EXCEEDED. CONNECTION DROPPED.\n")
+            elif "login" in decoded.lower():
+                client.send(b"AbyssRPC: Access Denied. (L13 Sovereign Lock active)\n")
             else:
                 client.send(b"ACK: Intent not understood. Connection stable.\n")
 
