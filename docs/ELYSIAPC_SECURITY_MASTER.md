@@ -8,6 +8,63 @@ This master guide serves as the definitive documentation for ElysiaAI's multi-la
 
 ---
 
+## ⚡ Security Quick Start (共鳴の第一歩)
+
+この「教科書」を読み解く前に、まずは手元でElysiaAIの守護能力を体感するための最短手順です。
+
+### Step 0: 前提条件（Prerequisites）
+ElysiaAIのソブリン・スタックを稼働させるには、以下の環境が必要です。
+- **Bun**: v1.1.0以上
+- **Docker & Docker Compose**: コンテナ・オーケストレーション用
+- **OpenSSL**: 鍵生成用（推奨）
+
+### Step 1: 聖鍵（Secrets）の生成と配置
+`.env.example` をコピーし、セキュリティの中核となる秘密鍵を設定します。
+
+```bash
+cp .env.example .env
+```
+> [!IMPORTANT]
+> `JWT_SECRET` と `JWT_REFRESH_SECRET` は、必ず以下のコマンド等で生成した独自の強固な文字列に置き換えてください。
+> ```bash
+> openssl rand -hex 32
+> ```
+
+### Step 2: ソブリン・スタックの召喚
+Dockerを用いて、サーバー、データベース、Rustシールドエージェント、そして攻撃シミュレーター（Kali）を一斉に起動します。
+
+```bash
+bun run docker:up
+```
+> [!NOTE]
+> 初回起動時は、Rustエージェント（`shield-agent`）のビルドに数分かかる場合があります。
+
+### Step 3: シールドの検知能力を実証する
+攻撃用サンドボックスから、意図的にブルートフォース攻撃を叩き込み、システムがどう反応するかを観察します。
+
+```bash
+# サンドボックス内でのシミュレーション実行
+docker-compose exec security-sandbox bash /sandbox/scripts/verify-security.sh
+```
+
+### Step 4: フィードバックループの目撃
+Rustシールドエージェントがログを解析し、動的に防御ルールを生成する瞬間を監視します。
+```bash
+docker-compose logs -f shield-agent
+```
+成功すると `[ALERT] Brute-force detected from IP: app. Blocked.` というログが表示されます。
+
+### Step 5: 「絶対的な拒絶」の確認
+攻撃が検知された後、再度サンドボックスからアクセスを試みてください。
+```bash
+docker-compose exec security-sandbox curl -i http://app:3000/auth/token
+```
+**期待される結果**: 
+`HTTP/1.1 403 Forbidden` 
+`Access denied by Alpha Protocol (Shield Agent)`
+
+---
+
 ## Ⅰ. The Alpha Protocol: 多層防御アーキテクチャ
 
 ElysiaAIは、単一の防壁に頼るのではなく、以下の**4層の防衛レイヤー**が重なり合うことで「絶対的な規律」を維持しています。
