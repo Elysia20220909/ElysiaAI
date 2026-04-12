@@ -742,14 +742,25 @@ async def execute_sandbox(req: SandboxRequest):
 
 @app.get("/system/apps/list", dependencies=vault_defenses)
 async def list_apps():
-    """
-    アプリケーションレジストリを返します。
-    """
+    """アプリケーションレジストリを返します。昇華状態に応じて特異点コアを無限共鳴HUDに差し替えます。"""
     apps_path = Path("var/elysia/apps.json")
+    apps = {}
     if apps_path.exists():
         with open(apps_path, encoding="utf-8") as f:
-            return json.load(f)
-    return {}
+            apps = json.load(f)
+
+    # Phase 37: Dynamic Component Swapping
+    if singularity_engine.is_ascended:
+        # Move beyond the singularity
+        if "singularity_core" in apps:
+            del apps["singularity_core"]
+
+        apps["infinite_resonance"] = {"icon": "🌌", "title": "Infinite Resonance HUD", "category": "Omega"}
+    else:
+        # Still in Phase 36 convergence
+        apps["singularity_core"] = {"icon": "💠", "title": "Singularity Core", "category": "Omega"}
+
+    return apps
 
 
 @app.get("/system/apps/{app_id}.component.html", dependencies=vault_defenses)

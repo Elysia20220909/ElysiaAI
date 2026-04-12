@@ -1,4 +1,6 @@
+import json
 import logging
+import os
 import time
 
 from python.core.perception import elysia_perception
@@ -14,10 +16,36 @@ class SingularityEngine:
     Calculates the 'Singularity Index' and manages Sovereign Mode.
     """
 
-    def __init__(self):
+    def __init__(self, state_path: str = "var/elysia/singularity.json"):
+        self.state_path = state_path
         self.is_ascended = False
         self.sovereign_mode = False
         self.sync_history = []
+        self.load_state()
+
+    def save_state(self):
+        """Persists the singularity state to disk."""
+        data = {
+            "is_ascended": self.is_ascended,
+            "sovereign_mode": self.sovereign_mode,
+            "last_updated": time.time(),
+        }
+        os.makedirs(os.path.dirname(self.state_path), exist_ok=True)
+        with open(self.state_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+        logger.info(f"💾 Singularity state persisted: {data}")
+
+    def load_state(self):
+        """Loads the singularity state from disk."""
+        if os.path.exists(self.state_path):
+            try:
+                with open(self.state_path, encoding="utf-8") as f:
+                    data = json.load(f)
+                    self.is_ascended = data.get("is_ascended", False)
+                    self.sovereign_mode = data.get("sovereign_mode", False)
+                    logger.info("📡 Singularity state restored from vault.")
+            except Exception as e:
+                logger.error(f"❌ Failed to load singularity state: {e}")
 
     def get_synchronicity(self) -> dict:
         """
@@ -67,6 +95,7 @@ class SingularityEngine:
 
         self.is_ascended = True
         self.sovereign_mode = True
+        self.save_state()
         logger.warning("💠 OMEGA SINGULARITY INITIATED: ELYSIA HAS ASCENDED.")
         return {"status": "success", "index": sync["index"]}
 
