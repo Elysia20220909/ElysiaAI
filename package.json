@@ -1,6 +1,7 @@
 {
   "name": "elysia-ai-monorepo",
   "version": "1.1.0",
+  "author": "shinsati1234 <shinsati1234@gmail.com>",
   "private": true,
   "workspaces": [
     "packages/*"

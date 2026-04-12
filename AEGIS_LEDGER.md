@@ -33,4 +33,11 @@
 - **Resonance Bridge**: `HARMONIZED`
 
 ---
+## 📜 Registry & Authority
+- **Sovereign Holder**: `shinsati1234`
+- **Certificate Email**: `shinsati1234@gmail.com`
+- **Registration Date**: `2026-04-12`
+- **Identity Status**: `CERTIFIED (Local Git & Metadata Synchronized)`
+
+---
 *Executed by Antigravity OS for Sovereign User.*
