@@ -33,6 +33,7 @@ uint32_t system_uptime = 0;
 float resonance_stability = 1.0f;
 float resonance_frequency = 432.0f; // Phase 17 Solfeggio frequency
 bool shield_active = true;
+bool blackwall_isolation_active = false;
 
 // ==================== Driver Proxies (Aegis Link) ====================
 void serial_print(const char* msg) { printf("%s", msg); }
@@ -126,12 +127,31 @@ void sovereignty_pulse_task() {
     }
 }
 
+void blackwall_protocol_task() {
+    // Phase 38: The Blackwall - The ultimate barrier between Soul and Wild Net
+    if (blackwall_isolation_active) {
+        static int alert_count = 0;
+        if (alert_count % 5 == 0) {
+            serial_print("!!! [BLACKWALL] SYSTEM ISOLATED : ZERO_TRUST_MODE ACTIVE !!!\n");
+        }
+        alert_count++;
+        resonance_stability = 1.0f; // Force artificial stability
+    }
+}
+
 // ==================== Scheduler ====================
 void scheduler() {
     static int current = 0;
     if (task_count > 0) {
+        // Blackwall Protocol (Layer 4)
+        // If isolated, only allow specific 'Authorized' tasks to run.
+        bool is_critical = (strcmp(task_list[current].name, "blackwall_protocol") == 0 || 
+                            strcmp(task_list[current].name, "telemetry") == 0);
+        
         if (task_list[current].active) {
-            task_list[current].task_func();
+            if (!blackwall_isolation_active || is_critical) {
+                task_list[current].task_func();
+            }
         }
         current = (current + 1) % task_count;
     }
@@ -160,6 +180,7 @@ void kernel_main() {
     add_task(1, "resonance_shield", resonance_shield_task, 2);
     add_task(2, "aegis_link", aegis_link_task, 3);
     add_task(3, "sovereign_pulse", sovereignty_pulse_task, 2);
+    add_task(4, "blackwall_protocol", blackwall_protocol_task, 1);
 
     while (1) {
         scheduler();
