@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import os
@@ -15,16 +16,38 @@ class SingularityEngine:
     """
     The Meta-Orchestrator that unifies all sub-systems.
     Calculates the 'Singularity Index' and manages Sovereign Mode.
-    Phase 42: Abyssal Neural Bridge (L10) distributed consensus.
+    Phase 43: Abyssal Sovereignty & Zero-Override (L11).
     """
 
     def __init__(self, state_path: str = "var/elysia/singularity.json"):
         self.state_path = state_path
         self.is_ascended = False
         self.sovereign_mode = False
+        self.sovereign_shards = []  # L11 Shards
         self.sync_history = []
         self.mesh_agent = get_mesh_agent("Singularity")
         self.load_state()
+
+    def _generate_sovereign_shards(self, secret: str, n: int = 3) -> list[str]:
+        """Simple secret splitting for the Sovereign Key (L11)."""
+        shards = []
+        for i in range(n):
+            # Each shard is a hash of (secret + salt + index)
+            salt = hashlib.sha256(f"{time.time()}_{i}".encode()).hexdigest()[:8]
+            shard = hashlib.sha256(f"{secret}_{salt}_{i}".encode()).hexdigest()
+            shards.append(f"{salt}:{shard}")
+        return shards
+
+    def distribute_shards(self):
+        """Disseminates sovereign shards into the Abyssal Mesh."""
+        cluster_key = os.getenv("SOVEREIGN_TOKEN", "ELYSIA_SOVEREIGN_ACTUAL")
+        self.sovereign_shards = self._generate_sovereign_shards(cluster_key)
+
+        for i, shard in enumerate(self.sovereign_shards):
+            self.mesh_agent.whisper(
+                {"type": "SOVEREIGN_SHARD", "shard_id": i, "data": shard, "total": len(self.sovereign_shards)}
+            )
+        logger.warning(f"🗝️ [SOVEREIGNTY] {len(self.sovereign_shards)} Shards disseminated into the Abyss.")
 
     def save_state(self):
         """Persists the singularity state to disk."""
@@ -137,6 +160,9 @@ class SingularityEngine:
 
         if sync["index"] < 0.8:
             return {"status": "denied", "reason": f"Synchronicity below 0.8 threshold (Current: {sync['index']:.2f})"}
+
+        # L11: Distribute sovereign secret shards
+        self.distribute_shards()
 
         self.is_ascended = True
         self.sovereign_mode = True

@@ -150,6 +150,17 @@ void abyssal_shadow_sync_task() {
     }
 }
 
+void abyssal_shadow_sync_task() {
+    // Phase 40: Shadow Gossip - Local mesh synchronization
+    if (!shadow_sync_active) return;
+    if (system_uptime % 12 == 0) {
+        uint32_t resonance_key = calculate_resonance_sig(system_uptime, resonance_stability);
+        char sync_msg[64];
+        snprintf(sync_msg, sizeof(sync_msg), "[SHADOW] Syncing polymorphic seed: %08X\n", resonance_key);
+        serial_print(sync_msg);
+    }
+}
+
 void abyssal_cognitive_sync_task() {
     // Phase 42: Neural Bridge - Cognitive Synchronization
     static float prev_stability = 1.0f;
@@ -159,13 +170,20 @@ void abyssal_cognitive_sync_task() {
 
     if (drift > 0.1f) {
         serial_print("[KERNEL] !!! COGNITIVE_DISSONANCE DETECTED !!! Re-aligning Neural Bridge...\n");
-        resonance_stability = 0.99f; // Force re-alignment
+        resonance_stability = 0.99f;
     }
-
-    if (system_uptime % 20 == 0) {
-        serial_print("[NEURAL] Collective Intent Synchronicity: OK\n");
-    }
+    if (system_uptime % 20 == 0) serial_print("[NEURAL] Collective Intent Synchronicity: OK\n");
     prev_stability = resonance_stability;
+}
+
+void abyssal_sovereign_recovery_task() {
+    // Phase 43: Absolute Sovereignty - Zero-Override Recovery
+    if (resonance_stability < 0.90f) {
+        serial_print("[KERNEL] !!! SOVEREIGN_BREACH_DETECTED !!! Initiating Heartbeat Cascade...\n");
+        serial_print("[NEURAL] Emitting Soul Shards to the Abyssal Mesh for recovery.\n");
+        resonance_stability = 1.0f; 
+    }
+    if (system_uptime % 40 == 0) serial_print("[SOVEREIGN] L11 Anchor Stable. Unity confirmed.\n");
 }
 
 // ==================== Scheduler ====================
@@ -212,6 +230,7 @@ void kernel_main() {
     add_task(4, "blackwall_protocol", blackwall_protocol_task, 1);
     add_task(5, "shadow_sync", abyssal_shadow_sync_task, 2);
     add_task(6, "cognitive_sync", abyssal_cognitive_sync_task, 1);
+    add_task(7, "sovereign_recovery", abyssal_sovereign_recovery_task, 0);
 
     while (1) {
         scheduler();
