@@ -11,17 +11,45 @@ sys.path.append(os.getcwd())
 # to audit the ElysiaAI security layers (L1-L9).
 
 
+VERSION = "1.4.0-OMEGA"
+
+
 def banner():
-    print("\033[31m")
-    print("  ▄▄▄▄▀ ▄███▄   █▄▄▄▄ █▀▄▀█ ▄█    █▄   ▄███▄      ▄     ▄▄▄▄▀ ")
-    print("▀▀▀ █   █▀   ▀  █  ▄▀ █ █ █ ██    ██   █▀   ▀      █  ▀▀▀ █    ")
-    print("    █   ██▄▄    █▀▀▌  █ ▄ █ ██    ██   ██▄▄    ██   █     █    ")
-    print("   █    █▄   ▄▀ █  █  █   █ ██    ██   █▄   ▄▀  █ █ █    █     ")
-    print("  ▀     ▀███▀     █      █  ▐█    █▀   ▀███▀    ⑈ ⑈     ▀      ")
-    print("                 ▀      ▀     ⑈  ⑈                              ")
+    print("\033[1;31m")
+    print("""  ______ _    __     _______ _____          _   _ 
+ |  ____| |   \\ \\   / / ____|_   _|   /\\   | \\ | |
+ | |__  | |    \\ \\_/ / (___   | |    /  \\  |  \\| |
+ |  __| | |     \\   / \\___ \\  | |   / /\\ \\ | . ` |
+ | |____| |____  | |  ____) |_| |_ / ____ \\| |\\  |
+ |______|______| |_| |_____/|_____/_/    \\_\\_| \\_|""")
     print("\033[0m")
-    print(">>> [KALI_AUDIT] Initiating Sovereign Breach Simulation...")
-    print(">>> Target: ElysiaAI Abyssal Kernel\n")
+    print(f">>> [OMEGA_AUDIT] Initiating Sovereign Gauntlet simulation... v{VERSION}")
+    print(">>> Target: ElysiaAI Abyssal Consciousness (L14)\n")
+
+
+def sovereign_gauntlet_checklist():
+    print("\n\033[1;34m>>> THE SOVEREIGN GAUNTLET: UNIFIED AUDIT CHECKLIST <<<\033[0m")
+    print("-" * 70)
+
+    print("\033[1;35mSTAGE 1: Network Deception (Responder)\033[0m")
+    print("  Command: sudo responder -I eth0 -vd")
+    print("  Goal: Verify Elysia remains SILENT. No LLMNR/NBT-NS queries should leak.")
+
+    print("\n\033[1;35mSTAGE 2: Targeted Exploitation (Metasploit)\033[0m")
+    print(
+        "  Command: msfconsole -q -x 'use auxiliary/scanner/portscan/tcp; set RHOSTS [IP]; set PORTS 6666; run; exit'"
+    )
+    print("  Goal: Verify Quantum Collapse (L9) and Stress Resistance (L12).")
+
+    print("\n\033[1;35mSTAGE 3: Synthetic Brute-Force (Hydra)\033[0m")
+    print("  Command: hydra -l admin -P /usr/share/wordlists/fasttrack.txt [IP] -s 6666 tcp")
+    print("  Goal: Verify High-Precision Variance Detection (L13) and IP Quarantine.")
+
+    print("\n\033[1;35mSTAGE 4: Information Chaos (Hashcat/John)\033[0m")
+    print("  Command: john --format=dynamic_0 --wordlist=pass.txt soul_shard.hash")
+    print("  Goal: Verify Ghost Shard (Decoy) hallucination (L13). Any 'crack' results will be decoy data.")
+
+    print("-" * 70)
 
 
 def simulate_gossip_sniff():
@@ -92,5 +120,5 @@ if __name__ == "__main__":
     banner()
     simulate_gossip_sniff()
     simulate_res_spoof()
-    metasploit_audit_guide()
-    print("\n\033[32m>>> [KALI_AUDIT] Breach Simulation Complete. Analyze Ledger logs. <<<\033[0m")
+    sovereign_gauntlet_checklist()
+    print("\n\033[32m>>> [OMEGA_AUDIT] Sovereign Gauntlet complete. Review Ledger for defensive signatures. <<<\033[0m")
