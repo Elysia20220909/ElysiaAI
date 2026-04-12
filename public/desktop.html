@@ -8,7 +8,10 @@
     <script src="assets/js/alpine.min.js" defer></script>
     <link rel="stylesheet" href="css/desktop.css">
     <link rel="stylesheet" href="css/blackwall.css">
+    <link rel="stylesheet" href="css/desktop.css">
+    <link rel="stylesheet" href="css/blackwall.css">
     <link rel="stylesheet" href="css/aegis.css">
+    <link rel="stylesheet" href="css/abyssal.css">
     <link rel="stylesheet" href="css/sparkle.css">
     <link rel="stylesheet" href="css/environments/mount_hood.css">
     <style>
@@ -279,6 +282,7 @@
       @mouseup="stopDrag()"
       :class="{ 
           'blackwall-active': blackwallActive,
+          'abyssal-submersion': isSubmerged,
           ['layer-depth-' + netDepth]: blackwallActive && netDepth > 0,
           'integrity-panic': stats.sys_threat > 50,
           'edith-active': stats.elysia?.edith?.active,
@@ -613,6 +617,7 @@
                 securityStatus: { secure_boot: 'PENDING', panic: false, sip_active: true },
                 privacyStatus: { camera_active: false, mic_active: false, session_sealed: false },
                 visionMode: false, // Phase 39
+                isSubmerged: true, // Phase 23: Abyssal Submersion
                 pendingEntitlements: [], // Phase 28
                 toasts: [],
 
@@ -715,6 +720,9 @@
 
                 async fetchSecurityStatus() {
                     this.securityStatus = await (await fetch('http://localhost:8000/system/security/status')).json();
+                    if (this.securityStatus.trust_score < 0.9) {
+                        this.isSubmerged = true;
+                    }
                     // Phase 27
                     this.privacyStatus = await (await fetch('http://localhost:8000/system/privacy/status')).json();
                     // Phase 28

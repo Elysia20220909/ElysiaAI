@@ -14,9 +14,13 @@ interface AppConfig {
 }
 
 // --- 1. Boot & Security (FaceID) ---
-const lockScreen = document.getElementById("lock-screen")!;
-const desktop = document.getElementById("desktop")!;
-const statusText = document.getElementById("status-text")!;
+const lockScreen = document.getElementById("lock-screen");
+const desktop = document.getElementById("desktop");
+const statusText = document.getElementById("status-text");
+
+if (!lockScreen || !desktop || !statusText) {
+	throw new Error("Critical UI elements missing from DOM");
+}
 const dots = document.querySelectorAll(".dot");
 let dotCount = 0;
 
@@ -42,7 +46,8 @@ setTimeout(bootSequence, 800);
 
 // --- 2. System Utilities ---
 function startClock() {
-	const clockEl = document.getElementById("system-time")!;
+	const clockEl = document.getElementById("system-time");
+	if (!clockEl) return;
 	setInterval(() => {
 		const now = new Date();
 		clockEl.innerText = now.toLocaleTimeString("en-US", {
@@ -54,7 +59,7 @@ function startClock() {
 
 // --- 3. Window Manager ---
 class WindowManager {
-	private layer = document.getElementById("window-layer")!;
+	private layer = document.getElementById("window-layer") as HTMLElement;
 	private template = document.getElementById(
 		"window-template",
 	) as HTMLTemplateElement;
@@ -370,9 +375,9 @@ const appFinder: AppConfig = {
 				});
 				const data = await res.json();
 				const list = body.querySelector("#file-list") as HTMLElement;
-				list.innerHTML = data.items
+				list.innerHTML = (data.items as Array<{ name: string; isDir: boolean }>)
 					.map(
-						(item: any) => `
+						(item) => `
           <div class="file-item" style="text-align:center; cursor:pointer;" onclick="window.dispatchEvent(new CustomEvent('finder-cd', {detail: '${path}/${item.name}'}))">
             <div style="font-size:32px;">${item.isDir ? "📁" : "📄"}</div>
             <div style="font-size:12px; margin-top:8px; word-break:break-all;">${item.name}</div>

@@ -5,9 +5,12 @@
  */
 
 import "dotenv/config";
-import { devLogger } from "../src/dev/dev-logger";
-import { assert, testDataGenerator } from "../src/dev/test-helpers";
-import * as db from "../src/lib/database-utils";
+import { devLogger } from "../packages/server/src/dev/dev-logger";
+import {
+	assert,
+	testDataGenerator,
+} from "../packages/server/src/dev/test-helpers";
+import * as db from "../packages/server/src/lib/database-utils";
 
 async function runTests() {
 	devLogger.info("Development comprehensive test started\n");

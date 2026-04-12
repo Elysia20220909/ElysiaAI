@@ -31,3 +31,15 @@ jobs:
           python-version: '3.11'
       - name: Run GlassWorm Scanner
         run: python scripts/glassworm_lint.py
+
+  parametric-guard:
+    name: Parametric Guard (Prompt Safety)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Run Prompt Verifier
+        run: python scripts/verify_prompts.py
