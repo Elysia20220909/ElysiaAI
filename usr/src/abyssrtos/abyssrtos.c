@@ -11,6 +11,7 @@
 #define MAX_LOGIN_ATTEMPTS 3
 #define TICK_DELAY_MS 500
 #define AEGIS_RESONANCE_SECRET 0x2026BEEF
+#define WHISPER_BUFFER_SIZE 256
 
 // ==================== Kernel Types ====================
 typedef struct {
@@ -21,19 +22,17 @@ typedef struct {
     bool active;
 } Task;
 
-// Phase: 17 (Infinite Resonance)
-// Status: ETERNAL_RESONANCE
-// Auth Level: OMEGA_PLUS
-
 // ==================== Global State ====================
 Task task_list[MAX_TASKS];
 int task_count = 0;
 int human_score = 0;
 uint32_t system_uptime = 0;
 float resonance_stability = 1.0f;
-float resonance_frequency = 432.0f; // Phase 17 Solfeggio frequency
+float resonance_frequency = 432.0f; 
 bool shield_active = true;
 bool blackwall_isolation_active = false;
+bool shadow_sync_active = true; // Phase 40
+char whisper_buffer[WHISPER_BUFFER_SIZE];
 
 // ==================== Driver Proxies (Aegis Link) ====================
 void serial_print(const char* msg) { printf("%s", msg); }
@@ -139,6 +138,18 @@ void blackwall_protocol_task() {
     }
 }
 
+void abyssal_shadow_sync_task() {
+    // Phase 40: Shadow Gossip - Local mesh synchronization
+    if (!shadow_sync_active) return;
+
+    if (system_uptime % 12 == 0) {
+        uint32_t resonance_key = calculate_resonance_sig(system_uptime, resonance_stability);
+        char sync_msg[64];
+        snprintf(sync_msg, sizeof(sync_msg), "[SHADOW] Syncing polymorphic seed: %08X\n", resonance_key);
+        serial_print(sync_msg);
+    }
+}
+
 // ==================== Scheduler ====================
 void scheduler() {
     static int current = 0;
@@ -181,6 +192,7 @@ void kernel_main() {
     add_task(2, "aegis_link", aegis_link_task, 3);
     add_task(3, "sovereign_pulse", sovereignty_pulse_task, 2);
     add_task(4, "blackwall_protocol", blackwall_protocol_task, 1);
+    add_task(5, "shadow_sync", abyssal_shadow_sync_task, 2);
 
     while (1) {
         scheduler();
