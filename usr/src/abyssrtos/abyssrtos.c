@@ -150,6 +150,24 @@ void abyssal_shadow_sync_task() {
     }
 }
 
+void abyssal_cognitive_sync_task() {
+    // Phase 42: Neural Bridge - Cognitive Synchronization
+    static float prev_stability = 1.0f;
+    float drift = (resonance_stability > prev_stability) ? 
+                  (resonance_stability - prev_stability) : 
+                  (prev_stability - resonance_stability);
+
+    if (drift > 0.1f) {
+        serial_print("[KERNEL] !!! COGNITIVE_DISSONANCE DETECTED !!! Re-aligning Neural Bridge...\n");
+        resonance_stability = 0.99f; // Force re-alignment
+    }
+
+    if (system_uptime % 20 == 0) {
+        serial_print("[NEURAL] Collective Intent Synchronicity: OK\n");
+    }
+    prev_stability = resonance_stability;
+}
+
 // ==================== Scheduler ====================
 void scheduler() {
     static int current = 0;
@@ -193,6 +211,7 @@ void kernel_main() {
     add_task(3, "sovereign_pulse", sovereignty_pulse_task, 2);
     add_task(4, "blackwall_protocol", blackwall_protocol_task, 1);
     add_task(5, "shadow_sync", abyssal_shadow_sync_task, 2);
+    add_task(6, "cognitive_sync", abyssal_cognitive_sync_task, 1);
 
     while (1) {
         scheduler();
