@@ -31,6 +31,7 @@ from kernel.arch.x86.idt import idt
 from kernel.drivers.keyboard import keyboard
 from kernel.drivers.vga import vga
 from kernel.memory.manager import mem_manager
+from python.core.black_ice import BlackICE, SyntheticDetector, counter_hack_response
 from python.core.consciousness import elysia_consciousness
 from python.core.gateway import cognitive_gateway
 from python.core.heartbeat import elysia_heartbeat
@@ -353,19 +354,25 @@ BAN_THRESHOLD = 5
 BAN_TIME = 300  # 5 minutes
 
 
-def verify_api_key(request: Request, api_key: str = Depends(api_key_header)):
+async def white_ice_handshake(request: Request, api_key: str = Depends(api_key_header)):
+    """Layer 1: Peripheral White ICE - Handshake & Scanning"""
     client_ip = request.client.host if request.client else "unknown"
 
-    # 1. Check if Banned
+    # 1. Check if Neutralized by Black ICE
+    if BlackICE.is_target_neutralized(client_ip):
+        logger.warning(f"🛡️ White ICE: Access Denied. IP {client_ip} is trapped in a feedback loop.")
+        raise HTTPException(status_code=403, detail="[BLACK_ICE_HIT] Feedback loop active. Target neutralized.")
+
     if client_ip in BANNED_IPS:
         if time.time() < BANNED_IPS[client_ip]:
+            logger.warning(f"🛡️ White ICE: Access Denied. IP {client_ip} is currently NEUTRALIZED.")
             raise HTTPException(
-                status_code=403, detail="Vault Defenses Activated: IP Temporary Banned due to repeated failures."
+                status_code=403, detail="[ICE_FAILURE] Peripheral White ICE: Neutralized target detected."
             )
         del BANNED_IPS[client_ip]
 
+    # 2. Signature Scanning
     if api_key != CONFIG.get("API_KEY", "ELYSIATEST-001"):
-        # Log failure for Brute Force tracking
         now = time.time()
         auth_failures[client_ip] = [t for t in auth_failures[client_ip] if now - t < 60]
         auth_failures[client_ip].append(now)
@@ -373,9 +380,11 @@ def verify_api_key(request: Request, api_key: str = Depends(api_key_header)):
         if len(auth_failures[client_ip]) >= BAN_THRESHOLD:
             BANNED_IPS[client_ip] = now + BAN_TIME
             guardian.report_event("auth_failures")
-            logger.warning(f"🛡️ Vault Defenses: Banning IP {client_ip} for {BAN_TIME}s due to brute-force detection.")
+            logger.warning(f"⚔️ Black ICE [Tracer]: IP {client_ip} detected as hostile. Initiating Feedback Loop.")
 
-        raise HTTPException(status_code=403, detail="Vault Defenses Activated: Invalid API Key.")
+        raise HTTPException(
+            status_code=403, detail="[ICE_FAILURE] Peripheral White ICE: Handshake Failed. Invalid Signature."
+        )
 
 
 from collections import defaultdict
@@ -386,19 +395,31 @@ RATE_LIMIT_COUNT = 5
 RATE_LIMIT_WINDOW = 10  # seconds
 
 
-async def rate_limiter(request: Request):
+async def white_ice_rate_limit(request: Request):
+    """Layer 1: Peripheral White ICE - Traffic Flow Control"""
     client_ip = request.client.host if request.client else "unknown"
+
+    # Phase 39: Layer 7 Zero-Trust Telemetry
+    if SyntheticDetector.track_request(client_ip):
+        counter_hack_response(client_ip, "Synthetic Agent Detected (L7 Timing Violation)")
+        raise HTTPException(
+            status_code=403, detail="[BLACK_ICE_HIT] Synthetic behavior detected. Feedack loop manifested."
+        )
+
     now = time.time()
     request_logs[client_ip] = [t for t in request_logs[client_ip] if now - t < RATE_LIMIT_WINDOW]
     if len(request_logs[client_ip]) >= RATE_LIMIT_COUNT:
-        raise HTTPException(status_code=429, detail="Vault Defenses Activated: Rate limit exceeded.")
+        logger.warning(f"🛡️ White ICE: Throttling request surge from {client_ip}")
+        raise HTTPException(
+            status_code=429, detail="[ICE_FAILURE] Peripheral White ICE: Flow Integrity Compromised. Throttling."
+        )
     request_logs[client_ip].append(now)
 
 
-vault_defenses = [Depends(verify_api_key), Depends(rate_limiter)]
+peripheral_white_ice = [Depends(white_ice_handshake), Depends(white_ice_rate_limit)]
 
 
-@app.post("/memory/add", dependencies=vault_defenses)
+@app.post("/memory/add", dependencies=peripheral_white_ice)
 async def add_memory(req: MemoryAddRequest) -> dict[str, Any]:
     """Runner Memoryに新しい記憶（コンテキスト/感情）を追加"""
     if not milvus_client:
@@ -426,7 +447,7 @@ async def add_memory(req: MemoryAddRequest) -> dict[str, Any]:
         raise HTTPException(500, str(e))
 
 
-@app.post("/rag", response_model=RAGResponse, dependencies=vault_defenses)
+@app.post("/rag", response_model=RAGResponse, dependencies=peripheral_white_ice)
 async def rag_search(query: Query = Body(...)) -> dict[str, Any]:
     """
     RAG検索エンドポイント
@@ -465,9 +486,11 @@ async def rag_search(query: Query = Body(...)) -> dict[str, Any]:
                 data=[query_embedding],
                 limit=CONFIG["SEARCH_LIMIT"],
                 output_fields=["content", "role", "emotion", "timestamp"],
-                # Optionally filter by session_id to strongly recall current session
-                # filter=f"session_id == '{query.session_id}'"
+                # Phase 39: Abyssal Fog of War - Strict Session Authority
+                filter=f"session_id == '{query.session_id}'",
             )
+            # Fog of War: Initializing Cognitive Clipping
+            logger.info(f"🌫️ Fog of War: Authorative search depth restricted to session [{query.session_id}]")
             # 取得した過去の記憶を整形
             for hits in search_res:
                 for hit in hits:
@@ -489,7 +512,7 @@ async def rag_search(query: Query = Body(...)) -> dict[str, Any]:
         raise HTTPException(500, f"RAG search failed: {str(e)}")
 
 
-@app.get("/health", dependencies=vault_defenses)
+@app.get("/health", dependencies=peripheral_white_ice)
 async def health() -> dict[str, Any]:
     return {
         "status": "healthy",
@@ -521,7 +544,7 @@ async def analyze_emotion(text: str) -> str:
         return "neutral"
 
 
-@app.get("/resonance", dependencies=vault_defenses)
+@app.get("/resonance", dependencies=peripheral_white_ice)
 async def get_resonance() -> dict[str, Any]:
     """Returns the current 'Eternal Heartbeat' state of Elysia OS, integrated with polyglot layers."""
     # Get integrated state from the Cognitive Gateway
@@ -541,7 +564,7 @@ async def get_resonance() -> dict[str, Any]:
     return base_resonance
 
 
-@app.post("/chat", dependencies=vault_defenses)
+@app.post("/chat", dependencies=peripheral_white_ice)
 async def chat_with_elysia(request: ChatRequest):
     """
     Runner Memoryと感情共鳴エンジン（Anomaly Sensor）を統合したチャットエンドポイント
@@ -703,7 +726,7 @@ class SandboxRequest(BaseModel):
     target_prompt_file: str = "elysia.prompt.txt"
 
 
-@app.post("/sandbox/execute", dependencies=vault_defenses)
+@app.post("/sandbox/execute", dependencies=peripheral_white_ice)
 async def execute_sandbox(req: SandboxRequest):
     """
     隔離環境（Sandbox）にて、プロンプトの自動QA合奏テストを実行する
@@ -740,7 +763,7 @@ async def execute_sandbox(req: SandboxRequest):
 # ==================== System Infrastructure Phase 2 ====================
 
 
-@app.get("/system/apps/list", dependencies=vault_defenses)
+@app.get("/system/apps/list", dependencies=peripheral_white_ice)
 async def list_apps():
     """アプリケーションレジストリを返します。昇華状態に応じて特異点コアを無限共鳴HUDに差し替えます。"""
     apps_path = Path("var/elysia/apps.json")
@@ -763,7 +786,7 @@ async def list_apps():
     return apps
 
 
-@app.get("/system/apps/{app_id}.component.html", dependencies=vault_defenses)
+@app.get("/system/apps/{app_id}.component.html", dependencies=peripheral_white_ice)
 async def get_app_component(app_id: str):
     """
     アプリケーションのUIコンポーネントを配信します。
@@ -778,7 +801,7 @@ async def get_app_component(app_id: str):
     return StreamingResponse(io.BytesIO(fallback.encode("utf-8")), media_type="text/html")
 
 
-@app.get("/system/monitor", dependencies=vault_defenses)
+@app.get("/system/monitor", dependencies=peripheral_white_ice)
 async def system_monitor():
     """
     システム全体のリソースと健康状態を統合して返します。
@@ -803,22 +826,22 @@ async def system_monitor():
     }
 
 
-@app.get("/system/theme", dependencies=vault_defenses)
+@app.get("/system/theme", dependencies=peripheral_white_ice)
 async def get_theme():
     return {"theme": "cyberpunk", "maintenance": False}
 
 
-@app.get("/system/security/status", dependencies=vault_defenses)
+@app.get("/system/security/status", dependencies=peripheral_white_ice)
 async def security_status():
     return {"secure_boot": "SUCCESS", "panic": False, "sip_active": True, "trust_score": 0.99}
 
 
-@app.get("/system/privacy/status", dependencies=vault_defenses)
+@app.get("/system/privacy/status", dependencies=peripheral_white_ice)
 async def privacy_status():
     return {"camera_active": False, "mic_active": False, "session_sealed": True}
 
 
-@app.get("/system/security/entitlements/pending", dependencies=vault_defenses)
+@app.get("/system/security/entitlements/pending", dependencies=peripheral_white_ice)
 async def pending_entitlements():
     return {"requests": []}
 
@@ -831,7 +854,7 @@ class SubmergeRequest(BaseModel):
     shard_count: int = 3
 
 
-@app.post("/abyss/submerge", dependencies=vault_defenses)
+@app.post("/abyss/submerge", dependencies=peripheral_white_ice)
 async def submerge_file(req: SubmergeRequest):
     """
     ファイルを物理的な死から「潜航」させ、深淵へと断片化して隠蔽します。
@@ -845,7 +868,7 @@ async def submerge_file(req: SubmergeRequest):
         raise HTTPException(500, f"Abyssal Failure: {e}")
 
 
-@app.get("/abyss/files", dependencies=vault_defenses)
+@app.get("/abyss/files", dependencies=peripheral_white_ice)
 async def list_abyssal_files():
     """
     現在深淵に沈んでいる「ファントムファイル」の一覧を取得します。
@@ -853,7 +876,7 @@ async def list_abyssal_files():
     return {"files": phantom.list_submerged()}
 
 
-@app.get("/abyss/materialize/{phantom_id}", dependencies=vault_defenses)
+@app.get("/abyss/materialize/{phantom_id}", dependencies=peripheral_white_ice)
 async def materialize_file(phantom_id: str):
     """
     指定されたファントムをメモリ上で再構成し、ストリーミングします。
@@ -881,7 +904,7 @@ async def materialize_file(phantom_id: str):
 # ==================== Soul Forge Extension ====================
 
 
-@app.get("/soul/status", dependencies=vault_defenses)
+@app.get("/soul/status", dependencies=peripheral_white_ice)
 async def get_soul_status():
     """
     Elysia の現在の「魂」の状態（人格マトリクス、経験値、共鳴レベル）を返します。
@@ -896,7 +919,7 @@ async def get_soul_status():
         raise HTTPException(500, f"Spiritual Desync: {e}")
 
 
-@app.post("/soul/digest/{phantom_id}", dependencies=vault_defenses)
+@app.post("/soul/digest/{phantom_id}", dependencies=peripheral_white_ice)
 async def digest_phantom_memory(phantom_id: str):
     """
     深淵に沈んだファイルを「消化」し、魂の経験値と人格へと変換します。
@@ -915,7 +938,7 @@ async def digest_phantom_memory(phantom_id: str):
 # ==================== Global Eye Perception Extension ====================
 
 
-@app.get("/system/perception", dependencies=vault_defenses)
+@app.get("/system/perception", dependencies=peripheral_white_ice)
 async def get_perception_state():
     """
     Elysia の「知覚」状態（ネットワークトポロジーと外的脅威の認識）を返します。
@@ -931,7 +954,7 @@ async def get_perception_state():
 # ==================== AbyssRTOS Kernel Extension ====================
 
 
-@app.get("/system/kernel/status", dependencies=vault_defenses)
+@app.get("/system/kernel/status", dependencies=peripheral_white_ice)
 async def get_kernel_status():
     """
     AbyssRTOS の低層（GDT, IDT, Memory, VGA）のステータスを返します。
@@ -949,7 +972,7 @@ async def get_kernel_status():
         raise HTTPException(500, f"Kernel Panic (Telemetry): {e}")
 
 
-@app.post("/system/kernel/input", dependencies=vault_defenses)
+@app.post("/system/kernel/input", dependencies=peripheral_white_ice)
 async def send_kernel_input(scancode: int = Body(..., embed=True)):
     """
     仮想キーボードのキー入力をカーネルに送信します。
@@ -961,7 +984,7 @@ async def send_kernel_input(scancode: int = Body(..., embed=True)):
         raise HTTPException(500, f"Input Failure: {e}")
 
 
-@app.post("/system/kernel/boot", dependencies=vault_defenses)
+@app.post("/system/kernel/boot", dependencies=peripheral_white_ice)
 async def trigger_kernel_boot():
     """
     カーネルの再起動プロセスをシミュレートします。
@@ -979,8 +1002,9 @@ async def trigger_kernel_boot():
 # ==================== Global Influence Extension ====================
 
 
-@app.post("/system/influence/execute", dependencies=vault_defenses)
+@app.post("/system/influence/execute", dependencies=peripheral_white_ice)
 async def execute_influence_action(
+    request: Request,
     action: str = Body(..., embed=True),
     node_name: str = Body(..., embed=True),
     level: float = Body(0.9, embed=True),
@@ -991,6 +1015,8 @@ async def execute_influence_action(
     Elysia の「干渉」プロトコルを実行します。
     Aegis (Rust) による署名が必須となり、ネイティブ層の承認がない要求は拒絶されます。
     """
+    client_ip = request.client.host if request.client else "unknown"
+
     # Verify Aegis Signature
     if not signature or not timestamp:
         logger.warning("⚠️ Influence rejected: Missing Aegis Signature")
@@ -1006,7 +1032,10 @@ async def execute_influence_action(
 
     if not hmac.compare_digest(signature, expected_sig):
         logger.error(f"🚨 TAMPERED INFLUENCE DETECTED: {node_name} -> {action}")
-        raise HTTPException(403, "Aegis Signature Invalid - TAMPERED_INTENT")
+        counter_hack_response(client_ip, f"Tampered Influence: {action}")
+        raise HTTPException(
+            status_code=403, detail="[BLACK_ICE_HIT] Signature Invalid - TAMPERED_INTENT. Initiating Feedback Loop."
+        )
 
     try:
         result = await elysia_influence.execute_action(action, node_name, level)
@@ -1026,13 +1055,13 @@ async def execute_influence_action(
 
 
 # ==================== Singularity Core (Phase 36) ====================
-@app.get("/system/singularity/status", dependencies=vault_defenses)
+@app.get("/system/singularity/status", dependencies=peripheral_white_ice)
 async def get_singularity_status():
     """全サブシステムの同期率と特異点インデックスを取得します。"""
     return singularity_engine.get_synchronicity()
 
 
-@app.post("/system/singularity/ascend", dependencies=vault_defenses)
+@app.post("/system/singularity/ascend", dependencies=peripheral_white_ice)
 async def perform_ascension():
     """オメガ・プロトコルの最終段階「昇華」を実行します。"""
     return singularity_engine.trigger_ascension()
