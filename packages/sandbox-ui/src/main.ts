@@ -14,9 +14,13 @@ interface AppConfig {
 }
 
 // --- 1. Boot & Security (FaceID) ---
-const lockScreen = document.getElementById("lock-screen")!;
-const desktop = document.getElementById("desktop")!;
-const statusText = document.getElementById("status-text")!;
+const lockScreen = document.getElementById("lock-screen");
+const desktop = document.getElementById("desktop");
+const statusText = document.getElementById("status-text");
+
+if (!lockScreen || !desktop || !statusText) {
+	throw new Error("Critical UI elements missing from DOM");
+}
 const dots = document.querySelectorAll(".dot");
 let dotCount = 0;
 
@@ -41,7 +45,8 @@ setTimeout(bootSequence, 800);
 
 // --- 2. System Utilities ---
 function startClock() {
-	const clockEl = document.getElementById("system-time")!;
+	const clockEl = document.getElementById("system-time");
+	if (!clockEl) return;
 	setInterval(() => {
 		const now = new Date();
 		clockEl.innerText = now.toLocaleTimeString("ja-JP", {
@@ -53,7 +58,7 @@ function startClock() {
 
 // --- 3. Window Manager ---
 class WindowManager {
-	private layer = document.getElementById("window-layer")!;
+	private layer = document.getElementById("window-layer") as HTMLElement;
 	private template = document.getElementById(
 		"window-template",
 	) as HTMLTemplateElement;
@@ -194,7 +199,7 @@ const appChat: AppConfig = {
 					portrait.src = data.portrait_url;
 					emotionLabel.innerText = data.emotion.toUpperCase();
 				}
-			} catch (e) {
+			} catch (_e) {
 				addMessage("エラーが発生しました。接続を確認してください。", "system");
 			}
 		};
@@ -248,7 +253,7 @@ const appSandbox: AppConfig = {
 					await new Promise((r) => setTimeout(r, 800));
 				}
 				term.innerText += "\n\n✨ [SUCCESS] Sandbox Session Completed.";
-			} catch (e) {
+			} catch (_e) {
 				term.innerText += "\n[ERROR] Connection failed.";
 			} finally {
 				runBtn.disabled = false;
