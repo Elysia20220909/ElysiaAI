@@ -20,6 +20,7 @@ pub struct AegisStatus {
     pub ice_active: bool,
     pub threat_level: u8, // 0 = Clear, 1 = Trace, 2 = Lockdown
     pub device_fingerprint: String, // Phase 39: Registered HWID
+    pub quantum_jitter: f32, // Phase 41: Observer Effect Jitter
 }
 
 pub struct AegisWatchdog {
@@ -48,6 +49,7 @@ impl AegisWatchdog {
             ice_active: true,
             threat_level: 0,
             device_fingerprint: hwid.clone(),
+            quantum_jitter: 0.0,
         };
 
         let status = Arc::new(Mutex::new(initial_status));
@@ -70,6 +72,15 @@ impl AegisWatchdog {
                     
                     if count % 10 == 0 {
                         s.resonance_index = 0.95 + (rand::random::<f32>() * 0.04);
+                        // Simulate observer jitter
+                        s.quantum_jitter = rand::random::<f32>() * 0.1;
+                    }
+
+                    // --- Layer 9: Quantum Jitter (Phase 41) ---
+                    // If jitter exceeds threshold, escalate threat level
+                    if s.quantum_jitter > 0.08 {
+                        s.threat_level = 1; // TRACE/OBSERVED
+                        println!("[AEGIS] QUANTUM_JITTER: Observer interference detected in the Abyssal Buffer.");
                     }
 
                     // --- Layer 2: Blue ICE Trace Logic ---
