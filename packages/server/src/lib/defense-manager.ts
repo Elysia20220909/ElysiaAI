@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, shadow } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { logger } from "./logger";
 
 interface DefenseRules {
@@ -7,8 +8,6 @@ interface DefenseRules {
 }
 
 class DefenseManager {
-	private readonly RULES_FILE =
-		process.env.DEFENSE_RULES_FILE || "../../config/defense/rules.json";
 	private rules: DefenseRules = { blocked_ips: [], last_updated: 0 };
 	private lastLoadedAt = 0;
 
@@ -17,13 +16,24 @@ class DefenseManager {
 	}
 
 	/**
+	 * 構成ファイルのパスを取得
+	 */
+	private getRulesPath(): string {
+		return (
+			process.env.DEFENSE_RULES_FILE ||
+			join(process.cwd(), "../../config/defense/rules.json")
+		);
+	}
+
+	/**
 	 * ロードされたルールを更新（必要に応じてファイルから再読込）
 	 */
 	public loadRules(): void {
 		try {
-			if (!existsSync(this.RULES_FILE)) return;
+			const rulesPath = this.getRulesPath();
+			if (!existsSync(rulesPath)) return;
 
-			const content = readFileSync(this.RULES_FILE, "utf-8");
+			const content = readFileSync(rulesPath, "utf-8");
 			this.rules = JSON.parse(content);
 			this.lastLoadedAt = Date.now();
 
