@@ -5,7 +5,7 @@ import sqlite3
 from python.lib.vault_shroud import shroud
 
 
-DB_PATH = os.getenv("ELYSIA_MEMORY_VAULT", "elysia_memory.vault")
+DB_PATH = os.getenv("ELYSIA_MEMORY_VAULT", "python/data/elysia_memory.vault")
 
 
 class MemoryVault:

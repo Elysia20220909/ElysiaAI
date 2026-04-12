@@ -8,8 +8,8 @@ struct KernelProcess(Mutex<Option<Child>>);
 
 #[tauri::command]
 fn get_aegis_resonance() -> aegis::AegisStatus {
-    let guard = aegis::AegisGuard::new();
-    guard.get_status()
+    let watchdog = aegis::AegisWatchdog::new();
+    watchdog.get_status()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

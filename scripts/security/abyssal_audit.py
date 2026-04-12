@@ -1,6 +1,9 @@
 import os
 import sys
 
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "../../"))
+
 from python.lib.vault_shroud import shroud
 
 
@@ -8,7 +11,7 @@ def audit_abyssal_vault():
     print("~~~ [ Abyssal Stealth Audit ] ~~~")
     print("----------------------------------------")
 
-    vault_file = "elysia_memory.vault"
+    vault_file = "python/data/elysia_memory.vault"
 
     # 1. Check if file exists
     if not os.path.exists(vault_file):
