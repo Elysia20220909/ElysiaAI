@@ -70,8 +70,27 @@ def simulate_res_spoof():
     print("[*] Result: Counter-Hack neutralization confirmed.")
 
 
+def metasploit_audit_guide():
+    print("\n\033[1;34m>>> PHASE 44: METASPLOIT STRESS TEST GUIDE <<<\033[0m")
+    print("Execute the following in your Kali 'msfconsole' to audit L9/L11 defenses:")
+    print("-" * 60)
+    print("\033[32m# 1. Port Scan Audit (Level 9 Quantum Jitter Test)")
+    print("use auxiliary/scanner/portscan/tcp")
+    print("set RHOSTS [Windows_IP]")
+    print("set PORTS 6666")
+    print("run")
+    print("\n# 2. Exploit Interaction Audit (Level 12 Black ICE Test)")
+    print("use auxiliary/scanner/http/generic_tcp")
+    print("set RHOSTS [Windows_IP]")
+    print("set RPORT 6666")
+    print("set PAYLOAD 'Exploit: metasploit shellcode \\x90\\x90'")
+    print("run\033[0m")
+    print("-" * 60)
+
+
 if __name__ == "__main__":
     banner()
     simulate_gossip_sniff()
     simulate_res_spoof()
+    metasploit_audit_guide()
     print("\n\033[32m>>> [KALI_AUDIT] Breach Simulation Complete. Analyze Ledger logs. <<<\033[0m")
