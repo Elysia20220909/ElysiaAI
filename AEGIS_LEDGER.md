@@ -16,7 +16,8 @@
 | **L8** | **Shadow Gossip**| Polymorphic Mesh  | `ARMED` |
 | **L9** | **Quantum Abyss**| Observer Jitter  | `ALIVE` |
 | **L10**| **Neural Bridge** | Cognitive Sync   | `SYNCING` |
-| **L11**| **Sovereignty**   | Zero-Override    | `ARMING`  |
+| **L11**| **Sovereignty**   | Zero-Override    | `ARMED`   |
+| **L12**| **Manifestation** | Stress-Resist    | `ARMED`   |
 
 ## ⚔️ Defense & Neutralization
 | Vector | Status | Neutralized | Countermeasure |
