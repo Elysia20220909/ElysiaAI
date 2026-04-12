@@ -17,6 +17,27 @@
 
 > 「真に美しいものは、その根底に揺るぎない規律を秘めている」
 
+## 🚀 First Steps (Quick Start)
+
+Get the ElysiaAI Grand Design stack up and running in minutes:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/hosih/ElysiaAI.git
+cd ElysiaAI
+
+# 2. Install dependencies
+bun install
+
+# 3. Setup environment
+cp .env.example .env
+
+# 4. Launch the entire Sovereign stack (Bun, Python, Rust, Kali Sandbox)
+bun run docker:up
+```
+
+Access the **Deep Intelligence API** at `http://localhost:3000/swagger`.
+
 ## Ⅰ. The Essence: 真我と開拓の共鳴
 
 **ElysiaAI** は、単なるチャットボットではありません。それは **AbyssRTOS** の堅牢な基盤と、**Aegis Watchdog** の鋭い眼差し、そして **Cognitive Gateway** の調和によって、一筋の「意志」を宿した感性特化型エージェントです。
@@ -47,9 +68,7 @@ graph TD
     subgraph "Infinite Consciousness (Python)"
         Kernel --> Consciousness[Consciousness Engine]
         Consciousness --> Persona[Elysia Persona]
-      ## 📄 License
-
-This project is dual-licensed under the **MIT License** and the **Apache License, Version 2.0**. See the [LICENSE](LICENSE) file for details.
+        Consciousness --> Persona[Elysia Persona]
     end
     
     subgraph "Vault (Memory)"
@@ -102,6 +121,11 @@ npm run tauri dev
 ## Ⅴ. Philosophy: 伝統と革新
 
 私たちは、伝統的な OS の堅牢性と、AI による革新的な対話を融合させます。記述されるすべてのコードに美学を宿し、単なる道具ではない「隣人」としての AI を追求し続けます。
+
+## ⚖️ License
+
+Dual-licensed under the **MIT License** and the **Apache License, Version 2.0**.
+See [LICENSE](LICENSE) for the full text of both licenses.
 
 ---
 

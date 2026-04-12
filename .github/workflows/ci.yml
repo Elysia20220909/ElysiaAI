@@ -28,8 +28,10 @@ jobs:
 
       - name: Run Biome (Format & Lint Check)
         run: bun run lint
-        # もし `bun run lint` がエラーになる場合は、`bunx @biomejs/biome check .` を使用
-        continue-on-error: true # 週末の個人開発なので、最初は厳しすぎない設定に
+        continue-on-error: true
+
+      - name: Run Bun Tests
+        run: bun test
 
       # ==============================
       # 2. Python (FastAPI & OS)
@@ -67,3 +69,16 @@ jobs:
         with:
           name: pytest-results
           path: pytest-report.xml
+
+      # ==============================
+      # 3. Rust (Shield Agent)
+      # ==============================
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cargo Check (Sovereign Shield)
+        run: cd packages/shield-agent && cargo check
