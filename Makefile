@@ -1,4 +1,4 @@
-.PHONY: help install boot start stop status ui logs clean build check doctor
+.PHONY: help install boot start stop status ui logs clean build check doctor manifest
 # 🍒 Elysia OS - Ultimate Manifestation Makefile 🍒
 
 help:
@@ -6,6 +6,7 @@ help:
 	@echo "  make install - System Initialization (Setup)"
 	@echo "  make boot    - Start Full OS Resonance Cluster (UI + Kernel)"
 	@echo "  make build   - [PRODUCTION] Build Standalone OS Installer (Tauri)"
+	@echo "  make manifest - Synchronize Sovereign Security Ledger"
 	@echo "  make doctor  - Run System Integrity Diagnostic"
 	@echo "  make check   - Verify dependencies and environment"
 	@echo "  make clean   - Purge logs and build artifacts"
@@ -55,3 +56,8 @@ clean:
 	rm -rf node_modules
 	rm -rf src-tauri/target
 	@echo "🧹 System memory purged."
+
+manifest:
+	@echo "📜 Synchronizing Sovereign Ledger..."
+	@export PYTHONPATH="."; python3 scripts/security/generate_ledger.py 2>/dev/null || \
+	 (set PYTHONPATH=.; python scripts/security/generate_ledger.py)
