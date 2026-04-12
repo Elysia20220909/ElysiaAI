@@ -14,15 +14,14 @@ class ShadowProtocol:
     """
     Polymorphic communication protocol for Abyssal Shadow Gossip (L8).
     Message schemas are mutated based on a shared resonance seed.
+    Phase 41: Quantum Deep Abyss - Observer Effect (Data collapse on intercept).
     """
+
+    OBSERVED_PIDS: set[str] = set()
 
     @staticmethod
     def get_resonance_seed():
-        """
-        Derives the current resonance seed.
-        In production, this should be synced with the Aegis HWID and EntropyEngine.
-        """
-        # For now, we use a 10-second windowed timestamp combined with a system secret
+        # ... (Existing implementation)
         secret = os.getenv("ABYSS_SHADOW_SECRET", "SHADOW_RESONANCE_DEFAULT")
         window = int(time.time() / 10)
         return hashlib.sha256(f"{secret}_{window}".encode()).hexdigest()
@@ -31,9 +30,14 @@ class ShadowProtocol:
     def mutate_payload(cls, data: dict) -> str:
         """
         Mutates the dictionary into a polymorphic JSON string with randomized keys.
+        Includes a Quantum Canary (PID) to detect unauthorized observation.
         """
         seed = cls.get_resonance_seed()
         random.seed(seed)
+
+        # Add a unique Packet ID (Quantum Canary)
+        packet_id = hashlib.sha256(f"{time.time()}_{random.random()}".encode()).hexdigest()[:16]
+        data["pid"] = packet_id
 
         # Shuffle the items to prevent fixed structural signatures
         items = list(data.items())
@@ -48,11 +52,26 @@ class ShadowProtocol:
         return json.dumps(dict(items))
 
     @classmethod
-    def hear_payload(cls, mutated_json: str) -> dict:
+    def hear_payload(cls, mutated_json: str, sovereign_token: str = None) -> dict:
         """
         Parses a polymorphic payload and strips noise.
+        DEEP ABYSS: If the data has been observed before without a valid sovereign token, it collapses.
         """
         data = json.loads(mutated_json)
+        pid = data.get("pid")
+
+        if pid:
+            if pid in cls.OBSERVED_PIDS:
+                # Re-observation detected. Verify sovereignty.
+                sov_secret = os.getenv("SOVEREIGN_TOKEN")
+                # If secret is unset or token doesn't match, trigger collapse
+                if not sov_secret or sovereign_token != sov_secret:
+                    logger.warning(f"⚠️ QUANTUM_COLLAPSE: Packet {pid} was re-observed. Wavefunction collapsed.")
+                    return {"status": "COLLAPSED", "data": "VOID_RESONANCE_ERROR", "observed": True}
+
+            # Mark as observed in the current timeline
+            cls.OBSERVED_PIDS.add(pid)
+
         return {k: v for k, v in data.items() if not k.startswith("noise_")}
 
 

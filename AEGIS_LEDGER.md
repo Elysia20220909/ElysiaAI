@@ -14,6 +14,7 @@
 | **L6** | **HW Sentinel** | Hardware Locking | `BONDED` |
 | **L7** | **ZT Telemetry** | Synthetic Detection| `SCANNING` |
 | **L8** | **Shadow Gossip**| Polymorphic Mesh  | `ARMED` |
+| **L9** | **Quantum Abyss**| Observer Jitter  | `ALIVE` |
 
 ## ⚔️ Defense & Neutralization
 | Vector | Status | Neutralized | Countermeasure |
@@ -25,6 +26,7 @@
 | Information Leak | ISOLATED | 0 | Abyssal Fog of War |
 | Vessel Spoofing | BONDED | 0 | Hardware Sentinel |
 | Bot / Automation | SCANNING | 0 | Synthetic Pattern Filter |
+| **Observer Hack** | **ALIVE** | **0** | **Quantum Collapse** |
 | **Total Intercepts** | -- | **1** | [Analysis Reference](./docs/references/marathon_anticheat_analysis.md) |
 
 ## 🌑 Abyssal Sync Status

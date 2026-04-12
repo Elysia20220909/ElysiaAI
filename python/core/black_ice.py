@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 
 from python.core.shadow_gossip import get_mesh_agent
@@ -22,16 +23,19 @@ class BlackICE:
         """
         Initiates a feedback loop on the target IP, effectively de-syncing it from the Sanctuary.
         """
-        expiry = time.time() + cls.FEEDBACK_LOOP_DURATION
-        cls.NEUTRALIZED_TARGETS[ip] = expiry
+        is_training = os.getenv("ABYSS_TRAINING_MODE", "false").lower() == "true"
 
-        logger.error(f"⚔️ BLACK_ICE ALERT: Feedback loop manifested on target {ip}. Reason: {threat_type}")
-        print(f"!!! BLACK_ICE_ACTIVE: Target neutralized: {ip} !!!")
+        if not is_training:
+            expiry = time.time() + cls.FEEDBACK_LOOP_DURATION
+            cls.NEUTRALIZED_TARGETS[ip] = expiry
+            logger.error(f"⚔️ BLACK_ICE ALERT: Feedback loop manifested on target {ip}. Reason: {threat_type}")
+            print(f"!!! BLACK_ICE_ACTIVE: Target neutralized: {ip} !!!")
+        else:
+            logger.warning(f"🛡️ [TRAINING_MODE] Simulated feedback loop on target {ip}. Reason: {threat_type}")
+            print(f">>> [SIMULATION] Target {ip} would have been neutralized.")
 
         # Whisper to the shadow mesh
-        gossip_agent.whisper(
-            {"action": "NEUTRALIZE", "target": ip, "threat": threat_type, "ttl": cls.FEEDBACK_LOOP_DURATION}
-        )
+        gossip_agent.whisper({"action": "NEUTRALIZE", "target": ip, "threat": threat_type, "training": is_training})
 
     @classmethod
     def is_target_neutralized(cls, ip: str) -> bool:
