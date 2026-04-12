@@ -59,18 +59,24 @@ class CognitiveGateway:
                 signal = payload.get("data", {})
 
                 # Identify layer based on payload structure
-                if "cpu_usage" in signal:
+                if "verified_sig" in signal:
                     self.update_signal(
                         "rust_layer",
                         {
                             "resonance": signal.get("resonance_index", 0.0),
-                            "cpu": signal.get("cpu_usage", 0.0),
+                            "kernel_health": signal.get("kernel_health", "UNKNOWN"),
+                            "verified_sig": signal.get("verified_sig", ""),
                             "status": "ACTIVE",
                         },
                     )
-                elif "shield" in signal:
+                elif "shield" in signal or "sig" in signal:
                     self.update_signal(
-                        "c_layer", {"resonance": signal.get("resonance", 0.0), "status": signal.get("shield", "OFF")}
+                        "c_layer",
+                        {
+                            "resonance": signal.get("resonance", 0.0),
+                            "status": signal.get("shield", "OFF"),
+                            "kernel_sig": signal.get("sig", ""),
+                        },
                     )
 
             except TimeoutError:
