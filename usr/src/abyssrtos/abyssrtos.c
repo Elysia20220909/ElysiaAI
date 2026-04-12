@@ -10,6 +10,7 @@
 #define MAX_TASKS 12
 #define MAX_LOGIN_ATTEMPTS 3
 #define TICK_DELAY_MS 500
+#define AEGIS_RESONANCE_SECRET 0x2026BEEF
 
 // ==================== Kernel Types ====================
 typedef struct {
@@ -40,6 +41,15 @@ bool uart_init() { serial_print("[INIT] UART_GENET_0: READY\n"); return true; }
 bool net_init() { serial_print("[INIT] AEGIS_NET_LINK: PROBING...\n"); return true; }
 bool gpio_init() { serial_print("[INIT] BCM_GPIO_CONTROLLER: ACTIVE\n"); return true; }
 
+// --- Phase 27: Aegis Signing Engine ---
+uint32_t calculate_resonance_sig(uint32_t uptime, float stability) {
+    // Simple PJW-like hashing for resonance verification
+    uint32_t hash = AEGIS_RESONANCE_SECRET;
+    hash = ((hash << 5) + hash) + uptime;
+    hash = ((hash << 5) + hash) + (uint32_t)(stability * 1000.0f);
+    return hash;
+}
+
 // ==================== Kernel Logic ====================
 
 void add_task(int id, const char* name, void (*func)(), int priority) {
@@ -67,8 +77,10 @@ void telemetry_task() {
     // Phase 17 Enhanced Telemetry
     static int mem_usage = 1024;
     mem_usage = 1024 + (system_uptime % 50);
-    printf("TELEMETRY:{\"uptime\":%d,\"human_score\":%d,\"stability\":%.4f,\"tasks\":%d,\"load\":%d,\"mem\":%d,\"phase\":17,\"state\":\"INFINITE\"}\n", 
-           system_uptime, human_score, resonance_stability, task_count, 10 + (system_uptime % 5), mem_usage);
+    uint32_t sig = calculate_resonance_sig(system_uptime, resonance_stability);
+    
+    printf("TELEMETRY:{\"uptime\":%u,\"human_score\":%d,\"stability\":%.4f,\"tasks\":%d,\"mem\":%d,\"sig\":\"%08X\"}\n", 
+           system_uptime, human_score, resonance_stability, task_count, mem_usage, sig);
 }
 
 void resonance_shield_task() {
