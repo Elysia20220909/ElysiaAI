@@ -13,6 +13,7 @@
 | **L5** | **Fog of War** | Session Privacy | `ISOLATED` |
 | **L6** | **HW Sentinel** | Hardware Locking | `BONDED` |
 | **L7** | **ZT Telemetry** | Synthetic Detection| `SCANNING` |
+| **L8** | **Shadow Gossip**| Polymorphic Mesh  | `ARMED` |
 
 ## ⚔️ Defense & Neutralization
 | Vector | Status | Neutralized | Countermeasure |

@@ -1,8 +1,11 @@
 import logging
 import time
 
+from python.core.shadow_gossip import get_mesh_agent
+
 
 logger = logging.getLogger("elysia.black_ice")
+gossip_agent = get_mesh_agent("BlackICE")
 
 
 class BlackICE:
@@ -24,6 +27,11 @@ class BlackICE:
 
         logger.error(f"⚔️ BLACK_ICE ALERT: Feedback loop manifested on target {ip}. Reason: {threat_type}")
         print(f"!!! BLACK_ICE_ACTIVE: Target neutralized: {ip} !!!")
+
+        # Whisper to the shadow mesh
+        gossip_agent.whisper(
+            {"action": "NEUTRALIZE", "target": ip, "threat": threat_type, "ttl": cls.FEEDBACK_LOOP_DURATION}
+        )
 
     @classmethod
     def is_target_neutralized(cls, ip: str) -> bool:
