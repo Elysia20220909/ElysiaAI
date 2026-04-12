@@ -8,7 +8,7 @@ import threading
 import time
 
 import network_simulation as ns
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 
@@ -164,6 +164,40 @@ async def start_simulation(config: SimulationConfig | None = None):
 async def stop_simulation():
     engine.stop()
     return {"status": "stopped", "message": "Simulation halted"}
+
+
+@app.post("/simulation/node/isolate/{name}")
+async def isolate_node(name: str):
+    """ノードを虚空に封印し、感染の拡大を物理的に遮断します。"""
+    if not engine.network:
+        raise HTTPException(400, "Simulation not initialized")
+    success = engine.network.isolate_node_by_name(name)
+    if not success:
+        raise HTTPException(404, f"Node {name} not found in grid")
+    return {"status": "isolated", "node": name}
+
+
+@app.post("/simulation/node/heal/{name}")
+async def heal_node(name: str):
+    """ノードの感染を浄化し、正常な共鳴状態に戻します。"""
+    if not engine.network:
+        raise HTTPException(400, "Simulation not initialized")
+    for node in engine.network.nodes:
+        if node.name == name:
+            node.clear_infection()
+            return {"status": "healed", "node": name}
+    raise HTTPException(404, f"Node {name} not found in grid")
+
+
+@app.post("/simulation/node/reinforce/{name}")
+async def reinforce_node(name: str, level: float = 0.9):
+    """ノードのシールドを強化し、将来の感染耐性を高めます。"""
+    if not engine.network:
+        raise HTTPException(400, "Simulation not initialized")
+    success = engine.network.adjust_security(name, level)
+    if not success:
+        raise HTTPException(404, f"Node {name} not found in grid")
+    return {"status": "reinforced", "node": name, "level": level}
 
 
 @app.get("/health")
