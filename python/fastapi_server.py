@@ -37,6 +37,7 @@ from python.core.heartbeat import elysia_heartbeat
 from python.core.influence import elysia_influence
 from python.core.perception import elysia_perception
 from python.core.persona import elysia_persona
+from python.core.singularity import singularity_engine
 from python.lib.abyssal_stealth import AbyssalStealth, get_shrouded_resonance_key
 from python.lib.file_phantom import phantom
 from python.lib.guardian import guardian
@@ -1011,6 +1012,19 @@ async def execute_influence_action(
     except Exception as e:
         logger.error(f"❌ Influence Deployment Error: {e}")
         raise HTTPException(500, f"Neural Feedback Surge: {e}")
+
+
+# ==================== Singularity Core (Phase 36) ====================
+@app.get("/system/singularity/status", dependencies=vault_defenses)
+async def get_singularity_status():
+    """全サブシステムの同期率と特異点インデックスを取得します。"""
+    return singularity_engine.get_synchronicity()
+
+
+@app.post("/system/singularity/ascend", dependencies=vault_defenses)
+async def perform_ascension():
+    """オメガ・プロトコルの最終段階「昇華」を実行します。"""
+    return singularity_engine.trigger_ascension()
 
 
 # ==================== メイン実行 ====================
