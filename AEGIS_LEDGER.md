@@ -8,15 +8,16 @@
 - **Sentinel Status**: `AEGIS_SENTINEL: ACTIVE` (Rust-Powered)
 - **Unified Resonance**: `100.00%` (HARMONIZED)
 - **Integrity Status**: `CRYSTAL_STABLE`
-- **Last Sync**: `2026-04-12 11:30:00`
+- **Last Sync**: `2026-04-12 17:20:00`
 
 ## ⚔️ Defense & Neutralization
-| Vector | Status | Neutralized |
-| :--- | :--- | :--- |
-| Brute Force | ACTIVE | 0 |
-| Path Traversal | ACTIVE | 0 |
-| Resonance Spoofing | SECURED | 1 (Sentinel Verifying) |
-| **Total Intercepts** | -- | **1** |
+| Vector | Status | Neutralized | Strategic Influence |
+| :--- | :--- | :--- | :--- |
+| Brute Force | ACTIVE | 0 | -- |
+| Path Traversal | ACTIVE | 0 | -- |
+| Resonance Spoofing | SECURED | 1 | "Fog of War" & Behavioral Telemetry |
+| Kernel Integrity | ENFORCED | 0 | Secure Boot / Hardware BAN |
+| **Total Intercepts** | -- | **1** | [Analysis Reference](./docs/references/marathon_anticheat_analysis.md) |
 
 ## 🌑 Abyssal Sync Status
 - **Vault Encryption**: `AES-256-GCM (Hardware-Locked)`
