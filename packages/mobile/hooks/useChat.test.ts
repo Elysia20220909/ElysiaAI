@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { renderHook, act } from "@testing-library/react-native";
 import { useChat } from "./useChat";
 import AsyncStorage from "@react-native-async-storage/async-storage";

@@ -30,6 +30,8 @@ int task_count = 0;
 int human_score = 0;
 uint32_t system_uptime = 0;
 float resonance_stability = 1.0f;
+float resonance_frequency = 432.0f; // Phase 17 Solfeggio frequency
+bool shield_active = true;
 
 // ==================== Driver Proxies (Aegis Link) ====================
 void serial_print(const char* msg) { printf("%s", msg); }
@@ -71,9 +73,32 @@ void telemetry_task() {
 
 void resonance_shield_task() {
     // Multi-Language Shield Protocol (Phase 17)
+    // Simulates a high-frequency filter protecting the system from cognitive noise.
+    
+    if (!shield_active) {
+        resonance_stability -= 0.05f;
+        serial_print("[WARNING] Shield Offline! Cognitive drift detected.\n");
+        return;
+    }
+
+    // Sync resonance frequency with uptime
+    resonance_frequency = 432.0f + (float)(system_uptime % 10) * 0.1f;
+    
+    // Integrity resonance check
     if (system_uptime % 15 == 0) {
-        resonance_stability = 0.99f + ((float)(system_uptime % 100) / 10000.0f);
-        serial_print("[SHIELD] Polyglot Resonance Shield: OPTIMAL\n");
+        float harmonics = (float)(system_uptime % 100) / 1000.0f;
+        resonance_stability = 0.999f + harmonics;
+        
+        char buffer[128];
+        snprintf(buffer, sizeof(buffer), "[SHIELD] Resonance Lock: %.1fHz | Stability: %.4f\n", 
+                 resonance_frequency, resonance_stability);
+        serial_print(buffer);
+    }
+
+    // Simulated memory protection check
+    if (resonance_stability < 0.95f) {
+        serial_print("[CRITICAL] Resonance harmonics failing. Re-calibrating...\n");
+        resonance_stability = 0.99f;
     }
 }
 

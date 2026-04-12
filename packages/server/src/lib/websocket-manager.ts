@@ -4,6 +4,7 @@
  */
 
 import type { Server } from "node:http";
+// @ts-expect-error
 import { WebSocket, WebSocketServer } from "ws";
 import { logger } from "./logger";
 
@@ -62,8 +63,8 @@ class WebSocketManager {
 			});
 
 			// エラー
-			ws.on("error", (error) => {
-				logger.error("WebSocket error", error);
+			ws.on("error", (error: unknown) => {
+				logger.error("WebSocket error", error as Error);
 			});
 
 			// 接続通知

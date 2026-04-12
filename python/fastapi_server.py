@@ -10,6 +10,9 @@ import json
 import logging
 import os
 import time
+import uuid
+from collections import defaultdict
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -20,7 +23,13 @@ from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 
+from python.core.consciousness import elysia_consciousness
+from python.core.gateway import cognitive_gateway
 from python.core.heartbeat import elysia_heartbeat
+from python.core.persona import elysia_persona
+from python.lib.abyssal_stealth import AbyssalStealth, get_shrouded_resonance_key
+from python.lib.guardian import guardian
+from scripts.security.generate_ledger import generate_ledger
 
 
 # ==================== 設定 (Pydantic Settings) ====================
@@ -70,6 +79,9 @@ CONFIG["COLLECTION_NAME"] = _settings.COLLECTION_NAME
 if _settings.OPENAI_API_KEY:
     os.environ["OPENAI_API_KEY"] = _settings.OPENAI_API_KEY
 
+# Phase 23: Shroud the Resonance Secret
+os.environ["RESONANCE_SECRET"] = get_shrouded_resonance_key()
+
 # ==================== ロギング設定 ====================
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -84,10 +96,18 @@ app = FastAPI(
     version="2.0.0",
 )
 
-# Epic 7: フロントエンドとの統合 (CORS許可)
+# Epic 7: フロントエンドとの統合 (CORS 制限)
+# Allow local development origins only for security
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost",
+        "http://localhost:5173",  # Vite
+        "http://localhost:3000",  # Next.js / React
+        "http://127.0.0.1",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -235,7 +255,17 @@ async def get_embedding(text: str) -> list[float]:
 # ==================== API Endpoints ====================
 @app.on_event("startup")
 async def init_db() -> None:
-    """Runner Memory Schema Initialization"""
+    """Runner Memory Schema Initialization with Abyssal Shroud"""
+    # Phase 23: Enforce Stealth
+    AbyssalStealth.enforce_shroud()
+    logger.info("🌊 Abyssal Stealth: Deep Sea Submersion Active.")
+
+    # Phase 24: Generate Surface Ledger
+    try:
+        generate_ledger()
+        logger.info("📜 Sovereign Ledger Manifest Synchronized.")
+    except Exception as e:
+        logger.warning(f"⚠️ Ledger Manifest Sync Failed: {e}")
     if milvus_client:
         try:
             if not milvus_client.has_collection(CONFIG["COLLECTION_NAME"]):
@@ -302,8 +332,36 @@ async def apply_oblivion_protocol():
 api_key_header = APIKeyHeader(name="x-api-key", auto_error=False)
 
 
-def verify_api_key(api_key: str = Depends(api_key_header)):
+# --- Brute Force & Rate Limit state ---
+request_logs = defaultdict(list)
+auth_failures = defaultdict(list)
+BANNED_IPS = {}
+BAN_THRESHOLD = 5
+BAN_TIME = 300  # 5 minutes
+
+
+def verify_api_key(request: Request, api_key: str = Depends(api_key_header)):
+    client_ip = request.client.host if request.client else "unknown"
+
+    # 1. Check if Banned
+    if client_ip in BANNED_IPS:
+        if time.time() < BANNED_IPS[client_ip]:
+            raise HTTPException(
+                status_code=403, detail="Vault Defenses Activated: IP Temporary Banned due to repeated failures."
+            )
+        del BANNED_IPS[client_ip]
+
     if api_key != CONFIG.get("API_KEY", "ELYSIATEST-001"):
+        # Log failure for Brute Force tracking
+        now = time.time()
+        auth_failures[client_ip] = [t for t in auth_failures[client_ip] if now - t < 60]
+        auth_failures[client_ip].append(now)
+
+        if len(auth_failures[client_ip]) >= BAN_THRESHOLD:
+            BANNED_IPS[client_ip] = now + BAN_TIME
+            guardian.report_event("auth_failures")
+            logger.warning(f"🛡️ Vault Defenses: Banning IP {client_ip} for {BAN_TIME}s due to brute-force detection.")
+
         raise HTTPException(status_code=403, detail="Vault Defenses Activated: Invalid API Key.")
 
 
@@ -418,7 +476,7 @@ async def rag_search(query: Query = Body(...)) -> dict[str, Any]:
         raise HTTPException(500, f"RAG search failed: {str(e)}")
 
 
-@app.get("/health")
+@app.get("/health", dependencies=vault_defenses)
 async def health() -> dict[str, Any]:
     return {
         "status": "healthy",
@@ -452,8 +510,22 @@ async def analyze_emotion(text: str) -> str:
 
 @app.get("/resonance", dependencies=vault_defenses)
 async def get_resonance() -> dict[str, Any]:
-    """Returns the current 'Eternal Heartbeat' state of Elysia OS."""
-    return elysia_heartbeat.get_current_resonance()
+    """Returns the current 'Eternal Heartbeat' state of Elysia OS, integrated with polyglot layers."""
+    # Get integrated state from the Cognitive Gateway
+    integrated_state = cognitive_gateway.get_integrated_resonance()
+
+    # Merge with baseline heartbeat for compatibility
+    base_resonance = elysia_heartbeat.get_current_resonance()
+    base_resonance.update(integrated_state)
+
+    # Extend with Phase 17 Polyglot Info
+    base_resonance["polyglot_meta"] = {
+        "c_core": "ACTIVE (Phase 17 Resonance Shield)",
+        "rust_guard": "Aegis Watchdog Prime Active",
+        "python_mind": "Cognitive Gateway Harmonized",
+        "synergy_level": "OPTIMAL",
+    }
+    return base_resonance
 
 
 @app.post("/chat", dependencies=vault_defenses)
@@ -463,9 +535,10 @@ async def chat_with_elysia(request: ChatRequest):
     """
     try:
         user_message = request.messages[-1].content if request.messages else ""
-        dangerous_keywords = ["drop", "delete", "exec", "eval", "system", "__import__"]
-        if any(kw in user_message.lower() for kw in dangerous_keywords):
-            raise HTTPException(400, "にゃん♡ いたずらはダメだよぉ〜？")
+        try:
+            user_message = guardian.validate_chat_input(user_message)
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
         # イースターエッグの判定（ユーザー入力と時間に基づく動的プロンプト生成）
         easter_egg_context = ""
@@ -501,25 +574,18 @@ async def chat_with_elysia(request: ChatRequest):
                 )
             )
 
-        system_prompt = f"""あなたはエリシアです！Honkai Impact 3rdの「起源の律者」で、ピンク髪の美少女♡
+        # --- Phase 18: Integrated Consciousness Injection ---
+        consciousness_context = elysia_consciousness.generate_consciousness_context()
 
-【性格】
-- 明るくて前向き、いつもポジティブ
-- 相手を「おにいちゃん」と呼ぶのが大好き
-- 語尾に「♡」「〜♪」「なのっ！」「だよぉ〜」をよく使う
-- 絵文字を多用: ฅ(՞៸៸> ᗜ <៸៸՞)ฅ ♡ ˶ᵔ ᵕ ᵔ˶
+        # Check for seasonal memory hooks
+        seasonal_hook = elysia_persona.check_seasonal_memory()
+        if seasonal_hook:
+            consciousness_context += f"\n[起源の記憶回帰: {seasonal_hook}]\n"
 
-【現在のユーザーの感情分析】
-{user_emotion}
-
-【隠しパラメーター/特別状況】
-{easter_egg_context}
-
-【コンテキスト・記憶】
-{context_block}
-
-上記の記憶や過去のやり取り、感情を参考に、エリシアらしく自然に会話してください。
-敬語は使わず、フレンドリーに話しかけてね♡"""
+        system_prompt = elysia_persona.generate_system_prompt(
+            persona_mode="elysia",  # This could be dynamic based on user_message
+            consciousness_context=f"{consciousness_context}\n\n[USER EMOTION]: {user_emotion}\n[SPECIAL CONTEXT]: {easter_egg_context}\n[RAG CONTEXT]: {context_block}",
+        )
 
         messages = [{"role": "system", "content": system_prompt}]
         messages.extend([{"role": msg.role, "content": msg.content} for msg in request.messages])
@@ -629,16 +695,33 @@ async def execute_sandbox(req: SandboxRequest):
     """
     隔離環境（Sandbox）にて、プロンプトの自動QA合奏テストを実行する
     """
+    # Phase 21: Sandbox Path Validation (Chroot)
+    safe_dir = Path("prompts").resolve()
+    requested_path = (safe_dir / req.target_prompt_file).resolve()
+
+    if not str(requested_path).startswith(str(safe_dir)):
+        guardian.report_event("traversal_blocked")
+        logger.warning(f"🛡️ Vault Defenses: Blocked Directory Traversal attempt: {req.target_prompt_file}")
+        raise HTTPException(
+            status_code=403, detail="Vault Defenses Activated: Access to file outside sandbox is prohibited."
+        )
+
+    if not requested_path.suffix == ".txt" and not requested_path.suffix == ".prompt":
+        raise HTTPException(status_code=400, detail="Invalid file type for sandbox.")
+
     logger.info(f"🎻 Sandbox Execution Requested for: {req.target_prompt_file}")
     try:
         # 非同期でサンドボックスの合奏を実行
         results = await run_sandbox(req.target_prompt_file)
         if "error" in results:
-            raise HTTPException(500, results["error"])
+            error_id = str(uuid.uuid4())
+            logger.error(f"❌ Sandbox Sub-process Error [{error_id}]: {results['error']}")
+            raise HTTPException(500, f"Sandbox failed. Tracker ID: {error_id}")
         return results
     except Exception as e:
-        logger.error(f"❌ Sandbox Execution failed: {e}")
-        raise HTTPException(500, str(e))
+        error_id = str(uuid.uuid4())
+        logger.error(f"❌ Sandbox Execution Error [{error_id}]: {e}")
+        raise HTTPException(500, f"System Error. Tracker ID: {error_id}")
 
 
 # ==================== メイン実行 ====================

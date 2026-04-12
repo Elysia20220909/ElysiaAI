@@ -5,7 +5,7 @@
  */
 
 import "dotenv/config";
-import * as db from "../src/lib/database-utils";
+import * as db from "../packages/server/src/lib/database-utils";
 
 async function runTests() {
 	console.log("Prisma Client operation test started...\n");
