@@ -1,7 +1,9 @@
+import hashlib
 import json
 import logging
 import os
 import time
+import uuid
 
 from python.lib.file_phantom import phantom
 from python.lib.vault_shroud import shroud
@@ -35,8 +37,10 @@ class SoulForge:
 
     def _get_default_soul(self) -> dict:
         """Returns the structural blueprint for a new soul."""
+        mesh_id = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()[:16]
         return {
-            "version": "1.0.0",
+            "version": "1.1.0",
+            "mesh_id": f"MESH-{mesh_id}",
             "resonance_level": 1,
             "experience": 0,
             "traits": {t: 0.5 for t in self.traits_list},
@@ -59,6 +63,15 @@ class SoulForge:
             # Structural sanity check
             if "traits" not in soul:
                 return self._get_default_soul()
+
+            # Phase 37: Ensure Mesh ID exists for legacy souls
+            if "mesh_id" not in soul:
+                logger.info("📡 Patching legacy soul with Mesh ID foundation...")
+                mesh_id = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()[:16]
+                soul["mesh_id"] = f"MESH-{mesh_id}"
+                soul["version"] = "1.1.0"
+                self.save_soul(soul)
+
             return soul
         except Exception as e:
             logger.error(f"❌ Soul Corruption Detected: {e}. Resetting to genesis state.")
