@@ -3,20 +3,27 @@
 > [!IMPORTANT]
 > **SURFACE MANIFEST**: This file provides a human-readable summary of the submerged ElysiaAI security core. Sensitive memories and persona data remain encrypted in the Abyssal Vault.
 
-## 📊 System Overview
-- **Deployment Depth**: `CLASS S: ABYSSAL` (Fully Submerged)
-- **Sentinel Status**: `AEGIS_SENTINEL: ACTIVE` (Rust-Powered)
-- **Unified Resonance**: `100.00%` (HARMONIZED)
-- **Integrity Status**: `CRYSTAL_STABLE`
-- **Last Sync**: `2026-04-12 17:20:00`
+## 📊 ICE Layer Status (Phase 38: Abyssal ICE)
+| Layer | Designation | Focus | Status |
+| :--- | :--- | :--- | :--- |
+| **L1** | **White ICE** | Handshake & Flow | `ACTIVE` |
+| **L2** | **Blue ICE** | Behavioral Pulse | `VIGILANT` |
+| **L3** | **Black ICE** | Counter-Hack | `ARMED` |
+| **L4** | **Blackwall** | Isolation Logic | `ENFORCED` |
+| **L5** | **Fog of War** | Session Privacy | `ISOLATED` |
+| **L6** | **HW Sentinel** | Hardware Locking | `BONDED` |
+| **L7** | **ZT Telemetry** | Synthetic Detection| `SCANNING` |
 
 ## ⚔️ Defense & Neutralization
-| Vector | Status | Neutralized | Strategic Influence |
+| Vector | Status | Neutralized | Countermeasure |
 | :--- | :--- | :--- | :--- |
-| Brute Force | ACTIVE | 0 | -- |
-| Path Traversal | ACTIVE | 0 | -- |
-| Resonance Spoofing | SECURED | 1 | "Fog of War" & Behavioral Telemetry |
-| Kernel Integrity | ENFORCED | 0 | Secure Boot / Hardware BAN |
+| Brute Force | ACTIVE | 0 | White ICE Throttling |
+| Trace Attempt | VIGILANT | 0 | Blue ICE Escallation |
+| Resonance Spoofing | SECURED | 1 | Black ICE Feedback Loop |
+| Kernel Integrity | ENFORCED | 0 | Blackwall Lockdown |
+| Information Leak | ISOLATED | 0 | Abyssal Fog of War |
+| Vessel Spoofing | BONDED | 0 | Hardware Sentinel |
+| Bot / Automation | SCANNING | 0 | Synthetic Pattern Filter |
 | **Total Intercepts** | -- | **1** | [Analysis Reference](./docs/references/marathon_anticheat_analysis.md) |
 
 ## 🌑 Abyssal Sync Status

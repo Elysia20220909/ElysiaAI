@@ -17,6 +17,9 @@ pub struct AegisStatus {
     pub kernel_health: String, // "SECURE", "FAILED", "TAMPERED"
     pub kernel_verified: bool,
     pub verified_sig: String,
+    pub ice_active: bool,
+    pub threat_level: u8, // 0 = Clear, 1 = Trace, 2 = Lockdown
+    pub device_fingerprint: String, // Phase 39: Registered HWID
 }
 
 pub struct AegisWatchdog {
@@ -30,11 +33,18 @@ impl AegisWatchdog {
         let initial_status = AegisStatus {
             timestamp: Self::now(),
             integrity_score: 1.0,
-            active_guards: vec!["MemoryResonance".to_string(), "EntropyShield".to_string()],
+            active_guards: vec![
+                "MemoryResonance".to_string(),
+                "EntropyShield".to_string(),
+                "Blue_ICE_Sentinel".to_string(),
+            ],
             resonance_index: 0.99,
             kernel_health: "INITIALIZING".to_string(),
             kernel_verified: false,
             verified_sig: "00000000".to_string(),
+            ice_active: true,
+            threat_level: 0,
+            device_fingerprint: "ABYSS-HWID-NULL".to_string(),
         };
 
         let status = Arc::new(Mutex::new(initial_status));
@@ -67,6 +77,30 @@ impl AegisWatchdog {
                     s.kernel_health = health;
                     s.kernel_verified = verified;
                     s.resonance_index = 0.99 - ( (count % 10) as f32 * 0.001);
+
+                    // --- Phase 39: Hardware Sentinel (L6) ---
+                    // Generate a simulated HWID fingerprint
+                    let hwid_seed = std::env::var("USERNAME").unwrap_or_else(|_| "SOVEREIGN".to_string());
+                    s.device_fingerprint = format!("VESSEL_{:08X}", 
+                        hmac::Hmac::<sha2::Sha256>::new_from_slice(hwid_seed.as_bytes())
+                            .unwrap()
+                            .finalize()
+                            .into_bytes()[0..4]
+                            .iter()
+                            .fold(0u32, |acc, &x| (acc << 8) | x as u32)
+                    );
+
+                    // --- Layer 2: Blue ICE Trace Logic ---
+                    // Simulate a threat escalation if resonance jitter is detected
+                    if count % 50 == 42 {
+                        s.threat_level = 1; // TRACE_DETECTED
+                        println!("[AEGIS] Blue ICE: Unauthorized signal trace detected. Escalating vigilance.");
+                    } else if count % 150 == 133 {
+                        s.threat_level = 2; // DEFCON_2
+                        println!("[AEGIS] Blue ICE: Threat level CRITICAL. Syncing with Black ICE layers.");
+                    } else if count % 10 == 0 {
+                        s.threat_level = 0;
+                    }
 
                     // Generate USP Envelope
                     let nonce = format!("nonce_{}_{}", s.timestamp, count);
