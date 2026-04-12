@@ -136,3 +136,4 @@ prisma.config.mjs.bak
 __pycache__/
 *.pyc
 packages/server/src/core/system/.abyss/network_simulation.py
+packages/server/src/core/system/.abyss/network_simulation.py
