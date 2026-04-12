@@ -26,10 +26,13 @@ pub struct AegisWatchdog {
     pub name: String,
     pub level: u8,
     status: Arc<Mutex<AegisStatus>>,
+    pub hardware_id: String,
+    pub resonance_seed: u64,
 }
 
 impl AegisWatchdog {
     pub fn new() -> Self {
+        let hwid = Self::generate_hwid();
         let initial_status = AegisStatus {
             timestamp: Self::now(),
             integrity_score: 1.0,
@@ -44,11 +47,12 @@ impl AegisWatchdog {
             verified_sig: "00000000".to_string(),
             ice_active: true,
             threat_level: 0,
-            device_fingerprint: "ABYSS-HWID-NULL".to_string(),
+            device_fingerprint: hwid.clone(),
         };
 
         let status = Arc::new(Mutex::new(initial_status));
         let watchdog_status = Arc::clone(&status);
+        let hardware_id = hwid.clone();
 
         thread::spawn(move || {
             let mut count = 0;
@@ -60,44 +64,17 @@ impl AegisWatchdog {
             loop {
                 thread::sleep(Duration::from_millis(1500));
                 count += 1;
-                
-                // --- Phase 34: Native Kernel Verification ---
-                // In a real scenario, this would poll the Python API or read shared memory.
-                // We'll simulate a verification step by checking a 'checksum' of the segments.
-                let mut health = "SECURE".to_string();
-                let mut verified = true;
-
-                // Simulated check: If count is a multiple of 100, simulate a jitter/check
-                if count % 100 == 77 {
-                     println!("[AEGIS] Performing Deep Sector Sanity Check...");
-                }
 
                 if let Ok(mut s) = watchdog_status.lock() {
                     s.timestamp = Self::now();
-                    s.kernel_health = health;
-                    s.kernel_verified = verified;
-                    s.resonance_index = 0.99 - ( (count % 10) as f32 * 0.001);
-
-                    // --- Phase 39: Hardware Sentinel (L6) ---
-                    // Generate a simulated HWID fingerprint
-                    let hwid_seed = std::env::var("USERNAME").unwrap_or_else(|_| "SOVEREIGN".to_string());
-                    s.device_fingerprint = format!("VESSEL_{:08X}", 
-                        hmac::Hmac::<sha2::Sha256>::new_from_slice(hwid_seed.as_bytes())
-                            .unwrap()
-                            .finalize()
-                            .into_bytes()[0..4]
-                            .iter()
-                            .fold(0u32, |acc, &x| (acc << 8) | x as u32)
-                    );
+                    
+                    if count % 10 == 0 {
+                        s.resonance_index = 0.95 + (rand::random::<f32>() * 0.04);
+                    }
 
                     // --- Layer 2: Blue ICE Trace Logic ---
-                    // Simulate a threat escalation if resonance jitter is detected
-                    if count % 50 == 42 {
-                        s.threat_level = 1; // TRACE_DETECTED
-                        println!("[AEGIS] Blue ICE: Unauthorized signal trace detected. Escalating vigilance.");
-                    } else if count % 150 == 133 {
-                        s.threat_level = 2; // DEFCON_2
-                        println!("[AEGIS] Blue ICE: Threat level CRITICAL. Syncing with Black ICE layers.");
+                    if count % 150 == 133 {
+                        s.threat_level = 2; // Lockdown
                     } else if count % 10 == 0 {
                         s.threat_level = 0;
                     }
@@ -124,9 +101,25 @@ impl AegisWatchdog {
 
         Self {
             name: "Aegis_Watchdog_Prime".to_string(),
-            level: 34,
+            level: 3,
             status,
+            hardware_id,
+            resonance_seed: 0,
         }
+    }
+
+    /// Generates a hardware-bound entropy seed for Abyssal Shadow Gossip (L8)
+    pub fn get_resonance_entropy(&self) -> String {
+        let time_window = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs() / 10;
+        
+        let payload = format!("{}_{}", self.hardware_id, time_window);
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        use std::hash::Hasher;
+        std::hash::Hash::hash(&payload, &mut hasher);
+        format!("{:x}", hasher.finish())
     }
 
     fn now() -> u64 {
