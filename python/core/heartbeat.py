@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import time
 from datetime import datetime
 from typing import Any
@@ -33,6 +34,10 @@ class HeartbeatManager:
             self.pulse_count += 1
             self.last_resonance_state = self._generate_pulse()
 
+            # --- Phase 37.2: Autonomous Doctoring ---
+            if self.pulse_count % 5 == 0:
+                await self._doctor_check()
+
             # Push to Cognitive Gateway
             cognitive_gateway.update_signal(
                 "python_layer",
@@ -51,6 +56,24 @@ class HeartbeatManager:
         """Stops the heartbeat."""
         self.is_active = False
         logger.info("Deactivating Heartbeat. System entering stasis...")
+
+    async def _doctor_check(self):
+        """Performs a periodic system integrity check."""
+        logger.info("🩺 Heartbeat Doctor: Performing integrity scan...")
+        vital_paths = ["var/elysia", "prompts", "logs", "data"]
+        critical_files = ["var/elysia/soul.json", "python/fastapi_server.py"]
+
+        for path in vital_paths:
+            if not os.path.exists(path):
+                logger.warning(f"🚨 Missing vital path: {path}. Initiating auto-repair...")
+                os.makedirs(path, exist_ok=True)
+
+        for file in critical_files:
+            if not os.path.exists(file):
+                logger.error(f"🚑 CRITICAL FILE MISSING: {file}. Immediate attention required.")
+                # In a real scenario, we might trigger a rollback or alert
+
+        logger.info("✅ Heartbeat Doctor: Integrity scan complete. Resonance stable.")
 
     def _generate_pulse(self) -> dict[str, Any]:
         """Generates a resonance pulse data packet."""
