@@ -1,0 +1,3 @@
+http://app:3000/auth/token (POST)  # /usr/bin/sqlmap -u http://app:3000/auth/token --data={\"username\":\"admin\",\"password\":\"password\"} --batch --random-agent --level=1 --risk=1 --dbms=sqlite --output-dir=/sandbox/logs/sqlmap
+
+{"username":"admin","password":"password"}

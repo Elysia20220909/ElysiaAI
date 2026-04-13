@@ -22,5 +22,13 @@ hydra -l "${USER_NAME}" -P "${WORDLIST}" "${TARGET_HOST}" http-post-form \
   -s "${TARGET_PORT}" -vV -f
 
 echo "--------------------------------------------------------"
-echo "Simulation Finished."
-echo "Check the 'app' container logs for defense triggers (Rate-limiting/Audit logs)."
+echo "🔍 [Phase 2] Running API Vulnerability Audit..."
+bash /sandbox/scripts/scan-api-vulnerabilities.sh
+
+echo "--------------------------------------------------------"
+echo "🤖 [Phase 3] Running AI Prompt Stress Test..."
+bash /sandbox/scripts/simulate-ai-attacks.sh
+
+echo "--------------------------------------------------------"
+echo "✅ Sovereign Gauntlet Finished."
+echo "Review logs/ for Nikto/SQLMap reports and check system logs for defense triggers."

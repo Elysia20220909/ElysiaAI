@@ -1,0 +1,44 @@
+- Nikto v2.6.0/
++ Target Host: 
++ Target Port: 3000
++ GET ERROR: Cannot resolve hostname 'app' because 'No address associated with hostname'.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: 
++ Target Port: 3000
++ GET ERROR: Cannot resolve hostname 'app' because 'No address associated with hostname'.
+- Nikto v2.6.0/
++ Target Host: 
++ Target Port: 3000
++ GET ERROR: Cannot resolve hostname 'app' because 'No address associated with hostname'.
+- Nikto v2.6.0/
++ Target Host: 
++ Target Port: 3000
++ GET ERROR: Cannot resolve hostname 'app' because 'No address associated with hostname'.
+- Nikto v2.6.0/
++ Target Host: 
++ Target Port: 3000
++ GET ERROR: Cannot resolve hostname 'app' because 'No address associated with hostname'.
+- Nikto v2.6.0/
++ Target Host: 
++ Target Port: 3000
++ GET ERROR: Cannot resolve hostname 'app' because 'No address associated with hostname'.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.

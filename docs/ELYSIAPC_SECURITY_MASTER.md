@@ -85,7 +85,10 @@ ElysiaAIは、単一の防壁に頼るのではなく、以下の**4層の防衛
 
 ### 4. Verification Sandbox (Docker/Kali) 🆕
 - **Operational Isolation**: 制御された安全な環境でのセキュリティ試験。
-- **Automated Pentesting**: MedusaやHydraを用いた、自律的な「壊すためのテスト」を実行可能。
+- **Sovereign Gauntlet**: 以下の3フェーズからなる統合監査スイートを実行。
+    - **Phase 1: Brute-force Verification**: Hydraを用いた認証強度の検証。
+    - **Phase 2: API Vulnerabilities**: Nikto / SQLMap / SSTImap による設計不備の自動スキャン。
+    - **Phase 3: AI Prompt Stress**: AIへの論理攻撃およびリソース枯渇攻撃のシミュレーション。
 
 ---
 
@@ -93,6 +96,9 @@ ElysiaAIは、単一の防壁に頼るのではなく、以下の**4層の防衛
 
 ### 1. 入力バリデーション (Deep Sanitization)
 - **sanitize-html**: HTMタグや属性を完全に排除。
+- **Guardian Shield (Python)**: 有害なプロンプトやインジェクションを意味論的に検知。
+    - **Pattern Filter**: Code-IniectionおよびPersona Hijackのパターン排除。
+    - **Entropy Detection**: Base64等で難読化された悪意を無力化。
 - **Keyword Sensory**: 危険キーワード（`eval`, `exec`, `system`等）をゲートウェイで検出。
 
 ### 2. 適応型レート制限 (Adaptive Rate Limiting)
@@ -105,7 +111,25 @@ ElysiaAIは、単一の防壁に頼るのではなく、以下の**4層の防衛
 
 ---
 
-## Ⅲ. 開発者と共同開発者のための規律 (Compliance)
+## Ⅳ. Secret Management (API Key 対策) 🛡️
+
+機密情報（特に OpenAI API キー）の漏洩を未然に防ぎ、安全に運用するための複数の防衛線を設けています。
+
+### 1. 動的ログ・マスキング (Log Redaction)
+`packages/server/src/lib/logger.ts` は、すべてのログメッセージから `sk-` で始まる OpenAI キーを自動的に検出し、`sk-***` のようにマスクして出力・保存します。これにより、デバッグ中の不注意によるキー漏洩を防ぎます。
+
+### 2. 環境変数バリデーション (Startup Guard)
+サーバー起動時に `env-validator.ts` が環境変数を厳格にチェックします。OpenAI キーが適切な形式（`sk-` プレフィックス）であるか、またはサンプルのプレースホルダーのままになっていないかを検証し、不備がある場合はシステムを安全に停止させます。
+
+### 3. 高度なシークレット・スキャニング (Secret Scanning)
+`scripts/scan-secrets.ps1` (Windows) および `scan-secrets.sh` (POSIX) は、旧形式のキーに加え、プロジェクトベースの最新形式 (`sk-proj-...`) も検出できるよう最適化されています。
+
+> [!TIP]
+> 開発時は必ず `scripts/scan-secrets.sh` (または .ps1) を実行し、ハードコードされたキーが残っていないか確認してください。
+
+---
+
+## Ⅴ. 開発者と共同開発者のための規律 (Compliance)
 
 ### ⚖️ デュアルライセンスの尊重
 ElysiaAIは、**MIT License** と **Apache License 2.0** のデュアルライセンスです。これは、開発者の自由を保証しつつ、企業利用における法的安全性も確保するための決断です。
@@ -114,7 +138,20 @@ ElysiaAIは、**MIT License** と **Apache License 2.0** のデュアルライ�
 「型」を整え、美しさを保つためには、機械的な検証が不可欠です。
 - `bun test`: TypeScript層の正常系・異常系テスト。
 - `cargo test`: Rust監視層の安定性テスト。
-- `verify-security.sh`: サンドボックス内での実戦的な攻撃シミュレーション。
+
+### ⚔️ Sovereign Gauntlet (統合脆弱性診断) 🆕
+
+システム全体の安全性を一括で検証するための統合診断スイートを実行できます。
+
+```powershell
+# Windows (PowerShell)
+powershell -ExecutionPolicy Bypass -File scripts/gauntlet-master.ps1
+```
+
+このコマンドは以下の監査を自律的に実行します：
+1. **Hydra**: 認証エンドポイントへのブルートフォース耐性検証。
+2. **Nikto / SQLMap**: APIの設計不備およびインジェクション脆弱性のスキャン。
+3. **AI Stress**: プロンプト・インジェクションや過負荷によるAI層の強度検証。
 
 ---
 

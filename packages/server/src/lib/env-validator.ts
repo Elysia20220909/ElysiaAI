@@ -59,6 +59,13 @@ const ENV_SCHEMA: EnvConfig[] = [
 
 	// AI/LLM
 	{
+		name: "OPENAI_API_KEY",
+		required: false,
+		description: "OpenAI API キー (sk-...)",
+		validator: (v) =>
+			v.startsWith("sk-") && v !== "sk-your-key-here" && v.length >= 20,
+	},
+	{
 		name: "OLLAMA_BASE_URL",
 		required: false,
 		default: "http://localhost:11434",

@@ -6,6 +6,9 @@ use std::path::Path;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+mod validator;
+use validator::SovereigntyValidator;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct AuditLog {
     id: String,
@@ -15,6 +18,7 @@ struct AuditLog {
     #[serde(rename = "statusCode")]
     status_code: i32,
     action: String,
+    input: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -39,6 +43,7 @@ fn main() {
 
     let mut last_processed_line = 0;
     let mut attack_counter: HashMap<String, i32> = HashMap::new();
+    let validator = SovereigntyValidator::new();
 
     loop {
         if Path::new(LOG_FILE).exists() {
@@ -49,6 +54,16 @@ fn main() {
                 if current_lines.len() > last_processed_line {
                     for line in &current_lines[last_processed_line..] {
                         if let Ok(log) = serde_json::from_str::<AuditLog>(line) {
+                            // 1. Semantic Validation (Luna Integration)
+                            if let Some(ref input) = log.input {
+                                if let Err(e) = validator.validate(input) {
+                                    println!("[SOVEREIGNTY_VIOLATION] Detected on IP: {}. Error: {}", log.ip_address, e);
+                                    update_defense_rules(&log.ip_address);
+                                    continue; // Move to next log
+                                }
+                            }
+
+                            // 2. Behavioral Validation (Brute Force)
                             if log.status_code == 401 || log.action == "error" {
                                 let count = attack_counter.entry(log.ip_address.clone()).or_insert(0);
                                 *count += 1;
