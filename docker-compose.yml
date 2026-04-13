@@ -46,6 +46,8 @@ services:
     volumes:
       - ./logs:/sandbox/logs
       - ./scripts:/sandbox/scripts
+    tty: true
+    command: tail -f /dev/null
 
   # Sovereign Defense Monitor (Rust Agent)
   shield-agent:
