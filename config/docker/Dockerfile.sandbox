@@ -17,8 +17,11 @@ RUN apt-get update && \
     hydra \
     metasploit-framework \
     sqlmap \
+    nikto \
+    sstimap \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
-
+ 
 WORKDIR /sandbox
 
 # Copy some verification scripts if any (stub)
