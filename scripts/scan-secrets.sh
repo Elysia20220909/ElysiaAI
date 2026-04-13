@@ -6,7 +6,7 @@
 echo "🔍 Scanning for secrets and hardcoded keys..."
 
 DANGEROUS_PATTERNS=(
-    "sk-[a-zA-Z0-9]{48}"         # OpenAI
+    "sk-(proj-)?[a-zA-Z0-9_-]{48,}"         # OpenAI (Legacy & Project)
     "AIza[0-9A-Za-z\\-_]{35}"    # Google Cloud
     "gh[p|o|u|s|r]_[a-zA-Z0-9]{36,255}" # GitHub
     "ey[a-zA-Z0-9._-]{10,}"      # Potential JWT/Bearer

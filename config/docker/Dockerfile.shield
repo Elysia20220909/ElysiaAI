@@ -2,7 +2,17 @@
 # Sovereign Defense Monitoring Agent (Rust)
 # Part of the Grand Design initiative.
 
-FROM rust:1.75-slim AS builder
+FROM python:3.11-bookworm AS builder
+
+# Install Rust toolchain
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    libssl-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /build
 
@@ -17,7 +27,7 @@ COPY packages/shield-agent/src ./src
 RUN cargo build --release
 
 # Final Image
-FROM debian:bookworm-slim
+FROM python:3.11-bookworm
 
 WORKDIR /app
 
