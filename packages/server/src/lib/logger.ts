@@ -53,12 +53,48 @@ class Logger {
 		return this.levelPriority[level] >= this.levelPriority[this.minLevel];
 	}
 
+	/**
+	 * シークレット（OpenAIキー等）をマスクする
+	 */
+	// biome-ignore lint/suspicious/noExplicitAny: generic data masking
+	private maskSecrets(data: any): any {
+		if (typeof data === "string") {
+			// OpenAI API Key (sk-...)
+			return data.replace(/sk-[a-zA-Z0-9-]{12,}/g, (match) => {
+				const prefix = match.startsWith("sk-proj-") ? "sk-proj-" : "sk-";
+				return `${prefix}***`;
+			});
+		}
+
+		if (data && typeof data === "object") {
+			// biome-ignore lint/suspicious/noExplicitAny: generic data masking
+			const masked: any = Array.isArray(data) ? [] : {};
+			for (const key in data) {
+				masked[key] = this.maskSecrets(data[key]);
+			}
+			return masked;
+		}
+
+		return data;
+	}
+
 	private formatLog(entry: LogEntry): string {
-		return `${JSON.stringify(entry)}\n`;
+		const maskedEntry = {
+			...entry,
+			message: this.maskSecrets(entry.message),
+			context: entry.context ? this.maskSecrets(entry.context) : undefined,
+		};
+		return `${JSON.stringify(maskedEntry)}\n`;
 	}
 
 	private writeLog(entry: LogEntry) {
 		if (!this.shouldLog(entry.level)) return;
+
+		// ログ出力前に機密情報をマスク
+		const maskedMessage = this.maskSecrets(entry.message);
+		const maskedContext = entry.context
+			? this.maskSecrets(entry.context)
+			: undefined;
 
 		const colors: Record<LogLevel, string> = {
 			trace: "\x1b[90m",
@@ -72,8 +108,8 @@ class Logger {
 		const color = colors[entry.level];
 
 		console.log(
-			`${color}[${entry.level.toUpperCase()}]${reset} ${entry.timestamp} ${entry.message}`,
-			entry.context ? entry.context : "",
+			`${color}[${entry.level.toUpperCase()}]${reset} ${entry.timestamp} ${maskedMessage}`,
+			maskedContext ? maskedContext : "",
 		);
 
 		try {

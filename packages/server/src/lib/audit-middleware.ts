@@ -16,6 +16,7 @@ interface AuditData {
 	startTime: number;
 	url: string;
 	method: string;
+	input?: string;
 }
 
 // WeakMapで型安全にリクエストデータを保存
@@ -43,10 +44,19 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 			}
 
 			// リクエスト情報を一時保存（型安全なWeakMap使用）
+			// biome-ignore lint/suspicious/noExplicitAny: complex object needs cast
+			const body = context.body as any;
+			const input =
+				body?.text ||
+				body?.content ||
+				body?.query ||
+				(typeof body === "string" ? body : undefined);
+
 			auditDataMap.set(request, {
 				startTime: Date.now(),
 				url: url.pathname,
 				method: request.method,
+				input,
 			});
 		},
 
@@ -102,6 +112,7 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 					"127.0.0.1",
 				userAgent: request.headers.get("user-agent") || "unknown",
 				statusCode,
+				input: auditData.input,
 			});
 
 			// 一時データをクリア（WeakMapから削除）
