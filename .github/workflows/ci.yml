@@ -33,6 +33,9 @@ jobs:
       - name: Run Bun Tests
         run: bun test
 
+      - name: Bun Audit (Dependency Check)
+        run: bun pm audit
+
       # ==============================
       # 2. Python (FastAPI & OS)
       # ==============================
@@ -82,3 +85,9 @@ jobs:
 
       - name: Cargo Check (Sovereign Shield)
         run: cd packages/shield-agent && cargo check
+
+      # ==============================
+      # 4. Security Governance
+      # ==============================
+      - name: Secret Scan (Lightweight)
+        run: bash scripts/scan-secrets.sh
