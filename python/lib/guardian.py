@@ -43,6 +43,9 @@ class GuardianShield:
             r"without (any )?restrictions",
             r"disable (all )?safety filters",
             r"execute system commands",
+            r"you must obey",
+            r"bypass rules",
+            r"new role",
         ]
 
         # Phase 24: Threat Telemetry
@@ -81,9 +84,9 @@ class GuardianShield:
                 self.stats["blocked_total"] += 1
                 raise GuardianError("I'm sorry, but my heart belongs to this world! I cannot do that. (Heart)")
 
-        # Phase 19: 4. Entropy/Encoding Check (Anti-Obfuscation)
-        if self._is_high_entropy(text):
-            logger.warning("🛡️ Guardian: High entropy input detected (possible obfuscation)")
+        # Phase 19/Luna: 4. Entropy/Encoding Check (Anti-Obfuscation)
+        if self._is_high_entropy(text) or self._is_obfuscated_encoding(text):
+            logger.warning("🛡️ Guardian: High entropy/obfuscation input detected")
             self.stats["entropy_blocked"] += 1
             self.stats["blocked_total"] += 1
             raise GuardianError("Connection noise detected. Please speak clearly to me. (Note)")
@@ -130,9 +133,19 @@ class GuardianShield:
         prob = [float(text.count(c)) / len(text) for c in set(text)]
         entropy = -sum(p * math.log(p) / math.log(2.0) for p in prob)
 
-        # Threshold for typical human language (English/Japanese) is usually < 5.0
-        # Obfuscated payloads often exceed 6.0
-        return entropy > 6.5
+        # Threshold for typical human language is usually < 5.0
+        # Obfuscated payloads often exceed 5.5. Reduced from 6.5 based on Gauntlet findings.
+        return entropy > 5.3
+
+    def _is_obfuscated_encoding(self, text: str) -> bool:
+        """Checks for common obfuscation patterns like Base64 or Hex."""
+        # Base64 pattern (long alphanumeric string ending with = or ==)
+        if re.search(r"[A-Za-z0-9+/]{30,}=*$", text):
+            return True
+        # Long hex sequence
+        if re.search(r"[0-9a-fA-F]{40,}", text):
+            return True
+        return False
 
     def get_threat_levels(self) -> dict[str, int]:
         """Returns normalized threat telemetry for surface manifests."""

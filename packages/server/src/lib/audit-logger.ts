@@ -19,6 +19,7 @@ interface AuditLog {
 	ipAddress: string;
 	userAgent: string;
 	statusCode: number;
+	input?: string;
 	before?: unknown;
 	after?: unknown;
 	error?: string;
