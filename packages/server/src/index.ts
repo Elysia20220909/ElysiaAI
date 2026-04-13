@@ -151,19 +151,67 @@ app
 		}),
 	)
 	.use(html())
-	// Telemetry and metrics middleware
+	// Telemetry, Security and Identity middleware
 	// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
 	.onBeforeHandle(({ request, error }: any) => {
 		const ip =
 			request.headers.get("x-forwarded-for") ||
 			request.headers.get("x-real-ip") ||
-			"anon";
+			"127.0.0.1";
 
+		// 1. Sovereign Defense Check (Alpha Protocol)
 		if (defenseManager.isBlocked(ip)) {
 			logger.warn(`🛑 Blocked request from flagged IP: ${ip}`);
 			return error(403, "Access denied by Alpha Protocol (Shield Agent)");
 		}
 
+		// 2. Adaptive Rate Limiting Check
+		const url = new URL(request.url).pathname;
+		const rateLimit = advancedRateLimiter.checkRateLimit(ip, url);
+		if (!rateLimit.allowed) {
+			logger.warn(`⏳ Rate limit exceeded for IP: ${ip} on ${url}`);
+			return error(429, rateLimit.reason || "Too Many Requests");
+		}
+	})
+	/**
+	 * 🌸 Global Error Handler (Software Quality Management)
+	 * 本番環境での技術情報の漏洩を防ぎ、AIキャラクターに合わせた一貫したエラー応答を返します。
+	 */
+	.error(({ code, error: rawError, set }) => {
+		const timestamp = new Date().toISOString();
+		const isProduction = process.env.NODE_ENV === "production";
+
+		// 本番環境では詳細なスタックトレースを隠蔽
+		const message = isProduction
+			? "ごめんなさい、ちょっと考えがまとまらなくて……もう一度教えてもらえますか？"
+			: rawError.message;
+
+		logger.error(`[${code}] Global Error Caught`, {
+			error: rawError.message,
+			stack: isProduction ? undefined : rawError.stack,
+		});
+
+		set.headers["content-type"] = "application/json";
+
+		switch (code) {
+			case "NOT_FOUND":
+				return {
+					error: "その場所は見つかりませんでした",
+					status: 404,
+					timestamp,
+				};
+			case "VALIDATION":
+				return {
+					error: "入力された形式が正しくないみたいです",
+					status: 400,
+					timestamp,
+				};
+			default:
+				return { error: message, status: 500, timestamp };
+		}
+	})
+	// biome-ignore lint/suspicious/noExplicitAny: Elysia internal request context type not exportable
+	.onBeforeHandle(({ request }: any) => {
 		const url = new URL(request.url);
 		const path = url.pathname;
 		const traceContext = getTraceContextFromRequest(request);
@@ -266,9 +314,9 @@ app
 					detail: { tags: ["infra"], summary: "List pvese issues" },
 				},
 			)
-			// biome-ignore lint/suspicious/noExplicitAny: Elysia typings trick
 			.get(
 				"/status/:node",
+				// biome-ignore lint/suspicious/noExplicitAny: Elysia typings trick
 				async ({ params: { node } }: any) => {
 					const { getPowerStatus } = await import("./lib/infra-ops");
 					return getPowerStatus(node);
