@@ -42,3 +42,55 @@
 + Target Host: app
 + Target Port: 3000
 + GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET /: Retrieved access-control-allow-origin header: *.
++ GET /: Suggested security header missing: permissions-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy: 
++ GET /admin.html: This might be interesting.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET Unable to connect to app:3000.
+- Nikto v2.6.0/
++ Target Host: app
++ Target Port: 3000
++ GET /: Retrieved access-control-allow-origin header: *.
++ GET /: Suggested security header missing: permissions-policy. See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy: 
++ GET /admin.html: This might be interesting.

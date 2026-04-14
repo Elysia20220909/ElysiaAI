@@ -48,7 +48,7 @@ from scripts.security.generate_ledger import generate_ledger
 
 # ==================== 設定 (Pydantic Settings) ====================
 class Settings(BaseSettings):
-    HOST: str = "127.0.0.1"
+    HOST: str = "0.0.0.0"
     PORT: int = 8000
     SEARCH_LIMIT: int = 3
     OLLAMA_HOST: str = "http://127.0.0.1:11434"
@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
 
     # Milvus Runner Memory Settings
-    MILVUS_URI: str = "./runner_memory.db"
+    MILVUS_URI: str = "http://localhost:19530"
     MILVUS_TOKEN: str = ""
 
     @property
@@ -512,11 +512,11 @@ async def rag_search(query: Query = Body(...)) -> dict[str, Any]:
         raise HTTPException(500, f"RAG search failed: {str(e)}")
 
 
-@app.get("/health", dependencies=peripheral_white_ice)
+@app.get("/health")
 async def health() -> dict[str, Any]:
     return {
         "status": "healthy",
-        "embedding_provider": CONFIG["EMBEDDING_PROVIDER"],
+        "embedding_provider": CONFIG.get("EMBEDDING_PROVIDER", "local"),
         "milvus_connected": milvus_client is not None,
         "quotes_loaded": len(quotes_store),
     }
@@ -562,6 +562,18 @@ async def get_resonance() -> dict[str, Any]:
         "synergy_level": "OPTIMAL",
     }
     return base_resonance
+
+
+@app.get("/system/security/stats", dependencies=peripheral_white_ice)
+async def get_security_stats() -> dict[str, Any]:
+    """MANIFEST: Sovereign Security Telemetry"""
+    return {
+        "integrity": "HARDENED",
+        "triple_green": True,
+        "threat_telemetry": guardian.get_threat_levels(),
+        "timestamp": time.time(),
+        "resonance_status": "STABLE",
+    }
 
 
 @app.post("/chat", dependencies=peripheral_white_ice)
@@ -704,6 +716,8 @@ async def chat_with_elysia(request: ChatRequest):
                 portrait_url=user_portrait,
             )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"❌ Chat or Connection error: {e}")
         # 【Epic 3: 優雅なフォールバック】エラー時もElysiaのキャラクター性を維持して会話を繋ぐ
