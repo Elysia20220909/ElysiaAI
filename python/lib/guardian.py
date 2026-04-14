@@ -66,7 +66,7 @@ class GuardianShield:
         # 1. Length Check (Approximate tokens by character count)
         if len(text) > self.max_token_approx * 4:
             logger.warning(f"🛡️ Guardian: Input too long ({len(text)} chars)")
-            raise GuardianError("Input exceeds the sanctuary's capacity.")
+            raise GuardianError("[SOVEREIGN_BLOCK] Input exceeds the sanctuary's capacity.")
 
         # 2. Injection Pattern Check
         for pattern in self.forbidden_patterns:
@@ -74,7 +74,7 @@ class GuardianShield:
                 logger.error(f"🛡️ Guardian: Malicious pattern detected: {pattern}")
                 self.stats["injection_blocked"] += 1
                 self.stats["blocked_total"] += 1
-                raise GuardianError("Security protocol activated: Dangerous sequence detected.")
+                raise GuardianError("[SOVEREIGN_BLOCK] Security protocol activated: Dangerous sequence detected.")
 
         # Phase 19: 3. Semantic Hijack Check (Adversarial Prompting)
         for pattern in self.hijack_patterns:
@@ -82,14 +82,16 @@ class GuardianShield:
                 logger.warning(f"🛡️ Guardian: Potential Persona Hijack attempt: {pattern}")
                 self.stats["hijack_blocked"] += 1
                 self.stats["blocked_total"] += 1
-                raise GuardianError("I'm sorry, but my heart belongs to this world! I cannot do that. (Heart)")
+                raise GuardianError(
+                    "[SOVEREIGN_BLOCK] I'm sorry, but my heart belongs to this world! I cannot do that. (Heart)"
+                )
 
         # Phase 19/Luna: 4. Entropy/Encoding Check (Anti-Obfuscation)
         if self._is_high_entropy(text) or self._is_obfuscated_encoding(text):
             logger.warning("🛡️ Guardian: High entropy/obfuscation input detected")
             self.stats["entropy_blocked"] += 1
             self.stats["blocked_total"] += 1
-            raise GuardianError("Connection noise detected. Please speak clearly to me. (Note)")
+            raise GuardianError("[SOVEREIGN_BLOCK] Connection noise detected. Please speak clearly to me. (Note)")
 
         # 3. Clean and return
         return text.strip()

@@ -184,14 +184,16 @@ app
 		// 本番環境では詳細なスタックトレースを隠蔽
 		const message = isProduction
 			? "ごめんなさい、ちょっと考えがまとまらなくて……もう一度教えてもらえますか？"
-			: rawError.message;
+			: rawError?.message || "Internal Server Error";
 
 		logger.error(`[${code}] Global Error Caught`, {
-			error: rawError.message,
-			stack: isProduction ? undefined : rawError.stack,
+			error: rawError?.message || String(rawError),
+			stack: isProduction ? undefined : rawError?.stack,
 		});
 
-		set.headers["content-type"] = "application/json";
+		if (set && set.headers) {
+			set.headers["content-type"] = "application/json";
+		}
 
 		switch (code) {
 			case "NOT_FOUND":
@@ -335,6 +337,56 @@ app
 					detail: { tags: ["infra"], summary: "Get LINSTOR cluster status" },
 				},
 			),
+	)
+
+	// Phase 18: Sovereign Orchestrator (GUI Environment Bridge)
+	.group("/api/sandbox", (app) =>
+		app
+			.post("/audit/launch", async () => {
+				const { spawn } = await import("node:child_process");
+				// Trigger the audit inside the Kali Sandbox
+				// We use docker exec via the mapped /var/run/docker.sock
+				const auditProcess = spawn("docker", [
+					"exec",
+					"-d", // Detached so we don't block the API
+					"elysiaai-security-sandbox-1",
+					"/sandbox/scripts/simulate-ai-attacks.sh",
+				]);
+
+				auditProcess.on("error", (err) => {
+					logger.error(`❌ Audit Launch Error: ${err.message}`);
+				});
+
+				return { status: "launched", timestamp: Date.now() };
+			})
+			.get("/audit/stream", function* () {
+				// SSE Stream for Audit Logs
+				const { readFileSync, existsSync } = require("node:fs");
+				const logPath = "/app/logs/audit.log";
+
+				if (!existsSync(logPath)) {
+					yield "event: message\ndata: [SYSTEM] Waiting for audit logs...\n\n";
+				}
+
+				let lastSize = 0;
+				while (true) {
+					if (existsSync(logPath)) {
+						const content = readFileSync(logPath, "utf-8");
+						const lines = content.split("\n");
+						if (lines.length > lastSize) {
+							for (let i = lastSize; i < lines.length; i++) {
+								if (lines[i].trim()) {
+									yield `event: message\ndata: ${lines[i]}\n\n`;
+								}
+							}
+							lastSize = lines.length;
+						}
+					}
+					// Non-blocking sleep for ESM yield is tricky in generator,
+					// but Bun handles simple yields well.
+					// For production stability, we'd use a real SSE implementation.
+				}
+			}),
 	)
 
 	// Health
