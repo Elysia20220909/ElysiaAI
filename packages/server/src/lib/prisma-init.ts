@@ -62,10 +62,12 @@ export async function initializePrisma(): Promise<void> {
  */
 async function checkSchema(): Promise<void> {
 	try {
-		// テーブル一覧を取得
-		const tables = await prisma.$queryRaw<
-			Array<{ name: string }>
-		>`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`;
+		// テーブル一覧を取得 (Dialect agnostic check)
+		const tables = await prisma.$queryRaw<Array<{ name: string }>>`
+			SELECT tablename as name FROM pg_catalog.pg_tables WHERE schemaname = 'public'
+			UNION
+			SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'
+		`.catch(() => [] as Array<{ name: string }>);
 
 		const expectedTables = [
 			"users",

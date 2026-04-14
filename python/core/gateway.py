@@ -58,11 +58,16 @@ class CognitiveGateway:
 
     def _start_udp_listener(self):
         """UDP server that listens for resonance signals from polyglot layers."""
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind(("127.0.0.1", self.port))
-        sock.settimeout(1.0)
-
-        logger.info(f"🛰️ Cognitive Gateway Listening on UDP port {self.port}...")
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.bind(("127.0.0.1", self.port))
+            sock.settimeout(1.0)
+            logger.info(f"🛰️ Cognitive Gateway Listening on UDP port {self.port}...")
+        except OSError as e:
+            if e.errno == 98:  # Address already in use
+                logger.warning(f"⚠️ Gateway: UDP port {self.port} already in use. Skipping listener.")
+                return
+            raise e
 
         while not self.stop_event.is_set():
             try:

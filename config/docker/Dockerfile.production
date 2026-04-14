@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     ca-certificates \
     build-essential \
+    docker.io \
     libffi-dev \
     libssl-dev \
     cmake \
@@ -27,6 +28,7 @@ RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
 WORKDIR /app
+ENV DATABASE_URL="postgresql://elysia:elysia_pass@db:5432/elysiadb"
 
 # 3. Install Python Dependencies
 # We install these first to leverage caching
