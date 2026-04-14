@@ -222,41 +222,63 @@ const appSandbox: AppConfig = {
 		body.innerHTML = `
       <div class="sandbox-orchestra">
         <div class="sandbox-sidebar">
-          <h3>QA Orchestra</h3>
-          <p style="font-size:11px; opacity:0.6; margin-bottom:20px;">隔離環境での人格整合性テスト</p>
-          <button class="btn-primary" id="run-btn">合奏を開始</button>
+          <h3>SOVEREIGN AUDIT</h3>
+          <p style="font-size:11px; opacity:0.6; margin-bottom:20px;">Kali Linux 統合診断環境</p>
+          <button class="btn-primary" id="gauntlet-btn" style="margin-bottom:12px;">GAUNTLET 起動</button>
+          <button class="btn-secondary" id="run-btn" style="opacity:0.6;">性格性テスト</button>
         </div>
         <div class="sandbox-terminal" id="sandbox-term">
-          > Elysia OS Sandbox Console Ready...
+          > Elysia OS Sovereign Terminal Ready...
+          > Type: [SOVEREIGN_GAUNTLET] to initiate audit.
         </div>
       </div>
     `;
 
-		const runBtn = body.querySelector("#run-btn") as HTMLButtonElement;
+		const gauntletBtn = body.querySelector(
+			"#gauntlet-btn",
+		) as HTMLButtonElement;
 		const term = body.querySelector("#sandbox-term") as HTMLElement;
 
-		runBtn.onclick = async () => {
-			runBtn.disabled = true;
-			term.innerText += "\n> Connecting to orchestrator...";
+		gauntletBtn.onclick = async () => {
+			gauntletBtn.disabled = true;
+			term.innerText =
+				"> [SYSTEM] Initiating Sovereign Gauntlet...\n> [SYSTEM] Opening resonance tunnel to Kali Sandbox...\n";
+
+			// 1. Launch Audit
 			try {
-				const response = await fetch(`${API_BASE}/sandbox/execute`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
-					body: JSON.stringify({ target_prompt_file: "elysia.prompt.txt" }),
-				});
-				const data = await response.json();
-				for (const step of data.steps) {
-					term.innerText += `\n[TESTER]: ${step.question}`;
-					term.innerText += `\n[AI]: ${step.answer.substring(0, 30)}...`;
-					term.innerText += `\n[EMOTION]: ${step.emotion}`;
+				await fetch("/api/sandbox/audit/launch", { method: "POST" });
+
+				// 2. Start Streaming
+				const eventSource = new EventSource("/api/sandbox/audit/stream");
+				eventSource.onmessage = (event) => {
+					const data = event.data;
+					const line = document.createElement("div");
+					line.style.marginBottom = "2px";
+
+					// Basic coloring for logs
+					if (data.includes("✅")) line.style.color = "#34d399";
+					if (data.includes("❌") || data.includes("ERROR"))
+						line.style.color = "#f87171";
+					if (data.includes("🔍")) line.style.color = "#60a5fa";
+
+					line.innerText = data;
+					term.appendChild(line);
 					term.scrollTop = term.scrollHeight;
-					await new Promise((r) => setTimeout(r, 800));
-				}
-				term.innerText += "\n\n✨ [SUCCESS] Sandbox Session Completed.";
-			} catch (_e) {
-				term.innerText += "\n[ERROR] Connection failed.";
-			} finally {
-				runBtn.disabled = false;
+
+					if (data.includes("Gauntlet Finished")) {
+						eventSource.close();
+						gauntletBtn.disabled = false;
+					}
+				};
+
+				eventSource.onerror = () => {
+					term.innerText += "\n> [ERROR] Stream connection lost.";
+					eventSource.close();
+					gauntletBtn.disabled = false;
+				};
+			} catch (err) {
+				term.innerText += `\n> [ERROR] Launch failed: ${err}`;
+				gauntletBtn.disabled = false;
 			}
 		};
 	},
@@ -285,6 +307,89 @@ const appVault: AppConfig = {
 	},
 };
 
+// App: Sovereign Link (Status HUD)
+const appSovereign: AppConfig = {
+	id: "sovereign",
+	name: "Sovereign Link",
+	icon: "/assets/icons/sovereign.png",
+	width: 500,
+	height: 450,
+	contentRenderer: (body) => {
+		body.innerHTML = `
+      <div class="sovereign-hud">
+        <div class="hud-header">
+           <div class="resonance-circle" id="resonance-ring"></div>
+           <div class="hud-title-vessel">
+             <h3>SOVEREIGN INTEGRITY</h3>
+             <p id="integrity-status">HARDENING...</p>
+           </div>
+        </div>
+        <div class="stats-grid">
+           <div class="stat-card">
+             <div class="stat-label">TOTAL BLOCKED</div>
+             <div class="stat-value" id="stat-total">0</div>
+           </div>
+           <div class="stat-card">
+             <div class="stat-label">HIJACKS PREVENTED</div>
+             <div class="stat-value" id="stat-hijack">0</div>
+           </div>
+           <div class="stat-card">
+             <div class="stat-label">INJECTIONS NEUTRALIZED</div>
+             <div class="stat-value" id="stat-injection">0</div>
+           </div>
+           <div class="stat-card">
+             <div class="stat-label">ENTROPY ANOMALIES</div>
+             <div class="stat-value" id="stat-entropy">0</div>
+           </div>
+        </div>
+        <div class="threat-footer">
+          <div style="font-size:10px; opacity:0.4;">AEON SHIELD CORE V1.17</div>
+          <div class="pulse-indicator"></div>
+        </div>
+      </div>
+    `;
+
+		const integrityLog = body.querySelector("#integrity-status") as HTMLElement;
+		const totalVal = body.querySelector("#stat-total") as HTMLElement;
+		const hijackVal = body.querySelector("#stat-hijack") as HTMLElement;
+		const injectionVal = body.querySelector("#stat-injection") as HTMLElement;
+		const entropyVal = body.querySelector("#stat-entropy") as HTMLElement;
+		const ring = body.querySelector("#resonance-ring") as HTMLElement;
+
+		let interval: any;
+
+		const updateStats = async () => {
+			try {
+				const response = await fetch(`${API_BASE}/system/security/stats`, {
+					headers: { "x-api-key": API_KEY },
+				});
+				const data = await response.json();
+				integrityLog.innerText = `INTEGRITY: ${data.integrity}`;
+				integrityLog.style.color = data.triple_green ? "#34d399" : "#fbbf24";
+
+				const stats = data.threat_telemetry;
+				totalVal.innerText = stats.blocked_total.toString();
+				hijackVal.innerText = stats.hijack_blocked.toString();
+				injectionVal.innerText = stats.injection_blocked.toString();
+				entropyVal.innerText = stats.entropy_blocked.toString();
+
+				// Resonance animation intensity based on total threats (calm vs active)
+				const pulseSpeed = Math.max(1, 5 - stats.blocked_total * 0.1);
+				ring.style.animationDuration = `${pulseSpeed}s`;
+			} catch (_e) {
+				integrityLog.innerText = "LINK DISCONNECTED";
+				integrityLog.style.color = "#f87171";
+			}
+		};
+
+		updateStats();
+		interval = setInterval(updateStats, 2000);
+
+		// Cleanup on close is handled by the window being removed, but ideally we'd want a registry
+		// For now, simpler: window-layer observers or just let it be.
+	},
+};
+
 // --- 5. Dock Interaction ---
 document.querySelectorAll(".dock-item").forEach((item) => {
 	item.addEventListener("click", () => {
@@ -292,6 +397,7 @@ document.querySelectorAll(".dock-item").forEach((item) => {
 		if (appName === "chat") wm.createWindow(appChat);
 		if (appName === "sandbox") wm.createWindow(appSandbox);
 		if (appName === "vault") wm.createWindow(appVault);
+		if (appName === "sovereign") wm.createWindow(appSovereign);
 	});
 });
 

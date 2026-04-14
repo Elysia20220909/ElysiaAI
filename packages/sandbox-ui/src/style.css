@@ -268,6 +268,115 @@ body, html {
 }
 
 /* 5. App Specific Content */
+.sovereign-hud {
+  padding: 24px;
+  background: radial-gradient(circle at center, rgba(20, 20, 22, 0.4) 0%, rgba(10, 10, 12, 0.9) 100%);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.hud-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.resonance-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 4px solid var(--apple-accent);
+  box-shadow: 0 0 30px var(--apple-accent), inset 0 0 30px var(--apple-accent);
+  animation: pulse-resonance 3s ease-in-out infinite;
+  position: relative;
+}
+
+.resonance-circle::after {
+  content: "";
+  position: absolute;
+  top: -10px; left: -10px; right: -10px; bottom: -10px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 183, 197, 0.3);
+  animation: ring-out 3s ease-out infinite;
+}
+
+@keyframes pulse-resonance {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+@keyframes ring-out {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+
+.hud-title-vessel h3 {
+  font-size: 18px;
+  letter-spacing: 2px;
+  font-weight: 800;
+  background: linear-gradient(90deg, #fff, var(--apple-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+#integrity-status {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--apple-border);
+  padding: 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.5;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  font-family: 'SF Pro Display', sans-serif;
+}
+
+.threat-footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--apple-border);
+}
+
+.pulse-indicator {
+  width: 8px;
+  height: 8px;
+  background: #34d399;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #34d399;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
 
 /* Chat App */
 .app-chat-container {
