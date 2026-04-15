@@ -1,10 +1,10 @@
+import os
 from fastapi.testclient import TestClient
 
 from usr.lib.elysia.kernel import app, parse_tool_calls
 
-
 client = TestClient(app)
-
+API_KEY = os.getenv("FASTAPI_API_KEY", "")
 
 def test_health_check_status():
     """Verify that the kernel reports as healthy."""
@@ -18,7 +18,7 @@ def test_health_check_status():
 def test_system_monitor_structure():
     """Verify that the system monitor returns structured telemetry data."""
     # Note: Requires x-api-key in actual use
-    response = client.get("/system/monitor", headers={"x-api-key": "ELYSIATEST-001"})
+    response = client.get("/system/monitor", headers={"x-api-key": API_KEY})
     assert response.status_code == 200
     data = response.json()
     assert "system" in data

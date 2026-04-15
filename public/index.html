@@ -502,11 +502,11 @@
                   session_id: "portfolio_user_" + user
               };
 
-              let response = await fetch("http://127.0.0.1:8000/chat", {
+              let response = await fetch("http://127.0.0.1:3000/api/chat", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  "x-api-key": "ELYSIATEST-001"
+                  "Authorization": `Bearer ${accessToken}`
                 },
                 body: JSON.stringify(requestBody),
               });
