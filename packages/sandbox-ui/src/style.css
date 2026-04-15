@@ -1,13 +1,17 @@
 :root {
-  --apple-blur: blur(25px) saturate(160%);
-  --apple-bg: rgba(255, 255, 255, 0.1);
-  --apple-bg-dark: rgba(20, 20, 22, 0.7);
+  --elysia-cyan: #00f2ff;
+  --elysia-magenta: #ff00ff;
+  --elysia-primary: #00f2ff;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: blur(25px) saturate(160%);
   --apple-text: #ffffff;
-  --apple-accent: #ffb7c5; /* Elysia Pink */
-  --apple-border: rgba(255, 255, 255, 0.15);
-  --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Helvetica Neue", sans-serif;
-  --window-shadow: 0 30px 60px rgba(0,0,0,0.4);
+  --font-main: "Outfit", "Inter", -apple-system, sans-serif;
+  --window-shadow: 0 20px 50px rgba(0,0,0,0.6);
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
 
 * {
   margin: 0;
@@ -24,452 +28,317 @@ body, html {
   overflow: hidden;
 }
 
-/* 1. Security Lock Screen (Boot) */
-#lock-screen {
+/* 1. Linux Boot Terminal */
+#boot-screen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: black;
+  display: flex;
+  flex-direction: column;
+  padding: 40px;
+  z-index: 10000;
+  overflow: hidden;
+  transition: opacity 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+#boot-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.boot-terminal {
+  font-family: 'Fira Code', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #eeeeee;
+  white-space: pre-wrap;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.boot-terminal::-webkit-scrollbar { display: none; }
+
+/* 2. Desktop Shell (Aurora Flagship) */
+#desktop {
+  width: 100%;
+  height: 100%;
+  background: url('/assets/elysia_aurora_wallpaper.png') no-repeat center center;
+  background-size: cover;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+}
+
+#desktop.visible { opacity: 1; }
+
+.top-bar {
+  height: 32px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  z-index: 1000;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.activities-btn {
+  font-weight: 800;
+  color: var(--elysia-cyan);
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.system-time {
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.system-status {
+  display: flex;
+  gap: 14px;
+  opacity: 0.8;
+}
+
+.desktop-main {
+  flex-grow: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  padding: 12px;
+}
+
+/* 3. Floating Glass Dash (Pill Design) */
+.dash-container {
+  width: 72px;
+  height: fit-content;
+  max-height: 80%;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 40px;
+  margin: auto 12px;
+  padding: 16px 0;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dash-container:hover {
+  transform: scale(1.02);
+  background: var(--glass-bg-hover);
+}
+
+.dash {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+}
+
+.dash-item {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.dash-item::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  background: var(--elysia-primary);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.dash-item.active-app::after {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--elysia-primary);
+}
+
+/* Glass-sliced Icons */
+.dash-item img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  transition: filter 0.3s;
+}
+
+/* Slicing Logic for elysia_glass_icons 
+   Assuming 4x2 grid, scaled to fit our icon grid container */
+.icon-grid {
+  background-image: url('/assets/elysia_glass_icons.png');
+  background-size: 216px 108px; /* 4 * 54px by 2 * 54px */
+  width: 54px;
+  height: 54px;
+  mix-blend-mode: screen; /* Replaces white background with transparency on dark glass */
+  filter: brightness(1.2) contrast(1.1);
+}
+
+/* 4. Desktop Content & Icons */
+#desktop-area {
+  flex-grow: 1;
+  position: relative;
+  padding: 30px;
+}
+
+.desktop-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.desktop-icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.desktop-icon-item .glass-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.desktop-icon-item:hover .glass-icon {
+  background: var(--glass-bg-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.desktop-icon-item span {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: white;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+/* 5. Window System (Glass Redux) */
+#window-layer {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(40px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  transition: opacity 1s ease, transform 1s ease;
-}
-
-#lock-screen.unlocked {
-  opacity: 0;
-  transform: scale(1.1);
   pointer-events: none;
-}
-
-.faceid-scanner {
-  width: 100px;
-  height: 100px;
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-  position: relative;
-  margin-bottom: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.faceid-scanner::after {
-  content: "👤";
-  font-size: 40px;
-}
-
-.faceid-line {
-  position: absolute;
-  width: 100%;
-  height: 2px;
-  background: var(--apple-accent);
-  box-shadow: 0 0 15px var(--apple-accent);
-  top: 0;
-  animation: scan 2s linear infinite;
-}
-
-@keyframes scan {
-  0% { top: 0; }
-  50% { top: 100%; }
-  100% { top: 0; }
-}
-
-.passcode-input {
-  display: flex;
-  gap: 20px;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border: 1.5px solid white;
-  border-radius: 50%;
-  transition: background 0.3s ease;
-}
-
-.dot.filled {
-  background: white;
-}
-
-/* 2. Desktop Shell */
-#desktop {
-  width: 100%;
-  height: 100%;
-  background: url('/assets/wallpaper.png') no-repeat center center;
-  background-size: cover;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  opacity: 0;
-  transition: opacity 1.5s ease;
-}
-
-#desktop.visible {
-  opacity: 1;
-}
-
-@keyframes gradientFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.menu-bar {
-  height: 28px;
-  background: #000000;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1000;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-}
-
-.menu-left, .menu-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.menu-logo {
-  height: 18px;
-  width: 18px;
-  border-radius: 4px;
-}
-
-.menu-item {
-  font-size: 13px;
-  font-weight: 500;
-  opacity: 0.9;
-  cursor: default;
-}
-
-.menu-item.bold { font-weight: 700; }
-
-.desktop-content {
-  display: flex;
-  flex-direction: row;
-  flex-grow: 1;
-  overflow: hidden;
-  position: relative;
-}
-
-/* 3. GNOME Dash (Dock) */
-.dock-container {
-  width: 64px;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 16px;
-  z-index: 900;
-  border-right: 1px solid rgba(255,255,255,0.1);
-}
-
-.dock {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  width: 100%;
-}
-
-.dock-item {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28), background 0.2s;
-  border-radius: 8px;
-}
-
-.dock-item:hover {
-  transform: scale(1.1);
-  background: rgba(255,255,255,0.1);
-}
-
-.dock-item img {
-  width: 36px;
-  height: 36px;
-}
-
-.dock-divider {
-  width: 36px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* 4. Window System */
-#window-layer {
-  flex-grow: 1;
-  position: relative;
-  overflow: hidden;
 }
 
 .window {
   position: absolute;
-  background: var(--apple-bg-dark);
-  backdrop-filter: var(--apple-blur);
-  border: 1px solid var(--apple-border);
-  border-radius: 12px;
+  pointer-events: all;
+  background: rgba(20, 20, 25, 0.7);
+  backdrop-filter: blur(40px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
   box-shadow: var(--window-shadow);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  animation: windowEnter 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
-@keyframes windowEnter {
-  from { transform: scale(0.9); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+.window-fullscreen {
+  border-radius: 0 !important;
+  border: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
 }
 
 .window-header {
-  height: 40px;
-  background: #303030;
+  height: 42px;
+  background: rgba(40, 40, 50, 0.4);
   display: flex;
   align-items: center;
-  padding: 0 12px;
-  border-bottom: 1px solid rgba(0,0,0,0.5);
-  cursor: default;
+  padding: 0 20px;
 }
 
 .window-title {
   flex-grow: 1;
   text-align: center;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 14px;
-  font-weight: 700;
-  color: #eeeeee;
 }
 
-.gnome-window-controls {
-  display: flex;
-  gap: 6px;
-}
+.gnome-window-controls { display: flex; gap: 10px; }
 
 .gnome-btn {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   color: #fff;
   cursor: pointer;
-  font-size: 14px;
-  line-height: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: background 0.2s;
 }
 
-.gnome-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-.gnome-btn.close-btn:hover {
-  background: #e01b24;
-}
+.gnome-btn:hover { background: rgba(255, 255, 255, 0.2); }
+.gnome-btn.close-btn:hover { background: #ff4d4d; }
 
 .window-body {
   flex-grow: 1;
   overflow: auto;
-  position: relative;
 }
 
-/* 5. App Specific Content */
-.sovereign-hud {
-  padding: 24px;
-  background: radial-gradient(circle at center, rgba(20, 20, 22, 0.4) 0%, rgba(10, 10, 12, 0.9) 100%);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+/* App Overrides for Aurora */
+.sandbox-orchestra-v2 {
+  background: rgba(0, 0, 0, 0.6);
 }
 
-.hud-header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.terminal-view {
+  color: var(--elysia-cyan);
+  text-shadow: 0 0 10px rgba(0, 242, 255, 0.4);
 }
 
-.resonance-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 4px solid var(--apple-accent);
-  box-shadow: 0 0 30px var(--apple-accent), inset 0 0 30px var(--apple-accent);
-  animation: pulse-resonance 3s ease-in-out infinite;
-  position: relative;
-}
-
-.resonance-circle::after {
-  content: "";
-  position: absolute;
-  top: -10px; left: -10px; right: -10px; bottom: -10px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 183, 197, 0.3);
-  animation: ring-out 3s ease-out infinite;
-}
-
-@keyframes pulse-resonance {
-  0%, 100% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.1); opacity: 1; }
-}
-
-@keyframes ring-out {
-  from { transform: scale(1); opacity: 1; }
-  to { transform: scale(1.6); opacity: 0; }
-}
-
-.hud-title-vessel h3 {
-  font-size: 18px;
-  letter-spacing: 2px;
-  font-weight: 800;
-  background: linear-gradient(90deg, #fff, var(--apple-accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-#integrity-status {
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.stat-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--apple-border);
-  padding: 16px;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-}
-
-.stat-label {
-  font-size: 10px;
-  font-weight: 700;
-  opacity: 0.5;
-  margin-bottom: 8px;
-  letter-spacing: 1px;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 800;
-  font-family: 'SF Pro Display', sans-serif;
-}
-
-.threat-footer {
-  margin-top: auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 16px;
-  border-top: 1px solid var(--apple-border);
-}
-
-.pulse-indicator {
-  width: 8px;
-  height: 8px;
-  background: #34d399;
-  border-radius: 50%;
-  box-shadow: 0 0 10px #34d399;
-  animation: blink 2s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-/* Chat App */
-.app-chat-container {
-  display: flex;
-  height: 100%;
-}
-
-.chat-portrait {
-  width: 160px;
-  border-right: 1px solid var(--apple-border);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.chat-portrait img {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--apple-border);
-  box-shadow: 0 0 20px rgba(255, 183, 197, 0.3);
-}
-
-.chat-main {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.message-area {
-  flex-grow: 1;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.input-area {
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  display: flex;
-  gap: 12px;
-}
-
-.chat-input {
-  flex-grow: 1;
+.btn-side {
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--apple-border);
-  border-radius: 8px;
-  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: white;
-  outline: none;
 }
 
-/* Sandbox App (Orchestra) */
-.sandbox-orchestra {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  height: 100%;
-}
-
-.sandbox-sidebar {
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.2);
-  border-right: 1px solid var(--apple-border);
-}
-
-.sandbox-terminal {
-  padding: 20px;
-  background: black;
-  color: #34d399;
-  font-family: monospace;
-  font-size: 13px;
-  overflow-y: auto;
+.btn-side.active {
+  background: linear-gradient(90deg, var(--elysia-cyan), var(--elysia-magenta));
+  border: none;
 }
 
 .hidden { display: none; }

@@ -1,0 +1,26 @@
+FROM debian:bookworm-slim
+
+# Install building tools and UEFI dependencies
+RUN apt-get update && apt-get install -y \
+    clang \
+    lld \
+    llvm \
+    nasm \
+    make \
+    mtools \
+    dosfstools \
+    qemu-system-x86 \
+    ovmf \
+    binutils-x86-64-linux-gnu \
+    xorriso \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /os-dev
+
+# Ensure we have the UEFI firmware available for QEMU
+RUN mkdir -p /os-dev/ovmf && \
+    cp /usr/share/OVMF/OVMF_CODE.fd /os-dev/ovmf/ && \
+    cp /usr/share/OVMF/OVMF_VARS.fd /os-dev/ovmf/
+
+# We'll mount the project source to /os-dev/src
+CMD ["/bin/bash"]

@@ -7,31 +7,78 @@ import {
 
 const wm = new WindowManager();
 
-// --- 1. Boot Animation (Shared across OS) ---
-const lockScreen = document.getElementById("lock-screen");
+// --- 1. Linux Kernel Boot Sequence ---
+const bootScreen = document.getElementById("boot-screen");
+const bootLog = document.getElementById("boot-log");
 const desktop = document.getElementById("desktop");
-const statusText = document.getElementById("status-text");
+const systemTime = document.getElementById("system-time");
 
-if (lockScreen && desktop && statusText) {
-	const dots = document.querySelectorAll(".dot");
-	let dotCount = 0;
-	const bootSequence = () => {
-		if (dotCount < dots.length) {
-			dots[dotCount].classList.add("filled");
-			dotCount++;
-			setTimeout(bootSequence, 200);
-		} else {
-			statusText.innerText = "FaceID 認証成功";
-			statusText.style.color = "#ffb7c5";
-			setTimeout(() => {
-				lockScreen.classList.add("unlocked");
-				desktop.classList.add("visible");
-				desktop.classList.remove("hidden");
-			}, 600);
-		}
-	};
-	setTimeout(bootSequence, 800);
+function updateClock() {
+	if (!systemTime) return;
+	const now = new Date();
+	const month = now.getMonth() + 1;
+	const date = now.getDate();
+	const hours = now.getHours().toString().padStart(2, "0");
+	const minutes = now.getMinutes().toString().padStart(2, "0");
+	systemTime.innerText = `${month}月${date}日 ${hours}:${minutes}`;
 }
+setInterval(updateClock, 1000);
+updateClock();
+
+async function startBootSequence() {
+	if (!bootScreen || !bootLog || !desktop) return;
+
+	try {
+		const response = await fetch("/api/sandbox/kernel/stream/boot");
+		const bootData = (await response.json()) as Array<{
+			phase: string;
+			msg: string;
+		}>;
+
+		for (const entry of bootData) {
+			const div = document.createElement("div");
+			div.innerText = entry.msg;
+
+			// Apply Phase Styles
+			if (entry.phase === "BIOS") div.className = "log-bios";
+			else if (entry.phase === "KERNEL") div.className = "log-kernel";
+			else if (entry.phase === "SERVICE") {
+				div.className = "log-service";
+				if (entry.msg.includes("[  OK  ]")) {
+					div.innerHTML = entry.msg.replace(
+						"[  OK  ]",
+						'<span class="log-ok">[  OK  ]</span>',
+					);
+				}
+			}
+
+			bootLog.appendChild(div);
+			bootLog.scrollTop = bootLog.scrollHeight;
+
+			// Timing logic based on phase
+			let delay = Math.random() * 50 + 10;
+			if (entry.phase === "BIOS") delay = 400; // BIOS is slower
+			if (entry.phase === "SERVICE") delay = 150; // Services are steady
+
+			await new Promise((resolve) => setTimeout(resolve, delay));
+		}
+
+		// Final Transition
+		setTimeout(() => {
+			bootScreen.classList.add("fade-out");
+			desktop.classList.add("visible");
+			desktop.classList.remove("hidden");
+
+			// Auto-open Sandbox after GUI load
+			setTimeout(() => wm.createWindow(appSandbox), 800);
+		}, 1000);
+	} catch (err) {
+		console.error("Boot failure:", err);
+		bootLog.innerText += `\n[ ERROR ] Kernel Panic: Unable to reach boot server. Check backend.`;
+	}
+}
+
+startBootSequence();
 
 // --- 2. Specialized App: Sovereign Gauntlet ---
 const appSandbox: AppConfig = {
@@ -40,23 +87,28 @@ const appSandbox: AppConfig = {
 	icon: "/assets/icons/sandbox.png",
 	width: 800,
 	height: 600,
+	fullScreen: true,
 	contentRenderer: (body) => {
 		body.innerHTML = `
-      <div class="sandbox-container">
-        <div class="sandbox-sidebar">
-          <button class="btn-side active" id="gauntlet-btn">Sovereign Gauntlet</button>
-          <button class="btn-side" id="stream-btn">Linux Kernel Stream</button>
-          <div style="flex-grow:1"></div>
-          <div class="sandbox-status">PROTECTION: <span style="color:#34d399">ACTIVE</span></div>
-        </div>
-        <div class="sandbox-main">
+      <div class="sandbox-orchestra-v2">
+        <div class="sandbox-terminal-main">
           <div class="terminal-view" id="sandbox-term">
-            > [SYSTEM] Sovereign Sandbox Ready.<br>
+            > [SYSTEM] Sovereign Sandbox (Linux 7.0 Base) Ready.<br>
             > [SYSTEM] Awaiting Command...
           </div>
-          <div class="sandbox-controls">
-             <button class="btn-primary" id="launch-gauntlet-btn" style="width:100%">RUN SECURITY AUDIT</button>
+        </div>
+        <div class="sandbox-sidebar-right">
+          <div class="sandbox-app-info">
+            <h3>Sovereign Gauntlet</h3>
+            <p>SLA L14 Security Suite</p>
           </div>
+          <button class="btn-side active" id="gauntlet-btn">Sovereign Gauntlet</button>
+          <button class="btn-side" id="stream-btn">Linux Kernel Stream</button>
+          <div class="sandbox-action-area">
+             <button class="btn-primary" id="launch-gauntlet-btn">RUN SECURITY AUDIT</button>
+          </div>
+          <div style="flex-grow:1"></div>
+          <div class="sandbox-status">PROTECTION: <span style="color:#34d399">ACTIVE</span></div>
         </div>
       </div>
     `;
@@ -129,13 +181,13 @@ const appSandbox: AppConfig = {
 	},
 };
 
-// --- 3. Dock Settings ---
-document.querySelectorAll(".dock-item").forEach((item) => {
+// --- 3. Dash (Dock) Settings ---
+document.querySelectorAll(".dash-item").forEach((item) => {
 	item.addEventListener("click", () => {
 		const appName = item.getAttribute("data-app");
 		if (appName === "sandbox") wm.createWindow(appSandbox);
 	});
 });
 
-// Auto-open Sandbox
-setTimeout(() => wm.createWindow(appSandbox), 1500);
+// Auto-open Sandbox is now handled at the end of startBootSequence()
+// for a seamless transition.

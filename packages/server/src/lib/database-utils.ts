@@ -5,11 +5,11 @@
 
 import { Database } from "bun:sqlite";
 import { randomUUID } from "node:crypto";
+import { join } from "node:path";
 import bcryptjs from "bcryptjs";
 
-// SQLite データベース接続
-const dbPath =
-	process.env.DATABASE_URL?.replace("file:", "") || "./prisma/dev.db";
+// SQLite データベース接続 (Sovereign Local Mode)
+const dbPath = join(import.meta.dir, "../../prisma/dev.db");
 const db = new Database(dbPath);
 
 // ============ ユーザー操作 ============
