@@ -13,7 +13,7 @@ void draw_rect(FramebufferInfo *fb, uint32_t x, uint32_t y, uint32_t w, uint32_t
 
 extern FramebufferInfo g_fb;
 
-// --- PIC (Programmable Interrupt Controller) ---
+// --- PIC ---
 #define PIC1_COMMAND 0x20
 #define PIC1_DATA    0x21
 #define PIC2_COMMAND 0xA0
@@ -29,20 +29,29 @@ uint8_t inb(uint16_t port) {
     return ret;
 }
 
+void outw(uint16_t port, uint16_t val) {
+    __asm__ volatile ("outw %w0, %w1" : : "a"(val), "Nd"(port));
+}
+
+uint16_t inw(uint16_t port) {
+    uint16_t ret;
+    __asm__ volatile ("inw %w1, %w0" : "=a"(ret) : "Nd"(port));
+    return ret;
+}
+
 void pic_init() {
     outb(PIC1_COMMAND, 0x11);
     outb(PIC2_COMMAND, 0x11);
-    outb(PIC1_DATA, 0x20); // Remap IRQ 0-7 to 0x20-0x27
-    outb(PIC2_DATA, 0x28); // Remap IRQ 8-15 to 0x28-0x2F
+    outb(PIC1_DATA, 0x20);
+    outb(PIC2_DATA, 0x28);
     outb(PIC1_DATA, 0x04);
     outb(PIC2_DATA, 0x02);
     outb(PIC1_DATA, 0x01);
     outb(PIC2_DATA, 0x01);
-    outb(PIC1_DATA, 0x0); // Unmask all
-    outb(PIC2_DATA, 0x0);
+    outb(PIC1_DATA, 0x0); // Unmask Master
+    outb(PIC2_DATA, 0x0); // Unmask Slave
 }
 
-// --- PIT (Programmable Interval Timer) ---
 void pit_init(uint32_t frequency) {
     uint32_t divisor = 1193182 / frequency;
     outb(0x43, 0x36);
@@ -50,7 +59,7 @@ void pit_init(uint32_t frequency) {
     outb(0x40, (uint8_t)((divisor >> 8) & 0xFF));
 }
 
-// --- IDT & Interrupts ---
+// --- IDT ---
 typedef struct {
     uint16_t isr_low; uint16_t kernel_cs; uint8_t ist;
     uint8_t attributes; uint16_t isr_mid; uint32_t isr_high; uint32_t reserved;
@@ -73,29 +82,36 @@ void set_idt_gate(int vector, void* isr) {
     idt[vector].isr_high = (addr >> 32) & 0xFFFFFFFF;
 }
 
+void init_mouse(); // from mouse.c
 void init_idt() {
     pic_init();
-    pit_init(100); // 100Hz Heartbeat
-    for (int i = 0; i < 48; i++) { // Exceptions + IRQs
+    pit_init(100);
+    init_mouse();
+    for (int i = 0; i < 48; i++) {
         set_idt_gate(i, isr_stub_table[i]);
     }
     idtr.base = (uint64_t)&idt;
     idtr.limit = sizeof(idt) - 1;
     load_idt(&idtr);
-    __asm__ volatile ("sti"); // Enable interrupts
+    __asm__ volatile ("sti");
 }
 
-void keyboard_handler(); // To be implemented
-void timer_handler();    // To be implemented
+void keyboard_handler(); 
+void mouse_handler();
+uint64_t scheduler(uint64_t rsp);
 
 void interrupt_handler(uint64_t vector) {
-    if (vector == 0x20) { // Timer
-        timer_handler();
-        outb(PIC1_COMMAND, 0x20); // EOI
-    } else if (vector == 0x21) { // Keyboard
+    if (vector == 0x20) {
+        // Handled by assembly scheduler call
+        outb(PIC1_COMMAND, 0x20);
+    } else if (vector == 0x21) {
         keyboard_handler();
-        outb(PIC1_COMMAND, 0x20); // EOI
-    } else if (vector < 32) { // Exception
+        outb(PIC1_COMMAND, 0x20);
+    } else if (vector == 0x2C) { // IRQ 12 (Keyboard + 0x28 + 4?) Actually IRQ 12 is at 0x20 + 12 = 0x2C
+        mouse_handler();
+        outb(PIC2_COMMAND, 0x20); // Slave
+        outb(PIC1_COMMAND, 0x20); // Master
+    } else if (vector < 32) {
         draw_rect(&g_fb, 100, 100, g_fb.width - 200, 200, 0xFF0000);
         kprint(&g_fb, 120, 120, "SOVEREIGN EXCEPTION", 0xFFFFFF);
         while(1);

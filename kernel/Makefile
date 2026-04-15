@@ -4,7 +4,7 @@ CFLAGS = -target x86_64-unknown-windows -ffreestanding -fno-stack-protector -fno
 LDFLAGS = -target x86_64-unknown-windows -nostdlib -Wl,-entry:efi_main -Wl,-subsystem:efi_application -fuse-ld=lld-link -Wl,-filealign:4096
 
 ASM_SRC = src/interrupts.asm
-C_SRC = boot/bootloader.c src/graphics.c src/memory.c src/paging.c src/interrupts.c src/task.c src/keyboard.c
+C_SRC = boot/bootloader.c src/graphics.c src/memory.c src/paging.c src/interrupts.c src/task.c src/keyboard.c src/mouse.c src/compositor.c src/ata.c src/fat32.c src/gdt.c src/syscall.c
 ASM_OBJ = interrupts.o
 BOOT_EFI = BOOTX64.EFI
 BOOT_IMG = elysia_os.img
@@ -23,9 +23,11 @@ $(BOOT_IMG): $(BOOT_EFI)
 	mmd -i $@ ::/EFI
 	mmd -i $@ ::/EFI/BOOT
 	mcopy -i $@ $(BOOT_EFI) ::/EFI/BOOT/BOOTX64.EFI
+	echo "ELYSIOS DATA SOVEREIGNTY ACHIEVED." > SOVEREIGN.TXT
+	mcopy -i $@ SOVEREIGN.TXT ::/SOVEREIGN.TXT
 
 clean:
-	rm -f $(BOOT_EFI) $(BOOT_IMG) $(ASM_OBJ)
+	rm -f $(BOOT_EFI) $(BOOT_IMG) $(ASM_OBJ) SOVEREIGN.TXT
 
 run: $(BOOT_IMG)
 	qemu-system-x86_64 -bios ovmf/OVMF_CODE.fd -drive format=raw,file=$(BOOT_IMG) -net none
