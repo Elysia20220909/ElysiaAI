@@ -8,7 +8,6 @@ typedef struct {
     uint32_t pixels_per_scanline;
 } FramebufferInfo;
 
-// Exported for the Sovereign API
 FramebufferInfo g_fb;
 
 void draw_pixel(FramebufferInfo *fb, uint32_t x, uint32_t y, uint32_t color) {
@@ -22,6 +21,28 @@ void draw_rect(FramebufferInfo *fb, uint32_t x, uint32_t y, uint32_t w, uint32_t
         for (uint32_t j = 0; j < w; j++) {
             draw_pixel(fb, x + j, y + i, color);
         }
+    }
+}
+
+// Support for Backbuffer Rendering
+void draw_char_to(uint32_t* buffer, uint32_t x, uint32_t y, char c, uint32_t color) {
+    if (x + 8 >= g_fb.width || y + 16 >= g_fb.height) return;
+    unsigned char *bitmap = font_8x16[(unsigned char)c];
+    for (int i = 0; i < 16; i++) {
+        for (int j = 0; j < 8; j++) {
+            if ((bitmap[i] << j) & 0x80) {
+                buffer[(y + i) * g_fb.width + (x + j)] = color;
+            }
+        }
+    }
+}
+
+void kprint_to(uint32_t* buffer, uint32_t x, uint32_t y, const char* str, uint32_t color) {
+    uint32_t current_x = x;
+    while (*str) {
+        draw_char_to(buffer, current_x, y, *str, color);
+        current_x += 8;
+        str++;
     }
 }
 
