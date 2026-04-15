@@ -25,47 +25,48 @@
       <!-- 2. Elysia OS Desktop Environment -->
       <div id="desktop" class="hidden">
         
-        <!-- Top Menu Bar -->
+        <!-- Top Menu Bar (GNOME Style) -->
         <div class="menu-bar">
           <div class="menu-left">
-            <img src="/logo.png" class="menu-logo" alt="Elysia Logo" />
-            <span class="menu-item bold">Elysia</span>
-            <span class="menu-item">File</span>
-            <span class="menu-item">Edit</span>
-            <span class="menu-item">View</span>
-            <span class="menu-item">Help</span>
+            <span class="menu-item bold" id="menu-view" style="cursor:pointer;" title="Activities (Full Screen Toggle)">Activities</span>
+          </div>
+          <div class="menu-center">
+            <span class="menu-item bold" id="system-time">12:00</span>
           </div>
           <div class="menu-right">
-            <span class="menu-item" id="system-time">12:00</span>
-            <span class="menu-item">🔋 100%</span>
             <span class="menu-item">📶</span>
+            <span class="menu-item">🔋 100%</span>
+            <span class="menu-item">⏻</span>
           </div>
         </div>
 
-        <!-- Window Layer (Desktop Workspace) -->
-        <div id="window-layer">
-          <!-- Windows will be injected here by WindowManager -->
-        </div>
+        <!-- Desktop Workspace & Dash Layer -->
+        <div class="desktop-content">
+          <!-- Left Dash (Dock) -->
+          <div class="dock-container">
+            <div class="dock">
+              <div class="dock-item" data-app="chat" title="Elysia Intelligence">
+                <img src="/assets/icons/chat.png" alt="Chat" />
+              </div>
+              <div class="dock-item" data-app="sandbox" title="Sandbox Orchestra">
+                <img src="/assets/icons/sandbox.png" alt="Sandbox" />
+              </div>
+              <div class="dock-item" data-app="vault" title="Memory Vault">
+                <img src="/assets/icons/vault.png" alt="Vault" />
+              </div>
+              <div class="dock-item" data-app="sovereign" title="Sovereign Link">
+                <img src="/assets/icons/sovereign.png" alt="Sovereign" />
+              </div>
+              <div class="dock-divider"></div>
+              <div class="dock-item" data-app="settings" title="System Settings">
+                <img src="/assets/icons/settings.png" alt="Settings" />
+              </div>
+            </div>
+          </div>
 
-        <!-- Bottom Dock -->
-        <div class="dock-container">
-          <div class="dock">
-            <div class="dock-item" data-app="chat" title="Elysia Intelligence">
-              <img src="/assets/icons/chat.png" alt="Chat" />
-            </div>
-            <div class="dock-item" data-app="sandbox" title="Sandbox Orchestra">
-              <img src="/assets/icons/sandbox.png" alt="Sandbox" />
-            </div>
-            <div class="dock-item" data-app="vault" title="Memory Vault">
-              <img src="/assets/icons/vault.png" alt="Vault" />
-            </div>
-            <div class="dock-item" data-app="sovereign" title="Sovereign Link">
-              <img src="/assets/icons/sovereign.png" alt="Sovereign" />
-            </div>
-            <div class="dock-divider"></div>
-            <div class="dock-item" data-app="settings" title="System Settings">
-              <img src="/assets/icons/settings.png" alt="Settings" />
-            </div>
+          <!-- Window Layer -->
+          <div id="window-layer">
+            <!-- Windows will be injected here by WindowManager -->
           </div>
         </div>
       </div>
@@ -74,12 +75,12 @@
       <template id="window-template">
         <div class="window" style="z-index: 100;">
           <div class="window-header">
-            <div class="traffic-lights">
-              <div class="light red close-btn"></div>
-              <div class="light yellow minimize-btn"></div>
-              <div class="light green maximize-btn"></div>
-            </div>
             <div class="window-title">App Name</div>
+            <div class="gnome-window-controls">
+              <button class="gnome-btn minimize-btn">_</button>
+              <button class="gnome-btn maximize-btn">□</button>
+              <button class="gnome-btn close-btn">✕</button>
+            </div>
           </div>
           <div class="window-body">
             <!-- App Content Injected Here -->
