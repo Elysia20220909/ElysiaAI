@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 const API_URL_KEY = "@elysia_api_url";
 const DEFAULT_API_URL = "http://192.168.1.100:3000";
+const ACCESS_TOKEN_KEY = "@elysia_access_token";
 
 export type Message = {
 	role: "user" | "assistant";
@@ -46,37 +47,41 @@ export function useChat() {
 		setLoading(true);
 
 		try {
+			const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
 			const response = await fetch(`${apiUrl}/elysia-love`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
+					"Authorization": `Bearer ${token}`
 				},
-				body: JSON.stringify({ messages: newMessages }),
+				body: JSON.stringify({ messages: sanitizedMessages(newMessages) }),
 			});
+
+			if (response.status === 401) {
+				throw new Error("Unauthorized: Please login again.");
+			}
 
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}`);
 			}
 
-			// Note: Streaming is handled here if supported by the environment
-			const reader = response.body?.getReader();
-			const decoder = new TextDecoder();
-			let assistantContent = "";
+			// Bun/Server SSE handling (Manual split for mobile environment compatibility)
+			const text = await response.text();
+            let assistantContent = "";
+            
+            // Simple data-stream parsing if multiple chunks were combined by fetch
+            const lines = text.split("\n\n");
+            for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                    try {
+                        const json = JSON.parse(line.substring(6));
+                        if (json.content) assistantContent += json.content;
+                    } catch {}
+                }
+            }
 
-			if (reader) {
-				while (true) {
-					const { done, value } = await reader.read();
-					if (done) break;
-
-					const chunk = decoder.decode(value, { stream: true });
-					assistantContent += chunk;
-
-					setMessages([...newMessages, { role: "assistant", content: assistantContent }]);
-				}
-			} else {
-				// Fallback for non-streaming environments
-				const data = await response.json();
-				assistantContent = data.content || "応答がありません";
+			if (!assistantContent && text) {
+				assistantContent = text; // Non-streaming fallback
 			}
 
 			setMessages([
@@ -91,6 +96,11 @@ export function useChat() {
 			setLoading(false);
 		}
 	};
+
+    const sanitizedMessages = (ms: Message[]) => ms.map(m => ({
+        role: m.role,
+        content: m.content
+    }));
 
 	const clearMessages = () => setMessages([]);
 
