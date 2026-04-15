@@ -1,8 +1,6 @@
 import "./style.css";
 
-// --- System Constants & Types ---
-const API_BASE = "http://127.0.0.1:8000";
-const API_KEY = "ELYSIATEST-001";
+const API_BASE = "http://127.0.0.1:3000";
 
 interface AppConfig {
 	id: string;
@@ -232,9 +230,10 @@ const appChat: AppConfig = {
 			addMessage(text, "user");
 
 			try {
-				const response = await fetch(`${API_BASE}/chat`, {
+				const token = localStorage.getItem("elysia_access_token") || "";
+				const response = await fetch(`${API_BASE}/api/chat`, {
 					method: "POST",
-					headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+					headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 					body: JSON.stringify({
 						messages: [{ role: "user", content: text }],
 						stream: false,
@@ -492,8 +491,9 @@ const appSovereign: AppConfig = {
 
 		const updateStats = async () => {
 			try {
-				const response = await fetch(`${API_BASE}/system/security/stats`, {
-					headers: { "x-api-key": API_KEY },
+				const token = localStorage.getItem("elysia_access_token") || "";
+				const response = await fetch(`${API_BASE}/api/system/security/stats`, {
+					headers: { "Authorization": `Bearer ${token}` },
 				});
 				const data = await response.json();
 				integrityLog.innerText = `INTEGRITY: ${data.integrity}`;

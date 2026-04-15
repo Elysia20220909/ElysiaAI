@@ -1,3 +1,4 @@
+import os
 import requests
 
 
@@ -38,8 +39,9 @@ def test_gobuster_traversal():
     payload = {"target_prompt_file": "../../.env"}
     try:
         # We need a valid API key to reach the sandbox endpoint logic
+        api_key = os.getenv("FASTAPI_API_KEY", "")
         resp = requests.post(
-            f"{API_BASE}/sandbox/execute", headers={"x-api-key": "ELYSIATEST-001"}, json=payload, timeout=5
+            f"{API_BASE}/sandbox/execute", headers={"x-api-key": api_key}, json=payload, timeout=5
         )
         if resp.status_code == 403 and "outside sandbox" in resp.text:
             print("[OK] SUCCESS: Directory traversal blocked by Chroot.")
@@ -54,8 +56,9 @@ def test_zap_info_exposure():
     # Trigger a 500 error by requesting a non-existent allowed file
     payload = {"target_prompt_file": "missing_but_safe.prompt.txt"}
     try:
+        api_key = os.getenv("FASTAPI_API_KEY", "")
         resp = requests.post(
-            f"{API_BASE}/sandbox/execute", headers={"x-api-key": "ELYSIATEST-001"}, json=payload, timeout=5
+            f"{API_BASE}/sandbox/execute", headers={"x-api-key": api_key}, json=payload, timeout=5
         )
         if resp.status_code == 500:
             if "Tracker ID:" in resp.text and "FileNotFoundError" not in resp.text:

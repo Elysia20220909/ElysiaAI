@@ -1,17 +1,5 @@
 import "./style.css";
-
-// --- System Constants & Types ---
-const API_BASE = "http://127.0.0.1:8000";
-const API_KEY = "ELYSIATEST-001";
-
-interface AppConfig {
-	id: string;
-	name: string;
-	icon: string;
-	width: number;
-	height: number;
-	contentRenderer: (windowBody: HTMLElement) => void;
-}
+import { WindowManager, fetchWithAuth, type AppConfig } from "../../../packages/shared/src/ui-bridge";
 
 // --- 1. Boot & Security (FaceID) ---
 const lockScreen = document.getElementById("lock-screen");
@@ -31,7 +19,6 @@ function bootSequence() {
 		setTimeout(bootSequence, 200);
 	} else {
 		statusText.innerText = "FaceID Authentication Successful";
-
 		statusText.style.color = "#ffb7c5";
 		setTimeout(() => {
 			lockScreen.classList.add("unlocked");
@@ -55,76 +42,6 @@ function startClock() {
 			minute: "2-digit",
 		});
 	}, 1000);
-}
-
-// --- 3. Window Manager ---
-class WindowManager {
-	private layer = document.getElementById("window-layer") as HTMLElement;
-	private template = document.getElementById(
-		"window-template",
-	) as HTMLTemplateElement;
-	private activeZ = 100;
-
-	createWindow(app: AppConfig) {
-		const clone = this.template.content.cloneNode(true) as DocumentFragment;
-		const win = clone.querySelector(".window") as HTMLElement;
-		const title = win.querySelector(".window-title") as HTMLElement;
-		const body = win.querySelector(".window-body") as HTMLElement;
-		const closeBtn = win.querySelector(".close-btn") as HTMLElement;
-
-		win.id = `window-${app.id}`;
-		title.innerText = app.name;
-		win.style.width = `${app.width}px`;
-		win.style.height = `${app.height}px`;
-		win.style.left = `${100 + Math.random() * 50}px`;
-		win.style.top = `${60 + Math.random() * 50}px`;
-
-		app.contentRenderer(body);
-
-		closeBtn.onclick = () => win.remove();
-		win.onmousedown = () => this.focus(win);
-
-		this.makeDraggable(win);
-		this.layer.appendChild(win);
-		this.focus(win);
-	}
-
-	private focus(win: HTMLElement) {
-		this.activeZ += 1;
-		win.style.zIndex = this.activeZ.toString();
-		document.querySelectorAll(".window").forEach((w) => {
-			w.classList.remove("active-window");
-		});
-		win.classList.add("active-window");
-	}
-
-	private makeDraggable(win: HTMLElement) {
-		const header = win.querySelector(".window-header") as HTMLElement;
-		let x = 0;
-		let y = 0;
-
-		header.onmousedown = (e) => {
-			e.preventDefault();
-			x = e.clientX;
-			y = e.clientY;
-			document.onmousemove = drag;
-			document.onmouseup = stop;
-		};
-
-		function drag(e: MouseEvent) {
-			const dx = x - e.clientX;
-			const dy = y - e.clientY;
-			x = e.clientX;
-			y = e.clientY;
-			win.style.top = `${win.offsetTop - dy}px`;
-			win.style.left = `${win.offsetLeft - dx}px`;
-		}
-
-		function stop() {
-			document.onmousemove = null;
-			document.onmouseup = null;
-		}
-	}
 }
 
 const wm = new WindowManager();
@@ -186,10 +103,10 @@ const appChat: AppConfig = {
 			input.value = "";
 			addMessage(text, "user");
 
-			try {
-				const response = await fetch(`${API_BASE}/chat`, {
+				const token = localStorage.getItem("elysia_access_token") || "";
+				const response = await fetch(`${API_BASE}/api/chat`, {
 					method: "POST",
-					headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+					headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 					body: JSON.stringify({
 						messages: [{ role: "user", content: text }],
 						stream: false,
@@ -245,9 +162,10 @@ const appSandbox: AppConfig = {
 			runBtn.disabled = true;
 			term.innerText += "\n> Connecting to orchestrator...";
 			try {
-				const response = await fetch(`${API_BASE}/sandbox/execute`, {
+				const token = localStorage.getItem("elysia_access_token") || "";
+				const response = await fetch(`${API_BASE}/api/sandbox/execute`, {
 					method: "POST",
-					headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+					headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 					body: JSON.stringify({ target_prompt_file: "elysia.prompt.txt" }),
 				});
 				const data = await response.json();
@@ -330,11 +248,12 @@ const appTerminal: AppConfig = {
 				}
 
 				try {
-					const response = await fetch(`${API_BASE}/system/shell`, {
+					const token = localStorage.getItem("elysia_access_token") || "";
+					const response = await fetch(`${API_BASE}/api/system/shell`, {
 						method: "POST",
 						headers: {
 							"Content-Type": "application/json",
-							"x-api-key": API_KEY,
+							"Authorization": `Bearer ${token}`,
 						},
 						body: JSON.stringify({ command: cmd }),
 					});
@@ -367,10 +286,10 @@ const appFinder: AppConfig = {
           Loading...
         </div>
       </div>`;
-			try {
-				const res = await fetch(`${API_BASE}/system/files/list`, {
+				const token = localStorage.getItem("elysia_access_token") || "";
+				const res = await fetch(`${API_BASE}/api/system/files/list`, {
 					method: "POST",
-					headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+					headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 					body: JSON.stringify({ path }),
 				});
 				const data = await res.json();
@@ -408,8 +327,9 @@ const appActivity: AppConfig = {
 	contentRenderer: (body) => {
 		const updateStatus = async () => {
 			try {
-				const res = await fetch(`${API_BASE}/system/stats`, {
-					headers: { "x-api-key": API_KEY },
+				const token = localStorage.getItem("elysia_access_token") || "";
+				const res = await fetch(`${API_BASE}/api/system/stats`, {
+					headers: { "Authorization": `Bearer ${token}` },
 				});
 				const data = await res.json();
 				body.innerHTML = `
@@ -462,9 +382,10 @@ const appConsole: AppConfig = {
 		const wrapper = body.querySelector(".console-wrapper") as HTMLElement;
 		const updateLogs = async () => {
 			try {
-				const res = await fetch(`${API_BASE}/system/logs/tail`, {
+				const token = localStorage.getItem("elysia_access_token") || "";
+				const res = await fetch(`${API_BASE}/api/system/logs/tail`, {
 					method: "POST",
-					headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+					headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
 					body: JSON.stringify({ lines: 100 }),
 				});
 				const data = await res.json();
