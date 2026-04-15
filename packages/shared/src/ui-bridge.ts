@@ -57,13 +57,16 @@ export class WindowManager {
 	private focus(win: HTMLElement) {
 		this.activeZ += 1;
 		win.style.zIndex = this.activeZ.toString();
-		document.querySelectorAll(".window").forEach((w) => w.classList.remove("active-window"));
+		document.querySelectorAll(".window").forEach((w) => {
+			w.classList.remove("active-window");
+		});
 		win.classList.add("active-window");
 	}
 
 	private makeDraggable(win: HTMLElement) {
 		const header = win.querySelector(".window-header") as HTMLElement;
-		let x = 0, y = 0;
+		let x = 0,
+			y = 0;
 		header.onmousedown = (e) => {
 			e.preventDefault();
 			x = e.clientX;
