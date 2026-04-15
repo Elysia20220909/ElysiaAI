@@ -3,10 +3,29 @@
 section .text
 extern interrupt_handler
 extern scheduler
+extern syscall_handler
 global load_idt
+global load_gdt
 global isr_stub_table
 
-; Macro for ISRs with no error code
+; --- GDT Loading ---
+load_gdt:
+    lgdt [rdi]
+    ; Reload segments
+    push 0x08           ; Kernel Code Segment
+    lea rax, [rel .reload_segments]
+    push rax
+    retfq               ; Far return to reload CS
+.reload_segments:
+    mov ax, 0x10        ; Kernel Data Segment
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    ret
+
+; --- IDT & Interrupts (from previous stage) ---
 %macro ISR_NOERR 1
 global isr_stub_%1
 isr_stub_%1:
@@ -15,7 +34,6 @@ isr_stub_%1:
     jmp isr_common
 %endmacro
 
-; Macro for ISRs with error code
 %macro ISR_ERR 1
 global isr_stub_%1
 isr_stub_%1:
@@ -33,12 +51,14 @@ isr_stub_%1:
 %assign i i+1
 %endrep
 
-; IRQs (0-15 mapped to 32-47)
 %assign i 32
 %rep 16
     ISR_NOERR i
 %assign i i+1
 %endrep
+
+; --- SYSCALL ENTRY (Vector 0x80 for simplicity) ---
+ISR_NOERR 128
 
 isr_common:
     push rbp
@@ -56,22 +76,24 @@ isr_common:
     push rsi
     push rdi
 
-    mov rdi, [rsp + 112] ; Get the vector number (vector was at rsp+16 before pushes, now at 16+96=112)
-    cmp rdi, 32         ; IRQ 0 (Timer)
-    jne .not_timer
-
-    ; --- SOVEREIGN CONTEXT SWITCH ---
-    mov rdi, rsp        ; Current SP
-    call scheduler      ; Scheduler returns NEW SP in RAX
-    mov rsp, rax        ; SWITCH STACK
+    mov rdi, [rsp + 112]
     
-    ; Signal EOI to PIC
+    cmp rdi, 32         ; Timer
+    jne .not_timer
+    mov rdi, rsp
+    call scheduler
+    mov rsp, rax
     mov al, 0x20
     out 0x20, al
     jmp .exit
 
 .not_timer:
-    mov rdi, [rsp + 112] ; Pass vector to handler
+    cmp rdi, 128        ; Syscall
+    jne .not_syscall
+    call syscall_handler
+    jmp .exit
+
+.not_syscall:
     call interrupt_handler
 
 .exit:
@@ -103,3 +125,7 @@ isr_stub_table:
     dq isr_stub_%+i
 %assign i i+1
 %endrep
+%rep 80
+    dq 0 ; Padding
+%endrep
+dq isr_stub_128 ; Vector 0x80
