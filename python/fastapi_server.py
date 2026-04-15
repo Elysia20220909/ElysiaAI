@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     OLLAMA_HOST: str = "http://127.0.0.1:11434"
     OLLAMA_MODEL: str = "llama3.2"
     OLLAMA_TIMEOUT: float = 60.0
-    API_KEY: str = "ELYSIATEST-001"
+    API_KEY: str = ""
     RATE_LIMIT_BLOCK_TIME: int = 60
 
     # Embedding Configuration (Dual Support)
@@ -372,7 +372,8 @@ async def white_ice_handshake(request: Request, api_key: str = Depends(api_key_h
         del BANNED_IPS[client_ip]
 
     # 2. Signature Scanning
-    if api_key != CONFIG.get("API_KEY", "ELYSIATEST-001"):
+    expected_api_key = CONFIG.get("API_KEY", "")
+    if not expected_api_key or api_key != expected_api_key:
         now = time.time()
         auth_failures[client_ip] = [t for t in auth_failures[client_ip] if now - t < 60]
         auth_failures[client_ip].append(now)
