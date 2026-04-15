@@ -7,11 +7,8 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 	// Auth: token issuance
 	.post(
 		"/token",
-		async ({ body }: any) => {
-			const { username, password } = body as {
-				username: string;
-				password: string;
-			};
+		async ({ body }: { body: { username: string; password: unknown } }) => {
+			const { username, password } = body;
 			if (
 				username !== CONFIG.AUTH_USERNAME ||
 				password !== CONFIG.AUTH_PASSWORD
@@ -57,8 +54,8 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 	// Auth: refresh access token
 	.post(
 		"/refresh",
-		async ({ body }: any) => {
-			const { refreshToken } = body as { refreshToken: string };
+		async ({ body }: { body: { refreshToken: string } }) => {
+			const { refreshToken } = body;
 			try {
 				const payload = jwt.verify(
 					refreshToken,
@@ -110,8 +107,8 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 	// Auth: logout revoke refresh
 	.post(
 		"/logout",
-		async ({ body }: any) => {
-			const { refreshToken } = body as { refreshToken: string };
+		async ({ body }: { body: { refreshToken: string } }) => {
+			const { refreshToken } = body;
 			try {
 				const payload = jwt.verify(
 					refreshToken,
