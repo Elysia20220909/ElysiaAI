@@ -43,6 +43,20 @@ function bootSequence() {
 
 setTimeout(bootSequence, 800);
 
+// OS Fullscreen Toggle
+const viewMenu = document.getElementById("menu-view");
+if (viewMenu) {
+	viewMenu.addEventListener("click", () => {
+		if (!document.fullscreenElement) {
+			document.documentElement.requestFullscreen().catch((err) => {
+				console.warn("Fullscreen toggle failed", err);
+			});
+		} else {
+			document.exitFullscreen();
+		}
+	});
+}
+
 // --- 2. System Utilities ---
 function startClock() {
 	const clockEl = document.getElementById("system-time");
@@ -70,13 +84,46 @@ class WindowManager {
 		const title = win.querySelector(".window-title") as HTMLElement;
 		const body = win.querySelector(".window-body") as HTMLElement;
 		const closeBtn = win.querySelector(".close-btn") as HTMLElement;
+		const maximizeBtn = win.querySelector(".maximize-btn") as HTMLElement;
 
 		win.id = `window-${app.id}`;
 		title.innerText = app.name;
-		win.style.width = `${app.width}px`;
-		win.style.height = `${app.height}px`;
-		win.style.left = `${100 + Math.random() * 50}px`;
-		win.style.top = `${60 + Math.random() * 50}px`;
+
+		let prevStats = {
+			width: `${app.width}px`,
+			height: `${app.height}px`,
+			left: `${100 + Math.random() * 50}px`,
+			top: `${60 + Math.random() * 50}px`,
+		};
+
+		let isMaximized = false;
+
+		// Default to Windowed (Floating)
+		win.style.width = prevStats.width;
+		win.style.height = prevStats.height;
+		win.style.left = prevStats.left;
+		win.style.top = prevStats.top;
+
+		maximizeBtn.onclick = () => {
+			if (isMaximized) {
+				win.style.width = prevStats.width;
+				win.style.height = prevStats.height;
+				win.style.left = prevStats.left;
+				win.style.top = prevStats.top;
+			} else {
+				prevStats = {
+					width: win.style.width,
+					height: win.style.height,
+					left: win.style.left,
+					top: win.style.top,
+				};
+				win.style.width = "100%";
+				win.style.height = "100%";
+				win.style.left = "0px";
+				win.style.top = "0px";
+			}
+			isMaximized = !isMaximized;
+		};
 
 		app.contentRenderer(body);
 
@@ -225,6 +272,7 @@ const appSandbox: AppConfig = {
           <h3>SOVEREIGN AUDIT</h3>
           <p style="font-size:11px; opacity:0.6; margin-bottom:20px;">Kali Linux 統合診断環境</p>
           <button class="btn-primary" id="gauntlet-btn" style="margin-bottom:12px;">GAUNTLET 起動</button>
+          <button class="btn-primary" id="kernel-stream-btn" style="margin-bottom:12px; background: #9c27b0;">LINUX KERNEL STREAM</button>
           <button class="btn-secondary" id="run-btn" style="opacity:0.6;">性格性テスト</button>
         </div>
         <div class="sandbox-terminal" id="sandbox-term">
@@ -237,7 +285,91 @@ const appSandbox: AppConfig = {
 		const gauntletBtn = body.querySelector(
 			"#gauntlet-btn",
 		) as HTMLButtonElement;
+		const streamBtn = body.querySelector(
+			"#kernel-stream-btn",
+		) as HTMLButtonElement;
 		const term = body.querySelector("#sandbox-term") as HTMLElement;
+
+		streamBtn.onclick = async () => {
+			streamBtn.disabled = true;
+			term.innerText = "";
+			try {
+				const response = await fetch(
+					`${API_BASE}/api/sandbox/kernel/stream/random`,
+				);
+				const text = await response.text();
+				const lines = text.split("\n");
+				let i = 0;
+				let isStreaming = true;
+
+				// Fast typing effect
+				const streamInterval = setInterval(() => {
+					if (!isStreaming || i >= lines.length) {
+						clearInterval(streamInterval);
+						streamBtn.disabled = false;
+
+						// Automatically fetch another file after a short delay if we hit the end
+						if (isStreaming && i >= lines.length) {
+							setTimeout(() => {
+								if (streamBtn.innerText === "STOP STREAM") {
+									streamBtn.click(); // Stop current state
+									streamBtn.click(); // Restart
+								}
+							}, 2000);
+						}
+						return;
+					}
+
+					// Print 2-5 lines at a time to look like fast hacker terminal
+					const chunk = Math.floor(Math.random() * 4) + 2;
+					for (let j = 0; j < chunk && i < lines.length; j++) {
+						const line = document.createElement("div");
+						line.style.marginBottom = "1px";
+						line.style.color = "#34d399";
+						// Highlight C keywords for more aesthetic look
+						const t = lines[i]
+							.replace(
+								/#include/g,
+								'<span style="color:#f472b6;">#include</span>',
+							)
+							.replace(
+								/void |int |char |struct |static /g,
+								(match) => `<span style="color:#60a5fa;">${match}</span>`,
+							)
+							.replace(
+								/return /g,
+								'<span style="color:#fbbf24;">return </span>',
+							);
+						line.innerHTML = t;
+						term.appendChild(line);
+						i++;
+					}
+
+					term.scrollTop = term.scrollHeight;
+
+					// Cap max lines to prevent DOM explosion
+					while (term.children.length > 300) {
+						term.removeChild(term.firstChild as Node);
+					}
+				}, 50);
+
+				// Allow clicking again to stop it
+				streamBtn.disabled = false;
+				streamBtn.innerText = "STOP STREAM";
+				streamBtn.onclick = () => {
+					isStreaming = false;
+					streamBtn.innerText = "LINUX KERNEL STREAM";
+					streamBtn.disabled = false;
+					// Restore the original onclick event loop
+					streamBtn.onclick = startStreamEvent;
+				};
+			} catch (err) {
+				term.innerText += `\n> [ERROR] Stream connect failed: ${err}`;
+				streamBtn.disabled = false;
+			}
+		};
+		// define the original function for reuse
+		const startStreamEvent = streamBtn.onclick;
 
 		gauntletBtn.onclick = async () => {
 			gauntletBtn.disabled = true;

@@ -386,6 +386,58 @@ app
 					// but Bun handles simple yields well.
 					// For production stability, we'd use a real SSE implementation.
 				}
+			})
+			.get("/kernel/stream/random", async () => {
+				const { readFileSync, existsSync, readdirSync, statSync } =
+					await import("node:fs");
+				const { resolve, join } = await import("node:path");
+
+				const basePath = resolve(process.cwd(), "../../kernel/linux");
+				const altPath = resolve(process.cwd(), "kernel/linux");
+
+				const targetDir = existsSync(basePath)
+					? basePath
+					: existsSync(altPath)
+						? altPath
+						: null;
+
+				if (!targetDir) {
+					return "> [SYSTEM ERROR] Linux kernel source not found locally.\n";
+				}
+
+				const subsystems = ["kernel", "mm", "fs", "net", "crypto", "security"];
+				let sysPath = "";
+				let sysName = "";
+				// try up to 3 times to find a valid directory
+				for (let i = 0; i < 3; i++) {
+					sysName = subsystems[Math.floor(Math.random() * subsystems.length)];
+					const p = join(targetDir, sysName);
+					if (existsSync(p) && statSync(p).isDirectory()) {
+						sysPath = p;
+						break;
+					}
+				}
+
+				if (!sysPath) return "> [SYSTEM ERROR] No subsystems found.\n";
+
+				try {
+					const files = readdirSync(sysPath).filter((f) => {
+						const full = join(sysPath, f);
+						return (
+							statSync(full).isFile() && (f.endsWith(".c") || f.endsWith(".h"))
+						);
+					});
+
+					if (files.length === 0)
+						return `> [SYSTEM ERROR] No C source files found in ${sysName}\n`;
+
+					const randomFile = files[Math.floor(Math.random() * files.length)];
+					const content = readFileSync(join(sysPath, randomFile), "utf-8");
+
+					return `> [SYSTEM] Parsing Linux Kernel Architecture...\n> [SYSTEM] Opening direct stream to ${sysName}/${randomFile}...\n\n${content}`;
+				} catch (err: any) {
+					return `> [ERROR] Failed to read kernel files: ${err.message}\n`;
+				}
 			}),
 	)
 
@@ -827,149 +879,201 @@ app
 			},
 		},
 		(app) =>
-			app.post(
-				"/elysia-love",
-				// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
-				async ({ body, request }: any) => {
-					const ip =
-						request.headers.get("x-forwarded-for") ||
-						request.headers.get("x-real-ip") ||
-						"anon";
-					let userId = "anon";
-					const auth = request.headers.get("authorization") || "";
-					try {
-						if (auth.startsWith("Bearer ")) {
-							const payload = jwt.verify(
-								auth.substring(7),
-								CONFIG.JWT_SECRET,
-							) as jwt.JwtPayload;
-							userId = (payload as { userId?: string }).userId || "anon";
-						}
-					} catch {}
-					const clientKey = `${userId}:${ip}`;
-					const rateLimitOk = await checkRateLimit(clientKey);
-					if (!rateLimitOk) return jsonError(429, "Rate limit exceeded");
+			app
+				.post(
+					"/elysia-love",
+					// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
+					async ({ body, request }: any) => {
+						const ip =
+							request.headers.get("x-forwarded-for") ||
+							request.headers.get("x-real-ip") ||
+							"anon";
+						let userId = "anon";
+						const auth = request.headers.get("authorization") || "";
+						try {
+							if (auth.startsWith("Bearer ")) {
+								const payload = jwt.verify(
+									auth.substring(7),
+									CONFIG.JWT_SECRET,
+								) as jwt.JwtPayload;
+								userId = (payload as { userId?: string }).userId || "anon";
+							}
+						} catch {}
+						const clientKey = `${userId}:${ip}`;
+						const rateLimitOk = await checkRateLimit(clientKey);
+						if (!rateLimitOk) return jsonError(429, "Rate limit exceeded");
 
-					const mode = body.mode || "normal";
-					const personaContext = getPersonaConfig(mode);
-					const llmConfig = {
-						systemPrompt: personaContext.systemPrompt,
-						temperature: personaContext.temperature,
-						model: CONFIG.MODEL_NAME,
-					};
+						const mode = body.mode || "normal";
+						const personaContext = getPersonaConfig(mode);
+						const llmConfig = {
+							systemPrompt: personaContext.systemPrompt,
+							temperature: personaContext.temperature,
+							model: CONFIG.MODEL_NAME,
+						};
 
-					// biome-ignore lint/suspicious/noExplicitAny: type inference hack
-					const sanitizedMessages = body.messages.map((m: any) => {
-						const cleaned = sanitizeHtml(m.content, {
-							allowedTags: [],
-							allowedAttributes: {},
+						// biome-ignore lint/suspicious/noExplicitAny: type inference hack
+						const sanitizedMessages = body.messages.map((m: any) => {
+							const cleaned = sanitizeHtml(m.content, {
+								allowedTags: [],
+								allowedAttributes: {},
+							});
+							if (containsDangerousKeywords(cleaned))
+								throw new Error("Dangerous content detected");
+							return { ...m, content: cleaned };
 						});
-						if (containsDangerousKeywords(cleaned))
-							throw new Error("Dangerous content detected");
-						return { ...m, content: cleaned };
-					});
 
-					// カジュアルモードの場合、Web検索を試行
-					let enhancedSystemPrompt = llmConfig.systemPrompt;
-					let fallbackCasualResponse = "";
-					if (mode === "casual" && body.messages.length > 0) {
-						const lastUserMessage = body.messages[body.messages.length - 1];
-						if (lastUserMessage.role === "user") {
-							try {
-								// パターン応答＋話題提案をランダム化
-								const casualResponse = await casualChat.generateCasualResponse(
-									lastUserMessage.content,
-								);
-								const topicPrompt = casualChat.getRandomTopic().prompt;
-								// 50%で話題提案、50%でパターン応答
-								fallbackCasualResponse =
-									Math.random() < 0.5 ? casualResponse : topicPrompt;
-								// 万一空文字なら話題提案
-								if (
-									!fallbackCasualResponse ||
-									fallbackCasualResponse.trim() === ""
-								) {
-									fallbackCasualResponse = topicPrompt;
+						// カジュアルモードの場合、Web検索を試行
+						let enhancedSystemPrompt = llmConfig.systemPrompt;
+						let fallbackCasualResponse = "";
+						if (mode === "casual" && body.messages.length > 0) {
+							const lastUserMessage = body.messages[body.messages.length - 1];
+							if (lastUserMessage.role === "user") {
+								try {
+									// パターン応答＋話題提案をランダム化
+									const casualResponse =
+										await casualChat.generateCasualResponse(
+											lastUserMessage.content,
+										);
+									const topicPrompt = casualChat.getRandomTopic().prompt;
+									// 50%で話題提案、50%でパターン応答
+									fallbackCasualResponse =
+										Math.random() < 0.5 ? casualResponse : topicPrompt;
+									// 万一空文字なら話題提案
+									if (
+										!fallbackCasualResponse ||
+										fallbackCasualResponse.trim() === ""
+									) {
+										fallbackCasualResponse = topicPrompt;
+									}
+									enhancedSystemPrompt += `\n\n参考情報: ${fallbackCasualResponse}`;
+								} catch {
+									// fallback: ランダム話題
+									fallbackCasualResponse = casualChat.getRandomTopic().prompt;
 								}
-								enhancedSystemPrompt += `\n\n参考情報: ${fallbackCasualResponse}`;
-							} catch {
-								// fallback: ランダム話題
+							} else {
+								// ユーザー発話がない場合は話題提案
 								fallbackCasualResponse = casualChat.getRandomTopic().prompt;
 							}
 						} else {
-							// ユーザー発話がない場合は話題提案
-							fallbackCasualResponse = casualChat.getRandomTopic().prompt;
+							// カジュアル以外は従来通り
+							fallbackCasualResponse =
+								"今日はどんな一日でしたか？何か話したいことがあれば教えてください！";
 						}
-					} else {
-						// カジュアル以外は従来通り
-						fallbackCasualResponse =
-							"今日はどんな一日でしたか？何か話したいことがあれば教えてください！";
-					}
 
-					const messagesWithSystem: Message[] = [
-						{ role: "system", content: enhancedSystemPrompt },
-						...sanitizedMessages,
-					];
+						const messagesWithSystem: Message[] = [
+							{ role: "system", content: enhancedSystemPrompt },
+							...sanitizedMessages,
+						];
 
-					try {
-						// OpenAIモードの場合はOpenAI APIを使用
-						if (mode === "openai") {
-							try {
-								const openaiMessages = messagesWithSystem.map((m) => ({
-									role: m.role,
-									content: m.content,
-								}));
+						try {
+							// OpenAIモードの場合はOpenAI APIを使用
+							if (mode === "openai") {
+								try {
+									const openaiMessages = messagesWithSystem.map((m) => ({
+										role: m.role,
+										content: m.content,
+									}));
 
-								// ストリーミングレスポンスを生成
-								const stream = new ReadableStream({
-									async start(controller) {
-										try {
-											for await (const chunk of openaiIntegration.streamChatWithOpenAI(
-												openaiMessages,
-												{
-													model: llmConfig.model,
-													temperature: llmConfig.temperature,
-												},
-											)) {
-												const sseData = `data: ${JSON.stringify({ content: chunk })}\n\n`;
-												controller.enqueue(new TextEncoder().encode(sseData));
+									// ストリーミングレスポンスを生成
+									const stream = new ReadableStream({
+										async start(controller) {
+											try {
+												for await (const chunk of openaiIntegration.streamChatWithOpenAI(
+													openaiMessages,
+													{
+														model: llmConfig.model,
+														temperature: llmConfig.temperature,
+													},
+												)) {
+													const sseData = `data: ${JSON.stringify({ content: chunk })}\n\n`;
+													controller.enqueue(new TextEncoder().encode(sseData));
+												}
+												controller.enqueue(
+													new TextEncoder().encode("data: [DONE]\n\n"),
+												);
+												controller.close();
+											} catch (error) {
+												const errorMsg =
+													error instanceof Error
+														? error.message
+														: String(error);
+												controller.enqueue(
+													new TextEncoder().encode(
+														`data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`,
+													),
+												);
+												controller.enqueue(
+													new TextEncoder().encode("data: [DONE]\n\n"),
+												);
+												controller.close();
 											}
-											controller.enqueue(
-												new TextEncoder().encode("data: [DONE]\n\n"),
-											);
-											controller.close();
-										} catch (error) {
-											const errorMsg =
-												error instanceof Error ? error.message : String(error);
-											controller.enqueue(
-												new TextEncoder().encode(
-													`data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`,
-												),
-											);
-											controller.enqueue(
-												new TextEncoder().encode("data: [DONE]\n\n"),
-											);
-											controller.close();
-										}
-									},
-								});
+										},
+									});
 
-								return new Response(stream, {
+									return new Response(stream, {
+										headers: {
+											"Content-Type": "text/event-stream",
+											"Cache-Control": "no-cache",
+											Connection: "keep-alive",
+											"X-Elysia-Mode": mode,
+											"X-Elysia-Provider": "openai",
+										},
+									});
+								} catch (openaiError) {
+									const errorMsg =
+										openaiError instanceof Error
+											? openaiError.message
+											: String(openaiError);
+									logger.error(`OpenAI API error: ${errorMsg}`);
+									// OpenAIエラー時も日本語日常会話返答＋エラー内容
+									const stream = new ReadableStream({
+										start(controller) {
+											const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
+											controller.enqueue(new TextEncoder().encode(sseData));
+											controller.enqueue(
+												new TextEncoder().encode("data: [DONE]\n\n"),
+											);
+											controller.close();
+										},
+									});
+									return new Response(stream, {
+										headers: {
+											"Content-Type": "text/event-stream",
+											"Cache-Control": "no-cache",
+											Connection: "keep-alive",
+											"X-Elysia-Mode": mode,
+											"X-Elysia-Provider": "openai",
+										},
+									});
+								}
+							}
+
+							// 通常のOllama APIを使用
+							try {
+								const upstream = await axios.post(
+									CONFIG.RAG_API_URL,
+									{
+										messages: messagesWithSystem,
+										temperature: llmConfig.temperature,
+										model: llmConfig.model,
+									},
+									{ responseType: "stream", timeout: CONFIG.RAG_TIMEOUT },
+								);
+								return new Response(upstream.data, {
 									headers: {
 										"Content-Type": "text/event-stream",
 										"Cache-Control": "no-cache",
 										Connection: "keep-alive",
 										"X-Elysia-Mode": mode,
-										"X-Elysia-Provider": "openai",
 									},
 								});
-							} catch (openaiError) {
+							} catch (ollamaError) {
 								const errorMsg =
-									openaiError instanceof Error
-										? openaiError.message
-										: String(openaiError);
-								logger.error(`OpenAI API error: ${errorMsg}`);
-								// OpenAIエラー時も日本語日常会話返答＋エラー内容
+									ollamaError instanceof Error
+										? ollamaError.message
+										: String(ollamaError);
+								logger.error(`Ollama API error: ${errorMsg}`);
+								// Ollamaエラー時も日本語日常会話返答＋エラー内容
 								const stream = new ReadableStream({
 									start(controller) {
 										const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
@@ -986,38 +1090,14 @@ app
 										"Cache-Control": "no-cache",
 										Connection: "keep-alive",
 										"X-Elysia-Mode": mode,
-										"X-Elysia-Provider": "openai",
 									},
 								});
 							}
-						}
-
-						// 通常のOllama APIを使用
-						try {
-							const upstream = await axios.post(
-								CONFIG.RAG_API_URL,
-								{
-									messages: messagesWithSystem,
-									temperature: llmConfig.temperature,
-									model: llmConfig.model,
-								},
-								{ responseType: "stream", timeout: CONFIG.RAG_TIMEOUT },
-							);
-							return new Response(upstream.data, {
-								headers: {
-									"Content-Type": "text/event-stream",
-									"Cache-Control": "no-cache",
-									Connection: "keep-alive",
-									"X-Elysia-Mode": mode,
-								},
-							});
-						} catch (ollamaError) {
+						} catch (error) {
+							// 予期せぬエラー時も日本語日常会話返答＋エラー内容
 							const errorMsg =
-								ollamaError instanceof Error
-									? ollamaError.message
-									: String(ollamaError);
-							logger.error(`Ollama API error: ${errorMsg}`);
-							// Ollamaエラー時も日本語日常会話返答＋エラー内容
+								error instanceof Error ? error.message : String(error);
+							logger.error(`Internal chat error: ${errorMsg}`);
 							const stream = new ReadableStream({
 								start(controller) {
 									const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
@@ -1037,68 +1117,133 @@ app
 								},
 							});
 						}
-					} catch (error) {
-						// 予期せぬエラー時も日本語日常会話返答＋エラー内容
-						const errorMsg =
-							error instanceof Error ? error.message : String(error);
-						logger.error(`Internal chat error: ${errorMsg}`);
-						const stream = new ReadableStream({
-							start(controller) {
-								const sseData = `data: ${JSON.stringify({ error: errorMsg, content: fallbackCasualResponse })}\n\n`;
-								controller.enqueue(new TextEncoder().encode(sseData));
-								controller.enqueue(
-									new TextEncoder().encode("data: [DONE]\n\n"),
-								);
-								controller.close();
-							},
-						});
-						return new Response(stream, {
-							headers: {
-								"Content-Type": "text/event-stream",
-								"Cache-Control": "no-cache",
-								Connection: "keep-alive",
-								"X-Elysia-Mode": mode,
-							},
-						});
-					}
-				},
-				{
-					body: t.Object({
-						messages: t.Array(
-							t.Object({
-								role: t.Union([
-									t.Literal("user"),
-									t.Literal("assistant"),
-									t.Literal("system"),
-								]),
-								content: t.String({
-									maxLength: 400,
-									minLength: 1,
-								}),
-							}),
-							{ maxItems: 8 },
-						),
-						mode: t.Optional(
-							t.Union([
-								t.Literal("sweet"),
-								t.Literal("normal"),
-								t.Literal("professional"),
-								t.Literal("casual"),
-								t.Literal("creative"),
-								t.Literal("technical"),
-								t.Literal("openai"),
-							]),
-						),
-					}),
-					detail: {
-						tags: ["ai"],
-						summary: "Chat with Elysia AI (Multi-LLM)",
-						description:
-							"Send chat messages to Elysia AI with selectable personality modes (sweet/normal/professional/casual/creative/technical). Casual mode enables friendly daily conversations. Returns streaming SSE response. Requires JWT.",
-						security: [{ bearerAuth: [] }],
 					},
-				},
-			),
+					{
+						body: t.Object({
+							messages: t.Array(
+								t.Object({
+									role: t.Union([
+										t.Literal("user"),
+										t.Literal("assistant"),
+										t.Literal("system"),
+									]),
+									content: t.String({
+										maxLength: 400,
+										minLength: 1,
+									}),
+								}),
+								{ maxItems: 8 },
+							),
+							mode: t.Optional(
+								t.Union([
+									t.Literal("sweet"),
+									t.Literal("normal"),
+									t.Literal("professional"),
+									t.Literal("casual"),
+									t.Literal("creative"),
+									t.Literal("technical"),
+									t.Literal("openai"),
+								]),
+							),
+						}),
+						detail: {
+							tags: ["ai"],
+							summary: "Chat with Elysia AI (Multi-LLM)",
+							description:
+								"Send chat messages to Elysia AI with selectable personality modes (sweet/normal/professional/casual/creative/technical). Casual mode enables friendly daily conversations. Returns streaming SSE response. Requires JWT.",
+							security: [{ bearerAuth: [] }],
+						},
+					},
+				)
+
+				// Protected: Sovereign Proxy for Video Generation
+				.post(
+					"/api/proxy/video",
+					// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
+					async ({ body, request }: any) => {
+						const ip =
+							request.headers.get("x-forwarded-for") ||
+							request.headers.get("x-real-ip") ||
+							"anon";
+						let userId = "anon";
+						const auth = request.headers.get("authorization") || "";
+						try {
+							if (auth.startsWith("Bearer ")) {
+								const payload = jwt.verify(
+									auth.substring(7),
+									CONFIG.JWT_SECRET,
+								) as jwt.JwtPayload;
+								userId = (payload as { userId?: string }).userId || "anon";
+							}
+						} catch {}
+
+						// Strict rate limiting for expensive Video API
+						const clientKey = `video:${userId}:${ip}`;
+						const rateLimitOk = await checkRateLimit(clientKey);
+						if (!rateLimitOk)
+							return jsonError(429, "Rate limit exceeded for video generation");
+
+						const VIDEO_API_KEY = process.env.VIDEO_API_KEY;
+						if (!VIDEO_API_KEY) {
+							return jsonError(
+								500,
+								"Server configuration error: Video API Secret not found in Sovereign Vault",
+							);
+						}
+
+						const { prompt, model } = body;
+						try {
+							// Architecture B: Proxy the request to the upstream Video AI API securely
+							// This template protects the API key in the backend environment.
+							//
+							// Example (e.g. Runway, Luma, Sora):
+							// const upstreamResponse = await fetch("https://api.videoprovider.com/v1/generate", {
+							// 	method: "POST",
+							// 	headers: {
+							// 		"Authorization": `Bearer ${VIDEO_API_KEY}`,
+							// 		"Content-Type": "application/json"
+							// 	},
+							// 	body: JSON.stringify({ prompt, model: model || "default-video-model" })
+							// });
+							// const data = await upstreamResponse.json();
+							// return data;
+
+							return new Response(
+								JSON.stringify({
+									success: true,
+									message:
+										"Sovereign Vault proxy active. Add specific upstream provider fetch logic here.",
+									prompt,
+									status: "acknowledged",
+								}),
+								{
+									headers: { "content-type": "application/json" },
+								},
+							);
+						} catch (error) {
+							const errorMsg =
+								error instanceof Error ? error.message : String(error);
+							logger.error(`Video API error: ${errorMsg}`);
+							return jsonError(
+								500,
+								"Failed to connect to upstream Video AI securely",
+							);
+						}
+					},
+					{
+						body: t.Object({
+							prompt: t.String({ minLength: 1, maxLength: 1000 }),
+							model: t.Optional(t.String()),
+						}),
+						detail: {
+							tags: ["ai", "video"],
+							summary: "Video Generation Proxy (Sovereign Vault)",
+							description:
+								"Protects developer API keys by routing video generation requests securely through the backend. Enforces rate limits.",
+							security: [{ bearerAuth: [] }],
+						},
+					},
+				),
 	)
 
 	// Admin API: Feedback Stats
