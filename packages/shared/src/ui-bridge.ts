@@ -4,6 +4,7 @@ export interface AppConfig {
 	icon: string;
 	width: number;
 	height: number;
+	fullScreen?: boolean;
 	contentRenderer: (windowBody: HTMLElement) => void;
 }
 
@@ -33,23 +34,34 @@ export class WindowManager {
 		if (!this.template || !this.layer) return;
 		const clone = this.template.content.cloneNode(true) as DocumentFragment;
 		const win = clone.querySelector(".window") as HTMLElement;
+		const header = win.querySelector(".window-header") as HTMLElement;
 		const title = win.querySelector(".window-title") as HTMLElement;
 		const body = win.querySelector(".window-body") as HTMLElement;
 		const closeBtn = win.querySelector(".close-btn") as HTMLElement;
 
 		win.id = `window-${app.id}`;
 		title.innerText = app.name;
-		win.style.width = `${app.width}px`;
-		win.style.height = `${app.height}px`;
-		win.style.left = `${100 + Math.random() * 50}px`;
-		win.style.top = `${60 + Math.random() * 50}px`;
+
+		if (app.fullScreen) {
+			win.classList.add("window-fullscreen");
+			win.style.width = "100%";
+			win.style.height = "100%";
+			win.style.left = "0";
+			win.style.top = "0";
+			if (header) header.style.display = "none";
+		} else {
+			win.style.width = `${app.width}px`;
+			win.style.height = `${app.height}px`;
+			win.style.left = `${100 + Math.random() * 50}px`;
+			win.style.top = `${60 + Math.random() * 50}px`;
+			this.makeDraggable(win);
+		}
 
 		app.contentRenderer(body);
 
 		closeBtn.onclick = () => win.remove();
 		win.onmousedown = () => this.focus(win);
 
-		this.makeDraggable(win);
 		this.layer.appendChild(win);
 		this.focus(win);
 	}
@@ -65,6 +77,7 @@ export class WindowManager {
 
 	private makeDraggable(win: HTMLElement) {
 		const header = win.querySelector(".window-header") as HTMLElement;
+		if (!header) return;
 		let x = 0,
 			y = 0;
 		header.onmousedown = (e) => {

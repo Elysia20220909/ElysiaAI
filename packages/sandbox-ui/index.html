@@ -8,61 +8,73 @@
   </head>
   <body>
     <div id="app">
-      <!-- 1. Security Lock Screen (iOS Style) -->
-      <div id="lock-screen">
-        <div id="face-id-ui" class="faceid-scanner">
-          <div class="faceid-line"></div>
-        </div>
-        <div id="status-text" class="status-label">FaceID 認証中...</div>
-        <div class="passcode-input" id="passcode-dots">
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-        </div>
+      <!-- 1. Linux Kernel Boot Screen -->
+      <div id="boot-screen">
+        <div class="boot-terminal" id="boot-log"></div>
       </div>
 
-      <!-- 2. Elysia OS Desktop Environment -->
+      <!-- 2. Elysia OS Desktop Environment (Aurora Flagship Style) -->
       <div id="desktop" class="hidden">
         
-        <!-- Top Menu Bar (GNOME Style) -->
-        <div class="menu-bar">
-          <div class="menu-left">
-            <span class="menu-item bold" id="menu-view" style="cursor:pointer;" title="Activities (Full Screen Toggle)">Activities</span>
-          </div>
-          <div class="menu-center">
-            <span class="menu-item bold" id="system-time">12:00</span>
-          </div>
-          <div class="menu-right">
-            <span class="menu-item">📶</span>
-            <span class="menu-item">🔋 100%</span>
-            <span class="menu-item">⏻</span>
+        <!-- Top Status Bar (Aurora Shell) -->
+        <div class="top-bar">
+          <div class="activities-btn" id="activities-btn">ELYSIOS</div>
+          <div class="system-time" id="system-time">ELYSIALAB CORE 7.0</div>
+          <div class="system-status">
+            <span class="status-icon">📶</span>
+            <span class="status-icon">🌐</span>
+            <span class="status-icon">📡</span>
+            <span class="status-icon">⏻</span>
           </div>
         </div>
 
-        <!-- Desktop Workspace & Dash Layer -->
-        <div class="desktop-content">
-          <!-- Left Dash (Dock) -->
-          <div class="dock-container">
-            <div class="dock">
-              <div class="dock-item" data-app="chat" title="Elysia Intelligence">
-                <img src="/assets/icons/chat.png" alt="Chat" />
+        <div class="desktop-main">
+          <!-- Left Floating Sidebar (Glass Pill Dash) -->
+          <div class="dash-container">
+            <div class="dash">
+              <div class="dash-item active-app" data-app="sandbox" title="Sovereign Gauntlet">
+                 <div class="icon-grid" style="background-position: 0px -54px;"></div>
               </div>
-              <div class="dock-item" data-app="sandbox" title="Sandbox Orchestra">
-                <img src="/assets/icons/sandbox.png" alt="Sandbox" />
+              <div class="dash-item" data-app="nexus" title="Nexus Intelligence">
+                 <div class="icon-grid" style="background-position: 0px 0px;"></div>
               </div>
-              <div class="dock-item" data-app="vault" title="Memory Vault">
-                <img src="/assets/icons/vault.png" alt="Vault" />
+              <div class="dash-item" data-app="vault" title="Secure Vault">
+                 <div class="icon-grid" style="background-position: -108px 0px;"></div>
               </div>
-              <div class="dock-item" data-app="sovereign" title="Sovereign Link">
-                <img src="/assets/icons/sovereign.png" alt="Sovereign" />
+              <div class="dash-item" data-app="settings" title="Core Settings">
+                 <div class="icon-grid" style="background-position: -54px -54px;"></div>
               </div>
-              <div class="dock-divider"></div>
-              <div class="dock-item" data-app="settings" title="System Settings">
-                <img src="/assets/icons/settings.png" alt="Settings" />
+              
+              <div style="flex-grow: 1;"></div>
+
+              <div class="dash-item" data-app="all-apps" title="Grid View">
+                <div class="grid-icon">
+                  <span></span><span></span><span></span>
+                  <span></span><span></span><span></span>
+                  <span></span><span></span><span></span>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Desktop Space -->
+          <div id="desktop-area">
+             <div class="desktop-icons">
+               <div class="desktop-icon-item" data-app="home">
+                 <div class="glass-icon">🏠</div>
+                 <span>ELYSIASYS</span>
+               </div>
+               <div class="desktop-icon-item" data-app="trash">
+                 <div class="glass-icon">🗑️</div>
+                 <span>RECOVERY</span>
+               </div>
+             </div>
+             
+             <!-- Window Layer -->
+             <div id="window-layer"></div>
+          </div>
+        </div>
+      </div>
 
           <!-- Window Layer -->
           <div id="window-layer">
