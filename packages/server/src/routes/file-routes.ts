@@ -2,15 +2,20 @@ import { Elysia } from "elysia";
 import jwt from "jsonwebtoken";
 import { CONFIG, jsonError } from "../lib/constants";
 import { fileUploadManager } from "../lib/file-upload";
+import { logger } from "../lib/logger";
 
-export const fileRoutes = new Elysia().guard(
+export const fileRoutes = new Elysia({ prefix: "/api/files" }).guard(
 	{
 		beforeHandle: ({ request }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) throw new Error("Missing Bearer token");
+			if (!auth.startsWith("Bearer ")) {
+				logger.warn("❌ [Files] Rejected: Missing Bearer token");
+				throw new Error("Missing Bearer token");
+			}
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 			} catch {
+				logger.warn("❌ [Files] Rejected: Invalid token");
 				throw new Error("Invalid or expired token");
 			}
 		},
@@ -51,7 +56,7 @@ export const fileRoutes = new Elysia().guard(
 					},
 				};
 			})
-			.get("/files/:fileId", async ({ params }) => {
+			.get("/:fileId", async ({ params }) => {
 				const { fileId } = params;
 				const file = fileUploadManager.getFile(fileId);
 				if (!file) return jsonError(404, "File not found");
@@ -66,7 +71,7 @@ export const fileRoutes = new Elysia().guard(
 					},
 				});
 			})
-			.get("/files", async ({ request }) => {
+			.get("/", async ({ request }) => {
 				const auth = request.headers.get("authorization") || "";
 				let userId: string;
 				try {

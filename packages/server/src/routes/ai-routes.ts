@@ -18,14 +18,18 @@ import { streamChatWithOpenAI } from "../lib/openai-integration";
 const casualChat = { generateCasualResponse, getRandomTopic };
 const openaiIntegration = { streamChatWithOpenAI };
 
-export const aiRoutes = new Elysia().guard(
+export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 	{
 		beforeHandle: ({ request }) => {
 			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) throw new Error("Missing Bearer token");
+			if (!auth.startsWith("Bearer ")) {
+				logger.warn("❌ [AI] Rejected: Missing Bearer token");
+				throw new Error("Missing Bearer token");
+			}
 			try {
 				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
 			} catch {
+				logger.warn("❌ [AI] Rejected: Invalid token");
 				throw new Error("Invalid or expired token");
 			}
 		},
@@ -41,12 +45,9 @@ export const aiRoutes = new Elysia().guard(
 					body: { messages: any[]; mode?: string };
 					request: Request;
 				}) => {
-					const ip =
-						request.headers.get("x-forwarded-for") ||
-						request.headers.get("x-real-ip") ||
-						"anon";
-					let userId = "anon";
+					logger.info("🤖 [AI] Processing elysia-love request...");
 					const auth = request.headers.get("authorization") || "";
+					let userId = "anon";
 					try {
 						if (auth.startsWith("Bearer ")) {
 							const payload = jwt.verify(
@@ -166,11 +167,8 @@ export const aiRoutes = new Elysia().guard(
 					}),
 				},
 			)
-			.post("/api/chat", ({ body }) => proxyToFastAPI("/chat", "POST", body))
-			.post("/api/proxy/video", async ({ body }) => {
-				const VIDEO_API_KEY = process.env.VIDEO_API_KEY;
-				if (!VIDEO_API_KEY) return jsonError(500, "Video API Key missing");
-				// Real implementation would proxy to Runway/Luma/Sora here
+			.post("/chat", ({ body }) => proxyToFastAPI("/chat", "POST", body))
+			.post("/proxy/video", async () => {
 				return { status: "Feature pending Sovereign subscription" };
 			})
 			.get("/knowledge/review", async ({ query }) => {
