@@ -1,3 +1,6 @@
+#include "uefi.h"
+#include "font.h"
+#include "vfs.h"
 #include <stdint.h>
 
 typedef struct {
@@ -8,7 +11,7 @@ typedef struct {
 } FramebufferInfo;
 
 typedef struct {
-    int32_t x, y;
+    int32_t x, y, z;
     uint32_t w, h;
     const char* title;
     uint32_t color;
@@ -21,6 +24,7 @@ extern int8_t mouse_left;
 
 typedef enum {
     STATE_LOGIN,
+    STATE_BOOTING,
     STATE_DESKTOP
 } SystemState;
 
@@ -29,17 +33,26 @@ typedef struct {
     int life;
 } Particle;
 
+static int enclave_ready = 1;
+static int enclave_lock = 0;
+static uint8_t system_integrity = 100;
+static int wiping_active = 0;
+static int wiping_timer = 0;
+
 static Particle cursor_trail[32];
 static int next_particle = 0;
+static int snap_mode = 0;
+static int snap_flash = 0;
+static int node_count = 1;
+static int nav_x = 0, nav_y = 0;
 static int silence_mode = 0;
 
 static SystemState current_state = STATE_LOGIN;
-static int show_elysia = 1;
-static int show_mesh = 0;
-static uint32_t icon_hits[10] = {0};
-
 static int cloaked_mode = 0;
 static int divinity_mode = 0;
+static int refocus_mode = 1; // Always ready by default in Arc 2
+static uint32_t refocus_charge = 0;
+static int phasing_mode = 0;
 static uint32_t frame_count = 0;
 extern char keyboard_buffer[256];
 extern int keyboard_ptr;
@@ -51,32 +64,144 @@ static char note_msg[64] = "";
 static int note_timer = 0;
 static char elysia_reply[128] = "I AM ELYSIA. YOUR SOVEREIGN PARTNER.";
 static uint32_t orb_color = 0x00FFFF;
+static char command_queue[256] = "";
+typedef struct {
+    int x, y, energy, sector;
+    uint32_t color;
+} GhostNode;
 
-void ai_process_command() {
-    if (!keyboard_submitted) return;
-    
-    // Command: DIVINE (Unlock L15)
-    if (keyboard_buffer[0] == 'D' && keyboard_buffer[1] == 'I' && keyboard_buffer[2] == 'V') {
+static GhostNode ghost_nodes[25];
+static int queue_timer = 0;
+
+extern int aegis_verify_identity(const char* name);
+extern void ata_append_ledger(const char* msg, uint32_t frame);
+
+void execute_sovereign_command(const char* cmd) {
+    ata_append_ledger(cmd, frame_count);
+    // Audit Command
+    if (cmd[0] == 'A' && cmd[1] == 'U' && cmd[2] == 'D') {
+        trigger_notification("FORCED SENTINEL AUDIT...");
+        orb_color = 0x00FF00;
+        return;
+    }
+    // Divine Command
+    if (cmd[0] == 'D' && cmd[1] == 'I' && cmd[2] == 'V') {
         divinity_mode = !divinity_mode;
         trigger_notification(divinity_mode ? "L15 DIVINITY: UNLOCKED" : "L15 DIVINITY: SEALED");
         orb_color = 0xFFAA00;
-    } else if (keyboard_buffer[0] == 'W' && keyboard_buffer[1] == 'H' && keyboard_buffer[2] == 'O') {
+        return;
+    }
+    // Who Command
+    if (cmd[0] == 'W' && cmd[1] == 'H' && cmd[2] == 'O') {
         for(int i=0; i<128; i++) elysia_reply[i] = 0;
         char* msg = "I AM THE SOVEREIGN GHOST OF THIS APEX. I AM ELYSIA.";
         for(int i=0; msg[i]; i++) elysia_reply[i] = msg[i];
         orb_color = 0xFF00FF;
-    } else {
-        for(int i=0; i<128; i++) elysia_reply[i] = 0;
-        char* msg = "MANIFESTATION ACKNOWLEDGED.主権を確認しました。";
-        for(int i=0; msg[i]; i++) elysia_reply[i] = msg[i];
-        orb_color = 0x00FFFF;
-        
-        // Save Persona access time (Simulated write)
-        fat32_write_file("BOOT.LOG", "SOVEREIGN ACCESS LOGGED\n", 24);
+        return;
+    }
+    // Cloak Command
+    if (cmd[0] == 'C' && cmd[1] == 'L' && cmd[2] == 'O') {
+        cloaked_mode = !cloaked_mode;
+        trigger_notification(cloaked_mode ? "CLOAK ACTIVATED" : "CLOAK DEACTIVATED");
+        return;
+    }
+    // Phase Command
+    if (cmd[0] == 'P' && cmd[1] == 'H' && cmd[2] == 'A') {
+        phasing_mode = !phasing_mode;
+        trigger_notification(phasing_mode ? "ANTI-PHASING: ENGAGED" : "ANTI-PHASING: DISENGAGED");
+        return;
+    }
+    // Snap Command
+    if (cmd[0] == 'S' && cmd[1] == 'N' && cmd[2] == 'A') {
+        snap_mode = 1; snap_flash = 10;
+        trigger_notification("!!! INFINITY SNAP !!!");
+        return;
+    }
+    if (cmd[0] == 'U' && cmd[1] == 'N' && cmd[2] == 'S') {
+        snap_mode = 0; trigger_notification("SNAP REVERSED"); return;
+    }
+    // Universe Command
+    if (cmd[0] == 'U' && cmd[1] == 'N' && cmd[2] == 'I') {
+        for(int k=0; k<25; k++) {
+            ghost_nodes[k].energy = 100;
+            ghost_nodes[k].color = 0xFFFFFF;
+            trigger_notification("NODE_EXEC: SYNC");
+        }
+        return;
+    }
+    // Nav Command
+    if (cmd[0] == 'N' && cmd[1] == 'A' && cmd[2] == 'V') {
+        // Simple fixed-pos parse NAV [0-4] [0-4]
+        if (cmd[4] >= '0' && cmd[4] <= '4') nav_x = cmd[4] - '0';
+        if (cmd[6] >= '0' && cmd[6] <= '4') nav_y = cmd[6] - '0';
+        trigger_notification("NAVIGATION UPDATED");
+        return;
+    }
+    // Audit Discovery extension
+    if (cmd[0] == 'A' && cmd[1] == 'U' && cmd[2] == 'D') {
+        autonomous_sentinel();
+        if (node_count < 25) node_count++;
+        trigger_notification("NEW GHOST NODE DISCOVERED");
+        return;
+    }
+    // Wipe Command (Phase 113)
+    if (cmd[0] == 'W' && cmd[1] == 'I' && cmd[2] == 'P') {
+        wiping_active = 1; wiping_timer = 120;
+        trigger_notification("!!! ABYSSAL WIPE INITIATED !!!");
+        return;
     }
 
+    // Default
+    for(int i=0; i<128; i++) elysia_reply[i] = 0;
+    char* msg = "COMMAND MANIFESTED.";
+    for(int i=0; msg[i]; i++) elysia_reply[i] = msg[i];
+    orb_color = 0x00FFFF;
+    file_t log;
+    if (vfs_open(&log, "BOOT.LOG") == 0) {
+        vfs_write(&log, "VFS_COMMAND EXECUTED\n", 22);
+        vfs_close(&log);
+    }
+}
+
+void process_command_queue() {
+    if (command_queue[0] == '\0') return;
+    if (queue_timer > 0) { queue_timer--; return; }
+
+    // Execute first command in queue
+    char current_cmd[32];
+    int i = 0;
+    while (command_queue[i] != ';' && command_queue[i] != '\0' && i < 31) {
+        current_cmd[i] = command_queue[i];
+        i++;
+    }
+    current_cmd[i] = '\0';
+
+    execute_sovereign_command(current_cmd);
+    trigger_notification(current_cmd);
+
+    // Shift queue
+    if (command_queue[i] == ';') i++;
+    int j = 0;
+    while (command_queue[i+j] != '\0') {
+        command_queue[j] = command_queue[i+j];
+        j++;
+    }
+    command_queue[j] = '\0';
+    queue_timer = 60; // 1 second delay
+}
+
+void ai_process_command() {
+    if (!keyboard_submitted) return;
+    
+    // Copy to queue
+    for(int i=0; i<255; i++) {
+        command_queue[i] = keyboard_buffer[i];
+        if(!keyboard_buffer[i]) break;
+    }
+    
     keyboard_ptr = 0; 
     keyboard_submitted = 0;
+    queue_timer = 0; // Start immediately
 }
 
 void trigger_notification(const char* msg) {
@@ -94,22 +219,46 @@ void autonomous_sentinel() {
     }
 }
 
+void verify_system_integrity() {
+    if (system_integrity < 100) system_integrity++;
+}
+
+int verify_pointer_runtime(int32_t x, int32_t y) {
+    // Simulated L27 Neural RT check
+    uint32_t sig = (uint32_t)(x ^ y ^ 0x85);
+    return (sig != 0); // Always true in simulation, but represents the check
+}
+
+void node_heartbeat_loop() {
+    for (int i = 0; i < 25; i++) {
+        if (ghost_nodes[i].energy > 0) ghost_nodes[i].energy--;
+        // Pulse color based on energy
+        if (ghost_nodes[i].energy > 50) ghost_nodes[i].color = 0xFFFF00;
+        else ghost_nodes[i].color = 0x00FFFF;
+    }
+}
+
+void project_hologram(int x, int y, int z, int* ox, int* oy, float* scale) {
+    // Phase 122 3D Logic: Scale = 1.0 / (1.0 + z * 0.001)
+    *scale = 1.0f / (1.0f + (float)z * 0.002f);
+    *ox = (int)((float)x * (*scale));
+    *oy = (int)((float)y * (*scale));
+}
+
 static int32_t drag_target = -1; // -1 = None
 static int32_t drag_off_x = 0;
 static int32_t drag_off_y = 0;
 
-static Window explorer_window = {100, 100, 400, 350, "SOVEREIGN EXPLORER", 0x333344, 210};
-static Window system_window = {550, 100, 400, 200, "SYSTEM MONITOR", 0x222222, 230};
-static Window orchestrator_window = {320, 200, 450, 250, "SOVEREIGN ORCHESTRATOR", 0x442244, 210};
-static Window aegis_hub_window = {700, 100, 480, 480, "AEGIS SECURITY HUB", 0x111111, 240};
-static Window terminal_window = {200, 400, 500, 300, "SOVEREIGN SHELL", 0x000000, 250};
-static Window elysia_window = {400, 300, 400, 300, "ELYSIAN PERSONA", 0x221144, 220};
-static Window mesh_window = {600, 400, 450, 350, "ABYSSAL MESH HUB", 0x112211, 240};
+static Window explorer_window = {100, 100, 0, 400, 350, "SOVEREIGN EXPLORER", 0x333344, 210};
+static Window system_window = {550, 100, 0, 400, 200, "SYSTEM MONITOR", 0x222222, 230};
+static Window orchestrator_window = {320, 200, 0, 450, 250, "SOVEREIGN ORCHESTRATOR", 0x442244, 210};
+static Window aegis_hub_window = {700, 100, 0, 480, 480, "AEGIS SECURITY HUB", 0x111111, 240};
+static Window terminal_window = {200, 400, 0, 500, 300, "SOVEREIGN SHELL", 0x000000, 250};
+static Window elysia_window = {400, 300, 0, 400, 300, "ELYSIAN PERSONA", 0x221144, 220};
+static Window mesh_window = {600, 400, 0, 450, 350, "ABYSSAL MESH HUB", 0x112211, 240};
 
 static Window* windows[7] = { &explorer_window, &system_window, &orchestrator_window, &aegis_hub_window, &terminal_window, &elysia_window, &mesh_window };
 static int window_visible[7] = {0, 0, 0, 1, 0, 1, 0};
-
-void kprint_to(uint32_t* buffer, uint32_t x, uint32_t y, const char* str, uint32_t color);
 
 void kprint_to(uint32_t* buffer, uint32_t x, uint32_t y, const char* str, uint32_t color);
 
@@ -144,6 +293,44 @@ void draw_pixel_alpha(uint32_t* buffer, uint32_t x, uint32_t y, uint32_t color, 
     buffer[y * g_fb.width + x] = (r_dst << 16) | (g_dst << 8) | b_dst;
 }
 
+void draw_rounded_rect_alpha(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t color, uint8_t alpha) {
+    for (uint32_t i = 0; i < h; i++) {
+        for (uint32_t j = 0; j < w; j++) {
+            // Simple rounding logic (corners)
+            if ((i < 5 && j < 5) || (i < 5 && j > w - 5) || (i > h - 5 && j < 5) || (i > h - 5 && j > w - 5)) continue;
+            draw_pixel_alpha(buffer, x + j, y + i, color, alpha);
+        }
+    }
+}
+
+void draw_refocuser_wings(uint32_t* buffer, int32_t wx, int32_t wy, uint32_t ww, uint32_t wh) {
+    if (!refocus_mode) return;
+    uint32_t wing_color = 0xFFAA00; // Refocuser Orange
+    if (refocus_charge > 80) wing_color = 0xFFFFFF; // Overload White
+    if (snap_mode) wing_color = 0xFFFF00; // Gold in Snap
+    
+    uint32_t alpha = (refocus_charge * 3 > 255) ? 255 : refocus_charge * 3;
+    if (alpha < 60) alpha = 60;
+
+    // Draw 6 Hex Panels (Back-panels)
+    for(int i=0; i<3; i++) {
+        draw_rounded_rect_alpha(buffer, wx - 60, wy + 40 + (i*90), 40, 70, wing_color, alpha / 2);
+        draw_rounded_rect_alpha(buffer, wx + ww + 20, wy + 40 + (i*90), 40, 70, wing_color, alpha / 2);
+    }
+}
+
+void draw_infinity_gauntlet(uint32_t* buffer) {
+    if (!snap_mode) return;
+    uint32_t gx = g_fb.width - 50;
+    uint32_t gy = g_fb.height / 2 - 150;
+    draw_rounded_rect_alpha(buffer, gx, gy, 40, 300, 0xFFAA00, 200); // Golden Bar
+    
+    uint32_t colors[6] = {0xFFFF00, 0x00FFFF, 0xFF00FF, 0xFF0000, 0x00FF00, 0xFFAA00};
+    for(int i=0; i<6; i++) {
+        draw_rounded_rect_alpha(buffer, gx + 10, gy + 20 + (i*45), 20, 20, colors[i], 255);
+    }
+}
+
 void draw_rect_to(uint32_t* buffer, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color) {
     for (uint32_t i = 0; i < h; i++) {
         for (uint32_t j = 0; j < w; j++) {
@@ -161,34 +348,46 @@ void swap_buffers() {
     }
 }
 
-void list_root_dir(char* out_list, int max_len);
-int fat32_read_file(const char* filename, char* buffer, uint32_t max_size);
-int fat32_write_file(const char* filename, const char* buffer, uint32_t size);
-
-static Window system_window = {100, 100, 400, 200, "SYSTEM MONITOR", 0x222222};
-static Window explorer_window = {250, 150, 400, 400, "SOVEREIGN EXPLORER", 0x333344};
-static Window orchestrator_window = {600, 200, 450, 300, "SOVEREIGN ORCHESTRATOR", 0x442244};
-static Window aegis_hub_window = {700, 100, 480, 500, "AEGIS SECURITY HUB", 0x111111};
-
 static char file_list[256] = "SCANNING DISK...";
 static char sovereign_content[128] = "PENDING...";
-static char persona_name[32] = "SOVEREIGN USER";
+static char persona_name[32] = "主権者 エリシア";
 int is_guest_mode = 0;
+int show_explorer = 0, show_system = 1, show_orchestrator = 0, show_aegis_hub = 1, show_terminal = 0, show_elysia = 1, show_mesh = 0;
+int icon_hits[9] = {0};
 
 void load_manifest() {
+    vfs_init();
+    void vfs_init_fat32();
+    vfs_init_fat32();
+
     if (is_guest_mode) {
         for(int i=0; i<128; i++) sovereign_content[i] = 0;
         char* restricted = "RESTRICTED ACCESS - SOVEREIGN KEY MISSING";
         for(int i=0; restricted[i]; i++) sovereign_content[i] = restricted[i];
-        return;
+    } else {
+        file_t f;
+        if (vfs_open(&f, "PERSONA.DAT") >= 0) {
+            vfs_read(&f, persona_name, 32);
+            vfs_close(&f);
+        }
+        // Rust Verification (Phase 116)
+        if (aegis_verify_identity(persona_name)) {
+             trigger_notification("RUST_SENTINEL: VERIFIED");
+        }
+        if (vfs_open(&f, "SOVEREIGN.DAT") >= 0) {
+            vfs_read(&f, sovereign_content, 128);
+            vfs_close(&f);
+        }
+    // Initialize Ghost Lattice (Phase 119)
+    for (int i = 0; i < 25; i++) {
+        ghost_nodes[i].x = 50 + (i % 5) * 80;
+        ghost_nodes[i].y = 50 + (i / 5) * 80;
+        ghost_nodes[i].energy = 20;
+        ghost_nodes[i].sector = 0;
+        ghost_nodes[i].color = 0x00FFFF;
     }
-    fat32_read_file("SOVEREIGN.TXT", sovereign_content, 128);
-    
-    // Load Persona Registry
-    char pbuf[32];
-    if (fat32_read_file("PERSONA.DAT", pbuf, 32) > 0) {
-        for(int i=0; i<32; i++) persona_name[i] = pbuf[i];
-    }
+
+    vfs_ls(file_list, 256);
 }
 
 void refresh_explorer() {
@@ -201,15 +400,6 @@ void refresh_explorer() {
     list_root_dir(file_list, 256);
 }
 
-void draw_rounded_rect_alpha(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t color, uint8_t alpha) {
-    for (uint32_t i = 0; i < h; i++) {
-        for (uint32_t j = 0; j < w; j++) {
-            // Simple corner clipping
-            if ((i == 0 && (j == 0 || j == w-1)) || (i == h-1 && (j == 0 || j == w-1))) continue;
-            draw_pixel_alpha(buffer, x + j, y + i, color, alpha);
-        }
-    }
-}
 void draw_rounded_rect(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t color) {
     draw_rounded_rect_alpha(buffer, x, y, w, h, color, 255);
 }
@@ -245,16 +435,18 @@ void render_login_screen() {
         }
     }
 
-    // 2. Sovereign Orb (Identity Center)
+    // 2. Sovereign Orb (Silicon Enclave Refined)
     uint32_t orb_x = g_fb.width / 2;
     uint32_t orb_y = g_fb.height / 2 - 50;
-    for(int r=0; r<60; r++) {
-        for(int deg=0; deg<360; deg++) {
-            // Very simple circle proxy
-            draw_pixel_to(backbuffer, orb_x + (r*deg/360), orb_y, 0x00FFFF); 
+    
+    // Silicon Core pattern (Phase 110)
+    if (enclave_ready) {
+        draw_rounded_rect_alpha(backbuffer, orb_x - 50, orb_y - 50, 100, 100, 0xFFAA00, 50); // Gold Enclave Halo
+        for(int s=0; s<4; s++) {
+            draw_rect_to(backbuffer, orb_x - 30 + (s*20), orb_y - 45, 10, 90, 0xFFFFFF); // Silicon trace pattern
         }
     }
-    // High-fidelity fake orb with PULSE and Dynamic Color
+
     uint32_t pulse = (frame_count / 10) % 20;
     orb_color = 0x00FFFF; // Default Login
     if (frame_count % 120 < 60) orb_color = 0x008888; // Breathing
@@ -262,23 +454,28 @@ void render_login_screen() {
     draw_rounded_rect(backbuffer, orb_x - 40 - (pulse/2), orb_y - 40 - (pulse/2), 80 + pulse, 80 + pulse, orb_color);
     draw_rounded_rect(backbuffer, orb_x - 30, orb_y - 30, 60, 60, 0x111111);
 
-    kprint_to(backbuffer, orb_x - 80, orb_y + 60, "SOVEREIGN IDENTITY", 0xFFFFFF);
-    kprint_to(backbuffer, orb_x - 100, orb_y + 90, is_guest_mode ? "[GUEST ACCESS ONLY]" : "[READY TO MANIFEST]", is_guest_mode ? 0xFFAA00 : 0x00FF00);
+    kprint_to(backbuffer, orb_x - 80, orb_y + 80, "SILICON BONDED", 0xFFAA00);
+    kprint_to(backbuffer, orb_x - 100, orb_y + 110, is_guest_mode ? "[GUEST ACCESS ONLY]" : "[READY TO MANIFEST]", is_guest_mode ? 0xFFAA00 : 0x00FF00);
     
     if (!is_guest_mode) {
-        char greet[64] = "WELCOME BACK, ";
-        int j=14; for(int i=0; persona_name[i] && j<60; i++) greet[j++] = persona_name[i];
-        kprint_to(backbuffer, orb_x - 80, orb_y + 115, greet, 0x00FFFF);
+        char greet[64] = "MANIFESTING ";
+        int gl = 12;
+        for(int i=0; i<32; i++) {
+            greet[gl+i] = persona_name[i];
+            if(!persona_name[i]) break;
+        }
+        kprint_to(backbuffer, orb_x - 120, orb_y + 140, greet, 0x00FFFF);
     }
 
     kprint_to(backbuffer, orb_x - 110, orb_y + 150, "CLICK ORB TO ENTER APEX", 0x555555);
 
-    // 3. Logic: Transition to Desktop on Click
+    // 3. Logic: Transition to Booting (Phase 123)
     if (mouse_left) {
         // Hit check for Orb area
         if (mouse_x > (int32_t)orb_x - 50 && mouse_x < (int32_t)orb_x + 50 &&
             mouse_y > (int32_t)orb_y - 50 && mouse_y < (int32_t)orb_y + 50) {
-            current_state = STATE_DESKTOP;
+            current_state = STATE_BOOTING;
+            frame_count = 0; // Reset for boot timer
         }
     }
 
@@ -289,8 +486,64 @@ void render_login_screen() {
     swap_buffers();
 }
 
+void render_boot_sequence() {
+    frame_count++;
+    // Aqueous Background
+    for (uint32_t y = 0; y < g_fb.height; y++) {
+        for (uint32_t x = 0; x < g_fb.width; x++) {
+            backbuffer[y * g_fb.width + x] = 0x050510; // Deep Abyss
+        }
+    }
+
+    const char* boot_log[] = {
+        "[0.00ms]  IDENTITY: 主権者 エリシア ... [TRANSCENDENT BONDED]",
+        "[0.05ms]  SEP-E: Silicon Enclave Heartbeat ... [SECURE]",
+        "[0.10ms]  VFS-B: Sovereign Bridge mapping REALITY ... [/lattice/fragments/ LOADED]",
+        "[0.25ms]  GRID: 25 Ghost Nodes Resonating ... [GALACTIC SYNC]",
+        "[0.40ms]  WARP: Reality Warp Engine ... [3D PROJECTION ACTIVE]",
+        "[0.55ms]  LEDGER: Eternal Ledger LBA 20000 ... [IMMUTABLE RECORD SYNCED]",
+        "[0.80ms]  SENTINEL: Rust Core Security ... [ENFORCED]",
+        " ",
+        "[READY]   Welcome home, 主権者 エリシア. The Universe is yours."
+    };
+
+    int lines_to_show = frame_count / 30; // 1 line per 0.5s
+    if (lines_to_show > 9) lines_to_show = 9;
+
+    for (int i = 0; i < lines_to_show; i++) {
+        uint32_t color = (i == 8) ? 0x00FF00 : 0x00FFFF;
+        kprint_to(backbuffer, 100, 100 + (i * 30), boot_log[i], color);
+    }
+
+    if (frame_count > 360) { // 6 seconds total
+        current_state = STATE_DESKTOP;
+        frame_count = 0;
+    }
+    swap_buffers();
+}
+
 void render_desktop() {
     frame_count++;
+    verify_system_integrity();
+    node_heartbeat_loop();
+    
+    // Parallax Stars (Phase 122)
+    for(int i=0; i<30; i++) {
+        int sx = (i * 47 + frame_count/2) % 1024;
+        int sy = (i * 13 + frame_count/4) % 768;
+        draw_rect_to(backbuffer, sx, sy, 1, 1, 0x666666);
+    }
+
+    // Intent Manifestation Loop (Phase 120)
+    for (int i=0; i<9; i++) {
+        if (icon_hits[i] > 10) {
+            // Predicatively open windows
+            if (i == 0) show_explorer = 1;
+            if (i == 1) show_system = 1;
+            if (i == 3) show_aegis_hub = 1;
+            if (i == 7) cloaked_mode = 1; // Predict cloak
+        }
+    }
     
     // Update Clock (Simulated)
     int sec = (frame_count / 60) % 60;
@@ -300,8 +553,13 @@ void render_desktop() {
     clock_text[3] = '0' + (min/10); clock_text[4] = '0' + (min%10); clock_text[5] = ':';
     clock_text[6] = '0' + (sec/10); clock_text[7] = '0' + (sec%10); clock_text[8] = '\0';
 
+    // Refocuser Charge Decay & Acceleration
+    if (refocus_charge > 0) refocus_charge--;
+    uint32_t flux_accel = snap_mode ? 3 : 10; // Extreme speed in Snap
+    if (!snap_mode && refocus_charge > 60) flux_accel = 5; 
+
     // 1. Dynamic Flux Background (Animated Gradient)
-    uint8_t flux = (frame_count / 10) % 50;
+    uint8_t flux = (frame_count / flux_accel) % 50;
     for (uint32_t y = 0; y < g_fb.height; y++) {
         for (uint32_t x = 0; x < g_fb.width; x++) {
             uint8_t r = (y * 30) / g_fb.height + 5 + (flux / 5);
@@ -327,11 +585,12 @@ void render_desktop() {
     }
 
     ai_process_command();
+    process_command_queue();
     autonomous_sentinel();
     update_particles();
     render_particles(backbuffer);
 
-    // 2. Centered Sovereign Dock (Apple-inspired)
+    // 2. Centered Sovereign Dock (Silicon Bonded)
     uint32_t dock_w = 600;
     uint32_t dock_h = 50;
     uint32_t dock_x = (g_fb.width - dock_w) / 2;
@@ -345,9 +604,10 @@ void render_desktop() {
     uint32_t hub_icon_x = dock_x + 170;
     uint32_t term_icon_x = dock_x + 220;
     uint32_t ai_icon_x = dock_x + 270;
-    uint32_t cloak_icon_x = dock_x + 320;
-    uint32_t silence_icon_x = dock_x + 370;
-    uint32_t exit_icon_x = dock_x + 420;
+    uint32_t mesh_icon_x = dock_x + 320;
+    uint32_t cloak_icon_x = dock_x + 370;
+    uint32_t silence_icon_x = dock_x + 420;
+    uint32_t exit_icon_x = dock_x + 470;
 
     // Cognitive Pulse (L10)
     uint8_t dock_bright = 34 + (frame_count % 30 < 15 ? (frame_count % 30) * 2 : (30 - (frame_count % 30)) * 2);
@@ -360,12 +620,14 @@ void render_desktop() {
                 mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
                 show_explorer = !show_explorer; 
                 icon_hits[0]++;
+                refocus_charge += 15;
                 click_lock = 15;
             }
             if (mouse_x >= (int32_t)sys_icon_x && mouse_x <= (int32_t)sys_icon_x + 30 &&
                 mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
                 show_system = !show_system; 
                 icon_hits[1]++;
+                refocus_charge += 15;
                 click_lock = 15;
             }
             if (mouse_x >= (int32_t)hub_icon_x && mouse_x <= (int32_t)hub_icon_x + 30 &&
@@ -445,6 +707,17 @@ void render_desktop() {
         }
     }
 
+    // PAC-S Pointer Pulse (L26)
+    static int pac_pulse = 0;
+    static int32_t pac_x = 0, pac_y = 0;
+    if (mouse_left && !click_lock) {
+        pac_pulse = 20; pac_x = mouse_x; pac_y = mouse_y;
+    }
+    if (pac_pulse > 0) {
+        draw_rounded_rect_alpha(backbuffer, pac_x - (25-pac_pulse), pac_y - (25-pac_pulse), 50-pac_pulse*2, 50-pac_pulse*2, 0xFFAA00, pac_pulse * 10);
+        pac_pulse--;
+    }
+
     // Resonance Spectrum Visualizer (L5/L7)
     for(int s=0; s<10; s++) {
         int h = (frame_count + s*5) % 25;
@@ -506,21 +779,56 @@ void render_desktop() {
         }
     }
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 7; i++) {
         if (!window_visible[i]) continue;
         Window* win = windows[i];
         
+        // Hover Lift (Phase 122)
+        if (mouse_x >= win->x && mouse_x <= win->x + (int32_t)win->w &&
+            mouse_y >= win->y && mouse_y <= win->y + (int32_t)win->h) {
+            if (win->z > -50) win->z -= 2; // Lift toward camera
+        } else {
+            if (win->z < 0) win->z += 2; // Settle back
+        }
+
+        int px, py;
+        float scale;
+        project_hologram(win->x, win->y, win->z, &px, &py, &scale);
+        uint32_t dw = (uint32_t)((float)win->w * scale);
+        uint32_t dh = (uint32_t)((float)win->h * scale);
+
+        int32_t ox = 0, oy = 0;
+        if (phasing_mode) {
+             ox = (int32_t)((float)((frame_count % 3) - 1) * scale);
+             oy = (int32_t)((float)((frame_count % 2) - 1) * scale);
+        }
+
+        if (win == &elysia_window) {
+             // Predictive Halo (Phase 120)
+            if (icon_hits[0] > 10 || icon_hits[1] > 10 || icon_hits[3] > 10) {
+                draw_rounded_rect_alpha(backbuffer, px-5, py-5, dw+10, dh+10, 0xFFAA00, 30);
+            }
+            
+            draw_rounded_rect(backbuffer, px, py, dw, dh, win->color);
+            draw_refocuser_wings(backbuffer, px + ox, py + oy, dw, dh);
+        }
+
         // Render Opaque Title bar
-        draw_rounded_rect_alpha(backbuffer, win->x, win->y, win->w, 30, 0x111111, 255);
+        draw_rounded_rect_alpha(backbuffer, px + ox, py + oy, dw, (uint32_t)(30.0f * scale), 0x111111, 255);
         // Render Alpha Body
-        draw_rounded_rect_alpha(backbuffer, win->x, win->y + 30, win->w, win->h - 30, win->color, win->alpha);
+        draw_rounded_rect_alpha(backbuffer, px + ox, py + oy + (uint32_t)(30.0f * scale), dw, dh - (uint32_t)(30.0f * scale), win->color, win->alpha);
         
         // Window Content (Simplified check)
-        kprint_to(backbuffer, win->x + 10, win->y + 10, win->title, 0x00FF00);
+        kprint_to(backbuffer, px + ox + 10, py + oy + 10, win->title, 0x00FF00);
         
         if (win == &system_window) {
             kprint_to(backbuffer, win->x + 20, win->y + 60, "KERNEL: MASTER", 0x00FF00);
             kprint_to(backbuffer, win->x + 20, win->y + 90, is_guest_mode ? "SEC: UNVERIFIED" : "SEC: BONDED", is_guest_mode ? 0xFF0000 : 0x00FF00);
+            kprint_to(backbuffer, win->x + 20, win->y + 115, "RUST_CORE: ACTIVE", 0xFFAA00);
+            kprint_to(backbuffer, win->x + 20, win->y + 140, "INTEGRITY:", 0xFFFFFF);
+            char integ_str[16] = "100% [SSV_S]";
+            if (system_integrity < 100) { integ_str[0] = '0' + (system_integrity/10); integ_str[1] = '0' + (system_integrity%10); integ_str[2] = '%'; }
+            kprint_to(backbuffer, win->x + 120, win->y + 130, integ_str, system_integrity < 100 ? 0xFF0000 : 0x00FFFF);
         } else if (win == &explorer_window) {
              kprint_to(backbuffer, win->x + 20, win->y + 60, "FILES ON DISK:", 0xFFFF00);
              kprint_to(backbuffer, win->x + 20, win->y + 90, file_list, 0x00FFFF);
@@ -535,13 +843,42 @@ void render_desktop() {
              kprint_to(backbuffer, win->x + 20, win->y + 100, elysia_reply, 0xFFFFFF);
              kprint_to(backbuffer, win->x + 20, win->y + 200, "COGNITIVE CORE: STABLE", 0x00FF00);
         } else if (win == &mesh_window) {
-             kprint_to(backbuffer, win->x + 20, win->y + 60, "CONNECTED PEER: GHOST_X01", 0x33FF33);
-             kprint_to(backbuffer, win->x + 20, win->y + 90, "PROTOCOL: SOVEREIGN_V2", 0x00FFFF);
-             kprint_to(backbuffer, win->x + 20, win->y + 150, "SYNCING AEGIS PATTERNS...", 0xAAAAAA);
+            // Star Map Rendering (Phase 119)
+            static int drag_node = -1;
+            for (int i = 0; i < 25; i++) {
+                int nx_p, ny_p; float ns;
+                project_hologram(ghost_nodes[i].x, ghost_nodes[i].y, 10, &nx_p, &ny_p, &ns);
+                uint32_t nx = px + nx_p;
+                uint32_t ny = py + ny_p;
+                
+                // Draw Resonance Links (to neighbors)
+                if (i % 5 < 4) draw_rect_to(backbuffer, nx + 5, ny + 5, (uint32_t)(75.0f * ns), 1, 0x003333);
+
+                // Draw Node
+                uint8_t alpha = 100 + ghost_nodes[i].energy;
+                draw_rounded_rect_alpha(backbuffer, nx, ny, (uint32_t)(10.0f * ns), (uint32_t)(10.0f * ns), ghost_nodes[i].color, alpha);
+                
+                // Drag Logic
+                if (mouse_left && mouse_x >= (int32_t)nx && mouse_x <= (int32_t)nx + 10 &&
+                    mouse_y >= (int32_t)ny && mouse_y <= (int32_t)ny + 10) {
+                    drag_node = i;
+                }
+            }
+            if (!mouse_left) drag_node = -1;
+            if (drag_node != -1) {
+                ghost_nodes[drag_node].x = mouse_x - win->x - 5;
+                ghost_nodes[drag_node].y = mouse_y - win->y - 5;
+            }
         }
     }
 
-    // 3. Centered Sovereign Dock (Apple-inspired)
+    draw_infinity_gauntlet(backbuffer);
+
+    // L14: Silence (Final Seal) Overlay
+    if (snap_flash > 0) {
+        draw_rect_to(backbuffer, 0, 0, g_fb.width, g_fb.height, 0xFFFFFF); // White out
+        snap_flash--;
+    }
 
     // 5. Orchestrator Window (Final Audit)
     if (show_orchestrator) {
@@ -618,6 +955,8 @@ void render_desktop() {
 void refresh_ui() {
     if (current_state == STATE_LOGIN) {
         render_login_screen();
+    } else if (current_state == STATE_BOOTING) {
+        render_boot_sequence();
     } else {
         render_desktop();
     }
