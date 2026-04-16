@@ -1,6 +1,7 @@
 {
     "python.linting.enabled": true,
     "python.linting.ruffEnabled": true,
+    "python.defaultInterpreterPath": "C:\\Python314\\python.exe",
     "python.formatting.provider": "none",
     "[python]": {
         "editor.formatOnSave": true,
