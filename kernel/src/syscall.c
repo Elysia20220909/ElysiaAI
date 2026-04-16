@@ -34,5 +34,13 @@ void syscall_handler(uint64_t syscall_num, uint64_t arg1, uint64_t arg2, uint64_
                 kernel_tune((uint32_t)arg1, (uint32_t)arg2, (uint32_t)arg3);
             }
             break;
+        case 5: // SYS_SPAWN_AGENT (Arc 10 Swarm Nucleus)
+            {
+                // arg1: agent_type_t, arg2: swarm_id
+                #include "task.h"
+                void task_swarm_spawn(agent_type_t type, uint32_t swarm_id);
+                task_swarm_spawn((agent_type_t)arg1, (uint32_t)arg2);
+            }
+            break;
     }
 }

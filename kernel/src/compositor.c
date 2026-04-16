@@ -233,6 +233,18 @@ void autonomous_sentinel() {
     }
 }
 
+void autonomous_shield() {
+    if (frame_count % 400 == 0) {
+        trigger_notification("SHIELD: PERIMETER HARDENED");
+    }
+}
+
+void autonomous_scout() {
+    if (frame_count % 800 == 0) {
+        trigger_notification("SCOUT: NODE DISCOVERY PULSE");
+    }
+}
+
 void verify_system_integrity() {
     if (system_integrity < 100) system_integrity++;
 }
@@ -270,9 +282,10 @@ static Window aegis_hub_window = {700, 100, 0, 480, 480, "AEGIS SECURITY HUB", 0
 static Window terminal_window = {200, 400, 0, 500, 300, "SOVEREIGN SHELL", 0x000000, 250};
 static Window elysia_window = {400, 300, 0, 400, 300, "ELYSIAN PERSONA", 0x221144, 220};
 static Window mesh_window = {600, 400, 0, 450, 350, "ABYSSAL MESH HUB", 0x112211, 240};
+static Window swarm_window = {250, 150, 0, 500, 400, "COSMIC SWARM MONITOR", 0x110022, 210};
 
-static Window* windows[7] = { &explorer_window, &system_window, &orchestrator_window, &aegis_hub_window, &terminal_window, &elysia_window, &mesh_window };
-static int window_visible[7] = {0, 0, 0, 1, 0, 1, 0};
+static Window* windows[8] = { &explorer_window, &system_window, &orchestrator_window, &aegis_hub_window, &terminal_window, &elysia_window, &mesh_window, &swarm_window };
+static int window_visible[8] = {0, 0, 0, 1, 0, 1, 0, 0};
 
 void kprint_to(uint32_t* buffer, uint32_t x, uint32_t y, const char* str, uint32_t color);
 
@@ -634,6 +647,7 @@ void render_desktop() {
     uint32_t orch_icon_x = dock_x + 120;
     uint32_t hub_icon_x = dock_x + 170;
     uint32_t term_icon_x = dock_x + 220;
+    uint32_t sw_icon_x = dock_x + 270; // Arc 10: Swarm Monitor
     uint32_t exit_icon_x = dock_x + 470;
     uint32_t evo_icon_x = dock_x + 520; // Arc 9: Evolutionary Pulse
 
@@ -684,6 +698,14 @@ void render_desktop() {
                 trigger_notification("MESH SYNC INITIATED");
                 click_lock = 15;
             }
+            if (mouse_x >= (int32_t)sw_icon_x && mouse_x <= (int32_t)sw_icon_x + 30 &&
+                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
+                show_orchestrator = 0; // Close others
+                show_explorer = 0;
+                window_visible[7] = !window_visible[7]; // Toggle Swarm Monitor
+                trigger_notification("SWARM OVERVIEW: ACTIVE");
+                click_lock = 15;
+            }
             if (mouse_x >= (int32_t)cloak_icon_x && mouse_x <= (int32_t)cloak_icon_x + 30 &&
                 mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
                 cloaked_mode = !cloaked_mode; 
@@ -723,6 +745,7 @@ void render_desktop() {
     draw_rect_to(backbuffer, term_icon_x, dock_y + 10, 30, 30, show_terminal ? 0xFFFFFF : 0x222222); 
     draw_rect_to(backbuffer, ai_icon_x, dock_y + 10, 30, 30, show_elysia ? 0xFFFFFF : 0x00FFFF); 
     draw_rect_to(backbuffer, mesh_icon_x, dock_y + 10, 30, 30, show_mesh ? 0x33FF33 : 0x114411); // Mesh
+    draw_rect_to(backbuffer, sw_icon_x, dock_y + 10, 30, 30, window_visible[7] ? 0xFF00FF : 0x440044); // Swarm Monitor
     draw_rect_to(backbuffer, cloak_icon_x, dock_y + 10, 30, 30, cloaked_mode ? 0x8800FF : 0x330055); 
     draw_rect_to(backbuffer, silence_icon_x, dock_y + 10, 30, 30, silence_mode ? 0x111111 : 0x444444); 
     draw_rect_to(backbuffer, exit_icon_x, dock_y + 10, 30, 30, 0xFF0000); 
@@ -738,6 +761,7 @@ void render_desktop() {
     kprint_to(backbuffer, term_icon_x + 5, dock_y + 15, "TR", 0xFFFFFF);
     kprint_to(backbuffer, ai_icon_x + 5, dock_y + 15, "EL", 0xFFFFFF);
     kprint_to(backbuffer, mesh_icon_x + 5, dock_y + 15, "MH", 0xFFFFFF);
+    kprint_to(backbuffer, sw_icon_x + 5, dock_y + 15, "SW", 0xFFFFFF);
     kprint_to(backbuffer, cloak_icon_x + 5, dock_y + 15, "CK", 0xFFFFFF);
     kprint_to(backbuffer, silence_icon_x + 5, dock_y + 15, "SL", 0xFFFFFF);
     kprint_to(backbuffer, exit_icon_x + 5, dock_y + 15, "QT", 0xFFFFFF);
