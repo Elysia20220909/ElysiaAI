@@ -14,6 +14,9 @@ uint8_t inb(uint16_t port);
 
 static int shell_x = 40;
 static int shell_y = 300;
+char keyboard_buffer[256];
+int keyboard_ptr = 0;
+int keyboard_submitted = 0;
 
 // Simple Scancode Set 1 (Simplified)
 static char scancode_map[128] = {
@@ -39,7 +42,13 @@ void keyboard_handler() {
     if (c == '\n') {
         shell_x = 40;
         shell_y += 20;
+        keyboard_buffer[keyboard_ptr] = '\0';
+        keyboard_submitted = 1; 
     } else {
+        if (keyboard_ptr < 255) {
+            keyboard_buffer[keyboard_ptr++] = c;
+            keyboard_buffer[keyboard_ptr] = '\0';
+        }
         draw_char(&g_fb, shell_x, shell_y, c, 0x00FF00); // Sovereign Green Typed Text
         shell_x += 8;
     }

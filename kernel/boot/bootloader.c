@@ -22,7 +22,8 @@ void init_idt();
 void init_fat32();
 void refresh_explorer();
 void create_task(int id, void* entry_point, void* stack_top);
-void render_desktop();
+void refresh_ui();
+void load_manifest();
 
 // --- TEST USER APP (Simulated Ring 3 Load) ---
 void sovereign_app_main() {
@@ -51,8 +52,29 @@ void sovereign_app_main() {
 // Background GUI Task
 void task_desktop() {
     while(1) {
-        render_desktop();
-        for(volatile int i=0; i<100000; i++); 
+        refresh_ui();
+        for(volatile int i=0; i<50000; i++); 
+    }
+}
+
+extern int is_guest_mode;
+
+void verify_sentinel() {
+    char key[64];
+    int read = fat32_read_file("SENTINEL.KEY", key, 64);
+    
+    // Check for the Master Key: AEGIS-SVR-777
+    const char* master_key = "AEGIS-SVR-777";
+    int match = 1;
+    if (read < 13) match = 0;
+    else {
+        for(int i=0; i<13; i++) {
+            if (key[i] != master_key[i]) { match = 0; break; }
+        }
+    }
+    
+    if (!match) {
+        is_guest_mode = 1;
     }
 }
 
@@ -71,7 +93,7 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     // 1. Initial State
     draw_aurora_splash(&g_fb);
-    kprint(&g_fb, 40, 40, "SOVEREIGN APEX (V10.0) - FINAL SYSTEM STATE", 0xFFFFFF);
+    kprint(&g_fb, 40, 40, "SOVEREIGN APEX PRO (V40.0) - AQUEOUS SECURITY", 0xFFFFFF);
 
     // 2. Achieve Sovereignty
     uint64_t map_size=0, map_key=0, desc_size=0; uint32_t desc_ver=0;
@@ -84,9 +106,14 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     init_gdt(); // Protection Boundaries
     init_idt(); // Reactive Events
     init_fat32(); // Persistence
+    
+    // 4. Security Verification (Gatekeeper)
+    verify_sentinel();
+    
     refresh_explorer(); // Asset Discovery
+    load_manifest(); // Sovereignty Verification
 
-    // 4. Spawn the Multiverse
+    // 5. Spawn the Multiverse
     static uint8_t stack_app[8192];
     static uint8_t stack_gui[8192];
     
