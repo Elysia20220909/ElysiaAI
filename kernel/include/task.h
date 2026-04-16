@@ -23,6 +23,7 @@ typedef struct tcb {
 void scheduler_init();
 void task_create(void (*entry)(), uint32_t priority);
 void task_neural_spawn(const char* intent);
+void kernel_tune(uint32_t tid, uint32_t param, uint32_t val);
 void schedule();
 
 #endif

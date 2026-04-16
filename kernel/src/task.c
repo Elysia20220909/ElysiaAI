@@ -63,3 +63,12 @@ void task_neural_spawn(const char* intent) {
         task_create(autonomous_sentinel, 10); 
     }
 }
+
+void kernel_tune(uint32_t tid, uint32_t param, uint32_t val) {
+    for (int i = 0; i < MAX_TASKS; i++) {
+        if (task_pool[i].id == tid && task_pool[i].state != TASK_KILLED) {
+            if (param == 0) task_pool[i].priority = val;
+            return;
+        }
+    }
+}
