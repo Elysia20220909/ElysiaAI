@@ -296,28 +296,32 @@ void draw_pixel_to(uint32_t* buffer, uint32_t x, uint32_t y, uint32_t color) {
     buffer[y * g_fb.width + x] = color;
 }
 
-void draw_pixel_alpha(uint32_t* buffer, uint32_t x, uint32_t y, uint32_t color, uint8_t alpha) {
-    if (x >= g_fb.width || y >= g_fb.height) return;
-    if (alpha == 255) {
-        buffer[y * g_fb.width + x] = color;
-        return;
-    }
-    
+void draw_pixel_alpha(uint32_t* buffer, int32_t x, int32_t y, uint32_t color, uint8_t alpha) {
+    if (x < 0 || x >= (int32_t)g_fb.width || y < 0 || y >= (int32_t)g_fb.height) return;
     uint32_t bg = buffer[y * g_fb.width + x];
-    
     uint8_t r_src = (color >> 16) & 0xFF;
     uint8_t g_src = (color >> 8) & 0xFF;
     uint8_t b_src = color & 0xFF;
-    
     uint8_t r_bg = (bg >> 16) & 0xFF;
     uint8_t g_bg = (bg >> 8) & 0xFF;
     uint8_t b_bg = bg & 0xFF;
-    
     uint8_t r_dst = (r_src * alpha + r_bg * (255 - alpha)) >> 8;
     uint8_t g_dst = (g_src * alpha + g_bg * (255 - alpha)) >> 8;
     uint8_t b_dst = (b_src * alpha + b_bg * (255 - alpha)) >> 8;
-    
     buffer[y * g_fb.width + x] = (r_dst << 16) | (g_dst << 8) | b_dst;
+}
+
+void draw_line_alpha(uint32_t* buffer, int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint32_t color, uint8_t alpha) {
+    int32_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int32_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    int32_t err = dx + dy, e2;
+    while (1) {
+        draw_pixel_alpha(buffer, x0, y0, color, alpha);
+        if (x0 == x1 && y0 == y1) break;
+        e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x0 += sx; }
+        if (e2 <= dx) { err += dx; y0 += sy; }
+    }
 }
 
 void draw_rounded_rect_alpha(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t color, uint8_t alpha) {
@@ -937,7 +941,22 @@ void render_desktop() {
                 uint32_t ny = win_py + oy + ny_p;
                 
                 // Draw Resonance Links (to neighbors)
-                if (i % 5 < 4) draw_rect_to(backbuffer, nx + 5, ny + 5, (uint32_t)(75.0f * ns), 1, 0x003333);
+                if (i % 5 < 4) {
+                    int nxe_p, nye_p; float nse;
+                    project_hologram(ghost_nodes[i+1].x, ghost_nodes[i+1].y, 10, &nxe_p, &nye_p, &nse);
+                    draw_line_alpha(backbuffer, nx + 5, ny + 5, win_px + ox + nxe_p + 5, win_py + oy + nye_p + 5, 0x00FFFF, 40);
+                }
+                if (i < 20) {
+                    int nxe_p, nye_p; float nse;
+                    project_hologram(ghost_nodes[i+5].x, ghost_nodes[i+5].y, 10, &nxe_p, &nye_p, &nse);
+                    draw_line_alpha(backbuffer, nx + 5, ny + 5, win_px + ox + nxe_p + 5, win_py + oy + nye_p + 5, 0x00FFFF, 40);
+                }
+
+                // Arc 10: Synaptic Threads to Peer Nodes (Calculated from shadow_gossip)
+                if (frame_count % 120 < 40) { // Pulsing active threads
+                    uint32_t thread_color = 0xFF00FF; // Synaptic Magenta
+                    draw_line_alpha(backbuffer, nx + 5, ny + 5, g_fb.width/2, g_fb.height/2, thread_color, 60);
+                }
 
                 // Draw Node
                 uint8_t alpha = 100 + ghost_nodes[i].energy;

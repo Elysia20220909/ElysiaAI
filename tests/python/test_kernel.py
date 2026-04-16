@@ -1,10 +1,13 @@
 import os
+
 from fastapi.testclient import TestClient
 
 from usr.lib.elysia.kernel import app, parse_tool_calls
 
+
 client = TestClient(app)
 API_KEY = os.getenv("FASTAPI_API_KEY", "")
+
 
 def test_health_check_status():
     """Verify that the kernel reports as healthy."""
