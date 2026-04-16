@@ -10,6 +10,7 @@ typedef struct file_handle {
     char name[MAX_PATH];
     uint32_t size;
     uint32_t offset;
+    uint32_t id; // Celestial Stream ID (e.g., 0xAA for Astral)
     void* internal_data; // Pointer to filesystem-specific handle
     struct file_operations* fop;
 } file_t;

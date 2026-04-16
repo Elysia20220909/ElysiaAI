@@ -16,12 +16,12 @@ void draw_pixel_to(uint32_t* buffer, uint32_t x, uint32_t y, uint32_t color);
 void draw_rect_to(uint32_t* buffer, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color);
 void kprint_to(uint32_t* buffer, uint32_t x, uint32_t y, const char* str, uint32_t color);
 void swap_buffers();
-void list_root_dir(char* out_list, int max_len);
 void init_gdt();
 void init_idt();
-void init_fat32();
+void vfs_init_fat32();
+void scheduler_init();
+void task_create(void (*entry)(), uint32_t priority);
 void refresh_explorer();
-void create_task(int id, void* entry_point, void* stack_top);
 void refresh_ui();
 void load_manifest();
 
@@ -51,9 +51,10 @@ void sovereign_app_main() {
 
 // Background GUI Task
 void task_desktop() {
+    void schedule();
     while(1) {
         refresh_ui();
-        for(volatile int i=0; i<50000; i++); 
+        schedule(); // Yield to other tasks (Phase 126.3)
     }
 }
 
@@ -105,7 +106,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     // 3. Initialize Ultimate Architecture
     init_gdt(); // Protection Boundaries
     init_idt(); // Reactive Events
-    init_fat32(); // Persistence
+    vfs_init_fat32(); // Persistence via VFS
+    scheduler_init(); // Tasking via Scheduler
     
     // 4. Security Verification (Gatekeeper)
     verify_sentinel();
@@ -114,16 +116,16 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     load_manifest(); // Sovereignty Verification
 
     // 5. Spawn the Multiverse
-    static uint8_t stack_app[8192];
-    static uint8_t stack_gui[8192];
-    
-    // Task 0: The User Application (Executing through Syscalls)
-    create_task(0, sovereign_app_main, (void*)&stack_app[8191]);
+    // Task 0: The User Application (Neural Trigger Ready)
+    task_create(sovereign_app_main, 5);
     
     // Task 1: The System Environment (Desktop)
-    create_task(1, task_desktop, (void*)&stack_gui[8191]);
+    task_create(task_desktop, 10);
 
-    while(1);
+    void schedule();
+    while(1) {
+        schedule(); // The Multiverse Heartbeat (Phase 126.3)
+    }
 
     return EFI_SUCCESS;
 }

@@ -43,6 +43,7 @@ from python.lib.abyssal_stealth import AbyssalStealth, get_shrouded_resonance_ke
 from python.lib.file_phantom import phantom
 from python.lib.guardian import guardian
 from python.lib.soul_forge import soul_forge
+from python.recall import abyssal_recall
 from scripts.security.generate_ledger import generate_ledger
 
 
@@ -316,6 +317,33 @@ async def init_db() -> None:
             embeddings_store.append(await get_embedding(q))
         logger.info("✅ Baseline quotes embedded.")
 
+    # Initialize Abyssal Recall (Memory Abyss)
+    abyssal_recall.connect()
+
+    # Trigger crawling if collection is new or requested
+    # Note: Embedding function provided via local_model/openai wrap
+    async def emb_wrap(text):
+        return await get_embedding(text)
+
+    # Run crawl in a separate task to avoid blocking startup
+    def run_crawl():
+        # Using a wrapper to bridge async/sync if necessary or just run sync if recall.py is sync
+        import asyncio
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        async def do_crawl():
+            logger.info("🌊 Abyssal Recall: Commencing System-wide Crawl...")
+            abyssal_recall.crawl_system(embedding_fn=lambda t: loop.run_until_complete(get_embedding(t)))
+            logger.info("✅ Abyssal Recall: Multi-threaded indexing complete.")
+
+        loop.run_until_complete(do_crawl())
+
+    # For now, just a direct init call
+    abyssal_recall.connect()
+    logger.info("✅ Abyssal Recall: Memory Abyss Harmonized.")
+
     # Initialize Heartbeat Protocol
     asyncio.create_task(elysia_heartbeat.start_pulse())
 
@@ -511,6 +539,22 @@ async def rag_search(query: Query = Body(...)) -> dict[str, Any]:
     except Exception as e:
         logger.error(f"❌ RAG search error: {e}")
         raise HTTPException(500, f"RAG search failed: {str(e)}")
+
+
+@app.post("/api/sovereign/recall", dependencies=peripheral_white_ice)
+async def sovereign_recall(query: Query = Body(...)) -> dict[str, Any]:
+    """
+    Abyssal Recall Search: Probing the OS's core knowledge (Code, Ledger, Docs)
+    """
+    try:
+        query_embedding = await get_embedding(query.text)
+        results = abyssal_recall.search(query_embedding, limit=5)
+
+        recall_context = "\n\n".join([f"[{res['path']}]: {res['content']}" for res in results])
+        return {"context": recall_context, "results": results, "error": ""}
+    except Exception as e:
+        logger.error(f"❌ Abyssal Recall failed: {e}")
+        raise HTTPException(500, f"Recall failed: {str(e)}")
 
 
 @app.get("/health")

@@ -22,6 +22,17 @@ int vfs_register_fs(fs_t* fs) {
 
 int vfs_open(file_t* file, const char* path) {
     if (!root_fs || !root_fs->ops->open) return -2;
+    
+    // Astral Presence Detection (Phase 126.3 Debug)
+    if (path[0] == '/' && path[1] == 'd' && path[2] == 'e' && path[3] == 'v') {
+        if (path[5] == 'a' && path[6] == 's') { // /dev/astral
+             file->id = 0xAA;
+             file->fop = NULL; // Virtual device
+             return 0;
+        }
+    }
+
+    file->id = 0; // Default: Standard file
     file->fop = root_fs->ops;
     return root_fs->ops->open(file, path);
 }
