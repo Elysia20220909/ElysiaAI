@@ -29,6 +29,13 @@ typedef enum {
 } SystemState;
 
 typedef struct {
+    int32_t relevance;
+    uint32_t last_hit;
+} ContextNode;
+
+static ContextNode synaptic_graph[7]; // One for each window
+
+typedef struct {
     int32_t x, y;
     int life;
 } Particle;
@@ -75,9 +82,16 @@ static int queue_timer = 0;
 
 extern int aegis_verify_identity(const char* name);
 extern void ata_append_ledger(const char* msg, uint32_t frame);
+extern void task_neural_spawn(const char* intent);
 
 void execute_sovereign_command(const char* cmd) {
     ata_append_ledger(cmd, frame_count);
+    // Evolve Command (Phase 124)
+    if (cmd[0] == 'E' && cmd[1] == 'V' && cmd[2] == 'O') {
+        task_neural_spawn("SECURE_LATTICE");
+        trigger_notification("CELESTIAL_EVOLVE: NEURAL_DISPATCH");
+        return;
+    }
     // Audit Command
     if (cmd[0] == 'A' && cmd[1] == 'U' && cmd[2] == 'D') {
         trigger_notification("FORCED SENTINEL AUDIT...");
@@ -424,6 +438,18 @@ static void render_particles(uint32_t* buffer) {
     }
 }
 
+static void update_synaptic_context() {
+    if (frame_count % 60 == 0) {
+        for (int i = 0; i < 7; i++) {
+            if (synaptic_graph[i].relevance > 0) synaptic_graph[i].relevance--;
+        }
+    }
+    // Boost focused window (drag_target is focus)
+    if (drag_target != -1 && synaptic_graph[drag_target].relevance < 100) {
+        synaptic_graph[drag_target].relevance += 2;
+    }
+}
+
 void render_login_screen() {
     // 1. Aqueous Premium Background
     for (uint32_t y = 0; y < g_fb.height; y++) {
@@ -526,6 +552,12 @@ void render_desktop() {
     frame_count++;
     verify_system_integrity();
     node_heartbeat_loop();
+    
+    // Celestial Pulse (Phase 124)
+    if (frame_count % 600 == 0) {
+        task_neural_spawn("SECURE_LATTICE");
+        trigger_notification("CELESTIAL_PULSE: AUTONOMOUS_AUDIT");
+    }
     
     // Parallax Stars (Phase 122)
     for(int i=0; i<30; i++) {
@@ -783,6 +815,13 @@ void render_desktop() {
         if (!window_visible[i]) continue;
         Window* win = windows[i];
         
+        // Synaptic Context (Phase 125)
+        int32_t glow_alpha = (synaptic_graph[i].relevance * 2);
+        if (glow_alpha > 120) glow_alpha = 120;
+        if (glow_alpha > 0) {
+            draw_rounded_rect_alpha(backbuffer, px-10, py-10, dw+20, dh+20, 0x00FFFF, (uint8_t)glow_alpha);
+        }
+
         // Hover Lift (Phase 122)
         if (mouse_x >= win->x && mouse_x <= win->x + (int32_t)win->w &&
             mouse_y >= win->y && mouse_y <= win->y + (int32_t)win->h) {
@@ -953,6 +992,7 @@ void render_desktop() {
 }
 
 void refresh_ui() {
+    update_synaptic_context();
     if (current_state == STATE_LOGIN) {
         render_login_screen();
     } else if (current_state == STATE_BOOTING) {
