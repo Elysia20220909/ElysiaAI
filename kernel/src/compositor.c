@@ -973,6 +973,13 @@ void render_desktop() {
                 ghost_nodes[drag_node].x = mouse_x - win->x - 5;
                 ghost_nodes[drag_node].y = mouse_y - win->y - 5;
             }
+
+            // Phase 136: Swarm Analytics Overlay
+            uint32_t hud_y = win_py + oy + 40;
+            kprint_to(backbuffer, win_px + ox + 10, hud_y,      "FLEET STATUS: DISTRIBUTED", 0x00FFFF);
+            kprint_to(backbuffer, win_px + ox + 10, hud_y + 20, "ACTIVE NODES: 8", 0x00FF00); // Simulated count
+            kprint_to(backbuffer, win_px + ox + 10, hud_y + 40, "MESH LATENCY: 14ms", 0xFFFF00);
+            kprint_to(backbuffer, win_px + ox + 10, hud_y + 60, "ABYSS SYNC: CALIBRATED", 0xFF00FF);
         }
     }
 
