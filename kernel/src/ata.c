@@ -53,3 +53,22 @@ void ata_write_sector(uint32_t lba, uint16_t *buffer) {
     outb(ATA_PRIMARY_COMMAND, 0xE7); // CACHE FLUSH
     while (inb(ATA_PRIMARY_STATUS) & 0x80);
 }
+
+static uint32_t current_ledger_lba = 20000;
+void ata_append_ledger(const char* msg, uint32_t frame) {
+    uint16_t buffer[256];
+    for (int i = 0; i < 256; i++) buffer[i] = 0;
+    
+    // Header
+    buffer[0] = 0xAE61; // 'AE' 'G' 'I'
+    buffer[1] = (uint16_t)frame;
+    
+    // Message copy
+    char* char_buf = (char*)&buffer[2];
+    for (int i = 0; i < 508 && msg[i]; i++) {
+        char_buf[i] = msg[i];
+    }
+    
+    ata_write_sector(current_ledger_lba++, buffer);
+    if (current_ledger_lba > 20100) current_ledger_lba = 20000; // Loop with ghost archival logic (Phase 123)
+}
