@@ -7,6 +7,7 @@ static int8_t mouse_cycle = 0;
 static uint8_t mouse_byte[3];
 int32_t mouse_x = 0;
 int32_t mouse_y = 0;
+int8_t mouse_left = 0;
 
 void mouse_wait(uint8_t type) {
     uint32_t timeout = 100000;
@@ -58,6 +59,8 @@ void mouse_handler() {
         
         // Byte 0: Flags (Bit 0: Left, 1: Right, 2: Middle, 3: Always 1, 4: X sign, 5: Y sign...)
         if (mouse_byte[0] & 0x80 || mouse_byte[0] & 0x40) return; // Overflow
+        
+        mouse_left = (mouse_byte[0] & 0x01);
         
         int32_t dx = mouse_byte[1];
         int32_t dy = mouse_byte[2];
