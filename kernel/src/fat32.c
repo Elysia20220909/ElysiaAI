@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "vfs.h"
 
 void ata_read_sector(uint32_t lba, uint16_t *buffer);
 void ata_write_sector(uint32_t lba, uint16_t *buffer);
@@ -218,4 +219,37 @@ int fat32_write_file(const char* filename, const char* buffer, uint32_t size) {
         current_cluster = get_next_cluster(current_cluster);
     }
     return (int)bytes_written;
+}
+
+// VFS Wrappers
+static int fat32_vfs_open(file_t* file, const char* path) {
+    // Simple direct name copy for now (Phase 115 Alpha)
+    for(int i=0; i<MAX_PATH && path[i]; i++) file->name[i] = path[i];
+    return 0; 
+}
+
+static int fat32_vfs_read(file_t* file, char* buffer, uint32_t size) {
+    return fat32_read_file(file->name, buffer, size);
+}
+
+static int fat32_vfs_write(file_t* file, const char* buffer, uint32_t size) {
+    return fat32_write_file(file->name, buffer, size);
+}
+
+static file_ops_t fat32_ops = {
+    .open = fat32_vfs_open,
+    .read = fat32_vfs_read,
+    .write = fat32_vfs_write,
+    .close = NULL,
+    .readdir = list_root_dir
+};
+
+static fs_t fat32_fs = {
+    .name = "fat32",
+    .ops = &fat32_ops
+};
+
+void vfs_init_fat32() {
+    init_fat32();
+    vfs_register_fs(&fat32_fs);
 }
