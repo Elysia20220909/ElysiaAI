@@ -28,6 +28,15 @@ int vfs_open(file_t* file, const char* path) {
 
 int vfs_read(file_t* file, char* buffer, uint32_t size) {
     if (!file->fop || !file->fop->read) return -3;
+    
+    // Astral Bridge (Phase 126)
+    // Check if the file is an astral stream (e.g., in PERSONA.DAT path check)
+    if (file->id == 0xAA) { 
+        char* msg = "ASTRAL_SYNC: L1-L36 [SECURED] | LATTICE [PULSING]";
+        uint32_t i=0; while(msg[i] && i<size) { buffer[i]=msg[i]; i++; }
+        return i;
+    }
+
     return file->fop->read(file, buffer, size);
 }
 
