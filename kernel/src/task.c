@@ -55,3 +55,11 @@ void schedule() {
     current_task->state = TASK_RUNNING;
     // Context switch logic would go here (assembly-level)
 }
+
+extern void autonomous_sentinel(); // From compositor.c
+void task_neural_spawn(const char* intent) {
+    if (intent[0] == 'S' && intent[1] == 'E' && intent[2] == 'C') {
+        // Intent: 'SECURE_LATTICE'
+        task_create(autonomous_sentinel, 10); 
+    }
+}
