@@ -370,9 +370,7 @@ int show_explorer = 0, show_system = 1, show_orchestrator = 0, show_aegis_hub = 
 int icon_hits[9] = {0};
 
 void load_manifest() {
-    vfs_init();
-    void vfs_init_fat32();
-    vfs_init_fat32();
+    // VFS and FAT32 now initialized in bootloader (Phase 126.4 Harmonization)
 
     if (is_guest_mode) {
         for(int i=0; i<128; i++) sovereign_content[i] = 0;
@@ -392,6 +390,7 @@ void load_manifest() {
             vfs_read(&f, sovereign_content, 128);
             vfs_close(&f);
         }
+    }
     // Initialize Ghost Lattice (Phase 119)
     for (int i = 0; i < 25; i++) {
         ghost_nodes[i].x = 50 + (i % 5) * 80;
@@ -411,7 +410,7 @@ void refresh_explorer() {
         for(int i=0; locked[i]; i++) file_list[i] = locked[i];
         return;
     }
-    list_root_dir(file_list, 256);
+    vfs_ls(file_list, 256);
 }
 
 void draw_rounded_rect(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint32_t h, uint32_t color) {
@@ -635,11 +634,8 @@ void render_desktop() {
     uint32_t orch_icon_x = dock_x + 120;
     uint32_t hub_icon_x = dock_x + 170;
     uint32_t term_icon_x = dock_x + 220;
-    uint32_t ai_icon_x = dock_x + 270;
-    uint32_t mesh_icon_x = dock_x + 320;
-    uint32_t cloak_icon_x = dock_x + 370;
-    uint32_t silence_icon_x = dock_x + 420;
     uint32_t exit_icon_x = dock_x + 470;
+    uint32_t evo_icon_x = dock_x + 520; // Arc 9: Evolutionary Pulse
 
     // Cognitive Pulse (L10)
     uint8_t dock_bright = 34 + (frame_count % 30 < 15 ? (frame_count % 30) * 2 : (30 - (frame_count % 30)) * 2);
@@ -730,6 +726,22 @@ void render_desktop() {
     draw_rect_to(backbuffer, cloak_icon_x, dock_y + 10, 30, 30, cloaked_mode ? 0x8800FF : 0x330055); 
     draw_rect_to(backbuffer, silence_icon_x, dock_y + 10, 30, 30, silence_mode ? 0x111111 : 0x444444); 
     draw_rect_to(backbuffer, exit_icon_x, dock_y + 10, 30, 30, 0xFF0000); 
+    
+    // Arc 9: Evolutionary Pulse Icon
+    uint8_t evo_pulse = (frame_count % 40 < 20 ? (frame_count % 40) * 4 : (40 - (frame_count % 40)) * 4);
+    draw_rounded_rect_alpha(backbuffer, evo_icon_x, dock_y + 10, 30, 30, 0xFF00FF, (uint8_t)(100 + evo_pulse));
+
+    // Labels
+    kprint_to(backbuffer, exp_icon_x + 5, dock_y + 15, "EX", 0xFFFFFF);
+    kprint_to(backbuffer, sys_icon_x + 5, dock_y + 15, "SY", 0xFFFFFF);
+    kprint_to(backbuffer, hub_icon_x + 5, dock_y + 15, "HB", 0xFFFFFF);
+    kprint_to(backbuffer, term_icon_x + 5, dock_y + 15, "TR", 0xFFFFFF);
+    kprint_to(backbuffer, ai_icon_x + 5, dock_y + 15, "EL", 0xFFFFFF);
+    kprint_to(backbuffer, mesh_icon_x + 5, dock_y + 15, "MH", 0xFFFFFF);
+    kprint_to(backbuffer, cloak_icon_x + 5, dock_y + 15, "CK", 0xFFFFFF);
+    kprint_to(backbuffer, silence_icon_x + 5, dock_y + 15, "SL", 0xFFFFFF);
+    kprint_to(backbuffer, exit_icon_x + 5, dock_y + 15, "QT", 0xFFFFFF);
+    kprint_to(backbuffer, evo_icon_x + 5, dock_y + 15, "EV", 0xFFFFFF);
 
     // 2.7 Predictive Hub: Cognitive Glow (L17)
     uint32_t icons_x[9] = {exp_icon_x, sys_icon_x, orch_icon_x, hub_icon_x, term_icon_x, ai_icon_x, mesh_icon_x, cloak_icon_x, silence_icon_x};
@@ -756,17 +768,23 @@ void render_desktop() {
         draw_rect_to(backbuffer, dock_x + 430 + (s*10), dock_y + 40 - h, 6, h, 0x00FFFF);
     }
     
-    // 2. High-Efficiency Window Dispatcher (Z-Order & Alpha)
+    // 2. High-Efficiency Window Dispatcher (Z-Order & Alpha - 3D Aware)
     if (mouse_left) {
         static int prev_mouse_left = 0;
         if (!prev_mouse_left) {
             // Drag Start Logic
             drag_target = -1;
-            for (int i = 4; i >= 0; i--) { // Reverse order for hit detection (5 windows)
+            for (int i = 8; i >= 0; i--) { // Hit detection for all 9 windows (Lattice Order)
                 if (!window_visible[i]) continue;
                 Window* win = windows[i];
-                if (mouse_x >= win->x && mouse_x <= (int32_t)(win->x + win->w) &&
-                    mouse_y >= win->y && mouse_y <= (int32_t)(win->y + 30)) { 
+                
+                int hpx, hpy; float hscale;
+                project_hologram(win->x, win->y, win->z, &hpx, &hpy, &hscale);
+                uint32_t hdw = (uint32_t)((float)win->w * hscale);
+                uint32_t hdh = (uint32_t)(30.0f * hscale); // Title bar hit area
+
+                if (mouse_x >= hpx && mouse_x <= (int32_t)(hpx + hdw) &&
+                    mouse_y >= hpy && mouse_y <= (int32_t)(hpy + hdh)) { 
                     drag_target = i;
                     drag_off_x = mouse_x - win->x;
                     drag_off_y = mouse_y - win->y;
@@ -774,13 +792,16 @@ void render_desktop() {
                     // Z-Order: Bring to front
                     Window* temp_win = windows[i];
                     int temp_vis = window_visible[i];
-                    for (int j = i; j < 4; j++) {
+                    for (int j = i; j < 8; j++) {
                         windows[j] = windows[j+1];
                         window_visible[j] = window_visible[j+1];
                     }
-                    windows[4] = temp_win;
-                    window_visible[4] = temp_vis;
-                    drag_target = 4;
+                    windows[8] = temp_win;
+                    window_visible[8] = temp_vis;
+                    drag_target = 8;
+                    
+                    // Synaptic Feedback (Phase 125)
+                    synaptic_graph[drag_target].relevance = 100;
                     break;
                 }
             }
@@ -815,26 +836,27 @@ void render_desktop() {
         if (!window_visible[i]) continue;
         Window* win = windows[i];
         
-        // Synaptic Context (Phase 125)
+        // 1. Calculate 3D Projection (Phase 126.5 Polish)
+        int win_px, win_py;
+        float scale;
+        project_hologram(win->x, win->y, win->z, &win_px, &win_py, &scale);
+        uint32_t dw = (uint32_t)((float)win->w * scale);
+        uint32_t dh = (uint32_t)((float)win->h * scale);
+
+        // 2. Synaptic Context Glow (Phase 125)
         int32_t glow_alpha = (synaptic_graph[i].relevance * 2);
         if (glow_alpha > 120) glow_alpha = 120;
         if (glow_alpha > 0) {
-            draw_rounded_rect_alpha(backbuffer, px-10, py-10, dw+20, dh+20, 0x00FFFF, (uint8_t)glow_alpha);
+            draw_rounded_rect_alpha(backbuffer, win_px-10, win_py-10, dw+20, dh+20, 0x00FFFF, (uint8_t)glow_alpha);
         }
 
-        // Hover Lift (Phase 122)
+        // 3. Hover Lift (Phase 122)
         if (mouse_x >= win->x && mouse_x <= win->x + (int32_t)win->w &&
             mouse_y >= win->y && mouse_y <= win->y + (int32_t)win->h) {
             if (win->z > -50) win->z -= 2; // Lift toward camera
         } else {
             if (win->z < 0) win->z += 2; // Settle back
         }
-
-        int px, py;
-        float scale;
-        project_hologram(win->x, win->y, win->z, &px, &py, &scale);
-        uint32_t dw = (uint32_t)((float)win->w * scale);
-        uint32_t dh = (uint32_t)((float)win->h * scale);
 
         int32_t ox = 0, oy = 0;
         if (phasing_mode) {
@@ -845,41 +867,41 @@ void render_desktop() {
         if (win == &elysia_window) {
              // Predictive Halo (Phase 120)
             if (icon_hits[0] > 10 || icon_hits[1] > 10 || icon_hits[3] > 10) {
-                draw_rounded_rect_alpha(backbuffer, px-5, py-5, dw+10, dh+10, 0xFFAA00, 30);
+                draw_rounded_rect_alpha(backbuffer, win_px-5, win_py-5, dw+10, dh+10, 0xFFAA00, 30);
             }
             
-            draw_rounded_rect(backbuffer, px, py, dw, dh, win->color);
-            draw_refocuser_wings(backbuffer, px + ox, py + oy, dw, dh);
+            draw_rounded_rect(backbuffer, win_px, win_py, dw, dh, win->color);
+            draw_refocuser_wings(backbuffer, win_px + ox, win_py + oy, dw, dh);
         }
 
         // Render Opaque Title bar
-        draw_rounded_rect_alpha(backbuffer, px + ox, py + oy, dw, (uint32_t)(30.0f * scale), 0x111111, 255);
+        draw_rounded_rect_alpha(backbuffer, win_px + ox, win_py + oy, dw, (uint32_t)(30.0f * scale), 0x111111, 255);
         // Render Alpha Body
-        draw_rounded_rect_alpha(backbuffer, px + ox, py + oy + (uint32_t)(30.0f * scale), dw, dh - (uint32_t)(30.0f * scale), win->color, win->alpha);
+        draw_rounded_rect_alpha(backbuffer, win_px + ox, win_py + oy + (uint32_t)(30.0f * scale), dw, dh - (uint32_t)(30.0f * scale), win->color, win->alpha);
         
         // Window Content (Simplified check)
-        kprint_to(backbuffer, px + ox + 10, py + oy + 10, win->title, 0x00FF00);
+        kprint_to(backbuffer, win_px + ox + 10, win_py + oy + 10, win->title, 0x00FF00);
         
         if (win == &system_window) {
-            kprint_to(backbuffer, win->x + 20, win->y + 60, "KERNEL: MASTER", 0x00FF00);
-            kprint_to(backbuffer, win->x + 20, win->y + 90, is_guest_mode ? "SEC: UNVERIFIED" : "SEC: BONDED", is_guest_mode ? 0xFF0000 : 0x00FF00);
-            kprint_to(backbuffer, win->x + 20, win->y + 115, "RUST_CORE: ACTIVE", 0xFFAA00);
-            kprint_to(backbuffer, win->x + 20, win->y + 140, "INTEGRITY:", 0xFFFFFF);
+            kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "KERNEL: MASTER", 0x00FF00);
+            kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 90, is_guest_mode ? "SEC: UNVERIFIED" : "SEC: BONDED", is_guest_mode ? 0xFF0000 : 0x00FF00);
+            kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 115, "RUST_CORE: ACTIVE", 0xFFAA00);
+            kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 140, "INTEGRITY:", 0xFFFFFF);
             char integ_str[16] = "100% [SSV_S]";
             if (system_integrity < 100) { integ_str[0] = '0' + (system_integrity/10); integ_str[1] = '0' + (system_integrity%10); integ_str[2] = '%'; }
-            kprint_to(backbuffer, win->x + 120, win->y + 130, integ_str, system_integrity < 100 ? 0xFF0000 : 0x00FFFF);
+            kprint_to(backbuffer, win_px + ox + 120, win_py + oy + 130, integ_str, system_integrity < 100 ? 0xFF0000 : 0x00FFFF);
         } else if (win == &explorer_window) {
-             kprint_to(backbuffer, win->x + 20, win->y + 60, "FILES ON DISK:", 0xFFFF00);
-             kprint_to(backbuffer, win->x + 20, win->y + 90, file_list, 0x00FFFF);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "FILES ON DISK:", 0xFFFF00);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 90, file_list, 0x00FFFF);
         } else if (win == &aegis_hub_window) {
-             kprint_to(backbuffer, win->x + 20, win->y + 60, "LEDGER PREVIEW:", 0x00FFFF);
-             kprint_to(backbuffer, win->x + 20, win->y + 90, ledger_data, 0xAAAAAA);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "LEDGER PREVIEW:", 0x00FFFF);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 90, ledger_data, 0xAAAAAA);
         } else if (win == &terminal_window) {
-             kprint_to(backbuffer, win->x + 20, win->y + 60, "ROOT@ELYSIOS:> ", 0x00FF00);
-             kprint_to(backbuffer, win->x + 140, win->y + 60, keyboard_buffer, 0xFFFFFF);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "ROOT@ELYSIOS:> ", 0x00FF00);
+             kprint_to(backbuffer, win_px + ox + 140, win_py + oy + 60, keyboard_buffer, 0xFFFFFF);
         } else if (win == &elysia_window) {
-             kprint_to(backbuffer, win->x + 20, win->y + 60, "ELYSIA:> ", 0x00FFFF);
-             kprint_to(backbuffer, win->x + 20, win->y + 100, elysia_reply, 0xFFFFFF);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "ELYSIA:> ", 0x00FFFF);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 100, elysia_reply, 0xFFFFFF);
              kprint_to(backbuffer, win->x + 20, win->y + 200, "COGNITIVE CORE: STABLE", 0x00FF00);
         } else if (win == &mesh_window) {
             // Star Map Rendering (Phase 119)
@@ -887,8 +909,8 @@ void render_desktop() {
             for (int i = 0; i < 25; i++) {
                 int nx_p, ny_p; float ns;
                 project_hologram(ghost_nodes[i].x, ghost_nodes[i].y, 10, &nx_p, &ny_p, &ns);
-                uint32_t nx = px + nx_p;
-                uint32_t ny = py + ny_p;
+                uint32_t nx = win_px + ox + nx_p;
+                uint32_t ny = win_py + oy + ny_p;
                 
                 // Draw Resonance Links (to neighbors)
                 if (i % 5 < 4) draw_rect_to(backbuffer, nx + 5, ny + 5, (uint32_t)(75.0f * ns), 1, 0x003333);
