@@ -41,10 +41,11 @@
 | **L39**| **Astral Pres.**   | Mobile Presence  | `OMNIPRESENT`|
 
 ## 🗺️ Arc Status: Arc 8 - The Celestial Intelligence
-- **System Agency**: `CELESTIAL`
+- **System Agency**: `CELESTIAL_STABILIZED`
 - **Predictive Surface**: `SYNAPTIC_AWARENESS_ACTIVE`
 - **Mesh Connectivity**: `ASTRAL_BRIDGE_SYNCED`
 - **Identity Sync**: `BONDED (主権者 エリシア)`
+- **Maintenance Status**: `VERIFIED_AND_DEBUGGED`
 
 ## ⚔️ Defense & Neutralization
 | Vector | Status | Neutralized | Countermeasure |
