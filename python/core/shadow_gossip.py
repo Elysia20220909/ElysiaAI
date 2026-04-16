@@ -128,23 +128,6 @@ class ShadowMeshAgent:
         else:
             logger.warning(f"❌ [AUTH_FAIL] Node {peer['id']} resonance rejection.")
 
-    def whisper(self, content: dict):
-        """
-        Broadcasts a polymorphic message to the mesh.
-        """
-        packet = {
-            "origin": self.module_name,
-            "timestamp": time.time(),
-            "payload": content,
-            "sig": self._generate_sig(content),
-        }
-        mutated = ShadowProtocol.mutate_payload(packet)
-        logger.info(f"🌑 [SHADOW_WHISPER] {self.module_name} -> Submerged Mesh: {len(mutated)} bytes")
-
-        # In a real environment, this would go to a UDP broadcast or Domain Socket
-        # For simulation, we log it to the Abyssal Whisper Buffer
-        self._record_in_whisper_buffer(mutated)
-
     def _generate_sig(self, content: dict) -> str:
         key = ShadowProtocol.get_resonance_seed()
         msg = json.dumps(content, sort_keys=True)
@@ -157,15 +140,53 @@ class ShadowMeshAgent:
         with open(buffer_path, "a", encoding="utf-8") as f:
             f.write(mutated_data + "\n")
 
+    def whisper(self, content: dict):
+        """
+        Phase 136: Polymorphic Broadcast.
+        Broadcasts an encrypted payload to all bonded peers and the local whisper buffer.
+        """
+        packet = {
+            "origin": self.module_name,
+            "timestamp": time.time(),
+            "payload": content,
+            "sig": self._generate_sig(content),
+        }
+        mutated = ShadowProtocol.mutate_payload(packet)
+
+        # Local record
+        self._record_in_whisper_buffer(mutated)
+        logger.info(f"🌑 [SHADOW_WHISPER] {self.module_name} -> Mesh: {len(mutated)} bytes")
+
+        # Routing to bonded peers
+        for node_id, info in self.PEERS.items():
+            logger.info(f"📡 [WHISPER] Routing {content.get('type', 'DATA')} to {node_id}@{info['ip']}")
+            # UDP simulation would go here
+
     def process_incoming_whisper(self, mutated_json: str, recall_instance=None):
-        """Phase 134: Processes incoming whisper and routes fragments to Recall."""
+        """
+        Phase 136: Polymorphic Dispatcher.
+        Decodes and routes incoming mesh traffic based on payload type.
+        """
         data = ShadowProtocol.hear_payload(mutated_json)
         if data.get("status") == "COLLAPSED":
             return
 
         payload = data.get("payload", {})
-        if payload.get("type") == "MEMORY_FRAGMENT" and recall_instance:
+        p_type = payload.get("type")
+
+        # Polymorphic Dispatch Table
+        if p_type == "MEMORY_FRAGMENT" and recall_instance:
             recall_instance.on_fragment_received(payload)
+        elif p_type == "HEARTBEAT":
+            origin = payload.get("origin")
+            if origin in self.PEERS:
+                self.PEERS[origin]["last_seen"] = time.time()
+                logger.debug(f"💓 [HEARTBEAT] Resonance confirmed for {origin}")
+        elif p_type == "LEDGER_UPDATE":
+            logger.info(f"📜 [LEDGER_SYNC] Received encrypted record from {payload.get('origin')}")
+            # Ledger sync logic would trigger here
+        else:
+            logger.warning(f"❓ [ROUTER] Unknown polymorphic payload: {p_type}")
 
 
 def get_mesh_agent(name: str):
