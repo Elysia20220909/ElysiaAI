@@ -22,9 +22,11 @@ void task_create(void (*entry)(), uint32_t priority) {
     for (int i = 0; i < MAX_TASKS; i++) {
         if (task_pool[i].state == TASK_KILLED) {
             task_pool[i].id = next_task_id++;
-            task_pool[i].priority = priority;
+            task_pool[i].priority = (int32_t)priority;
             task_pool[i].state = TASK_READY;
             task_pool[i].rip = (uint64_t)entry;
+            task_pool[i].swarm_id = 0;
+            task_pool[i].agent_type = AGENT_NONE;
             task_pool[i].cpu_id = 0; // Simulated BSP core
             
             // Add to ready queue (Simple append for now)
@@ -56,11 +58,40 @@ void schedule() {
     // Context switch logic would go here (assembly-level)
 }
 
-extern void autonomous_sentinel(); // From compositor.c
-void task_neural_spawn(const char* intent) {
-    if (intent[0] == 'S' && intent[1] == 'E' && intent[2] == 'C') {
-        // Intent: 'SECURE_LATTICE'
-        task_create(autonomous_sentinel, 10); 
+extern void autonomous_sentinel(); 
+extern void autonomous_shield();
+extern void autonomous_scout();
+
+void task_swarm_spawn(agent_type_t type, uint32_t swarm_id) {
+    void (*entry)() = NULL;
+    int32_t priority = PRIORITY_SWARM;
+
+    switch(type) {
+        case AGENT_SENTINEL: entry = autonomous_sentinel; break;
+        case AGENT_SHIELD:   entry = autonomous_shield;   break;
+        case AGENT_SCOUT:    entry = autonomous_scout;    break;
+        default: return;
+    }
+
+    for (int i = 0; i < MAX_TASKS; i++) {
+        if (task_pool[i].state == TASK_KILLED) {
+            task_pool[i].id = next_task_id++;
+            task_pool[i].priority = priority;
+            task_pool[i].state = TASK_READY;
+            task_pool[i].rip = (uint64_t)entry;
+            task_pool[i].swarm_id = swarm_id;
+            task_pool[i].agent_type = type;
+            task_pool[i].cpu_id = 0;
+
+            if (ready_queue == NULL) {
+                ready_queue = &task_pool[i];
+            } else {
+                tcb_t* last = ready_queue;
+                while (last->next) last = last->next;
+                last->next = &task_pool[i];
+            }
+            return;
+        }
     }
 }
 

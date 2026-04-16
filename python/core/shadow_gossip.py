@@ -74,17 +74,59 @@ class ShadowProtocol:
 
         return {k: v for k, v in data.items() if not k.startswith("noise_")}
 
+    @classmethod
+    def celestial_challenge(cls) -> str:
+        """Generates a ephemeral challenge for the Ghost Handshake."""
+        return hashlib.sha256(os.urandom(16)).hexdigest()
+
+    @classmethod
+    def verify_resonance(cls, challenge: str, response: str) -> bool:
+        """Verifies if the peer knows the Resonance Secret without revealing it."""
+        seed = cls.get_resonance_seed()
+        expected = hmac.new(seed.encode(), challenge.encode(), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected, response)
+
 
 class ShadowMeshAgent:
     """
     P2P Mesh Agent for Elysia subsystems.
     """
 
-    PEERS = []  # Registered local modules
+    PEERS: dict[str, dict] = {}  # Registered world-wide nodes {node_id: {ip, last_seen}}
 
     def __init__(self, module_name: str):
         self.module_name = module_name
+        self.node_id = hashlib.sha256(module_name.encode()).hexdigest()[:8]
         self.resonance_log = []
+
+    def discover(self):
+        """
+        Scans the local network for other Ghost Nodes (Simulated).
+        """
+        logger.info(f"📡 [GHOST_SCAN] {self.node_id} is seeking peers...")
+        # Simulating finding a Mobile Node and a Cloud Node
+        potential_peers = [
+            {"id": "MOB-ELY", "type": "MOBILE", "ip": "192.168.1.42"},
+            {"id": "CLD-ELY", "type": "CLOUD", "ip": "10.0.0.1"},
+        ]
+
+        for peer in potential_peers:
+            if peer["id"] not in self.PEERS:
+                self._inititate_handshake(peer)
+
+    def _inititate_handshake(self, peer: dict):
+        challenge = ShadowProtocol.celestial_challenge()
+        logger.info(f"✨ [HANDSHAKE] Initiating with {peer['id']}...")
+        # Simulated response from a valid peer
+        response = hmac.new(
+            ShadowProtocol.get_resonance_seed().encode(), challenge.encode(), hashlib.sha256
+        ).hexdigest()
+
+        if ShadowProtocol.verify_resonance(challenge, response):
+            self.PEERS[peer["id"]] = {"last_seen": time.time(), "ip": peer["ip"]}
+            logger.info(f"✅ [MESH_SYNC] Ghost Node {peer['id']} bonded to Swarm.")
+        else:
+            logger.warning(f"❌ [AUTH_FAIL] Node {peer['id']} resonance rejection.")
 
     def whisper(self, content: dict):
         """
@@ -114,6 +156,16 @@ class ShadowMeshAgent:
         os.makedirs("logs", exist_ok=True)
         with open(buffer_path, "a", encoding="utf-8") as f:
             f.write(mutated_data + "\n")
+
+    def process_incoming_whisper(self, mutated_json: str, recall_instance=None):
+        """Phase 134: Processes incoming whisper and routes fragments to Recall."""
+        data = ShadowProtocol.hear_payload(mutated_json)
+        if data.get("status") == "COLLAPSED":
+            return
+
+        payload = data.get("payload", {})
+        if payload.get("type") == "MEMORY_FRAGMENT" and recall_instance:
+            recall_instance.on_fragment_received(payload)
 
 
 def get_mesh_agent(name: str):

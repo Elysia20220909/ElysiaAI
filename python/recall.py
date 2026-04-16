@@ -105,6 +105,31 @@ class AbyssalRecall:
                 results.append(hit["entity"])
         return results
 
+    def publish_fragment(self, agent, content, embedding):
+        """Phase 134: Broadcasts a memory fragment to the mesh."""
+        fragment = {"type": "MEMORY_FRAGMENT", "content": content, "embedding": embedding, "origin": agent.node_id}
+        agent.whisper(fragment)
+        logger.info(f"💾 [ABYSS_SYNC] Published fragment from {agent.node_id}")
+
+    def on_fragment_received(self, data):
+        """Phase 134: Recieved a memory fragment from a peer."""
+        if not self._connected:
+            return
+
+        # Avoid duplication check could be added here
+        self.client.insert(
+            collection_name=self.collection_name,
+            data=[
+                {
+                    "path": f"mesh://{data['origin']}",
+                    "content": data["content"],
+                    "type": "mesh",
+                    "embedding": data["embedding"],
+                }
+            ],
+        )
+        logger.info(f"📥 [ABYSS_SYNC] Integrated fragment from {data['origin']}")
+
 
 # Shared Instance
 abyssal_recall = AbyssalRecall()
