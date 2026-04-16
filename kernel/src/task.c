@@ -1,46 +1,57 @@
-#include <stdint.h>
+#include "task.h"
+#include <stddef.h>
 
-typedef struct {
-    uint64_t rsp;
-    uint8_t  state; // 1 = Running, 0 = Stopped
-} Task;
+#define MAX_TASKS 64
 
-static Task tasks[2];
-static int current_task = 0;
+static tcb_t task_pool[MAX_TASKS];
+static tcb_t* ready_queue = NULL;
+static tcb_t* current_task = NULL;
+static uint32_t next_task_id = 1;
 
-void kprint(void* fb, uint32_t x, uint32_t y, const char *str, uint32_t color);
-extern void* g_fb_ptr;
+void scheduler_init() {
+    for (int i = 0; i < MAX_TASKS; i++) {
+        task_pool[i].id = 0;
+        task_pool[i].state = TASK_KILLED;
+        task_pool[i].next = NULL;
+    }
+    ready_queue = NULL;
+    current_task = NULL;
+}
 
-// The Sovereign Task Creator
-void create_task(int id, void* entry_point, void* stack_top) {
-    uint64_t *stack = (uint64_t*)stack_top;
+void task_create(void (*entry)(), uint32_t priority) {
+    for (int i = 0; i < MAX_TASKS; i++) {
+        if (task_pool[i].state == TASK_KILLED) {
+            task_pool[i].id = next_task_id++;
+            task_pool[i].priority = priority;
+            task_pool[i].state = TASK_READY;
+            task_pool[i].rip = (uint64_t)entry;
+            task_pool[i].cpu_id = 0; // Simulated BSP core
+            
+            // Add to ready queue (Simple append for now)
+            if (ready_queue == NULL) {
+                ready_queue = &task_pool[i];
+            } else {
+                tcb_t* last = ready_queue;
+                while (last->next) last = last->next;
+                last->next = &task_pool[i];
+            }
+            return;
+        }
+    }
+}
+
+void schedule() {
+    if (ready_queue == NULL) return;
     
-    // Initial Stack Frame for iretq
-    stack[-1] = 0x10;          // SS
-    stack[-2] = (uint64_t)stack_top; // RSP
-    stack[-3] = 0x202;         // RFLAGS (Interrupts enabled)
-    stack[-4] = 0x08;          // CS
-    stack[-5] = (uint64_t)entry_point; // RIP
-    
-    // Register Context (Initial state for pop/iret)
-    for (int i = 6; i <= 20; i++) {
-        stack[-i] = 0; // rbp, r15..rdi
+    // Simple Round Robin Scheduler
+    if (current_task == NULL) {
+        current_task = ready_queue;
+    } else {
+        current_task->state = TASK_READY;
+        current_task = current_task->next;
+        if (current_task == NULL) current_task = ready_queue;
     }
     
-    tasks[id].rsp = (uint64_t)&stack[-20];
-    tasks[id].state = 1;
-}
-
-// The Sovereign Scheduler (Heartbeat of Logic)
-uint64_t scheduler(uint64_t current_rsp) {
-    tasks[current_task].rsp = current_rsp;
-    
-    // Simple Round-Robin
-    current_task = (current_task + 1) % 2;
-    
-    return tasks[current_task].rsp;
-}
-
-void timer_handler(uint64_t rsp) {
-    // This will be called from assembly to perform the switch
+    current_task->state = TASK_RUNNING;
+    // Context switch logic would go here (assembly-level)
 }
