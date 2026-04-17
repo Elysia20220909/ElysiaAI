@@ -111,6 +111,17 @@ app
 		}
 		return "ElysiaAI Landing Page (Resource Missing)";
 	})
+	.get("/standalone/login/index.html", ({ set }) => {
+		const filePath = existsSync("public")
+			? "public/standalone/login/index.html"
+			: "../../public/standalone/login/index.html";
+		if (existsSync(filePath)) {
+			set.headers["Content-Type"] = "text/html; charset=utf-8";
+			return require("node:fs").readFileSync(filePath, "utf-8");
+		}
+		set.status = 404;
+		return "Not Found";
+	})
 	.listen(CONFIG.PORT);
 
 logger.info(
