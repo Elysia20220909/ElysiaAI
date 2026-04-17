@@ -6,19 +6,29 @@ async function boot() {
 		"\x1b[36m🌟 Initializing Elysia OS Resonance Cluster (PowerShell-free)...\x1b[0m",
 	);
 
-	// 1. Cleanse Cluster (Kill existing bun/node processes on port 3000)
-	console.log("\x1b[90m🧹 Cleansing Resonance Cluster...\x1b[0m");
+	// 1. Cleanse Cluster (Kill existing processes on port 3000)
+	console.log("\x1b[90m🧹 Cleansing Resonance Cluster (Port 3000)...\x1b[0m");
 	try {
 		if (process.platform === "win32") {
-			execSync("taskkill /F /IM bun.exe /T", { stdio: "ignore" });
-			execSync("taskkill /F /IM node.exe /T", { stdio: "ignore" });
+			const output = execSync("netstat -ano | findstr :3000").toString();
+			const lines = output.split("\n");
+			for (const line of lines) {
+				const parts = line.trim().split(/\s+/);
+				if (parts.length > 4 && parts[1].includes(":3000")) {
+					const pid = parts[parts.length - 1];
+					if (pid !== process.pid.toString()) {
+						execSync(`taskkill /F /PID ${pid} /T`, { stdio: "ignore" });
+					}
+				}
+			}
 		} else {
-			execSync("pkill -f bun", { stdio: "ignore" });
+			execSync("fuser -k 3000/tcp", { stdio: "ignore" });
 		}
 	} catch (e) {}
 
 	// 2. Start API Resonance
-	console.log("\x1b[36m📡 Initiating API Resonance (Port 3000)...\x1b[0m");
+	const port = process.env.PORT || 3000;
+	console.log(`\x1b[36m📡 Initiating API Resonance (Port ${port})...\x1b[0m`);
 	const server = spawn(["bun", "run", "--filter", "@elysia-ai/server", "dev"], {
 		stdout: "inherit",
 		stderr: "inherit",
@@ -29,7 +39,7 @@ async function boot() {
 	let ignited = false;
 	for (let i = 0; i < 30; i++) {
 		try {
-			const res = await fetch("http://localhost:3000/ping");
+			const res = await fetch(`http://localhost:${port}/ping`);
 			if (res.status === 200) {
 				console.log(" \x1b[32m[IGNITED]\x1b[0m");
 				ignited = true;
