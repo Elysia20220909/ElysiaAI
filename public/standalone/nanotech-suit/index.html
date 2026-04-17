@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSS-01 | NEURAL LINK ESTABLISHED</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="hex-overlay"></div>
+    
+    <div class="hud-container">
+        <h1 class="suit-title">ELYSIA SOVEREIGN SUIT</h1>
+
+        <!-- Vitals -->
+        <section class="hud-panel vitals-panel" aria-label="Vital Signs">
+            <div class="panel-title">
+                <span>VITAL_SIGNS</span>
+                <span class="text-cyan">ONLINE</span>
+            </div>
+            <div class="vital-row">
+                <div class="vital-label">HEART_RATE</div>
+                <div class="vital-value" id="heart-rate">72 BPM</div>
+            </div>
+            <div class="vital-row">
+                <div class="vital-label">OXYGEN_LEVEL</div>
+                <div class="vital-value" id="oxygen">98.4%</div>
+            </div>
+            <div class="vital-row">
+                <div class="vital-label">NEURAL_STABILITY</div>
+                <div class="vital-value" id="stability">1.0000</div>
+            </div>
+            <div class="vital-row">
+                <div class="vital-label">INTERNAL_TEMP</div>
+                <div class="vital-value text-warning" id="temp">36.5°C</div>
+            </div>
+        </section>
+
+        <!-- Central Reticle -->
+        <div class="reticle-center">
+            <div class="reticle-inner">
+                <div id="distance-target" style="position: absolute; font-size: 0.8rem; top: -40px; white-space: nowrap;">TARGET_DIST: 142.0m</div>
+            </div>
+        </div>
+
+        <!-- Nanite Management -->
+        <section class="hud-panel nano-panel" aria-label="Nanite Management">
+            <div class="panel-title">
+                <span>NANITE_POOL</span>
+                <span id="nano-count">1.4B UNITS</span>
+            </div>
+            <div class="nanite-pool">
+                <div class="nanite-wave" id="nano-wave"></div>
+            </div>
+            <div style="margin-top: 15px; font-size: 0.65rem; color: rgba(255,255,255,0.4); letter-spacing: 1px;">
+                STATUS: ASSEMBLING REINFORCED PLATING (ARC-12)
+            </div>
+        </section>
+
+        <!-- Combat -->
+        <section class="hud-panel combat-panel" aria-label="Combat Systems">
+            <div class="panel-title">
+                <span>COMBAT_SYSTEMS</span>
+                <span class="text-danger">ARMED</span>
+            </div>
+            <div class="weapon-status">
+                <span>REPULSOR_ARRAY</span>
+                <div class="status-indicator active"></div>
+            </div>
+            <div class="weapon-status">
+                <span>MICRO_MISSILES</span>
+                <div class="status-indicator"></div>
+            </div>
+            <div class="weapon-status">
+                <span>SHIELD_GEN</span>
+                <div class="status-indicator active"></div>
+            </div>
+        </section>
+
+        <!-- Scanner -->
+        <section class="hud-panel scanner-panel" aria-label="360 Scanner">
+            <div class="panel-title">SCANNER_360</div>
+            <canvas id="scanner-canvas"></canvas>
+        </section>
+
+        <!-- Neural Terminal (PowerShell Alternative) -->
+        <section class="hud-panel terminal-panel" aria-label="Neural Terminal">
+            <div class="panel-title">
+                <span>NEURAL_TERMINAL</span>
+                <span class="text-cyan">READY</span>
+            </div>
+            <div id="terminal-output" class="terminal-body">
+                <div>[SYSTEM] Welcome, Pilot.</div>
+                <div>[SYSTEM] Input neural signal...</div>
+            </div>
+            <div class="terminal-input-row">
+                <span>></span>
+                <input type="text" id="terminal-input" placeholder="Enter Command..." autocomplete="off">
+            </div>
+        </section>
+
+        <!-- Bottom Status Line -->
+        <footer class="bottom-status">
+            <span>GHOST_PROTOCOL: CONNECTED</span>
+            <span>KERNEL_VERSION: 1.2.0-ULTRA</span>
+            <span>AEGIS_INTEGRITY: 100%</span>
+            <span id="real-time-clock">00:00:00</span>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

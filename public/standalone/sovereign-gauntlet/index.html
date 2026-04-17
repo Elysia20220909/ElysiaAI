@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>SOVEREIGN GAUNTLET | AUDIT_MODE</title>
+    <link rel="stylesheet" href="terminal.css">
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    
+    <div class="terminal-header">
+        <div class="glitch" data-text="ELYSIA_SOVEREIGN_GAUNTLET_v4.2.0">ELYSIA_SOVEREIGN_GAUNTLET_v4.2.0</div>
+        <div>STATION: 0xFA22 | USER: ROOT | GHOST_PROTOCOL: ACTIVE</div>
+    </div>
+
+    <div class="terminal-body" id="terminal-output">
+        <div class="log-line">[SYS] Initializing Sovereign Gauntlet kernel...</div>
+        <div class="log-line">[SYS] Loading exploit database (5,402 entries)...</div>
+        <div class="log-line">[SYS] Establishing encrypted uplink to Swarm Nucleus...</div>
+        <!-- Logs will rain here -->
+    </div>
+
+    <div class="terminal-footer" style="position: fixed; bottom: 20px; left: 20px; width: 100%;">
+        <span class="prompt">ROOT@ELYSIA:~#</span>
+        <span id="input-buffer"></span><span class="cursor"></span>
+    </div>
+
+    <script src="gauntlet.js"></script>
+    <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const alphabet = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/%=<>!&|^~';
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        for (let x = 0; x < columns; x++) drops[x] = 1;
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(13, 2, 8, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#00ff41';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(drawMatrix, 30);
+
+        // Simulated Logging
+        const terminal = document.getElementById('terminal-output');
+        const logMessages = [
+            { t: "[INFIL] Target: NEURAL_BRIDGE_01", c: 'cyan' },
+            { t: "[INFIL] Attempting stack pivot...", c: '' },
+            { t: "[DEBUG] ROP chain constructed at 0x7FFF0012A", c: '' },
+            { t: "[CRIT] PERIMETER BREACH DETECTED", c: 'critical' },
+            { t: "[SUCCESS] Root access granted to Enclave 7", c: 'purple' },
+            { t: "[SYS] Syncing Aegis Ledger...", c: '' },
+            { t: "[GHOST] Sending encrypted packet: 0xDE...AD", c: 'cyan' }
+        ];
+
+        function addLogLine() {
+            const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
+            const div = document.createElement('div');
+            div.className = 'log-line ' + msg.c;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg.t}`;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+
+            if (terminal.childNodes.length > 100) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        }
+
+        setInterval(addLogLine, 200);
+
+        // Typing effect for the prompt
+        const buffer = document.getElementById('input-buffer');
+        const commands = ["gauntlet --audit all", "ghost-protocol --override", "rm -rf /volumes/intruder", "decrypt --sha256 0x..."];
+        let cmdIdx = 0;
+        let charIdx = 0;
+
+        function typeCommand() {
+            if (charIdx < commands[cmdIdx].length) {
+                buffer.textContent += commands[cmdIdx][charIdx];
+                charIdx++;
+                setTimeout(typeCommand, 100);
+            } else {
+                setTimeout(() => {
+                    buffer.textContent = '';
+                    charIdx = 0;
+                    cmdIdx = (cmdIdx + 1) % commands.length;
+                    typeCommand();
+                }, 2000);
+            }
+        }
+        typeCommand();
+    </script>
+</body>
+</html>

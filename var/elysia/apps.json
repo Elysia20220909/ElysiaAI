@@ -106,5 +106,17 @@
     "global_eye": {
         "icon": "🕶️",
         "title": "E.D.I.T.H. Global Eye"
+    },
+    "quantum_core": {
+        "icon": "💠",
+        "title": "Quantum Neural Core"
+    },
+    "sovereign_gauntlet": {
+        "icon": "⚔️",
+        "title": "Sovereign Gauntlet"
+    },
+    "nanotech_suit": {
+        "icon": "🧤",
+        "title": "Nanotech Suit"
     }
 }
