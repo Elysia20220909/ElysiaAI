@@ -4,6 +4,7 @@ import {
 	fetchWithAuth,
 	WindowManager,
 } from "../../shared/src/ui-bridge";
+import { SwarmLattice } from "./swarm_lattice";
 
 const wm = new WindowManager();
 
@@ -181,11 +182,74 @@ const appSandbox: AppConfig = {
 	},
 };
 
+// --- 3. Specialized App: Swarm Hub ---
+const appSwarmHub: AppConfig = {
+	id: "swarm-hub",
+	name: "Swarm Intelligence Hub",
+	icon: "/assets/icons/swarm-core.png",
+	width: 900,
+	height: 600,
+	contentRenderer: (body) => {
+		body.innerHTML = `
+      <div class="swarm-hub-container">
+        <canvas id="swarm-canvas"></canvas>
+        <div class="swarm-telemetry">
+          <div class="telemetry-header">SWARM TELEMETRY</div>
+          <div class="telemetry-item">STATUS: <span class="status-active">BONDED</span></div>
+          <div class="telemetry-item">PROTOCOL: <span class="status-cyan">GHOST v7.0</span></div>
+          <div class="telemetry-item">ACTIVE NODES: <span id="node-count">--</span></div>
+          <div class="telemetry-item">SYNC RATIO: <span class="status-cyan">99.8%</span></div>
+          <div style="flex-grow:1"></div>
+          <div class="telemetry-footer">ARC 10: COSMIC TRANSCENDENCE</div>
+        </div>
+      </div>
+    `;
+
+		const canvas = body.querySelector("#swarm-canvas") as HTMLCanvasElement;
+		const nodeDisplay = body.querySelector("#node-count") as HTMLElement;
+		const lattice = new SwarmLattice(canvas);
+
+		const syncStats = async () => {
+			try {
+				const response = await fetchWithAuth("/api/system/stats");
+				const data = (await response.json()) as { agents_active: number };
+				nodeDisplay.innerText = data.agents_active.toString();
+				lattice.init(data.agents_active * 10); // 10 particles per logical agent
+			} catch {
+				nodeDisplay.innerText = "8";
+				lattice.init(80);
+			}
+		};
+
+		syncStats();
+		lattice.start();
+
+		// Cleanup on window close
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				mutation.removedNodes.forEach((node) => {
+					if (
+						node instanceof HTMLElement &&
+						node.id === `window-${appSwarmHub.id}`
+					) {
+						lattice.stop();
+						observer.disconnect();
+					}
+				});
+			});
+		});
+		observer.observe(document.getElementById("window-layer")!, {
+			childList: true,
+		});
+	},
+};
+
 // --- 3. Dash (Dock) Settings ---
 document.querySelectorAll(".dash-item").forEach((item) => {
 	item.addEventListener("click", () => {
 		const appName = item.getAttribute("data-app");
 		if (appName === "sandbox") wm.createWindow(appSandbox);
+		if (appName === "swarm") wm.createWindow(appSwarmHub);
 	});
 });
 

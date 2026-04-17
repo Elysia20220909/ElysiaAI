@@ -1,0 +1,10 @@
+<div class="w-full h-full flex flex-col bg-black overflow-hidden rounded-xl border border-purple-500/30">
+    <div class="h-8 bg-black/80 flex items-center justify-between px-4 border-b border-purple-500/20 select-none cursor-move" 
+         @mousedown="startDrag('quantum_core', $event)">
+        <span class="text-[10px] font-black tracking-widest text-purple-400">ARC-11 // QUANTUM NEURAL CORE</span>
+        <button @click="closeApp('quantum_core')" class="text-purple-400/50 hover:text-purple-400">✕</button>
+    </div>
+    <div class="flex-1 relative">
+        <iframe src="standalone/quantum-core/index.html" class="w-full h-full border-none"></iframe>
+    </div>
+</div>
