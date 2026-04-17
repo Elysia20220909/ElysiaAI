@@ -1,0 +1,10 @@
+<div class="w-full h-full flex flex-col bg-black overflow-hidden rounded-xl border border-cyan-500/30">
+    <div class="h-8 bg-black/80 flex items-center justify-between px-4 border-b border-cyan-500/20 select-none cursor-move" 
+         @mousedown="startDrag('nanotech_suit', $event)">
+        <span class="text-[10px] font-black tracking-widest text-cyan-400">NSS-01 // NANOTECH SUIT HUD</span>
+        <button @click="closeApp('nanotech_suit')" class="text-cyan-400/50 hover:text-cyan-400">✕</button>
+    </div>
+    <div class="flex-1 relative">
+        <iframe src="standalone/nanotech-suit/index.html" class="w-full h-full border-none"></iframe>
+    </div>
+</div>
