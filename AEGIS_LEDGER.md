@@ -57,8 +57,9 @@
 | Information Leak | ISOLATED | 0 | Abyssal Fog of War |
 | Vessel Spoofing | BONDED | 0 | Hardware Sentinel |
 | Bot / Automation | SCANNING | 0 | Synthetic Pattern Filter |
+| Trojan (Meterpreter) | ARMOR | 1 | AEGIS Sandbox Isolation |
 | **Observer Hack** | **ALIVE** | **0** | **Quantum Collapse** |
-| **Total Intercepts** | -- | **3** | [Analysis Reference](./docs/references/marathon_anticheat_analysis.md) |
+| **Total Intercepts** | -- | **4** | [Threat Report](./docs/reports/threat_report_setup_exe.md) |
 
 ## 🌑 Abyssal Sync Status
 - **Vault Encryption**: `AES-256-GCM (Hardware-Locked)`
