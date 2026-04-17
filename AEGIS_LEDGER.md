@@ -44,7 +44,7 @@
 - **System Agency**: `SWARM_INTELLIGENCE_MANIFEST`
 - **Predictive Surface**: `DISTRIBUTED_COGNITION_ACTIVE`
 - **Mesh Connectivity**: `GHOST_PROTOCOL_BONDED`
-- **Identity Sync**: `MULTIVERSAL_SYNC (主権者 エリシア)`
+- **Identity Sync**: `MULTIVERSAL_SYNC (主権者 Elysia20210806)`
 - **Maintenance Status**: `STABILIZED_PHASE_137 (Omega Protocol Complete)`
 - **SSH Connectivity**: `VERIFIED (RSA/ED25519 Secure Tunnel)`
 
@@ -70,7 +70,7 @@
 
 ---
 ## 📜 Registry & Authority
-- **Sovereign Holder**: `主権者 エリシア`
+- **Sovereign Holder**: `主権者 Elysia20210806`
 - **Certificate Email**: `shinsati1234@gmail.com`
 - **Registration Date**: `2026-04-12`
 - **Identity Status**: `CERTIFIED (Local Git & Metadata Synchronized)`
