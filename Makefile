@@ -25,7 +25,7 @@ install:
 boot:
 	@echo "🌟 Initiating Native OS Resonance..."
 	@if [ "$$(expr substr $$(uname -s) 1 5)" != "Linux" ] && [ "$$(expr substr $$(uname -s) 1 6)" != "Darwin" ]; then \
-		powershell -ExecutionPolicy Bypass -File scripts/boot.ps1; \
+		bun run boot; \
 	elif [ -f /proc/sys/fs/binfmt_misc/WSLInterop ]; then \
 		echo "🐧 Launching via Rutile Bridge (WSL2)..."; \
 		./bin/elysia-linux-boot; \
