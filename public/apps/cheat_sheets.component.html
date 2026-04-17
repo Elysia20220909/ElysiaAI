@@ -1,0 +1,10 @@
+<div class="w-full h-full flex flex-col bg-black overflow-hidden rounded-xl border border-pink-500/30">
+    <div class="h-8 bg-black/80 flex items-center justify-between px-4 border-b border-pink-500/20 select-none cursor-move" 
+         @mousedown="startDrag('cheat_sheets', $event)">
+        <span class="text-[10px] font-black tracking-widest text-pink-400">REFERENCE MATRIX // CHEAT SHEETS</span>
+        <button @click="closeApp('cheat_sheets')" class="text-pink-400/50 hover:text-pink-400">✕</button>
+    </div>
+    <div class="flex-1 relative">
+        <iframe src="standalone/cheat_sheets/index.html" class="w-full h-full border-none"></iframe>
+    </div>
+</div>
