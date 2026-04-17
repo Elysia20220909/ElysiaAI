@@ -118,5 +118,9 @@
     "nanotech_suit": {
         "icon": "🧤",
         "title": "Nanotech Suit"
+    },
+    "cheat_sheets": {
+        "icon": "📚",
+        "title": "Reference Matrix"
     }
 }
