@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Login Test</title>
+</head>
+<body>
+    <form id="login-form">
+        <input type="text" id="username" value="admin">
+        <input type="password" id="password" value="elysiatest-001">
+        <button type="submit" id="login-btn">Login</button>
+    </form>
+    <div id="result"></div>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const res = await fetch('/auth/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            document.getElementById('result').textContent = JSON.stringify(data);
+        });
+    </script>
+</body>
+</html>

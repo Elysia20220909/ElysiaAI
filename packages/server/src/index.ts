@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config({ override: true });
 
 import { existsSync } from "node:fs";
+import path from "node:path";
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
