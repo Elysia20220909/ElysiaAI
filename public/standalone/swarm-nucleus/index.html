@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELYSIA // SWARM NUCLEUS</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="void-background"></div>
+    <canvas id="nucleus-canvas"></canvas>
+    
+    <div class="hud-overlay">
+        <!-- Top Navigation / Status -->
+        <header class="nucleus-header">
+            <div class="brand">ELYSIA // NUCLEUS-001</div>
+            <div class="status-box">
+                <span class="label">COHERENCE:</span>
+                <span id="coherence-value" class="value">0.0000</span>
+            </div>
+            <div class="status-box">
+                <span class="label">NODES:</span>
+                <span id="node-count" class="value">0</span>
+            </div>
+        </header>
+
+        <!-- Left: Agent Stream -->
+        <aside class="side-panel left-panel">
+            <div class="panel-tag">AGENT_SIGNALS</div>
+            <div id="signal-stream" class="signal-stream"></div>
+        </aside>
+
+        <!-- Right: Quantum Telemetry -->
+        <aside class="side-panel right-panel">
+            <div class="panel-tag">QUANTUM_TELEMETRY</div>
+            <div class="telemetry-grid">
+                <div class="t-item">
+                    <div class="t-label">GHOST_PHASE</div>
+                    <div id="ghost-phase" class="t-val">STABLE</div>
+                </div>
+                <div class="t-item">
+                    <div class="t-label">VOID_DENSITY</div>
+                    <div id="void-density" class="t-val">0.0%</div>
+                </div>
+            </div>
+            <div class="mini-graph" id="pulse-graph"></div>
+        </aside>
+
+        <!-- Central Controller -->
+        <div class="central-info">
+            <div id="nucleus-status">SYNCHRONIZING...</div>
+            <div class="progress-bar-container">
+                <div id="sync-progress" class="progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Footer -->
+        <footer class="nucleus-footer">
+            <div class="footer-left">PHASE_19 // THE_SWARM_AWAKENING</div>
+            <div class="footer-right" id="clock">00:00:00.000</div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
