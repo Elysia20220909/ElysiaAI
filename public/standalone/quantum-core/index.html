@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elysia OS | Quantum Neural Core</title>
+    <meta name="description" content="Elysia AI Sovereign Infrastructure - Quantum Nucleus Monitoring Interface. Monitoring the Ghost Protocol and Swarm Intelligence in real-time.">
+    
+    <!-- External Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="quantum.css">
+</head>
+<body>
+    <div class="matrix-background"></div>
+    <div class="scanline"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="panel">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                </div>
+                <h1 class="logo-text glitch-text">Elysia Quantum Core</h1>
+            </div>
+            <div class="system-time" id="clock">00:00:00.000</div>
+            <div class="security-badge">
+                <span class="accent-cyan">GHOST PROTOCOL:</span> ACTIVE
+            </div>
+        </header>
+
+        <!-- System Status Sidebar -->
+        <aside class="status-sidebar">
+            <div class="panel">
+                <div class="panel-header">
+                    <span>SYSTEM_VITALS</span>
+                    <span class="accent-cyan">0xFA22</span>
+                </div>
+                
+                <div class="status-item">
+                    <div class="status-label">NEURAL_LOAD</div>
+                    <div class="progress-bar-bg">
+                        <div id="load-bar" class="progress-bar-fill" style="width: 78%"></div>
+                    </div>
+                </div>
+
+                <div class="status-item">
+                    <div class="status-label">ENTROPY_INDEX</div>
+                    <div class="progress-bar-bg">
+                        <div id="entropy-bar" class="progress-bar-fill" style="width: 42%; background: var(--accent-secondary); box-shadow: 0 0 10px var(--accent-secondary);"></div>
+                    </div>
+                </div>
+
+                <div class="status-item">
+                    <div class="status-label">SWARM_COHESION</div>
+                    <div class="progress-bar-bg">
+                        <div id="cohesion-bar" class="progress-bar-fill" style="width: 95%; background: var(--accent-tertiary); box-shadow: 0 0 10px var(--accent-tertiary);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel" style="flex: 1;">
+                <div class="panel-header">
+                    <span>ACTIVE_AGENTS</span>
+                    <span class="accent-pink">ONLINE</span>
+                </div>
+                <div id="agent-list" class="log-container">
+                    <!-- Agents will be injected here -->
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Visualization -->
+        <main class="main-view panel">
+            <div class="panel-header" style="position: absolute; top: 15px; left: 15px; right: 15px; border: none; z-index: 5;">
+                <span>NUCLEUS_VISUALIZATION_V2</span>
+                <span class="accent-purple">DIMENSION_B-137</span>
+            </div>
+            <canvas id="neural-canvas"></canvas>
+            
+            <div id="node-info" class="panel" style="position: absolute; bottom: 20px; right: 20px; width: 200px; font-size: 0.7rem; pointer-events: none; opacity: 0; transition: 0.3s;">
+                <div class="accent-cyan">NODE_ID: <span id="node-id">--</span></div>
+                <div>POTENTIAL: <span id="node-pot">0.00</span></div>
+            </div>
+        </main>
+
+        <!-- Transmission Log Sidebar -->
+        <section class="transmission-panel panel">
+            <div class="panel-header">
+                <span>GHOST_TRANSMISSIONS</span>
+                <span class="accent-cyan">LIVE_FEED</span>
+            </div>
+            <div id="log-feed" class="log-container">
+                <!-- Real-time logs will be injected here -->
+            </div>
+        </section>
+
+        <!-- Bottom Terminal -->
+        <footer class="terminal-panel panel">
+            <div class="panel-header">
+                <span>SOVEREIGN_TERMINAL</span>
+                <span class="accent-purple">ROOT@ELYSIA</span>
+            </div>
+            <div id="terminal-output" class="log-container" style="max-height: 100px; margin-bottom: 10px; opacity: 0.7;">
+                [SYSTEM] Initializing Quantum Core sequence...<br>
+                [SYSTEM] Loading Swarm Nucleus parameters...<br>
+                [SYSTEM] Ghost Protocol handshaking established.
+            </div>
+            <div class="terminal-input-wrapper">
+                <span class="terminal-prompt">></span>
+                <input type="text" class="terminal-input" id="cmd-input" placeholder="Execute kernel command..." autofocus>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
