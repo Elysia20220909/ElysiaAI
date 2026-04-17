@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELYSIA // NEURAL LINK AUTH</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="nebula-bg"></div>
+    <div class="scanlines"></div>
+
+    <main class="login-container">
+        <!-- Neural Core Visual -->
+        <div class="neural-core-wrapper">
+            <div class="neural-core">
+                <div class="core-inner"></div>
+                <div class="core-scanner"></div>
+            </div>
+            <div class="core-status">NEURAL_ID: UNKNOWN</div>
+        </div>
+
+        <!-- Login Form -->
+        <section class="auth-panel">
+            <h1 class="auth-title">INITIATE_LINK</h1>
+            <p class="auth-subtitle">Neural signature required for Sovereign access.</p>
+
+            <form id="login-form" class="auth-form">
+                <div class="input-group">
+                    <label for="username">IDENTITY</label>
+                    <input type="text" id="username" placeholder="Enter ID..." required autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label for="password">SIGNATURE_KEY</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <div id="error-msg" class="error-msg hidden">SIGNATURE_MISMATCH: ACCESS_DENIED</div>
+
+                <button type="submit" id="login-btn" class="login-btn">
+                    <span class="btn-text">CALIBRATE & LINK</span>
+                    <div class="btn-glitch"></div>
+                </button>
+            </form>
+
+            <footer class="auth-footer">
+                <div class="footer-line">GHOST_PROTOCOL: ACTIVE</div>
+                <div class="footer-line">ENCRYPTION: QUANTUM_LATTICE</div>
+            </footer>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

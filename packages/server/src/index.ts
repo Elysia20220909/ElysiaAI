@@ -54,6 +54,7 @@ app
 		staticPlugin({
 			assets: existsSync("public") ? "public" : "../../public",
 			prefix: "",
+			alwaysUpdate: true,
 		}),
 	)
 	.use(html())
@@ -97,6 +98,7 @@ app
 	.use(fileRoutes)
 	.use(databaseRoutes)
 
+	.get("/ping", () => ({ status: "ok", timestamp: new Date().toISOString() }))
 	.get("/", () => {
 		const publicPaths = [
 			"public/index.html",
