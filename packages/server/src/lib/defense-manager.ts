@@ -10,6 +10,8 @@ interface DefenseRules {
 class DefenseManager {
 	private rules: DefenseRules = { blocked_ips: [], last_updated: 0 };
 	private lastLoadedAt = 0;
+	// ⚠️ 動的脅威検知用 (L3 Black ICE)
+	private suspiciousActivities: Map<string, number> = new Map();
 
 	constructor() {
 		this.loadRules();
@@ -34,10 +36,16 @@ class DefenseManager {
 			if (!existsSync(rulesPath)) return;
 
 			const content = readFileSync(rulesPath, "utf-8");
-			this.rules = JSON.parse(content);
+			const parsed = JSON.parse(content);
+
+			// 既存の動的ブロックIPをマージ
+			const mergedIps = Array.from(
+				new Set([...this.rules.blocked_ips, ...(parsed.blocked_ips || [])]),
+			);
+			this.rules = { ...parsed, blocked_ips: mergedIps };
 			this.lastLoadedAt = Date.now();
 
-			logger.info("Defense rules loaded", {
+			logger.info("Defense rules loaded & merged", {
 				blockedCount: this.rules.blocked_ips.length,
 			});
 		} catch (error) {
@@ -46,15 +54,46 @@ class DefenseManager {
 	}
 
 	/**
+	 * 悪意ある活動（InfoStealerスキャン等）を記録し、閾値を超えたら自動バン
+	 */
+	public reportSuspiciousActivity(ip: string, reason: string): void {
+		const cleanIp = ip.replace(/^::ffff:/, "");
+		const count = (this.suspiciousActivities.get(cleanIp) || 0) + 1;
+		this.suspiciousActivities.set(cleanIp, count);
+
+		logger.warn(
+			`⚠️ Suspicious activity from ${cleanIp}: ${reason} (Level: ${count})`,
+		);
+
+		// 3回以上の不審なリクエストでBlack ICE発動（IPをブロック）
+		if (count >= 3 && !this.rules.blocked_ips.includes(cleanIp)) {
+			this.rules.blocked_ips.push(cleanIp);
+			logger.error(
+				`🛡️ L3 Black ICE Activated: ${cleanIp} has been permanently blocked. (Reason: ${reason})`,
+			);
+		}
+	}
+
+	/**
+	 * 即時バン（重大な違反に対する措置）
+	 */
+	public banIp(ip: string, reason: string): void {
+		const cleanIp = ip.replace(/^::ffff:/, "");
+		if (!this.rules.blocked_ips.includes(cleanIp)) {
+			this.rules.blocked_ips.push(cleanIp);
+			logger.error(
+				`🛡️ L4 Blackwall Enforced: ${cleanIp} blocked immediately. (Reason: ${reason})`,
+			);
+		}
+	}
+
+	/**
 	 * 指定されたIPがブロック対象かチェック
 	 */
 	public isBlocked(ip: string): boolean {
-		// 定期的に再ロード（例: 10秒ごと）
 		if (Date.now() - this.lastLoadedAt > 10000) {
 			this.loadRules();
 		}
-
-		// Docker内部ネットワークなどの特定IPを考慮した正規化
 		const cleanIp = ip.replace(/^::ffff:/, "");
 		return this.rules.blocked_ips.includes(cleanIp);
 	}

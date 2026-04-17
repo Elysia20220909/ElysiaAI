@@ -64,14 +64,57 @@ app
 			request.headers.get("x-forwarded-for") ||
 			request.headers.get("x-real-ip") ||
 			"127.0.0.1";
+
 		if (defenseManager.isBlocked(ip)) {
 			logger.warn(`🛑 Blocked flagged IP: ${ip}`);
 			return error(403, "Access denied by Alpha Protocol");
 		}
+
 		const url = new URL(request.url).pathname;
+
+		// 🛡️ L2 Blue ICE: 悪意あるスキャンやInfoStealerのプローブを検知
+		const suspiciousPaths = [
+			"/.env",
+			"/cmd.exe",
+			"/powershell",
+			"/wp-admin",
+			"/config.json",
+			"/aws/credentials",
+			"/.git/config",
+		];
+		if (suspiciousPaths.some((p) => url.toLowerCase().includes(p))) {
+			defenseManager.reportSuspiciousActivity(
+				ip,
+				`Attempted access to honeypot/sensitive path: ${url}`,
+			);
+			return error(403, "Access Denied by AEGIS Sandbox Isolation");
+		}
+
+		// 🛡️ サンドボックス/マルウェア検知 (User-Agent異常)
+		const userAgent = request.headers.get("user-agent") || "";
+		if (
+			userAgent.includes("curl") ||
+			userAgent.includes("python-requests") ||
+			userAgent.includes("Go-http-client") ||
+			userAgent.includes("Meterpreter")
+		) {
+			// legitimate uses exist, but for Elysia OS, these might be probes if not from localhost
+			if (ip !== "127.0.0.1" && ip !== "::1") {
+				defenseManager.reportSuspiciousActivity(
+					ip,
+					`Suspicious User-Agent detected: ${userAgent}`,
+				);
+			}
+		}
+
 		const rateLimit = advancedRateLimiter.checkRateLimit(ip, url);
-		if (!rateLimit.allowed)
+		if (!rateLimit.allowed) {
+			defenseManager.reportSuspiciousActivity(
+				ip,
+				`Rate limit exceeded repeatedly on ${url}`,
+			);
 			return error(429, rateLimit.reason || "Too Many Requests");
+		}
 	})
 	.error(({ code, error: rawError, set }) => {
 		const isProduction = process.env.NODE_ENV === "production";
