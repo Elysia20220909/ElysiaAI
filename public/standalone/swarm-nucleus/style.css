@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@200;400;800&display=swap');
+
+:root {
+    --void-black: #020406;
+    --neon-emerald: #00ffaa;
+    --neon-violet: #bc00ff;
+    --neon-cyan: #00d4ff;
+    --hud-glass: rgba(0, 255, 170, 0.03);
+    --hud-border: rgba(0, 255, 170, 0.15);
+    --font-main: 'Outfit', sans-serif;
+    --font-hud: 'Orbitron', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: crosshair;
+}
+
+body {
+    background-color: var(--void-black);
+    color: white;
+    font-family: var(--font-main);
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* Background Effects */
+.void-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #0a1118 0%, #020406 100%);
+    z-index: -2;
+}
+
+#nucleus-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+/* HUD Overlay */
+.hud-overlay {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 40px;
+}
+
+/* Header */
+.nucleus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--hud-border);
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+
+.brand {
+    font-family: var(--font-hud);
+    font-weight: 900;
+    font-size: 1.4rem;
+    letter-spacing: 5px;
+    background: linear-gradient(90deg, var(--neon-emerald), var(--neon-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 15px rgba(0, 255, 170, 0.3);
+}
+
+.status-box {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-family: var(--font-hud);
+    font-size: 0.75rem;
+}
+
+.status-box .label { color: rgba(255,255,255,0.4); }
+.status-box .value { color: var(--neon-emerald); text-shadow: 0 0 10px var(--neon-emerald); }
+
+/* Side Panels */
+.side-panel {
+    position: absolute;
+    background: var(--hud-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--hud-border);
+    padding: 20px;
+    transition: all 0.5s ease;
+}
+
+.side-panel:hover {
+    border-color: var(--neon-emerald);
+    background: rgba(0, 255, 170, 0.05);
+}
+
+.panel-tag {
+    font-family: var(--font-hud);
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    color: var(--neon-violet);
+    margin-bottom: 15px;
+    border-left: 2px solid var(--neon-violet);
+    padding-left: 10px;
+}
+
+.left-panel {
+    top: 150px;
+    left: 40px;
+    width: 280px;
+    height: 400px;
+}
+
+.right-panel {
+    top: 150px;
+    right: 40px;
+    width: 320px;
+    height: 400px;
+}
+
+/* Signal Stream */
+.signal-stream {
+    height: 90%;
+    overflow-y: hidden;
+    font-family: monospace;
+    font-size: 0.65rem;
+    color: var(--neon-emerald);
+    opacity: 0.8;
+}
+
+.signal-line {
+    margin-bottom: 4px;
+    white-space: nowrap;
+}
+
+/* Telemetry */
+.telemetry-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.t-item {
+    background: rgba(255,255,255,0.02);
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.t-label { font-size: 0.5rem; color: rgba(255,255,255,0.4); margin-bottom: 5px; }
+.t-val { font-family: var(--font-hud); font-size: 1rem; color: white; }
+
+/* Central Info */
+.central-info {
+    position: absolute;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+}
+
+#nucleus-status {
+    font-family: var(--font-hud);
+    font-size: 1.2rem;
+    letter-spacing: 10px;
+    margin-bottom: 15px;
+    color: var(--neon-cyan);
+    text-shadow: 0 0 20px var(--neon-cyan);
+}
+
+.progress-bar-container {
+    width: 400px;
+    height: 2px;
+    background: rgba(255,255,255,0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: var(--neon-emerald);
+    box-shadow: 0 0 10px var(--neon-emerald);
+    transition: width 0.3s ease;
+}
+
+/* Footer */
+.nucleus-footer {
+    position: absolute;
+    bottom: 40px;
+    width: calc(100% - 80px);
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-hud);
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.2);
+    letter-spacing: 3px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    padding-top: 20px;
+}
+
+#clock { color: rgba(255,255,255,0.5); }
+
+/* Scanlines */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+    background-size: 100% 4px;
+    z-index: 100;
+    pointer-events: none;
+}
