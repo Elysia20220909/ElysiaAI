@@ -243,9 +243,11 @@
                     <div class="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
                         <span class="text-elysia-400">ROOT</span>
                         <span>/</span>
-                        <template x-for="part in breadcrumbs">
+                        <template x-for="(part, index) in breadcrumbs">
                             <div class="flex items-center gap-2">
-                                <span x-text="part" class="hover:text-white cursor-pointer transition-colors"></span>
+                                <span x-text="part" 
+                                      @click="navigateToBreadcrumb(index)"
+                                      class="hover:text-elysia-400 cursor-pointer transition-colors"></span>
                                 <span>/</span>
                             </div>
                         </template>
@@ -452,16 +454,28 @@
                 },
 
                 async loadFile(path) {
-                    if (this.currentPath === path) return;
+                    if (!path || this.currentPath === path) return;
+                    
+                    // Prevent loading directories as files
+                    if (path.endsWith('/') || !path.includes('.')) {
+                        console.warn('Attempted to load directory as file:', path);
+                        return;
+                    }
+
                     this.currentPath = path;
                     this.fileLoading = true;
                     
                     // Update breadcrumbs
-                    this.breadcrumbs = path.split('/').filter(p => !p.endsWith('.md'));
+                    this.breadcrumbs = path.split('/');
 
                     try {
                         const response = await fetch(`repo/${path}`);
-                        if (!response.ok) throw new Error('Module data missing or corrupted');
+                        if (!response.ok) {
+                            if (response.status === 403 || response.status === 404) {
+                                throw new Error(`Resource [${path}] is a directory or missing.`);
+                            }
+                            throw new Error('Module data missing or corrupted');
+                        }
                         let text = await response.text();
                         
                         // Fix relative paths for images and links
@@ -506,6 +520,22 @@
                         </div>`;
                     } finally {
                         this.fileLoading = false;
+                    }
+                },
+
+                navigateToBreadcrumb(index) {
+                    const newPathParts = this.breadcrumbs.slice(0, index + 1);
+                    // If it's a folder (not the full file path), we just scroll to it in the tree or clear view
+                    const targetPath = newPathParts.join('/');
+                    const node = this.tree.find(n => n.path === targetPath);
+                    if (node && node.type === 'folder') {
+                        this.currentPath = null;
+                        this.content = '';
+                        // Open the folder in the tree
+                        node.open = true;
+                        this.updateVisibility();
+                    } else if (node && node.type === 'file') {
+                        this.loadFile(targetPath);
                     }
                 },
 
