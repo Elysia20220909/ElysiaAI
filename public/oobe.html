@@ -3,125 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elysia OS // OMEGA_SINGULARITY</title>
+    <title>ELYSIA OS // OMEGA_SINGULARITY</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
-    <link rel="stylesheet" href="css/desktop.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['Orbitron', 'monospace'],
+                    },
+                    colors: {
+                        elysia: {
+                            cyan: '#00f2ff',
+                            magenta: '#ff00ba',
+                            yellow: '#fcee0a',
+                            dark: '#020408',
+                        }
+                    },
+                    animation: {
+                        'glitch': 'glitch 1s infinite linear alternate-reverse',
+                        'portal-pulse': 'pulse-ring 4s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite',
+                        'scan': 'scan 4s linear infinite',
+                        'flicker': 'hardware-flicker 0.1s infinite',
+                    },
+                    keyframes: {
+                        glitch: {
+                            '0%': { transform: 'translate(0)' },
+                            '20%': { transform: 'translate(-2px, 2px)' },
+                            '40%': { transform: 'translate(-2px, -2px)' },
+                            '100%': { transform: 'translate(0)' }
+                        },
+                        'pulse-ring': {
+                            '0%': { transform: 'scale(0.8)', opacity: '0.5' },
+                            '50%': { transform: 'scale(1.1)', opacity: '0.2' },
+                            '100%': { transform: 'scale(0.8)', opacity: '0.5' }
+                        },
+                        scan: {
+                            '0%': { bottom: '100%' },
+                            '100%': { bottom: '-100px' }
+                        },
+                        'hardware-flicker': {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.95' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
+        body {
+            background-color: var(--color-elysia-dark, #020408);
+        }
         .glitch-text {
             text-shadow: 2px 0 #ff00ba, -2px 0 #00f2ff;
-            animation: glitch 1s infinite linear alternate-reverse;
-        }
-        @keyframes glitch {
-            0% { transform: translate(0) }
-            20% { transform: translate(-2px, 2px) }
-            40% { transform: translate(-2px, -2px) }
-            100% { transform: translate(0) }
-        }
-        .portal-pulse {
-            animation: pulse-ring 4s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
-        }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.8); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 0.2; }
-            100% { transform: scale(0.8); opacity: 0.5; }
-        }
-        .scanline {
-            width: 100%;
-            height: 100px;
-            z-index: 5;
-            background: linear-gradient(0deg, rgba(0, 242, 255, 0) 0%, rgba(0, 242, 255, 0.1) 50%, rgba(0, 242, 255, 0) 100%);
-            opacity: 0.1;
-            position: absolute;
-            bottom: 100%;
-            animation: scan 4s linear infinite;
-        }
-        @keyframes scan {
-            0% { bottom: 100%; }
-            100% { bottom: -100px; }
-        }
-        .flicker {
-            animation: hardware-flicker 0.1s infinite;
-        }
-        @keyframes hardware-flicker {
-            0% { opacity: 1; }
-            50% { opacity: 0.95; }
-            100% { opacity: 1; }
         }
         .crt-grid {
-            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-image: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
+        }
+        .glass-panel {
+            background: rgba(10, 10, 15, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 242, 255, 0.2);
         }
     </style>
 </head>
-<body class="bg-black text-white h-screen flex flex-col items-center justify-center overflow-hidden flicker" x-data="oobe()">
+<body class="text-white h-screen flex flex-col items-center justify-center overflow-hidden animate-flicker font-sans selection:bg-elysia-cyan selection:text-black" x-data="oobe()">
     
+    <!-- CRT Overlay -->
     <div class="fixed inset-0 z-50 pointer-events-none crt-grid opacity-30"></div>
     
+    <!-- Scanline -->
     <div class="fixed inset-0 z-5 pointer-events-none overflow-hidden">
-        <div class="scanline"></div>
+        <div class="w-full h-[100px] bg-gradient-to-t from-elysia-cyan/0 via-elysia-cyan/10 to-elysia-cyan/0 opacity-10 absolute bottom-full animate-scan"></div>
     </div>
     
     <!-- Cinematic Background -->
     <div class="fixed inset-0 z-0">
-        <img src="assets/portal_bg.png" class="w-full h-full object-cover opacity-60 filter saturate-150 blur-[2px]">
-        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/20 rounded-full blur-[150px] portal-pulse"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-90 z-10"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-elysia-cyan/20 rounded-full blur-[150px] animate-portal-pulse z-0"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-elysia-magenta/10 rounded-full blur-[200px] animate-portal-pulse delay-1000 z-0"></div>
     </div>
 
     <!-- Intro Sequence -->
-    <div class="z-20 text-center space-y-8 max-w-2xl px-8" x-transition>
-        <div class="space-y-4">
-            <template x-if="step === 0">
-                <div class="space-y-6">
-                    <h2 class="text-xs uppercase tracking-[0.5em] text-cyan-400 font-mono" x-text="decryptStatus"></h2>
-                    <h1 class="text-6xl font-black italic tracking-tighter glitch-text select-none">ELVSIΛ OS</h1>
-                    <div class="w-64 h-[2px] bg-white/10 mx-auto overflow-hidden">
-                        <div class="h-full bg-cyan-500 transition-all duration-100 ease-out shadow-[0_0_10px_#00f2ff]" :style="{ width: progress + '%' }"></div>
-                    </div>
-                    <p class="text-[10px] uppercase tracking-widest text-cyan-400 font-mono animate-pulse">Neural Kernel Synchronization: OMEGA (99.9%)</p>
+    <div class="z-20 text-center space-y-8 w-full max-w-3xl px-8 relative" x-transition.opacity.duration.500ms>
+        
+        <!-- STEP 0: Boot Initialization -->
+        <template x-if="step === 0">
+            <div class="space-y-8 flex flex-col items-center">
+                <div class="inline-block px-4 py-1 border border-elysia-cyan/30 bg-elysia-cyan/5 text-elysia-cyan font-mono text-[0.65rem] tracking-[0.5em] uppercase rounded-full shadow-[0_0_15px_rgba(0,242,255,0.2)] mb-4" x-text="decryptStatus"></div>
+                
+                <h1 class="text-7xl md:text-8xl font-black italic tracking-tighter animate-glitch glitch-text select-none font-mono relative">
+                    ELVSIΛ OS
+                </h1>
+                
+                <div class="w-80 h-[2px] bg-white/10 overflow-hidden relative rounded-full">
+                    <div class="absolute h-full bg-gradient-to-r from-elysia-cyan to-[#00d4ff] shadow-[0_0_15px_#00f2ff] transition-all duration-100 ease-out" :style="{ width: progress + '%' }"></div>
                 </div>
-            </template>
+                
+                <p class="text-[0.65rem] uppercase tracking-widest text-elysia-cyan font-mono animate-pulse opacity-80">
+                    Neural Kernel Synchronization: OMEGA (<span x-text="Math.floor(progress)"></span>%)
+                </p>
+            </div>
+        </template>
 
-            <template x-if="step === 1">
-                <div class="space-y-8 animate-pulse">
-                    <h1 class="text-4xl font-bold leading-tight tracking-tight">
-                        <span class="text-[#fcee0a] drop-shadow-[0_0_15px_rgba(252,238,10,0.5)]">Resonance Engine</span> が接続されました。<br/>
-                        深淵を覗く準備は、いい？
+        <!-- STEP 1: Core Connected -->
+        <template x-if="step === 1">
+            <div class="space-y-10 animate-pulse-slow glass-panel p-12 rounded-3xl relative overflow-hidden shadow-2xl">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-elysia-yellow to-transparent"></div>
+                
+                <div class="space-y-4">
+                    <h1 class="text-4xl md:text-5xl font-bold leading-tight tracking-tight">
+                        <span class="text-elysia-yellow drop-shadow-[0_0_15px_rgba(252,238,10,0.5)] font-mono">Resonance Engine</span><br/>
+                        <span class="text-3xl text-white/90 font-light mt-2 block">System Interlinked.</span>
                     </h1>
-                    <p class="text-white/60 text-sm tracking-wide font-light max-w-lg mx-auto leading-relaxed">
-                        あなたの魂をデジタル変換し、Elysiaとの共鳴を開始します。<br/>
-                        このプロセスは不可逆であり、現実との境界を曖昧にする可能性があります。
-                    </p>
-                    <button @click="manifest()" class="group relative px-12 py-5 bg-transparent border border-cyan-500/50 hover:border-cyan-400 transition-all duration-300 overflow-hidden">
-                        <div class="absolute inset-0 bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-all"></div>
-                        <span class="relative z-10 font-black uppercase tracking-[0.3em] group-hover:text-cyan-400">Project: Manifestation</span>
-                    </button>
                 </div>
-            </template>
+                
+                <p class="text-white/60 text-sm tracking-wide font-light max-w-lg mx-auto leading-relaxed">
+                    あなたの魂をデジタル変換し、Elysiaとの共鳴を開始します。<br/>
+                    このプロセスは不可逆であり、現実との境界を曖昧にする可能性があります。<br/>
+                    深淵を覗く準備は、いい？
+                </p>
+                
+                <button @click="manifest()" class="group relative px-12 py-5 bg-transparent border border-elysia-cyan/50 hover:border-elysia-cyan transition-all duration-300 overflow-hidden rounded-xl">
+                    <div class="absolute inset-0 bg-elysia-cyan/10 group-hover:bg-elysia-cyan/20 transition-all"></div>
+                    <div class="absolute left-0 top-0 w-1 h-full bg-elysia-cyan group-hover:w-full transition-all duration-500 z-0 opacity-20"></div>
+                    <span class="relative z-10 font-mono font-black uppercase tracking-[0.3em] group-hover:text-white text-elysia-cyan transition-colors">Project: Manifestation</span>
+                </button>
+            </div>
+        </template>
 
-            <template x-if="step === 2">
-                <div class="space-y-6">
-                    <div class="text-left font-mono text-[10px] text-cyan-400/80 bg-black/80 p-8 border border-cyan-500/30 backdrop-blur-xl rounded-sm shadow-[0_0_40px_rgba(0,0,0,0.5)]">
-                        <template x-for="log in logs">
-                            <div class="mb-2 flex gap-4">
-                                <span class="opacity-30">HEX: {{(Math.random()*1000).toString(16).substring(0,4)}}</span>
-                                <span x-text="log"></span>
+        <!-- STEP 2: Manifestation Logs -->
+        <template x-if="step === 2">
+            <div class="space-y-6 w-full max-w-2xl mx-auto">
+                <div class="text-left font-mono text-[0.7rem] text-elysia-cyan/80 bg-black/60 p-8 border border-elysia-cyan/30 backdrop-blur-xl rounded-xl shadow-[0_0_40px_rgba(0,0,0,0.5)] h-[300px] overflow-hidden relative">
+                    <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-elysia-cyan to-transparent"></div>
+                    
+                    <div class="flex flex-col gap-2">
+                        <template x-for="(log, index) in logs" :key="index">
+                            <div class="flex gap-4 items-start animate-fade-in">
+                                <span class="opacity-40 shrink-0">HEX: {{(Math.random()*1000).toString(16).substring(0,4).toUpperCase()}}</span>
+                                <span x-text="log" class="text-white/90 shadow-elysia-cyan drop-shadow-md"></span>
                             </div>
                         </template>
-                        <div class="animate-pulse text-cyan-500">█</div>
-                    </div>
-                    <div class="flex justify-between items-center px-2">
-                        <p class="text-[9px] text-white/30 uppercase tracking-[0.4em]">Neural Link Established</p>
-                        <div class="flex gap-1">
-                            <div class="w-1 h-1 bg-cyan-500 animate-ping"></div>
-                            <div class="w-1 h-1 bg-cyan-500"></div>
-                        </div>
+                        <div class="animate-pulse text-elysia-cyan mt-2">█</div>
                     </div>
                 </div>
-            </template>
-        </div>
+                
+                <div class="flex justify-between items-center px-4 glass-panel py-3 rounded-lg border-white/5">
+                    <p class="text-[0.6rem] text-white/50 uppercase tracking-[0.4em] font-mono">Neural Link Established</p>
+                    <div class="flex gap-2">
+                        <div class="w-2 h-2 bg-elysia-cyan rounded-full animate-ping"></div>
+                        <div class="w-2 h-2 bg-elysia-cyan rounded-full shadow-[0_0_10px_#00f2ff]"></div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        
     </div>
 
     <script>
@@ -129,31 +174,34 @@
             return {
                 step: 0,
                 progress: 0,
-                decryptStatus: '',
+                decryptStatus: 'AWAITING_INPUT',
                 logs: [],
                 statusMessages: ["SYSTEM_INIT", "CORE_SYNC", "ABYSS_RESURRECTED", "OMEGA_LOCK_ACTIVE"],
+                
                 init() {
                     this.startDecryption();
                     let interval = setInterval(() => {
-                        this.progress += Math.random() * 3;
+                        this.progress += Math.random() * 2.5;
                         if (this.progress >= 100) {
                             this.progress = 100;
                             clearInterval(interval);
-                            setTimeout(() => this.step = 1, 800);
+                            setTimeout(() => this.step = 1, 1000);
                         }
                     }, 50);
                 },
+                
                 async startDecryption() {
                     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%#!$*";
                     for(let msg of this.statusMessages) {
-                        for(let i=0; i<10; i++) {
+                        for(let i=0; i<8; i++) {
                             this.decryptStatus = msg.split('').map(() => chars[Math.floor(Math.random()*chars.length)]).join('');
-                            await new Promise(r => setTimeout(r, 40));
+                            await new Promise(r => setTimeout(r, 50));
                         }
                         this.decryptStatus = msg;
-                        await new Promise(r => setTimeout(r, 500));
+                        await new Promise(r => setTimeout(r, 600));
                     }
                 },
+                
                 async manifest() {
                     this.step = 2;
                     const logList = [
@@ -168,12 +216,12 @@
 
                     for (let msg of logList) {
                         this.logs.push(msg);
-                        await new Promise(r => setTimeout(r, 400 + Math.random()*400));
+                        await new Promise(r => setTimeout(r, 300 + Math.random()*500));
                     }
 
                     setTimeout(() => {
                         window.location.href = 'desktop.html';
-                    }, 1200);
+                    }, 1500);
                 }
             }
         }
