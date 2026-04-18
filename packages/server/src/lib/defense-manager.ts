@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { logger } from "./logger";
 
 interface DefenseRules {
@@ -34,23 +34,53 @@ class DefenseManager {
 	public loadRules(): void {
 		try {
 			const rulesPath = this.getRulesPath();
-			if (!existsSync(rulesPath)) return;
+			if (!existsSync(rulesPath)) {
+				this.saveRules(); // 初期ファイルを作成
+				return;
+			}
 
 			const content = readFileSync(rulesPath, "utf-8");
-			const parsed = JSON.parse(content);
+			let parsed: Partial<DefenseRules>;
+			try {
+				parsed = JSON.parse(content);
+			} catch (parseError) {
+				logger.error(
+					"Malformed defense rules JSON, using defaults",
+					parseError as Error,
+				);
+				parsed = { blocked_ips: [] };
+			}
 
 			// 既存の動的ブロックIPをマージ
 			const mergedIps = Array.from(
 				new Set([...this.rules.blocked_ips, ...(parsed.blocked_ips || [])]),
 			);
-			this.rules = { ...parsed, blocked_ips: mergedIps };
+			this.rules = { ...this.rules, ...parsed, blocked_ips: mergedIps };
 			this.lastLoadedAt = Date.now();
 
-			logger.info("Defense rules loaded & merged", {
+			logger.info("🛡️ Defense rules loaded & merged", {
 				blockedCount: this.rules.blocked_ips.length,
 			});
 		} catch (error) {
 			logger.error("Failed to load defense rules", error as Error);
+		}
+	}
+
+	/**
+	 * ルールをファイルに永続化
+	 */
+	private saveRules(): void {
+		try {
+			const rulesPath = this.getRulesPath();
+			const dir = dirname(rulesPath);
+			if (!existsSync(dir)) {
+				mkdirSync(dir, { recursive: true });
+			}
+			this.rules.last_updated = Date.now();
+			writeFileSync(rulesPath, JSON.stringify(this.rules, null, 2), "utf-8");
+			logger.info("💾 Defense rules persisted to storage.");
+		} catch (error) {
+			logger.error("Failed to save defense rules", error as Error);
 		}
 	}
 
@@ -69,6 +99,7 @@ class DefenseManager {
 		// 3回以上の不審なリクエストでBlack ICE発動（IPをブロック）
 		if (count >= 3 && !this.rules.blocked_ips.includes(cleanIp)) {
 			this.rules.blocked_ips.push(cleanIp);
+			this.saveRules(); // 永続化
 			logger.error(
 				`🛡️ L3 Black ICE Activated: ${cleanIp} has been permanently blocked. (Reason: ${reason})`,
 			);
@@ -82,6 +113,7 @@ class DefenseManager {
 		const cleanIp = ip.replace(/^::ffff:/, "");
 		if (!this.rules.blocked_ips.includes(cleanIp)) {
 			this.rules.blocked_ips.push(cleanIp);
+			this.saveRules(); // 永続化
 			logger.error(
 				`🛡️ L4 Blackwall Enforced: ${cleanIp} blocked immediately. (Reason: ${reason})`,
 			);
