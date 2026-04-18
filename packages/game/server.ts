@@ -64,9 +64,9 @@ function placeOthello(
 	let flipped = 0;
 	const newBoard = board.map((row) => [...row]);
 	for (const [dx, dy] of dirs) {
-		let nx = x + dx,
-			ny = y + dy,
-			line: [number, number][] = [];
+		let nx = x + dx;
+		let ny = y + dy;
+		const line: [number, number][] = [];
 		while (
 			nx >= 0 &&
 			nx < 8 &&
@@ -105,8 +105,8 @@ function isGameOver(board: Board): boolean {
 	return true;
 }
 function countStones(board: Board): [number, number] {
-	let b = 0,
-		w = 0;
+	let b = 0;
+	let w = 0;
 	for (const row of board)
 		for (const c of row) {
 			if (c === 1) b++;
@@ -156,35 +156,34 @@ function alphabeta(
 				}
 			}
 		return maxEval;
-	} else {
-		let minEval = Number.POSITIVE_INFINITY;
-		for (let y = 0; y < 8; ++y)
-			for (let x = 0; x < 8; ++x) {
-				if (placeOthello(board, x, y, player).flipped) {
-					const nextPlayer = player === 1 ? 2 : 1;
-					const evalScore = alphabeta(
-						placeOthello(board, x, y, player).board,
-						nextPlayer,
-						depth - 1,
-						true,
-						alpha,
-						beta,
-						origPlayer,
-					);
-					minEval = Math.min(minEval, evalScore);
-					beta = Math.min(beta, evalScore);
-					if (beta <= alpha) break;
-				}
-			}
-		return minEval;
 	}
+	let minEval = Number.POSITIVE_INFINITY;
+	for (let y = 0; y < 8; ++y)
+		for (let x = 0; x < 8; ++x) {
+			if (placeOthello(board, x, y, player).flipped) {
+				const nextPlayer = player === 1 ? 2 : 1;
+				const evalScore = alphabeta(
+					placeOthello(board, x, y, player).board,
+					nextPlayer,
+					depth - 1,
+					true,
+					alpha,
+					beta,
+					origPlayer,
+				);
+				minEval = Math.min(minEval, evalScore);
+				beta = Math.min(beta, evalScore);
+				if (beta <= alpha) break;
+			}
+		}
+	return minEval;
 }
 function getStrongAIMove(
 	board: Board,
 	player: Player,
 ): { x: number; y: number } | null {
-	let bestScore = Number.NEGATIVE_INFINITY,
-		bestMove = null;
+	let bestScore = Number.NEGATIVE_INFINITY;
+	let bestMove = null;
 	for (let y = 0; y < 8; ++y)
 		for (let x = 0; x < 8; ++x) {
 			if (placeOthello(board, x, y, player).flipped) {
@@ -219,8 +218,8 @@ function getGodAIMove(
 	for (const c of corners) {
 		if (placeOthello(board, c.x, c.y, player).flipped) return c;
 	}
-	let bestScore = Number.NEGATIVE_INFINITY,
-		bestMove = null;
+	let bestScore = Number.NEGATIVE_INFINITY;
+	let bestMove = null;
 	for (let y = 0; y < 8; ++y)
 		for (let x = 0; x < 8; ++x) {
 			if (placeOthello(board, x, y, player).flipped) {
