@@ -134,13 +134,39 @@ typedef struct {
     void* AllocatePages;
     void* FreePages;
     EFI_GET_MEMORY_MAP GetMemoryMap;
-    void* AllocatePool; // index 8 in BS
+    void* AllocatePool;
     void* FreePool;
-    // ... many more omitted ...
-    char _pad1[72]; // Padding to reach LocateProtocol index (simplified)
-    EFI_LOCATE_PROTOCOL LocateProtocol;
-    char _pad2[64];
+    void* CreateEvent;
+    void* SetTimer;
+    void* WaitForEvent;
+    void* SignalEvent;
+    void* CloseEvent;
+    void* CheckEvent;
+    void* InstallProtocolInterface;
+    void* ReinstallProtocolInterface;
+    void* UninstallProtocolInterface;
+    void* HandleProtocol;
+    void* Reserved;
+    void* RegisterProtocolNotify;
+    void* LocateHandle;
+    void* LocateDevicePath;
+    void* InstallConfigurationTable;
+    void* LoadImage;
+    void* StartImage;
+    void* Exit;
+    void* UnloadImage;
     EFI_EXIT_BOOT_SERVICES ExitBootServices;
+    void* GetNextMonotonicCount;
+    void* Stall;
+    void* SetWatchdogTimer;
+    void* ConnectController;
+    void* DisconnectController;
+    void* OpenProtocol;
+    void* CloseProtocol;
+    void* OpenProtocolInformation;
+    void* ProtocolsPerHandle;
+    void* LocateHandleBuffer;
+    EFI_LOCATE_PROTOCOL LocateProtocol;
 } EFI_BOOT_SERVICES;
 
 typedef struct {
