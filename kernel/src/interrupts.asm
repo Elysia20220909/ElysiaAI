@@ -2,7 +2,7 @@
 
 section .text
 extern interrupt_handler
-extern scheduler
+extern schedule
 extern syscall_handler
 global load_idt
 global load_gdt
@@ -81,7 +81,7 @@ isr_common:
     cmp rdi, 32         ; Timer
     jne .not_timer
     mov rdi, rsp
-    call scheduler
+    call schedule
     mov rsp, rax
     mov al, 0x20
     out 0x20, al
