@@ -24,7 +24,13 @@
 			"public/assets/js",
 			"*.min.js",
 			"kernel",
-			"kernel/linux"
+			"kernel/linux",
+			"docs/archive",
+			"public/standalone",
+			"**/prisma/client",
+			"**/.next",
+			"**/.cache",
+			"**/.turbo"
 		]
 	},
 	"formatter": {
