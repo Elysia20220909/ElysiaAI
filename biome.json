@@ -22,7 +22,9 @@
 			"src/**/*.d.ts",
 			"**/*.d.ts",
 			"public/assets/js",
-			"*.min.js"
+			"*.min.js",
+			"kernel",
+			"kernel/linux"
 		]
 	},
 	"formatter": {
