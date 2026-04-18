@@ -14,10 +14,18 @@ param(
 
 $ErrorActionPreference = "SilentlyContinue"
 
-Write-Host "🛡️  ELYSIANA TECHNOLOGY // NANOTECH VACUUM" -ForegroundColor Red
-Write-Host "=========================================" -ForegroundColor DarkRed
-Write-Host "Initiating lightweighting sequence..." -ForegroundColor Gray
-Write-Host ""
+Write-Host @"
+ ███████╗██╗     ██╗   ██╗███████╗██╗ █████╗ 
+ ██╔════╝██║     ╚██╗ ██╔╝██╔════╝██║██╔══██╗
+ █████╗  ██║      ╚████╔╝ ███████╗██║███████║
+ ██╔══╝  ██║       ╚██╔╝  ╚════██║██║██╔══██║
+ ███████╗███████╗   ██║   ███████║██║██╔══██║
+ ╚══════╝╚══════╝   ╚═╝   ╚══════╝╚═╝╚═╝  ╚═╝
+"@ -ForegroundColor Cyan
+
+Write-Host " [ SYSTEM ] : ELYSIANA NANOTECH VACUUM v4.1" -ForegroundColor Green
+Write-Host " [ STATUS ] : LINK START // AGGRESSIVE CLEANUP" -ForegroundColor Red
+Write-Host "----------------------------------------------------"
 
 $cleanupTargets = @(
     # Standard Caches
@@ -55,7 +63,7 @@ foreach ($target in $cleanupTargets) {
     $items = Get-ChildItem -Path . -Include $target.Path -Recurse -ErrorAction SilentlyContinue
     
     if ($items) {
-        Write-Host "Scanning: $($target.Description)..." -NoNewline -ForegroundColor Gray
+        Write-Host " [ ACCESS ] : $($target.Description)" -ForegroundColor DarkGray
         
         $currentSize = 0
         foreach ($i in $items) {
@@ -68,9 +76,9 @@ foreach ($target in $cleanupTargets) {
         
         if (!$Simulation) {
             $items | Remove-Item -Recurse -Force
-            Write-Host " ✓ Cleaned ($([Math]::Round($currentSize / 1MB, 2)) MB)" -ForegroundColor Green
+            Write-Host " [ PURGE  ] : COMPLETED ($([Math]::Round($currentSize / 1MB, 2)) MB)" -ForegroundColor Green
         } else {
-            Write-Host " 🔍 Simulation ($([Math]::Round($currentSize / 1MB, 2)) MB)" -ForegroundColor Yellow
+            Write-Host " [ TARGET ] : DETECTED ($([Math]::Round($currentSize / 1MB, 2)) MB)" -ForegroundColor Yellow
         }
         
         $totalFreed += $currentSize
@@ -79,11 +87,11 @@ foreach ($target in $cleanupTargets) {
 }
 
 Write-Host ""
-Write-Host "=========================================" -ForegroundColor DarkRed
+Write-Host "----------------------------------------------------"
 if ($Simulation) {
-    Write-Host "POTENTIAL SPACE SAVINGS: $([Math]::Round($totalFreed / 1MB, 2)) MB" -ForegroundColor Yellow
+    Write-Host " [ OVERFLOW ] : $([Math]::Round($totalFreed / 1MB, 2)) MB POTENTIAL SPACE" -ForegroundColor Yellow
 } else {
-    Write-Host "SYSTEM LIGHTWEIGHTED: $([Math]::Round($totalFreed / 1MB, 2)) MB freed." -ForegroundColor Green
+    Write-Host " [ OPTIMIZED ] : $([Math]::Round($totalFreed / 1MB, 2)) MB PURGED" -ForegroundColor Green
 }
-Write-Host "Status: STABLE // REDUCED FOOTPRINT" -ForegroundColor Gray
+Write-Host " [ STATUS    ] : SYSTEM STABLE // NANOTECH ACTIVE" -ForegroundColor Gray
 Write-Host ""
