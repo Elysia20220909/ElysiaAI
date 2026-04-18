@@ -132,9 +132,44 @@
         .fade-in {
             animation: fadeIn 0.4s ease-out forwards;
         }
+
+        /* Nanotech Loading */
+        @keyframes particle {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
+        }
+        .nano-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ec4899;
+            border-radius: 1px;
+            animation: particle 1.5s infinite;
+        }
     </style>
 </head>
-<body x-data="app()" x-init="init()">
+<body x-data="app()" x-init="init()" class="relative">
+    <!-- Nanotech Splash -->
+    <div x-show="booting" x-transition:leave="transition ease-in duration-1000" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] bg-matrix-bg flex flex-col items-center justify-center pointer-events-none">
+        <div class="relative w-64 h-64 flex items-center justify-center">
+            <div class="absolute inset-0 border-2 border-elysia-500/20 rounded-full animate-ping"></div>
+            <div class="absolute inset-4 border border-elysia-400/30 rounded-full animate-[spin_3s_linear_infinite]"></div>
+            <div class="absolute inset-8 border border-elysia-300/40 rounded-full animate-[spin_2s_linear_infinite_reverse]"></div>
+            
+            <div class="relative z-10 text-center">
+                <h1 class="text-4xl font-black italic tracking-tighter text-white mb-2">ELYSIANA</h1>
+                <div class="h-0.5 w-full bg-gradient-to-r from-transparent via-elysia-500 to-transparent"></div>
+                <p class="text-[8px] font-mono text-elysia-400 mt-2 tracking-[0.5em] uppercase">Nanotech Sync Active</p>
+            </div>
+            
+            <!-- Particles -->
+            <template x-for="i in 12">
+                <div class="nano-particle" :style="`top: ${Math.random()*100}%; left: ${Math.random()*100}%; animation-delay: ${Math.random()*2}s`"></div>
+            </template>
+        </div>
+    </div>
     
     <div class="flex h-screen w-full overflow-hidden bg-matrix-bg">
         
@@ -301,6 +336,7 @@
         function app() {
             return {
                 loading: true,
+                booting: true,
                 fileLoading: false,
                 search: '',
                 tree: [], // Flattened list with depth info for easy rendering
@@ -310,6 +346,8 @@
                 breadcrumbs: [],
 
                 async init() {
+                    // Simulated Nanotech Boot
+                    setTimeout(() => { this.booting = false; }, 2000);
                     try {
                         const response = await fetch('tree.json');
                         if (!response.ok) throw new Error('Failed to load matrix index');
