@@ -219,5 +219,45 @@ export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 				} catch {
 					return jsonError(500, "Failed to store feedback");
 				}
-			}),
+			})
+			.post(
+				"/summary",
+				async ({ body }) => {
+					const { content } = body as { content: string };
+					if (!content) return jsonError(400, "Missing content");
+
+					try {
+						const response = await axios.post(
+							"https://api.groq.com/openai/v1/chat/completions",
+							{
+								model: "llama-3.3-70b-versatile",
+								messages: [
+									{
+										role: "system",
+										content:
+											"You are the ElysiaAI Neural Link Summarizer. Provide a concise, 3-bullet point summary of the following document in Japanese. Use professional, futuristic tone.",
+									},
+									{ role: "user", content },
+								],
+								max_tokens: 500,
+							},
+							{
+								headers: {
+									Authorization: `Bearer ${CONFIG.GROQ_API_KEY}`,
+									"Content-Type": "application/json",
+								},
+							},
+						);
+						return { summary: response.data.choices[0].message.content };
+					} catch (error: any) {
+						logger.error("🤖 [AI] Summary Error:", error.message);
+						return jsonError(500, "Failed to generate neural summary");
+					}
+				},
+				{
+					body: t.Object({
+						content: t.String(),
+					}),
+				},
+			),
 );

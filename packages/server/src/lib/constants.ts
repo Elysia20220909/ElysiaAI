@@ -13,6 +13,7 @@ export const CONFIG = {
 	RAG_TIMEOUT: 60000,
 	AUTH_USERNAME: process.env.AUTH_USERNAME || "admin",
 	AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysiatest-001",
+	GROQ_API_KEY: process.env.GROQ_API_KEY || "",
 };
 
 export const jsonError = (status: number, message: string) => {
