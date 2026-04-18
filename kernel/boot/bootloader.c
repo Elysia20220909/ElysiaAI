@@ -86,10 +86,37 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
     EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = 0;
+    
+    // Attempt 1: LocateProtocol
     EFI_STATUS status = SystemTable->BootServices->LocateProtocol(&gop_guid, 0, (void**)&gop);
 
+    // Attempt 2: HandleProtocol on ConsoleOutHandle (Fallback)
     if (status != EFI_SUCCESS || !gop) {
-        SystemTable->ConOut->OutputString(SystemTable->ConOut, L"FAILED TO LOCATE GOP PROTOCOL\r\n");
+        status = SystemTable->BootServices->HandleProtocol(SystemTable->ConsoleOutHandle, &gop_guid, (void**)&gop);
+    }
+
+    // Attempt 3: HandleProtocol on ImageHandle (Fallback)
+    if (status != EFI_SUCCESS || !gop) {
+        status = SystemTable->BootServices->HandleProtocol(ImageHandle, &gop_guid, (void**)&gop);
+    }
+
+    // Attempt 4: LocateHandleBuffer (Deep Search)
+    if (status != EFI_SUCCESS || !gop) {
+        EFI_HANDLE *handle_buffer = 0;
+        uint64_t handle_count = 0;
+        // Index 19 is LocateHandle (Wait, I used index 36 for LocateHandleBuffer)
+        // Let's use the typed version from uefi.h
+        typedef EFI_STATUS (*EFI_LOCATE_HANDLE_BUFFER) (uint32_t SearchType, EFI_GUID *Protocol, void *SearchKey, uint64_t *NoHandles, EFI_HANDLE **Buffer);
+        EFI_LOCATE_HANDLE_BUFFER locate_handle_buffer = (EFI_LOCATE_HANDLE_BUFFER)SystemTable->BootServices->LocateHandleBuffer;
+        
+        status = locate_handle_buffer(2, &gop_guid, 0, &handle_count, &handle_buffer); // 2 = ByProtocol
+        if (status == EFI_SUCCESS && handle_count > 0) {
+            status = SystemTable->BootServices->HandleProtocol(handle_buffer[0], &gop_guid, (void**)&gop);
+        }
+    }
+
+    if (status != EFI_SUCCESS || !gop) {
+        SystemTable->ConOut->OutputString(SystemTable->ConOut, L"CRITICAL: GOP NOT FOUND VIA ANY METHOD. CHECK VM SETTINGS.\r\n");
         while(1);
     }
 
@@ -100,14 +127,25 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     // 1. Initial State
     draw_aurora_splash(&g_fb);
-    kprint(&g_fb, 40, 40, "SOVEREIGN APEX PRO (V40.0) - AQUEOUS SECURITY", 0xFFFFFF);
+    kprint(&g_fb, 40, 40, "SOVEREIGN APEX PRO (V41.0) - AQUEOUS SECURITY", 0xFFFFFF);
 
     // 2. Achieve Sovereignty
     uint64_t map_size=0, map_key=0, desc_size=0; uint32_t desc_ver=0;
-    SystemTable->BootServices->GetMemoryMap(&map_size, 0, &map_key, &desc_size, &desc_ver);
-    static uint8_t map_buffer[16384];
-    SystemTable->BootServices->GetMemoryMap(&map_size, (EFI_MEMORY_DESCRIPTOR*)map_buffer, &map_key, &desc_size, &desc_ver);
-    SystemTable->BootServices->ExitBootServices(ImageHandle, map_key);
+    static uint8_t map_buffer[32768]; // Increased to 32KB
+    map_size = sizeof(map_buffer);
+
+    status = SystemTable->BootServices->GetMemoryMap(&map_size, (EFI_MEMORY_DESCRIPTOR*)map_buffer, &map_key, &desc_size, &desc_ver);
+    if (status != EFI_SUCCESS) {
+        SystemTable->ConOut->OutputString(SystemTable->ConOut, L"FAILED TO GET MEMORY MAP\r\n");
+        while(1);
+    }
+
+    status = SystemTable->BootServices->ExitBootServices(ImageHandle, map_key);
+    if (status != EFI_SUCCESS) {
+        // One retry with updated map
+        SystemTable->BootServices->GetMemoryMap(&map_size, (EFI_MEMORY_DESCRIPTOR*)map_buffer, &map_key, &desc_size, &desc_ver);
+        SystemTable->BootServices->ExitBootServices(ImageHandle, map_key);
+    }
 
     // 3. Initialize Ultimate Architecture
     init_gdt(); // Protection Boundaries

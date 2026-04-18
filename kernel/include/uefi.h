@@ -93,7 +93,7 @@ typedef struct _EFI_GRAPHICS_OUTPUT_PROTOCOL {
 } EFI_GRAPHICS_OUTPUT_PROTOCOL;
 
 #define EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID \
-    {0x70483051, 0xD74D, 0x4422, {0x8A, 0x38, 0xB7, 0x73, 0x0E, 0x4D, 0x2C, 0x33}}
+    {0x9042a9de, 0x23dc, 0x4a38, {0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a}}
 
 // --- Memory Management ---
 
@@ -111,6 +111,12 @@ typedef struct {
 typedef EFI_STATUS (*EFI_LOCATE_PROTOCOL) (
     EFI_GUID *Protocol,
     void *Registration,
+    void **Interface
+);
+
+typedef EFI_STATUS (*EFI_HANDLE_PROTOCOL) (
+    EFI_HANDLE Handle,
+    EFI_GUID *Protocol,
     void **Interface
 );
 
@@ -145,7 +151,7 @@ typedef struct {
     void* InstallProtocolInterface;
     void* ReinstallProtocolInterface;
     void* UninstallProtocolInterface;
-    void* HandleProtocol;
+    EFI_HANDLE_PROTOCOL HandleProtocol;
     void* Reserved;
     void* RegisterProtocolNotify;
     void* LocateHandle;
@@ -167,6 +173,12 @@ typedef struct {
     void* ProtocolsPerHandle;
     void* LocateHandleBuffer;
     EFI_LOCATE_PROTOCOL LocateProtocol;
+    void* InstallMultipleProtocolInterfaces;
+    void* UninstallMultipleProtocolInterfaces;
+    void* CalculateCrc32;
+    void* CopyMem;
+    void* SetMem;
+    void* CreateEventEx;
 } EFI_BOOT_SERVICES;
 
 typedef struct {
