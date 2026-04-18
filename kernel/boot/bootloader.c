@@ -86,7 +86,12 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
     EFI_GUID gop_guid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
     EFI_GRAPHICS_OUTPUT_PROTOCOL *gop = 0;
-    SystemTable->BootServices->LocateProtocol(&gop_guid, 0, (void**)&gop);
+    EFI_STATUS status = SystemTable->BootServices->LocateProtocol(&gop_guid, 0, (void**)&gop);
+
+    if (status != EFI_SUCCESS || !gop) {
+        SystemTable->ConOut->OutputString(SystemTable->ConOut, L"FAILED TO LOCATE GOP PROTOCOL\r\n");
+        while(1);
+    }
 
     g_fb.base_address = gop->Mode->FrameBufferBase;
     g_fb.width = gop->Mode->Info->HorizontalResolution;
