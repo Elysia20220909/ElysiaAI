@@ -78,8 +78,8 @@ export class WindowManager {
 	private makeDraggable(win: HTMLElement) {
 		const header = win.querySelector(".window-header") as HTMLElement;
 		if (!header) return;
-		let x = 0,
-			y = 0;
+		let x = 0;
+		let y = 0;
 		header.onmousedown = (e) => {
 			e.preventDefault();
 			x = e.clientX;

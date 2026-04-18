@@ -75,7 +75,8 @@ async function startBootSequence() {
 		}, 1000);
 	} catch (err) {
 		console.error("Boot failure:", err);
-		bootLog.innerText += `\n[ ERROR ] Kernel Panic: Unable to reach boot server. Check backend.`;
+		bootLog.innerText +=
+			"\n[ ERROR ] Kernel Panic: Unable to reach boot server. Check backend.";
 	}
 }
 

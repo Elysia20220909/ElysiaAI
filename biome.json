@@ -30,7 +30,20 @@
 		"indentStyle": "tab"
 	},
 	"linter": {
-		"enabled": false
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "off"
+			},
+			"complexity": {
+				"noForEach": "off"
+			},
+			"style": {
+				"noParameterAssign": "off",
+				"noNonNullAssertion": "off"
+			}
+		}
 	},
 	"javascript": {
 		"formatter": {
