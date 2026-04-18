@@ -43,7 +43,7 @@ $cleanupTargets = @(
 if ($UltraDeep) {
     Write-Host "⚡ ULTRA-DEEP MODE ACTIVATED" -ForegroundColor Cyan
     $cleanupTargets += @(
-        @{ Path = "node_modules/.cache"; Description = "NPM/Bun Caches" },
+        # @{ Path = "node_modules/.cache"; Description = "NPM/Bun Caches (RISKY)" },
         @{ Path = "kernel/linux/.git/objects/pack/*.idx"; Description = "Kernel Pack Indices" }
     )
 }
