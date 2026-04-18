@@ -6,6 +6,7 @@
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import { logger } from "./logger";
+import { secureVault } from "./secure-vault";
 
 // Apply .env
 dotenv.config({ override: true });
@@ -122,15 +123,23 @@ export const chatService = {
 	},
 
 	async addMessage(data: { sessionId: string; role: string; content: string }) {
-		return prisma.message.create({ data });
+		const encryptedData = {
+			...data,
+			content: secureVault.encrypt(data.content),
+		};
+		return prisma.message.create({ data: encryptedData });
 	},
 
 	async getMessages(sessionId: string, limit = 50) {
-		return prisma.message.findMany({
+		const messages = await prisma.message.findMany({
 			where: { sessionId },
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
+		return messages.map((m) => ({
+			...m,
+			content: secureVault.decrypt(m.content),
+		}));
 	},
 
 	async deleteSession(id: string) {
@@ -191,7 +200,11 @@ export const knowledgeService = {
 		source?: string;
 		verified?: boolean;
 	}) {
-		return prisma.knowledgeBase.create({ data });
+		const encryptedData = {
+			...data,
+			answer: secureVault.encrypt(data.answer),
+		};
+		return prisma.knowledgeBase.create({ data: encryptedData });
 	},
 
 	async search(query: string, limit = 10) {
@@ -209,11 +222,15 @@ export const knowledgeService = {
 	},
 
 	async getAll(verified = true) {
-		return prisma.knowledgeBase.findMany({
+		const knowledge = await prisma.knowledgeBase.findMany({
 			where: verified ? { verified: true } : undefined,
 			orderBy: { updatedAt: "desc" },
 			take: 200,
 		});
+		return knowledge.map((k) => ({
+			...k,
+			answer: secureVault.decrypt(k.answer),
+		}));
 	},
 
 	async verify(id: string) {

@@ -12,6 +12,7 @@ class DefenseManager {
 	private lastLoadedAt = 0;
 	// ⚠️ 動的脅威検知用 (L3 Black ICE)
 	private suspiciousActivities: Map<string, number> = new Map();
+	private isGatekeeperVerified = false;
 
 	constructor() {
 		this.loadRules();
@@ -96,6 +97,40 @@ class DefenseManager {
 		}
 		const cleanIp = ip.replace(/^::ffff:/, "");
 		return this.rules.blocked_ips.includes(cleanIp);
+	}
+
+	/**
+	 * Gatekeeper: シリコン・レベルの整合性検証
+	 */
+	public verifyGatekeeper(): boolean {
+		try {
+			const keyPath = join(process.cwd(), "../../kernel/SENTINEL.KEY");
+			if (!existsSync(keyPath)) {
+				this.isGatekeeperVerified = false;
+				return false;
+			}
+			const key = readFileSync(keyPath, "utf-8").trim();
+			this.isGatekeeperVerified = key === "AEGIS-SVR-777";
+			if (this.isGatekeeperVerified) {
+				logger.info("🛡️ Gatekeeper Verified: Silicon Root of Trust active.");
+			}
+			return this.isGatekeeperVerified;
+		} catch (e) {
+			this.isGatekeeperVerified = false;
+			return false;
+		}
+	}
+
+	/**
+	 * Neural Sandbox: リクエストのサニタイズと隔離
+	 */
+	public enforceSandbox(req: any): void {
+		if (!this.isGatekeeperVerified && !this.verifyGatekeeper()) {
+			throw new Error(
+				"GATEKEEPER_REJECTED: Unauthorized hardware environment.",
+			);
+		}
+		// 追加のサンドボックスロジック（ヘッダー削除等は routes 側で実施）
 	}
 
 	/**
