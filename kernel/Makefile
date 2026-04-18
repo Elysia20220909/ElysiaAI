@@ -47,7 +47,9 @@ $(BOOT_VMX):
 	echo '.encoding = "UTF-8"' > $@
 	echo 'config.version = "8"' >> $@
 	echo 'virtualHW.version = "22"' >> $@
-	echo 'memsize = "2048"' >> $@
+	echo 'memsize = "32768"' >> $@
+	echo 'numvcpus = "16"' >> $@
+	echo 'cpuid.coresPerSocket = "16"' >> $@
 	echo 'guestOS = "other-64"' >> $@
 	echo 'firmware = "efi"' >> $@
 	echo 'ide0:0.present = "TRUE"' >> $@
@@ -59,10 +61,13 @@ $(BOOT_VMX):
 	echo 'pciBridge6.present = "TRUE"' >> $@
 	echo 'pciBridge7.present = "TRUE"' >> $@
 	echo 'floppy0.present = "FALSE"' >> $@
-	echo 'floppy0.autodetect = "FALSE"' >> $@
 	echo 'mks.enable3d = "TRUE"' >> $@
+	echo 'svga.vramSize = "2147483648"' >> $@
+	echo 'svga.graphicsMemoryKB = "2097152"' >> $@
 	echo 'gui.exitOnLastVMClosing = "FALSE"' >> $@
-	echo 'displayName = "Elysia Sovereign OS"' >> $@
+	echo 'displayName = "Elysia Sovereign OS PRO"' >> $@
+	echo 'cleanShutdown = "FALSE"' >> $@
+	echo 'softPowerOff = "FALSE"' >> $@
 
 clean:
 	rm -f $(BOOT_EFI) $(BOOT_IMG) $(BOOT_VMDK) $(BOOT_ISO) $(BOOT_VMX) $(ASM_OBJ) SOVEREIGN.TXT SENTINEL.KEY
