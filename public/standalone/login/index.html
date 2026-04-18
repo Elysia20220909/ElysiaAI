@@ -4,52 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ELYSIA // NEURAL LINK AUTH</title>
-    <link rel="stylesheet" href="/standalone/login/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['Orbitron', 'monospace'],
+                    },
+                    colors: {
+                        core: {
+                            cyan: '#00f2ff',
+                            magenta: '#ff00ff',
+                            dark: '#020408',
+                        }
+                    },
+                    animation: {
+                        'scan': 'scan 3s infinite linear',
+                        'pulse-glow': 'pulseGlow 2s infinite ease-in-out',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%': { transform: 'translateY(-60px)', opacity: '0' },
+                            '50%': { opacity: '1' },
+                            '100%': { transform: 'translateY(60px)', opacity: '0' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { transform: 'scale(1)', opacity: '0.8', boxShadow: '0 0 20px #00f2ff' },
+                            '50%': { transform: 'scale(1.2)', opacity: '1', boxShadow: '0 0 40px #00f2ff' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: var(--color-core-dark, #020408);
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(0, 242, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(255, 0, 255, 0.05) 0%, transparent 40%);
+            color: white;
+            overflow: hidden;
+        }
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0.3;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Hidden class for app.js */
+        .hidden { display: none !important; }
+    </style>
 </head>
-<body>
-    <div class="nebula-bg"></div>
+<body class="h-screen w-full flex items-center justify-center font-sans">
     <div class="scanlines"></div>
 
-    <main class="login-container">
+    <main class="login-container relative z-20 w-full max-w-md flex flex-col items-center gap-10 px-6">
+        
         <!-- Neural Core Visual -->
-        <div class="neural-core-wrapper">
-            <div class="neural-core">
-                <div class="core-inner"></div>
-                <div class="core-scanner"></div>
+        <div class="neural-core-wrapper flex flex-col items-center">
+            <div class="w-32 h-32 border-2 border-core-cyan rounded-full relative flex justify-center items-center shadow-[0_0_30px_rgba(0,242,255,0.2)] overflow-hidden">
+                <div class="w-10 h-10 bg-core-cyan rounded-full animate-pulse-glow"></div>
+                <div class="absolute w-[140%] h-[2px] bg-gradient-to-r from-transparent via-core-cyan to-transparent animate-scan"></div>
             </div>
-            <div class="core-status">NEURAL_ID: UNKNOWN</div>
+            <div class="core-status mt-4 font-mono text-[0.65rem] tracking-widest text-core-cyan uppercase">NEURAL_ID: UNKNOWN</div>
         </div>
 
         <!-- Login Form -->
-        <section class="auth-panel">
-            <h1 class="auth-title">INITIATE_LINK</h1>
-            <p class="auth-subtitle">Neural signature required for Sovereign access.</p>
+        <section class="auth-panel glass-panel rounded-3xl p-10 w-full text-center shadow-2xl relative">
+            <div class="absolute inset-0 rounded-3xl pointer-events-none border border-white/5"></div>
+            
+            <h1 class="font-mono text-2xl tracking-[0.2em] mb-2 font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">INITIATE_LINK</h1>
+            <p class="text-xs text-white/50 mb-8 font-light">Neural signature required for Sovereign access.</p>
 
-            <form id="login-form" class="auth-form">
-                <div class="input-group">
-                    <label for="username">IDENTITY</label>
-                    <input type="text" id="username" placeholder="Enter ID..." required autocomplete="off">
+            <form id="login-form" class="flex flex-col gap-5">
+                <div class="flex flex-col text-left gap-2 group">
+                    <label for="username" class="font-mono text-[0.65rem] tracking-widest text-core-cyan font-bold transition-colors group-focus-within:text-white">IDENTITY</label>
+                    <input type="text" id="username" placeholder="Enter ID..." required autocomplete="off" 
+                        class="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white text-sm focus:outline-none focus:border-core-cyan focus:bg-core-cyan/5 transition-all w-full placeholder:text-white/20">
                 </div>
-                <div class="input-group">
-                    <label for="password">SIGNATURE_KEY</label>
-                    <input type="password" id="password" placeholder="••••••••" required>
+                
+                <div class="flex flex-col text-left gap-2 group">
+                    <label for="password" class="font-mono text-[0.65rem] tracking-widest text-core-cyan font-bold transition-colors group-focus-within:text-white">SIGNATURE_KEY</label>
+                    <input type="password" id="password" placeholder="••••••••" required 
+                        class="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white text-sm focus:outline-none focus:border-core-cyan focus:bg-core-cyan/5 transition-all w-full placeholder:text-white/20">
                 </div>
 
-                <div id="error-msg" class="error-msg hidden">SIGNATURE_MISMATCH: ACCESS_DENIED</div>
+                <div id="error-msg" class="error-msg hidden text-red-500 font-mono text-xs mt-2 drop-shadow-[0_0_5px_rgba(255,0,0,0.5)]">SIGNATURE_MISMATCH: ACCESS_DENIED</div>
 
-                <button type="submit" id="login-btn" class="login-btn">
-                    <span class="btn-text">CALIBRATE & LINK</span>
-                    <div class="btn-glitch"></div>
+                <button type="submit" id="login-btn" 
+                    class="mt-4 w-full bg-gradient-to-r from-core-cyan to-[#00d4ff] text-black font-mono font-black text-sm py-4 rounded-xl hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(0,242,255,0.4)] transition-all relative overflow-hidden group">
+                    <span class="btn-text relative z-10 tracking-widest">CALIBRATE & LINK</span>
+                    <div class="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-0 transition-transform duration-300 z-0"></div>
                 </button>
             </form>
 
-            <footer class="auth-footer">
-                <div class="footer-line">GHOST_PROTOCOL: ACTIVE</div>
-                <div class="footer-line">ENCRYPTION: QUANTUM_LATTICE</div>
+            <footer class="mt-8 flex justify-between text-[0.55rem] font-mono opacity-40 text-white/80">
+                <div>GHOST_PROTOCOL: ACTIVE</div>
+                <div>ENCRYPTION: QUANTUM_LATTICE</div>
             </footer>
         </section>
     </main>
 
-    <script src="/standalone/login/app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>

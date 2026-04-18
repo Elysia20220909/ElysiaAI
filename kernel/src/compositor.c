@@ -434,22 +434,122 @@ void draw_rounded_rect(uint32_t* buffer, int32_t x, int32_t y, uint32_t w, uint3
     draw_rounded_rect_alpha(buffer, x, y, w, h, color, 255);
 }
 
+typedef struct {
+    int32_t x, y;
+    int32_t vx, vy;
+    int life;
+    int max_life;
+    uint32_t color;
+} Spark;
+
+static Spark ambient_sparks[64];
+static int sparks_initialized = 0;
+
+typedef struct {
+    int32_t start_x, start_y;
+    int32_t end_x, end_y;
+    int life;
+    uint32_t color;
+} NeuralPulse;
+
+static NeuralPulse pulses[16];
+static int next_pulse = 0;
+
 static void update_particles() {
+    if (!sparks_initialized) {
+        for(int i=0; i<64; i++) ambient_sparks[i].life = 0;
+        sparks_initialized = 1;
+    }
+
+    // 1. Cursor Trail Update (Synaptic Ribbon)
     for(int i=0; i<32; i++) {
         if(cursor_trail[i].life > 0) cursor_trail[i].life--;
     }
-    // Spawn new at mouse
     cursor_trail[next_particle].x = mouse_x;
     cursor_trail[next_particle].y = mouse_y;
-    cursor_trail[next_particle].life = 20;
+    cursor_trail[next_particle].life = 25;
     next_particle = (next_particle + 1) % 32;
+
+    // 2. Autonomous Neural Pulses (Thought waves connecting nodes)
+    if (frame_count % 20 == 0) {
+        pulses[next_pulse].start_x = (frame_count * 17) % g_fb.width;
+        pulses[next_pulse].start_y = (frame_count * 11) % g_fb.height;
+        pulses[next_pulse].end_x = pulses[next_pulse].start_x + ((frame_count % 7) - 3) * 150;
+        pulses[next_pulse].end_y = pulses[next_pulse].start_y + ((frame_count % 5) - 2) * 150;
+        pulses[next_pulse].life = 40;
+        pulses[next_pulse].color = (frame_count % 3 == 0) ? 0x00FFFF : 0xFF00FF; // Cyan or Magenta
+        next_pulse = (next_pulse + 1) % 16;
+    }
+    for(int i=0; i<16; i++) {
+        if(pulses[i].life > 0) pulses[i].life--;
+    }
+
+    // 3. Floating Ambient Sparks (Data Motes)
+    for(int i=0; i<64; i++) {
+        if(ambient_sparks[i].life > 0) {
+            ambient_sparks[i].x += ambient_sparks[i].vx;
+            ambient_sparks[i].y += ambient_sparks[i].vy;
+            ambient_sparks[i].life--;
+        } else {
+            // Respawn organically
+            if ((frame_count + i) % 15 == 0) {
+                ambient_sparks[i].x = (frame_count * i * 3) % g_fb.width;
+                ambient_sparks[i].y = g_fb.height + 20; // Start from bottom
+                ambient_sparks[i].vx = (i % 5) - 2;
+                ambient_sparks[i].vy = -((i % 4) + 1); // Float up
+                ambient_sparks[i].max_life = 150 + (i % 100);
+                ambient_sparks[i].life = ambient_sparks[i].max_life;
+                ambient_sparks[i].color = (i % 2 == 0) ? 0x00FFFF : 0xFF00FF;
+            }
+        }
+    }
 }
 
 static void render_particles(uint32_t* buffer) {
+    // 1. Draw Ambient Sparks (Data Motes)
+    for(int i=0; i<64; i++) {
+        if(ambient_sparks[i].life > 0) {
+            uint8_t alpha = (ambient_sparks[i].life * 255) / ambient_sparks[i].max_life;
+            if (alpha > 120) alpha = 120;
+            draw_pixel_alpha(buffer, ambient_sparks[i].x, ambient_sparks[i].y, ambient_sparks[i].color, alpha);
+            draw_pixel_alpha(buffer, ambient_sparks[i].x+1, ambient_sparks[i].y, 0xFFFFFF, alpha/2); // Core glow
+        }
+    }
+
+    // 2. Draw Neural Pulses (Synaptic Lightning)
+    for(int i=0; i<16; i++) {
+        if(pulses[i].life > 0) {
+            uint8_t alpha = pulses[i].life * 6; // Fade out
+            if (alpha > 200) alpha = 200;
+            
+            draw_line_alpha(buffer, pulses[i].start_x, pulses[i].start_y, pulses[i].end_x, pulses[i].end_y, pulses[i].color, alpha);
+            // Draw intersection nodes (Data Burst)
+            draw_rounded_rect_alpha(buffer, pulses[i].start_x - 3, pulses[i].start_y - 3, 6, 6, 0xFFFFFF, alpha);
+            draw_rounded_rect_alpha(buffer, pulses[i].end_x - 2, pulses[i].end_y - 2, 4, 4, pulses[i].color, alpha);
+        }
+    }
+
+    // 3. Draw Cursor Synaptic Ribbon
     for(int i=0; i<32; i++) {
         if(cursor_trail[i].life > 0) {
-            uint8_t alpha = cursor_trail[i].life * 12;
-            draw_pixel_alpha(buffer, cursor_trail[i].x, cursor_trail[i].y, 0x00FFFF, alpha);
+            uint8_t alpha = cursor_trail[i].life * 10;
+            int prev_idx = (i == 0) ? 31 : i - 1;
+            
+            // Connect to previous particle to form a continuous holographic ribbon
+            if (cursor_trail[prev_idx].life > 0) {
+                int dx = cursor_trail[i].x - cursor_trail[prev_idx].x;
+                int dy = cursor_trail[i].y - cursor_trail[prev_idx].y;
+                
+                // Prevent wrapping lines across the screen by checking distance
+                if (dx*dx + dy*dy < 10000) { 
+                    draw_line_alpha(buffer, cursor_trail[i].x, cursor_trail[i].y, cursor_trail[prev_idx].x, cursor_trail[prev_idx].y, 0x00FFFF, alpha);
+                    // Add a secondary magenta shadow line for cyber effect
+                    draw_line_alpha(buffer, cursor_trail[i].x + 2, cursor_trail[i].y + 2, cursor_trail[prev_idx].x + 2, cursor_trail[prev_idx].y + 2, 0xFF00FF, alpha / 2);
+                }
+            }
+            
+            // Core spark of the ribbon
+            draw_pixel_alpha(buffer, cursor_trail[i].x, cursor_trail[i].y, 0xFFFFFF, alpha);
         }
     }
 }
@@ -467,73 +567,113 @@ static void update_synaptic_context() {
 }
 
 void render_login_screen() {
-    // 1. Aqueous Premium Background
+    frame_count++;
+    
+    // 1. Cyberpunk Dark Mode Gradient Background
     for (uint32_t y = 0; y < g_fb.height; y++) {
         for (uint32_t x = 0; x < g_fb.width; x++) {
-            uint8_t r = (y * 50) / g_fb.height + 20;
-            uint8_t g = (y * 50) / g_fb.height + 25;
-            uint8_t b = 60;
+            // Diagonal cyber-gradient
+            uint32_t dist = (x + y) / 4;
+            uint8_t r = 5; 
+            uint8_t g = (dist / 10) % 20;
+            uint8_t b = 30 + (dist / 5) % 40;
+            
+            // Add subtle grid lines (scanlines/CRT effect)
+            if (x % 40 == 0 || y % 40 == 0) {
+                r += 5; g += 10; b += 15;
+            }
             backbuffer[y * g_fb.width + x] = (r << 16) | (g << 8) | b;
         }
     }
 
-    // 2. Sovereign Orb (Silicon Enclave Refined)
-    uint32_t orb_x = g_fb.width / 2;
-    uint32_t orb_y = g_fb.height / 2 - 50;
-    
-    // Silicon Core pattern (Phase 110)
-    if (enclave_ready) {
-        draw_rounded_rect_alpha(backbuffer, orb_x - 50, orb_y - 50, 100, 100, 0xFFAA00, 50); // Gold Enclave Halo
-        for(int s=0; s<4; s++) {
-            draw_rect_to(backbuffer, orb_x - 30 + (s*20), orb_y - 45, 10, 90, 0xFFFFFF); // Silicon trace pattern
-        }
-    }
+    uint32_t center_x = g_fb.width / 2;
+    uint32_t center_y = g_fb.height / 2;
 
-    uint32_t pulse = (frame_count / 10) % 20;
-    orb_color = 0x00FFFF; // Default Login
-    if (frame_count % 120 < 60) orb_color = 0x008888; // Breathing
-    
-    draw_rounded_rect(backbuffer, orb_x - 40 - (pulse/2), orb_y - 40 - (pulse/2), 80 + pulse, 80 + pulse, orb_color);
-    draw_rounded_rect(backbuffer, orb_x - 30, orb_y - 30, 60, 60, 0x111111);
+    // 2. Glassmorphism Login Panel
+    uint32_t panel_w = 420;
+    uint32_t panel_h = 280;
+    uint32_t panel_x = center_x - (panel_w / 2);
+    uint32_t panel_y = center_y - (panel_h / 2);
 
-    kprint_to(backbuffer, orb_x - 80, orb_y + 80, "SILICON BONDED", 0xFFAA00);
-    kprint_to(backbuffer, orb_x - 100, orb_y + 110, is_guest_mode ? "[GUEST ACCESS ONLY]" : "[READY TO MANIFEST]", is_guest_mode ? 0xFFAA00 : 0x00FF00);
+    // Panel Outer Glow / Border
+    draw_rounded_rect_alpha(backbuffer, panel_x - 2, panel_y - 2, panel_w + 4, panel_h + 4, 0x00FFFF, 60);
+    // Draw Glass Panel (Dark translucent)
+    draw_rounded_rect_alpha(backbuffer, panel_x, panel_y, panel_w, panel_h, 0x020205, 200);
+
+    // 3. Glowing Neural Orb (Login Button)
+    uint32_t orb_x = center_x;
+    uint32_t orb_y = center_y - 10;
+    uint32_t pulse = (frame_count / 4) % 15;
     
-    if (!is_guest_mode) {
-        char greet[64] = "MANIFESTING ";
-        int gl = 12;
+    orb_color = 0x00FFFF;
+    if (frame_count % 120 < 60) orb_color = 0x0088CC; // Breathing effect
+    
+    // Outer glow aura
+    draw_rounded_rect_alpha(backbuffer, orb_x - 40 - pulse, orb_y - 40 - pulse, 80 + pulse*2, 80 + pulse*2, orb_color, 40 - (pulse*2));
+    // Mid layer
+    draw_rounded_rect_alpha(backbuffer, orb_x - 30, orb_y - 30, 60, 60, 0x004466, 180);
+    // Inner core
+    draw_rounded_rect(backbuffer, orb_x - 25, orb_y - 25, 50, 50, 0x050510);
+    // Core center spark
+    draw_rounded_rect(backbuffer, orb_x - 8, orb_y - 8, 16, 16, orb_color);
+
+    // 4. Stylish Typography
+    kprint_to(backbuffer, center_x - 120, panel_y + 30, "E L Y S I A   O S", 0xFFFFFF);
+    kprint_to(backbuffer, center_x - 64, panel_y + 55, "NEURAL LINK AUTH", 0x00FFFF);
+
+    if (is_guest_mode) {
+        kprint_to(backbuffer, center_x - 60, orb_y + 60, "[ GUEST ACCESS ]", 0xFFAA00);
+    } else {
+        char greet[64] = "IDENTITY: ";
+        int gl = 10;
         for(int i=0; i<32; i++) {
             greet[gl+i] = persona_name[i];
             if(!persona_name[i]) break;
         }
-        kprint_to(backbuffer, orb_x - 120, orb_y + 140, greet, 0x00FFFF);
+        kprint_to(backbuffer, center_x - 100, orb_y + 60, greet, 0x00FF00);
     }
 
-    kprint_to(backbuffer, orb_x - 110, orb_y + 150, "CLICK ORB TO ENTER APEX", 0x555555);
+    uint8_t blink = (frame_count / 30) % 2;
+    if (blink) {
+        kprint_to(backbuffer, center_x - 84, panel_y + panel_h - 40, "CLICK ORB TO INITIATE", 0x777777);
+    }
 
-    // 3. Logic: Transition to Booting (Phase 123)
+    // 5. Logic: Transition to Booting (Phase 123)
     if (mouse_left) {
         // Hit check for Orb area
-        if (mouse_x > (int32_t)orb_x - 50 && mouse_x < (int32_t)orb_x + 50 &&
-            mouse_y > (int32_t)orb_y - 50 && mouse_y < (int32_t)orb_y + 50) {
+        if (mouse_x > (int32_t)orb_x - 40 && mouse_x < (int32_t)orb_x + 40 &&
+            mouse_y > (int32_t)orb_y - 40 && mouse_y < (int32_t)orb_y + 40) {
             current_state = STATE_BOOTING;
             frame_count = 0; // Reset for boot timer
         }
     }
 
-    // 4. Cursor
+    // 6. Cybernetic Cursor
     if (mouse_x < 0) mouse_x = 0; if (mouse_x >= (int32_t)g_fb.width) mouse_x = g_fb.width - 1;
     if (mouse_y < 0) mouse_y = 0; if (mouse_y >= (int32_t)g_fb.height) mouse_y = g_fb.height - 1;
-    draw_rect_to(backbuffer, mouse_x, mouse_y, 10, 10, 0xFFFFFF);
+    
+    // Draw crosshair cursor
+    draw_rect_to(backbuffer, mouse_x - 5, mouse_y, 11, 2, 0x00FFFF);
+    draw_rect_to(backbuffer, mouse_x, mouse_y - 5, 2, 11, 0x00FFFF);
+    draw_rect_to(backbuffer, mouse_x - 1, mouse_y - 1, 3, 3, 0xFFFFFF);
+
     swap_buffers();
 }
 
 void render_boot_sequence() {
     frame_count++;
-    // Aqueous Background
+    
+    // Cyberpunk Dark Mode Gradient Background (Seamless Transition)
     for (uint32_t y = 0; y < g_fb.height; y++) {
         for (uint32_t x = 0; x < g_fb.width; x++) {
-            backbuffer[y * g_fb.width + x] = 0x050510; // Deep Abyss
+            uint32_t dist = (x + y) / 4;
+            uint8_t r = 5; 
+            uint8_t g = (dist / 10) % 20;
+            uint8_t b = 30 + (dist / 5) % 40;
+            if (x % 40 == 0 || y % 40 == 0) {
+                r += 5; g += 10; b += 15;
+            }
+            backbuffer[y * g_fb.width + x] = (r << 16) | (g << 8) | b;
         }
     }
 
@@ -569,31 +709,47 @@ void render_desktop() {
     verify_system_integrity();
     node_heartbeat_loop();
     
-    // Celestial Pulse (Phase 124)
     if (frame_count % 600 == 0) {
         task_neural_spawn("SECURE_LATTICE");
         trigger_notification("CELESTIAL_PULSE: AUTONOMOUS_AUDIT");
     }
     
-    // Parallax Stars (Phase 122)
-    for(int i=0; i<30; i++) {
-        int sx = (i * 47 + frame_count/2) % 1024;
-        int sy = (i * 13 + frame_count/4) % 768;
-        draw_rect_to(backbuffer, sx, sy, 1, 1, 0x666666);
+    // 1. Dynamic Glassmorphism Background (Cyberpunk Deep Space)
+    for (uint32_t y = 0; y < g_fb.height; y++) {
+        for (uint32_t x = 0; x < g_fb.width; x++) {
+            uint32_t dist = (x + y) / 4;
+            uint8_t r = 5;
+            uint8_t g = (dist / 10) % 20;
+            uint8_t b = 30 + (dist / 5) % 30;
+            
+            if (x % 50 == 0 || y % 50 == 0) {
+                r += 5; g += 5; b += 10;
+            }
+            if (cloaked_mode && (frame_count % 2)) {
+                r += (x % 10); g += (y % 10);
+            }
+            backbuffer[y * g_fb.width + x] = (r << 16) | (g << 8) | b;
+        }
     }
 
-    // Intent Manifestation Loop (Phase 120)
+    // Parallax Stars
+    for(int i=0; i<40; i++) {
+        int sx = (i * 47 + frame_count/2) % g_fb.width;
+        int sy = (i * 13 + frame_count/4) % g_fb.height;
+        draw_pixel_alpha(backbuffer, sx, sy, 0x00FFFF, 150);
+        draw_pixel_alpha(backbuffer, sx+1, sy+1, 0xFF00FF, 100);
+    }
+
+    // Intent Manifestation Loop
     for (int i=0; i<9; i++) {
         if (icon_hits[i] > 10) {
-            // Predicatively open windows
             if (i == 0) show_explorer = 1;
             if (i == 1) show_system = 1;
             if (i == 3) show_aegis_hub = 1;
-            if (i == 7) cloaked_mode = 1; // Predict cloak
+            if (i == 7) cloaked_mode = 1;
         }
     }
-    
-    // Update Clock (Simulated)
+
     int sec = (frame_count / 60) % 60;
     int min = (frame_count / 3600) % 60;
     int hr = (frame_count / 216000) % 24;
@@ -601,29 +757,9 @@ void render_desktop() {
     clock_text[3] = '0' + (min/10); clock_text[4] = '0' + (min%10); clock_text[5] = ':';
     clock_text[6] = '0' + (sec/10); clock_text[7] = '0' + (sec%10); clock_text[8] = '\0';
 
-    // Refocuser Charge Decay & Acceleration
     if (refocus_charge > 0) refocus_charge--;
-    uint32_t flux_accel = snap_mode ? 3 : 10; // Extreme speed in Snap
-    if (!snap_mode && refocus_charge > 60) flux_accel = 5; 
 
-    // 1. Dynamic Flux Background (Animated Gradient)
-    uint8_t flux = (frame_count / flux_accel) % 50;
-    for (uint32_t y = 0; y < g_fb.height; y++) {
-        for (uint32_t x = 0; x < g_fb.width; x++) {
-            uint8_t r = (y * 30) / g_fb.height + 5 + (flux / 5);
-            uint8_t g = (y * 30) / g_fb.height + 10 + (flux / 8);
-            uint8_t b = 30 + (flux / 10);
-            
-            if (cloaked_mode && (frame_count % 2)) {
-                r += (x % 10) * 2; g += (y % 10) * 2;
-            }
-            
-            uint32_t base_color = (r << 16) | (g << 8) | b;
-            backbuffer[y * g_fb.width + x] = base_color;
-        }
-    }
-
-    // L15 Divinity Mode Matrix (Background Layer)
+    // L15 Divinity Mode Matrix
     if (divinity_mode) {
         for(int m=0; m<50; m++) {
             uint32_t mx = (m * 40) % g_fb.width;
@@ -638,101 +774,50 @@ void render_desktop() {
     update_particles();
     render_particles(backbuffer);
 
-    // 2. Centered Sovereign Dock (Silicon Bonded)
-    uint32_t dock_w = 600;
-    uint32_t dock_h = 50;
+    // 2. Centered Glassmorphic Dock
+    uint32_t dock_w = 640;
+    uint32_t dock_h = 56;
     uint32_t dock_x = (g_fb.width - dock_w) / 2;
     uint32_t dock_y = g_fb.height - 70;
-    draw_rounded_rect(backbuffer, dock_x, dock_y, dock_w, dock_h, 0x222222);
     
-    // Icon blocks & Logic
+    // Dock Outer Glow
+    draw_rounded_rect_alpha(backbuffer, dock_x - 2, dock_y - 2, dock_w + 4, dock_h + 4, 0x00FFFF, 40);
+    // Dock Inner Glass
+    draw_rounded_rect_alpha(backbuffer, dock_x, dock_y, dock_w, dock_h, 0x020205, 180);
+
     uint32_t exp_icon_x = dock_x + 20;
     uint32_t sys_icon_x = dock_x + 70;
     uint32_t orch_icon_x = dock_x + 120;
     uint32_t hub_icon_x = dock_x + 170;
     uint32_t term_icon_x = dock_x + 220;
-    uint32_t sw_icon_x = dock_x + 270; // Arc 10: Swarm Monitor
-    uint32_t exit_icon_x = dock_x + 470;
-    uint32_t evo_icon_x = dock_x + 520; // Arc 9: Evolutionary Pulse
-
-    // Cognitive Pulse (L10)
-    uint8_t dock_bright = 34 + (frame_count % 30 < 15 ? (frame_count % 30) * 2 : (30 - (frame_count % 30)) * 2);
+    uint32_t ai_icon_x = dock_x + 270;
+    uint32_t mesh_icon_x = dock_x + 320;
+    uint32_t sw_icon_x = dock_x + 370;
+    uint32_t cloak_icon_x = dock_x + 420;
+    uint32_t silence_icon_x = dock_x + 470;
+    uint32_t evo_icon_x = dock_x + 520;
+    uint32_t exit_icon_x = dock_x + 570;
 
     if (mouse_left) {
         static int click_lock = 0;
         if (!click_lock) {
-            // ... (Icons)
-            if (mouse_x >= (int32_t)exp_icon_x && mouse_x <= (int32_t)exp_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                show_explorer = !show_explorer; 
-                icon_hits[0]++;
-                refocus_charge += 15;
-                click_lock = 15;
-            }
-            if (mouse_x >= (int32_t)sys_icon_x && mouse_x <= (int32_t)sys_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                show_system = !show_system; 
-                icon_hits[1]++;
-                refocus_charge += 15;
-                click_lock = 15;
-            }
-            if (mouse_x >= (int32_t)hub_icon_x && mouse_x <= (int32_t)hub_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                show_aegis_hub = !show_aegis_hub; 
-                icon_hits[3]++;
-                click_lock = 15;
-            }
-            if (mouse_x >= (int32_t)term_icon_x && mouse_x <= (int32_t)term_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                show_terminal = !show_terminal; 
-                icon_hits[4]++;
-                click_lock = 15;
-            }
-            if (mouse_x >= (int32_t)ai_icon_x && mouse_x <= (int32_t)ai_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                show_elysia = !show_elysia; 
-                icon_hits[5]++;
-                trigger_notification("ELYSIAN PERSONA MANIFESTED");
-                click_lock = 15;
-            }
-            if (mouse_x >= (int32_t)mesh_icon_x && mouse_x <= (int32_t)mesh_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                show_mesh = !show_mesh; 
-                icon_hits[6]++;
-                trigger_notification("MESH SYNC INITIATED");
-                click_lock = 15;
-            }
-            if (mouse_x >= (int32_t)sw_icon_x && mouse_x <= (int32_t)sw_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                show_orchestrator = 0; // Close others
-                show_explorer = 0;
-                window_visible[7] = !window_visible[7]; // Toggle Swarm Monitor
-                trigger_notification("SWARM OVERVIEW: ACTIVE");
-                click_lock = 15;
-            }
-            if (mouse_x >= (int32_t)cloak_icon_x && mouse_x <= (int32_t)cloak_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                cloaked_mode = !cloaked_mode; 
-                trigger_notification(cloaked_mode ? "CLOAK ACTIVATED" : "CLOAK DEACTIVATED");
-                click_lock = 15;
-            }
-            if (mouse_x >= (int32_t)silence_icon_x && mouse_x <= (int32_t)silence_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                silence_mode = !silence_mode; 
-                trigger_notification(silence_mode ? "SILENCE ENGAGED" : "SILENCE DISENGAGED");
-                click_lock = 15;
-            }
-            if (mouse_x >= (int32_t)exit_icon_x && mouse_x <= (int32_t)exit_icon_x + 30 &&
-                mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
-                trigger_notification("HIBERNATING TO VAULT...");
-                current_state = STATE_LOGIN; click_lock = 15;
+            if (mouse_y >= (int32_t)dock_y + 10 && mouse_y <= (int32_t)dock_y + 40) {
+                if (mouse_x >= (int32_t)exp_icon_x && mouse_x <= (int32_t)exp_icon_x + 30) { show_explorer = !show_explorer; icon_hits[0]++; click_lock = 15; }
+                if (mouse_x >= (int32_t)sys_icon_x && mouse_x <= (int32_t)sys_icon_x + 30) { show_system = !show_system; icon_hits[1]++; click_lock = 15; }
+                if (mouse_x >= (int32_t)hub_icon_x && mouse_x <= (int32_t)hub_icon_x + 30) { show_aegis_hub = !show_aegis_hub; icon_hits[3]++; click_lock = 15; }
+                if (mouse_x >= (int32_t)term_icon_x && mouse_x <= (int32_t)term_icon_x + 30) { show_terminal = !show_terminal; icon_hits[4]++; click_lock = 15; }
+                if (mouse_x >= (int32_t)ai_icon_x && mouse_x <= (int32_t)ai_icon_x + 30) { show_elysia = !show_elysia; icon_hits[5]++; click_lock = 15; }
+                if (mouse_x >= (int32_t)mesh_icon_x && mouse_x <= (int32_t)mesh_icon_x + 30) { show_mesh = !show_mesh; icon_hits[6]++; click_lock = 15; }
+                if (mouse_x >= (int32_t)sw_icon_x && mouse_x <= (int32_t)sw_icon_x + 30) { show_orchestrator = 0; show_explorer = 0; window_visible[7] = !window_visible[7]; click_lock = 15; }
+                if (mouse_x >= (int32_t)cloak_icon_x && mouse_x <= (int32_t)cloak_icon_x + 30) { cloaked_mode = !cloaked_mode; click_lock = 15; }
+                if (mouse_x >= (int32_t)silence_icon_x && mouse_x <= (int32_t)silence_icon_x + 30) { silence_mode = !silence_mode; click_lock = 15; }
+                if (mouse_x >= (int32_t)exit_icon_x && mouse_x <= (int32_t)exit_icon_x + 30) { current_state = STATE_LOGIN; click_lock = 15; }
             }
         } else {
             click_lock--;
         }
     }
 
-    // Update Visibility Bridge
     window_visible[0] = show_explorer;
     window_visible[1] = show_system;
     window_visible[2] = show_orchestrator;
@@ -741,75 +826,57 @@ void render_desktop() {
     window_visible[5] = show_elysia;
     window_visible[6] = show_mesh;
 
-    draw_rounded_rect(backbuffer, dock_x, dock_y, dock_w, dock_h, (dock_bright << 16) | (dock_bright << 8) | dock_bright);
-    
-    draw_rect_to(backbuffer, exp_icon_x, dock_y + 10, 30, 30, show_explorer ? 0x00AAFF : 0x003355); 
-    draw_rect_to(backbuffer, sys_icon_x, dock_y + 10, 30, 30, show_system ? 0xFFAA00 : 0x553300);   
-    draw_rect_to(backbuffer, hub_icon_x, dock_y + 10, 30, 30, show_aegis_hub ? 0x00FF00 : 0x005500); 
-    draw_rect_to(backbuffer, term_icon_x, dock_y + 10, 30, 30, show_terminal ? 0xFFFFFF : 0x222222); 
-    draw_rect_to(backbuffer, ai_icon_x, dock_y + 10, 30, 30, show_elysia ? 0xFFFFFF : 0x00FFFF); 
-    draw_rect_to(backbuffer, mesh_icon_x, dock_y + 10, 30, 30, show_mesh ? 0x33FF33 : 0x114411); // Mesh
-    draw_rect_to(backbuffer, sw_icon_x, dock_y + 10, 30, 30, window_visible[7] ? 0xFF00FF : 0x440044); // Swarm Monitor
-    draw_rect_to(backbuffer, cloak_icon_x, dock_y + 10, 30, 30, cloaked_mode ? 0x8800FF : 0x330055); 
-    draw_rect_to(backbuffer, silence_icon_x, dock_y + 10, 30, 30, silence_mode ? 0x111111 : 0x444444); 
-    draw_rect_to(backbuffer, exit_icon_x, dock_y + 10, 30, 30, 0xFF0000); 
-    
-    // Arc 9: Evolutionary Pulse Icon
-    uint8_t evo_pulse = (frame_count % 40 < 20 ? (frame_count % 40) * 4 : (40 - (frame_count % 40)) * 4);
-    draw_rounded_rect_alpha(backbuffer, evo_icon_x, dock_y + 10, 30, 30, 0xFF00FF, (uint8_t)(100 + evo_pulse));
+    // Draw stylish glowing dock icons
+    uint32_t icons_pos_x[] = {exp_icon_x, sys_icon_x, orch_icon_x, hub_icon_x, term_icon_x, ai_icon_x, mesh_icon_x, sw_icon_x, cloak_icon_x, silence_icon_x, evo_icon_x, exit_icon_x};
+    uint32_t icons_active[] = {show_explorer, show_system, show_orchestrator, show_aegis_hub, show_terminal, show_elysia, show_mesh, window_visible[7], cloaked_mode, silence_mode, 1, 0};
+    uint32_t icons_color[] = {0x00AAFF, 0xFFAA00, 0x00FFFF, 0x00FF00, 0xFFFFFF, 0xFFFFFF, 0x33FF33, 0xFF00FF, 0x8800FF, 0x111111, 0xFF00FF, 0xFF0000};
+    const char* icon_labels[] = {"EX", "SY", "OR", "HB", "TR", "EL", "MH", "SW", "CK", "SL", "EV", "QT"};
 
-    // Labels
-    kprint_to(backbuffer, exp_icon_x + 5, dock_y + 15, "EX", 0xFFFFFF);
-    kprint_to(backbuffer, sys_icon_x + 5, dock_y + 15, "SY", 0xFFFFFF);
-    kprint_to(backbuffer, hub_icon_x + 5, dock_y + 15, "HB", 0xFFFFFF);
-    kprint_to(backbuffer, term_icon_x + 5, dock_y + 15, "TR", 0xFFFFFF);
-    kprint_to(backbuffer, ai_icon_x + 5, dock_y + 15, "EL", 0xFFFFFF);
-    kprint_to(backbuffer, mesh_icon_x + 5, dock_y + 15, "MH", 0xFFFFFF);
-    kprint_to(backbuffer, sw_icon_x + 5, dock_y + 15, "SW", 0xFFFFFF);
-    kprint_to(backbuffer, cloak_icon_x + 5, dock_y + 15, "CK", 0xFFFFFF);
-    kprint_to(backbuffer, silence_icon_x + 5, dock_y + 15, "SL", 0xFFFFFF);
-    kprint_to(backbuffer, exit_icon_x + 5, dock_y + 15, "QT", 0xFFFFFF);
-    kprint_to(backbuffer, evo_icon_x + 5, dock_y + 15, "EV", 0xFFFFFF);
+    for (int i = 0; i < 12; i++) {
+        if (i == 2) continue; // Skip orch icon slot visual
+        uint32_t base_color = icons_color[i];
+        if (!icons_active[i]) {
+            base_color = (base_color & 0xFEFEFE) >> 1; // Dim
+            draw_rounded_rect_alpha(backbuffer, icons_pos_x[i], dock_y + 13, 30, 30, base_color, 120);
+        } else {
+            // Active glow
+            draw_rounded_rect_alpha(backbuffer, icons_pos_x[i]-2, dock_y + 11, 34, 34, base_color, 100);
+            draw_rounded_rect_alpha(backbuffer, icons_pos_x[i], dock_y + 13, 30, 30, base_color, 255);
+        }
+        kprint_to(backbuffer, icons_pos_x[i] + 5, dock_y + 18, icon_labels[i], 0xFFFFFF);
+    }
 
-    // 2.7 Predictive Hub: Cognitive Glow (L17)
-    uint32_t icons_x[9] = {exp_icon_x, sys_icon_x, orch_icon_x, hub_icon_x, term_icon_x, ai_icon_x, mesh_icon_x, cloak_icon_x, silence_icon_x};
+    // Predictive Glow
     for (int i=0; i<9; i++) {
-        if (icon_hits[i] > 3) {
-             draw_rect_to(backbuffer, icons_x[i]-2, dock_y+8, 34, 34, 0xFFFF00); // Yellow predictive glow
+        if (icon_hits[i] > 3 && i != 2) {
+             draw_rounded_rect_alpha(backbuffer, icons_pos_x[i]-4, dock_y+9, 38, 38, 0xFFFF00, 80); 
         }
     }
 
-    // PAC-S Pointer Pulse (L26)
+    // PAC-S Pointer Pulse
     static int pac_pulse = 0;
     static int32_t pac_x = 0, pac_y = 0;
-    if (mouse_left && !click_lock) {
+    if (mouse_left) {
         pac_pulse = 20; pac_x = mouse_x; pac_y = mouse_y;
     }
     if (pac_pulse > 0) {
-        draw_rounded_rect_alpha(backbuffer, pac_x - (25-pac_pulse), pac_y - (25-pac_pulse), 50-pac_pulse*2, 50-pac_pulse*2, 0xFFAA00, pac_pulse * 10);
+        draw_rounded_rect_alpha(backbuffer, pac_x - (25-pac_pulse), pac_y - (25-pac_pulse), 50-pac_pulse*2, 50-pac_pulse*2, 0x00FFFF, pac_pulse * 10);
         pac_pulse--;
     }
-
-    // Resonance Spectrum Visualizer (L5/L7)
-    for(int s=0; s<10; s++) {
-        int h = (frame_count + s*5) % 25;
-        draw_rect_to(backbuffer, dock_x + 430 + (s*10), dock_y + 40 - h, 6, h, 0x00FFFF);
-    }
     
-    // 2. High-Efficiency Window Dispatcher (Z-Order & Alpha - 3D Aware)
+    // 3. High-Efficiency Glassmorphic Window Dispatcher
     if (mouse_left) {
         static int prev_mouse_left = 0;
         if (!prev_mouse_left) {
-            // Drag Start Logic
             drag_target = -1;
-            for (int i = 8; i >= 0; i--) { // Hit detection for all 9 windows (Lattice Order)
+            for (int i = 8; i >= 0; i--) { 
                 if (!window_visible[i]) continue;
                 Window* win = windows[i];
                 
                 int hpx, hpy; float hscale;
                 project_hologram(win->x, win->y, win->z, &hpx, &hpy, &hscale);
                 uint32_t hdw = (uint32_t)((float)win->w * hscale);
-                uint32_t hdh = (uint32_t)(30.0f * hscale); // Title bar hit area
+                uint32_t hdh = (uint32_t)(30.0f * hscale); 
 
                 if (mouse_x >= hpx && mouse_x <= (int32_t)(hpx + hdw) &&
                     mouse_y >= hpy && mouse_y <= (int32_t)(hpy + hdh)) { 
@@ -817,7 +884,6 @@ void render_desktop() {
                     drag_off_x = mouse_x - win->x;
                     drag_off_y = mouse_y - win->y;
                     
-                    // Z-Order: Bring to front
                     Window* temp_win = windows[i];
                     int temp_vis = window_visible[i];
                     for (int j = i; j < 8; j++) {
@@ -828,7 +894,6 @@ void render_desktop() {
                     window_visible[8] = temp_vis;
                     drag_target = 8;
                     
-                    // Synaptic Feedback (Phase 125)
                     synaptic_graph[drag_target].relevance = 100;
                     break;
                 }
@@ -844,46 +909,44 @@ void render_desktop() {
         drag_target = -1;
     }
 
-    // L14: Silence (Final Seal) Overlay
     if (silence_mode) {
          for (uint32_t y = 0; y < g_fb.height; y++) {
             for (uint32_t x = 0; x < g_fb.width; x++) {
-                // Focus preservation (Don't dim the top-most window)
-                Window* top = windows[4];
-                if (window_visible[4] && 
+                Window* top = windows[8];
+                if (window_visible[8] && 
                     x >= (uint32_t)top->x && x <= (uint32_t)(top->x + top->w) &&
                     y >= (uint32_t)top->y && y <= (uint32_t)(top->y + top->h)) {
                     continue; 
                 }
-                draw_pixel_alpha(backbuffer, x, y, 0x000000, 150); // Dim the background
+                draw_pixel_alpha(backbuffer, x, y, 0x000000, 150); 
             }
         }
     }
 
-    for (int i = 0; i < 7; i++) {
+    // Render Windows (Back to front)
+    for (int i = 0; i < 9; i++) {
         if (!window_visible[i]) continue;
         Window* win = windows[i];
         
-        // 1. Calculate 3D Projection (Phase 126.5 Polish)
         int win_px, win_py;
         float scale;
         project_hologram(win->x, win->y, win->z, &win_px, &win_py, &scale);
         uint32_t dw = (uint32_t)((float)win->w * scale);
         uint32_t dh = (uint32_t)((float)win->h * scale);
 
-        // 2. Synaptic Context Glow (Phase 125)
+        // Synaptic Context Glow
         int32_t glow_alpha = (synaptic_graph[i].relevance * 2);
         if (glow_alpha > 120) glow_alpha = 120;
         if (glow_alpha > 0) {
-            draw_rounded_rect_alpha(backbuffer, win_px-10, win_py-10, dw+20, dh+20, 0x00FFFF, (uint8_t)glow_alpha);
+            draw_rounded_rect_alpha(backbuffer, win_px-6, win_py-6, dw+12, dh+12, win->color, (uint8_t)glow_alpha);
         }
 
-        // 3. Hover Lift (Phase 122)
+        // Hover Lift
         if (mouse_x >= win->x && mouse_x <= win->x + (int32_t)win->w &&
             mouse_y >= win->y && mouse_y <= win->y + (int32_t)win->h) {
-            if (win->z > -50) win->z -= 2; // Lift toward camera
+            if (win->z > -50) win->z -= 2; 
         } else {
-            if (win->z < 0) win->z += 2; // Settle back
+            if (win->z < 0) win->z += 2; 
         }
 
         int32_t ox = 0, oy = 0;
@@ -893,25 +956,21 @@ void render_desktop() {
         }
 
         if (win == &elysia_window) {
-             // Predictive Halo (Phase 120)
-            if (icon_hits[0] > 10 || icon_hits[1] > 10 || icon_hits[3] > 10) {
-                draw_rounded_rect_alpha(backbuffer, win_px-5, win_py-5, dw+10, dh+10, 0xFFAA00, 30);
-            }
-            
-            draw_rounded_rect(backbuffer, win_px, win_py, dw, dh, win->color);
             draw_refocuser_wings(backbuffer, win_px + ox, win_py + oy, dw, dh);
         }
 
-        // Render Opaque Title bar
-        draw_rounded_rect_alpha(backbuffer, win_px + ox, win_py + oy, dw, (uint32_t)(30.0f * scale), 0x111111, 255);
-        // Render Alpha Body
-        draw_rounded_rect_alpha(backbuffer, win_px + ox, win_py + oy + (uint32_t)(30.0f * scale), dw, dh - (uint32_t)(30.0f * scale), win->color, win->alpha);
+        // Beautiful Glassmorphic Window Frame
+        // Title Bar
+        draw_rounded_rect_alpha(backbuffer, win_px + ox, win_py + oy, dw, (uint32_t)(30.0f * scale), 0x050510, 230);
+        // Alpha Glass Body
+        draw_rounded_rect_alpha(backbuffer, win_px + ox, win_py + oy + (uint32_t)(30.0f * scale), dw, dh - (uint32_t)(30.0f * scale), 0x050515, win->alpha - 30);
+        // Cyber Border
+        draw_rounded_rect_alpha(backbuffer, win_px + ox, win_py + oy, dw, dh, win->color, 120);
         
-        // Window Content (Simplified check)
-        kprint_to(backbuffer, win_px + ox + 10, win_py + oy + 10, win->title, 0x00FF00);
+        kprint_to(backbuffer, win_px + ox + 10, win_py + oy + 10, win->title, 0x00FFFF);
         
         if (win == &system_window) {
-            kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "KERNEL: MASTER", 0x00FF00);
+            kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "KERNEL: MASTER", 0x00FFFF);
             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 90, is_guest_mode ? "SEC: UNVERIFIED" : "SEC: BONDED", is_guest_mode ? 0xFF0000 : 0x00FF00);
             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 115, "RUST_CORE: ACTIVE", 0xFFAA00);
             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 140, "INTEGRITY:", 0xFFFFFF);
@@ -919,11 +978,16 @@ void render_desktop() {
             if (system_integrity < 100) { integ_str[0] = '0' + (system_integrity/10); integ_str[1] = '0' + (system_integrity%10); integ_str[2] = '%'; }
             kprint_to(backbuffer, win_px + ox + 120, win_py + oy + 130, integ_str, system_integrity < 100 ? 0xFF0000 : 0x00FFFF);
         } else if (win == &explorer_window) {
-             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "FILES ON DISK:", 0xFFFF00);
-             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 90, file_list, 0x00FFFF);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "FILES ON DISK:", 0x00FFFF);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 90, file_list, 0xAAAAAA);
         } else if (win == &aegis_hub_window) {
              kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "LEDGER PREVIEW:", 0x00FFFF);
              kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 90, ledger_data, 0xAAAAAA);
+             kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 300, "SECURITY LAYERS:", 0x00FF00);
+             const char* layers[] = {"L1-WHITE", "L4-BLACKWALL", "L6-SENTINEL", "L8-SHADOW"};
+             for(int l=0; l<4; l++) {
+                 kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 330 + (l*20), layers[l], 0x00FFFF);
+             }
         } else if (win == &terminal_window) {
              kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 60, "ROOT@ELYSIOS:> ", 0x00FF00);
              kprint_to(backbuffer, win_px + ox + 140, win_py + oy + 60, keyboard_buffer, 0xFFFFFF);
@@ -932,40 +996,34 @@ void render_desktop() {
              kprint_to(backbuffer, win_px + ox + 20, win_py + oy + 100, elysia_reply, 0xFFFFFF);
              kprint_to(backbuffer, win->x + 20, win->y + 200, "COGNITIVE CORE: STABLE", 0x00FF00);
         } else if (win == &mesh_window) {
-            // Star Map Rendering (Phase 119)
             static int drag_node = -1;
-            for (int i = 0; i < 25; i++) {
+            for (int j = 0; j < 25; j++) {
                 int nx_p, ny_p; float ns;
-                project_hologram(ghost_nodes[i].x, ghost_nodes[i].y, 10, &nx_p, &ny_p, &ns);
+                project_hologram(ghost_nodes[j].x, ghost_nodes[j].y, 10, &nx_p, &ny_p, &ns);
                 uint32_t nx = win_px + ox + nx_p;
                 uint32_t ny = win_py + oy + ny_p;
                 
-                // Draw Resonance Links (to neighbors)
-                if (i % 5 < 4) {
+                if (j % 5 < 4) {
                     int nxe_p, nye_p; float nse;
-                    project_hologram(ghost_nodes[i+1].x, ghost_nodes[i+1].y, 10, &nxe_p, &nye_p, &nse);
+                    project_hologram(ghost_nodes[j+1].x, ghost_nodes[j+1].y, 10, &nxe_p, &nye_p, &nse);
                     draw_line_alpha(backbuffer, nx + 5, ny + 5, win_px + ox + nxe_p + 5, win_py + oy + nye_p + 5, 0x00FFFF, 40);
                 }
-                if (i < 20) {
+                if (j < 20) {
                     int nxe_p, nye_p; float nse;
-                    project_hologram(ghost_nodes[i+5].x, ghost_nodes[i+5].y, 10, &nxe_p, &nye_p, &nse);
+                    project_hologram(ghost_nodes[j+5].x, ghost_nodes[j+5].y, 10, &nxe_p, &nye_p, &nse);
                     draw_line_alpha(backbuffer, nx + 5, ny + 5, win_px + ox + nxe_p + 5, win_py + oy + nye_p + 5, 0x00FFFF, 40);
                 }
 
-                // Arc 10: Synaptic Threads to Peer Nodes (Calculated from shadow_gossip)
-                if (frame_count % 120 < 40) { // Pulsing active threads
-                    uint32_t thread_color = 0xFF00FF; // Synaptic Magenta
-                    draw_line_alpha(backbuffer, nx + 5, ny + 5, g_fb.width/2, g_fb.height/2, thread_color, 60);
+                if (frame_count % 120 < 40) {
+                    draw_line_alpha(backbuffer, nx + 5, ny + 5, g_fb.width/2, g_fb.height/2, 0xFF00FF, 60);
                 }
 
-                // Draw Node
-                uint8_t alpha = 100 + ghost_nodes[i].energy;
-                draw_rounded_rect_alpha(backbuffer, nx, ny, (uint32_t)(10.0f * ns), (uint32_t)(10.0f * ns), ghost_nodes[i].color, alpha);
+                uint8_t alpha = 100 + ghost_nodes[j].energy;
+                draw_rounded_rect_alpha(backbuffer, nx, ny, (uint32_t)(10.0f * ns), (uint32_t)(10.0f * ns), ghost_nodes[j].color, alpha);
                 
-                // Drag Logic
                 if (mouse_left && mouse_x >= (int32_t)nx && mouse_x <= (int32_t)nx + 10 &&
                     mouse_y >= (int32_t)ny && mouse_y <= (int32_t)ny + 10) {
-                    drag_node = i;
+                    drag_node = j;
                 }
             }
             if (!mouse_left) drag_node = -1;
@@ -974,91 +1032,38 @@ void render_desktop() {
                 ghost_nodes[drag_node].y = mouse_y - win->y - 5;
             }
 
-            // Phase 136: Swarm Analytics Overlay
             uint32_t hud_y = win_py + oy + 40;
             kprint_to(backbuffer, win_px + ox + 10, hud_y,      "FLEET STATUS: DISTRIBUTED", 0x00FFFF);
-            kprint_to(backbuffer, win_px + ox + 10, hud_y + 20, "ACTIVE NODES: 8", 0x00FF00); // Simulated count
-            kprint_to(backbuffer, win_px + ox + 10, hud_y + 40, "MESH LATENCY: 14ms", 0xFFFF00);
-            kprint_to(backbuffer, win_px + ox + 10, hud_y + 60, "ABYSS SYNC: CALIBRATED", 0xFF00FF);
+            kprint_to(backbuffer, win_px + ox + 10, hud_y + 20, "ACTIVE NODES: 8", 0x00FF00);
         }
     }
 
     draw_infinity_gauntlet(backbuffer);
 
-    // L14: Silence (Final Seal) Overlay
     if (snap_flash > 0) {
-        draw_rect_to(backbuffer, 0, 0, g_fb.width, g_fb.height, 0xFFFFFF); // White out
+        draw_rect_to(backbuffer, 0, 0, g_fb.width, g_fb.height, 0xFFFFFF); 
         snap_flash--;
     }
 
-    // 5. Orchestrator Window (Final Audit)
-    if (show_orchestrator) {
-        draw_rounded_rect(backbuffer, orchestrator_window.x, orchestrator_window.y, orchestrator_window.w, orchestrator_window.h, orchestrator_window.color);
-        draw_rounded_rect(backbuffer, orchestrator_window.x, orchestrator_window.y, orchestrator_window.w, 30, 0x111111);
-        kprint_to(backbuffer, orchestrator_window.x + 10, orchestrator_window.y + 10, orchestrator_window.title, 0xFFFFFF);
-        
-        static int audit_step = 0;
-        if (frame_count % 30 == 0) audit_step++;
-        
-        if (audit_step < 5) kprint_to(backbuffer, orchestrator_window.x + 20, orchestrator_window.y + 60, "AUDIT: SCANNING KERNEL...", 0xFFFFFF);
-        else if (audit_step < 10) kprint_to(backbuffer, orchestrator_window.x + 20, orchestrator_window.y + 60, "AUDIT: VERIFYING STORAGE...", 0xFFFFFF);
-        else if (audit_step < 15) kprint_to(backbuffer, orchestrator_window.x + 20, orchestrator_window.y + 60, "AUDIT: BONDING IDENTITY...", 0xFFFFFF);
-        else {
-            kprint_to(backbuffer, orchestrator_window.x + 20, orchestrator_window.y + 60, "AUDIT: COMPLETE. SOVEREIGNTY SECURED.", 0x00FF00);
-            kprint_to(backbuffer, orchestrator_window.x + 20, orchestrator_window.y + 90, "CERTIFICATE WRITTEN TO DISK.", 0x00FFFF);
-            
-            static int cert_written = 0;
-            if (!cert_written && !is_guest_mode) {
-                const char* cert = "SOVEREIGN IDENTITY CERTIFICATE\nSTATUS: BONDED\nLEVEL: APEX APEX\n";
-                // We use a dummy write to proof sovereignty
-                fat32_write_file("IDENTITY.CRT", cert, 64);
-                cert_written = 1;
-            }
-        }
-    }
-    // 6. Aegis Security Hub (L1-L14)
-    if (show_aegis_hub) {
-        draw_rounded_rect(backbuffer, aegis_hub_window.x, aegis_hub_window.y, aegis_hub_window.w, aegis_hub_window.h, aegis_hub_window.color);
-        draw_rounded_rect(backbuffer, aegis_hub_window.x, aegis_hub_window.y, aegis_hub_window.w, 30, 0x222222);
-        kprint_to(backbuffer, aegis_hub_window.x + 10, aegis_hub_window.y + 10, aegis_hub_window.title, 0x00FF00);
-        
-        kprint_to(backbuffer, aegis_hub_window.x + 20, aegis_hub_window.y + 60, "AEGIS SECURITY LAYERS (ACTIVE):", 0xFFFFFF);
-        const char* layers[] = {"L1-WHITE", "L4-BLACKWALL", "L6-SENTINEL", "L8-SHADOW", "L9-ABYSS", "L11-SOVEREIGN"};
-        for(int i=0; i<6; i++) {
-            kprint_to(backbuffer, aegis_hub_window.x + 20, aegis_hub_window.y + 90 + (i*30), layers[i], 0x00FFFF);
-            kprint_to(backbuffer, aegis_hub_window.x + 200, aegis_hub_window.y + 90 + (i*30), "[ENFORCED]", 0x00FF00);
-        }
-        
-        kprint_to(backbuffer, aegis_hub_window.x + 20, aegis_hub_window.y + 300, "LEDGER PREVIEW (FROM DISK):", 0xFFFF00);
-        // Show raw ledger data snippet
-        kprint_to(backbuffer, aegis_hub_window.x + 20, aegis_hub_window.y + 330, ledger_data, 0xAAAAAA);
-    }
-
-    // 7. Blackwall Enforcment (Emergency Overlay)
-    // Simulating a critical fault handler
-    static int simulation_fault = 0;
-    if (mouse_x < 10 && mouse_y < 10 && mouse_left) simulation_fault = 1;
-    if (simulation_fault) {
-        draw_rect_to(backbuffer, 0, 0, g_fb.width, g_fb.height, 0x440000); // Corruption screen
-        kprint_to(backbuffer, g_fb.width/2 - 150, g_fb.height/2, "!!! BLACKWALL ENFORCEMENT !!!", 0xFF0000);
-        kprint_to(backbuffer, g_fb.width/2 - 200, g_fb.height/2 + 40, "UNAUTHORIZED MANIFESTATION DETECTED", 0xFFFFFF);
-    }
-    // 8. Sovereign Notifications (Slide-in)
+    // Sovereign Notifications
     if (note_timer > 0) {
         note_timer--;
-        int slide_x = g_fb.width - 220;
-        if(note_timer > 160) slide_x += (note_timer - 160) * 10; // Slide in
-        if(note_timer < 20) slide_x += (20 - note_timer) * 10;   // Slide out
+        int slide_x = g_fb.width - 240;
+        if(note_timer > 160) slide_x += (note_timer - 160) * 10;
+        if(note_timer < 20) slide_x += (20 - note_timer) * 10;
         
-        draw_rounded_rect_alpha(backbuffer, slide_x, 40, 200, 40, 0x00FF00, 200);
-        kprint_to(backbuffer, slide_x + 10, 52, note_msg, 0x000000);
+        draw_rounded_rect_alpha(backbuffer, slide_x, 40, 220, 50, 0x050515, 200);
+        draw_rounded_rect_alpha(backbuffer, slide_x-2, 38, 224, 54, 0x00FFFF, 80);
+        kprint_to(backbuffer, slide_x + 15, 55, note_msg, 0x00FFFF);
     }
 
-    // 5. Cursor
+    // Crosshair Cursor
     if (mouse_x < 0) mouse_x = 0; if (mouse_x >= (int32_t)g_fb.width) mouse_x = g_fb.width - 1;
     if (mouse_y < 0) mouse_y = 0; if (mouse_y >= (int32_t)g_fb.height) mouse_y = g_fb.height - 1;
-    draw_rect_to(backbuffer, mouse_x, mouse_y, 10, 10, 0xFFFFFF);
-    draw_rect_to(backbuffer, mouse_x, mouse_y, 2, 14, 0x00FFFF);
+    
+    draw_rect_to(backbuffer, mouse_x - 5, mouse_y, 11, 2, 0x00FFFF);
+    draw_rect_to(backbuffer, mouse_x, mouse_y - 5, 2, 11, 0x00FFFF);
+    draw_rect_to(backbuffer, mouse_x - 1, mouse_y - 1, 3, 3, 0xFFFFFF);
 
     swap_buffers();
 }
