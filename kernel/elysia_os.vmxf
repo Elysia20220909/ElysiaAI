@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<Foundry>
+<VM>
+<VMId type="string">52 c7 87 ac 67 f2 26 da-ff 8c 0d 7c 09 af 05 46</VMId>
+<ClientMetaData>
+<clientMetaDataAttributes/>
+<HistoryEventList/></ClientMetaData>
+<vmxPathName type="string">elysia_os.vmx</vmxPathName></VM></Foundry>
