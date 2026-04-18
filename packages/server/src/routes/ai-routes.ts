@@ -12,8 +12,10 @@ import {
 	proxyToFastAPI,
 } from "../lib/constants";
 import { feedbackService, knowledgeService } from "../lib/database";
+import { defenseManager } from "../lib/defense-manager";
 import { logger } from "../lib/logger";
 import { streamChatWithOpenAI } from "../lib/openai-integration";
+import { secureVault } from "../lib/secure-vault";
 
 const casualChat = { generateCasualResponse, getRandomTopic };
 const openaiIntegration = { streamChatWithOpenAI };
@@ -222,11 +224,12 @@ export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 			})
 			.post(
 				"/summary",
-				async ({ body }) => {
-					const { content } = body as { content: string };
-					if (!content) return jsonError(400, "Missing content");
-
+				async ({ body, request }) => {
 					try {
+						defenseManager.enforceSandbox(request);
+						const { content } = body as { content: string };
+						if (!content) return jsonError(400, "Missing content");
+
 						const response = await axios.post(
 							"https://api.groq.com/openai/v1/chat/completions",
 							{
@@ -242,10 +245,10 @@ export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 								max_tokens: 500,
 							},
 							{
-								headers: {
+								headers: secureVault.sanitizeRequest({
 									Authorization: `Bearer ${CONFIG.GROQ_API_KEY}`,
 									"Content-Type": "application/json",
-								},
+								}),
 							},
 						);
 						return { summary: response.data.choices[0].message.content };

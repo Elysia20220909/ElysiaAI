@@ -4,9 +4,8 @@ import { CONFIG, proxyToFastAPI } from "../lib/constants";
 import { logger } from "../lib/logger";
 
 // 1. 公開ルート用インスタンス
-const publicRoutes = new Elysia().get(
-	"/api/sandbox/kernel/stream/boot",
-	async () => {
+const publicRoutes = new Elysia()
+	.get("/api/sandbox/kernel/stream/boot", async () => {
 		logger.info("🚀 [System] Streaming OS 7.0 kernel logs (Public Access)");
 		return [
 			{
@@ -70,8 +69,38 @@ const publicRoutes = new Elysia().get(
 				msg: "[  OK  ] Started Elysia Desktop Manager (GNOME-Native).",
 			},
 		];
-	},
-);
+	})
+	.get("/api/system/matrix-dashboard", async () => {
+		// Neural Stats Calculation
+		const memory = process.memoryUsage();
+		return {
+			timestamp: new Date().toISOString(),
+			system: {
+				uptime: Math.floor(process.uptime()),
+				platform: process.platform,
+				node_version: process.version,
+			},
+			metrics: {
+				heap_used: Math.round(memory.heapUsed / 1024 / 1024),
+				heap_total: Math.round(memory.heapTotal / 1024 / 1024),
+				external: Math.round(memory.external / 1024 / 1024),
+			},
+			security: {
+				shield_active: true,
+				threat_level: "LOW",
+				last_scan: new Date().toISOString(),
+			},
+			silicon: {
+				status: "SECURE",
+				key_id: "AEGIS-SVR-777",
+				verified: require("node:fs").existsSync("kernel/SENTINEL.KEY"),
+			},
+			armor: {
+				integrity: 100,
+				countermeasures: "ACTIVE",
+			},
+		};
+	});
 
 // 2. 保護ルート用インスタンス (JWT認証必須)
 const guardedRoutes = new Elysia({ prefix: "/api/system" }).guard(

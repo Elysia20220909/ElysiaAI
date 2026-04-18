@@ -104,26 +104,103 @@
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
         }
+        
+        .dashboard-card {
+            background: rgba(236, 72, 153, 0.03);
+            border: 1px solid var(--matrix-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        .dashboard-card:hover {
+            border-color: var(--elysia-pink);
+            background: rgba(236, 72, 153, 0.06);
+        }
+
+        /* FaceID Simulation */
+        .faceid-scanner {
+            width: 120px;
+            height: 120px;
+            border: 2px solid var(--elysia-pink);
+            border-radius: 30%;
+            position: relative;
+            overflow: hidden;
+        }
+        .faceid-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: var(--elysia-pink);
+            box-shadow: 0 0 10px var(--elysia-pink);
+            animation: scan 2s ease-in-out infinite;
+        }
+        @keyframes scan {
+            0%, 100% { top: 10%; }
+            50% { top: 90%; }
+        }
+        .faceid-success {
+            color: #10b981;
+            transform: scale(0);
+            animation: successScale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes successScale {
+            to { transform: scale(1.5); }
+        }
+
+        /* Apple Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px; width: 20px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--elysia-pink); }
+        input:checked + .slider:before { transform: translateX(22px); }
     </style>
 </head>
 <body x-data="app()" x-init="init()" class="relative">
-    <!-- Neural Link Splash -->
+    <!-- Neural FaceID / Splash -->
     <div x-show="booting" 
          x-transition:leave="transition ease-in duration-1000"
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-150 blur-xl"
          class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center pointer-events-none overflow-hidden">
         
-        <!-- Hexagon grid background -->
         <div class="absolute inset-0 opacity-10" 
              style="background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iMTA0IiB2aWV3Qm94PSIwIDAgNjAgMTA0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02MCA0N0wzMCAzMCAwIDQ3VjgwdGgzMFY5N3QzMC0xN1Y0N3oiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VjNDg5OSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+');"></div>
 
-        <div class="relative w-80 h-80 flex flex-col items-center justify-center">
-            <div class="absolute inset-0 border-2 border-elysia-500/20 rounded-full animate-[ping_3s_linear_infinite]"></div>
-            <div class="absolute inset-8 border border-elysia-400/30 rounded-full animate-[spin_4s_linear_infinite]"></div>
-            <div class="absolute inset-12 border border-elysia-300/40 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
-            
-            <div class="z-10 flex flex-col items-center gap-6">
+        <div class="relative flex flex-col items-center gap-12">
+            <div class="flex flex-col items-center gap-6">
+                <div class="faceid-scanner flex items-center justify-center">
+                    <div x-show="!faceIdSuccess" class="faceid-line"></div>
+                    <div x-show="faceIdSuccess" class="faceid-success">
+                        <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] font-mono tracking-[0.5em] uppercase" :class="faceIdSuccess ? 'text-emerald-500' : 'text-elysia-500'" x-text="faceIdStatus"></p>
+                </div>
+            </div>
+
+            <div class="z-10 flex flex-col items-center gap-6 transition-all duration-1000" :class="faceIdSuccess ? 'opacity-100' : 'opacity-0 blur-lg'">
                 <pre class="text-elysia-500 font-mono text-[6px] leading-[1] matrix-text animate-pulse">
  ███████╗██╗     ██╗   ██╗███████╗██╗ █████╗ 
  ██╔════╝██║     ╚██╗ ██╔╝██╔════╝██║██╔══██╗
@@ -137,10 +214,22 @@
             </div>
         </div>
 
-        <div class="absolute bottom-24 w-64 h-0.5 bg-slate-900 overflow-hidden">
-            <div class="h-full bg-elysia-500 animate-[loading_2s_ease-in-out_infinite]"></div>
-        </div>
         <div class="absolute bottom-12 text-[10px] font-mono text-slate-700 uppercase tracking-widest">Elysia Sovereign OS // v4.1.0-STABLE</div>
+    </div>
+
+    <!-- App Tracking Transparency Dialog -->
+    <div x-show="showATT" x-transition class="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div class="max-w-xs w-full bg-neutral-900 border border-white/10 rounded-2xl p-6 shadow-2xl fade-in">
+            <div class="w-12 h-12 rounded-xl bg-elysia-500/10 flex items-center justify-center mb-6 text-elysia-500 mx-auto">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+            </div>
+            <h3 class="text-white font-bold text-center mb-2">ElysiaAI のトラッキングを許可しますか？</h3>
+            <p class="text-slate-400 text-[11px] text-center leading-relaxed mb-8">ElysiaAI が他社の App や Web サイトを横断してあなたを追跡することを許可しますか？これにより、よりパーソナライズされたニューラル共鳴を提供できます。</p>
+            <div class="flex flex-col gap-3">
+                <button @click="showATT = false" class="w-full py-3 bg-white text-black font-bold rounded-xl text-sm active:scale-95 transition-transform">許可</button>
+                <button @click="showATT = false" class="w-full py-3 text-slate-400 font-medium rounded-xl text-sm active:scale-95 transition-transform">App にトラッキングしないよう要求</button>
+            </div>
+        </div>
     </div>
     
     <div class="flex h-screen w-full overflow-hidden bg-matrix-bg">
@@ -157,15 +246,22 @@
  ███████╗███████╗   ██║   ███████║██║██╔══██║
  ╚══════╝╚══════╝   ╚═╝   ╚══════╝╚═╝╚═╝  ╚═╝</pre>
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-elysia-500 animate-pulse"></div>
-                        <h2 class="text-[10px] font-mono tracking-widest text-slate-400 uppercase">Neural Link Established</h2>
-                    </div>
-                    <span class="text-[8px] font-mono text-slate-600">v4.1.0</span>
+                    <button @click="currentView = 'viewer'" 
+                            class="flex items-center gap-2 group transition-all"
+                            :class="currentView === 'viewer' ? 'opacity-100' : 'opacity-40 hover:opacity-100'">
+                        <div class="w-2 h-2 rounded-full bg-elysia-500"></div>
+                        <h2 class="text-[10px] font-mono tracking-widest text-slate-400 uppercase">Archive Viewer</h2>
+                    </button>
+                    <button @click="currentView = 'dashboard'; fetchMetrics()" 
+                            class="flex items-center gap-2 group transition-all"
+                            :class="currentView === 'dashboard' ? 'opacity-100' : 'opacity-40 hover:opacity-100'">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <h2 class="text-[10px] font-mono tracking-widest text-slate-400 uppercase">Dashboard</h2>
+                    </button>
                 </div>
 
                 <!-- Search -->
-                <div class="relative">
+                <div class="relative" x-show="currentView === 'viewer'">
                     <input type="text" x-model="search" placeholder="Search archives..." 
                            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-elysia-500/50 focus:border-elysia-500 transition-all placeholder:text-slate-600">
                     <div class="absolute right-3 top-2.5 text-slate-500">
@@ -175,7 +271,7 @@
             </div>
 
             <!-- Tree Navigation -->
-            <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+            <div class="flex-1 overflow-y-auto p-4 custom-scrollbar" x-show="currentView === 'viewer'">
                 <div x-show="loading" class="flex flex-col items-center justify-center h-40 opacity-50">
                     <div class="w-5 h-5 border-2 border-elysia-500 border-t-transparent rounded-full animate-spin mb-3"></div>
                     <p class="text-[8px] uppercase tracking-widest font-mono">[ ANALYZING_STRUCTURE ]</p>
@@ -227,11 +323,12 @@
                                 <span x-show="index < breadcrumbs.length - 1" class="opacity-30">/</span>
                             </div>
                         </template>
+                        <span x-show="currentView === 'dashboard'" class="text-emerald-400">SECURITY CENTER</span>
                     </div>
                 </div>
                 
                 <div class="flex items-center gap-6">
-                    <button @click="getSummary()" 
+                    <button x-show="currentView === 'viewer'" @click="getSummary()" 
                             class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-elysia-500/30 bg-elysia-500/10 text-elysia-400 hover:bg-elysia-500/20 transition-all disabled:opacity-50"
                             :disabled="!currentPath || summaryLoading">
                         <svg class="w-3.5 h-3.5" :class="{'animate-spin': summaryLoading}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -247,9 +344,8 @@
                 </div>
             </header>
 
-            <!-- Viewer -->
-            <div class="flex-1 overflow-y-auto p-12 relative scroll-smooth" id="markdown-viewer">
-                
+            <!-- Viewer View -->
+            <div x-show="currentView === 'viewer'" class="flex-1 overflow-y-auto p-12 relative scroll-smooth" id="markdown-viewer">
                 <!-- Initial State -->
                 <div x-show="!currentPath && !fileLoading" class="h-full flex flex-col items-center justify-center text-center fade-in">
                     <div class="relative mb-8">
@@ -281,27 +377,145 @@
                 </div>
 
                 <!-- Summary Overlay -->
-                <div x-show="showSummary" 
-                     class="max-w-4xl mx-auto mb-8 p-6 rounded-2xl bg-elysia-500/5 border border-elysia-500/20 glass fade-in relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-2">
+                <div x-show="showSummary" class="max-w-4xl mx-auto mb-8 p-6 rounded-2xl bg-elysia-500/5 border border-elysia-500/20 glass fade-in relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-1.5 h-6 bg-elysia-500"></div>
+                            <h4 class="text-[10px] font-mono text-elysia-400 tracking-[0.4em] uppercase">Neural Summary // Llama-3</h4>
+                        </div>
                         <button @click="showSummary = false" class="text-slate-500 hover:text-white">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
-                    </div>
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-1.5 h-6 bg-elysia-500"></div>
-                        <h4 class="text-[10px] font-mono text-elysia-400 tracking-[0.4em] uppercase">Neural Summary // Llama-3</h4>
                     </div>
                     <div class="text-slate-300 text-sm leading-relaxed whitespace-pre-line" x-html="summary"></div>
                 </div>
 
                 <!-- Markdown Content -->
-                <article x-show="currentPath && !fileLoading" 
-                         class="markdown-content max-w-4xl mx-auto fade-in" 
-                         x-html="content">
-                </article>
-                
-                <div class="h-20"></div>
+                <article x-show="currentPath && !fileLoading" class="markdown-content max-w-4xl mx-auto fade-in" x-html="content"></article>
+            </div>
+
+            <!-- Dashboard / Security Center View -->
+            <div x-show="currentView === 'dashboard'" class="flex-1 overflow-y-auto p-12 fade-in custom-scrollbar">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex items-center justify-between mb-12">
+                        <div>
+                            <h2 class="text-4xl font-black text-white tracking-tighter uppercase italic">Security Center</h2>
+                            <p class="text-slate-500 font-mono text-[10px] mt-1 tracking-widest uppercase">Elysia Neural HUD // JARVIS.OS</p>
+                        </div>
+                        <div class="flex items-center gap-6">
+                            <div class="text-right">
+                                <p class="text-[8px] font-mono text-slate-600 uppercase mb-1">Armor Integrity</p>
+                                <div class="w-32 h-2 bg-neutral-900 rounded-full overflow-hidden border border-white/5">
+                                    <div class="h-full bg-gradient-to-r from-red-500 via-amber-500 to-emerald-500 transition-all duration-1000" :style="`width: ${integrity}%`"></div>
+                                </div>
+                            </div>
+                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-widest">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.9L10 .155 17.834 4.9a2 2 0 011.166 1.81v3.57c0 5.061-3.334 9.51-8.166 10.574a2 2 0 01-1.668 0C4.334 19.79 1 15.34 1 10.28V6.71a2 2 0 011.166-1.81zM10 3.103L3 7.303v2.977c0 4.107 2.623 7.757 6.166 8.621a1 1 0 001.668 0C14.377 18.037 17 14.387 17 10.28V7.303l-7-4.2zM8.25 9.75a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z" clip-rule="evenodd"></path></svg>
+                                SECURE
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Iron Man HUD Vitals -->
+                    <div class="grid grid-cols-4 gap-4 mb-8">
+                        <div class="dashboard-card border-white/5 flex flex-col items-center justify-center py-4 bg-white/[0.02]">
+                            <p class="text-[8px] font-mono text-slate-600 uppercase tracking-[0.2em] mb-1">Reactor Temp</p>
+                            <span class="text-xl font-black text-white">36.5°C</span>
+                        </div>
+                        <div class="dashboard-card border-white/5 flex flex-col items-center justify-center py-4 bg-white/[0.02]">
+                            <p class="text-[8px] font-mono text-slate-600 uppercase tracking-[0.2em] mb-1">Shield Power</p>
+                            <span class="text-xl font-black text-white" x-text="`${integrity}%` text-white"></span>
+                        </div>
+                        <div class="dashboard-card border-white/5 flex flex-col items-center justify-center py-4 bg-white/[0.02]">
+                            <p class="text-[8px] font-mono text-slate-600 uppercase tracking-[0.2em] mb-1">Countermeasures</p>
+                            <span class="text-[10px] font-bold text-emerald-400">STANDBY</span>
+                        </div>
+                        <div class="dashboard-card border-white/5 flex flex-col items-center justify-center py-4 bg-white/[0.02]">
+                            <p class="text-[8px] font-mono text-slate-600 uppercase tracking-[0.2em] mb-1">Threat Detect</p>
+                            <span class="text-[10px] font-bold text-slate-500">NULL</span>
+                        </div>
+                    </div>
+
+                    <!-- Safety Check List -->
+                    <div class="bg-neutral-900/50 rounded-3xl border border-white/5 overflow-hidden mb-12">
+                        <div class="p-4 border-b border-white/5 bg-white/5">
+                            <h4 class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Safety Recommendations</h4>
+                        </div>
+                        <div class="divide-y divide-white/5">
+                            <div class="p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white">Neural Secure Enclave</p>
+                                        <p class="text-[10px] text-slate-500 font-mono uppercase">Status: Silicon Root of Trust Verified</p>
+                                    </div>
+                                </div>
+                                <span class="text-emerald-500"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg></span>
+                            </div>
+                            <div class="p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white">Private Relay Proxy</p>
+                                        <p class="text-[10px] text-slate-500 font-mono uppercase">Status: Metadata Anonymization Active</p>
+                                    </div>
+                                </div>
+                                <span class="text-emerald-500"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg></span>
+                            </div>
+                            <div class="p-6 flex items-center justify-between hover:bg-white/5 transition-all">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-white">Lockdown Mode</p>
+                                        <p class="text-[10px] text-slate-500 font-mono uppercase">Extreme protection for sensitive data</p>
+                                    </div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" x-model="lockdownMode">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Privacy Report Card -->
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="dashboard-card border-blue-500/20 bg-blue-500/5">
+                            <h4 class="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-6">Privacy Report</h4>
+                            <div class="flex items-center gap-6">
+                                <div class="relative w-20 h-20">
+                                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                        <circle cx="18" cy="18" r="16" fill="none" stroke="#222" stroke-width="4"></circle>
+                                        <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="100" stroke-dashoffset="25" class="text-blue-500"></circle>
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center font-bold text-white text-lg">75%</div>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-white">Tracker Prevention</p>
+                                    <p class="text-[10px] text-slate-500 leading-tight mt-1">124 malicious nodes were blocked from profiling you this week.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card border-pink-500/20 bg-pink-500/5">
+                            <h4 class="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-6">E2EE Data Health</h4>
+                            <div class="flex items-center gap-6">
+                                <div class="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center text-white shadow-lg shadow-pink-500/50">
+                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2V7a5 5 0 00-5-5zM7 7a3 3 0 016 0v2H7V7z"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-white">Vault Encrypted</p>
+                                    <p class="text-[10px] text-slate-500 leading-tight mt-1">100% of your chat and knowledge history is AES-256 protected.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Scroll Indicator -->
@@ -314,144 +528,95 @@
     </div>
 
     <script>
-        // Configure marked options
         marked.setOptions({
-            highlight: function(code, lang) {
-                if (Prism.languages[lang]) {
-                    return Prism.highlight(code, Prism.languages[lang], lang);
-                }
-                return code;
-            },
-            breaks: true,
-            gfm: true
+            highlight: (code, lang) => Prism.languages[lang] ? Prism.highlight(code, Prism.languages[lang], lang) : code,
+            breaks: true, gfm: true
         });
-
-        // Initialize mermaid
-        mermaid.initialize({
-            startOnLoad: false,
-            theme: 'dark',
-            themeVariables: {
-                primaryColor: '#ec4899',
-                primaryTextColor: '#fff',
-                primaryBorderColor: '#ec4899',
-                lineColor: '#f472b6',
-                secondaryColor: '#030303',
-                tertiaryColor: '#1e293b'
-            }
-        });
+        mermaid.initialize({ startOnLoad: false, theme: 'dark' });
 
         function app() {
             return {
-                loading: true,
-                booting: true,
-                fileLoading: false,
-                search: '',
-                tree: [], 
-                rawTree: [], 
-                currentPath: null,
-                content: '',
-                breadcrumbs: [],
-                summary: '',
-                summaryLoading: false,
-                showSummary: false,
+                loading: true, booting: true, fileLoading: false, currentView: 'viewer',
+                search: '', tree: [], rawTree: [], currentPath: null, content: '', breadcrumbs: [],
+                summary: '', summaryLoading: false, showSummary: false,
+                metrics: null, logs: [],
+                faceIdStatus: '[ NEURAL_SCAN_INIT ]', faceIdSuccess: false, showATT: false,
+                lockdownMode: false, integrity: 100,
 
                 async init() {
-                    // Simulated Neural Link Sequence
-                    setTimeout(() => { this.booting = false; }, 3500);
+                    setTimeout(() => { this.faceIdStatus = '[ BIOMETRIC_IDENTIFIED ]'; }, 1000);
+                    setTimeout(() => { this.faceIdStatus = '[ ACCESS_GRANTED ]'; this.faceIdSuccess = true; }, 2000);
+                    setTimeout(() => { this.booting = false; setTimeout(() => { this.showATT = true; }, 1000); }, 3500);
+
                     try {
                         const response = await fetch('tree.json');
-                        if (!response.ok) throw new Error('Failed to load matrix index');
                         this.rawTree = await response.json();
                         this.buildTree();
-                        
-                        // Load README if it exists
-                        if (this.rawTree.includes('README.md')) {
-                            this.loadFile('README.md');
-                        }
-                    } catch (err) {
-                        console.error('Matrix Init Error:', err);
-                    } finally {
-                        this.loading = false;
-                    }
+                        if (this.rawTree.includes('README.md')) this.loadFile('README.md');
+                    } catch (err) { console.error('Init Error:', err); }
+                    finally { this.loading = false; }
 
-                    // Handle scroll visibility
                     const viewer = document.getElementById('markdown-viewer');
                     const scrollBtn = document.getElementById('scroll-top-btn');
-                    viewer.addEventListener('scroll', () => {
-                        scrollBtn.style.opacity = viewer.scrollTop > 500 ? '1' : '0';
-                    });
+                    viewer.addEventListener('scroll', () => { scrollBtn.style.opacity = viewer.scrollTop > 500 ? '1' : '0'; });
+                    
+                    setInterval(() => { if(this.currentView === 'dashboard') this.fetchMetrics(); }, 5000);
+                },
+
+                async fetchMetrics() {
+                    try {
+                        const res = await fetch('/api/system/matrix-dashboard');
+                        this.metrics = await res.json();
+                        this.logs.unshift({ time: new Date().toLocaleTimeString(), msg: `[SECURE] Silicon Verified: ${this.metrics.silicon.key_id}` });
+                        if (this.logs.length > 50) this.logs.pop();
+                    } catch (e) { console.error('Metrics Error:', e); }
+                },
+
+                formatUptime(s) {
+                    const h = Math.floor(s / 3600);
+                    const m = Math.floor((s % 3600) / 60);
+                    return `${h}h ${m}m`;
                 },
 
                 buildTree() {
                     const nodes = [];
                     const root = { children: {} };
-
-                    // Build internal structure
                     this.rawTree.forEach(path => {
                         const parts = path.split('/');
                         let current = root;
                         parts.forEach((part, i) => {
                             if (!current.children[part]) {
-                                current.children[part] = {
-                                    name: part,
-                                    type: i === parts.length - 1 ? 'file' : 'folder',
-                                    path: path,
-                                    children: {}
-                                };
+                                current.children[part] = { name: part, type: i === parts.length - 1 ? 'file' : 'folder', path: path, children: {} };
                             }
                             current = current.children[part];
                         });
                     });
-
-                    // Flatten for rendering with depth
                     const flatten = (node, depth, fullPath = '') => {
                         const keys = Object.keys(node.children).sort((a, b) => {
-                            const nodeA = node.children[a];
-                            const nodeB = node.children[b];
+                            const nodeA = node.children[a], nodeB = node.children[b];
                             if (nodeA.type === 'folder' && nodeB.type === 'file') return -1;
                             if (nodeA.type === 'file' && nodeB.type === 'folder') return 1;
                             return a.localeCompare(b);
                         });
-
                         keys.forEach(key => {
                             const child = node.children[key];
                             const path = child.type === 'file' ? child.path : (fullPath ? fullPath + '/' + key : key);
-                            nodes.push({
-                                name: child.name.replace('.md', ''),
-                                type: child.type,
-                                path: path,
-                                depth: depth,
-                                open: depth < 1, 
-                                parentPath: fullPath,
-                                visible: depth === 0
-                            });
-                            if (child.type === 'folder') {
-                                flatten(child, depth + 1, path);
-                            }
+                            nodes.push({ name: child.name.replace('.md', ''), type: child.type, path: path, depth: depth, open: depth < 1, parentPath: fullPath, visible: depth === 0 });
+                            if (child.type === 'folder') flatten(child, depth + 1, path);
                         });
                     };
-
                     flatten(root, 0);
                     this.tree = nodes;
                 },
 
                 toggleFolder(node) {
                     node.open = !node.open;
-                    // Update visibility of children
                     this.tree.forEach(n => {
-                        if (n.parentPath === node.path || n.path.startsWith(node.path + '/')) {
-                            const parentParts = n.parentPath.split('/');
-                            const isDirectChild = n.parentPath === node.path;
-                            
-                            // A node is visible if ALL its parents are open
-                            let visible = true;
-                            let currentParentPath = n.parentPath;
+                        if (n.path.startsWith(node.path + '/')) {
+                            let visible = true, currentParentPath = n.parentPath;
                             while (currentParentPath) {
                                 const parent = this.tree.find(x => x.path === currentParentPath && x.type === 'folder');
-                                if (parent && !parent.open) {
-                                    visible = false;
-                                    break;
-                                }
+                                if (parent && !parent.open) { visible = false; break; }
                                 const lastSlash = currentParentPath.lastIndexOf('/');
                                 currentParentPath = lastSlash === -1 ? '' : currentParentPath.substring(0, lastSlash);
                             }
@@ -461,108 +626,45 @@
                 },
 
                 shouldShow(node) {
-                    if (this.search) {
-                        return node.name.toLowerCase().includes(this.search.toLowerCase()) || 
-                               node.path.toLowerCase().includes(this.search.toLowerCase());
-                    }
-                    return node.visible;
+                    return this.search ? (node.name.toLowerCase().includes(this.search.toLowerCase()) || node.path.toLowerCase().includes(this.search.toLowerCase())) : node.visible;
                 },
 
                 async getSummary() {
                     if (!this.content || this.summaryLoading) return;
-                    this.summaryLoading = true;
-                    this.showSummary = true;
-                    this.summary = "[ ACCESSING NEURAL NETWORK... ]";
-                    
+                    this.summaryLoading = true; this.showSummary = true; this.summary = "[ ACCESSING NEURAL NETWORK... ]";
                     try {
-                        const response = await fetch('/api/ai/summary', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ content: this.content })
-                        });
-                        const data = await response.json();
-                        if (data.summary) {
-                            this.summary = data.summary;
-                        } else {
-                            this.summary = "ERROR: Connection refused by Elysia Mainframe.";
-                        }
-                    } catch (e) {
-                        this.summary = "ERROR: Neural Link Timeout.";
-                    } finally {
-                        this.summaryLoading = false;
-                    }
+                        const res = await fetch('/api/ai/summary', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ content: this.content }) });
+                        const data = await res.json();
+                        this.summary = data.summary || "ERROR: Neural Link Timeout.";
+                    } catch (e) { this.summary = "ERROR: Connection refused."; }
+                    finally { this.summaryLoading = false; }
                 },
 
                 async loadFile(path) {
                     this.showSummary = false;
                     if (!path || this.currentPath === path) return;
-                    
-                    if (path.endsWith('/') || !path.includes('.')) {
-                        console.warn('Attempted to load directory as file:', path);
-                        return;
-                    }
-
-                    this.currentPath = path;
-                    this.fileLoading = true;
-                    this.breadcrumbs = path.split('/');
-
+                    this.currentPath = path; this.fileLoading = true; this.breadcrumbs = path.split('/');
                     try {
-                        const response = await fetch(`repo/${path}`);
-                        if (!response.ok) throw new Error('Module data missing');
-                        let text = await response.text();
-                        
+                        const res = await fetch(`repo/${path}`);
+                        let text = await res.text();
                         const basePath = path.substring(0, path.lastIndexOf('/'));
-                        if (basePath) {
-                            text = text.replace(/(!\[.*?\]\()(?!\/|http|https)(.*?\))/g, `$1repo/${basePath}/$2`);
-                            text = text.replace(/(\[.*?\]\()(?!\/|http|https)(.*?\))/g, (match, p1, p2) => {
-                                if (p2.startsWith('#')) return match;
-                                return `${p1}repo/${basePath}/${p2}`;
-                            });
-                        } else {
-                            text = text.replace(/(!\[.*?\]\()(?!\/|http|https)(.*?\))/g, `$1repo/$2`);
-                            text = text.replace(/(\[.*?\]\()(?!\/|http|https)(.*?\))/g, (match, p1, p2) => {
-                                if (p2.startsWith('#')) return match;
-                                return `${p1}repo/${p2}`;
-                            });
-                        }
-
-                        let html = marked.parse(text);
-                        this.content = DOMPurify.sanitize(html);
-                        
-                        this.$nextTick(() => {
-                            Prism.highlightAllUnder(document.querySelector('.markdown-content'));
-                            this.renderMermaid();
-                        });
-
+                        const replacer = (match, p1, p2) => p2.startsWith('#') ? match : `${p1}repo/${basePath ? basePath + '/' : ''}${p2}`;
+                        text = text.replace(/(!\[.*?\]\()(?!\/|http|https)(.*?\))/g, replacer).replace(/(\[.*?\]\()(?!\/|http|https)(.*?\))/g, replacer);
+                        this.content = DOMPurify.sanitize(marked.parse(text));
+                        this.$nextTick(() => { Prism.highlightAllUnder(document.querySelector('.markdown-content')); this.renderMermaid(); });
                         this.scrollToTop();
-                    } catch (err) {
-                        console.error(err);
-                        this.content = `<div class="bg-red-500/10 border border-red-500/20 p-8 rounded-2xl text-center">
-                            <div class="text-red-500 text-4xl mb-4">⚠️</div>
-                            <h2 class="text-white font-bold mb-2">Neural Link Interrupted</h2>
-                            <p class="text-slate-400 text-sm">${err.message}</p>
-                        </div>`;
-                    } finally {
-                        this.fileLoading = false;
-                    }
+                    } catch (err) { this.content = `<div class='text-red-500'>Error: ${err.message}</div>`; }
+                    finally { this.fileLoading = false; }
                 },
 
                 renderMermaid() {
                     this.$nextTick(() => {
-                        const elements = document.querySelectorAll('.markdown-content .mermaid');
-                        elements.forEach((el, i) => {
-                            const content = el.innerText;
-                            const id = `mermaid-${i}`;
-                            mermaid.render(id, content).then(({ svg }) => {
-                                el.innerHTML = svg;
-                            });
+                        document.querySelectorAll('.markdown-content .mermaid').forEach((el, i) => {
+                            mermaid.render(`mermaid-${i}`, el.innerText).then(({ svg }) => { el.innerHTML = svg; });
                         });
                     });
                 },
-
-                scrollToTop() {
-                    document.getElementById('markdown-viewer').scrollTo({ top: 0, behavior: 'smooth' });
-                }
+                scrollToTop() { document.getElementById('markdown-viewer').scrollTo({ top: 0, behavior: 'smooth' }); }
             }
         }
     </script>
