@@ -16,7 +16,7 @@ Write-Host "[*] Writing Secure Build Container Blueprint (Dockerfile)..." -Foreg
 $dockerfile = @"
 FROM rust:slim
 RUN apt-get update && \
-    apt-get install -y clang lld nasm make mtools dosfstools xorriso && \
+    apt-get install -y clang lld nasm make mtools dosfstools qemu-utils xorriso && \
     rm -rf /var/lib/apt/lists/*
 RUN rustup target add x86_64-pc-windows-gnullvm
 WORKDIR /os
@@ -31,7 +31,7 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Write-Host "[*] Compiling Kernel & Weaving ISO Hologram..." -ForegroundColor Cyan
+Write-Host "[*] Compiling Kernel & Forging VMDK Drive..." -ForegroundColor Cyan
 docker run --rm -v "${PWD}:/os" elysia-kernel-builder
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[!] Kernel compilation failed! The build process encountered an error." -ForegroundColor Red
@@ -43,14 +43,15 @@ Write-Host "==========================================================" -Foregro
 Write-Host " [SUCCESS] ELYSIA OS COMPILED AND MANIFESTED!" -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "Output File: elysia_os.iso" -ForegroundColor Cyan
+Write-Host "Output Files:" -ForegroundColor Cyan
+Write-Host "  - elysia_os.vmx  (VMware Config - DOUBLE CLICK THIS!)" -ForegroundColor Magenta
+Write-Host "  - elysia_os.vmdk (VMware Virtual Disk)" -ForegroundColor Green
+Write-Host "  - elysia_os.iso  (CD-ROM / ISO Image)" -ForegroundColor Green
+Write-Host "  - elysia_os.img  (USB / Raw Disk Image)" -ForegroundColor Green
 Write-Host ""
-Write-Host "To run your Sovereign OS on VirtualBox:" -ForegroundColor Yellow
-Write-Host " 1. Open VirtualBox and click 'New'."
-Write-Host " 2. Name: Elysia OS | Type: Other | Version: Other/Unknown (64-bit)"
-Write-Host " 3. Memory: 2048 MB or higher."
-Write-Host " 4. Hard Disk: Do not add a virtual hard disk (or attach elysia_os.img if you wish)."
-Write-Host " 5. Go to Settings -> System -> Motherboard -> CHECK 'Enable EFI (special OSes only)'"
-Write-Host " 6. Go to Settings -> Storage -> Empty optical drive -> Choose 'elysia_os.iso'"
-Write-Host " 7. Start the Virtual Machine and witness sovereignty." -ForegroundColor Magenta
+Write-Host "How to Launch in VMware:" -ForegroundColor Yellow
+Write-Host " 1. Open the 'kernel' folder in Windows Explorer."
+Write-Host " 2. Double-click on 'elysia_os.vmx'." -ForegroundColor Cyan
+Write-Host " 3. VMware will open and automatically configure everything."
+Write-Host " 4. Click 'Power On' and witness sovereignty." -ForegroundColor Magenta
 Write-Host ""

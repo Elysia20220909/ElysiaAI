@@ -11,6 +11,14 @@ typedef enum {
     AGENT_ANALYST
 } agent_type_t;
 
+typedef enum {
+    TASK_READY = 0,
+    TASK_RUNNING,
+    TASK_BLOCKED,
+    TASK_KILLED
+} task_state_t;
+
+
 typedef struct tcb {
     uint32_t id;
     int32_t priority;
@@ -29,8 +37,9 @@ typedef struct tcb {
 void scheduler_init();
 void task_create(void (*entry)(), uint32_t priority);
 void task_swarm_spawn(agent_type_t type, uint32_t swarm_id);
+void task_neural_spawn(const char* intent);
 void kernel_tune(uint32_t tid, uint32_t param, uint32_t val);
 
-void schedule();
+uint64_t schedule(uint64_t stack_pointer);
 
 #endif

@@ -9,3 +9,9 @@ crate-type = ["staticlib"]
 [dependencies]
 # No standard library for the kernel
 # cortex-m or other embedded crates would go here if needed
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

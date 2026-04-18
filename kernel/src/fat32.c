@@ -1,6 +1,10 @@
 #include <stdint.h>
 #include "vfs.h"
 
+#ifndef NULL
+#define NULL ((void*)0)
+#endif
+
 void ata_read_sector(uint32_t lba, uint16_t *buffer);
 void ata_write_sector(uint32_t lba, uint16_t *buffer);
 
@@ -76,7 +80,7 @@ uint32_t get_next_cluster(uint32_t cluster) {
     return next & 0x0FFFFFFF;
 }
 
-void list_root_dir(char* out_list, int max_len) {
+int list_root_dir(char* out_list, int max_len) {
     uint16_t dir_sector[256];
     ata_read_sector(root_dir_sector, dir_sector);
     FAT_DirectoryEntry *entries = (FAT_DirectoryEntry*)dir_sector;
@@ -101,6 +105,7 @@ void list_root_dir(char* out_list, int max_len) {
         if (current_len < max_len - 1) out_list[current_len++] = ' ';
     }
     out_list[current_len] = '\0';
+    return 0;
 }
 
 int fat32_read_file(const char* filename, char* buffer, uint32_t max_size) {

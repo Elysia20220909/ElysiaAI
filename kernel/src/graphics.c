@@ -9,6 +9,7 @@ typedef struct {
 } FramebufferInfo;
 
 FramebufferInfo g_fb;
+int _fltused = 0;
 
 void draw_pixel(FramebufferInfo *fb, uint32_t x, uint32_t y, uint32_t color) {
     if (x >= fb->width || y >= fb->height) return;

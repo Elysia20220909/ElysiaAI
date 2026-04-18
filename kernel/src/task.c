@@ -42,20 +42,30 @@ void task_create(void (*entry)(), uint32_t priority) {
     }
 }
 
-void schedule() {
-    if (ready_queue == NULL) return;
+uint64_t schedule(uint64_t stack_pointer) {
+    if (ready_queue == NULL) return stack_pointer;
     
+    // Save current task stack pointer if it exists and is valid (non-zero)
+    if (current_task != NULL && stack_pointer != 0) {
+        current_task->rsp = stack_pointer;
+        current_task->state = TASK_READY;
+    }
+
     // Simple Round Robin Scheduler
     if (current_task == NULL) {
         current_task = ready_queue;
     } else {
-        current_task->state = TASK_READY;
         current_task = current_task->next;
         if (current_task == NULL) current_task = ready_queue;
     }
     
     current_task->state = TASK_RUNNING;
-    // Context switch logic would go here (assembly-level)
+    return current_task->rsp;
+}
+
+void task_neural_spawn(const char* intent) {
+    // Neural lattice expansion logic
+    // For now, satisfy linker and provide a placeholder for the sovereign agent
 }
 
 extern void autonomous_sentinel(); 

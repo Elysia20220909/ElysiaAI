@@ -1,22 +1,24 @@
 CC = clang
 ASM = nasm
 CFLAGS = -target x86_64-unknown-windows -ffreestanding -fno-stack-protector -fno-stack-check -fshort-wchar -mno-red-zone -Iinclude -O2
-LDFLAGS = -target x86_64-unknown-windows -nostdlib -Wl,-entry:efi_main -Wl,-subsystem:efi_application -fuse-ld=lld-link -Wl,-filealign:4096 -Lsrc/rust_core/target/x86_64-pc-windows-gnullvm/release -lrust_core
+LDFLAGS = -target x86_64-unknown-windows -nostdlib -Wl,-entry:efi_main -Wl,-subsystem:efi_application -fuse-ld=lld-link -Wl,-filealign:4096
 
 ASM_SRC = src/interrupts.asm
 C_SRC = boot/bootloader.c src/graphics.c src/memory.c src/paging.c src/interrupts.c src/task.c src/keyboard.c src/mouse.c src/compositor.c src/ata.c src/fat32.c src/vfs.c src/gdt.c src/syscall.c
 ASM_OBJ = interrupts.o
 BOOT_EFI = BOOTX64.EFI
 BOOT_IMG = elysia_os.img
-BOOT_ISO = elysia_os.iso
+BOOT_VMDK = elysia_os.vmdk
+BOOT_VMX = elysia_os.vmx
+RUST_LIB = src/rust_core/target/x86_64-pc-windows-gnullvm/release/librust_core.a
 
-all: $(BOOT_ISO)
+all: $(BOOT_VMDK) $(BOOT_ISO) $(BOOT_IMG) $(BOOT_VMX)
 
 $(ASM_OBJ): $(ASM_SRC)
 	$(ASM) -f win64 -o $@ $<
 
 $(BOOT_EFI): $(C_SRC) $(ASM_OBJ) rust_lib
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(C_SRC) $(ASM_OBJ)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(C_SRC) $(ASM_OBJ) $(RUST_LIB)
 
 rust_lib:
 	cd src/rust_core && cargo build --release --target x86_64-pc-windows-gnullvm
@@ -32,17 +34,34 @@ $(BOOT_IMG): $(BOOT_EFI)
 	echo "AEGIS-SVR-777" > SENTINEL.KEY
 	mcopy -i $@ SENTINEL.KEY ::/SENTINEL.KEY
 
-$(BOOT_ISO): $(BOOT_IMG) $(BOOT_EFI)
+$(BOOT_VMDK): $(BOOT_IMG)
+	qemu-img convert -f raw -O vmdk $(BOOT_IMG) $@
+
+$(BOOT_ISO): $(BOOT_IMG)
 	mkdir -p iso_root/EFI/BOOT
 	cp $(BOOT_EFI) iso_root/EFI/BOOT/BOOTX64.EFI
-	echo "ELYSIOS DATA SOVEREIGNTY ACHIEVED." > iso_root/SOVEREIGN.TXT
-	echo "AEGIS-SVR-777" > iso_root/SENTINEL.KEY
-	cp $(BOOT_IMG) iso_root/
-	xorriso -as mkisofs -R -J -v -V "ELYSIA_OS" -e elysia_os.img -no-emul-boot -isohybrid-gpt-basdat -o $@ iso_root/
+	xorriso -as mkisofs -R -f -e $(BOOT_IMG) -no-emul-boot -o $@ iso_root
+	rm -rf iso_root
+
+$(BOOT_VMX):
+	echo '.encoding = "UTF-8"' > $@
+	echo 'config.version = "8"' >> $@
+	echo 'virtualHW.version = "21"' >> $@
+	echo 'memsize = "2048"' >> $@
+	echo 'guestOS = "other-64"' >> $@
+	echo 'firmware = "efi"' >> $@
+	echo 'nvme0.present = "TRUE"' >> $@
+	echo 'nvme0:0.present = "TRUE"' >> $@
+	echo 'nvme0:0.fileName = "elysia_os.vmdk"' >> $@
+	echo 'nvme0:0.virtualSSD = "TRUE"' >> $@
+	echo 'pciBridge0.present = "TRUE"' >> $@
+	echo 'floppy0.present = "FALSE"' >> $@
+	echo 'floppy0.autodetect = "FALSE"' >> $@
+	echo 'mks.enable3d = "TRUE"' >> $@
+	echo 'gui.exitOnLastVMClosing = "FALSE"' >> $@
 
 clean:
-	rm -f $(BOOT_EFI) $(BOOT_IMG) $(BOOT_ISO) $(ASM_OBJ) SOVEREIGN.TXT SENTINEL.KEY
-	rm -rf iso_root/
+	rm -f $(BOOT_EFI) $(BOOT_IMG) $(BOOT_VMDK) $(BOOT_ISO) $(BOOT_VMX) $(ASM_OBJ) SOVEREIGN.TXT SENTINEL.KEY
 
-run: $(BOOT_ISO)
-	qemu-system-x86_64 -bios ovmf/OVMF_CODE.fd -cdrom $(BOOT_ISO) -net none
+run: $(BOOT_VMDK)
+	qemu-system-x86_64 -bios ovmf/OVMF_CODE.fd -drive file=$(BOOT_VMDK),format=vmdk -net none
