@@ -67,7 +67,7 @@ int vfs_ls(char* out_list, int max_len) {
     if (bridge_fs) {
         char* prefix = "LATTICE_FRAGMENTS: ";
         int i = 0;
-        while (prefix[i]) out_list[i++] = prefix[i];
+        while (prefix[i]) { out_list[i] = prefix[i]; i++; }
         return bridge_fs->ops->readdir(out_list + i, max_len - i);
     }
     return root_fs->ops->readdir(out_list, max_len);
