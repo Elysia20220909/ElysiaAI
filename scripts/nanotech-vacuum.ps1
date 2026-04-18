@@ -8,8 +8,8 @@
 #>
 
 param(
-    [switch]$Deep,
-    [switch]$WhatIf
+    [switch]$Simulation,
+    [switch]$UltraDeep
 )
 
 $ErrorActionPreference = "SilentlyContinue"
@@ -40,7 +40,7 @@ $cleanupTargets = @(
     @{ Path = "**/test-results"; Description = "Test Results" }
 )
 
-if ($Deep) {
+if ($UltraDeep) {
     Write-Host "⚡ ULTRA-DEEP MODE ACTIVATED" -ForegroundColor Cyan
     $cleanupTargets += @(
         @{ Path = "node_modules/.cache"; Description = "NPM/Bun Caches" },
@@ -59,17 +59,15 @@ foreach ($target in $cleanupTargets) {
         
         $currentSize = 0
         foreach ($i in $items) {
-            try {
-                if ($i.PSIsContainer) {
-                    $currentSize += (Get-ChildItem $i.FullName -Recurse -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
-                } else {
-                    $currentSize += $i.Length
-                }
-            } catch {}
+            if ($i.PSIsContainer) {
+                $currentSize += (Get-ChildItem $i.FullName -Recurse -File | Measure-Object -Property Length -Sum).Sum
+            } else {
+                $currentSize += $i.Length
+            }
         }
         
-        if (!$WhatIf) {
-            $items | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        if (!$Simulation) {
+            $items | Remove-Item -Recurse -Force
             Write-Host " ✓ Cleaned ($([Math]::Round($currentSize / 1MB, 2)) MB)" -ForegroundColor Green
         } else {
             Write-Host " 🔍 Simulation ($([Math]::Round($currentSize / 1MB, 2)) MB)" -ForegroundColor Yellow
@@ -82,7 +80,7 @@ foreach ($target in $cleanupTargets) {
 
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor DarkRed
-if ($WhatIf) {
+if ($Simulation) {
     Write-Host "POTENTIAL SPACE SAVINGS: $([Math]::Round($totalFreed / 1MB, 2)) MB" -ForegroundColor Yellow
 } else {
     Write-Host "SYSTEM LIGHTWEIGHTED: $([Math]::Round($totalFreed / 1MB, 2)) MB freed." -ForegroundColor Green
