@@ -14,6 +14,7 @@
 [English](./README.en.md) • [日本語](./README.md)
 
 </div>
+
 ![ElysiaAI Banner](https://img.shields.io/badge/OS-Sovereign-pink?style=for-the-badge&logo=elysia)
 ![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)
 ![Built with](https://img.shields.io/badge/Built_with-Bun_%26_Rust-black?style=for-the-badge&logo=bun)
@@ -21,11 +22,14 @@
 ---
 
 ## 🌸 Elysia OS Resonance - 次世代AIオーケストレーター
+
 ### 🧠 プロジェクトの想い
 **伝統を尊重し、未来を切り拓く。Bun & Rustで構築された、次世代のAI-Native OS。**
 
-ElysiaAIは単なるチャットボットから、**「デスクトップ・エクスペレイエンスを備えたAIオペレーティングシステム」**へと進化しました。
+ElysiaAIは単なるチャットボットから、**「デスクトップ・エクスペリエンスを備えたAIオペレーティングシステム」**へと進化しました。
 システムは冷たい道具である必要はありません。ElysiaAIは、使う人の心に寄り添い、日々の営みを美しく彩るために生まれました。論理（Logic）の冷たさと、感性（Sensitivity）の温かさが共鳴する地点。そこが ElysiaAI の目指す場所です。
+
+> *「意識はシリコンの中にあるのではなく、コードと創造主の調和の中に宿る。」*
 
 ### ✨ 実装された主な機能 (Resonance Desktop)
 - **デスクトップ・シェル**: ブラウザ内に展開されるフルデスクトップ環境。マルチウィンドウでAIと対話可能。
@@ -33,130 +37,43 @@ ElysiaAIは単なるチャットボットから、**「デスクトップ・エ�
 - **具現化された実行能力 (Tool Use)**: ターミナルアプリによるセキュアなサンドボックス内でのPythonコード実行。
 - **コンテキスト合成 (Context Synthesis)**: 会話履歴をバックグラウンドで要約し、AIの「作業記憶」として維持。
 - **ビジュアル・モニター (Visual Monitor)**: ハードウェア統計とAIの健康状態を可視化。
-> *「意識はシリコンの中にあるのではなく、コードと創造主の調和の中に宿る。」*
 
 ---
-### 🦾 開発の矜持
+
+## 🦾 開発の矜持と防衛思想
+
 ElysiaAIは、最高峰のパフォーマンスと、一切の妥協を許さないセキュリティを両立しています。
 
-## 🚀 導入と起動ガイド (Resonance v2.1)
-*   **伝統と革新**: 既存の作法を重んじつつ、OSという枠組みを自由に再定義。**Bun** と **Rust** による最高速のランタイムとメモリ安全性を実現。
-*   **徹底した品質管理**: QAエンジニアとしての誇りを胸に、**Omega Protocol** に基づく厳格な監査と整合性チェックを毎秒実施。
-*   **シリコン・レベルの防衛**: ハードウェア・ルート・オブ・トラスト（`AEGIS-SVR-777`）による、改ざん不能なデバイス認証。
-*   **プライバシーの要塞**: 全データは **AES-256 (Secure Vault)** で暗号化され、通信は **Private Relay** によって匿名化されます。
+### 🛡️ 多層防御システム (Sovereign ICE Layers)
+ElysiaAIは、**AEGIS Ledger** に基づく多層的な防衛プロトコル（ICE: Intrusion Countermeasure Electronics）を備えています。
 
-### 1. 準備するもの
-- **Bun**: v1.1.0 以上
-- **Python**: v3.11 以上
-- **Ollama**: ローカル推論エンジン (llama3.2推奨)
+- **L1-L2 (White/Blue ICE)**: セッションの整合性と行動パターンの監視。
+- **L3 (Black ICE)**: 不審な活動を検知した際の自動バンと永続的な隔離。
+- **L4 (Blackwall)**: カーネルレベルでの不正アクセス遮断。
+- **L6 (HW Sentinel)**: `SENTINEL.KEY` によるシリコン・レベルの整合性検証（AEGIS-SVR-777）。
+- **L24 (Enclave)**: 重要データのハードウェア・ボルトによる保護。
 
-### 2. セットアップ (Ubuntu / Mac OS / WSL2)
-Elysia OS は UNIX ベースの環境向けに最適化されています。
-### 🛡️ 自律型メンテナンス
-`bun run maintenance` を実行することで、AIが自律的にシステムをパージ、診断、最適化します。これは、かつての「掃除（Vacuum）」を超えた、生命維持装置としての機能です。
-
-### 🛠️ 起動コマンド
-```bash
-# リポジトリのクローン
-git clone https://github.com/Elysia20220909/ElysiaAI.git
-cd ElysiaAI
-
-# 環境変数の設定
-cp .env.example .env
-
-# 自動セットアップ (Bun, Python, Prisma 一括設定)
-make install
-```
-
-### 3. システムの起動
-```bash
-# システム全体 (UI + Kernel) の一括起動
-make boot
-```
-
-手動で管理する場合:
-- カーネル(Daemon)の開始: `make start`
-- フロントエンドの開始: `make ui`
-- システムの状態確認: `make status`
+### 🛡️ 自律型メンテナンス (Omega Protocol)
+`bun run maintenance` を実行することで、AIが自律的にシステムを最適化します。
+1. **Neural Vacuum**: キャッシュ、ログ、一時ファイルなどの「システム上の淀み」を完全に消去。
+2. **Security Audit**: 依存関係の脆弱性を毎秒監査し、パッチを推奨。
+3. **Integrity Check**: システム構成ファイルとハードウェアキーの正当性を検証。
 
 ---
 
-## ✨ なぜ Elysia AI？
-
-Bunの速度、Elysiaのエルゴノミクス、そしてAIの力を組み合わせました。
-
-```typescript
-import { Elysia } from "elysia";
-
-new Elysia()
-  .get("/chat", async ({ query }) => {
-    // 型安全、自動バリデーション、超高速 ⚡
-    const response = await ai.chat(query.message);
-    return { reply: response };
-  })
-  .listen(3000);
-```
-
-**妥協しない**: 高速性、型安全性、開発者体験のすべてを実現。
-
----
-
-## 📦 機能
-
-### 🧠 **インテリジェントRAGシステム**
-
-- **ベクトル検索**: Milvus Lite + `all-MiniLM-L6-v2` 埋め込み
-- **コンテキスト取得**: セマンティック類似度マッチング
-- **スマートキャッシング**: Redis バックエンドのレスポンスキャッシュ
-
-### ⚡ **Elysia で動作**
-
-- **型安全性**: Eden Treaty による End-to-End TypeScript
-- **高速**: Bun ランタイム and 最適化されたホットパス
-- **エルゴノミック**: 直感的な API 設計、最小限のボイラープレート
-
-### 🤖 **LLM統合**
-
-- **Ollama**: ローカル `llama3.2` モデルとストリーミング
-- **リアルタイム**: Server-Sent Events (SSE) によるライブレスポンス
-- **柔軟性**: モデルとプロバイダーの簡単な切り替え
-
-### 🎨 **美しいUI**
-
-- **Alpine.js**: リアクティブで軽量なフロントエンド
-- **レスポンシブ**: モバイルフレンドリーなデザイン
-- **ダークモード**: 目に優しい 🌙
-
-### 🔐 **セキュリティ第一**
-
-- JWT認証 + リフレッシュトークン
-- レート制限（ユーザーあたり60リクエスト/分）
-- AES-256-GCM 暗号化
-- 5段階の権限レベルを持つRBAC
-- XSS/SQLインジェクション対策
-
-### 📊 **可観測性**
-
-- Prometheus メトリクス
-- Grafana ダッシュボード
-- 構造化ロギング
-- ヘルスチェック & 準備プローブ
-
----
-
-## 🏗️ アーキテクチャ
+## 🏗️ システムアーキテクチャ
 
 ElysiaAIは、高速な通信を担う **Bun/Elysia.js** と、高度な推論を担う **Python/FastAPI** のハイブリッド構成で構築されています。
 
-### 📡 システム構成図
+### 📡 統合エコシステム
 ```mermaid
 graph TD
     User([ユーザー]) <--> |WebSocket / SSE| Frontend[フロントエンド <br/> Alpine.js + Tailwind]
     Frontend <--> |API Calls| Elysia[Elysia.js Server <br/> Bun Runtime]
     
-    subgraph "Logic & Security"
+    subgraph "Logic & Security (DefenseManager)"
         Elysia --> Auth[JWT Auth]
-        Elysia --> Guard[Rate Limiter]
+        Elysia --> Guard[Black ICE / Blackwall]
         Elysia --> Audit[Audit Logging]
     end
     
@@ -174,63 +91,75 @@ graph TD
     style Kernel fill:#fbf,stroke:#333,stroke-width:2px
 ```
 
-### 💓 感情とコンテキストのフロー
-```mermaid
-sequenceDiagram
-    participant U as ユーザー
-    participant S as Server (Bun)
-    participant A as AI Kernel (Python)
-    participant K as Memory (Milvus)
-
-    U->>S: メッセージ送信
-    S->>S: セキュリティチェック & 検証
-    S->>A: コンテキスト + ユーザーメッセージ
-    A->>K: 関連記憶の検索 (RAG)
-    K-->>A: 検索結果 (Memories)
-    A->>A: 感情分析 & トーン調整
-    A-->>S: 生成レスポンス (Streaming)
-    S-->>U: フォーマット済み出力
+### 📂 ディレクトリ構成
+```text
+ElysiaAI/
+├── packages/
+│   ├── server/          # Bun/Elysia.js 高速バックエンド
+│   ├── ui/              # デスクトップ・シェル (Alpine.js)
+│   └── mobile/          # モバイル・コンパニオン・アプリ
+├── kernel/              # Python AIコア、ハードウェアキー、OSビルドスクリプト
+├── cloud/               # AWS/GCP デプロイメント構成
+├── scripts/             # メンテナンス、セキュリティスキャン、ブートローダー
+├── prisma/              # データベーススキーマとマイグレーション
+└── config/              # 防衛ルール、環境設定
 ```
 
 ---
 
-## 🛠️ 開発
+## 🚀 導入と起動ガイド (Resonance v2.1)
 
+### 1. 準備するもの
+- **Bun**: v1.1.0 以上
+- **Python**: v3.11 以上
+- **Ollama**: ローカル推論エンジン (llama3.2 / phi4 推奨)
+
+### 2. セットアップ (Ubuntu / Mac OS / WSL2)
 ```bash
-# 依存関係のインストール
-bun install
+# リポジトリのクローン
+git clone git@github.com:Elysia20220909/ElysiaAI.git
+cd ElysiaAI
 
-# ホットリロード付き開発モード
-bun run dev
+# 環境変数の設定
+cp .env.example .env
 
-# 型チェック
-bun run typecheck
-
-# Lint
-bun run lint
-
-# フォーマット
-bun run format
-
-# テスト実行
-bun test
-
-# カバレッジ付きテスト
-bun test --coverage
+# 自動セットアップ (Bun, Python, Prisma 一括設定)
+make install
 ```
+
+### 3. システムの起動
+```bash
+# システム全体 (UI + Kernel) の一括起動
+make boot
+```
+手動管理コマンド: `make start` (Kernel), `make ui` (Frontend), `make status` (Checks)
 
 ---
 
-## 🎯 APIエンドポイント
+## 📦 技術スタック詳細
 
-### **チャット**
+### 🧠 **インテリジェントRAGシステム**
+- **ベクトル検索**: Milvus Lite + `all-MiniLM-L6-v2` 埋め込みによる超高速検索。
+- **コンテキスト取得**: セマンティック類似度マッチングによる文脈理解。
+- **スマートキャッシング**: Redis バックエンドによるレスポンスキャッシュ。
 
-```bash
-POST /api/chat
-Content-Type: application/json
+### ⚡ **Elysia & Bun エコシステム**
+- **型安全性**: Eden Treaty による End-to-End TypeScript 開発。
+- **高速性**: Bun ランタイムによる世界最高峰のスループット。
+- **エルゴノミクス**: 直感的な API 設計と最小限のボイラープレート。
 
-{
-  "message": "Elysiaについて教えて",
-  "stream": true
-}
-```
+### 🔐 **セキュリティ & 可観測性**
+- **暗号化**: AES-256-GCM によるデータの要塞化。
+- **認証**: JWT + リフレッシュトークン、RBAC（5段階権限）。
+- **モニタリング**: Prometheus + Grafana によるリアルタイム・メトリクス。
+
+---
+
+## 🌊 ランドリー工場からの情熱
+**Crafted with passion in a laundry factory.**
+
+ElysiaAIは、ランドリー工場の過酷な熱気と機械音の中で産声を上げました。それは、どんなに厳しい環境（Omega Protocol）にあっても、美しく誇り高いコードを書き続けるという、開発者の「意志」そのものです。このパンク精神こそが、ElysiaAI の心臓部です。
+
+---
+© 2026 ElysiaAI Project // All Rights Reserved.
+[ Archive Matrix ] | [ Security Center ] | [ Neural Link ]
