@@ -1,8 +1,8 @@
 import "./style.css";
 import {
 	type AppConfig,
-	fetchWithAuth,
 	WindowManager,
+	fetchWithAuth,
 } from "../../../packages/shared/src/ui-bridge";
 
 const wm = new WindowManager();
