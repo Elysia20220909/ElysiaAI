@@ -1,19 +1,7 @@
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Install uv for fast dependency resolution
-RUN pip install uv
-
-# Copy Python backend files
-COPY python/pyproject.toml python/README.md ./
-# Install dependencies into system environment so Docker doesn't need venv
-RUN uv pip install --system -e ".[dev]"
-
-# Copy application source
-COPY python/ ./
-
-EXPOSE 8000
-
-# Start Elysia API Server
-CMD ["uvicorn", "fastapi_server:app", "--host", "0.0.0.0", "--port", "8000"]
+﻿FROM rust:slim
+RUN apt-get update && \
+    apt-get install -y clang lld nasm make mtools dosfstools qemu-utils xorriso && \
+    rm -rf /var/lib/apt/lists/*
+RUN rustup target add x86_64-pc-windows-gnullvm
+WORKDIR /os
+CMD ["make"]

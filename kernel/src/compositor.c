@@ -84,6 +84,10 @@ extern int aegis_verify_identity(const char* name);
 extern void ata_append_ledger(const char* msg, uint32_t frame);
 extern void task_neural_spawn(const char* intent);
 
+void trigger_notification(const char* msg);
+void autonomous_sentinel();
+int abs(int j) { return j < 0 ? -j : j; }
+
 void execute_sovereign_command(const char* cmd) {
     ata_append_ledger(cmd, frame_count);
     // Evolve Command (Phase 124)
@@ -847,7 +851,7 @@ void render_desktop() {
     }
 
     // Predictive Glow
-    for (int i=0; i<9; i++) {
+    for (int i=0; i<8; i++) {
         if (icon_hits[i] > 3 && i != 2) {
              draw_rounded_rect_alpha(backbuffer, icons_pos_x[i]-4, dock_y+9, 38, 38, 0xFFFF00, 80); 
         }
@@ -869,7 +873,7 @@ void render_desktop() {
         static int prev_mouse_left = 0;
         if (!prev_mouse_left) {
             drag_target = -1;
-            for (int i = 8; i >= 0; i--) { 
+            for (int i = 7; i >= 0; i--) { 
                 if (!window_visible[i]) continue;
                 Window* win = windows[i];
                 
@@ -886,13 +890,13 @@ void render_desktop() {
                     
                     Window* temp_win = windows[i];
                     int temp_vis = window_visible[i];
-                    for (int j = i; j < 8; j++) {
+                    for (int j = i; j < 7; j++) {
                         windows[j] = windows[j+1];
                         window_visible[j] = window_visible[j+1];
                     }
-                    windows[8] = temp_win;
-                    window_visible[8] = temp_vis;
-                    drag_target = 8;
+                    windows[7] = temp_win;
+                    window_visible[7] = temp_vis;
+                    drag_target = 7;
                     
                     synaptic_graph[drag_target].relevance = 100;
                     break;
@@ -912,8 +916,8 @@ void render_desktop() {
     if (silence_mode) {
          for (uint32_t y = 0; y < g_fb.height; y++) {
             for (uint32_t x = 0; x < g_fb.width; x++) {
-                Window* top = windows[8];
-                if (window_visible[8] && 
+                Window* top = windows[7];
+                if (window_visible[7] && 
                     x >= (uint32_t)top->x && x <= (uint32_t)(top->x + top->w) &&
                     y >= (uint32_t)top->y && y <= (uint32_t)(top->y + top->h)) {
                     continue; 
@@ -924,7 +928,7 @@ void render_desktop() {
     }
 
     // Render Windows (Back to front)
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < 8; i++) {
         if (!window_visible[i]) continue;
         Window* win = windows[i];
         

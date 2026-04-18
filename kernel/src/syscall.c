@@ -23,8 +23,8 @@ void syscall_handler(uint64_t syscall_num, uint64_t arg1, uint64_t arg2, uint64_
             break;
         case 3: // SYS_YIELD
             {
-                void schedule();
-                schedule();
+                uint64_t schedule(uint64_t);
+                schedule(0);
             }
             break;
         case 4: // SYS_TUNE_KERNEL (Arc 9 Evo-Link)

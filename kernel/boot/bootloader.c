@@ -24,6 +24,7 @@ void task_create(void (*entry)(), uint32_t priority);
 void refresh_explorer();
 void refresh_ui();
 void load_manifest();
+int fat32_read_file(const char* filename, char* buffer, uint32_t max_size);
 
 // --- TEST USER APP (Simulated Ring 3 Load) ---
 void sovereign_app_main() {
@@ -51,10 +52,10 @@ void sovereign_app_main() {
 
 // Background GUI Task
 void task_desktop() {
-    void schedule();
+    uint64_t schedule(uint64_t);
     while(1) {
         refresh_ui();
-        schedule(); // Yield to other tasks (Phase 126.3)
+        schedule(0); // Yield to other tasks (Phase 126.3)
     }
 }
 
@@ -122,9 +123,9 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     // Task 1: The System Environment (Desktop)
     task_create(task_desktop, 10);
 
-    void schedule();
+    uint64_t schedule(uint64_t);
     while(1) {
-        schedule(); // The Multiverse Heartbeat (Phase 126.3)
+        schedule(0); // The Multiverse Heartbeat (Phase 126.3)
     }
 
     return EFI_SUCCESS;
