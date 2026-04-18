@@ -3,6 +3,14 @@ Write-Host "        ELYSIOS SOVEREIGN KERNEL BUILD ENGINE" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
 
+# Path Context Verification (Phase 126.3)
+if ($PWD.Path -notlike "*\kernel") {
+    if (Test-Path "kernel") {
+        Write-Host "[*] Transitioning to Kernel Workspace..." -ForegroundColor Gray
+        Set-Location "kernel"
+    }
+}
+
 Write-Host "[*] Verifying Docker Engine Integration..." -ForegroundColor Blue
 docker --version > $null 2>&1
 if ($LASTEXITCODE -ne 0) {
