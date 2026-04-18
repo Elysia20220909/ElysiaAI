@@ -138,3 +138,18 @@ __pycache__/
 packages/server/src/core/system/.abyss/network_simulation.py
 packages/server/src/core/system/.abyss/network_simulation.py
 kernel/linux
+
+# VMware artifacts
+*.vmem
+*.vmdk
+*.nvram
+*.vmsd
+*.vmx
+*.vmxf
+*.scoreboard
+vmware*.log
+mksSandbox.log
+
+# Tauri build artifacts
+src-tauri/target/
+
