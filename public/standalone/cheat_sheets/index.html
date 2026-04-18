@@ -134,6 +134,11 @@
         }
 
         /* Nanotech Loading */
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        .matrix-text { text-shadow: 0 0 15px rgba(236, 72, 153, 0.6); }
         @keyframes particle {
             0% { transform: scale(0) rotate(0deg); opacity: 0; }
             50% { opacity: 1; }
@@ -150,25 +155,33 @@
     </style>
 </head>
 <body x-data="app()" x-init="init()" class="relative">
-    <!-- Nanotech Splash -->
-    <div x-show="booting" x-transition:leave="transition ease-in duration-1000" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[100] bg-matrix-bg flex flex-col items-center justify-center pointer-events-none">
-        <div class="relative w-64 h-64 flex items-center justify-center">
-            <div class="absolute inset-0 border-2 border-elysia-500/20 rounded-full animate-ping"></div>
-            <div class="absolute inset-4 border border-elysia-400/30 rounded-full animate-[spin_3s_linear_infinite]"></div>
-            <div class="absolute inset-8 border border-elysia-300/40 rounded-full animate-[spin_2s_linear_infinite_reverse]"></div>
+    <!-- Neural Link Splash -->
+    <div x-show="booting" 
+         x-transition:leave="transition ease-in duration-1000"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-150 blur-xl"
+         class="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center pointer-events-none overflow-hidden">
+        
+        <!-- Hexagon grid background -->
+        <div class="absolute inset-0 opacity-10" 
+             style="background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iMTA0IiB2aWV3Qm94PSIwIDAgNjAgMTA0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik02MCA0N0wzMCAzMCAwIDQ3VjgwdGgzMFY5N3QzMC0xN1Y0N3oiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VjNDg5OSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+');"></div>
+
+        <div class="relative w-80 h-80 flex flex-col items-center justify-center">
+            <div class="absolute inset-0 border-2 border-elysia-500/20 rounded-full animate-[ping_3s_linear_infinite]"></div>
+            <div class="absolute inset-8 border border-elysia-400/30 rounded-full animate-[spin_4s_linear_infinite]"></div>
+            <div class="absolute inset-12 border border-elysia-300/40 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
             
-            <div class="relative z-10 text-center">
-                <h1 class="text-4xl font-black italic tracking-tighter text-white mb-2">ELYSIANA</h1>
-                <div class="h-0.5 w-full bg-gradient-to-r from-transparent via-elysia-500 to-transparent"></div>
-                <p class="text-[8px] font-mono text-elysia-400 mt-2 tracking-[0.5em] uppercase">Nanotech Sync Active</p>
+            <div class="z-10 flex flex-col items-center gap-4">
+                <div class="text-elysia-500 font-black text-5xl tracking-[0.4em] matrix-text animate-pulse">LINK START</div>
+                <div class="h-[1px] w-64 bg-gradient-to-r from-transparent via-elysia-500 to-transparent"></div>
+                <div class="text-slate-500 font-mono text-[10px] tracking-widest uppercase">Initializing Neural Link Sequence</div>
             </div>
-            
-            <!-- Particles -->
-            <template x-for="i in 12">
-                <div class="nano-particle" :style="`top: ${Math.random()*100}%; left: ${Math.random()*100}%; animation-delay: ${Math.random()*2}s`"></div>
-            </template>
         </div>
+
+        <div class="absolute bottom-24 w-64 h-0.5 bg-slate-900 overflow-hidden">
+            <div class="h-full bg-elysia-500 animate-[loading_2s_ease-in-out_infinite]"></div>
+        </div>
+        <div class="absolute bottom-12 text-[10px] font-mono text-slate-700 uppercase tracking-widest">Elysia Sovereign OS // v4.1.0-STABLE</div>
     </div>
     
     <div class="flex h-screen w-full overflow-hidden bg-matrix-bg">
@@ -348,8 +361,8 @@
                 breadcrumbs: [],
 
                 async init() {
-                    // Simulated Nanotech Boot
-                    setTimeout(() => { this.booting = false; }, 2000);
+                    // Simulated Neural Link Sequence
+                    setTimeout(() => { this.booting = false; }, 3500);
                     try {
                         const response = await fetch('tree.json');
                         if (!response.ok) throw new Error('Failed to load matrix index');
