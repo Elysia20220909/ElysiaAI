@@ -46,19 +46,23 @@ $(BOOT_ISO): $(BOOT_IMG)
 $(BOOT_VMX):
 	echo '.encoding = "UTF-8"' > $@
 	echo 'config.version = "8"' >> $@
-	echo 'virtualHW.version = "21"' >> $@
+	echo 'virtualHW.version = "22"' >> $@
 	echo 'memsize = "2048"' >> $@
 	echo 'guestOS = "other-64"' >> $@
 	echo 'firmware = "efi"' >> $@
-	echo 'nvme0.present = "TRUE"' >> $@
-	echo 'nvme0:0.present = "TRUE"' >> $@
-	echo 'nvme0:0.fileName = "elysia_os.vmdk"' >> $@
-	echo 'nvme0:0.virtualSSD = "TRUE"' >> $@
+	echo 'ide0:0.present = "TRUE"' >> $@
+	echo 'ide0:0.fileName = "elysia_os.vmdk"' >> $@
+	echo 'ide0:0.deviceType = "disk"' >> $@
 	echo 'pciBridge0.present = "TRUE"' >> $@
+	echo 'pciBridge4.present = "TRUE"' >> $@
+	echo 'pciBridge5.present = "TRUE"' >> $@
+	echo 'pciBridge6.present = "TRUE"' >> $@
+	echo 'pciBridge7.present = "TRUE"' >> $@
 	echo 'floppy0.present = "FALSE"' >> $@
 	echo 'floppy0.autodetect = "FALSE"' >> $@
 	echo 'mks.enable3d = "TRUE"' >> $@
 	echo 'gui.exitOnLastVMClosing = "FALSE"' >> $@
+	echo 'displayName = "Elysia Sovereign OS"' >> $@
 
 clean:
 	rm -f $(BOOT_EFI) $(BOOT_IMG) $(BOOT_VMDK) $(BOOT_ISO) $(BOOT_VMX) $(ASM_OBJ) SOVEREIGN.TXT SENTINEL.KEY
