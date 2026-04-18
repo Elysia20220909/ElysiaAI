@@ -1,51 +1,83 @@
 import fs from 'fs';
 import path from 'path';
 
-const cleanupPatterns = [
-  // Caches (Directory match)
+// --- CONFIGURATION ---
+
+const TARGET_DIRECTORIES = [
   '__pycache__', '.mypy_cache', '.ruff_cache', '.pytest_cache', '.tsbuildinfo',
-  // Build Artifacts (Directory match)
-  'dist', 'target', 'out', 'build',
-  // Logs & Temp (Extension match)
-  '.log', '.tmp', 'playwright-report', 'test-results',
-  // Infrastructure (Specific match)
-  '.scoreboard', 'mksSandbox', 'vmware', '.vmem', '.nvram', '.vmsd', '.vmxf'
+  'dist', 'target', 'out', 'build', 'playwright-report', 'test-results'
 ];
 
-// Files that should NEVER be deleted even if they match a pattern
-const protectedFiles = ['build.rs', 'build.ps1', 'build.ts', 'build.sh', 'Makefile', 'Dockerfile'];
+const TARGET_FILE_EXTENSIONS = [
+  '.log', '.tmp', '.vmem', '.nvram', '.vmsd', '.vmxf', '.scoreboard'
+];
 
-const excludeDirs = ['node_modules', '.git'];
+const TARGET_FILE_PREFIXES = [
+  'mksSandbox', 'vmware'
+];
+
+// Folders that are completely OFF-LIMITS for recursive deletion of their own name
+// e.g. even if 'src' contained 'out', we don't delete 'src'.
+const PROTECTED_PARENT_DIRS = ['src', 'packages', 'kernel', 'python', 'usr', 'lib'];
+
+// Files that should NEVER be deleted
+const PROTECTED_FILES = ['build.rs', 'build.ps1', 'build.ts', 'build.sh', 'Makefile', 'Dockerfile', 'Kbuild'];
+
+const EXCLUDE_WALK = ['node_modules', '.git'];
+
+// --- ENGINE ---
 
 let totalFreed = 0;
 let fileCount = 0;
+const isSimulation = process.argv.includes('--sim');
 
-function vacuum(dir) {
+function vacuum(dir, depth = 0) {
   try {
     const files = fs.readdirSync(dir);
     for (const file of files) {
         const fullPath = path.join(dir, file);
-        const stats = fs.statSync(fullPath);
+        let stats;
+        try {
+            stats = fs.statSync(fullPath);
+        } catch (e) { continue; }
 
         if (stats.isDirectory()) {
-            if (excludeDirs.includes(file)) continue;
-            
-            if (cleanupPatterns.some(p => file.includes(p))) {
+            if (EXCLUDE_WALK.includes(file)) continue;
+
+            // Check if this directory should be purged
+            // MUST be an EXACT match for security
+            const isTargetDir = TARGET_DIRECTORIES.includes(file);
+            const isProtected = PROTECTED_PARENT_DIRS.includes(file) && depth === 0;
+
+            if (isTargetDir && !isProtected) {
                 const size = getDirSize(fullPath);
-                fs.rmSync(fullPath, { recursive: true, force: true });
-                console.log(`[REMOVED DIR] ${fullPath} (${Math.round(size / 1024 / 1024 * 100) / 100} MB)`);
+                if (!isSimulation) {
+                    fs.rmSync(fullPath, { recursive: true, force: true });
+                    console.log(`[PURGED DIR] ${fullPath} (${formatSize(size)})`);
+                } else {
+                    console.log(`[FOUND DIR]  ${fullPath} (${formatSize(size)})`);
+                }
                 totalFreed += size;
                 fileCount++;
             } else {
-                vacuum(fullPath);
+                vacuum(fullPath, depth + 1);
             }
         } else {
-            if (protectedFiles.includes(file)) continue;
-            
-            if (cleanupPatterns.some(p => file.endsWith(p) || file.startsWith(p))) {
+            // Check if this file should be purged
+            if (PROTECTED_FILES.includes(file)) continue;
+
+            const shouldPurge = 
+                TARGET_FILE_EXTENSIONS.some(ext => file.endsWith(ext)) ||
+                TARGET_FILE_PREFIXES.some(pre => file.startsWith(pre));
+
+            if (shouldPurge) {
                 const size = stats.size;
-                fs.unlinkSync(fullPath);
-                console.log(`[REMOVED] ${fullPath} (${Math.round(size / 1024 * 100) / 100} KB)`);
+                if (!isSimulation) {
+                    fs.unlinkSync(fullPath);
+                    console.log(`[PURGED]     ${fullPath} (${formatSize(size)})`);
+                } else {
+                    console.log(`[FOUND]      ${fullPath} (${formatSize(size)})`);
+                }
                 totalFreed += size;
                 fileCount++;
             }
@@ -67,8 +99,19 @@ function getDirSize(dir) {
     return size;
 }
 
-console.log('>>> ELYSIA.SYSTEM // NANOTECH VACUUM CORE (JS ENGINE) <<<');
+function formatSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+console.log(`>>> ELYSIA.SYSTEM // NANOTECH VACUUM CORE v5.0 [${isSimulation ? 'SIMULATION' : 'ACTIVE'}] <<<`);
+if (isSimulation) console.log('NOTE: Running in safety simulation mode. No files will be deleted.');
+console.log('----------------------------------------------------');
+
 vacuum('.');
-console.log('=========================================');
-console.log(`SYSTEM LIGHTWEIGHTED: ${Math.round(totalFreed / 1024 / 1024 * 100) / 100} MB freed.`);
-console.log(`FILES/DIRS REMOVED: ${fileCount}`);
+
+console.log('====================================================');
+console.log(`${isSimulation ? 'POTENTIAL SAVINGS' : 'SYSTEM LIGHTWEIGHTED'}: ${formatSize(totalFreed)}`);
+console.log(`FILES/DIRS ${isSimulation ? 'DETECTED' : 'REMOVED'}: ${fileCount}`);
+if (isSimulation) console.log('To execute for real, run with: node scratch/nanotech_vacuum.js');
