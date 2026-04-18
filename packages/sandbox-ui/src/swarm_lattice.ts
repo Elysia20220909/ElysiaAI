@@ -5,7 +5,7 @@ export class SwarmNode {
 	vy: number;
 	size: number;
 	color: string;
-	pulse: number = 0;
+	pulse = 0;
 
 	constructor(width: number, height: number) {
 		this.x = Math.random() * width;

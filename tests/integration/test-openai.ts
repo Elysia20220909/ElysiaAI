@@ -3,12 +3,12 @@
  */
 
 import {
+	type OpenAIChatMessage,
 	conversationChat,
 	estimateTokens,
 	initializeOpenAI,
 	isOpenAIAvailable,
 	listAvailableModels,
-	type OpenAIChatMessage,
 	simpleChat,
 } from "../../src/lib/openai-integration.ts";
 

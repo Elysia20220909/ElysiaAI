@@ -1,8 +1,8 @@
 import "./style.css";
 import {
 	type AppConfig,
-	fetchWithAuth,
 	WindowManager,
+	fetchWithAuth,
 } from "../../shared/src/ui-bridge";
 import { SwarmLattice } from "./swarm_lattice";
 

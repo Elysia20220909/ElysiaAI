@@ -136,7 +136,7 @@ function alphabeta(
 ): number {
 	if (depth === 0 || isGameOver(board)) return evaluateBoard(board, origPlayer);
 	if (maximizing) {
-		let maxEval = -Infinity;
+		let maxEval = Number.NEGATIVE_INFINITY;
 		for (let y = 0; y < 8; ++y)
 			for (let x = 0; x < 8; ++x) {
 				if (placeOthello(board, x, y, player).flipped) {
@@ -157,7 +157,7 @@ function alphabeta(
 			}
 		return maxEval;
 	} else {
-		let minEval = Infinity;
+		let minEval = Number.POSITIVE_INFINITY;
 		for (let y = 0; y < 8; ++y)
 			for (let x = 0; x < 8; ++x) {
 				if (placeOthello(board, x, y, player).flipped) {
@@ -183,7 +183,7 @@ function getStrongAIMove(
 	board: Board,
 	player: Player,
 ): { x: number; y: number } | null {
-	let bestScore = -Infinity,
+	let bestScore = Number.NEGATIVE_INFINITY,
 		bestMove = null;
 	for (let y = 0; y < 8; ++y)
 		for (let x = 0; x < 8; ++x) {
@@ -194,8 +194,8 @@ function getStrongAIMove(
 					nextPlayer,
 					1,
 					false,
-					-Infinity,
-					Infinity,
+					Number.NEGATIVE_INFINITY,
+					Number.POSITIVE_INFINITY,
 					player,
 				);
 				if (score > bestScore) {
@@ -219,7 +219,7 @@ function getGodAIMove(
 	for (const c of corners) {
 		if (placeOthello(board, c.x, c.y, player).flipped) return c;
 	}
-	let bestScore = -Infinity,
+	let bestScore = Number.NEGATIVE_INFINITY,
 		bestMove = null;
 	for (let y = 0; y < 8; ++y)
 		for (let x = 0; x < 8; ++x) {
@@ -230,8 +230,8 @@ function getGodAIMove(
 					nextPlayer,
 					3,
 					false,
-					-Infinity,
-					Infinity,
+					Number.NEGATIVE_INFINITY,
+					Number.POSITIVE_INFINITY,
 					player,
 				);
 				if (score > bestScore) {
