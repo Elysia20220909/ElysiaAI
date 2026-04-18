@@ -602,9 +602,11 @@ function renderTrialsReport(players: PlayerStats[]) {
 		.filter((p) => p.efficiency)
 		.sort((a, b) => {
 			const aVal =
-				parseFloat((a.kda || "0").split(" / ")[0]) || parseFloat(a.kda || "0");
+				Number.parseFloat((a.kda || "0").split(" / ")[0]) ||
+				Number.parseFloat(a.kda || "0");
 			const bVal =
-				parseFloat((b.kda || "0").split(" / ")[0]) || parseFloat(b.kda || "0");
+				Number.parseFloat((b.kda || "0").split(" / ")[0]) ||
+				Number.parseFloat(b.kda || "0");
 			return bVal - aVal;
 		})
 		.slice(0, 3);
