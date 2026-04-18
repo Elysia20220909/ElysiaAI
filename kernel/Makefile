@@ -8,8 +8,9 @@ C_SRC = boot/bootloader.c src/graphics.c src/memory.c src/paging.c src/interrupt
 ASM_OBJ = interrupts.o
 BOOT_EFI = BOOTX64.EFI
 BOOT_IMG = elysia_os.img
+BOOT_ISO = elysia_os.iso
 
-all: $(BOOT_IMG)
+all: $(BOOT_ISO)
 
 $(ASM_OBJ): $(ASM_SRC)
 	$(ASM) -f win64 -o $@ $<
@@ -31,8 +32,17 @@ $(BOOT_IMG): $(BOOT_EFI)
 	echo "AEGIS-SVR-777" > SENTINEL.KEY
 	mcopy -i $@ SENTINEL.KEY ::/SENTINEL.KEY
 
-clean:
-	rm -f $(BOOT_EFI) $(BOOT_IMG) $(ASM_OBJ) SOVEREIGN.TXT
+$(BOOT_ISO): $(BOOT_IMG) $(BOOT_EFI)
+	mkdir -p iso_root/EFI/BOOT
+	cp $(BOOT_EFI) iso_root/EFI/BOOT/BOOTX64.EFI
+	echo "ELYSIOS DATA SOVEREIGNTY ACHIEVED." > iso_root/SOVEREIGN.TXT
+	echo "AEGIS-SVR-777" > iso_root/SENTINEL.KEY
+	cp $(BOOT_IMG) iso_root/
+	xorriso -as mkisofs -R -J -v -V "ELYSIA_OS" -e elysia_os.img -no-emul-boot -isohybrid-gpt-basdat -o $@ iso_root/
 
-run: $(BOOT_IMG)
-	qemu-system-x86_64 -bios ovmf/OVMF_CODE.fd -drive format=raw,file=$(BOOT_IMG) -net none
+clean:
+	rm -f $(BOOT_EFI) $(BOOT_IMG) $(BOOT_ISO) $(ASM_OBJ) SOVEREIGN.TXT SENTINEL.KEY
+	rm -rf iso_root/
+
+run: $(BOOT_ISO)
+	qemu-system-x86_64 -bios ovmf/OVMF_CODE.fd -cdrom $(BOOT_ISO) -net none
