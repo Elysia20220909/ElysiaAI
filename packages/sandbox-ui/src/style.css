@@ -28,7 +28,10 @@ body, html, #app {
   overflow: hidden;
 }
 
-/* 1. Linux Boot Terminal */
+/* ============================================================
+   1. OS CORE SHELL (Boot, Desktop, Dash, Window Manager)
+   ============================================================ */
+
 #boot-screen {
   position: absolute;
   top: 0;
@@ -44,10 +47,7 @@ body, html, #app {
   transition: opacity 1.5s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
-#boot-screen.fade-out {
-  opacity: 0;
-  pointer-events: none;
-}
+#boot-screen.fade-out { opacity: 0; pointer-events: none; }
 
 .boot-terminal {
   font-family: 'Fira Code', monospace;
@@ -57,12 +57,8 @@ body, html, #app {
   white-space: pre-wrap;
   height: 100%;
   overflow-y: auto;
-  scrollbar-width: none;
 }
 
-.boot-terminal::-webkit-scrollbar { display: none; }
-
-/* 2. Desktop Shell (Aurora Flagship) */
 #desktop {
   width: 100%;
   height: 100%;
@@ -87,36 +83,8 @@ body, html, #app {
   padding: 0 16px;
   z-index: 1000;
   font-size: 13px;
-  letter-spacing: 0.5px;
 }
 
-.activities-btn {
-  font-weight: 800;
-  color: var(--elysia-cyan);
-  cursor: pointer;
-  text-transform: uppercase;
-}
-
-.system-time {
-  font-weight: 600;
-  opacity: 0.9;
-}
-
-.system-status {
-  display: flex;
-  gap: 14px;
-  opacity: 0.8;
-}
-
-.desktop-main {
-  flex-grow: 1;
-  display: flex;
-  overflow: hidden;
-  position: relative;
-  padding: 12px;
-}
-
-/* 3. Floating Glass Dash (Pill Design) */
 .dash-container {
   width: 72px;
   height: fit-content;
@@ -127,23 +95,10 @@ body, html, #app {
   border-radius: 40px;
   margin: auto 12px;
   padding: 16px 0;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
   display: flex;
   flex-direction: column;
   justify-content: center;
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.dash-container:hover {
-  transform: scale(1.02);
-  background: var(--glass-bg-hover);
-}
-
-.dash {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  align-items: center;
 }
 
 .dash-item {
@@ -156,111 +111,12 @@ body, html, #app {
   transition: all 0.3s;
   border-radius: 50%;
   position: relative;
-  overflow: hidden;
 }
 
-.dash-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.1);
-}
-
-.dash-item::after {
-  content: "";
-  position: absolute;
-  bottom: 2px;
-  width: 4px;
-  height: 4px;
-  background: var(--elysia-primary);
-  border-radius: 50%;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.dash-item.active-app::after {
-  opacity: 1;
-  box-shadow: 0 0 8px var(--elysia-primary);
-}
-
-/* Glass-sliced Icons */
-.dash-item img {
-  width: 48px;
-  height: 48px;
-  object-fit: cover;
-  transition: filter 0.3s;
-}
-
-/* Slicing Logic for elysia_glass_icons 
-   Assuming 4x2 grid, scaled to fit our icon grid container */
-.icon-grid {
-  background-image: url('/assets/elysia_glass_icons.png');
-  background-size: 216px 108px; /* 4 * 54px by 2 * 54px */
-  width: 54px;
-  height: 54px;
-  mix-blend-mode: screen; /* Replaces white background with transparency on dark glass */
-  filter: brightness(1.2) contrast(1.1);
-}
-
-/* 4. Desktop Content & Icons */
-#desktop-area {
-  flex-grow: 1;
-  position: relative;
-  padding: 30px;
-}
-
-.desktop-icons {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
-.desktop-icon-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.desktop-icon-item .glass-icon {
-  width: 64px;
-  height: 64px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 18px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.2s;
-}
-
-.desktop-icon-item:hover .glass-icon {
-  background: var(--glass-bg-hover);
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-
-.desktop-icon-item span {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: white;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-}
-
-/* 5. Window System (Glass Redux) */
-#window-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
+.dash-item:hover { transform: scale(1.1); background: rgba(255,255,255,0.1); }
 
 .window {
   position: absolute;
-  pointer-events: all;
   background: rgba(20, 20, 25, 0.7);
   backdrop-filter: blur(40px);
   border: 1px solid var(--glass-border);
@@ -269,15 +125,7 @@ body, html, #app {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-.window-fullscreen {
-  border-radius: 0 !important;
-  border: none !important;
-  width: 100% !important;
-  height: 100% !important;
-  top: 0 !important;
-  left: 0 !important;
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 .window-header {
@@ -288,131 +136,27 @@ body, html, #app {
   padding: 0 20px;
 }
 
-.window-title {
-  flex-grow: 1;
-  text-align: center;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-}
+.window-title { flex-grow: 1; text-align: center; font-weight: 600; font-size: 14px; opacity: 0.8; }
 
 .gnome-window-controls { display: flex; gap: 10px; }
-
-.gnome-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background 0.2s;
-}
-
-.gnome-btn:hover { background: rgba(255, 255, 255, 0.2); }
+.gnome-btn { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: #fff; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+.gnome-btn:hover { background: rgba(255,255,255,0.2); }
 .gnome-btn.close-btn:hover { background: #ff4d4d; }
 
-.window-body {
-  flex-grow: 1;
-  overflow: auto;
-}
+.window-body { flex-grow: 1; overflow: auto; }
 
-/* App Overrides for Aurora */
-.sandbox-orchestra-v2 {
-  background: rgba(0, 0, 0, 0.6);
-}
+/* ============================================================
+   2. ARC 10: SOVEREIGN SECURITY (Aegis Sentinel, Gauntlet)
+   ============================================================ */
 
-.terminal-view {
-  color: var(--elysia-cyan);
-  text-shadow: 0 0 10px rgba(0, 242, 255, 0.4);
-}
-
-.btn-side {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-}
-
-.btn-side.active {
-  background: linear-gradient(90deg, var(--elysia-cyan), var(--elysia-magenta));
-  border: none;
-}
-
-.hidden { display: none; }
-
-/* 6. Swarm Intelligence Hub Styles */
-.swarm-hub-container {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at center, rgba(0, 242, 255, 0.05) 0%, rgba(0, 0, 0, 0.9) 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-#swarm-canvas {
-  flex-grow: 1;
-  background: transparent;
-}
-
-.swarm-telemetry {
-  width: 280px;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(20px);
-  border-left: 1px solid var(--glass-border);
-  display: flex;
-  flex-direction: column;
-  padding: 30px 20px;
-  gap: 20px;
-  z-index: 10;
-}
-
-.telemetry-header {
-  font-weight: 800;
-  font-size: 14px;
-  letter-spacing: 2px;
-  color: var(--elysia-cyan);
-  border-bottom: 1px solid var(--elysia-cyan);
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-}
-
-.telemetry-item {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.status-active { color: #34d399; text-shadow: 0 0 10px #34d399; }
-.status-cyan { color: var(--elysia-cyan); }
-
-.telemetry-footer {
-  font-size: 10px;
-  opacity: 0.4;
-  text-align: center;
-}
-
-/* 7. Aegis Sentinel: Sovereign Security Hub */
 .aegis-sentinel-hub {
   display: flex;
   width: 100%;
   height: 100%;
   background: radial-gradient(circle at top right, rgba(255, 0, 255, 0.05) 0%, rgba(0, 0, 0, 0.95) 100%);
-  color: white;
-  overflow: hidden;
 }
 
-.aegis-main-view {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 40px;
-  gap: 30px;
-}
+.aegis-main-view { flex-grow: 1; display: flex; flex-direction: column; padding: 40px; gap: 30px; }
 
 .aegis-hero {
   height: 220px;
@@ -425,66 +169,9 @@ body, html, #app {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.aegis-shield-animation {
-  position: relative;
-  width: 120px;
-  height: 120px;
-}
+.aegis-big-status { font-size: 48px; font-weight: 800; letter-spacing: 8px; color: var(--elysia-cyan); text-shadow: 0 0 20px rgba(0, 242, 255, 0.5); }
 
-.shield-core {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 40px;
-  height: 40px;
-  background: var(--elysia-cyan);
-  border-radius: 50%;
-  box-shadow: 0 0 30px var(--elysia-cyan);
-  z-index: 5;
-}
-
-.shield-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border: 2px solid rgba(0, 242, 255, 0.3);
-  border-radius: 50%;
-  animation: shield-pulse 4s infinite linear;
-}
-
-.ring-1 { width: 60px; height: 60px; animation-duration: 3s; }
-.ring-2 { width: 90px; height: 90px; animation-duration: 5s; animation-direction: reverse; }
-.ring-3 { width: 120px; height: 120px; animation-duration: 7s; }
-
-@keyframes shield-pulse {
-  0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); border-color: rgba(0, 242, 255, 0.1); }
-  50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.05); border-color: rgba(0, 242, 255, 0.5); }
-  100% { transform: translate(-50%, -50%) rotate(360deg) scale(1); border-color: rgba(0, 242, 255, 0.1); }
-}
-
-.aegis-big-status {
-  font-size: 48px;
-  font-weight: 800;
-  letter-spacing: 8px;
-  color: var(--elysia-cyan);
-  text-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
-}
-
-.aegis-subtitle {
-  font-size: 14px;
-  font-weight: 400;
-  letter-spacing: 4px;
-  opacity: 0.6;
-}
-
-.aegis-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  flex-grow: 1;
-}
+.aegis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; }
 
 .aegis-card {
   background: var(--glass-bg);
@@ -497,46 +184,7 @@ body, html, #app {
   gap: 16px;
 }
 
-.aegis-card h4 {
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: var(--elysia-magenta);
-  border-bottom: 1px solid rgba(255, 0, 255, 0.2);
-  padding-bottom: 8px;
-}
-
-.ice-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ice-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.ice-status {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.status-active { color: #34d399; background: rgba(52, 211, 153, 0.1); }
-.status-vigilant { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
-.status-reinforced { color: var(--elysia-cyan); background: rgba(0, 242, 255, 0.1); }
-.status-alive { color: #f472b6; background: rgba(244, 114, 182, 0.1); }
-
-.threat-log {
-  font-family: 'Fira Code', monospace;
-  font-size: 11px;
-  color: #888;
-  overflow-y: auto;
-  flex-grow: 1;
-}
+.threat-log { font-family: 'Fira Code', monospace; font-size: 11px; color: #888; overflow-y: auto; flex-grow: 1; }
 
 .aegis-sidebar {
   width: 300px;
@@ -549,45 +197,56 @@ body, html, #app {
   gap: 40px;
 }
 
-.sidebar-section h4 {
-  font-size: 11px;
-  letter-spacing: 2px;
-  opacity: 0.5;
-  margin-bottom: 15px;
-}
+.gauntlet-app { display: flex; flex-direction: column; width: 100%; height: 100%; background: #000; font-family: 'Fira Code', monospace; }
+.gauntlet-header { padding: 15px 25px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.1); }
+.gauntlet-body { flex-grow: 1; overflow-y: auto; padding: 20px; font-size: 13px; line-height: 1.6; }
 
-.aegis-btn {
-  width: 100%;
-  padding: 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  color: white;
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: all 0.3s;
-  margin-bottom: 10px;
-}
+.silicon-panel { background: rgba(0, 20, 40, 0.4); border: 1px solid rgba(0, 242, 255, 0.2); padding: 20px; border-radius: 12px; }
+.sip-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+.sip-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; display: flex; flex-direction: column; gap: 5px; }
 
-.aegis-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--elysia-cyan);
-  transform: translateY(-2px);
-}
+/* ============================================================
+   3. ARC 11: SOVEREIGN CREATION (Forge, Manifestation)
+   ============================================================ */
 
-#btn-omega:hover {
-  box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
-  border-color: var(--elysia-magenta);
-}
+.forge-app { display: flex; flex-direction: column; width: 100%; height: 100%; background: radial-gradient(circle at top right, rgba(0, 242, 255, 0.05), #050505); }
+.forge-header { padding: 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.forge-title { font-size: 20px; font-weight: 800; letter-spacing: 4px; background: linear-gradient(to right, #fff, var(--elysia-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.forge-layout { display: flex; flex-grow: 1; overflow: hidden; }
+.forge-controls { width: 400px; padding: 30px; border-right: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 20px; }
+.forge-preview { flex-grow: 1; padding: 30px; display: flex; flex-direction: column; }
+.preview-content { flex-grow: 1; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 20px; display: flex; justify-content: center; align-items: center; }
 
-.integrity-stat {
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-}
+#forge-intent { width: 100%; height: 150px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; color: #fff; outline: none; }
+.forge-btn { background: linear-gradient(135deg, var(--elysia-cyan), #ff00ff); border: none; padding: 15px; border-radius: 12px; color: #fff; font-weight: 800; cursor: pointer; }
 
-.integrity-stat span { color: var(--elysia-cyan); }
+/* ============================================================
+   4. ARC 12: VOID OPTIMIZATION (Aether, Void)
+   ============================================================ */
+
+.sentinel-persona-visual { position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center; }
+.persona-orb { width: 60px; height: 60px; border-radius: 50%; animation: orb-pulse 4s infinite ease-in-out; }
+.aether-orb { background: radial-gradient(circle, #fff, rgba(0, 242, 255, 0.4), transparent); box-shadow: 0 0 30px rgba(0, 242, 255, 0.4); }
+
+.void-mode { background: #000 !important; opacity: 0.6; transition: opacity 0.3s; }
+.void-mode:hover { opacity: 1; }
+.void-eye { width: 2px; height: 20px; background: #fff; box-shadow: 0 0 15px #fff; animation: void-blink 4s infinite ease-in-out; }
+
+/* ============================================================
+   5. COMMON UTILITIES & ANIMATIONS
+   ============================================================ */
+
+.status-active { color: #34d399 !important; }
+.status-reinforced { color: var(--elysia-cyan) !important; }
+.status-warn { color: #fbbf24 !important; }
+
+.aegis-btn { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-bottom: 10px; }
+.aegis-btn:hover { border-color: var(--elysia-cyan); transform: translateY(-2px); }
+
+.integrity-stat { font-size: 12px; font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; }
+
+@keyframes orb-pulse { 0%, 100% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.1); filter: brightness(1.3); } }
+@keyframes void-blink { 0%, 80%, 100% { transform: scaleY(1); opacity: 1; } 90% { transform: scaleY(0.1); opacity: 0.5; } }
+
+.sentinel-msg { padding: 10px; margin-bottom: 10px; border-left: 2px solid var(--elysia-cyan); font-size: 14px; color: #fff; animation: fade-in 0.5s ease-out; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }

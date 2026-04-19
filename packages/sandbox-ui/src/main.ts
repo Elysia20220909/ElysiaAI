@@ -4,6 +4,8 @@ import {
 	WindowManager,
 	fetchWithAuth,
 } from "../../shared/src/ui-bridge";
+import { SovereignForge } from "./forge";
+import { SovereignGauntlet } from "./gauntlet";
 import { SecurityHub } from "./security_hub";
 import { SwarmLattice } from "./swarm_lattice";
 
@@ -277,6 +279,26 @@ const appAegisSentinel: AppConfig = {
 	},
 };
 
+// --- 5. Specialized App: Sovereign Gauntlet ---
+const appSovereignGauntlet: AppConfig = {
+	id: "gauntlet",
+	name: "Sovereign Gauntlet",
+	icon: "/assets/icons/gauntlet.png",
+	width: 800,
+	height: 600,
+	contentRenderer: (body) => new SovereignGauntlet(body).init(),
+};
+
+// --- 6. Specialized App: Sovereign Forge ---
+const appSovereignForge: AppConfig = {
+	id: "forge",
+	name: "Sovereign Forge",
+	icon: "/assets/icons/forge.png",
+	width: 900,
+	height: 650,
+	contentRenderer: (body) => new SovereignForge(body).init(),
+};
+
 // --- 3. Dash (Dock) Settings ---
 document.querySelectorAll(".dash-item").forEach((item) => {
 	item.addEventListener("click", () => {
@@ -284,6 +306,8 @@ document.querySelectorAll(".dash-item").forEach((item) => {
 		if (appName === "sandbox") wm.createWindow(appSandbox);
 		if (appName === "swarm") wm.createWindow(appSwarmHub);
 		if (appName === "aegis") wm.createWindow(appAegisSentinel);
+		if (appName === "gauntlet") wm.createWindow(appSovereignGauntlet);
+		if (appName === "forge") wm.createWindow(appSovereignForge);
 	});
 });
 

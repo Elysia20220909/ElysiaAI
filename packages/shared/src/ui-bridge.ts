@@ -38,9 +38,14 @@ export class WindowManager {
 		const title = win.querySelector(".window-title") as HTMLElement;
 		const body = win.querySelector(".window-body") as HTMLElement;
 		const closeBtn = win.querySelector(".close-btn") as HTMLElement;
+		const minBtn = win.querySelector(".minimize-btn") as HTMLElement;
+		const maxBtn = win.querySelector(".maximize-btn") as HTMLElement;
 
 		win.id = `window-${app.id}`;
 		title.innerText = app.name;
+
+		// Initial Pos Memory
+		let lastPos = { top: "0px", left: "0px", width: "0px", height: "0px" };
 
 		if (app.fullScreen) {
 			win.classList.add("window-fullscreen");
@@ -59,7 +64,43 @@ export class WindowManager {
 
 		app.contentRenderer(body);
 
-		closeBtn.onclick = () => win.remove();
+		closeBtn.onclick = (e) => {
+			e.stopPropagation();
+			win.remove();
+		};
+
+		if (minBtn) {
+			minBtn.onclick = (e) => {
+				e.stopPropagation();
+				win.classList.toggle("minimized");
+			};
+		}
+
+		if (maxBtn) {
+			maxBtn.onclick = (e) => {
+				e.stopPropagation();
+				if (win.classList.contains("maximized")) {
+					win.classList.remove("maximized");
+					win.style.top = lastPos.top;
+					win.style.left = lastPos.left;
+					win.style.width = lastPos.width;
+					win.style.height = lastPos.height;
+				} else {
+					lastPos = {
+						top: win.style.top,
+						left: win.style.left,
+						width: win.style.width,
+						height: win.style.height,
+					};
+					win.classList.add("maximized");
+					win.style.top = "32px"; // Below top bar
+					win.style.left = "0px";
+					win.style.width = "100%";
+					win.style.height = "calc(100% - 32px)";
+				}
+			};
+		}
+
 		win.onmousedown = () => this.focus(win);
 
 		this.layer.appendChild(win);
