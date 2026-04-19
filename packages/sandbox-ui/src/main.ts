@@ -4,6 +4,7 @@ import {
 	WindowManager,
 	fetchWithAuth,
 } from "../../shared/src/ui-bridge";
+import { SecurityHub } from "./security_hub";
 import { SwarmLattice } from "./swarm_lattice";
 
 const wm = new WindowManager();
@@ -245,12 +246,44 @@ const appSwarmHub: AppConfig = {
 	},
 };
 
+// --- 4. Specialized App: Aegis Sentinel ---
+const appAegisSentinel: AppConfig = {
+	id: "aegis",
+	name: "Aegis Sentinel",
+	icon: "/assets/icons/aegis-sentinel.png",
+	width: 1000,
+	height: 700,
+	contentRenderer: (body) => {
+		const hub = new SecurityHub(body);
+		hub.init();
+
+		// Cleanup on window close
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				mutation.removedNodes.forEach((node) => {
+					if (
+						node instanceof HTMLElement &&
+						node.id === `window-${appAegisSentinel.id}`
+					) {
+						hub.stop();
+						observer.disconnect();
+					}
+				});
+			});
+		});
+		observer.observe(document.getElementById("window-layer")!, {
+			childList: true,
+		});
+	},
+};
+
 // --- 3. Dash (Dock) Settings ---
 document.querySelectorAll(".dash-item").forEach((item) => {
 	item.addEventListener("click", () => {
 		const appName = item.getAttribute("data-app");
 		if (appName === "sandbox") wm.createWindow(appSandbox);
 		if (appName === "swarm") wm.createWindow(appSwarmHub);
+		if (appName === "aegis") wm.createWindow(appAegisSentinel);
 	});
 });
 
