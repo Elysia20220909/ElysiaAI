@@ -5,7 +5,6 @@ interface CacheOptions {
 	prefix?: string;
 }
 
-// biome-ignore lint: Dynamic import type for optional Redis client
 type RedisClientType = any;
 
 class CacheService {

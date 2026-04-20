@@ -369,10 +369,8 @@ export const prisma = {
 		const stmt = db.prepare(trimmed);
 
 		if (trimmed.toUpperCase().startsWith("SELECT")) {
-			// biome-ignore lint/suspicious/noExplicitAny: params must be array for spread
 			return stmt.all(...(params as any[])) as T;
 		}
-		// biome-ignore lint/suspicious/noExplicitAny: params must be array for spread
 		stmt.run(...(params as any[]));
 		return [] as T;
 	},

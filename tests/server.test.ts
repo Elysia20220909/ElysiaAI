@@ -117,7 +117,8 @@ describe("Docker Configuration Tests", () => {
 
 		const content = fs.readFileSync(dockerfilePath, "utf-8");
 		expect(content).toContain("FROM");
-		expect(content).toContain("oven/bun");
+		expect(content).toContain("python:3.11-bookworm");
+
 		console.log("✅ Dockerfile.production valid");
 	});
 

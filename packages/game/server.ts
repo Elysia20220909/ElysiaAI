@@ -346,8 +346,8 @@ const app = new Elysia()
 		"/game/action",
 		({ body }) => {
 			// ネットワークゲームのアクション（エージェント移動）
-			// biome-ignore lint/suspicious/noExplicitAny: Workaround for Elysia type inference
 			const actionBody = body as any;
+
 			if (
 				actionBody?.agentId &&
 				actionBody?.to &&

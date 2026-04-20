@@ -56,7 +56,6 @@ class Logger {
 	/**
 	 * シークレット（OpenAIキー等）をマスクする
 	 */
-	// biome-ignore lint/suspicious/noExplicitAny: generic data masking
 	private maskSecrets(data: any): any {
 		if (typeof data === "string") {
 			// OpenAI API Key (sk-...)
@@ -67,7 +66,6 @@ class Logger {
 		}
 
 		if (data && typeof data === "object") {
-			// biome-ignore lint/suspicious/noExplicitAny: generic data masking
 			const masked: any = Array.isArray(data) ? [] : {};
 			for (const key in data) {
 				masked[key] = this.maskSecrets(data[key]);
