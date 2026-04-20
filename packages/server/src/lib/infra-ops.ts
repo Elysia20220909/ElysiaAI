@@ -36,7 +36,6 @@ export async function runInfraScript(
 			cwd: INFRA_SCRIPTS_DIR, // Execute in the infra folder to respect relative paths in pvese
 		});
 		return { success: true, stdout, stderr };
-		// biome-ignore lint/suspicious/noExplicitAny: error object parsing
 	} catch (error: any) {
 		logger.error(`[InfraOps] Script failed: ${command}`, error);
 		return {
