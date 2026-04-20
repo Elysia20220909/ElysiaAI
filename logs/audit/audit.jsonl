@@ -1,0 +1,9 @@
+{"id":"audit-1776683557261-1","timestamp":"2026-04-20T11:12:37.261Z","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1776683557262-2","timestamp":"2026-04-20T11:12:37.262Z","userId":"testuser","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1776683557262-3","timestamp":"2026-04-20T11:12:37.262Z","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1776683557263-4","timestamp":"2026-04-20T11:12:37.263Z","action":"CREATE","resource":"test","method":"POST","path":"/test","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":201}
+{"id":"audit-1776683557263-5","timestamp":"2026-04-20T11:12:37.263Z","action":"READ","resource":"feedback","resourceId":"123","method":"GET","path":"/feedback/123","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1776683557264-6","timestamp":"2026-04-20T11:12:37.264Z","action":"AUTH","resource":"auth","method":"POST","path":"/auth/login","ipAddress":"127.0.0.1","userAgent":"test-agent","statusCode":200}
+{"id":"audit-1776683557264-7","timestamp":"2026-04-20T11:12:37.264Z","userId":"user123","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test","statusCode":200}
+{"id":"audit-1776683557393-8","timestamp":"2026-04-20T11:12:37.393Z","action":"READ","resource":"test","method":"GET","path":"/test","ipAddress":"127.0.0.1","userAgent":"test","statusCode":200}
+{"id":"audit-1776683557404-9","timestamp":"2026-04-20T11:12:37.404Z","action":"UPDATE","resource":"feedback","resourceId":"456","method":"PUT","path":"/feedback/456","ipAddress":"127.0.0.1","userAgent":"test","statusCode":200}
