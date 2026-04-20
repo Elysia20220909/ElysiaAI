@@ -44,7 +44,6 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 			}
 
 			// リクエスト情報を一時保存（型安全なWeakMap使用）
-			// biome-ignore lint/suspicious/noExplicitAny: complex object needs cast
 			const body = context.body as any;
 			const input =
 				body?.text ||

@@ -1,4 +1,3 @@
-// biome-ignore lint/suspicious/noExplicitAny: Generic any for Elysia set object
 export const applySecurityHeaders = (set: any, url: string) => {
 	const csp =
 		"default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; img-src 'self' data: https:; connect-src 'self' ws: wss: https:;";
@@ -11,7 +10,6 @@ export const applySecurityHeaders = (set: any, url: string) => {
 		"X-XSS-Protection": "1; mode=block",
 	};
 
-	// biome-ignore lint/suspicious/noExplicitAny: Elysia set headers dynamic manipulation
 	const headers = set.headers as any;
 
 	for (const [key, value] of Object.entries(securityHeaders)) {
