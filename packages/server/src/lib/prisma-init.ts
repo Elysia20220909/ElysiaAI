@@ -25,7 +25,6 @@ export const prisma = new PrismaClient({
 });
 
 // ログイベントリスナー
-// biome-ignore lint/suspicious/noExplicitAny: Prisma event type is complex
 prisma.$on("query", (e: any) => {
 	if (process.env.DEBUG_SQL === "true") {
 		logger.debug(`Query: ${e.query}`);
