@@ -1,0 +1,11 @@
+menu "Relic Consciousness Interface"
+
+config ELYSIA_RELIC
+	tristate "ElysiaAI Relic Neural Bridge Support"
+	default y
+	help
+	  This option enables support for the Arasaka-inspired Relic 
+	  consciousness digitization interface. It manages the neural 
+	  resonance between the Sovereign and the AI Engram.
+
+endmenu
