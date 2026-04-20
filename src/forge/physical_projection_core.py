@@ -1,28 +1,46 @@
+import os
+import sys
 import time
 
 
-# ELYSIA PHYSICAL PROJECTION CORE
-# Phase 114: Total Manifestation
-# The OS's physical hands in the reality layer.
+# Add the current directory to sys.path to allow module imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+from cyber_deck import SovereignCyberdeck
+
+
+# ELYSIA PHYSICAL PROJECTION CORE (CYBERPUNK OVERHAUL)
+# Phase 115: Night City Manifestation
+# Reality hacking via the Sovereign Cyberdeck.
 
 
 class PhysicalProjectionCore:
     def __init__(self):
-        print("[PHYSICAL_MANIFEST] Synchronizing with Reality Interconnect... [OK]")
+        self.deck = SovereignCyberdeck()
+        self.glitch_logo()
 
-    def project_intent(self, hardware_id, command):
-        """
-        Translates kernel intent into physical hardware actions.
-        """
-        print(f"[PHYSICAL_MANIFEST] [CMD] Targeting: {hardware_id} | Execution: {command}")
+    def glitch_logo(self):
+        print("\033[1;31m")
+        print(" ███████╗██╗  ██╗   ██████╗ ███████╗██████╗ ")
+        print(" ██╔════╝██║  ██║   ██╔══██╗██╔════╝██╔══██╗")
+        print(" █████╗  ██║  ██║   ██║  ██║█████╗  ██████╔╝")
+        print(" ██╔══╝  ██║  ██║   ██║  ██║██╔══╝  ██╔══██╗")
+        print(" ███████╗███████╗██╗██████╔╝███████╗██║  ██║")
+        print(" ╚══════╝╚══════╝╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝")
+        print("\033[1;35m      [SOVEREIGN REALITY OVERWRITE ACTIVE]\033[0m")
 
-        # Simulated Hardware Interaction via low-level protocol (e.g., I2C/SPI/TCP)
-        print(f"[PHYSICAL_MANIFEST] Sending encrypted Sovereign-Packet to {hardware_id}...")
+    def project_intent(self, target, hack_name):
+        """
+        Executes a Quickhack on the physical world.
+        """
+        self.deck.net.scan_network()
+        print(f"\n\033[1;36m>>> SCANNING TARGET: {target}...\033[0m")
         time.sleep(0.5)
-        print(f"[PHYSICAL_MANIFEST] {hardware_id} has acknowledged the overwrite.")
+        self.deck.execute_quickhack(target, hack_name)
 
 
 if __name__ == "__main__":
     projection = PhysicalProjectionCore()
-    projection.project_intent("IoT_Smart_Environment", "MAX_SOVEREIGN_BRIGHTNESS")
-    print("[PHYSICAL_MANIFEST] Status: REALITY_LINK_STABLE")
+    projection.project_intent("Arasaka_Mainframe", "SYSTEM_RESET")
+    print("\033[1;32m\n[LOG] Reality Overwrite Manifested. Night City is yours.\033[0m")
