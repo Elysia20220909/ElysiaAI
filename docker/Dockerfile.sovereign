@@ -1,0 +1,33 @@
+# ELYSIA SOVEREIGN FORGE
+# Phase 88: The Image Smithing Environment
+# Contains tools to forge raw disk images from the Abyss.
+
+FROM debian:bookworm-slim
+
+# Install high-end forgery and security tools
+RUN apt-get update && apt-get install -y \
+    qemu-utils \
+    qemu-user-static \
+    binfmt-support \
+    parted \
+    dosfstools \
+    e2fsprogs \
+    btrfs-progs \
+    llvm \
+    clang \
+    dkms \
+    gcc-aarch64-linux-gnu \
+    binutils-aarch64-linux-gnu \
+    make \
+    bc \
+    kmod \
+    cpio \
+    wget \
+    wipe \
+    xorriso \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /sovereign_forge
+
+# This container will be used to run the 'forge-image-logic.sh'
+ENTRYPOINT ["/bin/bash"]
