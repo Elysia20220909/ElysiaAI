@@ -64,8 +64,8 @@ def send_discord_embed(title, description, url, source_name, color, fields=None,
         embed["image"] = {"url": image_url}
 
     payload = {
-        "username": "Sovereign Sentinel (Cloud)",
-        "avatar_url": "https://raw.githubusercontent.com/google/material-design-icons/master/png/device/cloud_queue/mw24.png",
+        "username": "Marathon Sentinel",
+        "avatar_url": "https://raw.githubusercontent.com/google/material-design-icons/master/png/action/settings_input_antenna/mw24.png",
         "embeds": [embed],
     }
     req = urllib.request.Request(
@@ -198,14 +198,14 @@ def main():
     for update in updates:
         state_key = f"{update['type']}_{update['source']}_guid"
         if state_key in state and state[state_key] != update["guid"]:
-            print(f"New Update: {update['source']}")
+            print(f"New Marathon Update: {update['source']}")
             translated = translate_to_ja(update["title"])
             fields = [
                 {"name": "🇯🇵 日本語翻訳", "value": translated or "翻訳不可", "inline": False},
                 {"name": "🇺🇸 Original", "value": f"> {update['title']}", "inline": False},
             ]
             send_discord_embed(
-                f"New Update: {update['type']}",
+                f"Marathon Update: {update['type']}",
                 f"Detected a new post from **{update['source']}**",
                 update["link"],
                 update["source"],
