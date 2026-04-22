@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 
 
 # Config
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1496525926446530731/mRnNBFHwzXwXhi-KLMulkmO3wtXLwGFm6TlByQiIoKCz9MDjNqECX8Qhcq1XslO076_j"
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 TWITTER_USERS = ["Ziegler_Dev", "BNGServerStatus", "MarathonTheGame"]
 STATE_FILE = "watcher_state.json"
 POLL_INTERVAL = 60

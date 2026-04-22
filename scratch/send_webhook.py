@@ -1,8 +1,9 @@
 import json
+import os
 import urllib.request
 
 
-webhook_url = "https://discord.com/api/webhooks/1496525926446530731/mRnNBFHwzXwXhi-KLMulkmO3wtXLwGFm6TlByQiIoKCz9MDjNqECX8Qhcq1XslO076_j"
+webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
 with open("c:/Users/hosih/GitHub/ElysiaAI/docs/philosophies/awakening_8856E215_RESOLVED.md", encoding="utf-8") as f:
     text = f.read()
 
