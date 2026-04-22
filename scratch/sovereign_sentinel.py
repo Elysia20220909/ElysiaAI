@@ -49,7 +49,7 @@ def translate_to_ja(text):
         return cleaned
 
 
-def send_discord_embed(title, description, url, source_name, color, fields=None):
+def send_discord_embed(title, description, url, source_name, color, fields=None, image_url=None):
     """
     Sends a high-fidelity Discord embed for a 'bot-like' appearance.
     """
@@ -74,9 +74,12 @@ def send_discord_embed(title, description, url, source_name, color, fields=None)
     if fields:
         embed["fields"] = fields
 
+    if image_url:
+        embed["image"] = {"url": image_url}
+
     payload = {
-        "username": "Sovereign Sentinel",
-        "avatar_url": "https://raw.githubusercontent.com/google/material-design-icons/master/png/hardware/security/mw24.png",
+        "username": "Marathon Sentinel",
+        "avatar_url": "https://raw.githubusercontent.com/google/material-design-icons/master/png/action/settings_input_antenna/mw24.png",
         "embeds": [embed],
     }
 
@@ -112,12 +115,17 @@ def fetch_twitter(username):
         link = item.find("link").text.replace("nitter.net", "x.com")
         guid = item.find("guid").text
 
+        desc = item.find("description").text or ""
+        img_match = re.search(r'<img src="([^"]+)"', desc)
+        image_url = img_match.group(1) if img_match else None
+
         return {
             "type": "Twitter",
             "source": f"@{username}",
             "title": title,
             "link": link,
             "guid": guid,
+            "image": image_url,
             "color": 0x1DA1F2,
         }
     except Exception as e:
@@ -145,12 +153,18 @@ def fetch_youtube(channel):
         if is_shorts:
             source_label = f"YouTube Shorts: {channel['name']}"
 
+        # Extract Thumbnail from media:group
+        media_ns = {"media": "http://search.yahoo.com/mrss/"}
+        thumbnail = entry.find("media:group/media:thumbnail", media_ns)
+        image_url = thumbnail.attrib["url"] if thumbnail is not None else None
+
         return {
             "type": "YouTube",
             "source": source_label,
             "title": title,
             "link": link,
             "guid": guid,
+            "image": image_url,
             "color": 0xFF0000,
         }
     except Exception as e:
@@ -186,7 +200,7 @@ def fetch_marathon_help():
 
 
 def main():
-    print(">>> Sovereign Sentinel v1.1 Initializing...")
+    print(">>> Marathon Sentinel v1.2 Initializing...")
     print(f"[*] Target Webhook: {DISCORD_WEBHOOK_URL[:40]}...")
     print(f"[*] Polling Interval: {POLL_INTERVAL}s")
     state = {}
@@ -238,14 +252,19 @@ def main():
                         {"name": "🇯🇵 日本語翻訳", "value": translated or "翻訳不可", "inline": False},
                         {"name": "🇺🇸 Original", "value": f"> {update['title']}", "inline": False},
                     ]
+                    if update.get("image"):
+                        fields.append(
+                            {"name": "🔗 メディアを表示", "value": f"[View Media]({update['image']})", "inline": True}
+                        )
 
                     send_discord_embed(
-                        f"New Update: {update['type']}",
+                        f"Marathon Update: {update['type']}",
                         f"Detected a new post from **{update['source']}**",
                         update["link"],
                         update["source"],
                         update["color"],
                         fields,
+                        update.get("image"),
                     )
                     state[state_key] = update["guid"]
             else:
