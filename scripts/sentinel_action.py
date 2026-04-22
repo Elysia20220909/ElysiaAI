@@ -48,23 +48,25 @@ def translate_to_ja(text):
         return cleaned
 
 
-def send_discord_embed(title, description, url, source_name, color, fields=None):
+def send_discord_embed(title, description, url, source_name, color, fields=None, image_url=None):
     timestamp = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    embed = {
+        "title": title,
+        "description": description,
+        "url": url,
+        "color": color,
+        "timestamp": timestamp,
+        "footer": {"text": f"Sovereign Sentinel • {source_name}"},
+        "author": {"name": source_name},
+        "fields": fields or [],
+    }
+    if image_url:
+        embed["image"] = {"url": image_url}
+
     payload = {
         "username": "Sovereign Sentinel (Cloud)",
         "avatar_url": "https://raw.githubusercontent.com/google/material-design-icons/master/png/device/cloud_queue/mw24.png",
-        "embeds": [
-            {
-                "title": title,
-                "description": description,
-                "url": url,
-                "color": color,
-                "timestamp": timestamp,
-                "footer": {"text": f"Sovereign Sentinel • {source_name}"},
-                "author": {"name": source_name},
-                "fields": fields or [],
-            }
-        ],
+        "embeds": [embed],
     }
     req = urllib.request.Request(
         DISCORD_WEBHOOK_URL,
@@ -91,12 +93,17 @@ def fetch_twitter(username):
         item = root.find("channel/item")
         if item is None:
             return None
+        desc = item.find("description").text or ""
+        img_match = re.search(r'<img src="([^"]+)"', desc)
+        image_url = img_match.group(1) if img_match else None
+
         return {
             "type": "Twitter",
             "source": f"@{username}",
             "title": item.find("title").text,
             "link": item.find("link").text.replace("nitter.net", "x.com"),
             "guid": item.find("guid").text,
+            "image": image_url,
             "color": 0x1DA1F2,
         }
     except Exception as e:
@@ -115,12 +122,18 @@ def fetch_youtube(channel):
         if entry is None:
             return None
         link = entry.find("atom:link", ns).attrib["href"]
+        # Extract Thumbnail from media:group
+        media_ns = {"media": "http://search.yahoo.com/mrss/"}
+        thumbnail = entry.find("media:group/media:thumbnail", media_ns)
+        image_url = thumbnail.attrib["url"] if thumbnail is not None else None
+
         return {
             "type": "YouTube",
             "source": f"YouTube: {channel['name']}",
             "title": entry.find("atom:title", ns).text,
             "link": link,
             "guid": entry.find("atom:id", ns).text,
+            "image": image_url,
             "color": 0xFF0000,
         }
     except Exception as e:
@@ -198,6 +211,7 @@ def main():
                 update["source"],
                 update["color"],
                 fields,
+                update.get("image"),
             )
         state[state_key] = update["guid"]
 
