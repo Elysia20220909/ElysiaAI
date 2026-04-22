@@ -1,12 +1,13 @@
 import html
 import json
+import os
 import re
 import time
 import urllib.parse
 import urllib.request
 
 
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1496527812234969209/FcTRDUfKHIicCDeEeET2jvDkc5T8dVUfhKyZ4Yh_ehOSRRRp-IAQDXN8r5edTY_2hb3n"
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
 
 def clean_for_translation(text):
