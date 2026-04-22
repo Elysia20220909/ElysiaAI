@@ -204,6 +204,11 @@ def main():
                 {"name": "🇯🇵 日本語翻訳", "value": translated or "翻訳不可", "inline": False},
                 {"name": "🇺🇸 Original", "value": f"> {update['title']}", "inline": False},
             ]
+            if update.get("image"):
+                fields.append(
+                    {"name": "🔗 メディアを表示", "value": f"[View Media]({update['image']})", "inline": True}
+                )
+
             send_discord_embed(
                 f"Marathon Update: {update['type']}",
                 f"Detected a new post from **{update['source']}**",
