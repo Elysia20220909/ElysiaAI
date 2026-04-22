@@ -12,10 +12,7 @@ from datetime import UTC, datetime
 # SOVEREIGN SENTINEL ACTION CONFIG
 # ==========================================
 # Recommended: Use GitHub Secrets for this in the workflow
-DISCORD_WEBHOOK_URL = os.environ.get(
-    "DISCORD_WEBHOOK_URL",
-    "https://discord.com/api/webhooks/1496527812234969209/FcTRDUfKHIicCDeEeET2jvDkc5T8dVUfhKyZ4Yh_ehOSRRRp-IAQDXN8r5edTY_2hb3n",
-)
+DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")
 STATE_FILE = "data/sentinel_state.json"
 
 TWITTER_USERS = ["Ziegler_Dev", "BNGServerStatus", "MarathonTheGame"]
@@ -159,6 +156,10 @@ def fetch_marathon_help():
 
 def main():
     print("Cloud Sentinel Run Start")
+    if not DISCORD_WEBHOOK_URL:
+        print("[!] ERROR: DISCORD_WEBHOOK_URL is not set. Please add it to GitHub Secrets.")
+        return
+
     os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
     state = {}
     if os.path.exists(STATE_FILE):
