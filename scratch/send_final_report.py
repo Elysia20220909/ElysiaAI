@@ -1,9 +1,10 @@
 import json
+import os
 import urllib.request
 from datetime import UTC, datetime
 
 
-WEBHOOK_URL = "https://discord.com/api/webhooks/1496527812234969209/FcTRDUfKHIicCDeEeET2jvDkc5T8dVUfhKyZ4Yh_ehOSRRRp-IAQDXN8r5edTY_2hb3n"
+WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
 
 def send_report():
