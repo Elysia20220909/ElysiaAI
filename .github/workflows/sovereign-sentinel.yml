@@ -1,0 +1,35 @@
+name: Sovereign Sentinel (Cloud Monitor)
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # Every 15 minutes
+  workflow_dispatch:      # Manual trigger
+
+permissions:
+  contents: write         # Required to push state updates
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run Sentinel Action
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python scripts/sentinel_action.py
+
+      - name: Commit State Changes
+        run: |
+          git config --global user.name "Sovereign Sentinel Bot"
+          git config --global user.email "bot@elysia.ai"
+          git add data/sentinel_state.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update sentinel state [skip ci]" && git push)
