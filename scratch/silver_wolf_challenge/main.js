@@ -45,8 +45,6 @@ function startGame() {
         count--;
         if (count > 0) {
             elements.countdownDisplay.textContent = count;
-        } else if (count === 0) {
-            elements.countdownDisplay.textContent = "GO!";
         } else {
             clearInterval(interval);
             beginPlay();
@@ -63,9 +61,10 @@ function beginPlay() {
         console.log("DEFEAT MODE ACTIVATED: SYSTEM BYPASSED.");
         autoTapInterval = setInterval(() => {
             if (isPlaying) {
+                elements.tapTarget.classList.toggle('is-tapping');
                 handleTap();
             }
-        }, 10); // 100 taps per second
+        }, 30); // ~33 taps per second - more balanced visual/performance
     }
 
     const startTimestamp = performance.now();
@@ -99,9 +98,12 @@ function handleTap() {
 }
 
 function createRipple() {
+    const container = elements.tapTarget.querySelector('.ripple-container');
+    // Limit ripples to prevent DOM bloat
+    if (container.children.length > 10) return;
+
     const ripple = document.createElement('div');
     ripple.className = 'ripple';
-    const container = elements.tapTarget.querySelector('.ripple-container');
     container.appendChild(ripple);
     
     setTimeout(() => {
@@ -114,6 +116,7 @@ function endGame() {
     if (autoTapInterval) {
         clearInterval(autoTapInterval);
         autoTapInterval = null;
+        elements.tapTarget.classList.remove('is-tapping');
     }
     
     showScreen('result');
