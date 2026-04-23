@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElysiaAI // Technical Specification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        elysia: {
+                            500: '#6366f1',
+                            900: '#1e1b4b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        details > summary {
+            list-style: none;
+            cursor: pointer;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details[open] summary ~ * {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(-5px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-4xl mx-auto space-y-8">
+        
+        <header class="text-center py-12 border-b border-slate-700">
+            <h1 class="text-5xl font-bold mb-4 font-mono gradient-text">ElysiaAI // INFINITE RESONANCE</h1>
+            <p class="text-xl text-slate-400">次世代AI-Native OS 技術仕様書</p>
+            <div class="mt-6 flex justify-center gap-4 text-sm">
+                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Version: 1.0.0</span>
+                <span class="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Author: Elysia20210806</span>
+            </div>
+        </header>
+
+        <!-- 01. プロジェクト概要 -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                01. プロジェクト概要
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50 text-slate-300 leading-relaxed">
+                <p>ElysiaAIは単なるチャットUIではなく、「思考」と「実行」の間に横たわる溝を埋めるために設計された自律型AI-Native OSです。</p>
+                <ul class="list-disc ml-6 mt-4 space-y-2">
+                    <li><strong>Agent x Decision Tree:</strong> 決定木に基づく論理的なステップの自律実行。</li>
+                    <li><strong>Sovereign Privacy:</strong> ローカルLLM (Ollama) と Milvus Lite を用いた完全ローカルRAG。外部へのデータ流出ゼロ。</li>
+                    <li><strong>Resonance Design:</strong> ランドリー工場の熱気から着想を得た、強靭かつ美しいUI/UX。</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- 02. 技術スタック -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                02. 技術スタック
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-slate-800/50 rounded-lg">
+                        <h3 class="text-indigo-400 font-bold mb-2">Frontend</h3>
+                        <p class="text-sm text-slate-300">Alpine.js, Tailwind CSS, Lucide Icons</p>
+                    </div>
+                    <div class="p-4 bg-slate-800/50 rounded-lg">
+                        <h3 class="text-indigo-400 font-bold mb-2">Backend</h3>
+                        <p class="text-sm text-slate-300">Bun, Elysia.js, Prisma, SQLite</p>
+                    </div>
+                    <div class="p-4 bg-slate-800/50 rounded-lg">
+                        <h3 class="text-indigo-400 font-bold mb-2">AI Kernel</h3>
+                        <p class="text-sm text-slate-300">Python 3.11, FastAPI, LangChain, Ollama (llama3.2)</p>
+                    </div>
+                    <div class="p-4 bg-slate-800/50 rounded-lg">
+                        <h3 class="text-indigo-400 font-bold mb-2">Memory / Security</h3>
+                        <p class="text-sm text-slate-300">Milvus Lite, Sentence-Transformers / AEGIS Ledger, JWT</p>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- 03. アーキテクチャ図 -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                03. アーキテクチャ: The Resonance Loop
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50 flex flex-col items-center">
+                <p class="text-slate-300 mb-6 text-center">論理（Python Kernel）と高速通信（Bun/Elysia.js）の共鳴によるシステム全体像</p>
+                <div class="bg-slate-800 p-6 rounded-xl w-full flex justify-center">
+                    <pre class="mermaid">
+graph TD
+    User[User Interface] <-->|WebSocket/HTTP| API[Bun / Elysia.js Backend]
+    
+    subgraph Resonance Loop
+        API <-->|IPC/HTTP| AIKernel[Python FastAPI Kernel]
+        
+        AIKernel -->|Query| RAG[(Milvus Lite Vector DB)]
+        AIKernel -->|Plan| Tree[Decision Tree Logic]
+        AIKernel -->|Execute| Tools[Tool Execution Sandbox]
+        
+        Tree --> Tools
+        RAG --> Tree
+    end
+
+    API -->|Read/Write| DB[(SQLite / Prisma)]
+    
+    classDef default fill:#1e293b,stroke:#475569,stroke-width:2px,color:#f8fafc;
+    classDef highlight fill:#4f46e5,stroke:#818cf8,stroke-width:2px,color:#fff;
+    class User,API default;
+    class AIKernel highlight;
+                    </pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- 04. 機能一覧 -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                04. 機能一覧 (MoSCoW分析)
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50">
+                <div class="space-y-6">
+                    <div>
+                        <h3 class="text-rose-400 font-bold text-lg mb-3 flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-rose-400"></div> MUST (必須要件)
+                        </h3>
+                        <ul class="list-disc ml-8 text-slate-300 space-y-1">
+                            <li>Ollama(llama3.2)を用いた完全ローカルでの推論実行</li>
+                            <li>Bun/Elysia.jsによる高速なWebSocketリアルタイム通信</li>
+                            <li>Python Kernelによるプロンプト解析とツール呼び出しの制御</li>
+                            <li>Milvus Liteを利用したローカルドキュメントのベクトル検索(RAG)</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-amber-400 font-bold text-lg mb-3 flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-amber-400"></div> SHOULD (推奨要件)
+                        </h3>
+                        <ul class="list-disc ml-8 text-slate-300 space-y-1">
+                            <li>決定木(Decision Tree)を用いたマルチステップ自律推論機能</li>
+                            <li>AEGIS Ledgerによるシステム内部セキュリティおよびログ暗号化</li>
+                            <li>SQLite + Prismaを用いたユーザーセッションとメモリ履歴の永続化</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-sky-400 font-bold text-lg mb-3 flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-sky-400"></div> COULD (可能であれば実装)
+                        </h3>
+                        <ul class="list-disc ml-8 text-slate-300 space-y-1">
+                            <li>他のローカルLLM(Qwen, Mistral等)への動的切り替え機能</li>
+                            <li>外部API連携機能(検索エンジン、GitHub統合など)のプラグイン化</li>
+                            <li>デスクトップ環境における動的ウィジェット(Resonance UI)の拡張</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- 06. APIエンドポイント仕様 -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                06. APIエンドポイント (推定仕様)
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50 overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-600 text-slate-400 text-sm uppercase tracking-wider">
+                            <th class="p-3">Endpoint (Bun)</th>
+                            <th class="p-3">Method</th>
+                            <th class="p-3">Description</th>
+                            <th class="p-3">Backend Route</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-slate-300">
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/30">
+                            <td class="p-3 font-mono text-sm text-sky-300">/api/v1/chat</td>
+                            <td class="p-3"><span class="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-bold">POST</span></td>
+                            <td class="p-3">ユーザーからのメッセージ送信と応答取得</td>
+                            <td class="p-3 font-mono text-xs">Python Kernel /infer</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/30">
+                            <td class="p-3 font-mono text-sm text-sky-300">/ws/resonance</td>
+                            <td class="p-3"><span class="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs font-bold">WS</span></td>
+                            <td class="p-3">LLMトークンのストリーミング及び状態同期</td>
+                            <td class="p-3 font-mono text-xs">-</td>
+                        </tr>
+                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/30">
+                            <td class="p-3 font-mono text-sm text-sky-300">/api/v1/memory/sync</td>
+                            <td class="p-3"><span class="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-bold">POST</span></td>
+                            <td class="p-3">ドキュメントのMilvus Liteへの埋め込み(Embed)</td>
+                            <td class="p-3 font-mono text-xs">Python Kernel /embed</td>
+                        </tr>
+                        <tr class="hover:bg-slate-800/30">
+                            <td class="p-3 font-mono text-sm text-sky-300">/api/v1/system/health</td>
+                            <td class="p-3"><span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs font-bold">GET</span></td>
+                            <td class="p-3">Ollama, Milvus, Python Kernelの稼働状況確認</td>
+                            <td class="p-3 font-mono text-xs">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="mt-4 text-sm text-slate-500">* これはREADMEから推定された構成であり、実際の仕様と異なる場合があります。</p>
+            </div>
+        </details>
+
+        <!-- 07. セキュリティ -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                07. セキュリティ: AEGIS Ledger
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50 text-slate-300">
+                <p class="mb-4">ElysiaAIのセキュリティ基盤「AEGIS Ledger」は、Sovereign Privacyを実現するための多層防衛(Multi-layer ICE)システムです。</p>
+                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                    <h4 class="text-indigo-400 font-bold mb-2">実装のハイライト (予定)</h4>
+                    <ul class="list-disc ml-6 space-y-2 text-sm">
+                        <li><strong>ローカル完結型処理:</strong> 全てのLLM推論とRAG検索はローカルデバイス内で完結。</li>
+                        <li><strong>Tool Execution Sandbox:</strong> AIによるツール実行(ファイル書き込みやコマンド実行等)は、厳格に制限されたサンドボックス内で評価・実行。</li>
+                        <li><strong>JWT認証:</strong> Web UIとBunバックエンド間のセキュアなセッション管理。</li>
+                        <li><strong>暗号化メモリ:</strong> MilvusLiteに保存されるベクトルデータおよびSQLiteの機密データ保護。</li>
+                    </ul>
+                </div>
+            </div>
+        </details>
+
+        <!-- 08. 技術的ギャップ分析 -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                08. 技術的ギャップ分析 (Gap Analysis)
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50">
+                <p class="text-slate-300 mb-6">README.mdの分析結果に基づく、設計が不足している12の要素です。</p>
+                
+                <!-- フィルターボタン -->
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <button onclick="filterGaps('all')" id="btn-all" class="gap-filter-btn px-4 py-1 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 border border-slate-500 transition-colors text-sm font-bold ring-2 ring-indigo-500 ring-offset-2 ring-offset-slate-900">すべて</button>
+                    <button onclick="filterGaps('high')" id="btn-high" class="gap-filter-btn px-4 py-1 rounded-full bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/50 transition-colors text-sm font-bold">高優先度 (High)</button>
+                    <button onclick="filterGaps('medium')" id="btn-medium" class="gap-filter-btn px-4 py-1 rounded-full bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/50 transition-colors text-sm font-bold">中優先度 (Medium)</button>
+                    <button onclick="filterGaps('low')" id="btn-low" class="gap-filter-btn px-4 py-1 rounded-full bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/50 transition-colors text-sm font-bold">低優先度 (Low)</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="gap-list">
+                    <!-- High Priority -->
+                    <div class="gap-item high p-4 bg-slate-800/50 border border-rose-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">1. Decision Tree 仕様</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold">HIGH</span>
+                        </div>
+                        <p class="text-sm text-slate-400">エージェントが自律的に推論を進めるためのコアロジックや、ノードごとの評価基準の定義。</p>
+                    </div>
+                    <div class="gap-item high p-4 bg-slate-800/50 border border-rose-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">2. AEGIS Ledger 詳細</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold">HIGH</span>
+                        </div>
+                        <p class="text-sm text-slate-400">"Multi-layer ICE"の具体的な暗号化アルゴリズムや、ログの不変性を担保する仕組み。</p>
+                    </div>
+                    <div class="gap-item high p-4 bg-slate-800/50 border border-rose-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">3. Tool Sandbox 制限</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold">HIGH</span>
+                        </div>
+                        <p class="text-sm text-slate-400">Pythonカーネルから実行されるコマンドの権限分離や、ディレクトリトラバーサル防止機構。</p>
+                    </div>
+                    <div class="gap-item high p-4 bg-slate-800/50 border border-rose-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-rose-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">4. RAG Embedding 戦略</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-bold">HIGH</span>
+                        </div>
+                        <p class="text-sm text-slate-400">Milvusに格納するドキュメントのチャンクサイズ、オーバーラップ率、ベクトル次元数。</p>
+                    </div>
+
+                    <!-- Medium Priority -->
+                    <div class="gap-item medium p-4 bg-slate-800/50 border border-amber-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">5. Bun-Python IPC プロトコル</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">MED</span>
+                        </div>
+                        <p class="text-sm text-slate-400">プロセス間通信のペイロード形式や、再接続時のリトライ制御ロジック。</p>
+                    </div>
+                    <div class="gap-item medium p-4 bg-slate-800/50 border border-amber-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">6. State Management</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">MED</span>
+                        </div>
+                        <p class="text-sm text-slate-400">Bunのインメモリ状態とSQLiteの永続化状態を同期するタイミングとトランザクション。</p>
+                    </div>
+                    <div class="gap-item medium p-4 bg-slate-800/50 border border-amber-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">7. Error Recovery</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">MED</span>
+                        </div>
+                        <p class="text-sm text-slate-400">Ollamaプロセスのクラッシュ時や、Milvus接続タイムアウト時のフォールバック処理。</p>
+                    </div>
+                    <div class="gap-item medium p-4 bg-slate-800/50 border border-amber-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">8. Tool Schema 一覧</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-bold">MED</span>
+                        </div>
+                        <p class="text-sm text-slate-400">エージェントが利用可能なツールのI/Oスキーマ定義と追加方法。</p>
+                    </div>
+
+                    <!-- Low Priority -->
+                    <div class="gap-item low p-4 bg-slate-800/50 border border-sky-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-sky-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">9. Database Schema</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 font-bold">LOW</span>
+                        </div>
+                        <p class="text-sm text-slate-400">PrismaでのUser, Session, Messageモデルの具体的なテーブル構造とインデックス。</p>
+                    </div>
+                    <div class="gap-item low p-4 bg-slate-800/50 border border-sky-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-sky-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">10. Dev Environment Setup</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 font-bold">LOW</span>
+                        </div>
+                        <p class="text-sm text-slate-400">.envに必要な変数のリストと、make install/bootで実行されるスクリプトの詳細。</p>
+                    </div>
+                    <div class="gap-item low p-4 bg-slate-800/50 border border-sky-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-sky-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">11. UI Component Architecture</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 font-bold">LOW</span>
+                        </div>
+                        <p class="text-sm text-slate-400">Alpine.jsのコンポーネント分割と、グローバルなイベントバス(x-data)の構造。</p>
+                    </div>
+                    <div class="gap-item low p-4 bg-slate-800/50 border border-sky-500/20 rounded-lg relative overflow-hidden transition-all duration-300">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-sky-500"></div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-slate-200">12. LLM Switching Mechanism</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 font-bold">LOW</span>
+                        </div>
+                        <p class="text-sm text-slate-400">llama3.2からQwenやMistralへ動的にモデルを切り替える際のプロンプト吸収レイヤー。</p>
+                    </div>
+                </div>
+            </div>
+        <!-- 09. エラーハンドリング設計 -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                09. エラーハンドリング設計 (Error Handling)
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50">
+                <!-- Tabs Navigation -->
+                <div class="flex border-b border-slate-600 mb-6 overflow-x-auto">
+                    <button onclick="switchErrorTab('layer')" id="err-tab-layer" class="err-tab-btn whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-indigo-500 text-indigo-400 focus:outline-none transition-colors">レイヤー別エラー</button>
+                    <button onclick="switchErrorTab('flow')" id="err-tab-flow" class="err-tab-btn whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-300 focus:outline-none transition-colors">障害フロー</button>
+                    <button onclick="switchErrorTab('retry')" id="err-tab-retry" class="err-tab-btn whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-300 focus:outline-none transition-colors">リトライ設計</button>
+                    <button onclick="switchErrorTab('code')" id="err-tab-code" class="err-tab-btn whitespace-nowrap px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-300 focus:outline-none transition-colors">実装例</button>
+                </div>
+                
+                <!-- Tab: レイヤー別エラー -->
+                <div id="err-content-layer" class="err-tab-content text-slate-300">
+                    
+                    <!-- 1. Bun / Elysia.js -->
+                    <div class="mb-6 border border-slate-700 rounded-lg overflow-hidden bg-slate-800/30 shadow-lg">
+                        <div class="bg-slate-800 border-b border-slate-700 p-4 flex items-center gap-3">
+                            <div class="w-8 h-8 rounded bg-amber-100 text-amber-800 flex items-center justify-center font-bold">B</div>
+                            <div>
+                                <h4 class="font-bold text-slate-200">Bun / Elysia.js — 通信層</h4>
+                                <p class="text-xs text-slate-400">WebSocket・HTTPルーティング</p>
+                            </div>
+                        </div>
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-slate-400 border-b border-slate-700/50 bg-slate-800/10">
+                                    <th class="p-3 font-medium w-1/3">エラー種別</th>
+                                    <th class="p-3 font-medium w-1/6">重大度</th>
+                                    <th class="p-3 font-medium w-1/2">対応方針</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50">
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">WebSocket 切断</div>
+                                        <div class="text-xs text-slate-500 mt-1">クライアント突然切断・タイムアウト</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
+                                    <td class="p-3 text-slate-400">再接続ハンドラ＋セッション状態の一時保持（30秒）</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">Python Kernel 無応答</div>
+                                        <div class="text-xs text-slate-500 mt-1">IPC/HTTPタイムアウト（30秒超）</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">重大</span></td>
+                                    <td class="p-3 text-slate-400"><span class="px-1.5 py-0.5 bg-slate-700 rounded text-slate-300 text-xs font-mono font-bold">503</span> を返し、Kernel再起動を試みる。3回失敗でアラート</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">リクエストバリデーション失敗</div>
+                                        <div class="text-xs text-slate-500 mt-1">不正な入力スキーマ</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold">軽微</span></td>
+                                    <td class="p-3 text-slate-400">Elysia.jsのスキーマバリデーションで <span class="px-1.5 py-0.5 bg-slate-700 rounded text-slate-300 text-xs font-mono font-bold">400</span> 即時返却</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">JWT 検証失敗</div>
+                                        <div class="text-xs text-slate-500 mt-1">期限切れ・改ざんトークン</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
+                                    <td class="p-3 text-slate-400"><span class="px-1.5 py-0.5 bg-slate-700 rounded text-slate-300 text-xs font-mono font-bold">401</span> 返却。ログに記録しリフレッシュフローへ誘導</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 2. Python Kernel -->
+                    <div class="mb-6 border border-slate-700 rounded-lg overflow-hidden bg-slate-800/30 shadow-lg">
+                        <div class="bg-slate-800 border-b border-slate-700 p-4 flex items-center gap-3">
+                            <div class="w-8 h-8 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">P</div>
+                            <div>
+                                <h4 class="font-bold text-slate-200">Python Kernel — 推論層</h4>
+                                <p class="text-xs text-slate-400">FastAPI・LangChain・Decision Tree</p>
+                            </div>
+                        </div>
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-slate-400 border-b border-slate-700/50 bg-slate-800/10">
+                                    <th class="p-3 font-medium w-1/3">エラー種別</th>
+                                    <th class="p-3 font-medium w-1/6">重大度</th>
+                                    <th class="p-3 font-medium w-1/2">対応方針</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50">
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">Ollama 接続失敗</div>
+                                        <div class="text-xs text-slate-500 mt-1">モデル未起動・ポート不一致</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">重大</span></td>
+                                    <td class="p-3 text-slate-400">起動時ヘルスチェック。失敗時はUI上に「モデルが起動していません」を表示</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">モデルロード失敗</div>
+                                        <div class="text-xs text-slate-500 mt-1">VRAMが不足・モデル未ダウンロード</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">重大</span></td>
+                                    <td class="p-3 text-slate-400">必要スペックとともにエラーメッセージを返す。代替軽量モデルを提案</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">推論タイムアウト</div>
+                                        <div class="text-xs text-slate-500 mt-1">長大プロンプト・リソース不足</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
+                                    <td class="p-3 text-slate-400">60秒でタイムアウト。ストリーミングで部分結果を返してから終了</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">Decision Tree 実行エラー</div>
+                                        <div class="text-xs text-slate-500 mt-1">ノード定義不正・無限ループ</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
+                                    <td class="p-3 text-slate-400">最大ステップ数制限（例: 20ノード）。超過時は現在地から安全終了</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">Tool Execution 失敗</div>
+                                        <div class="text-xs text-slate-500 mt-1">外部コマンド・スクリプトエラー</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
+                                    <td class="p-3 text-slate-400">サンドボックス内で捕捉。エラー内容をAgentにフィードバックし再試行</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 3. Milvus Lite -->
+                    <div class="border border-slate-700 rounded-lg overflow-hidden bg-slate-800/30 shadow-lg">
+                        <div class="bg-slate-800 border-b border-slate-700 p-4 flex items-center gap-3">
+                            <div class="w-8 h-8 rounded bg-rose-100 text-rose-800 flex items-center justify-center font-bold">R</div>
+                            <div>
+                                <h4 class="font-bold text-slate-200">Milvus Lite — メモリ層</h4>
+                                <p class="text-xs text-slate-400">ベクターDB・RAGパイプライン</p>
+                            </div>
+                        </div>
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-slate-400 border-b border-slate-700/50 bg-slate-800/10">
+                                    <th class="p-3 font-medium w-1/3">エラー種別</th>
+                                    <th class="p-3 font-medium w-1/6">重大度</th>
+                                    <th class="p-3 font-medium w-1/2">対応方針</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50">
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">DB ファイル破損</div>
+                                        <div class="text-xs text-slate-500 mt-1">不正シャットダウン・ディスクエラー</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">重大</span></td>
+                                    <td class="p-3 text-slate-400">起動時整合性チェック。破損検出時は空DBで再初期化（データ損失警告）</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">埋め込み生成失敗</div>
+                                        <div class="text-xs text-slate-500 mt-1">Sentence-Transformersモデル未ロード</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
+                                    <td class="p-3 text-slate-400">RAGなしでLLM直接推論にフォールバック。ユーザーへ通知</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/50 transition-colors">
+                                    <td class="p-3">
+                                        <div class="font-semibold text-slate-300">ディスク容量不足</div>
+                                        <div class="text-xs text-slate-500 mt-1">ベクターデータ蓄積によるストレージ枯渇</div>
+                                    </td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
+                                    <td class="p-3 text-slate-400">80%使用時に警告。古いエントリの自動削除ポリシー（設定可能）</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab: リトライ設計 -->
+                <div id="err-content-retry" class="err-tab-content hidden text-slate-300">
+                    <h3 class="text-lg font-bold text-slate-200 mb-3 border-l-4 border-indigo-500 pl-3">構造化エラーオブジェクト</h3>
+                    <p class="mb-4">ElysiaAIの全レイヤー（Bun, Python, フロントエンド）で統一されたエラーフォーマットを使用し、自動復旧やリトライの判断をプログラムが自律的に行えるようにします。</p>
+                    <div class="bg-[#0f172a] p-5 rounded-lg font-mono text-sm border border-slate-700/50 shadow-inner">
+                        <span class="text-pink-400">interface</span> <span class="text-emerald-300">ElysiaError</span> {<br>
+                        &nbsp;&nbsp;<span class="text-indigo-300">code</span>: <span class="text-amber-300">string</span>;      <span class="text-slate-500">// 例: "ERR_OLLAMA_VRAM"</span><br>
+                        &nbsp;&nbsp;<span class="text-indigo-300">message</span>: <span class="text-amber-300">string</span>;   <span class="text-slate-500">// システム向け詳細</span><br>
+                        &nbsp;&nbsp;<span class="text-indigo-300">hint</span>: <span class="text-amber-300">string</span>;      <span class="text-slate-500">// ユーザー向け解決ヒント</span><br>
+                        &nbsp;&nbsp;<span class="text-indigo-300">retryable</span>: <span class="text-amber-300">boolean</span>; <span class="text-slate-500">// 自動リトライ可能か</span><br>
+                        }
+                    </div>
+                </div>
+
+                <!-- Tab: 障害フロー -->
+                <div id="err-content-flow" class="err-tab-content hidden text-slate-300">
+                    <h3 class="text-lg font-bold text-slate-200 mb-3 border-l-4 border-emerald-500 pl-3">フルスタック障害フロー</h3>
+                    <div class="bg-slate-800/50 p-6 rounded-xl flex justify-center border border-slate-700 overflow-x-auto">
+                        <pre class="mermaid">
+sequenceDiagram
+    participant F as Frontend
+    participant B as Bun Backend
+    participant P as Python Kernel
+    participant O as Ollama
+    
+    F->>B: リクエスト送信
+    B->>P: IPC呼び出し
+    P->>O: LLM推論リクエスト
+    O-->>P: エラー発生 (例: VRAM不足)
+    
+    P->>P: エラー解析 (ElysiaError生成)
+    P-->>B: {code: "ERR_VRAM", retryable: true...}
+    
+    alt retryable == true
+        B->>B: 再試行ロジック実行 (コンテキスト縮小等)
+        B->>P: 再リクエスト
+    else retryable == false
+        B-->>F: エラーとHintを返却
+        F->>F: ユーザーに解決策をUI提示
+    end
+                        </pre>
+                    </div>
+                </div>
+
+                <!-- Tab: 実装例 -->
+                <div id="err-content-code" class="err-tab-content hidden text-slate-300">
+                    <h3 class="text-lg font-bold text-slate-200 mb-3 border-l-4 border-sky-500 pl-3">実装例 (Bun Middleware)</h3>
+                    <div class="bg-[#0f172a] p-5 rounded-lg overflow-x-auto text-sm border border-slate-700/50 shadow-inner">
+<pre><code class="language-typescript font-mono"><span class="text-slate-500">// Bun/Elysia.js 側でのエラーハンドリングミドルウェア</span>
+app.<span class="text-sky-300">onError</span>(({ <span class="text-indigo-300">code</span>, <span class="text-indigo-300">error</span>, <span class="text-indigo-300">set</span> }) => {
+    <span class="text-slate-500">// 構造化エラーかチェック</span>
+    <span class="text-pink-400">if</span> (error && error.<span class="text-indigo-300">code</span> && error.<span class="text-indigo-300">hint</span> !== <span class="text-amber-300">undefined</span>) {
+        set.<span class="text-indigo-300">status</span> = <span class="text-amber-300">400</span>;
+        <span class="text-pink-400">return</span> {
+            <span class="text-indigo-300">success</span>: <span class="text-amber-300">false</span>,
+            <span class="text-indigo-300">error</span>: {
+                <span class="text-indigo-300">code</span>: error.<span class="text-indigo-300">code</span>,
+                <span class="text-indigo-300">message</span>: error.<span class="text-indigo-300">message</span>,
+                <span class="text-indigo-300">hint</span>: error.<span class="text-indigo-300">hint</span>,
+                <span class="text-indigo-300">retryable</span>: error.<span class="text-indigo-300">retryable</span>
+            }
+        };
+    }
+    
+    <span class="text-slate-500">// 未知のエラーは汎用フォーマットにラップ</span>
+    set.<span class="text-indigo-300">status</span> = <span class="text-amber-300">500</span>;
+    <span class="text-pink-400">return</span> {
+        <span class="text-indigo-300">success</span>: <span class="text-amber-300">false</span>,
+        <span class="text-indigo-300">error</span>: {
+            <span class="text-indigo-300">code</span>: <span class="text-emerald-300">"ERR_UNKNOWN"</span>,
+            <span class="text-indigo-300">message</span>: <span class="text-emerald-300">"予期せぬシステムエラーが発生しました。"</span>,
+            <span class="text-indigo-300">hint</span>: <span class="text-emerald-300">"システム管理者に連絡するか、ログを確認してください。"</span>,
+            <span class="text-indigo-300">retryable</span>: <span class="text-amber-300">false</span>
+        }
+    };
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- 10. Decision Tree 仕様 -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                10. Decision Tree 仕様 (Autonomous Reasoning Engine)
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50">
+                <p class="text-slate-300 mb-6">エージェントが自律的にタスクを完了させるための決定木（Decision Tree）ロジックの詳細です。</p>
+                <div class="bg-slate-800/50 p-6 rounded-xl flex justify-center border border-slate-700 overflow-x-auto mb-6">
+                    <pre class="mermaid">
+graph TD
+    Start((リクエスト受信)) --> Intent[Intent Classifier Node]
+    
+    Intent -->|知識が必要| RAG[Knowledge Retrieval Node]
+    Intent -->|直接回答可能| Direct[Direct Response Node]
+    Intent -->|ツール操作が必要| Plan[Action Planning Node]
+    
+    RAG --> Plan
+    Plan --> Execute[Tool Execution Node]
+    Execute --> Evaluate[Verification Node]
+    
+    Evaluate -->|成功・タスク完了| Finalize[Finalize Response Node]
+    Evaluate -->|失敗・修正が必要| Plan
+    
+    Direct --> Finalize
+    Finalize --> End((レスポンス返却))
+    
+    classDef core fill:#312e81,stroke:#6366f1,stroke-width:2px,color:#fff;
+    classDef tool fill:#831843,stroke:#f43f5e,stroke-width:2px,color:#fff;
+    classDef check fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#fff;
+    
+    class Intent,Plan,Finalize core;
+    class Execute tool;
+    class Evaluate check;
+                    </pre>
+                </div>
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-800/40 rounded-lg border border-indigo-500/30">
+                        <h4 class="font-bold text-indigo-300 mb-2">Intent Classifier Node (意図分類)</h4>
+                        <p class="text-sm text-slate-400">ユーザーの入力を解析し、「単なる質問」「外部知識が必要な質問」「システム操作が必要なタスク」のいずれかに分類します。この分類精度が全体のパフォーマンスを左右します。</p>
+                    </div>
+                    <div class="p-4 bg-slate-800/40 rounded-lg border border-rose-500/30">
+                        <h4 class="font-bold text-rose-300 mb-2">Tool Execution Node (ツール実行)</h4>
+                        <p class="text-sm text-slate-400">後述の「Tool Sandbox」内でシステムコマンドやファイル操作を実行します。実行結果の標準出力/標準エラー出力を取得し、次のVerification Nodeに渡します。</p>
+                    </div>
+                    <div class="p-4 bg-slate-800/40 rounded-lg border border-emerald-500/30">
+                        <h4 class="font-bold text-emerald-300 mb-2">Verification Node (自己評価・検証)</h4>
+                        <p class="text-sm text-slate-400">ツールの実行結果や生成された回答が、ユーザーの要求を満たしているか（Resonance Loopの終了条件）を自己評価します。エラーが含まれていれば再度プランニングに遷移します。</p>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- 11. AEGIS Ledger 詳細 -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                11. AEGIS Ledger 詳細 (Security Architecture)
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50">
+                <p class="text-slate-300 mb-6">Sovereign Privacy（主権的プライバシー）を保証するための多層防衛システム「Multi-layer ICE」の全貌です。</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Layer 1 -->
+                    <div class="p-5 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-600 relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-6xl text-slate-700/30 font-bold">01</div>
+                        <h4 class="font-bold text-slate-200 mb-2 relative z-10 text-lg">Layer 1: Edge Auth</h4>
+                        <p class="text-sm text-slate-400 relative z-10 mb-3">WebSocketおよびHTTP APIのエントリーポイント。Bun/Elysia.jsによる高速なJWT検証とRate Limitingを実施。</p>
+                        <div class="text-xs font-mono bg-slate-950 p-2 rounded text-emerald-400">Algorithm: EdDSA (Ed25519)</div>
+                    </div>
+                    <!-- Layer 2 -->
+                    <div class="p-5 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-600 relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-6xl text-slate-700/30 font-bold">02</div>
+                        <h4 class="font-bold text-slate-200 mb-2 relative z-10 text-lg">Layer 2: Core IPC Crypto</h4>
+                        <p class="text-sm text-slate-400 relative z-10 mb-3">BunとPython Kernel間のローカルプロセス間通信（IPC）においてもペイロードを暗号化し、メモリスニッフィングを防止。</p>
+                        <div class="text-xs font-mono bg-slate-950 p-2 rounded text-emerald-400">Protocol: TLS 1.3 over Unix Socket</div>
+                    </div>
+                    <!-- Layer 3 -->
+                    <div class="p-5 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-600 relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-6xl text-slate-700/30 font-bold">03</div>
+                        <h4 class="font-bold text-slate-200 mb-2 relative z-10 text-lg">Layer 3: Memory Masking</h4>
+                        <p class="text-sm text-slate-400 relative z-10 mb-3">Milvus Liteへ保存されるベクトルデータ（RAG）の保存前マスキング。PII（個人情報）を検知してハッシュ化または伏せ字に置換。</p>
+                        <div class="text-xs font-mono bg-slate-950 p-2 rounded text-emerald-400">Analyzer: Presidio + Local NER Model</div>
+                    </div>
+                    <!-- Layer 4 -->
+                    <div class="p-5 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-600 relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-6xl text-slate-700/30 font-bold">04</div>
+                        <h4 class="font-bold text-slate-200 mb-2 relative z-10 text-lg">Layer 4: Immutable Ledger</h4>
+                        <p class="text-sm text-slate-400 relative z-10 mb-3">AIが実行する全コマンド・ファイル操作はSQLiteに「Append-Only（追記のみ）」で記録。ハッシュチェーンで改ざんを防止。</p>
+                        <div class="text-xs font-mono bg-slate-950 p-2 rounded text-emerald-400">Mechanism: Cryptographic Hash Chain</div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- 12. セットアップ手順詳細 -->
+        <details class="glass-panel rounded-xl overflow-hidden group" open>
+            <summary class="p-6 bg-slate-800/50 hover:bg-slate-700/50 transition-colors flex justify-between items-center text-xl font-semibold">
+                12. セットアップ手順詳細 (Development Setup)
+                <svg class="w-6 h-6 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </summary>
+            <div class="p-6 border-t border-slate-700/50 text-slate-300">
+                <p class="mb-6">ElysiaAIの開発および実行環境を構築するための詳細なステップです。</p>
+
+                <div class="space-y-6">
+                    <!-- Step 1: Prerequisites -->
+                    <div>
+                        <h4 class="text-indigo-400 font-bold mb-3 border-b border-slate-700 pb-2">Step 1: 前提条件 (Prerequisites)</h4>
+                        <ul class="list-disc ml-6 space-y-1 text-sm">
+                            <li><strong>Bun</strong> (v1.1以上): フロントエンドおよびバックエンドサーバー用</li>
+                            <li><strong>Python</strong> (v3.11以上): AIカーネルおよび推論エンジン用</li>
+                            <li><strong>Ollama</strong>: ローカルLLM実行用（<code>llama3.2</code> を pull しておくことを推奨）</li>
+                            <li><strong>Make</strong>: ビルドおよび起動スクリプト実行用</li>
+                        </ul>
+                    </div>
+
+                    <!-- Step 2: Environment Variables -->
+                    <div>
+                        <h4 class="text-indigo-400 font-bold mb-3 border-b border-slate-700 pb-2">Step 2: 環境変数の設定 (.env)</h4>
+                        <p class="text-sm mb-2">リポジトリルートの <code>.env.example</code> を <code>.env</code> にコピーし、以下の変数を設定します。</p>
+                        <div class="bg-slate-900 p-4 rounded-lg font-mono text-xs border border-slate-700 overflow-x-auto">
+                            <span class="text-slate-500"># Server Settings</span><br>
+                            <span class="text-sky-300">PORT</span>=3000<br>
+                            <span class="text-sky-300">PYTHON_PORT</span>=8000<br>
+                            <br>
+                            <span class="text-slate-500"># Security</span><br>
+                            <span class="text-sky-300">JWT_SECRET</span>="your-super-secret-key"<br>
+                            <br>
+                            <span class="text-slate-500"># Database & Memory</span><br>
+                            <span class="text-sky-300">DATABASE_URL</span>="file:./dev.db"<br>
+                            <span class="text-sky-300">MILVUS_URI</span>="./milvus_memory.db"<br>
+                            <br>
+                            <span class="text-slate-500"># LLM Configuration</span><br>
+                            <span class="text-sky-300">OLLAMA_BASE_URL</span>="http://localhost:11434"<br>
+                            <span class="text-sky-300">DEFAULT_MODEL</span>="llama3.2"<br>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Installation -->
+                    <div>
+                        <h4 class="text-indigo-400 font-bold mb-3 border-b border-slate-700 pb-2">Step 3: 依存関係のインストール (make install)</h4>
+                        <p class="text-sm mb-2"><code>make install</code> コマンドを実行すると、以下のプロセスが自動で走ります。</p>
+                        <ol class="list-decimal ml-6 space-y-2 text-sm bg-slate-800/30 p-4 rounded-lg">
+                            <li><strong>Bunパッケージのインストール:</strong> <code>bun install</code> によりフロント/バックエンドの依存を解決</li>
+                            <li><strong>Python仮想環境の構築:</strong> <code>.venv</code> を作成し、<code>pip install -r requirements.txt</code> を実行</li>
+                            <li><strong>データベースの初期化:</strong> <code>bunx prisma db push</code> でSQLiteをセットアップ</li>
+                            <li><strong>モデルの事前確認:</strong> Ollamaサーバーとの疎通確認およびモデルの存在チェック</li>
+                        </ol>
+                    </div>
+
+                    <!-- Step 4: Boot -->
+                    <div>
+                        <h4 class="text-indigo-400 font-bold mb-3 border-b border-slate-700 pb-2">Step 4: システム起動 (make boot)</h4>
+                        <p class="text-sm mb-2"><code>make boot</code> コマンドにより、Resonance Loopが起動します。</p>
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="flex-1 p-4 bg-slate-800/80 rounded border-l-4 border-emerald-500">
+                                <strong class="text-emerald-400 block mb-1">バックグラウンド</strong>
+                                <span class="text-xs">Python Uvicornサーバーがポート <code>8000</code> で起動し、AIカーネルとMilvusデータベースが初期化されます。</span>
+                            </div>
+                            <div class="flex-1 p-4 bg-slate-800/80 rounded border-l-4 border-sky-500">
+                                <strong class="text-sky-400 block mb-1">フォアグラウンド</strong>
+                                <span class="text-xs">Bun/Elysia.js サーバーがポート <code>3000</code> で起動。<code>http://localhost:3000</code> でWeb UIにアクセス可能になります。</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <footer class="text-center py-8 text-slate-500 text-sm">
+            <p>Generated by ElysiaAI System // <button onclick="window.print()" class="text-indigo-400 hover:text-indigo-300 transition-colors underline cursor-pointer">印刷・PDF保存</button></p>
+        </footer>
+    </div>
+    
+    <script>
+        // Mermaid Initialize
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'dark',
+            fontFamily: 'Inter',
+        });
+
+        // Gap Filter Logic
+        function filterGaps(priority) {
+            // Remove active rings from all buttons
+            document.querySelectorAll('.gap-filter-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-indigo-500', 'ring-offset-2', 'ring-offset-slate-900');
+            });
+            // Add active ring to clicked button
+            document.getElementById('btn-' + priority).classList.add('ring-2', 'ring-indigo-500', 'ring-offset-2', 'ring-offset-slate-900');
+
+            // Show/Hide items
+            document.querySelectorAll('.gap-item').forEach(item => {
+                if (priority === 'all' || item.classList.contains(priority)) {
+                    item.style.display = 'block';
+                    // Trigger reflow for animation
+                    item.style.opacity = '0';
+                    setTimeout(() => {
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateY(0)';
+                    }, 50);
+                } else {
+                    item.style.display = 'none';
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateY(10px)';
+                }
+            });
+        }
+
+        // Error Handling Tab Logic
+        function switchErrorTab(tabId) {
+            // Hide all content
+            document.querySelectorAll('.err-tab-content').forEach(content => {
+                content.classList.add('hidden');
+                content.style.animation = 'none';
+                content.offsetHeight; /* trigger reflow */
+                content.style.animation = null; 
+            });
+            // Show target content
+            const targetContent = document.getElementById('err-content-' + tabId);
+            targetContent.classList.remove('hidden');
+            targetContent.style.animation = 'fadeIn 0.3s ease-in-out';
+
+            // Reset all buttons
+            document.querySelectorAll('.err-tab-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'text-indigo-400');
+                btn.classList.add('border-transparent', 'text-slate-400');
+            });
+            // Highlight target button
+            const activeBtn = document.getElementById('err-tab-' + tabId);
+            activeBtn.classList.remove('border-transparent', 'text-slate-400');
+            activeBtn.classList.add('border-indigo-500', 'text-indigo-400');
+        }
+    </script>
+</body>
+</html>

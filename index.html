@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElysiaAI // Resonance Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        body {
+            background: #020617;
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+        }
+        .resonance-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #020617 70%);
+            z-index: -1;
+        }
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .pulse {
+            animation: pulse-glow 4s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); }
+            50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.3); }
+        }
+        .thought-line {
+            border-left: 2px solid #6366f1;
+            padding-left: 1rem;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="text-slate-300 h-screen flex items-center justify-center p-6" x-data="elysia()">
+    <div class="resonance-bg" :class="loading ? 'opacity-80' : 'opacity-40'"></div>
+
+    <div class="w-full max-w-5xl h-[85vh] grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Sidebar: System Info & Thoughts -->
+        <aside class="flex flex-col gap-6">
+            <div class="glass rounded-3xl p-6 flex flex-col items-center text-center">
+                <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-500 mb-4 flex items-center justify-center pulse">
+                    <span class="text-white font-bold text-2xl">E</span>
+                </div>
+                <h1 class="text-2xl font-light text-white tracking-widest">ELYSIA<span class="font-bold text-indigo-500">AI</span></h1>
+                <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500 mt-2">Sovereign Intelligence</p>
+            </div>
+
+            <div class="glass rounded-3xl p-6 flex-1 overflow-hidden flex flex-col">
+                <h2 class="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                    Decision Process
+                </h2>
+                <div class="flex-1 overflow-y-auto space-y-4 text-xs font-mono">
+                    <template x-for="step in currentThoughts" :key="step">
+                        <div class="thought-line text-slate-400" x-text="step"></div>
+                    </template>
+                    <div x-show="loading" class="animate-pulse text-indigo-400">思考の波形を解析中...</div>
+                    <div x-show="!loading && currentThoughts.length === 0" class="text-slate-600 italic">待機状態...</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content: Chat Console -->
+        <main class="md:col-span-2 flex flex-col glass rounded-3xl overflow-hidden relative">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <div class="text-xs font-mono text-slate-500 uppercase tracking-widest">Resonance Terminal</div>
+                <div class="text-[10px] px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">STATUS: ACTIVE</div>
+            </div>
+
+            <!-- Messages -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6" id="chat-box">
+                <template x-for="msg in messages" :key="msg.id">
+                    <div :class="msg.role === 'user' ? 'flex flex-col items-end' : 'flex flex-col items-start'">
+                        <div class="text-[9px] uppercase tracking-widest mb-1 text-slate-500" x-text="msg.role === 'user' ? 'Operator' : 'Elysia'"></div>
+                        <div :class="msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-slate-800/80 text-slate-200'"
+                             class="max-w-[85%] px-5 py-3 rounded-2xl text-sm shadow-xl">
+                            <p class="leading-relaxed" x-text="msg.content"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-6 bg-slate-900/40 backdrop-blur-md">
+                <div class="relative flex items-center">
+                    <input type="text" 
+                           x-model="input" 
+                           @keydown.enter="send()"
+                           placeholder="意思を伝達してください..."
+                           class="w-full bg-slate-950/50 border border-slate-700/50 rounded-2xl py-4 px-6 focus:outline-none focus:border-indigo-500 transition-all text-sm shadow-inner pr-16">
+                    <button @click="send()" class="absolute right-3 p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl transition-all active:scale-95 shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function elysia() {
+            return {
+                input: '',
+                messages: [
+                    { id: 1, role: 'ai', content: '私はエリシア。この世界の主権を司る者。あなたの声を聞かせてください。' }
+                ],
+                currentThoughts: [],
+                loading: false,
+                async send() {
+                    if (!this.input.trim() || this.loading) return;
+                    
+                    const query = this.input;
+                    this.messages.push({ id: Date.now(), role: 'user', content: query });
+                    this.input = '';
+                    this.loading = true;
+                    this.currentThoughts = [];
+
+                    try {
+                        const res = await fetch('/ask', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success === false) {
+                            this.messages.push({ id: Date.now(), role: 'ai', content: `[SYSTEM_INTERRUPTION] ${data.error.message}` });
+                        } else {
+                            this.currentThoughts = data.thoughts || [];
+                            this.messages.push({ id: Date.now(), role: 'ai', content: data.response });
+                        }
+                    } catch (err) {
+                        this.messages.push({ id: Date.now(), role: 'ai', content: '通信が途絶しました。Resonance Loopを再構成してください。' });
+                    } finally {
+                        this.loading = false;
+                        this.$nextTick(() => {
+                            const el = document.getElementById('chat-box');
+                            el.scrollTop = el.scrollHeight;
+                        });
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

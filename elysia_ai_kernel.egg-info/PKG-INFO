@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: elysia-ai-kernel
+Version: 0.1.0
+Summary: AI Core for ElysiaAI
+License-File: LICENSE
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: langchain
+Requires-Dist: langchain-community
+Requires-Dist: ollama
+Requires-Dist: pymilvus[model]
+Requires-Dist: python-dotenv
+Requires-Dist: pydantic
+Dynamic: license-file

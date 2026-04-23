@@ -1,62 +1,20 @@
 {
-  "name": "@elysia-ai/root",
-  "version": "4.1.0",
-  "description": "ElysiaAI: Where Logic Meets Human Sensitivity. A sentient, high-performance platform built with Bun & Rust.",
-  "author": "Elysia20210806 <elysia@elysia.os>",
-  "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "name": "elysia-ai",
+  "version": "0.1.0",
   "scripts": {
+    "dev": "bun run --watch src/index.ts",
     "test": "bun test",
-    "dev": "bun --filter \"*\" dev",
-    "start": "bun --filter @elysia-ai/server start",
-    "build": "cd packages/server && bun build src/index.ts --outdir ../../dist --target node",
-    "docker:build": "docker build -f Dockerfile.production -t elysia-ai:latest .",
-    "docker:up": "docker-compose up -d",
-    "aws:deploy": "bash cloud/aws/deploy.sh",
-    "gcp:deploy": "bash cloud/gcp/deploy.sh",
-    "lint": "biome check .",
-    "format": "biome format --write .",
-    "fix": "biome check --write .",
-    "clean": "powershell -ExecutionPolicy Bypass -File ./scripts/clean.ps1 -Deep",
-    "db:init": "bun --filter \"@elysia-ai/server\" db:init",
-    "db:migrate": "bun --filter \"@elysia-ai/server\" db:migrate",
-    "prepare": "husky",
-    "tauri": "tauri",
-    "dev:desktop": "tauri dev",
-    "boot": "bun run scripts/boot.ts",
-    "maintenance": "bun run scripts/maintenance.ts",
-    "fix:encoding": "bun run scripts/fix-encoding.ts",
-    "lint-staged": "lint-staged"
-  },
-  "lint-staged": {
-    "*.{js,ts,tsx,json}": [
-      "biome check --write --no-errors-on-unmatched"
-    ],
-    "*.py": [
-      "python -m ruff check --fix --force-exclude",
-      "python -m ruff format --force-exclude"
-    ],
-    "*": [
-      "bun run scripts/security-scan.ts"
-    ]
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "@playwright/test": "^1.59.1",
-    "@tailwindcss/postcss": "^4.2.2",
-    "@tauri-apps/cli": "^2.10.1",
-    "autoprefixer": "^10.5.0",
-    "axios": "^1.15.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^15.5.2",
-    "postcss": "^8.5.10",
-    "prisma": "^6.19.3",
-    "react-test-renderer": "^19.2.5",
-    "tailwindcss": "^4.2.2"
+    "prepare": "husky"
   },
   "dependencies": {
-    "@prisma/client": "^6.19.3"
+    "elysia": "latest",
+    "@elysiajs/cors": "latest",
+    "@elysiajs/jwt": "latest",
+    "@elysiajs/websocket": "latest",
+    "prisma": "latest",
+    "@prisma/client": "latest"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
   }
 }
