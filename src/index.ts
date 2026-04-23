@@ -1,17 +1,33 @@
 import { cors } from "@elysiajs/cors";
+import { staticPlugin } from "@elysiajs/static";
 import { Elysia, t } from "elysia";
+
+const KERNEL_URL = "http://localhost:8000";
 
 const app = new Elysia()
 	.use(cors())
+	.use(staticPlugin())
 	.get("/", () => Bun.file("index.html"))
+
+	// システムヘルスチェックのプロキシ
+	.get("/api/health", async ({ set }) => {
+		try {
+			const res = await fetch(`${KERNEL_URL}/health`);
+			if (!res.ok) throw new Error();
+			return await res.json();
+		} catch (e) {
+			set.status = 503;
+			return { ollama: false, kernel: false, workspace: false };
+		}
+	})
+
 	.post(
-		"/ask",
+		"/api/process",
 		async ({ body, set }) => {
 			const { query } = body as { query: string };
 
 			try {
-				// Python Kernel (Resonance Loop) へリクエストを転送
-				const response = await fetch("http://localhost:8000/process", {
+				const response = await fetch(`${KERNEL_URL}/process`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ query }),
@@ -23,16 +39,12 @@ const app = new Elysia()
 
 				return await response.json();
 			} catch (error) {
-				// 仕様書に基づいた構造化エラーレスポンス
 				set.status = 503;
 				return {
-					success: false,
-					error: {
-						code: "ERR_KERNEL_OFFLINE",
-						message: "Python AI Kernel に接続できません。",
-						hint: "make boot を実行してカーネルが起動しているか確認してください。",
-						retryable: true,
-					},
+					response:
+						"知能の共鳴が遮断されました。深層回路（Python Kernel）の接続を確認してください。",
+					thoughts: ["致命的エラー：通信路の破綻。"],
+					status: "error",
 				};
 			}
 		},
