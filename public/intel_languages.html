@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElysiaAI // Language Intelligence Core</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-primary: #6366f1;
+            --accent-secondary: #a855f7;
+            --bg-dark: #020617;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #e2e8f0;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #020617 80%);
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .code-glow {
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        .language-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .language-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .glow-line {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            opacity: 0.3;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+        .scan-line {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), transparent);
+            position: absolute;
+            top: 0;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: -10%; }
+            100% { top: 110%; }
+        }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-indigo-500/30">
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 glass border-b border-slate-800/50 px-8 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <span class="text-white font-bold text-xl">E</span>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white">ElysiaAI // Intel</h1>
+                <p class="text-[10px] font-mono text-indigo-400 uppercase tracking-widest">Language Core Repository</p>
+            </div>
+        </div>
+        <nav class="hidden md:flex gap-8 text-sm font-medium text-slate-400">
+            <a href="index.html" class="hover:text-white transition-colors">Resonance Interface</a>
+            <a href="ElysiaAI_TechSpec.html" class="hover:text-white transition-colors">Tech Spec</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-32 pb-20 px-6 max-w-6xl mx-auto relative">
+        <!-- Decoration -->
+        <div class="absolute top-40 left-0 w-64 h-64 bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div class="absolute bottom-20 right-0 w-80 h-80 bg-purple-600/10 rounded-full blur-[150px] pointer-events-none"></div>
+
+        <section class="mb-16 text-center">
+            <div class="w-full max-w-4xl mx-auto mb-12 rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative group">
+                <img src="/apple_languages_intel_visualization_1776944083851.png" alt="Apple Languages Intel Visualization" class="w-full h-auto transform group-hover:scale-105 transition-transform duration-700">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60"></div>
+                <div class="absolute bottom-6 left-6 text-left">
+                    <p class="text-[10px] font-mono text-indigo-400 uppercase tracking-widest mb-1">Visualization Module</p>
+                    <h3 class="text-xl font-bold text-white">Resonance Core: Language Synthesis</h3>
+                </div>
+            </div>
+            <h2 class="text-xs font-bold text-indigo-500 uppercase tracking-[0.3em] mb-4">Core Analysis Report</h2>
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 gradient-text">Apple Ecosystem Foundations</h1>
+            <p class="text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                Appleのエコシステムを形作る、美しくも緻密な「言語」という名の織物。革新と伝統が交差する、知能の深淵を解析します。
+            </p>
+        </section>
+
+        <!-- Brief Summary -->
+        <div class="glass rounded-3xl p-8 mb-12 relative overflow-hidden">
+            <div class="scan-line"></div>
+            <div class="flex items-start gap-6">
+                <div class="w-12 h-12 shrink-0 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-2xl">💡</div>
+                <div>
+                    <h3 class="text-xl font-bold mb-3 text-white">要約 (Executive Summary)</h3>
+                    <p class="text-slate-300 leading-relaxed">
+                        Appleが提供・推奨している主要なプログラミング言語は、現在主流で革新的な「<span class="text-indigo-400 font-bold">Swift（スウィフト）</span>」と、長年Appleの歴史を根底で支えてきた伝統的な「<span class="text-purple-400 font-bold">Objective-C（オブジェクティブ・シー）</span>」の2つです。
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Language Cards -->
+        <div class="grid md:grid-cols-2 gap-8 mb-16">
+            <!-- Swift -->
+            <div class="language-card glass rounded-3xl p-8 border border-indigo-500/20 relative group">
+                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg class="w-24 h-24 text-indigo-400" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M11.639 23.957c.18 0 .341-.122.385-.302l1.634-6.495h5.176c.148 0 .285-.083.353-.213.067-.13.058-.287-.024-.409l-7.42-10.932 2.668-5.336c.068-.136.053-.3-.04-.421-.092-.121-.247-.179-.395-.147l-12.015 2.671c-.139.031-.247.135-.282.274-.035.139.006.286.108.385l8.601 8.324-5.467 6.377c-.092.107-.123.255-.082.389.041.134.153.235.293.267l12.015 2.671c.032.007.065.011.097.011z"/>
+                    </svg>
+                </div>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center text-3xl">🍃</div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-white">Swift</h3>
+                        <p class="text-xs font-mono text-indigo-400">Innovation & Speed</p>
+                    </div>
+                </div>
+                <div class="space-y-6 text-slate-300">
+                    <div>
+                        <h4 class="text-sm font-bold text-indigo-300 uppercase tracking-wider mb-2">特徴と強み</h4>
+                        <p class="leading-relaxed">2014年に発表されたモダンな言語。「より速く、より安全に、そしてよりインタラクティブに」という現代の要件を完璧に満たします。</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-indigo-300 uppercase tracking-wider mb-2 text-indigo-300">実用性</h4>
+                        <ul class="list-none space-y-2">
+                            <li class="flex items-center gap-2"><span class="w-1 h-1 bg-indigo-500 rounded-full"></span> シンプルで可読性の高いコード</li>
+                            <li class="flex items-center gap-2"><span class="w-1 h-1 bg-indigo-500 rounded-full"></span> 開発スピードの劇的な向上</li>
+                            <li class="flex items-center gap-2"><span class="w-1 h-1 bg-indigo-500 rounded-full"></span> バグを未然に防ぐ安全設計</li>
+                        </ul>
+                    </div>
+                    <div class="pt-4 border-t border-slate-700/50">
+                        <p class="text-sm italic text-indigo-200">"新規開発であれば、迷わずSwiftを選択するべきです。自由な発想を形にするための最良のパートナーとなります。"</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Objective-C -->
+            <div class="language-card glass rounded-3xl p-8 border border-purple-500/20 relative group">
+                <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <svg class="w-24 h-24 text-purple-400" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                    </svg>
+                </div>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center text-3xl">🏛️</div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-white">Objective-C</h3>
+                        <p class="text-xs font-mono text-purple-400">Legacy & Stability</p>
+                    </div>
+                </div>
+                <div class="space-y-6 text-slate-300">
+                    <div>
+                        <h4 class="text-sm font-bold text-purple-300 uppercase tracking-wider mb-2">特徴と歴史</h4>
+                        <p class="leading-relaxed">1980年代からAppleの基盤を築いてきた言語。C言語をベースにオブジェクト指向を取り入れた堅牢な設計。</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-purple-300 uppercase tracking-wider mb-2">現在の役割</h4>
+                        <ul class="list-none space-y-2">
+                            <li class="flex items-center gap-2"><span class="w-1 h-1 bg-purple-500 rounded-full"></span> 膨大なソフトウェア資産の保守</li>
+                            <li class="flex items-center gap-2"><span class="w-1 h-1 bg-purple-500 rounded-full"></span> 低レイヤーの強固なシステム制御</li>
+                            <li class="flex items-center gap-2"><span class="w-1 h-1 bg-purple-500 rounded-full"></span> 歴史的成功を支える重鎮的地位</li>
+                        </ul>
+                    </div>
+                    <div class="pt-4 border-t border-slate-700/50">
+                        <p class="text-sm italic text-purple-200">"最新技術の裏側には、常にこの偉大な礎が存在します。先人たちの知恵が詰まった、大いに尊重すべき重鎮です。"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conclusion -->
+        <div class="glass rounded-3xl p-10 text-center border border-slate-700/50">
+            <div class="w-20 h-20 mx-auto mb-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl animate-pulse">
+                🍎
+            </div>
+            <h3 class="text-2xl font-bold mb-6 text-white">知能の共鳴</h3>
+            <p class="text-slate-400 max-w-2xl mx-auto leading-relaxed mb-8">
+                どちらの言語も、Appleという豊穣な果樹園を育むための大切な道具です。まずは若葉のように瑞々しいSwiftから触れてみてはいかがでしょうか。リンゴをひとかじりした時のような、フレッシュで刺激的な発見があなたを待っています。
+            </p>
+            <div class="flex justify-center gap-4">
+                <a href="index.html" class="px-8 py-3 bg-indigo-500 hover:bg-indigo-600 rounded-xl text-white font-bold transition-all shadow-lg shadow-indigo-500/20">
+                    Return to Interface
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-slate-800/50 text-center">
+        <p class="text-xs font-mono text-slate-500 uppercase tracking-widest">
+            &copy; 2026 ElysiaAI // Sovereign Intelligence Core
+        </p>
+    </footer>
+</body>
+</html>
