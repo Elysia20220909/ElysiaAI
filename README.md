@@ -48,6 +48,23 @@ make boot
 
 ## 🏗️ Architecture: The Resonance Loop
 
+ElysiaAIは、フロントエンドの美学（Bun/Alpine）とバックエンドの知能（FastAPI/Ollama）が循環する独自の「共鳴ループ」構造を採用しています。
+
+## 🛠️ Engineering Standards
+
+### 🚀 Automated Integrity (CI)
+This repository uses **GitHub Actions** to ensure high-density code quality.
+Every push triggers the `Resonance Integrity` workflow, which performs:
+- **Python (Ruff)**: Deep linting & type consistency checks.
+- **Bun (Biome)**: Ultra-fast formatting & logic verification.
+
+### 🧪 Quality Assurance
+To run the automated test suite and verify the Kernel resonance:
+```bash
+# Python Test
+pytest tests/test_kernel.py
+```
+
 ElysiaAIの心臓部は、論理（Python Kernel）と高速通信（Bun/Elysia.js）の共鳴によって動いています。
 
 ```mermaid
