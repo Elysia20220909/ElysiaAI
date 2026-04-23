@@ -24,8 +24,12 @@
     "files.exclude": {
         "**/.mypy_cache": true,
         "**/.ruff_cache": true,
-        "kernel/config/abyss": true,
-        "**/node_modules": false,
+        "kernel": true,
+        "etc": true,
+        "var": true,
+        "usr": true,
+        "scripts": true,
+        "node_modules": false,
         "**/.git": false
     }
 }
