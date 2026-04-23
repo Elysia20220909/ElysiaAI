@@ -151,6 +151,13 @@
                     } finally {
                         this.loading.neural = false;
                     }
+                },
+                async bootstrapSystem() {
+                    this.addLog('>>> STARTING SOVEREIGN BOOTSTRAP SEQUENCE <<<');
+                    await this.initiateNanotech();
+                    await this.accessWorkspace();
+                    await this.neuralAuth();
+                    this.addLog('>>> SYSTEM RESONANCE STABILIZED <<<');
                 }
             }
         }
@@ -164,6 +171,12 @@
                 <span class="bg-gradient-to-r from-pink-500 to-cyan-500 bg-clip-text text-transparent">MODULES</span>
             </h1>
             <div class="h-[1px] flex-1 bg-gradient-to-r from-slate-800 to-transparent"></div>
+            <button 
+                @click="bootstrapSystem()"
+                class="px-4 py-2 rounded-full border border-cyan-500/30 text-cyan-400 text-[10px] font-bold uppercase tracking-widest hover:bg-cyan-500/10 transition-all"
+            >
+                Bootstrap System
+            </button>
             <div class="flex items-center gap-4 text-[10px] font-mono text-slate-500">
                 <span class="flex items-center gap-1"><span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> KERNEL_ONLINE</span>
                 <span>Uptime: 00:42:15</span>
