@@ -115,10 +115,31 @@ function startLogStream() {
     next();
 }
 
-// Start everything
+// --- Boot Sequence ---
+const bootLog = document.getElementById('boot-log');
+const bootMessages = [
+    'Loading AETHER core...',
+    'Synchronizing temporal shards...',
+    'Bypassing reality constraints...',
+    'Establishing neural link...',
+    'SOVEREIGN OS READY.'
+];
+
+async function startBoot() {
+    for (let msg of bootMessages) {
+        bootLog.innerText += '> ' + msg + '\n';
+        await new Promise(r => setTimeout(r, Math.random() * 500 + 200));
+    }
+    setTimeout(() => {
+        document.getElementById('boot-screen').classList.add('boot-fade-out');
+    }, 1000);
+}
+
+// Final Initialization
 console.log('Elysia OS: Log stream initializing...');
 startLogStream();
 animate();
+startBoot();
 
 // --- Hacker Typer Logic ---
 const hackerCodeRaw = `
