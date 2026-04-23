@@ -13,5 +13,18 @@
     },
     "ruff.importStrategy": "fromEnvironment",
     "ruff.fixAll": true,
-    "ruff.organizeImports": true
+    "ruff.organizeImports": true,
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.expand": false,
+    "explorer.fileNesting.patterns": {
+        "package.json": "bun.lock, tsconfig.json, biome.json, .env*, .gitignore, .gitattributes, .editorconfig, bunfig.toml, pyproject.toml, ruff.toml, postcss.config.cjs, tailwind.config.js, requirements.txt, requirements.lock, .npmrc, .yarnrc.yml, .dockerignore, .cleanignore, .husky, Dockerfile*, docker-compose.yml, Makefile",
+        "README.md": "README.*.md, LICENSE, CONTRIBUTING.md, AEGIS_LEDGER.md",
+        "scripts/boot.ts": "sentinel_*.json, soul_shard.hash, dev.db"
+    },
+    "files.exclude": {
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "**/node_modules": false,
+        "**/.git": false
+    }
 }
