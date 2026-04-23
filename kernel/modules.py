@@ -7,9 +7,13 @@ from typing import Any
 
 class ModuleManager:
     def __init__(self, workspace: str):
-        self.workspace = workspace
-        self.status_file = os.path.join(workspace, "modules_state.json")
+        self.workspace = os.path.abspath(workspace)
+        self.status_file = os.path.join(self.workspace, "modules_state.json")
         self.state = self._load_state()
+
+    def _is_safe_path(self, path: str) -> bool:
+        abs_path = os.path.abspath(os.path.join(self.workspace, path))
+        return abs_path.startswith(self.workspace)
 
     def _load_state(self) -> dict[str, Any]:
         if os.path.exists(self.status_file):
@@ -54,14 +58,20 @@ class ModuleManager:
         """
         Rebuilds the workspace index and prepares the sovereign desktop.
         """
-        files = os.listdir(self.workspace)
-        self.state["desktop"]["workspace_locked"] = False
-        self._save_state()
-        return {
-            "status": "success",
-            "file_count": len(files),
-            "theme": self.state["desktop"]["theme"]
-        }
+        if not self._is_safe_path("."):
+            return {"error": "Sandbox violation: Access outside workspace denied"}
+            
+        try:
+            files = os.listdir(self.workspace)
+            self.state["desktop"]["workspace_locked"] = False
+            self._save_state()
+            return {
+                "status": "success",
+                "file_count": len(files),
+                "theme": self.state["desktop"]["theme"]
+            }
+        except OSError as e:
+            return {"error": f"IO Error during workspace scan: {e}"}
 
     def neural_authenticate(self, seed: str) -> dict[str, Any]:
         """
