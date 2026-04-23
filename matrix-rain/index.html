@@ -8,13 +8,58 @@
 </head>
 <body>
     <canvas id="matrix-canvas"></canvas>
+    
+    <div class="dashboard-container">
+        <!-- Top Stats -->
+        <div class="widget stats-widget">
+            <div class="widget-header">
+                <span>SYSTEM STATUS</span>
+                <span id="uptime">UPTIME: 00:00:00</span>
+            </div>
+            <div class="stat-row"><span>CPU</span><span id="cpu-percent">4%</span></div>
+            <div class="progress-bar"><div id="cpu-bar" class="progress-fill" style="width: 4%"></div></div>
+            <div class="stat-row" style="margin-top: 10px"><span>MEM</span><span id="mem-percent">12%</span></div>
+            <div class="progress-bar"><div id="mem-bar" class="progress-fill" style="width: 12%"></div></div>
+        </div>
+
+        <!-- Network Activity -->
+        <div class="widget network-widget">
+            <div class="widget-header">
+                <span>NEURAL NODES</span>
+                <span>SYNCING...</span>
+            </div>
+            <ul id="node-list" class="node-list">
+                <!-- Nodes will be added by JS -->
+            </ul>
+        </div>
+
+        <!-- Neural Map -->
+        <div class="widget neural-widget">
+            <div class="widget-header">
+                <span>REALITY MAP</span>
+                <span>GRID: 6267</span>
+            </div>
+            <canvas id="neural-canvas"></canvas>
+        </div>
+    </div>
+
     <div id="log-stream" class="log-stream-container"></div>
-    <div class="overlay">
+    <div class="overlay" id="center-overlay">
         <div class="terminal-container">
             <h1 class="glitch-text" data-text="SYSTEM BREACH">SYSTEM BREACH</h1>
             <p class="status">CONNECTED TO ELYSIA SOVEREIGN OS</p>
             <div class="cursor-block"></div>
+            <p class="blink-prompt" style="margin-top: 2rem; color: #00ff41; font-size: 0.8rem; animation: blink 1s infinite;">> TYPE TO HACK_</p>
         </div>
+    </div>
+    
+    <div id="typer-container" class="typer-container">
+        <pre id="typer-content"></pre>
+        <span class="typer-cursor">_</span>
+    </div>
+
+    <div id="access-popup" class="access-popup hidden">
+        <h1 id="access-message"></h1>
     </div>
     <script src="script.js"></script>
 </body>
