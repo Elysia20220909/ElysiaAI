@@ -150,7 +150,25 @@ impl AegisWatchdog {
     }
 
     pub fn get_status(&self) -> AegisStatus {
-        self.status.lock().unwrap().clone()
+        self.status.lock().expect("Failed to lock Aegis status").clone()
+    }
+
+    /// Generates a stable, hardware-bound identifier.
+    fn generate_hwid() -> String {
+        // In a production environment, this would use machine-id or serial numbers
+        #[cfg(windows)]
+        {
+            let output = std::process::Command::new("powershell")
+                .args(&["-Command", "(Get-CimInstance -ClassName Win32_ComputerSystemProduct).UUID"])
+                .output();
+            
+            if let Ok(out) = output {
+                let uuid = String::from_utf8_lossy(&out.stdout).trim().to_string();
+                if !uuid.is_empty() { return uuid; }
+            }
+        }
+        
+        "ELYSIAN-GENERIC-HWID-0000".to_string()
     }
 }
 
