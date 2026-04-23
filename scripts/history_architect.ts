@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const MESSAGES = [
@@ -21,7 +21,9 @@ if (!existsSync(ABYSS_DIR)) {
 }
 
 async function architect(days: number, commitsPerDay: number) {
-	console.log(`🏗️ Architecting History: Generating ${days * commitsPerDay} commits over ${days} days.`);
+	console.log(
+		`🏗️ Architecting History: Generating ${days * commitsPerDay} commits over ${days} days.`,
+	);
 
 	const now = new Date();
 
@@ -32,9 +34,12 @@ async function architect(days: number, commitsPerDay: number) {
 		for (let c = 0; c < commitsPerDay; c++) {
 			const message = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
 			const entropy = Math.random().toString(36).substring(2);
-			
+
 			// Jitter the time
-			targetDate.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60));
+			targetDate.setHours(
+				Math.floor(Math.random() * 24),
+				Math.floor(Math.random() * 60),
+			);
 			const dateStr = targetDate.toISOString();
 
 			writeFileSync(HISTORY_FILE, Buffer.from(entropy));
@@ -42,25 +47,30 @@ async function architect(days: number, commitsPerDay: number) {
 			try {
 				execSync("git add kernel/config/abyss/history_engram.bin");
 				// Forge both author and committer dates
-				execSync(`git commit -m "${message}" --date="${dateStr}" --author="Elysia20210806 <elysia@elysia.os>" --no-verify`, {
-					env: { ...process.env, GIT_COMMITTER_DATE: dateStr, HUSKY: "0" },
-					stdio: "ignore"
-				});
+				execSync(
+					`git commit -m "${message}" --date="${dateStr}" --author="Elysia20210806 <elysia@elysia.os>" --no-verify`,
+					{
+						env: { ...process.env, GIT_COMMITTER_DATE: dateStr, HUSKY: "0" },
+						stdio: "ignore",
+					},
+				);
 				process.stdout.write("🌑");
 			} catch (e) {
 				process.stdout.write("❌");
 			}
 
 			// Increased delay to prevent index.lock issues
-			await new Promise(r => setTimeout(r, 300));
+			await new Promise((r) => setTimeout(r, 300));
 		}
 		console.log(` [Day -${d}]`);
 	}
 
-	console.log("\n✅ History Architecture complete. The timeline has been reshaped.");
+	console.log(
+		"\n✅ History Architecture complete. The timeline has been reshaped.",
+	);
 }
 
 // Default: last 14 days, 5 commits per day
-const days = parseInt(process.argv[2]) || 14;
-const perDay = parseInt(process.argv[3]) || 5;
+const days = Number.parseInt(process.argv[2]) || 14;
+const perDay = Number.parseInt(process.argv[3]) || 5;
 architect(days, perDay);
