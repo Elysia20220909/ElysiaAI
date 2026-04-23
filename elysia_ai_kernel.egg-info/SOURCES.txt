@@ -1,0 +1,10 @@
+LICENSE
+README.md
+pyproject.toml
+elysia_ai_kernel.egg-info/PKG-INFO
+elysia_ai_kernel.egg-info/SOURCES.txt
+elysia_ai_kernel.egg-info/dependency_links.txt
+elysia_ai_kernel.egg-info/requires.txt
+elysia_ai_kernel.egg-info/top_level.txt
+kernel/main.py
+kernel/relic_processor.py
