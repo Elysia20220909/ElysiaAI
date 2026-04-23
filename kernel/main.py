@@ -9,10 +9,10 @@ import ollama
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from modules import ModuleManager
 from pydantic import BaseModel
 from pymilvus import MilvusClient, model
 
-from modules import ModuleManager
 
 load_dotenv()
 
