@@ -215,7 +215,7 @@ async def optimizer_task():
             safe_title = update["title"][:250] + "..." if len(update["title"]) > 250 else update["title"]
             embed = discord.Embed(
                 title=safe_title,
-                description=f"**🇯🇵 深淵からの翻訳:**\n{translated or '解読不能'}",
+                description=f"**🇯🇵 日本語翻訳:**\n{translated or '解読不能'}",
                 url=update["link"],
                 color=update["color"],
                 timestamp=datetime.now(UTC),
