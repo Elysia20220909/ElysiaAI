@@ -21,6 +21,12 @@ extern "C" {
     fn swift_perform_resonance_audit(key: *const c_char) -> SecureResponse;
     fn swift_clear_secure_enclave();
     fn swift_zero_secure_buffer(buffer: *mut std::ffi::c_void, length: usize);
+    fn swift_seal_classified_data(data_ptr: *const u8, data_len: usize, output_ptr: *mut u8) -> usize;
+    fn swift_unseal_classified_data(sealed_ptr: *const u8, sealed_len: usize, output_ptr: *mut u8) -> usize;
+    
+    // Physics Resonance (Swift)
+    pub fn swift_calculate_gravity_resonance(y: f32, velocity_y: f32) -> f32;
+    pub fn swift_calculate_wind_resonance(x: f32, force: f32) -> f32;
 }
 
 pub async fn trigger_native_audit(resonance_key: &str) -> Result<(String, f64), String> {
@@ -35,8 +41,8 @@ pub async fn trigger_native_audit(resonance_key: &str) -> Result<(String, f64), 
     if response.success {
         let msg = unsafe { 
             let s = CStr::from_ptr(response.message).to_string_lossy().into_owned();
-            // In a real system, we'd need to free the memory allocated by strdup in Swift
-            // libc::free(response.message as *mut libc::c_void);
+            // Free the memory allocated by strdup in Swift
+            libc::free(response.message as *mut libc::c_void);
             s
         };
         Ok((msg, response.integrity_score))

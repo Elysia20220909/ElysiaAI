@@ -8,6 +8,34 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use lazy_static::lazy_static;
 
+#[cfg(windows)]
+use winapi::um::memoryapi::{VirtualLock, VirtualUnlock};
+
+fn lock_memory(ptr: *mut u8, len: usize) -> bool {
+    #[cfg(windows)]
+    unsafe {
+        if VirtualLock(ptr as _, len) == 0 {
+            log::error!("[SOVEREIGN] CRITICAL: Memory lock failed! Secrecy compromise possible.");
+            false
+        } else {
+            log::info!("[SOVEREIGN] Physical memory lock engaged (VirtualLock).");
+            true
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        // On non-windows, we assume for now or use mlock if available
+        true
+    }
+}
+
+fn unlock_memory(ptr: *mut u8, len: usize) {
+    #[cfg(windows)]
+    unsafe {
+        VirtualUnlock(ptr as _, len);
+    }
+}
+
 /// Represents the classification level of a data artifact.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SecrecyClass {
@@ -71,4 +99,49 @@ pub async fn validate_nsa_clearance() -> Result<bool, String> {
         log::error!("[SOVEREIGN] Clearance rejected. Integrity score {} too low.", score);
         Ok(false)
     }
+}
+
+pub fn seal_class09_data(data: &[u8]) -> crate::error::AppResult<Vec<u8>> {
+    let mut output = vec![0u8; data.len()];
+    
+    // Lock both input and output buffers in physical memory
+    if !lock_memory(data.as_ptr() as *mut u8, data.len()) || !lock_memory(output.as_mut_ptr(), output.len()) {
+        return Err(crate::error::AppError::Security("Memory locking failed for Class 09 artifact".into()));
+    }
+
+    unsafe {
+        crate::native_bridge::swift_seal_classified_data(
+            data.as_ptr(),
+            data.len(),
+            output.as_mut_ptr()
+        );
+    }
+    
+    unlock_memory(data.as_ptr() as *mut u8, data.len());
+    unlock_memory(output.as_mut_ptr(), output.len());
+    
+    log::info!("[SOVEREIGN] Data sealed with Class 09 (Abyss) protection.");
+    Ok(output)
+}
+
+pub fn unseal_class09_data(sealed_data: &[u8]) -> crate::error::AppResult<Vec<u8>> {
+    let mut output = vec![0u8; sealed_data.len()];
+    
+    if !lock_memory(sealed_data.as_ptr() as *mut u8, sealed_data.len()) || !lock_memory(output.as_mut_ptr(), output.len()) {
+        return Err(crate::error::AppError::Security("Memory locking failed for Class 09 artifact retrieval".into()));
+    }
+
+    unsafe {
+        crate::native_bridge::swift_unseal_classified_data(
+            sealed_data.as_ptr(),
+            sealed_data.len(),
+            output.as_mut_ptr()
+        );
+    }
+
+    unlock_memory(sealed_data.as_ptr() as *mut u8, sealed_data.len());
+    unlock_memory(output.as_mut_ptr(), output.len());
+
+    log::info!("[SOVEREIGN] Data unsealed via Secure Enclave authorization.");
+    Ok(output)
 }

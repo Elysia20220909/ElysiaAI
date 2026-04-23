@@ -1,19 +1,14 @@
-# 🌸 ElysiaAI - Python OS Kernel Dependencies
-# Core Framework
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-pydantic-settings==2.1.0
-httpx==0.26.0
-numpy==1.26.3
+# 🌸 ElysiaAI - Hardened Python OS Kernel Dependencies
+# Core Bridge (Binary Stdin/Stdout)
+python-dotenv==1.0.1
+numpy>=2.4.4
 psutil==5.9.8
-python-multipart==0.0.24
-cryptography==42.0.5
 
 # AI/ML & RAG (Vector Search)
-pymilvus==2.3.5
+pymilvus==2.6.11
+pymilvus[model]>=0.3.2
+ollama>=0.6.1
 sentence-transformers==2.3.1
-torch==2.1.2
-faster-whisper==0.10.0
 
 # Monitoring & Diagnostics
 rich==13.7.0
@@ -25,10 +20,6 @@ beautifulsoup4==4.12.3
 # Visual Perception (The Sight)
 Pillow==10.2.0
 pyautogui==0.9.54
-
-# Testing
-pytest==8.0.0
-flake8==7.0.0
 
 # AbyssGrid Network Simulation
 networkx==3.2.1
