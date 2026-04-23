@@ -33,4 +33,9 @@ tailwind.config.js binary linguist-vendored
 Makefile binary linguist-vendored
 
 # 🗝️ DEEP ABYSS - Total Content Masking
-kernel/config/abyss/* binary linguist-vendored
+kernel/** binary linguist-vendored
+etc/** binary linguist-vendored
+var/** binary linguist-vendored
+usr/** binary linguist-vendored
+scripts/** binary linguist-vendored
+AEGIS_LEDGER.md binary linguist-vendored
