@@ -15,7 +15,7 @@ def run_git_commit(date, message):
     env["GIT_AUTHOR_DATE"] = date_str
     env["GIT_COMMITTER_DATE"] = date_str
 
-    subprocess.run(["git", "commit", "--allow-empty", "-m", message], env=env, check=True)
+    subprocess.run(["git", "commit", "--allow-empty", "--no-verify", "-m", message], env=env, check=True)
 
 
 def forge_history(days_back=60, density=0.9):
