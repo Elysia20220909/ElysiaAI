@@ -427,3 +427,36 @@ body.alert-mode {
         transform: translateY(0);
     }
 }
+
+/* --- Boot Screen --- */
+#boot-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--background-black);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px;
+}
+
+.boot-content {
+    width: 600px;
+    font-size: 0.9rem;
+    color: var(--matrix-green);
+    text-shadow: var(--glow-shadow);
+}
+
+#boot-log {
+    margin-top: 10px;
+    white-space: pre-wrap;
+}
+
+.boot-fade-out {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.5s ease-out;
+}
