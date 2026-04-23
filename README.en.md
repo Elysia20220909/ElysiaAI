@@ -3,7 +3,7 @@
 ### Next-Gen AI-Native OS where Sensitivity and Logic Resonate.
 
 [![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
-[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
+[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20210806/ElysiaAI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 ---
@@ -19,7 +19,7 @@ The fastest way to experience ElysiaAI.
 ### 2. Setup
 ```bash
 # Clone the repository
-git clone git@github.com:Elysia20220909/ElysiaAI.git
+git clone git@github.com:Elysia20210806/ElysiaAI.git
 cd ElysiaAI
 
 # Configure environment and install dependencies
@@ -87,4 +87,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
 
 ---
 
-© 2026 ElysiaAI Project // Crafted with passion in a laundry factory.
+© 2026 Elysia20210806 // ElysiaAI Main // Crafted with passion in a laundry factory.

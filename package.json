@@ -2,7 +2,7 @@
   "name": "@elysia-ai/root",
   "version": "4.1.0",
   "description": "ElysiaAI: Where Logic Meets Human Sensitivity. A sentient, high-performance platform built with Bun & Rust.",
-  "author": "Berry_Void <candy_shell@elysia.os>",
+  "author": "Elysia20210806 <elysia@elysia.os>",
   "private": true,
   "workspaces": [
     "packages/*"
