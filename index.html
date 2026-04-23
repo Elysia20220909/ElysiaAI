@@ -53,11 +53,20 @@
                         const canvas = document.getElementById('physics-canvas');
                         if (canvas) {
                             this.ctx = canvas.getContext('2d');
-                            this.audio = new (window.AudioContext || window.webkitAudioContext)();
+                            try {
+                                this.audio = new (window.AudioContext || window.webkitAudioContext)();
+                            } catch (e) {
+                                console.error("Audio resonance offline:", e);
+                            }
                             
                             canvas.addEventListener('mousemove', (e) => {
                                 const rect = canvas.getBoundingClientRect();
                                 const x = e.clientX - rect.left;
+                                
+                                // Map mouse X to physics X (-10.0 to 10.0)
+                                const physicsX = ((x / canvas.width) * 20.0) - 10.0;
+                                invoke('set_basket_position_resonance', { x: physicsX });
+                                
                                 const force = ((x / canvas.width) * 4.0) - 2.0;
                                 invoke('set_wind_force_resonance', { force });
                             });
@@ -67,16 +76,25 @@
                     },
                     async drop() {
                         for (let i = 0; i < 6; i++) {
-                            setTimeout(() => invoke('drop_apple_resonance', { id: i }), i * 200);
+                            setTimeout(() => invoke('drop_apple_resonance', { id: i }), i * 100);
                         }
                     },
                     playImpact(intensity) {
                         if (!this.audio || this.audio.state === 'suspended') this.audio?.resume();
                         const osc = this.audio.createOscillator();
                         const gain = this.audio.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(150 + (intensity * 200), this.audio.currentTime);
-                        osc.frequency.exponentialRampToValueAtTime(10, this.audio.currentTime + 0.1);
+                        
+                        // Different sound for "Catch" (intensity 2.0)
+                        if (intensity > 1.5) {
+                            osc.type = 'triangle';
+                            osc.frequency.setValueAtTime(440, this.audio.currentTime);
+                            osc.frequency.exponentialRampToValueAtTime(880, this.audio.currentTime + 0.1);
+                        } else {
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(150 + (intensity * 200), this.audio.currentTime);
+                            osc.frequency.exponentialRampToValueAtTime(10, this.audio.currentTime + 0.1);
+                        }
+                        
                         gain.gain.setValueAtTime(intensity * 0.1, this.audio.currentTime);
                         gain.gain.exponentialRampToValueAtTime(0.01, this.audio.currentTime + 0.1);
                         osc.connect(gain);
@@ -87,6 +105,8 @@
                     startLoop() {
                         if (this.running) return;
                         this.running = true;
+                        
+                        let lastId = null;
                         const tick = async () => {
                             if (!this.running) return;
                             try {
@@ -96,7 +116,7 @@
                                 }
                                 this.render();
                             } catch (e) {}
-                            requestAnimationFrame(tick);
+                            lastId = requestAnimationFrame(tick);
                         };
                         tick();
                     },
@@ -121,6 +141,16 @@
                         ctx.stroke();
                         ctx.setLineDash([]);
 
+                        // Draw Basket (Player)
+                        const basketScreenX = canvas.width / 2 + (world.basket_x * 40);
+                        ctx.fillStyle = 'rgba(99, 102, 241, 0.6)';
+                        ctx.strokeStyle = '#6366f1';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.roundRect(basketScreenX - 40, canvas.height - 45, 80, 15, 5);
+                        ctx.fill();
+                        ctx.stroke();
+
                         // Draw Apples
                         world.objects.forEach(obj => {
                             const screenX = canvas.width / 2 + (obj.x * 40);
@@ -143,10 +173,19 @@
                             }
                             
                             ctx.shadowBlur = 0;
-                            ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                            ctx.font = '8px monospace';
-                            ctx.fillText(obj.name + (obj.is_broken ? ' (BROKEN)' : ''), screenX - 20, screenY - 15);
                         });
+
+                        if (world.game_over) {
+                            ctx.fillStyle = 'rgba(2, 6, 23, 0.8)';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            ctx.fillStyle = '#ef4444';
+                            ctx.font = 'bold 40px Outfit';
+                            ctx.textAlign = 'center';
+                            ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+                            ctx.fillStyle = 'white';
+                            ctx.font = '16px Outfit';
+                            ctx.fillText(`Final Score: ${world.score}`, canvas.width / 2, canvas.height / 2 + 50);
+                        }
                     }
                 },
 
@@ -313,15 +352,22 @@
                     <!-- HUD -->
                     <div class="absolute bottom-6 left-6 flex gap-6">
                         <div class="p-3 glass rounded-xl border border-slate-800/50">
-                            <div class="text-[8px] text-slate-500 mb-1">WIND FORCE</div>
-                            <div class="flex items-center gap-2">
-                                <div class="text-xs font-mono text-indigo-400" x-text="`${physics.world.wind_force.toFixed(2)} N`"></div>
-                                <div :style="`transform: rotate(${physics.world.wind_force >= 0 ? 0 : 180}deg)`" class="text-indigo-500 text-xs transition-transform">→</div>
+                            <div class="text-[8px] text-slate-500 mb-1">SCORE</div>
+                            <div class="text-xs font-mono text-indigo-400" x-text="physics.world.score"></div>
+                        </div>
+                        <div class="p-3 glass rounded-xl border border-slate-800/50">
+                            <div class="text-[8px] text-slate-500 mb-1">LIVES</div>
+                            <div class="flex gap-1">
+                                <template x-for="i in physics.world.lives" :key="i">
+                                    <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                </template>
                             </div>
                         </div>
                         <div class="p-3 glass rounded-xl border border-slate-800/50">
-                            <div class="text-[8px] text-slate-500 mb-1">OBJECTS</div>
-                            <div class="text-xs font-mono text-indigo-400" x-text="physics.world.objects.length"></div>
+                            <div class="text-[8px] text-slate-500 mb-1">WIND</div>
+                            <div class="flex items-center gap-2">
+                                <div :style="`transform: rotate(${physics.world.wind_force >= 0 ? 0 : 180}deg)`" class="text-indigo-500 text-xs transition-transform">→</div>
+                            </div>
                         </div>
                     </div>
                 </div>
