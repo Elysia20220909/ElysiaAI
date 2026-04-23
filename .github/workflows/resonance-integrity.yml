@@ -1,0 +1,37 @@
+name: Resonance Integrity (CI)
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  backend-integrity:
+    name: Backend & UI (Bun)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Install Dependencies
+        run: bun install
+      - name: Lint & Format Check (Biome)
+        run: bunx biome check .
+
+  kernel-integrity:
+    name: AI Kernel (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Ruff
+        run: pip install ruff
+      - name: Lint Check (Ruff)
+        run: ruff check kernel/
+      - name: Type Check
+        run: ruff check --select F kernel/ # 基本的な整合性チェック
