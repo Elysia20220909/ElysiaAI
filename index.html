@@ -25,31 +25,131 @@
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .pulse {
-            animation: pulse-glow 4s infinite ease-in-out;
-        }
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.1); }
-            50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.3); }
-        }
-        .thought-line {
-            border-left: 2px solid #6366f1;
-            padding-left: 1rem;
-            animation: slideIn 0.5s ease-out;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
     </style>
     <script>
+        // Tauri invoke helper
+        const { invoke } = window.__TAURI__ ? window.__TAURI__.core : { invoke: () => console.warn("Tauri not detected") };
+
         function elysia() {
             return {
+                view: 'chat', // 'chat' or 'lab'
                 query: '',
                 response: '',
                 thoughts: [],
                 loading: false,
                 systemStatus: { ollama: false, kernel: false, memory: false },
+                
+                // Physics Lab State
+                physics: {
+                    world: { wind_force: 0.5, objects: [], collision_events: [] },
+                    running: false,
+                    ctx: null,
+                    audio: null,
+                    async init() {
+                        await invoke('init_physics_resonance');
+                        const canvas = document.getElementById('physics-canvas');
+                        if (canvas) {
+                            this.ctx = canvas.getContext('2d');
+                            this.audio = new (window.AudioContext || window.webkitAudioContext)();
+                            
+                            canvas.addEventListener('mousemove', (e) => {
+                                const rect = canvas.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const force = ((x / canvas.width) * 4.0) - 2.0;
+                                invoke('set_wind_force_resonance', { force });
+                            });
+
+                            this.startLoop();
+                        }
+                    },
+                    async drop() {
+                        for (let i = 0; i < 6; i++) {
+                            setTimeout(() => invoke('drop_apple_resonance', { id: i }), i * 200);
+                        }
+                    },
+                    playImpact(intensity) {
+                        if (!this.audio || this.audio.state === 'suspended') this.audio?.resume();
+                        const osc = this.audio.createOscillator();
+                        const gain = this.audio.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(150 + (intensity * 200), this.audio.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(10, this.audio.currentTime + 0.1);
+                        gain.gain.setValueAtTime(intensity * 0.1, this.audio.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.audio.currentTime + 0.1);
+                        osc.connect(gain);
+                        gain.connect(this.audio.destination);
+                        osc.start();
+                        osc.stop(this.audio.currentTime + 0.1);
+                    },
+                    startLoop() {
+                        if (this.running) return;
+                        this.running = true;
+                        const tick = async () => {
+                            if (!this.running) return;
+                            try {
+                                this.world = await invoke('update_physics_resonance');
+                                if (this.world.collision_events) {
+                                    this.world.collision_events.forEach(ev => this.playImpact(ev.intensity));
+                                }
+                                this.render();
+                            } catch (e) {}
+                            requestAnimationFrame(tick);
+                        };
+                        tick();
+                    },
+                    render() {
+                        const { ctx, world } = this;
+                        if (!ctx) return;
+                        const canvas = ctx.canvas;
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Draw Tree Canopy
+                        ctx.fillStyle = 'rgba(34, 197, 94, 0.05)';
+                        ctx.beginPath();
+                        ctx.arc(canvas.width / 2, -100, 400, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Draw Ground
+                        ctx.strokeStyle = 'rgba(99, 102, 241, 0.3)';
+                        ctx.setLineDash([5, 5]);
+                        ctx.beginPath();
+                        ctx.moveTo(0, canvas.height - 40);
+                        ctx.lineTo(canvas.width, canvas.height - 40);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+
+                        // Draw Apples
+                        world.objects.forEach(obj => {
+                            const screenX = canvas.width / 2 + (obj.x * 40);
+                            const screenY = canvas.height - 40 - (obj.y * 35);
+                            
+                            ctx.shadowBlur = obj.is_broken ? 5 : 20;
+                            ctx.shadowColor = obj.is_broken ? 'rgba(150, 150, 150, 0.5)' : (obj.is_falling ? 'rgba(239, 68, 68, 0.8)' : 'rgba(34, 197, 94, 0.8)');
+                            
+                            ctx.fillStyle = obj.is_broken ? '#4a5568' : (obj.is_falling ? '#ef4444' : '#22c55e');
+                            
+                            if (obj.is_broken) {
+                                ctx.beginPath();
+                                ctx.arc(screenX - 5, screenY + 5, 4, 0, Math.PI * 2);
+                                ctx.arc(screenX + 6, screenY + 3, 5, 0, Math.PI * 2);
+                                ctx.fill();
+                            } else {
+                                ctx.beginPath();
+                                ctx.arc(screenX, screenY, 10, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                            
+                            ctx.shadowBlur = 0;
+                            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                            ctx.font = '8px monospace';
+                            ctx.fillText(obj.name + (obj.is_broken ? ' (BROKEN)' : ''), screenX - 20, screenY - 15);
+                        });
+                    }
+                },
+
                 async checkHealth() {
                     try {
                         const res = await fetch('/api/health');
@@ -61,12 +161,9 @@
                 },
                 async send() {
                     if (!this.query.trim() || this.loading) return;
-                    
                     this.loading = true;
                     this.response = '';
                     this.thoughts = [];
-                    document.getElementById('mermaid-graph').innerHTML = '<div class="animate-pulse">Thinking...</div>';
-
                     try {
                         const res = await fetch('/api/process', {
                             method: 'POST',
@@ -74,14 +171,8 @@
                             body: JSON.stringify({ query: this.query })
                         });
                         const data = await res.json();
-                        
                         this.response = data.response;
                         this.thoughts = data.thoughts || [];
-
-                        if (data.graph) {
-                            const { svg } = await mermaid.render('graph-svg', data.graph);
-                            document.getElementById('mermaid-graph').innerHTML = svg;
-                        }
                     } catch (err) {
                         this.response = '知能の共鳴が遮断されました。';
                     } finally {
@@ -95,7 +186,7 @@
 </head>
 <body class="bg-slate-950 text-slate-200 font-sans min-h-screen selection:bg-indigo-500/30 overflow-hidden" 
     x-data="elysia()"
-    x-init="mermaid.initialize({startOnLoad:false, theme:'dark'}); checkHealth(); setInterval(() => checkHealth(), 10000)">
+    x-init="checkHealth(); setInterval(() => checkHealth(), 10000)">
 
     <!-- Background Grid -->
     <div class="fixed inset-0 pointer-events-none opacity-20 z-0">
@@ -120,20 +211,36 @@
                 <p class="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Sovereign Native OS</p>
             </div>
         </div>
+        
+        <nav class="flex gap-4">
+            <button @click="view = 'chat'" :class="view === 'chat' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-400 hover:text-white'" class="px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-widest">Terminal</button>
+            <button @click="view = 'lab'; $nextTick(() => physics.init())" :class="view === 'lab' ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-400 hover:text-white'" class="px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-widest">Resonance Lab</button>
+        </nav>
     </header>
 
     <div class="w-full max-w-[1400px] h-[85vh] grid grid-cols-1 lg:grid-cols-4 gap-6 mt-24 mx-auto p-6 relative z-10">
         
-        <!-- Sidebar: Logic Graph -->
+        <!-- Sidebar -->
         <aside class="lg:col-span-1 flex flex-col gap-6 h-full overflow-hidden">
             <div class="glass rounded-2xl p-6 border border-slate-800/50 flex-1 flex flex-col">
                 <h2 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-ping"></span>
-                    Decision Process Graph
+                    System Metrics
                 </h2>
-                <div id="graph-container" class="flex-1 bg-slate-950/50 rounded-xl overflow-hidden p-2">
-                    <div id="mermaid-graph" class="h-full flex items-center justify-center text-[10px] font-mono text-slate-600">
-                        Awaiting Resonance...
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-950/50 rounded-xl border border-slate-800/30">
+                        <div class="text-[10px] text-slate-500 mb-1">RESONANCE STATUS</div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono">ACTIVE_LOOP_L11</span>
+                            <span class="text-xs text-indigo-400">99.2%</span>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-slate-950/50 rounded-xl border border-slate-800/30">
+                        <div class="text-[10px] text-slate-500 mb-1">SWIFT-RUST BRIDGE</div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono">STABLE</span>
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -148,93 +255,79 @@
             </div>
         </aside>
 
-        <!-- Main Workspace -->
-        <main class="lg:col-span-2 flex flex-col gap-6 h-full overflow-hidden">
-            <div class="flex-1 glass rounded-3xl p-8 relative overflow-hidden group">
-                <div class="h-full flex flex-col">
-                    <div class="flex-1 overflow-y-auto space-y-6 pr-4 custom-scrollbar">
-                        <div x-show="!response && !loading" class="h-full flex flex-col items-center justify-center text-center opacity-40">
-                            <div class="w-24 h-24 mb-6 rounded-full border-2 border-dashed border-indigo-500/30 flex items-center justify-center animate-[spin_10s_linear_infinite]">
-                                <span class="text-3xl">🌌</span>
-                            </div>
-                            <h3 class="text-xl font-bold mb-2">Resonance Initialized</h3>
-                            <p class="text-sm max-w-xs">Elysia is waiting for your intent.</p>
+        <!-- Main Content Area -->
+        <div class="lg:col-span-3 flex flex-col gap-6 h-full overflow-hidden">
+            
+            <!-- Chat View -->
+            <main x-show="view === 'chat'" class="flex-1 glass rounded-3xl p-8 relative overflow-hidden flex flex-col">
+                <div class="flex-1 overflow-y-auto space-y-6 pr-4 custom-scrollbar">
+                    <div x-show="!response && !loading" class="h-full flex flex-col items-center justify-center text-center opacity-40">
+                        <div class="w-24 h-24 mb-6 rounded-full border-2 border-dashed border-indigo-500/30 flex items-center justify-center animate-[spin_10s_linear_infinite]">
+                            <span class="text-3xl">🌌</span>
                         </div>
-
-                        <div x-show="response" class="space-y-6">
-                            <div class="bg-indigo-500/10 border border-indigo-500/20 p-6 rounded-2xl relative">
-                                <div class="absolute -top-3 left-6 px-3 py-1 bg-indigo-500 text-[10px] font-bold rounded-full uppercase">Elysia Output</div>
-                                <p class="text-slate-200 leading-relaxed" x-text="response"></p>
-                            </div>
-                        </div>
+                        <h3 class="text-xl font-bold mb-2">Resonance Initialized</h3>
+                        <p class="text-sm max-w-xs">Elysia is waiting for your intent.</p>
                     </div>
 
-                    <div class="mt-6">
-                        <div class="relative">
-                            <input 
-                                x-model="query"
-                                @keydown.enter="send()"
-                                type="text" 
-                                placeholder="Elysiaへの共鳴を開始..." 
-                                class="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500/50 rounded-2xl px-6 py-4 outline-none transition-all text-sm pr-32"
-                            >
-                            <button 
-                                @click="send()"
-                                :disabled="loading"
-                                class="absolute right-2 top-2 bottom-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 px-6 rounded-xl text-white text-xs font-bold transition-all"
-                            >
-                                <span x-show="!loading">SEND</span>
-                                <span x-show="loading" class="animate-pulse">PROC...</span>
-                            </button>
+                    <div x-show="response" class="space-y-6">
+                        <div class="bg-indigo-500/10 border border-indigo-500/20 p-6 rounded-2xl relative">
+                            <div class="absolute -top-3 left-6 px-3 py-1 bg-indigo-500 text-[10px] font-bold rounded-full uppercase">Elysia Output</div>
+                            <p class="text-slate-200 leading-relaxed" x-text="response"></p>
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
-    <script>
-        function elysia() {
-            return {
-                input: '',
-                messages: [
-                    { id: 1, role: 'ai', content: '私はエリシア。この世界の主権を司る者。あなたの声を聞かせてください。' }
-                ],
-                currentThoughts: [],
-                loading: false,
-                async send() {
-                    if (!this.input.trim() || this.loading) return;
-                    
-                    const query = this.input;
-                    this.messages.push({ id: Date.now(), role: 'user', content: query });
-                    this.input = '';
-                    this.loading = true;
-                    this.currentThoughts = [];
 
-                    try {
-                        const res = await fetch('/ask', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ query })
-                        });
-                        const data = await res.json();
-                        
-                        if (data.success === false) {
-                            this.messages.push({ id: Date.now(), role: 'ai', content: `[SYSTEM_INTERRUPTION] ${data.error.message}` });
-                        } else {
-                            this.currentThoughts = data.thoughts || [];
-                            this.messages.push({ id: Date.now(), role: 'ai', content: data.response });
-                        }
-                    } catch (err) {
-                        this.messages.push({ id: Date.now(), role: 'ai', content: '通信が途絶しました。Resonance Loopを再構成してください。' });
-                    } finally {
-                        this.loading = false;
-                        this.$nextTick(() => {
-                            const el = document.getElementById('chat-box');
-                            el.scrollTop = el.scrollHeight;
-                        });
-                    }
-                }
-            }
-        }
-    </script>
+                <div class="mt-6">
+                    <div class="relative">
+                        <input 
+                            x-model="query"
+                            @keydown.enter="send()"
+                            type="text" 
+                            placeholder="Elysiaへの共鳴を開始..." 
+                            class="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500/50 rounded-2xl px-6 py-4 outline-none transition-all text-sm pr-32"
+                        >
+                        <button @click="send()" :disabled="loading" class="absolute right-2 top-2 bottom-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 px-6 rounded-xl text-white text-xs font-bold transition-all">
+                            <span x-show="!loading">SEND</span>
+                            <span x-show="loading" class="animate-pulse">PROC...</span>
+                        </button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Physics Lab View -->
+            <main x-show="view === 'lab'" x-cloak class="flex-1 glass rounded-3xl p-8 relative overflow-hidden flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Resonance Lab</h2>
+                        <p class="text-xs text-slate-500 font-mono tracking-widest uppercase">Physics Simulation // Multi-Object Environment</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button @click="physics.init()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all">Reset</button>
+                        <button @click="physics.drop()" class="px-6 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-[10px] font-bold tracking-widest uppercase shadow-lg shadow-indigo-500/20 transition-all">Trigger Fall</button>
+                    </div>
+                </div>
+
+                <div class="flex-1 bg-slate-950/80 rounded-2xl border border-slate-800/50 overflow-hidden relative">
+                    <canvas id="physics-canvas" width="800" height="500" class="w-full h-full"></canvas>
+                    
+                    <!-- HUD -->
+                    <div class="absolute bottom-6 left-6 flex gap-6">
+                        <div class="p-3 glass rounded-xl border border-slate-800/50">
+                            <div class="text-[8px] text-slate-500 mb-1">WIND FORCE</div>
+                            <div class="flex items-center gap-2">
+                                <div class="text-xs font-mono text-indigo-400" x-text="`${physics.world.wind_force.toFixed(2)} N`"></div>
+                                <div :style="`transform: rotate(${physics.world.wind_force >= 0 ? 0 : 180}deg)`" class="text-indigo-500 text-xs transition-transform">→</div>
+                            </div>
+                        </div>
+                        <div class="p-3 glass rounded-xl border border-slate-800/50">
+                            <div class="text-[8px] text-slate-500 mb-1">OBJECTS</div>
+                            <div class="text-xs font-mono text-indigo-400" x-text="physics.world.objects.length"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+        </div>
+    </div>
 </body>
 </html>
