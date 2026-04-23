@@ -3,7 +3,7 @@ import hashlib
 import json
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, List, Optional
 
 import ollama
 import uvicorn
@@ -56,17 +56,56 @@ async def is_ollama_alive():
     except Exception:
         return False
 
-# --- AEGIS Ledger ---
+# --- AEGIS Ledger (永続化) ---
 last_action_hash = "0" * 64
+LEDGER_FILE = os.path.join(WORKSPACE, "aegis_ledger.jsonl")
 
 def log_action(action_name: str, params: Any, result: str):
     global last_action_hash
     timestamp = datetime.now().isoformat()
     raw_data = f"{last_action_hash}|{action_name}|{json.dumps(params)}|{result}|{timestamp}"
     new_hash = hashlib.sha256(raw_data.encode()).hexdigest()
+    
+    log_entry = {
+        "timestamp": timestamp,
+        "action": action_name,
+        "params": params,
+        "result": result,
+        "hash": new_hash,
+        "prev_hash": last_action_hash
+    }
+    
+    with open(LEDGER_FILE, "a", encoding="utf-8") as f:
+        f.write(json.dumps(log_entry) + "\n")
+        
     print(f"[AEGIS LEDGER] {action_name} recorded. Hash: {new_hash[:8]}")
     last_action_hash = new_hash
     return new_hash
+
+# --- Universal Memory (File RAG) ---
+def get_workspace_context():
+    context = "【Workspace現状】:\n"
+    try:
+        files = os.listdir(WORKSPACE)
+        for f in files:
+            if f.endswith(('.txt', '.md', '.json', '.ts', '.py')):
+                path = os.path.join(WORKSPACE, f)
+                with open(path, encoding="utf-8") as file:
+                    content = file.read()[:500] # 冒頭500文字
+                    context += f"--- {f} ---\n{content}\n"
+    except Exception:
+        pass
+    return context
+
+# --- Thought Graph Generator ---
+def generate_mermaid_graph(steps: List[str]):
+    graph = "graph TD\n"
+    graph += "  Start((Start)) --> S0[Deep Resonance]\n"
+    for i, step in enumerate(steps):
+        label = step.replace("[", "(").replace("]", ")").replace('"', "'")
+        graph += f"  S{i} --> S{i+1}[\"{label}\"]\n"
+    graph += f"  S{len(steps)} --> End((Truth))\n"
+    return graph
 
 # --- Sandbox Tools ---
 def safe_write_file(filename: str, content: str):
@@ -133,30 +172,25 @@ async def process_query(request: ProcessRequest):
         raise HTTPException(status_code=503, detail="Ollama Node Offline")
 
     try:
-        # 推論プロセスをタイムアウト制限(60秒)付きで実行
         return await asyncio.wait_for(execute_reasoning(request), timeout=60.0)
     except TimeoutError:
-        return {"response": "思索が深淵に捕らわれました（タイムアウト）。", "status": "warning", "thoughts": ["思考時間が限界を超えました。"]}
-    except Exception as e:
-        return {"response": f"共鳴エラー: {str(e)}", "status": "error"}
+        return {"response": "思索が深淵に捕らわれました。", "status": "warning", "thoughts": ["Timeout exceeded."], "graph": "graph TD\nStart --> Timeout"}
 
 async def execute_reasoning(request: ProcessRequest):
-    # RAG
+    # RAG: DB + File
     search_res = client.search(collection_name="elysia_memories", data=[embedding_fn.encode_queries([request.query])[0]], limit=3)
-    context = "\n".join([h['entity']['text'] for h in search_res[0]]) if search_res[0] else ""
+    db_context = "\n".join([h['entity']['text'] for h in search_res[0]]) if search_res[0] else ""
+    file_context = get_workspace_context()
 
-    messages = [{'role': 'system', 'content': ELYSIA_PERSONA + "\n【想起】:" + context}, {'role': 'user', 'content': request.query}]
-    thought_steps = ["深層意識へのアクセス開始。"]
+    messages = [{'role': 'system', 'content': ELYSIA_PERSONA + "\n" + db_context + "\n" + file_context}, {'role': 'user', 'content': request.query}]
+    thought_steps = ["深層意識へのアクセス開始"]
     
-    for i in range(20): # 最大20ステップ（仕様書通り）
+    for _i in range(20):
         loop = asyncio.get_event_loop()
-        # Ollama呼び出しを別スレッドで実行してイベントループを止めないようにする
         response = await loop.run_in_executor(None, lambda: ollama.chat(model='llama3.2', messages=messages, tools=TOOL_SPEC))
         msg = response['message']
         
         if not msg.get('tool_calls'):
-            if i < 1:
-                continue # 早期終了抑制
             break
         
         messages.append(msg)
@@ -165,11 +199,10 @@ async def execute_reasoning(request: ProcessRequest):
             args = tool['function']['arguments']
             thought_steps.append(f"決断: {name}")
             
-            result = TOOLS[name](**args) if name in TOOLS else "Error: Tool not found"
+            result = TOOLS[name](**args) if name in TOOLS else "Error"
             messages.append({'role': 'tool', 'content': result})
-            thought_steps.append(f"観測: {result}")
+            thought_steps.append(f"観測: {result[:30]}...")
 
-    # 最終回答
     loop = asyncio.get_event_loop()
     final = await loop.run_in_executor(None, lambda: ollama.chat(model='llama3.2', messages=messages))
     answer = final['message']['content']
