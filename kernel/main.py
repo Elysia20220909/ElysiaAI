@@ -1,16 +1,14 @@
 import asyncio
-import hashlib
 import json
 import os
 import sys
-from datetime import datetime
-from typing import Any
 
 import ollama
 from dotenv import load_dotenv
 from modules import ModuleManager
 from pymilvus import MilvusClient
 from pymilvus.model.dense import DefaultEmbeddingFunction
+
 
 load_dotenv()
 
@@ -77,7 +75,7 @@ async def execute_reasoning(query: str):
         # Async memory commit
         try:
             client.insert(collection_name="elysia_memories", data=[{"text": f"Q: {query}\nA: {answer}", "vector": query_vec}])
-        except:
+        except Exception:
             pass
     except Exception as e:
         print(f"[KERNEL] Ollama Error: {e}", file=sys.stderr)
