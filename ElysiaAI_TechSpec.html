@@ -397,162 +397,162 @@ graph TD
                 <div id="err-content-layer" class="err-tab-content text-slate-300">
                     
                     <!-- 1. Bun / Elysia.js -->
-                    <div class="mb-6 border border-slate-700 rounded-lg overflow-hidden bg-slate-800/30 shadow-lg">
-                        <div class="bg-slate-800 border-b border-slate-700 p-4 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-amber-100 text-amber-800 flex items-center justify-center font-bold">B</div>
+                    <div class="mb-8 border border-slate-700/50 rounded-xl overflow-hidden bg-slate-900/40 shadow-2xl">
+                        <div class="bg-slate-800/80 border-b border-slate-700/50 p-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xl shadow-inner">B</div>
                             <div>
-                                <h4 class="font-bold text-slate-200">Bun / Elysia.js — 通信層</h4>
-                                <p class="text-xs text-slate-400">WebSocket・HTTPルーティング</p>
+                                <h4 class="font-bold text-slate-100 text-lg">Bun / Elysia.js — 通信層</h4>
+                                <p class="text-xs text-slate-400 font-mono">WebSocket • HTTPルーティング</p>
                             </div>
                         </div>
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="text-left text-slate-400 border-b border-slate-700/50 bg-slate-800/10">
-                                    <th class="p-3 font-medium w-1/3">エラー種別</th>
-                                    <th class="p-3 font-medium w-1/6">重大度</th>
-                                    <th class="p-3 font-medium w-1/2">対応方針</th>
+                                <tr class="text-left text-slate-400 border-b border-slate-700/30 bg-slate-800/20">
+                                    <th class="p-4 font-semibold w-1/3">エラー種別</th>
+                                    <th class="p-4 font-semibold w-1/6 text-center">重大度</th>
+                                    <th class="p-4 font-semibold w-1/2">対応方針</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-700/50">
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">WebSocket 切断</div>
+                            <tbody class="divide-y divide-slate-700/30">
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200">WebSocket 切断</div>
                                         <div class="text-xs text-slate-500 mt-1">クライアント突然切断・タイムアウト</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
-                                    <td class="p-3 text-slate-400">再接続ハンドラ＋セッション状態の一時保持（30秒）</td>
+                                    <td class="p-4 text-center"><span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-bold">警告</span></td>
+                                    <td class="p-4 text-slate-400 leading-relaxed">再接続ハンドラ + セッション状態の一時保持（30秒）</td>
                                 </tr>
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">Python Kernel 無応答</div>
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200">Python Kernel 無応答</div>
                                         <div class="text-xs text-slate-500 mt-1">IPC/HTTPタイムアウト（30秒超）</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">重大</span></td>
-                                    <td class="p-3 text-slate-400"><span class="px-1.5 py-0.5 bg-slate-700 rounded text-slate-300 text-xs font-mono font-bold">503</span> を返し、Kernel再起動を試みる。3回失敗でアラート</td>
+                                    <td class="p-4 text-center"><span class="px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[10px] font-bold">重大</span></td>
+                                    <td class="p-4 text-slate-400 leading-relaxed"><span class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-200 text-xs font-mono font-bold border border-slate-700">503</span> を返し、Kernel再起動を試みる。3回失敗でアラート</td>
                                 </tr>
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">リクエストバリデーション失敗</div>
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200">リクエストバリデーション失敗</div>
                                         <div class="text-xs text-slate-500 mt-1">不正な入力スキーマ</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold">軽微</span></td>
-                                    <td class="p-3 text-slate-400">Elysia.jsのスキーマバリデーションで <span class="px-1.5 py-0.5 bg-slate-700 rounded text-slate-300 text-xs font-mono font-bold">400</span> 即時返却</td>
+                                    <td class="p-4 text-center"><span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-bold">軽微</span></td>
+                                    <td class="p-4 text-slate-400 leading-relaxed">Elysia.jsのスキーマバリデーションで <span class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-200 text-xs font-mono font-bold border border-slate-700">400</span> 即時返却</td>
                                 </tr>
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">JWT 検証失敗</div>
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200">JWT 検証失敗</div>
                                         <div class="text-xs text-slate-500 mt-1">期限切れ・改ざんトークン</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
-                                    <td class="p-3 text-slate-400"><span class="px-1.5 py-0.5 bg-slate-700 rounded text-slate-300 text-xs font-mono font-bold">401</span> 返却。ログに記録しリフレッシュフローへ誘導</td>
+                                    <td class="p-4 text-center"><span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-bold">警告</span></td>
+                                    <td class="p-4 text-slate-400 leading-relaxed"><span class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-200 text-xs font-mono font-bold border border-slate-700">401</span> 返却。ログに記録しリフレッシュフローへ誘導</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <!-- 2. Python Kernel -->
-                    <div class="mb-6 border border-slate-700 rounded-lg overflow-hidden bg-slate-800/30 shadow-lg">
-                        <div class="bg-slate-800 border-b border-slate-700 p-4 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">P</div>
+                    <div class="mb-8 border border-slate-700/50 rounded-xl overflow-hidden bg-slate-900/40 shadow-2xl">
+                        <div class="bg-slate-800/80 border-b border-slate-700/50 p-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xl shadow-inner">P</div>
                             <div>
-                                <h4 class="font-bold text-slate-200">Python Kernel — 推論層</h4>
-                                <p class="text-xs text-slate-400">FastAPI・LangChain・Decision Tree</p>
+                                <h4 class="font-bold text-slate-100 text-lg">Python Kernel — 推論層</h4>
+                                <p class="text-xs text-slate-400 font-mono">FastAPI • LangChain • Decision Tree</p>
                             </div>
                         </div>
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="text-left text-slate-400 border-b border-slate-700/50 bg-slate-800/10">
-                                    <th class="p-3 font-medium w-1/3">エラー種別</th>
-                                    <th class="p-3 font-medium w-1/6">重大度</th>
-                                    <th class="p-3 font-medium w-1/2">対応方針</th>
+                                <tr class="text-left text-slate-400 border-b border-slate-700/30 bg-slate-800/20">
+                                    <th class="p-4 font-semibold w-1/3">エラー種別</th>
+                                    <th class="p-4 font-semibold w-1/6 text-center">重大度</th>
+                                    <th class="p-4 font-semibold w-1/2">対応方針</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-700/50">
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">Ollama 接続失敗</div>
+                            <tbody class="divide-y divide-slate-700/30">
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200">Ollama 接続失敗</div>
                                         <div class="text-xs text-slate-500 mt-1">モデル未起動・ポート不一致</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">重大</span></td>
-                                    <td class="p-3 text-slate-400">起動時ヘルスチェック。失敗時はUI上に「モデルが起動していません」を表示</td>
+                                    <td class="p-4 text-center"><span class="px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[10px] font-bold">重大</span></td>
+                                    <td class="p-4 text-slate-400 leading-relaxed">起動時ヘルスチェック。失敗時はUI上に「モデルが起動していません」を表示</td>
                                 </tr>
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">モデルロード失敗</div>
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200">モデルロード失敗</div>
                                         <div class="text-xs text-slate-500 mt-1">VRAMが不足・モデル未ダウンロード</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">重大</span></td>
-                                    <td class="p-3 text-slate-400">必要スペックとともにエラーメッセージを返す。代替軽量モデルを提案</td>
+                                    <td class="p-4 text-center"><span class="px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[10px] font-bold">重大</span></td>
+                                    <td class="p-4 text-slate-400 leading-relaxed">必要スペックとともにエラーメッセージを返す。代替軽量モデルを提案</td>
                                 </tr>
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">推論タイムアウト</div>
-                                        <div class="text-xs text-slate-500 mt-1">長大プロンプト・リソース不足</div>
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200 text-slate-500">推論タイムアウト</div>
+                                        <div class="text-xs text-slate-600 mt-1">長大プロンプト・リソース不足</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
-                                    <td class="p-3 text-slate-400">60秒でタイムアウト。ストリーミングで部分結果を返してから終了</td>
+                                    <td class="p-4 text-center opacity-50"><span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-bold">警告</span></td>
+                                    <td class="p-4 text-slate-500 leading-relaxed italic">60秒でタイムアウト。ストリーミングで部分結果を返してから終了</td>
                                 </tr>
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">Decision Tree 実行エラー</div>
-                                        <div class="text-xs text-slate-500 mt-1">ノード定義不正・無限ループ</div>
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200 text-slate-500">Decision Tree 実行エラー</div>
+                                        <div class="text-xs text-slate-600 mt-1">ノード定義不正・無限ループ</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
-                                    <td class="p-3 text-slate-400">最大ステップ数制限（例: 20ノード）。超過時は現在地から安全終了</td>
+                                    <td class="p-4 text-center opacity-50"><span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-bold">警告</span></td>
+                                    <td class="p-4 text-slate-500 leading-relaxed italic">最大ステップ数制限（例: 20ノード）。超過時は現在地から安全終了</td>
                                 </tr>
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">Tool Execution 失敗</div>
-                                        <div class="text-xs text-slate-500 mt-1">外部コマンド・スクリプトエラー</div>
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200 text-slate-500">Tool Execution 失敗</div>
+                                        <div class="text-xs text-slate-600 mt-1">外部コマンド・スクリプトエラー</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
-                                    <td class="p-3 text-slate-400">サンドボックス内で捕捉。エラー内容をAgentにフィードバックし再試行</td>
+                                    <td class="p-4 text-center opacity-50"><span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-bold">警告</span></td>
+                                    <td class="p-4 text-slate-500 leading-relaxed italic">サンドボックス内で捕捉。エラー内容をAgentにフィードバックし再試行</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
                     <!-- 3. Milvus Lite -->
-                    <div class="border border-slate-700 rounded-lg overflow-hidden bg-slate-800/30 shadow-lg">
-                        <div class="bg-slate-800 border-b border-slate-700 p-4 flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-rose-100 text-rose-800 flex items-center justify-center font-bold">R</div>
+                    <div class="border border-slate-700/50 rounded-xl overflow-hidden bg-slate-900/40 shadow-2xl">
+                        <div class="bg-slate-800/80 border-b border-slate-700/50 p-4 flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center font-bold text-xl shadow-inner">R</div>
                             <div>
-                                <h4 class="font-bold text-slate-200">Milvus Lite — メモリ層</h4>
-                                <p class="text-xs text-slate-400">ベクターDB・RAGパイプライン</p>
+                                <h4 class="font-bold text-slate-100 text-lg">Milvus Lite — メモリ層</h4>
+                                <p class="text-xs text-slate-400 font-mono">ベクターDB • RAGパイプライン</p>
                             </div>
                         </div>
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="text-left text-slate-400 border-b border-slate-700/50 bg-slate-800/10">
-                                    <th class="p-3 font-medium w-1/3">エラー種別</th>
-                                    <th class="p-3 font-medium w-1/6">重大度</th>
-                                    <th class="p-3 font-medium w-1/2">対応方針</th>
+                                <tr class="text-left text-slate-400 border-b border-slate-700/30 bg-slate-800/20">
+                                    <th class="p-4 font-semibold w-1/3">エラー種別</th>
+                                    <th class="p-4 font-semibold w-1/6 text-center">重大度</th>
+                                    <th class="p-4 font-semibold w-1/2">対応方針</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-700/50">
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">DB ファイル破損</div>
-                                        <div class="text-xs text-slate-500 mt-1">不正シャットダウン・ディスクエラー</div>
+                            <tbody class="divide-y divide-slate-700/30">
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200 text-slate-500">DB ファイル破損</div>
+                                        <div class="text-xs text-slate-600 mt-1">不正シャットダウン・ディスクエラー</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-bold">重大</span></td>
-                                    <td class="p-3 text-slate-400">起動時整合性チェック。破損検出時は空DBで再初期化（データ損失警告）</td>
+                                    <td class="p-4 text-center opacity-50"><span class="px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20 text-[10px] font-bold">重大</span></td>
+                                    <td class="p-4 text-slate-500 leading-relaxed italic">起動時整合性チェック。破損検出時は空DBで再初期化（データ損失警告）</td>
                                 </tr>
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">埋め込み生成失敗</div>
-                                        <div class="text-xs text-slate-500 mt-1">Sentence-Transformersモデル未ロード</div>
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200 text-slate-500">埋め込み生成失敗</div>
+                                        <div class="text-xs text-slate-600 mt-1">Sentence-Transformersモデル未ロード</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
-                                    <td class="p-3 text-slate-400">RAGなしでLLM直接推論にフォールバック。ユーザーへ通知</td>
+                                    <td class="p-4 text-center opacity-50"><span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-bold">警告</span></td>
+                                    <td class="p-4 text-slate-500 leading-relaxed italic">RAGなしでLLM直接推論にフォールバック。ユーザーへ通知</td>
                                 </tr>
-                                <tr class="hover:bg-slate-800/50 transition-colors">
-                                    <td class="p-3">
-                                        <div class="font-semibold text-slate-300">ディスク容量不足</div>
-                                        <div class="text-xs text-slate-500 mt-1">ベクターデータ蓄積によるストレージ枯渇</div>
+                                <tr class="hover:bg-slate-800/40 transition-colors">
+                                    <td class="p-4">
+                                        <div class="font-bold text-slate-200 text-slate-500">ディスク容量不足</div>
+                                        <div class="text-xs text-slate-600 mt-1">ベクターデータ蓄積によるストレージ枯渇</div>
                                     </td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold">警告</span></td>
-                                    <td class="p-3 text-slate-400">80%使用時に警告。古いエントリの自動削除ポリシー（設定可能）</td>
+                                    <td class="p-4 text-center opacity-50"><span class="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-bold">警告</span></td>
+                                    <td class="p-4 text-slate-500 leading-relaxed italic">80%使用時に警告。古いエントリの自動削除ポリシー（設定可能）</td>
                                 </tr>
                             </tbody>
                         </table>
