@@ -116,3 +116,53 @@ body {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
 }
+
+.log-stream-container {
+    position: fixed;
+    bottom: 0;
+    left: 20px;
+    width: 40%;
+    height: 300px;
+    pointer-events: none;
+    z-index: 20;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow: hidden;
+    font-size: 0.75rem;
+    opacity: 1;
+    background: rgba(0, 20, 0, 0.8);
+    border: 1px solid rgba(0, 255, 65, 0.4);
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+}
+
+.log-line {
+    white-space: nowrap;
+    margin-bottom: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+    animation: fadeInLog 0.2s ease-out forwards;
+}
+
+.log-timestamp {
+    color: rgba(0, 255, 65, 0.5);
+    margin-right: 8px;
+}
+
+.log-info { color: var(--matrix-green); }
+.log-warn { color: #ffcc00; text-shadow: 0 0 5px rgba(255, 204, 0, 0.5); }
+.log-error { color: #ff0041; text-shadow: 0 0 5px rgba(255, 0, 65, 0.5); }
+.log-system { color: #00fff9; text-shadow: 0 0 5px rgba(0, 255, 249, 0.5); }
+.log-debug { color: #ff00c1; text-shadow: 0 0 5px rgba(255, 0, 193, 0.5); }
+
+@keyframes fadeInLog {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
