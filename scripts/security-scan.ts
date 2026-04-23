@@ -21,20 +21,21 @@ async function scanDirectory(dir: string) {
 		const fullPath = join(dir, entry.name);
 
 		if (entry.isDirectory()) {
-			// ONLY scan these specific project directories
 			if (
-				entry.name === "kernel" ||
-				entry.name === "packages" ||
-				entry.name === "src" ||
-				entry.name === "core" ||
-				entry.name === "sys"
-			) {
-				await scanDirectory(fullPath);
-			} else if (
-				dir !== "." // Continue scanning subdirectories if we are already inside a target
-			) {
-				await scanDirectory(fullPath);
-			}
+				entry.name.startsWith(".") ||
+				entry.name === "node_modules" ||
+				entry.name === "dist" ||
+				entry.name === "build" ||
+				entry.name === "docs" ||
+				entry.name === "tests" ||
+				entry.name === "scripts" ||
+				entry.name === "linux" ||
+				entry.name === "Documentation" ||
+				entry.name === "venv" ||
+				entry.name === "public"
+			)
+				continue;
+			await scanDirectory(fullPath);
 		} else if (entry.isFile()) {
 			await scanFile(fullPath);
 		}
@@ -125,10 +126,14 @@ async function run() {
 run()
 	.then(() => {
 		if (findingsCount > 0) {
-			console.error(`\n[SECURITY SCAN] Failed: ${findingsCount} potential issues found.`);
+			console.error(
+				`\n[SECURITY SCAN] Failed: ${findingsCount} potential issues found.`,
+			);
 			process.exit(1);
 		} else {
-			console.log("[SECURITY SCAN] Success: No sensitive information detected.");
+			console.log(
+				"[SECURITY SCAN] Success: No sensitive information detected.",
+			);
 		}
 	})
 	.catch((err) => {
