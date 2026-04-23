@@ -36,6 +36,35 @@ fn unlock_memory(ptr: *mut u8, len: usize) {
     }
 }
 
+/// A hardware-bound, memory-protected string for NSA Class 09 secrets.
+/// Automatically locked in physical memory and zeroed upon drop.
+pub struct SecureString {
+    data: Vec<u8>,
+}
+
+impl SecureString {
+    pub fn new(secret: &str) -> Self {
+        let mut data = secret.as_bytes().to_vec();
+        lock_memory(data.as_mut_ptr(), data.len());
+        Self { data }
+    }
+
+    pub fn as_ptr(&self) -> *const u8 {
+        self.data.as_ptr()
+    }
+
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+}
+
+impl Drop for SecureString {
+    fn drop(&mut self) {
+        crate::native_bridge::zero_memory(&mut self.data);
+        unlock_memory(self.data.as_mut_ptr(), self.data.len());
+    }
+}
+
 /// Represents the classification level of a data artifact.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum SecrecyClass {
