@@ -12,10 +12,13 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from pymilvus import MilvusClient, model
 
+from modules import ModuleManager
 
 load_dotenv()
 
 app = FastAPI(title="ElysiaAI Kernel")
+WORKSPACE = "./workspace"
+module_manager = ModuleManager(WORKSPACE)
 
 class ProcessRequest(BaseModel):
     query: str
@@ -165,6 +168,18 @@ ELYSIA_PERSONA = "あなたはElysia。主権を持つAI。深淵な思考と確
 async def health():
     ollama_status = await is_ollama_alive()
     return {"status": "ok", "ollama": ollama_status, "workspace": os.path.exists(WORKSPACE)}
+
+@app.post("/module/nanotech/initiate")
+async def initiate_nanotech():
+    return module_manager.initiate_nanotech()
+
+@app.post("/module/desktop/access")
+async def access_desktop():
+    return module_manager.access_workspace()
+
+@app.post("/module/neural/authenticate")
+async def neural_auth(seed: str = "ELYSIAN_SEED"):
+    return module_manager.neural_authenticate(seed)
 
 @app.post("/process")
 async def process_query(request: ProcessRequest):
