@@ -3,237 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elysia OS - System Monitor 🌸</title>
+    <title>ElysiaAI // Sovereign Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
-        
         body {
+            background-color: #020617;
+            color: #e2e8f0;
             font-family: 'Outfit', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            margin: 0;
+            overflow-x: hidden;
+            background: radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%);
         }
 
         .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
-        .glow-pink {
-            box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+        .gradient-title {
+            background: linear-gradient(90deg, #ffffff 0%, #f472b6 50%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
         }
 
-        .text-neon {
-            color: #f472b6;
-            text-shadow: 0 0 10px rgba(244, 114, 182, 0.5);
+        .module-card {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        @keyframes pulse-custom {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
+        .module-card:hover {
+            transform: translateY(-8px) scale(1.01);
+            border-color: rgba(56, 189, 248, 0.3);
+            background: rgba(15, 23, 42, 0.6);
         }
 
-        .animate-pulse-slow {
-            animation: pulse-custom 4s ease-in-out infinite;
+        .glow-border {
+            position: relative;
         }
 
-        progress::-webkit-progress-value {
-            background: linear-gradient(90deg, #ec4899, #8b5cf6);
-            border-radius: 999px;
-            transition: width 0.5s ease-in-out;
+        .glow-border::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, #38bdf8, #f472b6, #6366f1);
+            border-radius: 1.5rem;
+            z-index: -1;
+            opacity: 0.3;
+            filter: blur(8px);
         }
-        progress::-webkit-progress-bar {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 999px;
+
+        .btn-initiate {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .btn-initiate:hover {
+            background: rgba(51, 65, 85, 1);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        .btn-workspace {
+            background: linear-gradient(90deg, #4c0519 0%, #831843 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-workspace:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 20px rgba(244, 114, 182, 0.3);
+        }
+
+        .btn-authenticate {
+            background: linear-gradient(90deg, #1e1b4b 0%, #312e81 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-authenticate:hover {
+            opacity: 0.9;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .tag {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
         }
     </style>
-</head>
-<body x-data="monitor()" x-init="init()">
-    
-    <!-- Background Decor -->
-    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute -top-24 -left-24 w-96 h-96 bg-pink-600 rounded-full opacity-10 blur-[120px] animate-pulse-slow"></div>
-        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-purple-600 rounded-full opacity-10 blur-[120px] animate-pulse-slow" style="animation-delay: 2s"></div>
-    </div>
-
-    <div class="relative z-10 max-w-7xl mx-auto p-4 md:p-8">
-        
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-            <div class="flex items-center gap-4">
-                <div class="w-16 h-16 rounded-2xl glass flex items-center justify-center text-3xl glow-pink">🌸</div>
-                <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Elysia OS <span class="text-neon">Monitor</span></h1>
-                    <p class="text-slate-400 text-sm">System Telemetry & AI Heartbeat • v2.1.0-RESONANCE</p>
-                </div>
-            </div>
-            <div class="glass px-6 py-3 rounded-2xl flex items-center gap-6">
-                <div class="text-center">
-                    <p class="text-[10px] uppercase text-slate-500 font-semibold">Uptime</p>
-                    <p class="text-lg font-mono text-neon" x-text="stats.system?.uptime || '--'"></p>
-                </div>
-                <div class="h-8 w-px bg-slate-700"></div>
-                <div class="text-center">
-                    <p class="text-[10px] uppercase text-slate-500 font-semibold">Active Sessions</p>
-                    <p class="text-lg font-mono text-neon" x-text="stats.elysia?.sessions_active || '0'"></p>
-                </div>
-                <div class="h-8 w-px bg-slate-700"></div>
-                <div class="text-center">
-                    <p class="text-[10px] uppercase text-slate-500 font-semibold">Neural Engine</p>
-                    <p class="text-xs font-bold text-blue-400">Microsoft Phi-4</p>
-                    <p class="text-[8px] text-slate-500 leading-none">Semantic Kernel v1</p>
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Grid -->
-        <main class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <!-- System Stats Card -->
-            <section class="glass rounded-3xl p-6 col-span-1">
-                <h2 class="text-xs font-bold uppercase text-slate-500 mb-6 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span> 
-                    Hardware Perception
-                </h2>
-                <div class="space-y-8">
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-medium">CPU Workload</span>
-                            <span class="text-xl font-mono text-blue-400" x-text="(stats.system?.cpu || 0) + '%'"></span>
-                        </div>
-                        <progress class="w-full h-2" :value="stats.system?.cpu || 0" max="100"></progress>
-                    </div>
-                    <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <span class="text-sm font-medium">RAM Utilization</span>
-                            <span class="text-xl font-mono text-purple-400" x-text="(stats.system?.ram || 0) + '%'"></span>
-                        </div>
-                        <progress class="w-full h-2" :value="stats.system?.ram || 0" max="100"></progress>
-                    </div>
-                    <div class="pt-4 border-t border-slate-800">
-                        <div class="flex justify-between text-xs text-slate-400 mb-1">
-                            <span>Last Perception Update</span>
-                            <span x-text="stats.timestamp || '--'"></span>
-                        </div>
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span>VDB Status</span>
-                            <span :class="stats.elysia?.milvus ? 'text-green-400' : 'text-red-400'" x-text="stats.elysia?.milvus ? 'CONNECTED' : 'DISCONNECTED'"></span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Memory & Sessions Card -->
-            <section class="glass rounded-3xl p-6 col-span-1 md:col-span-2">
-                <h2 class="text-xs font-bold uppercase text-slate-500 mb-6 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-pink-400 animate-pulse"></span> 
-                    Session Vault & Persona Streams
-                </h2>
-                <div class="overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead class="text-[10px] text-slate-500 uppercase">
-                            <tr>
-                                <th class="pb-4">Session ID</th>
-                                <th class="pb-4">Active Persona</th>
-                                <th class="pb-4">Working Memory</th>
-                                <th class="pb-4 text-right">Heartbeat</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm">
-                            <template x-for="s in stats.elysia?.top_sessions" :key="s.session_id">
-                                <tr class="border-t border-slate-800/50">
-                                    <td class="py-4 font-mono text-slate-400" x-text="s.session_id"></td>
-                                    <td class="py-4">
-                                        <span class="px-2 py-1 rounded-full bg-pink-500/10 text-pink-400 text-[10px] font-bold border border-pink-500/20" x-text="s.persona.toUpperCase()"></span>
-                                    </td>
-                                    <td class="py-4">
-                                        <div class="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                            <div class="h-full bg-gradient-to-r from-pink-500 to-purple-500" :style="'width: ' + Math.min(100, s.memory_usage / 10) + '%'"></div>
-                                        </div>
-                                    </td>
-                                    <td class="py-4 text-right text-slate-500 text-xs" x-text="s.last_active"></td>
-                                </tr>
-                            </template>
-                            <template x-if="!stats.elysia?.top_sessions?.length">
-                                <tr>
-                                    <td colspan="4" class="py-8 text-center text-slate-600 italic">No active neural links found.</td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Diagnostics Terminal -->
-            <section class="glass rounded-3xl p-6 col-span-1 md:col-span-3">
-                <header class="flex justify-between items-center mb-4">
-                    <h2 class="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> 
-                        Action Logging & Sandbox Output
-                    </h2>
-                    <span class="text-[10px] font-mono text-slate-600">SANDBOX_ID: elysia-kernel-01</span>
-                </header>
-                <div class="bg-black/40 rounded-xl p-4 font-mono text-xs text-slate-300 h-48 overflow-y-auto space-y-1">
-                    <template x-for="log in logs" :key="log.id">
-                        <div>
-                            <span class="text-slate-600" x-text="'[' + log.time + ']'"></span>
-                            <span :class="log.type === 'error' ? 'text-red-400' : 'text-green-400'" x-text="log.type === 'error' ? '[SH_ERR]' : '[OS_OK]'"></span>
-                            <span x-text="log.message"></span>
-                        </div>
-                    </template>
-                    <div x-show="!logs.length" class="text-slate-700 italic">Listening for kernel actions...</div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="mt-8 text-center">
-            <p class="text-slate-600 text-xs tracking-widest uppercase">Elysia AI Project • Resonance Interface v2</p>
-        </footer>
-    </div>
-
     <script>
-        function monitor() {
+        function dashboard() {
             return {
-                stats: {},
-                logs: [],
-                timer: null,
-                
-                async fetchStats() {
+                logs: [
+                    { time: new Date().toLocaleTimeString(), msg: 'Sovereign OS Kernel Initialized.' },
+                    { time: new Date().toLocaleTimeString(), msg: 'Awaiting module resonance...' }
+                ],
+                loading: { nanotech: false, desktop: false, neural: false },
+                addLog(msg) {
+                    this.logs.push({ time: new Date().toLocaleTimeString(), msg });
+                    this.$nextTick(() => {
+                        const el = document.getElementById('log-box');
+                        el.scrollTop = el.scrollHeight;
+                    });
+                },
+                async initiateNanotech() {
+                    this.loading.nanotech = true;
+                    this.addLog('Initiating Nanotech Suit NSS-01 resonance scan...');
                     try {
-                        const res = await fetch("http://127.0.0.1:8000/system/monitor", {
-                            headers: { "x-api-key": "ELYSIATEST-001" }
-                        });
-                        if (res.ok) {
-                            this.stats = await res.json();
-                            this.addLog("Perception refreshed. Kernel synchronized.");
-                        } else {
-                            this.addLog("Sync failed: Kernel unreachable.", "error");
-                        }
+                        const res = await fetch('http://localhost:8000/module/nanotech/initiate', { method: 'POST' });
+                        const data = await res.json();
+                        this.addLog(data.message);
+                        this.addLog(`Integrity Verified: ${data.integrity.toFixed(6)}`);
                     } catch (e) {
-                        this.addLog("Transmission error: " + e.message, "error");
+                        this.addLog('[ERROR] Nanotech Link Failed.');
+                    } finally {
+                        this.loading.nanotech = false;
                     }
                 },
-
-                addLog(msg, type = "info") {
-                    this.logs.unshift({
-                        id: Date.now(),
-                        time: new Date().toLocaleTimeString(),
-                        message: msg,
-                        type: type
-                    });
-                    if (this.logs.length > 50) this.logs.pop();
+                async accessWorkspace() {
+                    this.loading.desktop = true;
+                    this.addLog('Syncing Sovereign Desktop workspace...');
+                    try {
+                        const res = await fetch('http://localhost:8000/module/desktop/access', { method: 'POST' });
+                        const data = await res.json();
+                        this.addLog(`Workspace Access Granted. ${data.file_count} documents indexed.`);
+                    } catch (e) {
+                        this.addLog('[ERROR] Workspace Sync Interrupted.');
+                    } finally {
+                        this.loading.desktop = false;
+                    }
                 },
-
-                init() {
-                    this.fetchStats();
-                    this.timer = setInterval(() => this.fetchStats(), 4000);
-                    this.addLog("Elysia OS Resonance Initialization...");
+                async neuralAuth() {
+                    this.loading.neural = true;
+                    this.addLog('Executing Neural Handshake protocol...');
+                    try {
+                        const res = await fetch('http://localhost:8000/module/neural/authenticate', { method: 'POST' });
+                        const data = await res.json();
+                        this.addLog(`Handshake Successful: ${data.handshake_id.slice(0, 16)}...`);
+                        this.addLog(`Encryption Layer: ${data.encryption}`);
+                    } catch (e) {
+                        this.addLog('[ERROR] Neural Link Desync.');
+                    } finally {
+                        this.loading.neural = false;
+                    }
                 }
             }
         }
     </script>
+</head>
+<body class="min-h-screen p-12" x-data="dashboard()">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-12 flex items-center gap-4">
+            <h1 class="text-4xl font-bold tracking-tighter">
+                <span class="text-white">FEATURED</span> 
+                <span class="bg-gradient-to-r from-pink-500 to-cyan-500 bg-clip-text text-transparent">MODULES</span>
+            </h1>
+            <div class="h-[1px] flex-1 bg-gradient-to-r from-slate-800 to-transparent"></div>
+            <div class="flex items-center gap-4 text-[10px] font-mono text-slate-500">
+                <span class="flex items-center gap-1"><span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> KERNEL_ONLINE</span>
+                <span>Uptime: 00:42:15</span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <!-- Module 1: Nanotech Suit -->
+            <div class="module-card glow-border glass rounded-[1.5rem] p-6 flex flex-col h-full">
+                <div class="rounded-xl overflow-hidden mb-6 aspect-video relative group">
+                    <img src="/nanotech_suit_nss01_visualization_1776944921653.png" alt="Nanotech Suit" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-white mb-3 font-mono">Nanotech Suit NSS-01</h2>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                        14億個のナノマシンを制御する主権防衛スーツ。ニューラルリンクによる神経接続と高度なHUDを搭載。
+                    </p>
+                    <div class="flex gap-2 mb-8">
+                        <span class="tag text-cyan-400 border-cyan-500/20">Nanotech</span>
+                        <span class="tag text-rose-400 border-rose-500/20">Combat</span>
+                    </div>
+                </div>
+                <button 
+                    @click="initiateNanotech()"
+                    :disabled="loading.nanotech"
+                    class="w-full py-3 rounded-lg text-xs font-bold tracking-[0.2em] uppercase btn-initiate text-slate-300 disabled:opacity-50"
+                >
+                    <span x-show="!loading.nanotech">INITIATE_MODULE</span>
+                    <span x-show="loading.nanotech" class="animate-pulse">RESONATING...</span>
+                </button>
+            </div>
+
+            <!-- Module 2: Sovereign Desktop -->
+            <div class="module-card glass rounded-[1.5rem] p-6 flex flex-col h-full">
+                <div class="rounded-xl overflow-hidden mb-6 aspect-video relative group">
+                    <img src="/sovereign_desktop_visualization_1776944941569.png" alt="Sovereign Desktop" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                    <div class="absolute inset-0 bg-black/40"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <svg class="w-12 h-12 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M2 5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5z"/>
+                            <path d="M8 21h8M12 17v4"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-white mb-3">Sovereign Desktop</h2>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                        完全レスポンシブな主権デスクトップUI。洗練されたウィンドウマネージャーとシステムトレイを完備。
+                    </p>
+                    <div class="flex gap-2 mb-8">
+                        <span class="tag text-slate-400">TailwindCSS</span>
+                        <span class="tag text-slate-400">Alpine.js</span>
+                    </div>
+                </div>
+                <button 
+                    @click="accessWorkspace()"
+                    :disabled="loading.desktop"
+                    class="w-full py-3 rounded-lg text-xs font-bold tracking-[0.2em] uppercase btn-workspace text-white disabled:opacity-50"
+                >
+                    <span x-show="!loading.desktop">ACCESS_WORKSPACE</span>
+                    <span x-show="loading.desktop" class="animate-pulse">SYNCING...</span>
+                </button>
+            </div>
+
+            <!-- Module 3: Neural Auth -->
+            <div class="module-card glass rounded-[1.5rem] p-6 flex flex-col h-full">
+                <div class="rounded-xl overflow-hidden mb-6 aspect-video relative bg-slate-950 flex items-center justify-center group">
+                    <img src="/neural_auth_visualization_1776944961618.png" alt="Neural Auth" class="absolute inset-0 w-full h-full object-cover opacity-60 transform group-hover:scale-110 transition-transform duration-700">
+                    <div class="relative z-10">
+                        <svg class="w-12 h-12 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold text-white mb-3">Neural Auth</h2>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                        量子暗号化されたニューラルリンク認証ゲートウェイ。セキュアなトークン管理と侵入検知システム。
+                    </p>
+                    <div class="flex gap-2 mb-8">
+                        <span class="tag text-indigo-400 border-indigo-500/20">Security</span>
+                        <span class="tag text-sky-400 border-sky-500/20">JWT</span>
+                    </div>
+                </div>
+                <button 
+                    @click="neuralAuth()"
+                    :disabled="loading.neural"
+                    class="w-full py-3 rounded-lg text-xs font-bold tracking-[0.2em] uppercase btn-authenticate text-white disabled:opacity-50"
+                >
+                    <span x-show="!loading.neural">AUTHENTICATE</span>
+                    <span x-show="loading.neural" class="animate-pulse">HANDSHAKING...</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- System Log Console -->
+        <div class="glass rounded-2xl p-6 border border-slate-800/50">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span class="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-ping"></span>
+                System Resonance Logs
+            </h3>
+            <div id="log-box" class="h-40 overflow-y-auto font-mono text-[10px] space-y-1 custom-scrollbar">
+                <template x-for="log in logs" :key="log.time + log.msg">
+                    <div class="flex gap-4">
+                        <span class="text-slate-600" x-text="`[${log.time}]`"></span>
+                        <span class="text-slate-400" x-text="log.msg"></span>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
