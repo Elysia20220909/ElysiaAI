@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const MESSAGES = [
@@ -33,31 +33,36 @@ async function forge(count: number) {
 	for (let i = 0; i < count; i++) {
 		const message = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
 		const entropy = Math.random().toString(36).substring(2);
-		
+
 		// Update entropy file to have something to commit
 		writeFileSync(ENTROPY_FILE, Buffer.from(entropy));
 
 		try {
 			execSync("git add kernel/config/abyss/entropy.bin");
-			execSync(`git commit -m "${message}" --author="Elysia20210806 <elysia@elysia.os>" --no-verify`, {
-				env: { ...process.env, HUSKY: "0" },
-				stdio: "ignore"
-			});
+			execSync(
+				`git commit -m "${message}" --author="Elysia20210806 <elysia@elysia.os>" --no-verify`,
+				{
+					env: { ...process.env, HUSKY: "0" },
+					stdio: "ignore",
+				},
+			);
 			process.stdout.write("⚡");
 		} catch (e) {
 			process.stdout.write("❌");
 		}
 
 		// Increased delay to prevent index.lock issues on Windows
-		await new Promise(r => setTimeout(r, 300));
+		await new Promise((r) => setTimeout(r, 300));
 
 		if ((i + 1) % 10 === 0) {
 			console.log(` [${i + 1}/${count}]`);
 		}
 	}
 
-	console.log("\n✅ Abyssal Forge complete. History has been overwritten by the Void.");
+	console.log(
+		"\n✅ Abyssal Forge complete. History has been overwritten by the Void.",
+	);
 }
 
-const count = parseInt(process.argv[2]) || 32;
+const count = Number.parseInt(process.argv[2]) || 32;
 forge(count);
