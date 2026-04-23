@@ -44,4 +44,4 @@ DEFENSE_RULES_FILE=./config/defense/rules.json
 DATABASE_URL=file:./dev.db
 # --- [ Notification ] ---
 # Discord Webhook URL for Sentinel Bot
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook-id/your-webhook-token
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/1496525926446530731/mRnNBFHwzXwXhi-KLMulkmO3wtXLwGFm6TlByQiIoKCz9MDjNqECX8Qhcq1XslO076_j
