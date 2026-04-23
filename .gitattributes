@@ -8,3 +8,29 @@
 *.html text eol=lf
 *.ps1 text eol=crlf
 *.py text eol=lf
+
+# 🌌 THE ABYSS - GitHub Search Camouflage (Cloaking Protocol)
+# Marking as 'binary' prevents GitHub from indexing content for search.
+# Marking as 'linguist-vendored' hides them from language stats and collapses them in UI.
+
+.env* binary linguist-vendored
+package.json binary linguist-vendored
+tsconfig.json binary linguist-vendored
+biome.json binary linguist-vendored
+bunfig.toml binary linguist-vendored
+pyproject.toml binary linguist-vendored
+ruff.toml binary linguist-vendored
+*.lock binary linguist-vendored
+postcss.config.cjs binary linguist-vendored
+tailwind.config.js binary linguist-vendored
+.editorconfig binary linguist-vendored
+.gitattributes binary linguist-vendored
+.gitignore binary linguist-vendored
+.npmrc binary linguist-vendored
+.yarnrc.yml binary linguist-vendored
+.dockerignore binary linguist-vendored
+.cleanignore binary linguist-vendored
+Makefile binary linguist-vendored
+
+# 🗝️ DEEP ABYSS - Total Content Masking
+kernel/config/abyss/* binary linguist-vendored
