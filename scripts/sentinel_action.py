@@ -56,7 +56,7 @@ def send_discord_embed(title, description, url, source_name, color, fields=None,
         "url": url,
         "color": color,
         "timestamp": timestamp,
-        "footer": {"text": f"Sovereign Sentinel • {source_name}"},
+        "footer": {"text": f"ElysiaBot // #elysia-pc • {source_name}"},
         "author": {"name": source_name},
         "fields": fields or [],
     }
@@ -64,7 +64,7 @@ def send_discord_embed(title, description, url, source_name, color, fields=None,
         embed["image"] = {"url": image_url}
 
     payload = {
-        "username": "Marathon Sentinel",
+        "username": "ElysiaBot",
         "avatar_url": "https://raw.githubusercontent.com/google/material-design-icons/master/png/action/settings_input_antenna/mw24.png",
         "embeds": [embed],
     }
