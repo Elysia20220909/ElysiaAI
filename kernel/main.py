@@ -3,7 +3,7 @@ import hashlib
 import json
 import os
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any
 
 import ollama
 import uvicorn
@@ -98,7 +98,7 @@ def get_workspace_context():
     return context
 
 # --- Thought Graph Generator ---
-def generate_mermaid_graph(steps: List[str]):
+def generate_mermaid_graph(steps: list[str]):
     graph = "graph TD\n"
     graph += "  Start((Start)) --> S0[Deep Resonance]\n"
     for i, step in enumerate(steps):
