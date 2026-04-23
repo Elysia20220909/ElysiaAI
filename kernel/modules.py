@@ -13,8 +13,12 @@ class ModuleManager:
 
     def _load_state(self) -> dict[str, Any]:
         if os.path.exists(self.status_file):
-            with open(self.status_file) as f:
-                return json.load(f)
+            try:
+                with open(self.status_file, "r") as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError) as e:
+                print(f"[MODULES] State corrupted, resetting: {e}")
+        
         return {
             "nanotech": {"level": 1, "integrity": 1.0, "active": False},
             "desktop": {"theme": "sovereign", "workspace_locked": False},
@@ -22,8 +26,14 @@ class ModuleManager:
         }
 
     def _save_state(self):
-        with open(self.status_file, "w") as f:
-            json.dump(self.state, f, indent=4)
+        # Atomic write using a temporary file
+        temp_file = self.status_file + ".tmp"
+        try:
+            with open(temp_file, "w") as f:
+                json.dump(self.state, f, indent=4)
+            os.replace(temp_file, self.status_file)
+        except IOError as e:
+            print(f"[MODULES] Failed to save state: {e}")
 
     def initiate_nanotech(self) -> dict[str, Any]:
         """

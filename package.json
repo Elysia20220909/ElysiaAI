@@ -7,12 +7,13 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "elysia": "latest",
-    "@elysiajs/cors": "latest",
+    "@elysiajs/cors": "^1.4.1",
     "@elysiajs/jwt": "latest",
+    "@elysiajs/static": "^1.4.9",
     "@elysiajs/websocket": "latest",
-    "prisma": "latest",
-    "@prisma/client": "latest"
+    "@prisma/client": "latest",
+    "elysia": "^1.4.28",
+    "prisma": "latest"
   },
   "devDependencies": {
     "bun-types": "latest"
