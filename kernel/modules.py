@@ -14,9 +14,9 @@ class ModuleManager:
     def _load_state(self) -> dict[str, Any]:
         if os.path.exists(self.status_file):
             try:
-                with open(self.status_file, "r") as f:
+                with open(self.status_file) as f:
                     return json.load(f)
-            except (json.JSONDecodeError, IOError) as e:
+            except (OSError, json.JSONDecodeError) as e:
                 print(f"[MODULES] State corrupted, resetting: {e}")
         
         return {
@@ -32,7 +32,7 @@ class ModuleManager:
             with open(temp_file, "w") as f:
                 json.dump(self.state, f, indent=4)
             os.replace(temp_file, self.status_file)
-        except IOError as e:
+        except OSError as e:
             print(f"[MODULES] Failed to save state: {e}")
 
     def initiate_nanotech(self) -> dict[str, Any]:
