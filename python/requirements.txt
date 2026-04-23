@@ -29,7 +29,7 @@ Pillow==10.2.0
 pyautogui==0.9.54
 
 # Testing
-pytest==8.0.0
+pytest==9.0.3
 flake8==7.0.0
 
 # AbyssGrid Network Simulation
