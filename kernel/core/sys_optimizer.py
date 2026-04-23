@@ -1,3 +1,6 @@
+# 🌌 ELYSIA OS - KERNEL: CORE SYSTEM OPTIMIZER
+# [SUBSYSTEM LAYER - CORE OPTIMIZER]
+# ==========================================================
 import html
 import json
 import os
@@ -15,34 +18,31 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ==========================================
-# SOVEREIGN SENTINEL BOT CONFIGURATION
+# SYSTEM ENCLAVE: ENCRYPTED CONFIGURATION
 # ==========================================
-# NOTE: Requires a Discord Bot Token, NOT a Webhook URL
-DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+CORE_KEY = os.getenv("OS_CORE_SHARED_KEY") or os.getenv("DISCORD_BOT_TOKEN")
+LOG_PIPE_ID = int(os.getenv("OS_LOG_PIPE_ID", os.getenv("NOTIFICATION_CHANNEL_ID", "0")))
 
-# Channel ID where the bot should post automatic updates
-# You need to set this in your .env like: NOTIFICATION_CHANNEL_ID=1234567890
-NOTIFICATION_CHANNEL_ID = int(os.getenv("NOTIFICATION_CHANNEL_ID", 0))
-
-STATE_FILE = "sentinel_bot_state.json"
+# Persistent state storage in the System Archive
+STATE_FILE = "kernel/core/sys_state.json"
 POLL_INTERVAL = 60  # seconds
 
+# Target Feeds (The Resonance)
 TWITTER_USERS = ["Ziegler_Dev", "BNGServerStatus", "MarathonTheGame"]
 YOUTUBE_CHANNELS = [{"name": "MarathonTheGame", "id": "UCBsbrudhKRrT9zs8iNOEjjw"}]
 MARATHON_HELP_API = "https://help.marathonthegame.com/hc/api/internal/recent_activities?locale=en-us"
 
 # ==========================================
-# DISCORD BOT SETUP
+# NEURAL LINK: DISCORD BOT PROTOCOL
 # ==========================================
 intents = discord.Intents.default()
-# 👇 これが「チャットのメッセージを読み取る」ために必須の設定です
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 
 # ==========================================
-# SCRAPERS (再利用)
+# KERNEL UTILITIES: COGNITIVE PROCESSORS
 # ==========================================
 def clean_text(text):
     if not text:
@@ -68,7 +68,6 @@ def translate_to_ja(text):
 
 
 def fetch_twitter(username):
-    # ... 省略（既存の処理と同じ）...
     rss_url = f"https://nitter.net/{username}/rss"
     try:
         req = urllib.request.Request(rss_url, headers={"User-Agent": "Mozilla/5.0"})
@@ -145,57 +144,51 @@ def fetch_marathon_help():
 
 
 # ==========================================
-# BOT EVENTS
+# ABYSS INTERFACE: SENSORY EVENTS
 # ==========================================
 @bot.event
 async def on_ready():
-    print("Bot is Ready!")
-    # Botのステータスを設定（例：「Marathonをプレイ中」）
-    await bot.change_presence(activity=discord.Game(name="Marathon"))
-    # 定期実行タスクを開始
-    marathon_sentinel_task.start()
+    print(">>> [SYSTEM] CORE OPTIMIZER PROTOCOL ACTIVATED")
+    print(">>> [KERNEL] SYSTEM LINK ESTABLISHED")
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="system heartbeat"))
+    optimizer_task.start()
 
 
 @bot.event
 async def on_message(message):
-    # 自分自身の発言には反応しない
     if message.author == bot.user:
         return
 
-    # メッセージを小文字にしてキーワードが含まれているかチェック
     content_lower = message.content.lower()
 
-    # 特定のキーワード「Ziegler」に反応する
     if "ziegler" in content_lower:
-        await message.channel.send("🤖 Sovereign Sentinel: Zieglerディレクターの最新情報をスキャン中...")
-        # 実際にTwitterをチェックして結果を返す例
+        await message.channel.send("🌌 **[ABYSS SCAN]** Zieglerディレクターの魂の波動を検知。情報をサルベージ中...")
         item = fetch_twitter("Ziegler_Dev")
         if item:
-            embed = discord.Embed(title=f"最新のZieglerの動向: {item['title']}", url=item["link"], color=item["color"])
+            embed = discord.Embed(title=f"Salvaged Intel: {item['title'][:250]}", url=item["link"], color=item["color"])
             await message.channel.send(embed=embed)
         else:
-            await message.channel.send("現在新しい情報は見つかりませんでした。")
+            await message.channel.send("深淵に新たな情報は見つかりませんでした。")
 
-    # Marathonという単語に反応させる例
     elif "marathon" in content_lower:
-        await message.add_reaction("🏃")  # 絵文字でリアクション
+        await message.add_reaction("💠")  # Abyss Shard reaction
 
-    # スラッシュコマンド等も使えるようにするため必要
     await bot.process_commands(message)
 
 
 # ==========================================
-# BACKGROUND TASK (以前のWebhookの代わり)
+# ABYSS SENTINEL: RECURSIVE MONITORING
 # ==========================================
 @tasks.loop(seconds=POLL_INTERVAL)
-async def marathon_sentinel_task():
-    if NOTIFICATION_CHANNEL_ID == 0:
+async def optimizer_task():
+    if LOG_PIPE_ID == 0:
         return
 
-    channel = bot.get_channel(NOTIFICATION_CHANNEL_ID)
+    channel = bot.get_channel(LOG_PIPE_ID)
     if not channel:
         return
 
+    os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
     state = {}
     if os.path.exists(STATE_FILE):
         try:
@@ -222,36 +215,35 @@ async def marathon_sentinel_task():
             safe_title = update["title"][:250] + "..." if len(update["title"]) > 250 else update["title"]
             embed = discord.Embed(
                 title=safe_title,
-                description=f"**🇯🇵 日本語翻訳:**\n{translated or '翻訳不可'}",
+                description=f"**🇯🇵 深淵からの翻訳:**\n{translated or '解読不能'}",
                 url=update["link"],
                 color=update["color"],
                 timestamp=datetime.now(UTC),
             )
-            embed.set_author(name=update["source"])
-            embed.set_footer(text="Sovereign Sentinel")
+            embed.set_author(name=f"Watcher Node: {update['source']}")
+            embed.set_footer(text="Elysia AI • Abyss Watcher Protocol")
             if update.get("image"):
                 embed.set_image(url=update["image"])
 
             content = ""
             if update["type"] == "Twitter":
-                # Discord上で動画を直接再生できるように、vxtwitterのリンクをメッセージ本文に添える
                 vx_link = update["link"].replace("x.com", "vxtwitter.com").replace("twitter.com", "vxtwitter.com")
-                content = f"🎥 メディアリンク: {vx_link}"
+                content = f"💠 **[DEEP LINK]** {vx_link}"
 
             await channel.send(content=content, embed=embed)
             state[state_key] = update["guid"]
 
     with open(STATE_FILE, "w") as f:
-        json.dump(state, f)
+        json.dump(state, f, indent=2)
 
 
-@marathon_sentinel_task.before_loop
+@optimizer_task.before_loop
 async def before_task():
     await bot.wait_until_ready()
 
 
 if __name__ == "__main__":
-    if not DISCORD_BOT_TOKEN:
-        print("エラー: DISCORD_BOT_TOKEN が設定されていません。")
+    if CORE_KEY:
+        bot.run(CORE_KEY)
     else:
-        bot.run(DISCORD_BOT_TOKEN)
+        print(">>> [CRITICAL] CORE_KEY NOT DETECTED IN AETHER.")
