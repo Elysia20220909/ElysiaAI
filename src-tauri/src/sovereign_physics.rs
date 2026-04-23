@@ -20,6 +20,10 @@ pub struct WorldState {
     pub wind_force: f32,
     pub objects: Vec<PhysicalObject>,
     pub collision_events: Vec<CollisionEvent>,
+    pub score: i32,
+    pub lives: i32,
+    pub basket_x: f32,
+    pub game_over: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,6 +48,12 @@ pub struct PhysicalObject {
 }
 
 #[tauri::command]
+pub fn set_basket_position(x: f32) {
+    let mut state = WORLD_STATE.lock().unwrap();
+    state.basket_x = x;
+}
+
+#[tauri::command]
 pub fn set_wind_force(force: f32) {
     let mut state = WORLD_STATE.lock().unwrap();
     state.wind_force = force;
@@ -51,9 +61,13 @@ pub fn set_wind_force(force: f32) {
 
 lazy_static! {
     static ref WORLD_STATE: Mutex<WorldState> = Mutex::new(WorldState {
-        wind_force: 0.5,
+        wind_force: 0.0,
         objects: Vec::new(),
         collision_events: Vec::new(),
+        score: 0,
+        lives: 3,
+        basket_x: 0.0,
+        game_over: false,
     });
 }
 
@@ -61,6 +75,10 @@ pub fn initialize_simulation() {
     let mut state = WORLD_STATE.lock().unwrap();
     state.objects.clear();
     state.collision_events.clear();
+    state.score = 0;
+    state.lives = 3;
+    state.basket_x = 0.0;
+    state.game_over = false;
     
     // Add multiple apples
     for i in 0..6 {
@@ -68,17 +86,15 @@ pub fn initialize_simulation() {
             id: i,
             name: format!("Apple_{}", i),
             x: (i as f32 * 1.5) - 4.0, 
-            y: 10.0 + (i as f32 * 0.8),
+            y: 12.0 + (i as f32 * 2.0), // Higher up for the game
             velocity_x: 0.0,
             velocity_y: 0.0,
             mass: 0.2,
-            restitution: 0.5,
+            restitution: 0.4,
             is_falling: false,
             is_broken: false,
         });
     }
-    
-    log::info!("[PHYSICS] Multi-object simulation initialized with breaking mechanics.");
 }
 
 pub fn trigger_fall(id: u32) {
@@ -91,9 +107,13 @@ pub fn trigger_fall(id: u32) {
 
 pub fn update_simulation() -> WorldState {
     let mut state = WORLD_STATE.lock().unwrap();
-    state.collision_events.clear();
+    if state.game_over {
+        return state.clone();
+    }
     
+    state.collision_events.clear();
     let wind_force = state.wind_force;
+    let basket_x = state.basket_x;
     let num_objs = state.objects.len();
     
     // 1. Physics Update
@@ -106,24 +126,44 @@ pub fn update_simulation() -> WorldState {
                 obj.velocity_x += wind_force * TIME_STEP;
             }
             
-            // Ground collision + Bounce
+            // X-Bounds enforcement (Sovereign play area)
+            if obj.x < -10.0 { obj.x = -10.0; obj.velocity_x = -obj.velocity_x * 0.5; }
+            if obj.x > 10.0 { obj.x = 10.0; obj.velocity_x = -obj.velocity_x * 0.5; }
+
+            // Ground collision
             if obj.y <= 0.0 {
                 obj.y = 0.0;
                 
-                // Break if hit too hard
-                if obj.velocity_y.abs() > 8.0 && !obj.is_broken {
-                    obj.is_broken = true;
-                    state.collision_events.push(CollisionEvent { x: obj.x, y: 0.0, intensity: 1.0 });
-                } else if obj.velocity_y.abs() > 0.5 {
-                    state.collision_events.push(CollisionEvent { x: obj.x, y: 0.0, intensity: 0.3 });
-                }
-
-                obj.velocity_y = -obj.velocity_y * obj.restitution;
-                
-                if obj.velocity_y.abs() < 0.2 {
+                // --- Game Rule: Catch Check ---
+                if (obj.x - basket_x).abs() < 1.2 {
+                    state.score += 10;
+                    state.collision_events.push(CollisionEvent { x: obj.x, y: 0.0, intensity: 2.0 }); 
+                    
+                    obj.y = 12.0 + (rand::random::<f32>() * 5.0);
+                    obj.x = (rand::random::<f32>() * 12.0) - 6.0;
                     obj.velocity_y = 0.0;
                     obj.velocity_x = 0.0;
-                    obj.is_falling = false;
+                    obj.is_broken = false;
+                    obj.is_falling = true;
+                } else {
+                    if obj.velocity_y.abs() > 8.0 && !obj.is_broken {
+                        obj.is_broken = true;
+                        state.lives = (state.lives - 1).max(0);
+                        state.collision_events.push(CollisionEvent { x: obj.x, y: 0.0, intensity: 1.0 });
+                        
+                        if state.lives <= 0 {
+                            state.game_over = true;
+                        }
+                    } else if obj.velocity_y.abs() > 0.5 {
+                        state.collision_events.push(CollisionEvent { x: obj.x, y: 0.0, intensity: 0.3 });
+                    }
+
+                    obj.velocity_y = -obj.velocity_y * obj.restitution;
+                    if obj.velocity_y.abs() < 0.2 {
+                        obj.velocity_y = 0.0;
+                        obj.velocity_x = 0.0;
+                        obj.is_falling = false;
+                    }
                 }
             }
         }

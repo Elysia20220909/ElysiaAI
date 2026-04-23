@@ -22,8 +22,8 @@ struct KernelState(Mutex<Option<Child>>);
 
 /// Returns the current status of the AEGIS watchdog.
 #[tauri::command]
-fn get_aegis_resonance() -> aegis::AegisStatus {
-    aegis::AegisWatchdog::new().get_status()
+fn get_aegis_resonance(watchdog: State<'_, aegis::AegisWatchdog>) -> aegis::AegisStatus {
+    watchdog.get_status()
 }
 
 /// Triggers a native audit via the Swift-Rust bridge.
@@ -63,6 +63,11 @@ async fn register_classified_file(
     };
 
     sovereign_secrecy::register_important_file(file).map_err(AppError::Internal)?;
+    
+    // Log to Immutable Ledger
+    let watchdog = app_handle.state::<aegis::AegisWatchdog>();
+    watchdog.log_to_ledger("SECURITY", &format!("Class 09 Artifact Registered: {}", name));
+
     Ok(format!("File registered with Class {:02}", class))
 }
 
@@ -111,11 +116,14 @@ fn generate_influence_signature(action: &str, node_name: &str) -> AppResult<serd
     }))
 }
 
-/// Helper to relay signed actions to the background Python kernel.
+/// Helper to relay signed actions to the Sovereign Node (Bun Bridge).
 async fn relay_influence_to_kernel(payload: serde_json::Value) -> AppResult<serde_json::Value> {
     let client = reqwest::Client::new();
-    let res = client.post("http://localhost:8000/system/influence/execute")
-        .json(&payload)
+    let res = client.post("http://localhost:3000/api/kernel")
+        .json(&serde_json::json!({
+            "method": "influence",
+            "params": payload
+        }))
         .send()
         .await?;
 
@@ -139,6 +147,33 @@ fn update_physics_resonance() -> sovereign_physics::WorldState {
 }
 
 #[tauri::command]
+async fn save_secure_world_state() -> AppResult<String> {
+    let state = sovereign_physics::update_simulation();
+    let json = serde_json::to_vec(&state).map_err(|e| AppError::Internal(e.to_string()))?;
+    
+    // Seal with NSA-grade hardware resonance
+    let sealed = crate::sovereign_secrecy::seal_class09_data(&json)?;
+    
+    let path = "secure_world_state.bin";
+    std::fs::write(path, sealed).map_err(|e| AppError::Io(e))?;
+    
+    crate::sovereign_secrecy::register_important_file(crate::sovereign_secrecy::SovereignFile {
+        name: "World State Backup".to_string(),
+        path: path.to_string(),
+        secrecy: crate::sovereign_secrecy::SecrecyClass::Class09Abyss,
+        owner: "Elysia".to_string(),
+        integrity_hash: hex::encode(reqwest::header::HeaderValue::from_str("dummy").unwrap().as_bytes()), // Dummy hash for now
+    }).map_err(|e| AppError::Security(e))?;
+
+    Ok(format!("World state sealed and stored at {}", path))
+}
+
+#[tauri::command]
+fn set_basket_position_resonance(x: f32) {
+    sovereign_physics::set_basket_position(x);
+}
+
+#[tauri::command]
 fn set_wind_force_resonance(force: f32) {
     sovereign_physics::set_wind_force(force);
 }
@@ -155,18 +190,11 @@ pub fn run() {
             init_physics_resonance,
             drop_apple_resonance,
             update_physics_resonance,
-            set_wind_force_resonance
+            set_wind_force_resonance,
+            set_basket_position_resonance,
+            save_secure_world_state
         ])
-        .manage(KernelState(Mutex::new(None)))
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                shutdown_kernel(window.state::<KernelState>());
-            }
-        })
-        .setup(|app| {
-            setup_kernel_process(app.handle())?;
-            Ok(())
-        })
+        .manage(aegis::AegisWatchdog::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
