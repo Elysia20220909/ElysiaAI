@@ -40,7 +40,9 @@ pub async fn trigger_native_audit(resonance_key: &str) -> Result<(String, f64), 
     
     if response.success {
         let msg = unsafe { 
-            let s = CStr::from_ptr(response.message).to_string_lossy().into_owned();
+            let c_str = CStr::from_ptr(response.message);
+            let s = c_str.to_string_lossy().into_owned();
+            
             // Free the memory allocated by strdup in Swift
             libc::free(response.message as *mut libc::c_void);
             s
