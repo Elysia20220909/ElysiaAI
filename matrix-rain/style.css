@@ -5,12 +5,16 @@
     --matrix-dark-green: #003b00;
     --background-black: #0d0208;
     --glow-shadow: 0 0 10px rgba(0, 255, 65, 0.8), 0 0 20px rgba(0, 255, 65, 0.5);
+    --alert-red: #ff0041;
+    --cyan-accent: #00fff9;
+    --pink-accent: #ff00c1;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    cursor: crosshair;
 }
 
 body {
@@ -21,6 +25,61 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    color: var(--matrix-green);
+}
+
+/* CRT Effect Overlay */
+body::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 1000;
+    background-size: 100% 4px, 3px 100%;
+    pointer-events: none;
+}
+
+body::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(18, 16, 16, 0.1);
+    opacity: 0;
+    z-index: 1001;
+    pointer-events: none;
+    animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+    0% { opacity: 0.27861; }
+    5% { opacity: 0.34769; }
+    10% { opacity: 0.23604; }
+    15% { opacity: 0.90626; }
+    20% { opacity: 0.18128; }
+    25% { opacity: 0.83891; }
+    30% { opacity: 0.65583; }
+    35% { opacity: 0.57807; }
+    40% { opacity: 0.26559; }
+    45% { opacity: 0.84693; }
+    50% { opacity: 0.96019; }
+    55% { opacity: 0.08594; }
+    60% { opacity: 0.20313; }
+    65% { opacity: 0.71988; }
+    70% { opacity: 0.53455; }
+    75% { opacity: 0.37288; }
+    80% { opacity: 0.71428; }
+    85% { opacity: 0.70419; }
+    90% { opacity: 0.7003; }
+    95% { opacity: 0.36108; }
+    100% { opacity: 0.24387; }
 }
 
 #matrix-canvas {
@@ -155,6 +214,208 @@ body {
 .log-error { color: #ff0041; text-shadow: 0 0 5px rgba(255, 0, 65, 0.5); }
 .log-system { color: #00fff9; text-shadow: 0 0 5px rgba(0, 255, 249, 0.5); }
 .log-debug { color: #ff00c1; text-shadow: 0 0 5px rgba(255, 0, 193, 0.5); }
+
+/* --- Hacker Typer Styles --- */
+.typer-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 15;
+    padding: 40px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    pointer-events: none;
+    display: none; /* Shown when typing starts */
+    background: rgba(13, 2, 8, 0.85); /* Darken matrix when typing */
+}
+
+#typer-content {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--matrix-green);
+    white-space: pre-wrap;
+    word-break: break-all;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+    display: inline;
+    margin: 0;
+}
+
+.typer-cursor {
+    color: var(--matrix-green);
+    font-size: 1.2rem;
+    animation: blink 0.8s infinite;
+}
+
+/* --- Access Popups --- */
+.access-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    padding: 20px 60px;
+    border: 4px solid;
+    background: rgba(0, 0, 0, 0.9);
+    text-align: center;
+    box-shadow: 0 0 50px;
+}
+
+.access-popup h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 4rem;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+}
+
+.access-popup.hidden {
+    display: none;
+}
+
+.access-granted {
+    border-color: #00ff41;
+    color: #00ff41;
+    box-shadow: 0 0 50px rgba(0, 255, 65, 0.6);
+    animation: pulsePopupGranted 1s infinite alternate;
+}
+
+.access-denied {
+    border-color: #ff0041;
+    color: #ff0041;
+    box-shadow: 0 0 50px rgba(255, 0, 65, 0.6);
+    animation: pulsePopupDenied 0.3s infinite alternate;
+}
+
+@keyframes pulsePopupGranted {
+    from { box-shadow: 0 0 20px rgba(0, 255, 65, 0.4); }
+    to { box-shadow: 0 0 60px rgba(0, 255, 65, 0.8); }
+}
+
+/* --- Sovereign Dashboard Widgets --- */
+.dashboard-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 8;
+    display: grid;
+    grid-template-columns: 350px 1fr 350px;
+    grid-template-rows: 60px 1fr 250px;
+    gap: 20px;
+    padding: 20px;
+    pointer-events: none;
+}
+
+.widget {
+    background: rgba(0, 20, 0, 0.4);
+    border: 1px solid rgba(0, 255, 65, 0.3);
+    backdrop-filter: blur(4px);
+    padding: 15px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.widget-header {
+    font-size: 0.7rem;
+    color: var(--matrix-green);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    letter-spacing: 2px;
+}
+
+/* Neural Map Widget */
+.neural-widget {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+#neural-canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* System Stats Widget */
+.stats-widget {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(0, 255, 65, 0.1);
+    margin-top: 5px;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--matrix-green);
+    box-shadow: 0 0 10px var(--matrix-green);
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+/* Network Widget */
+.network-widget {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.node-list {
+    font-size: 0.7rem;
+    list-style: none;
+}
+
+.node-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    animation: slideIn 0.5s ease-out forwards;
+}
+
+.node-status {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--matrix-green);
+}
+
+.node-status.offline { background: var(--alert-red); }
+.node-status.syncing { background: var(--cyan-accent); animation: blink 0.5s infinite; }
+
+/* Global Alert Mode */
+body.alert-mode {
+    animation: alertFlash 0.5s infinite alternate;
+}
+
+@keyframes alertFlash {
+    from { background-color: var(--background-black); }
+    to { background-color: rgba(255, 0, 65, 0.2); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
 
 @keyframes fadeInLog {
     from {
