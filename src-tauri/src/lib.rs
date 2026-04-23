@@ -12,6 +12,7 @@ mod chameleon_core;
 mod confidential_exchange;
 mod shared_resonance;
 mod error;
+mod sovereign_physics;
 
 use crate::error::{AppError, AppResult};
 use crate::sovereign_secrecy::{SecrecyClass, SovereignFile};
@@ -122,6 +123,26 @@ async fn relay_influence_to_kernel(payload: serde_json::Value) -> AppResult<serd
     Ok(json)
 }
 
+#[tauri::command]
+fn init_physics_resonance() {
+    sovereign_physics::initialize_simulation();
+}
+
+#[tauri::command]
+fn drop_apple_resonance(id: u32) {
+    sovereign_physics::trigger_fall(id);
+}
+
+#[tauri::command]
+fn update_physics_resonance() -> sovereign_physics::WorldState {
+    sovereign_physics::update_simulation()
+}
+
+#[tauri::command]
+fn set_wind_force_resonance(force: f32) {
+    sovereign_physics::set_wind_force(force);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -130,7 +151,11 @@ pub fn run() {
             execute_signed_influence,
             perform_native_audit,
             emergency_purge,
-            register_classified_file
+            register_classified_file,
+            init_physics_resonance,
+            drop_apple_resonance,
+            update_physics_resonance,
+            set_wind_force_resonance
         ])
         .manage(KernelState(Mutex::new(None)))
         .on_window_event(|window, event| {
