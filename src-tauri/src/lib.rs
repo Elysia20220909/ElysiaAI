@@ -3,6 +3,8 @@ use std::sync::Mutex;
 use tauri::Manager;
 
 mod aegis;
+mod native_bridge;
+mod confidential_core;
 
 struct KernelProcess(Mutex<Option<Child>>);
 
@@ -10,6 +12,17 @@ struct KernelProcess(Mutex<Option<Child>>);
 fn get_aegis_resonance() -> aegis::AegisStatus {
     let watchdog = aegis::AegisWatchdog::new();
     watchdog.get_status()
+}
+
+#[tauri::command]
+async fn perform_native_audit(key: String) -> Result<(String, f64), String> {
+    native_bridge::trigger_native_audit(&key)
+}
+
+#[tauri::command]
+fn emergency_purge() {
+    let mut controller = confidential_core::ConfidentialController::new("EMERGENCY_SYSTEM_PURGE");
+    controller.emergency_purge();
 }
 
 #[tauri::command]
@@ -54,7 +67,12 @@ async fn execute_signed_influence(action: String, node_name: String) -> Result<s
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_aegis_resonance, execute_signed_influence])
+        .invoke_handler(tauri::generate_handler![
+            get_aegis_resonance, 
+            execute_signed_influence,
+            perform_native_audit,
+            emergency_purge
+        ])
         .manage(KernelProcess(Mutex::new(None)))
     .on_window_event(|window, event| {
         if let tauri::WindowEvent::CloseRequested { .. } = event {
