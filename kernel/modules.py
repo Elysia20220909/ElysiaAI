@@ -1,8 +1,9 @@
-import time
 import hashlib
 import json
 import os
-from typing import Dict, Any
+import time
+from typing import Any
+
 
 class ModuleManager:
     def __init__(self, workspace: str):
@@ -10,9 +11,9 @@ class ModuleManager:
         self.status_file = os.path.join(workspace, "modules_state.json")
         self.state = self._load_state()
 
-    def _load_state(self) -> Dict[str, Any]:
+    def _load_state(self) -> dict[str, Any]:
         if os.path.exists(self.status_file):
-            with open(self.status_file, "r") as f:
+            with open(self.status_file) as f:
                 return json.load(f)
         return {
             "nanotech": {"level": 1, "integrity": 1.0, "active": False},
@@ -24,7 +25,7 @@ class ModuleManager:
         with open(self.status_file, "w") as f:
             json.dump(self.state, f, indent=4)
 
-    def initiate_nanotech(self) -> Dict[str, Any]:
+    def initiate_nanotech(self) -> dict[str, Any]:
         """
         Upgrades the Nanotech Suit to the next resonance level.
         Simulates a deep system scan and optimization.
@@ -39,7 +40,7 @@ class ModuleManager:
             "integrity": self.state["nanotech"]["integrity"]
         }
 
-    def access_workspace(self) -> Dict[str, Any]:
+    def access_workspace(self) -> dict[str, Any]:
         """
         Rebuilds the workspace index and prepares the sovereign desktop.
         """
@@ -52,7 +53,7 @@ class ModuleManager:
             "theme": self.state["desktop"]["theme"]
         }
 
-    def neural_authenticate(self, seed: str) -> Dict[str, Any]:
+    def neural_authenticate(self, seed: str) -> dict[str, Any]:
         """
         Performs a neural handshake using SHA-256 resonance.
         """
