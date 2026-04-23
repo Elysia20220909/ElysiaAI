@@ -213,5 +213,12 @@ pub fn update_simulation() -> WorldState {
         }
     }
     
+    for obj in state.objects.iter_mut() {
+        obj.x = (obj.x * 1000.0).round() / 1000.0;
+        obj.y = (obj.y * 1000.0).round() / 1000.0;
+        obj.velocity_x = (obj.velocity_x * 1000.0).round() / 1000.0;
+        obj.velocity_y = (obj.velocity_y * 1000.0).round() / 1000.0;
+    }
+    
     state.clone()
 }
