@@ -9,16 +9,11 @@ services:
       - "8000:8000" # Python FastAPI
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://elysia:elysia_pass@db:5432/elysiadb
-      - REDIS_URL=redis://redis:6379
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
-    depends_on:
-      - db
-      - redis
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data:rw
       - ./logs:/app/logs:rw
 
   # Database Layer

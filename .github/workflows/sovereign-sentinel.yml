@@ -28,10 +28,11 @@ jobs:
         run: |
           python scripts/sentinel_action.py
           python scripts/bungie_broadcast.py
+          python scripts/marathon_hook_monitor.py
 
       - name: Commit State Changes
         run: |
           git config --global user.name "Meteor#6267"
           git config --global user.email "meteor@elysia.ai"
-          git add data/sentinel_state.json data/bungie_state.json
+          git add data/sentinel_state.json data/bungie_state.json data/marathon_hook_state.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "chore(sentinel): update intelligence state [skip ci]" && git push)

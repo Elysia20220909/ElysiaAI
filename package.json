@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "bun run --watch server.ts",
+    "desktop": "bun tauri dev",
     "test": "bun test",
     "prepare": "husky"
   },
@@ -16,6 +17,8 @@
     "prisma": "latest"
   },
   "devDependencies": {
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/cli": "^2.10.1",
     "bun-types": "latest"
   }
 }
