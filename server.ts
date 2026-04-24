@@ -87,7 +87,7 @@ const app = new Elysia()
 	.use(staticPlugin())
 	.get("/", () => Bun.file("index.html"))
 	.get("/api/health", async () => {
-		const kernelHealth = await callKernel("health") as any;
+		const kernelHealth = (await callKernel("health")) as any;
 		return {
 			...kernelHealth,
 			aether: defenseManager.getAetherStatus(),
