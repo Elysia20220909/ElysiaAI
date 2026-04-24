@@ -46,6 +46,7 @@ services:
     container_name: elysia-nitter
     volumes:
       - ./deploy/nitter/nitter.conf:/src/nitter.conf:ro
+      - ./deploy/nitter/sessions.jsonl:/src/sessions.jsonl:ro
     depends_on:
       - nitter-redis
     restart: always
