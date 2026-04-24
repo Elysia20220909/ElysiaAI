@@ -1,0 +1,79 @@
+name: 🛡️ Sovereign Security & Integrity Tests
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 毎日深夜に実行
+  workflow_dispatch:      # 手動実行
+  push:
+    branches: [ "main", "dev" ]
+    paths:
+      - 'packages/**'
+      - 'scripts/**'
+      - '.github/workflows/security-tests.yml'
+
+jobs:
+  security-audit:
+    name: "🔍 セキュリティ監査 (Audit)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Bun Audit (JS/TS)
+        run: bun pm audit
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Python Safety Check
+        run: |
+          uv pip install safety
+          uv run safety check
+
+  unit-tests:
+    name: "🧪 統合テスト (Tests)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Install JS Dependencies
+        run: bun install
+
+      - name: Run Bun Tests
+        run: bun test
+
+  zap-scan:
+    name: "🛡️ OWASP ZAP Security Scan"
+    runs-on: ubuntu-latest
+    # 本番環境またはテスト環境のURLに対して実行
+    if: github.event_name == 'schedule'
+    steps:
+      - name: ZAP Scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: 'https://elysia.io' # 実際のURLまたはテストURLに変更
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+
+  report:
+    name: "📡 Meteor Status Report"
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [security-audit, unit-tests]
+    steps:
+      - name: Notify Meteor#6267
+        run: |
+          # Webhookを使用して実行結果を通知 (Meteor#6267名義)
+          curl -X POST -H "Content-Type: application/json" \
+          -d "{\"username\": \"Meteor#6267\", \"content\": \"🛡️ **Security Audit Complete**\nAudit: ${{ needs.security-audit.result }}\nTests: ${{ needs.unit-tests.result }}\nTimestamp: $(date)\"}" \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}

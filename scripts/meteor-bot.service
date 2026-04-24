@@ -1,0 +1,21 @@
+[Unit]
+Description=Meteor#6267 Discord Bot Sentinel
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/GitHub/ElysiaAI
+ExecStart=/usr/bin/python3 scripts/meteor_bot_core.py
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=meteor-bot
+
+# Environment variables
+Environment=DISCORD_TOKEN=your_token_here
+Environment=DISCORD_MONITOR_CHANNEL_ID=your_channel_id_here
+
+[Install]
+WantedBy=multi-user.target
