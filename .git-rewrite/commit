@@ -1,6 +1,6 @@
-tree c11be06a214533efaf0e14843dd6747ca10646e9
-parent 3c0111ab5c1ea4320d7ad7ef8d481d9986dfa21a
-author chloeamethyst <chloeamethyst@users.noreply.github.com> 1764655309 +0900
-committer chloeamethyst <chloeamethyst@users.noreply.github.com> 1764659392 +0900
+tree 22cd30d8c49152b77968e8c6fb6b8409c6e75950
+parent 81266896adf8144fa8ac85730254cc011d0aab75
+author chloeamethyst <chloeamethyst@users.noreply.github.com> 1764602545 +0900
+committer chloeamethyst <chloeamethyst@users.noreply.github.com> 1764602545 +0900
 
-feat: add multi-LLM mode configuration and update chat request handling
+feat: モダンで魅力的な
