@@ -4,8 +4,7 @@
   "scripts": {
     "dev": "bun run --watch server.ts",
     "desktop": "bun tauri dev",
-    "test": "bun test",
-    "prepare": "husky"
+    "test": "bun test"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.1",
