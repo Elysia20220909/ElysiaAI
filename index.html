@@ -193,7 +193,7 @@
                     try {
                         const res = await fetch('/api/health');
                         const data = await res.json();
-                        this.systemStatus = { ollama: data.ollama, kernel: true, memory: data.workspace };
+                        this.systemStatus = { ollama: data.ollama, kernel: true, memory: data.workspace, aether: data.aether };
                     } catch {
                         this.systemStatus = { ollama: false, kernel: false, memory: false };
                     }
