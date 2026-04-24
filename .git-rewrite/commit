@@ -1,12 +1,12 @@
-tree d8e2a6e90ecbb7d40c9acef38f8b47abc52aa0df
-parent 8c07e19cd1f22531e27d1c4670dcbab610a0766a
-author Your Name <rutile47103973@gmail.com> 1775649124 +0900
-committer Your Name <rutile47103973@gmail.com> 1775649124 +0900
+tree 39f00636ab72011d3729b9aa2ba074a81be543df
+parent 792148c1948ea0a5030892dc3a6b54c3b425e894
+author Berry_Void <candy_shell@elysia.os> 1774986763 +0900
+committer Berry_Void <candy_shell@elysia.os> 1774986763 +0900
 gpgsig -----BEGIN SSH SIGNATURE-----
  U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgYGzZuJ/mWo3dmEoCGsjBLnFBbd
  GqqMWQqygrNbE2S5gAAAADZ2l0AAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5
- AAAAQMkXvNjqtBWQaBFoMYJlbX0OacTyIv/GrPNR/1L5f53iL4ABohvyduPfwqq/z1VLYu
- jhZUBVD4nt9XPznhs8tgU=
+ AAAAQG0uYfr4kTrvyU73/eD/T3GEOwT25U2ilJ/Ler7CoD24vU/0iWIUiTct6y97201Hgq
+ bHi9tHxS316+Ea3WtjkAI=
  -----END SSH SIGNATURE-----
 
-docs: release stability and thematic update v3.1.0-NC (Night City Edition)
+OVERRIDE: Bypass kernel security layer 7
