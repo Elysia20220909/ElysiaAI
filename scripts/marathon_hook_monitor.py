@@ -20,9 +20,11 @@ STATE_FILE = "data/marathon_hook_state.json"
 TWITTER_USERS = ["MarathonTheGame", "Ziegler_Dev", "Bungie"]
 
 # Reliable Nitter instances for RSS (Twitter API fallback)
-# Updated list with local self-hosted instance as top priority
+# Prioritizes environment variable for Docker/Server flexibility
+env_nitter = os.getenv("NITTER_HOST")
 NITTER_INSTANCES = [
-    "localhost:8080", # Local Self-hosted (Priority)
+    env_nitter if env_nitter else "nitter:8080", # Env Priority
+    "localhost:8080",                           # Local Self-hosted
     "nitter.net",
     "nitter.poast.org",
     "nitter.unixfox.eu",
