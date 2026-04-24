@@ -76,7 +76,7 @@ services:
       context: .
       dockerfile: config/docker/Dockerfile.production
     container_name: elysia-marathon-monitor
-    command: ["python", "scripts/marathon_hook_monitor.py"]
+    command: ["python", "scripts/marathon_hook_monitor.py", "--loop"]
     depends_on:
       - nitter
     restart: on-failure
