@@ -28,6 +28,15 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.2); border-radius: 10px; }
+        .void-mode {
+            opacity: 0.05;
+            filter: blur(10px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .void-mode:hover, .void-mode:focus-within {
+            opacity: 1;
+            filter: blur(0);
+        }
     </style>
     <script>
         // Tauri invoke helper
@@ -257,7 +266,8 @@
         </nav>
     </header>
 
-    <div class="w-full max-w-[1400px] h-[85vh] grid grid-cols-1 lg:grid-cols-4 gap-6 mt-24 mx-auto p-6 relative z-10">
+    <div class="w-full max-w-[1400px] h-[85vh] grid grid-cols-1 lg:grid-cols-4 gap-6 mt-24 mx-auto p-6 relative z-10"
+        :class="systemStatus.aether?.mode === 'VOID' ? 'void-mode' : ''">
         
         <!-- Sidebar -->
         <aside class="lg:col-span-1 flex flex-col gap-6 h-full overflow-hidden">
@@ -284,11 +294,11 @@
                     <div class="p-4 bg-slate-950/50 rounded-xl border border-slate-800/30" x-show="systemStatus.aether">
                         <div class="text-[10px] text-slate-500 mb-1">CORE LIGHTWEIGHTING</div>
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-mono text-cyan-400" x-text="systemStatus.aether?.mode"></span>
+                            <span class="text-xs font-mono" :class="systemStatus.aether?.mode === 'VOID' ? 'text-purple-400' : 'text-cyan-400'" x-text="systemStatus.aether?.mode"></span>
                             <span class="text-[9px] text-slate-500" x-text="`LATENCY: ${systemStatus.aether?.latency}`"></span>
                         </div>
                         <div class="mt-2 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
-                            <div class="h-full bg-cyan-500 animate-pulse" :style="`width: ${systemStatus.aether?.mode === 'AETHER' ? '100%' : '5%'}`"></div>
+                            <div class="h-full animate-pulse" :class="systemStatus.aether?.mode === 'VOID' ? 'bg-purple-500' : 'bg-cyan-500'" :style="`width: ${systemStatus.aether?.mode === 'VOID' ? '100%' : (systemStatus.aether?.mode === 'AETHER' ? '80%' : '5%')}`"></div>
                         </div>
                     </div>
                 </div>
