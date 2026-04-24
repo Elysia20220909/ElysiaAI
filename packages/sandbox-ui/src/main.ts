@@ -8,6 +8,7 @@ import { SovereignForge } from "./forge";
 import { SovereignGauntlet } from "./gauntlet";
 import { SecurityHub } from "./security_hub";
 import { SwarmLattice } from "./swarm_lattice";
+import { MeteorSentinel } from "./meteor_sentinel";
 
 const wm = new WindowManager();
 
@@ -299,6 +300,37 @@ const appSovereignForge: AppConfig = {
 	contentRenderer: (body) => new SovereignForge(body).init(),
 };
 
+// --- 7. Specialized App: Meteor Sentinel ---
+const appMeteorSentinel: AppConfig = {
+	id: "meteor",
+	name: "Meteor Sentinel",
+	icon: "🛰️",
+	width: 700,
+	height: 500,
+	contentRenderer: (body) => {
+		const sentinel = new MeteorSentinel(body);
+		sentinel.init();
+
+		// Cleanup on window close
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				mutation.removedNodes.forEach((node) => {
+					if (
+						node instanceof HTMLElement &&
+						node.id === `window-${appMeteorSentinel.id}`
+					) {
+						sentinel.stop();
+						observer.disconnect();
+					}
+				});
+			});
+		});
+		observer.observe(document.getElementById("window-layer")!, {
+			childList: true,
+		});
+	},
+};
+
 // --- 3. Dash (Dock) Settings ---
 document.querySelectorAll(".dash-item").forEach((item) => {
 	item.addEventListener("click", () => {
@@ -308,6 +340,7 @@ document.querySelectorAll(".dash-item").forEach((item) => {
 		if (appName === "aegis") wm.createWindow(appAegisSentinel);
 		if (appName === "gauntlet") wm.createWindow(appSovereignGauntlet);
 		if (appName === "forge") wm.createWindow(appSovereignForge);
+		if (appName === "meteor") wm.createWindow(appMeteorSentinel);
 	});
 });
 
