@@ -1,6 +1,6 @@
-tree 6b13d84a38b6dff5e66bc91420ec6a2118782c77
-parent 8e2ae33b8d4598345ca8d7820f1de6bda397c61e
-author chloeamethyst <chloeamethyst@users.noreply.github.com> 1764593179 +0900
-committer chloeamethyst <chloeamethyst@users.noreply.github.com> 1764593179 +0900
+tree 93cd72d257c16e5128288d04e2de4dbddfdbda90
+parent 2904ef0dc0dc88430feb7bde1d06684224cbe0d5
+author Your Name <your@email.com> 1774170307 +0900
+committer Your Name <your@email.com> 1774170307 +0900
 
-fix: Update subproject commit to indicate dirty state
+feat: Initialize Python virtual environment, install dependencies, and include development configuration and simulation outputs.
