@@ -7,7 +7,7 @@ let pythonProcess: any;
 
 function startKernel() {
 	console.log("[BRIDGE] Starting Sovereign Kernel...");
-	pythonProcess = Bun.spawn(["python", "kernel/main.py"], {
+	pythonProcess = Bun.spawn(["python", "main.py"], {
 		stdin: "pipe",
 		stdout: "pipe",
 		stderr: "inherit",

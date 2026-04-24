@@ -11,7 +11,7 @@ from pymilvus import MilvusClient, model
 
 load_dotenv()
 
-WORKSPACE = os.path.abspath("./workspace")
+WORKSPACE = os.path.abspath("./data")
 module_manager = ModuleManager(WORKSPACE)
 MILVUS_FILE = os.path.join(WORKSPACE, "elysia_memory.db")
 
