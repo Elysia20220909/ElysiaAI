@@ -25,11 +25,13 @@ jobs:
       - name: Run Sentinel Action
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: python scripts/sentinel_action.py
+        run: |
+          python scripts/sentinel_action.py
+          python scripts/bungie_broadcast.py
 
       - name: Commit State Changes
         run: |
-          git config --global user.name "Sovereign Sentinel Bot"
-          git config --global user.email "bot@elysia.ai"
-          git add data/sentinel_state.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update sentinel state [skip ci]" && git push)
+          git config --global user.name "Meteor#6267"
+          git config --global user.email "meteor@elysia.ai"
+          git add data/sentinel_state.json data/bungie_state.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(sentinel): update intelligence state [skip ci]" && git push)
