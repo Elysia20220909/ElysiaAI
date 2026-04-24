@@ -28,3 +28,7 @@ inputimeout==1.0.5
 
 # Discord Interface (Meteor#6267)
 discord.py==2.7.1
+
+# X (Twitter) Scraper (Backup)
+twscrape>=0.13.0
+aiohttp>=3.9.0
