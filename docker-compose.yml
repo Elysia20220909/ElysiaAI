@@ -82,6 +82,7 @@ services:
     restart: on-failure
     environment:
       - NITTER_HOST=${NITTER_HOST}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
 
 volumes:
   postgres_data:
