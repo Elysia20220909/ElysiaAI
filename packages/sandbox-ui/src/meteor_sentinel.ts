@@ -1,15 +1,15 @@
 import { fetchWithAuth } from "../../shared/src/ui-bridge";
 
 export class MeteorSentinel {
-    private container: HTMLElement;
-    private statusInterval: number | null = null;
+	private container: HTMLElement;
+	private statusInterval: number | null = null;
 
-    constructor(container: HTMLElement) {
-        this.container = container;
-    }
+	constructor(container: HTMLElement) {
+		this.container = container;
+	}
 
-    public init() {
-        this.container.innerHTML = `
+	public init() {
+		this.container.innerHTML = `
             <div class="meteor-sentinel-v1">
                 <div class="sentinel-header">
                     <div class="meteor-logo">🛰️</div>
@@ -168,68 +168,88 @@ export class MeteorSentinel {
             </div>
         `;
 
-        this.setupListeners();
-        this.startStatusPolling();
-    }
+		this.setupListeners();
+		this.startStatusPolling();
+	}
 
-    private setupListeners() {
-        const broadcastBtn = this.container.querySelector("#broadcast-test-btn") as HTMLButtonElement;
-        const auditBtn = this.container.querySelector("#resonance-audit-btn") as HTMLButtonElement;
-        const consoleEl = this.container.querySelector("#meteor-console") as HTMLElement;
+	private setupListeners() {
+		const broadcastBtn = this.container.querySelector(
+			"#broadcast-test-btn",
+		) as HTMLButtonElement;
+		const auditBtn = this.container.querySelector(
+			"#resonance-audit-btn",
+		) as HTMLButtonElement;
+		const consoleEl = this.container.querySelector(
+			"#meteor-console",
+		) as HTMLElement;
 
-        broadcastBtn.onclick = async () => {
-            this.logToConsole("> [ACTION] Initiating Broadcast Test...");
-            try {
-                // In a real implementation, we would call the backend
-                // For now, simulate success
-                setTimeout(() => {
-                    this.logToConsole("✅ [METEOR] Broadcast successful. Signal strength 100%.");
-                }, 1000);
-            } catch (err) {
-                this.logToConsole(`❌ [ERROR] Broadcast failed: ${err}`);
-            }
-        };
+		broadcastBtn.onclick = async () => {
+			this.logToConsole("> [ACTION] Initiating Broadcast Test...");
+			try {
+				// In a real implementation, we would call the backend
+				// For now, simulate success
+				setTimeout(() => {
+					this.logToConsole(
+						"✅ [METEOR] Broadcast successful. Signal strength 100%.",
+					);
+				}, 1000);
+			} catch (err) {
+				this.logToConsole(`❌ [ERROR] Broadcast failed: ${err}`);
+			}
+		};
 
-        auditBtn.onclick = async () => {
-            this.logToConsole("> [ACTION] Triggering Hardware Resonance Audit (Swift/NSA Class)...");
-            const scoreEl = this.container.querySelector("#resonance-score") as HTMLElement;
-            
-            let count = 0;
-            const interval = setInterval(() => {
-                scoreEl.innerText = `${Math.floor(Math.random() * 20 + 80)}%`;
-                count++;
-                if (count > 10) {
-                    clearInterval(interval);
-                    scoreEl.innerText = "99.9%";
-                    this.logToConsole("✅ [RESONANCE] Audit Complete. Secure Enclave Verified.");
-                }
-            }, 100);
-        };
-    }
+		auditBtn.onclick = async () => {
+			this.logToConsole(
+				"> [ACTION] Triggering Hardware Resonance Audit (Swift/NSA Class)...",
+			);
+			const scoreEl = this.container.querySelector(
+				"#resonance-score",
+			) as HTMLElement;
 
-    private startStatusPolling() {
-        const statusBadge = this.container.querySelector("#sentinel-status") as HTMLElement;
-        const scoreEl = this.container.querySelector("#resonance-score") as HTMLElement;
+			let count = 0;
+			const interval = setInterval(() => {
+				scoreEl.innerText = `${Math.floor(Math.random() * 20 + 80)}%`;
+				count++;
+				if (count > 10) {
+					clearInterval(interval);
+					scoreEl.innerText = "99.9%";
+					this.logToConsole(
+						"✅ [RESONANCE] Audit Complete. Secure Enclave Verified.",
+					);
+				}
+			}, 100);
+		};
+	}
 
-        this.statusInterval = window.setInterval(() => {
-            // Simulate bot being online
-            statusBadge.innerText = "ONLINE";
-            statusBadge.classList.add("status-online");
-            if (scoreEl.innerText === "--%") {
-                scoreEl.innerText = "94.2%";
-            }
-        }, 2000);
-    }
+	private startStatusPolling() {
+		const statusBadge = this.container.querySelector(
+			"#sentinel-status",
+		) as HTMLElement;
+		const scoreEl = this.container.querySelector(
+			"#resonance-score",
+		) as HTMLElement;
 
-    public stop() {
-        if (this.statusInterval) clearInterval(this.statusInterval);
-    }
+		this.statusInterval = window.setInterval(() => {
+			// Simulate bot being online
+			statusBadge.innerText = "ONLINE";
+			statusBadge.classList.add("status-online");
+			if (scoreEl.innerText === "--%") {
+				scoreEl.innerText = "94.2%";
+			}
+		}, 2000);
+	}
 
-    private logToConsole(msg: string) {
-        const consoleEl = this.container.querySelector("#meteor-console") as HTMLElement;
-        const div = document.createElement("div");
-        div.innerText = msg;
-        consoleEl.appendChild(div);
-        consoleEl.scrollTop = consoleEl.scrollHeight;
-    }
+	public stop() {
+		if (this.statusInterval) clearInterval(this.statusInterval);
+	}
+
+	private logToConsole(msg: string) {
+		const consoleEl = this.container.querySelector(
+			"#meteor-console",
+		) as HTMLElement;
+		const div = document.createElement("div");
+		div.innerText = msg;
+		consoleEl.appendChild(div);
+		consoleEl.scrollTop = consoleEl.scrollHeight;
+	}
 }
