@@ -5,8 +5,9 @@ import sys
 
 import ollama
 from dotenv import load_dotenv
-from modules import ModuleManager
 from pymilvus import MilvusClient, model
+
+from modules import ModuleManager
 
 
 load_dotenv()
