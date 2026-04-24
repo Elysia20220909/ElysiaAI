@@ -6,8 +6,7 @@ import sys
 import ollama
 from dotenv import load_dotenv
 from modules import ModuleManager
-from pymilvus import MilvusClient
-from pymilvus.model.dense import DefaultEmbeddingFunction
+from pymilvus import MilvusClient, model
 
 
 load_dotenv()
@@ -42,7 +41,7 @@ def init_system():
         return new_client
 
 client = init_system()
-embedding_fn = DefaultEmbeddingFunction()
+embedding_fn = model.DefaultEmbeddingFunction()
 
 async def is_ollama_alive():
     try:
