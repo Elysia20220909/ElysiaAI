@@ -6,9 +6,9 @@ import {
 } from "../../shared/src/ui-bridge";
 import { SovereignForge } from "./forge";
 import { SovereignGauntlet } from "./gauntlet";
+import { MeteorSentinel } from "./meteor_sentinel";
 import { SecurityHub } from "./security_hub";
 import { SwarmLattice } from "./swarm_lattice";
-import { MeteorSentinel } from "./meteor_sentinel";
 
 const wm = new WindowManager();
 

@@ -4,9 +4,11 @@ import os
 import re
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET
 from datetime import UTC, datetime
+
+import defusedxml.ElementTree as ElementTree
 from dotenv import load_dotenv
+
 
 # ==========================================
 # BUNGIE BROADCASTER CONFIG
@@ -26,7 +28,8 @@ BUNGIE_SOURCES = [
 # ==========================================
 
 def clean_text(text):
-    if not text: return ""
+    if not text:
+        return ""
     text = html.unescape(text)
     text = re.sub(r"http[s]?://\S+", "", text)
     text = re.sub(r"<[^<]+?>", "", text)
@@ -34,7 +37,8 @@ def clean_text(text):
 
 def translate_to_ja(text):
     cleaned = clean_text(text)
-    if not cleaned: return ""
+    if not cleaned:
+        return ""
     try:
         url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ja&dt=t&q={urllib.parse.quote(cleaned)}"
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -80,7 +84,7 @@ def fetch_twitter(username):
     try:
         req = urllib.request.Request(rss_url, headers={"User-Agent": "Mozilla/5.0"})
         res = urllib.request.urlopen(req, timeout=15)
-        root = ET.fromstring(res.read())
+        root = ElementTree.fromstring(res.read())
         item = root.find("channel/item")
         if item is not None:
             return {
@@ -95,7 +99,7 @@ def fetch_rss(url, source_name):
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         res = urllib.request.urlopen(req, timeout=15)
-        root = ET.fromstring(res.read())
+        root = ElementTree.fromstring(res.read())
         item = root.find("channel/item")
         if item is not None:
             title_node = item.find("title")
@@ -114,7 +118,8 @@ def fetch_marathon_help(url, source_name):
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         res = urllib.request.urlopen(req, timeout=15)
         data = json.loads(res.read().decode())
-        if not data.get("activities"): return None
+        if not data.get("activities"):
+            return None
         post = data["activities"][0]
         return {
             "title": post["title"],
