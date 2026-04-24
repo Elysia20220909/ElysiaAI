@@ -2,11 +2,12 @@ import asyncio
 import json
 import os
 import re
-import time
 import urllib.parse
 import urllib.request
 from datetime import UTC, datetime
+
 from twscrape import API, gather
+
 
 # ==========================================
 # CONFIG
@@ -20,11 +21,13 @@ TWITTER_USERS = ["MarathonTheGame", "Ziegler_Dev", "Bungie"]
 # ==========================================
 
 def translate_to_ja(text):
-    if not text: return ""
+    if not text:
+        return ""
     # Clean text
     text = re.sub(r"http[s]?://\S+", "", text)
     text = re.sub(r"<[^<]+?>", "", text).strip()
-    if not text: return ""
+    if not text:
+        return ""
     
     try:
         url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ja&dt=t&q={urllib.parse.quote(text)}"
@@ -32,7 +35,7 @@ def translate_to_ja(text):
         res = urllib.request.urlopen(req, timeout=10)
         data = json.loads(res.read().decode("utf-8"))
         return "".join([s[0] for s in data[0] if s[0]])
-    except:
+    except Exception:
         return text
 
 def send_discord_embed(tweet, source_name):
@@ -53,7 +56,7 @@ def send_discord_embed(tweet, source_name):
     embeds = []
     primary_embed = {
         "title": f"Marathon Update: {source_name}",
-        "description": f"New post detected via Twscrape",
+        "description": "New post detected via Twscrape",
         "url": tweet.url,
         "color": 0x34D399,
         "timestamp": timestamp,
@@ -101,18 +104,21 @@ async def main():
     os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
     state = {}
     if os.path.exists(STATE_FILE):
-        with open(STATE_FILE) as f: state = json.load(f)
+        with open(STATE_FILE) as f:
+            state = json.load(f)
 
     for username in TWITTER_USERS:
         print(f"Checking @{username}...")
         try:
             # Get user ID first
             user = await api.user_by_username(username)
-            if not user: continue
+            if not user:
+                continue
             
             # Get latest tweets
             tweets = await gather(api.user_tweets(user.id, limit=5))
-            if not tweets: continue
+            if not tweets:
+                continue
             
             latest = tweets[0]
             state_key = f"{username}_id"
