@@ -181,50 +181,70 @@ def main():
     # Filter out flags
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     is_test = "--test" in sys.argv
+    is_loop = "--loop" in sys.argv
     
     targets = args if args else TWITTER_USERS
     
-    print(f"[{datetime.now()}] Marathon Hook Monitor Started (Targets: {', '.join(targets)})")
+    # Priority: Env > Hardcoded
+    webhook_url = os.getenv("DISCORD_WEBHOOK_URL", DISCORD_WEBHOOK_URL)
+    
+    print(f"[{datetime.now()}] Marathon Hook Monitor Awakening...")
+    print(f"[*] Targets: {', '.join(targets)}")
+    print(f"[*] Webhook: {webhook_url[:40]}...")
+    
     if is_test:
         print("[TEST MODE] State check bypassed. Sending latest post regardless of history.")
     
     os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
-    state = {}
-    if os.path.exists(STATE_FILE):
-        try:
-            with open(STATE_FILE) as f:
-                state = json.load(f)
-        except Exception:
-            pass
 
-    for user in targets:
-        print(f"Checking @{user}...")
-        post = fetch_twitter_rss(user)
+    def run_cycle():
+        state = {}
+        if os.path.exists(STATE_FILE):
+            try:
+                with open(STATE_FILE) as f:
+                    state = json.load(f)
+            except Exception:
+                pass
+
+        for user in targets:
+            print(f"Checking @{user}...")
+            post = fetch_twitter_rss(user)
+            
+            if post:
+                state_key = f"twitter_{user}_guid"
+                if not is_test and state_key in state and state[state_key] == post["guid"]:
+                    print(f"No new posts for @{user}")
+                    continue
+                
+                print(f"New post detected for @{user}!")
+                send_discord_embed(
+                    title=f"Marathon Update: {user}",
+                    description=post["description"],
+                    url=post["link"],
+                    source_name=post["source"],
+                    image_urls=post["images"]
+                )
+                
+                # Update state
+                state[state_key] = post["guid"]
+                # Small delay to avoid rate limits
+                time.sleep(2)
+
+        with open(STATE_FILE, "w") as f:
+            json.dump(state, f, indent=2)
         
-        if post:
-            state_key = f"twitter_{user}_guid"
-            if not is_test and state_key in state and state[state_key] == post["guid"]:
-                print(f"No new posts for @{user}")
-                continue
-            
-            print(f"New post detected for @{user}!")
-            send_discord_embed(
-                title=f"Marathon Update: {user}",
-                description=post["description"],
-                url=post["link"],
-                source_name=post["source"],
-                image_urls=post["images"]
-            )
-            
-            # Update state
-            state[state_key] = post["guid"]
-            # Small delay to avoid rate limits
-            time.sleep(2)
+        print(f"[{datetime.now()}] Cycle Complete.")
 
-    with open(STATE_FILE, "w") as f:
-        json.dump(state, f, indent=2)
-    
-    print(f"[{datetime.now()}] Monitoring Cycle Complete")
+    if is_loop:
+        print("[*] Entering background loop mode (Interval: 10m)")
+        try:
+            while True:
+                run_cycle()
+                time.sleep(600) # Check every 10 minutes
+        except KeyboardInterrupt:
+            print("[*] Monitor returning to Abyss.")
+    else:
+        run_cycle()
 
 if __name__ == "__main__":
     main()
