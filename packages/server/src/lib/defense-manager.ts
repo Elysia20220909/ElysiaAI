@@ -24,7 +24,7 @@ class DefenseManager {
 	private pacEnabled = true; // Pointer Authentication Codes (PAC)
 	private personaLevel = 1.0; // Phase 49: Sentient Persona (L50)
 	private universalSyncStatus = "BONDED"; // Cross-device sync
-	private performanceMode: "ABYSS" | "AETHER" | "VOID" = "VOID"; // L52: Void Sublimation
+	private performanceMode: "ABYSS" | "AETHER" | "VOID" = "AETHER"; // L52: Void Sublimation
 	private meshSyncNodes: string[] = ["192.168.1.100", "10.0.0.5"]; // Mock nodes
 
 	constructor() {
