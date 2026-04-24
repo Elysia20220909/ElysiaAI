@@ -1,60 +1,86 @@
 services:
-  # ElysiaAI Core Server (Bun + Python Monolith)
+  # --- [1] ElysiaAI Core Kernel ---
   app:
     build:
       context: .
       dockerfile: config/docker/Dockerfile.production
+    container_name: elysia-app
     ports:
-      - "3000:3000" # Elysia UI & API
-      - "8000:8000" # Python FastAPI
+      - "3000:3000"
+      - "8000:8000"
     environment:
       - NODE_ENV=production
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/app/data:rw
       - ./logs:/app/logs:rw
+    depends_on:
+      - db
+      - redis
+    restart: always
 
-  # Database Layer
+  # --- [2] Database Layer ---
   db:
     image: postgres:15-alpine
+    container_name: elysia-db
     environment:
-      - POSTGRES_USER=elysia
-      - POSTGRES_PASSWORD=elysia_pass
-      - POSTGRES_DB=elysiadb
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: always
 
-  # Cache & Rate Limiting Layer
+  # --- [3] Cache & Intelligence Bridge ---
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    container_name: elysia-redis
+    restart: always
 
-  # Sovereign Verification Sandbox (Kali Linux)
-  security-sandbox:
-    build:
-      context: .
-      dockerfile: config/docker/Dockerfile.sandbox
-    depends_on:
-      - app
+  # --- [4] Self-hosted X (Twitter) Bridge ---
+  nitter:
+    image: zedeus/nitter:latest
+    container_name: elysia-nitter
     volumes:
-      - ./logs:/sandbox/logs
-      - ./scripts:/sandbox/scripts
-    tty: true
-    command: tail -f /dev/null
+      - ./deploy/nitter/nitter.conf:/src/nitter.conf:ro
+    depends_on:
+      - nitter-redis
+    restart: always
 
-  # Sovereign Defense Monitor (Rust Agent)
+  nitter-redis:
+    image: redis:6-alpine
+    container_name: elysia-nitter-redis
+    restart: always
+
+  # --- [5] Sovereign Defense Monitor ---
   shield-agent:
     build:
       context: .
       dockerfile: config/docker/Dockerfile.shield
+    container_name: elysia-shield
     depends_on:
       - app
     volumes:
       - ./logs:/app/logs:ro
       - ./config/defense:/app/config/defense:rw
+    restart: always
+
+  # --- [6] Automation Monitor (Marathon) ---
+  # Note: Runs as a sidecar to monitor posts
+  marathon-monitor:
+    build:
+      context: .
+      dockerfile: config/docker/Dockerfile.production
+    container_name: elysia-marathon-monitor
+    command: ["python", "scripts/marathon_hook_monitor.py"]
+    depends_on:
+      - nitter
+    restart: on-failure
+    environment:
+      - NITTER_HOST=${NITTER_HOST}
 
 volumes:
   postgres_data:
