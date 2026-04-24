@@ -81,6 +81,8 @@ package-lock.json
 /python/venv/
 /python/**/*.db
 /outputs/
+/scratch/
+kernel/config/abyss/RESONANCE_INIT.bin
 
 # Temporary and log files
 *.log

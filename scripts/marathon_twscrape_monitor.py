@@ -12,7 +12,7 @@ from twscrape import API, gather
 # ==========================================
 # CONFIG
 # ==========================================
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1496703595834376433/My9KqapPfu2M1BCPKkGGItN449FjYs-dJGQKauz-DXCPtHWYCqW71oL0XxQ0DJ7zlq79"
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 STATE_FILE = "data/marathon_twscrape_state.json"
 TWITTER_USERS = ["MarathonTheGame", "Ziegler_Dev", "Bungie"]
 
