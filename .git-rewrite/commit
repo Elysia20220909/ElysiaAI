@@ -1,6 +1,6 @@
-tree 93cd72d257c16e5128288d04e2de4dbddfdbda90
-parent 2904ef0dc0dc88430feb7bde1d06684224cbe0d5
-author Your Name <your@email.com> 1774170307 +0900
-committer Your Name <your@email.com> 1774170307 +0900
+tree c11be06a214533efaf0e14843dd6747ca10646e9
+parent 3c0111ab5c1ea4320d7ad7ef8d481d9986dfa21a
+author chloeamethyst <chloeamethyst@users.noreply.github.com> 1764655309 +0900
+committer chloeamethyst <chloeamethyst@users.noreply.github.com> 1764659392 +0900
 
-feat: Initialize Python virtual environment, install dependencies, and include development configuration and simulation outputs.
+feat: add multi-LLM mode configuration and update chat request handling
