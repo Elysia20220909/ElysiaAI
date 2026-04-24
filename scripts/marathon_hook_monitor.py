@@ -5,8 +5,10 @@ import re
 import time
 import urllib.parse
 import urllib.request
-import defusedxml.ElementTree as ET
 from datetime import UTC, datetime
+
+from defusedxml import ElementTree
+
 
 # ==========================================
 # MARATHON HOOK MONITOR CONFIG
@@ -132,7 +134,7 @@ def fetch_twitter_rss(username):
             if res.status != 200:
                 continue
                 
-            root = ET.fromstring(res.read())
+            root = ElementTree.fromstring(res.read())
             items = root.findall("channel/item")
             if not items:
                 continue
