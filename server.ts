@@ -1,6 +1,7 @@
 import { cors } from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia, t } from "elysia";
+import { defenseManager } from "./packages/server/src/lib/defense-manager";
 
 // --- Kernel Bridge (Sovereign Binary Stream) ---
 let pythonProcess: any;
@@ -86,7 +87,11 @@ const app = new Elysia()
 	.use(staticPlugin())
 	.get("/", () => Bun.file("index.html"))
 	.get("/api/health", async () => {
-		return await callKernel("health");
+		const kernelHealth = await callKernel("health") as any;
+		return {
+			...kernelHealth,
+			aether: defenseManager.getAetherStatus(),
+		};
 	})
 	.post(
 		"/api/process",
