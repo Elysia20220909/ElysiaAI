@@ -38,3 +38,4 @@ Write-Host "==========================================================" -Foregro
 Write-Host " [AUDIT_COMPLETE] THE VOID IS CLEAN" -ForegroundColor Black -BackgroundColor White
 Write-Host " Status: SYSTEM_INTEGRITY_STABLE" -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Black -BackgroundColor White
+Write-Host "==========================================================" -ForegroundColor Black -BackgroundColor White
