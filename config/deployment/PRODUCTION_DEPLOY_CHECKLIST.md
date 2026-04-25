@@ -107,11 +107,10 @@ ollama serve
 
 ```powershell
 # Python環境セットアップ
-cd python
 pip install -r requirements.txt
 
 # サーバー起動（別ターミナル）
-python fastapi_server.py
+python -m uvicorn python.fastapi_server:app --host 127.0.0.1 --port 8000
 ```
 
 ### 3. ビルドとテスト

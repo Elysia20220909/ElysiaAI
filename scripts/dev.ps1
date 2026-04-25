@@ -35,12 +35,13 @@ $fastapiErr = Join-Path $logs 'fastapi.err.log'
 Write-Host "🚀 Starting FastAPI (port $FastApiPort) ..."
 $fastapi = Start-Process -FilePath "powershell.exe" -ArgumentList @(
     '-NoProfile','-ExecutionPolicy','Bypass','-File',
-    (Join-Path $PSScriptRoot 'start-fastapi.ps1')
+    (Join-Path $PSScriptRoot 'start-fastapi.ps1'),
+    '-Port', "$FastApiPort"
 ) -RedirectStandardOutput $fastapiOut -RedirectStandardError $fastapiErr -PassThru -WindowStyle Hidden
 
 if (-not $fastapi) { throw "Failed to start FastAPI" }
 
-$ok = Wait-ForUrl ("http://127.0.0.1:{0}/docs" -f $FastApiPort) 40
+$ok = Wait-ForUrl ("http://127.0.0.1:{0}/health" -f $FastApiPort) 40
 if ($ok) {
     Write-Host "✅ FastAPI is up: http://127.0.0.1:$FastApiPort"
 } else {
@@ -67,12 +68,13 @@ Write-Host "⚡ Starting Elysia (port $ElysiaPort) ..."
 $elysia = Start-Process -FilePath "powershell.exe" -ArgumentList @(
     '-NoProfile','-ExecutionPolicy','Bypass','-File',
     (Join-Path $PSScriptRoot 'start-server.ps1'),
-    '-Port', "$ElysiaPort"
+    '-Port', "$ElysiaPort",
+    '-FastApiBaseUrl', "http://127.0.0.1:$FastApiPort"
 ) -RedirectStandardOutput $elysiaOut -RedirectStandardError $elysiaErr -PassThru -WindowStyle Hidden
 
 if (-not $elysia) { throw "Failed to start Elysia" }
 
-$ok2 = Wait-ForUrl ("http://localhost:{0}" -f $ElysiaPort) 20
+$ok2 = Wait-ForUrl ("http://localhost:{0}/ping" -f $ElysiaPort) 20
 if ($ok2) {
     Write-Host "✅ Elysia is up: http://localhost:$ElysiaPort"
 } else {

@@ -142,6 +142,7 @@ describe("Docker Configuration Tests", () => {
 		const content = fs.readFileSync(dockerfilePath, "utf-8");
 		expect(content).toContain("FROM");
 		expect(content).toContain("python:3.12-slim-bookworm");
+		expect(content).toContain("config/docker/start.sh");
 
 		console.log("✅ Dockerfile.production valid");
 	});
@@ -159,6 +160,7 @@ describe("Docker Configuration Tests", () => {
 		const content = fs.readFileSync(composePath, "utf-8");
 		expect(content).toContain("services:");
 		expect(content).toContain("elysia:");
+		expect(content).toContain("python.fastapi_server:app");
 		console.log("✅ docker-compose.yml valid");
 	});
 });

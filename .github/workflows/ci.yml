@@ -63,6 +63,8 @@ jobs:
         continue-on-error: true
 
       - name: Run Python Tests (Pytest)
+        env:
+          ELYSIA_TEST_MODE: "1"
         run: |
           uv run pytest tests/python tests/test_kernel.py --junitxml=pytest-report.xml
 

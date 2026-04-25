@@ -23,8 +23,8 @@ Options:
   -h, --help          Show this help
 
 This script starts:
-  1) FastAPI RAG server (python/fastapi_server.py)
-  2) Elysia server (src/index.ts)
+  1) FastAPI RAG server (python.fastapi_server:app)
+  2) Elysia server (packages/server/src/index.ts)
   3) Network Simulation API (optional)
 USAGE
       exit 0
@@ -75,10 +75,10 @@ wait_for_url() {
 
 # 1) Start FastAPI (background)
 echo "🚀 Starting FastAPI (http://127.0.0.1:8000) ..."
-nohup ./scripts/start-fastapi.sh >"$FASTAPI_OUT" 2>"$FASTAPI_ERR" &
+FASTAPI_PORT=8000 nohup ./scripts/start-fastapi.sh >"$FASTAPI_OUT" 2>"$FASTAPI_ERR" &
 fastapi_pid=$!
 
-if wait_for_url "http://127.0.0.1:8000/docs" 60; then
+if wait_for_url "http://127.0.0.1:8000/health" 60; then
   echo "✅ FastAPI is up"
 else
   echo "⚠ FastAPI did not become ready in time. See $FASTAPI_OUT / $FASTAPI_ERR" >&2
@@ -93,10 +93,10 @@ fi
 
 # 3) Start Elysia (background)
 echo "⚡ Starting Elysia (http://localhost:3000) ..."
-nohup ./scripts/start-server.sh >"$ELYSIA_OUT" 2>"$ELYSIA_ERR" &
+FASTAPI_BASE_URL=http://127.0.0.1:8000 nohup ./scripts/start-server.sh >"$ELYSIA_OUT" 2>"$ELYSIA_ERR" &
 elysia_pid=$!
 
-if wait_for_url "http://localhost:3000" 40; then
+if wait_for_url "http://localhost:3000/ping" 40; then
   echo "✅ Elysia is up"
 else
   echo "⚠ Elysia did not become ready in time. See $ELYSIA_OUT / $ELYSIA_ERR" >&2
