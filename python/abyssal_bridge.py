@@ -1,9 +1,8 @@
 import mmap
-import time
-import struct
 import os
-import ctypes
-from typing import Optional
+import struct
+import time
+
 
 # 🛰️ Abyssal Binary Bridge (Phase 161)
 # "Piercing the Veil between Runtimes."
@@ -13,7 +12,7 @@ class AbyssalBridge:
     def __init__(self, map_file: str, size: int = 1024 * 1024):
         self.map_file = map_file
         self.size = size
-        self.mm: Optional[mmap.mmap] = None
+        self.mm: mmap.mmap | None = None
         
         # Memory Layout Constants (Sync with TS)
         self.INDEX_LOCK = 0
@@ -61,9 +60,10 @@ class AbyssalBridge:
     def _unlock(self):
         self.mm[self.INDEX_LOCK:self.INDEX_LOCK+4] = struct.pack("<I", 0)
 
-    def read_sovereign_data(self) -> Optional[str]:
+    def read_sovereign_data(self) -> str | None:
         """Reads data if the state is READY (1)"""
-        if not self.mm: return None
+        if not self.mm:
+            return None
         
         state = struct.unpack("<I", self.mm[self.INDEX_STATE:self.INDEX_STATE+4])[0]
         if state != 1:
@@ -83,7 +83,8 @@ class AbyssalBridge:
 
     def write_response(self, message: str):
         """Writes a response and sets state to PROCESSED (2)"""
-        if not self.mm: return
+        if not self.mm:
+            return
         
         encoded = message.encode('utf-8')
         self._lock()
@@ -91,14 +92,15 @@ class AbyssalBridge:
             self.mm[self.INDEX_LEN:self.INDEX_LEN+4] = struct.pack("<I", len(encoded))
             self.mm[self.DATA_OFFSET : self.DATA_OFFSET + len(encoded)] = encoded
             self.mm[self.INDEX_STATE:self.INDEX_STATE+4] = struct.pack("<I", 2)
-            print(f"📝 [BRIDGE] Response injected into Memory Segment.")
+            print("📝 [BRIDGE] Response injected into Memory Segment.")
         finally:
             self._unlock()
 
 if __name__ == "__main__":
     # Integration Test Flow
     MAP_PATH = "data/abyssal_memory.map"
-    if not os.path.exists("data"): os.makedirs("data")
+    if not os.path.exists("data"):
+        os.makedirs("data")
     
     bridge = AbyssalBridge(MAP_PATH)
     
