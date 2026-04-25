@@ -34,6 +34,7 @@ describe("Integration Tests - Full Stack", () => {
 		const serverPkg = JSON.parse(fs.readFileSync(serverPkgPath, "utf-8"));
 
 		expect(rootPkg.scripts).toHaveProperty("dev");
+		expect(rootPkg.scripts).toHaveProperty("boot");
 		expect(rootPkg.scripts).toHaveProperty("lint");
 		expect(rootPkg.scripts).toHaveProperty("start");
 		expect(rootPkg.scripts).toHaveProperty("test");
@@ -44,16 +45,8 @@ describe("Integration Tests - Full Stack", () => {
 	});
 
 	test("Environment can handle TypeScript compilation", async () => {
-		const { execSync } = await import("node:child_process");
-
-		try {
-			const output = execSync("bun --version", { encoding: "utf-8" });
-			expect(output).toBeTruthy();
-			console.log("✅ Bun runtime available:", output.trim());
-		} catch (error) {
-			console.error("❌ Bun runtime check failed");
-			throw error;
-		}
+		expect(Bun.version).toBeTruthy();
+		console.log("✅ Bun runtime available:", Bun.version);
 	});
 
 	test("Python FastAPI dependencies are documented", async () => {
@@ -73,6 +66,143 @@ describe("Integration Tests - Full Stack", () => {
 		} else {
 			console.warn("⚠️  Python requirements.txt not found");
 		}
+	});
+
+	test("README documents the current local boot flow", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const readme = fs.readFileSync(path.join(process.cwd(), "README.md"), "utf-8");
+
+		expect(readme).toContain("make boot");
+		expect(readme).toContain(".\\scripts\\boot.ps1");
+		expect(readme).toContain(".\\scripts\\setup-python.ps1");
+		expect(readme).toContain("./scripts/boot.sh");
+		expect(readme).toContain("FastAPI Kernel");
+		expect(readme).toContain("HTTP proxy");
+		console.log("✅ README local boot flow is current");
+	});
+
+	test("Environment template covers both server and kernel names", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const envExample = fs.readFileSync(
+			path.join(process.cwd(), ".env.example"),
+			"utf-8",
+		);
+
+		expect(envExample).toContain("FASTAPI_BASE_URL=");
+		expect(envExample).toContain("OLLAMA_BASE_URL=");
+		expect(envExample).toContain("OLLAMA_HOST=");
+		console.log("✅ Environment template covers runtime aliases");
+	});
+
+	test("Python setup scripts use the root virtualenv contract", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const setupPs1 = fs.readFileSync(
+			path.join(process.cwd(), "scripts", "setup-python.ps1"),
+			"utf-8",
+		);
+		const setupSh = fs.readFileSync(
+			path.join(process.cwd(), "scripts", "setup-python.sh"),
+			"utf-8",
+		);
+
+		expect(setupPs1).toContain(".venv\\Scripts\\python.exe");
+		expect(setupPs1).toContain("requirements.txt");
+		expect(setupPs1).not.toContain("python\\requirements.txt");
+		expect(setupSh).toContain(".venv/bin/python");
+		expect(setupSh).toContain("requirements.txt");
+		expect(setupSh).not.toContain("python/requirements.txt");
+		console.log("✅ Python setup scripts use root virtualenv");
+	});
+
+	test("Compatibility entrypoints point to the modular server", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const legacyServerPath = path.join(process.cwd(), "server.ts");
+		const bootScriptPath = path.join(process.cwd(), "scripts", "boot.ts");
+		const bootPs1Path = path.join(process.cwd(), "scripts", "boot.ps1");
+		const bootShPath = path.join(process.cwd(), "scripts", "boot.sh");
+		const startServerPs1Path = path.join(
+			process.cwd(),
+			"scripts",
+			"start-server.ps1",
+		);
+		const startServerShPath = path.join(
+			process.cwd(),
+			"scripts",
+			"start-server.sh",
+		);
+		const startServerTsPath = path.join(
+			process.cwd(),
+			"scripts",
+			"start-server.ts",
+		);
+		const startFastApiPs1Path = path.join(
+			process.cwd(),
+			"scripts",
+			"start-fastapi.ps1",
+		);
+		const startFastApiShPath = path.join(
+			process.cwd(),
+			"scripts",
+			"start-fastapi.sh",
+		);
+		const legacyServer = fs.readFileSync(legacyServerPath, "utf-8");
+		const bootScript = fs.readFileSync(bootScriptPath, "utf-8");
+		const serverIndex = fs.readFileSync(
+			path.join(process.cwd(), "packages", "server", "src", "index.ts"),
+			"utf-8",
+		);
+		const bootPs1 = fs.readFileSync(bootPs1Path, "utf-8");
+		const bootSh = fs.readFileSync(bootShPath, "utf-8");
+		const startServerPs1 = fs.readFileSync(startServerPs1Path, "utf-8");
+		const startServerSh = fs.readFileSync(startServerShPath, "utf-8");
+		const startServerTs = fs.readFileSync(startServerTsPath, "utf-8");
+		const startFastApiPs1 = fs.readFileSync(startFastApiPs1Path, "utf-8");
+		const startFastApiSh = fs.readFileSync(startFastApiShPath, "utf-8");
+		const startAllPs1 = fs.readFileSync(
+			path.join(process.cwd(), "scripts", "start-all.ps1"),
+			"utf-8",
+		);
+
+		expect(legacyServer).toContain("packages/server/src/index.ts");
+		expect(bootScript).toContain("python.fastapi_server:app");
+		expect(bootScript).toContain('["bun", "run", "start"]');
+		expect(bootScript).toContain("await loadDotEnv()");
+		expect(serverIndex).toContain("dotenv.config()");
+		expect(serverIndex).not.toContain("override: true");
+		const databaseSource = fs.readFileSync(
+			path.join(
+				process.cwd(),
+				"packages",
+				"server",
+				"src",
+				"lib",
+				"database.ts",
+			),
+			"utf-8",
+		);
+		expect(
+			databaseSource.includes("override: true"),
+		).toBe(false);
+		expect(bootPs1).toContain("bun run boot");
+		expect(bootSh).toContain("exec bun run boot");
+		expect(startServerPs1).toContain("bun run start");
+		expect(startServerPs1).not.toContain("bun run src/index.ts");
+		expect(startServerSh).toContain("exec bun run start");
+		expect(startServerSh).not.toContain("dist/index.js");
+		expect(startServerTs).toContain("packages/server/src/index.ts");
+		expect(startFastApiPs1).toContain("python.fastapi_server:app");
+		expect(startFastApiSh).toContain("python.fastapi_server:app");
+		expect(startAllPs1).toContain("boot.ps1");
+		expect(startAllPs1).not.toContain("bun src/index.ts");
+		console.log("✅ Compatibility entrypoints aligned");
 	});
 });
 

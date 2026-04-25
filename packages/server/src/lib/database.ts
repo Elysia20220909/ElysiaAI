@@ -9,7 +9,7 @@ import { logger } from "./logger";
 import { secureVault } from "./secure-vault";
 
 // Apply .env
-dotenv.config({ override: true });
+dotenv.config();
 
 // Prisma client singleton
 const dbUrl = process.env.DATABASE_URL;

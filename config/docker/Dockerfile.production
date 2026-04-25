@@ -5,6 +5,7 @@ FROM python:3.12-slim-bookworm
 
 # 1. Install System Dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
     curl \
     unzip \
     ca-certificates \
@@ -23,20 +24,22 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 4. Install Node Dependencies
 COPY package.json ./
-# Note: skipping bun.lock if it's strictly for local, but copying if it exists
-COPY bun.lock* ./ 
+COPY bun.lock* ./
+COPY packages/server/package.json packages/server/package.json
+COPY packages/shared/package.json packages/shared/package.json
 RUN bun install
 
 # 5. Copy Code and Assets
 COPY . .
+RUN chmod +x config/docker/start.sh
 
 # 6. Final Environment Setup
 ENV NODE_ENV=production
 ENV PYTHONPATH=/app
 ENV PORT=3000
+ENV FASTAPI_PORT=8000
 
 # 7. Startup
-EXPOSE 3000
+EXPOSE 3000 8000
 
-# We use bun to run the server directly
-CMD ["bun", "run", "server.ts"]
+CMD ["bash", "config/docker/start.sh"]
