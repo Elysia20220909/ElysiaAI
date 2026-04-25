@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from defusedxml import ElementTree
 
 
+# VERSION: 1.0.2 - REBUILD_FIX
 # ==========================================
 # MARATHON HOOK MONITOR CONFIG
 # ==========================================
@@ -146,8 +147,16 @@ def fetch_twitter_rss(username):
             title = item.find("title").text
             link = item.find("link").text.replace(instance, "x.com")
             guid = item.find("guid").text
+            pub_date_str = item.find("pubDate").text
             desc = item.find("description").text or ""
             
+            # Parse publication date
+            # format: Sat, 25 Apr 2026 09:58:11 GMT
+            try:
+                pub_date = datetime.strptime(pub_date_str, "%a, %d %b %Y %H:%M:%S %Z").replace(tzinfo=UTC)
+            except Exception:
+                pub_date = datetime.now(UTC)
+
             # Extract ALL image URLs from description
             images = []
             img_matches = re.findall(r'<img src="([^"]+)"', desc)
@@ -162,6 +171,7 @@ def fetch_twitter_rss(username):
                 "title": title,
                 "link": link,
                 "guid": guid,
+                "pub_date": pub_date,
                 "description": title, # Usually title is the full tweet in Nitter RSS
                 "images": images
             }
@@ -206,11 +216,20 @@ def main():
             except Exception:
                 pass
 
+        now = datetime.now(UTC)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
         for user in targets:
             print(f"Checking @{user}...")
             post = fetch_twitter_rss(user)
             
             if post:
+                # 1. Date Check: Only post if it was created today
+                if post["pub_date"] < today_start:
+                    print(f"Skipping old post from @{user} ({post['pub_date']})")
+                    continue
+
+                # 2. Duplicate Check: Only post if we haven't seen this GUID
                 state_key = f"twitter_{user}_guid"
                 if not is_test and state_key in state and state[state_key] == post["guid"]:
                     print(f"No new posts for @{user}")
