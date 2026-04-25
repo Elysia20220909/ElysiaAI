@@ -59,10 +59,10 @@ Every push triggers the `Resonance Integrity` workflow, which performs:
 - **Bun (Biome)**: Ultra-fast formatting & logic verification.
 
 ### 🧪 Quality Assurance
-To run the automated test suite and verify the Kernel resonance:
+To run the full automated test suite and verify both the orchestrator and the kernel:
 ```bash
-# Python Test
-pytest tests/test_kernel.py
+# Run both Bun and Python tests
+make test
 ```
 
 ElysiaAIの心臓部は、論理（Python Kernel）と高速通信（Bun/Elysia.js）の共鳴によって動いています。
