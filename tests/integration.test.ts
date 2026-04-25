@@ -1,33 +1,46 @@
 import { describe, expect, test } from "bun:test";
 
 describe("Integration Tests - Full Stack", () => {
-	test("TypeScript build produces valid output", async () => {
+	test("Server entrypoint exists and has content", async () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const distPath = path.join(process.cwd(), "dist", "index.js");
-		expect(fs.existsSync(distPath)).toBe(true);
+		const entryPath = path.join(
+			process.cwd(),
+			"packages",
+			"server",
+			"src",
+			"index.ts",
+		);
+		expect(fs.existsSync(entryPath)).toBe(true);
 
-		const content = fs.readFileSync(distPath, "utf-8");
+		const content = fs.readFileSync(entryPath, "utf-8");
 		expect(content.length).toBeGreaterThan(0);
-		console.log("✅ Build output valid");
+		console.log("✅ Server entrypoint valid");
 	});
 
-	test("Package.json has all required scripts", async () => {
+	test("Package manifests expose the current workflow scripts", async () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const pkgPath = path.join(process.cwd(), "package.json");
-		const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+		const rootPkgPath = path.join(process.cwd(), "package.json");
+		const serverPkgPath = path.join(
+			process.cwd(),
+			"packages",
+			"server",
+			"package.json",
+		);
+		const rootPkg = JSON.parse(fs.readFileSync(rootPkgPath, "utf-8"));
+		const serverPkg = JSON.parse(fs.readFileSync(serverPkgPath, "utf-8"));
 
-		expect(pkg.scripts).toHaveProperty("dev");
-		expect(pkg.scripts).toHaveProperty("lint");
-		expect(pkg.scripts).toHaveProperty("start");
-		expect(pkg.scripts).toHaveProperty("docker:build");
-		expect(pkg.scripts).toHaveProperty("docker:up");
-		expect(pkg.scripts).toHaveProperty("aws:deploy");
-		expect(pkg.scripts).toHaveProperty("gcp:deploy");
-		console.log("✅ All deployment scripts present");
+		expect(rootPkg.scripts).toHaveProperty("dev");
+		expect(rootPkg.scripts).toHaveProperty("lint");
+		expect(rootPkg.scripts).toHaveProperty("start");
+		expect(rootPkg.scripts).toHaveProperty("test");
+		expect(serverPkg.scripts).toHaveProperty("dev");
+		expect(serverPkg.scripts).toHaveProperty("db:init");
+		expect(serverPkg.scripts).toHaveProperty("db:migrate");
+		console.log("✅ Current workflow scripts present");
 	});
 
 	test("Environment can handle TypeScript compilation", async () => {

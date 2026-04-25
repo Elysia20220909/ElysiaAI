@@ -27,6 +27,8 @@ cp .env.example .env
 make install
 ```
 
+PowerShell では `Copy-Item .env.example .env` を使えます。
+
 ### 3. 起動
 ```bash
 make boot
