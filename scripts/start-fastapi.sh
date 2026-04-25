@@ -1,20 +1,20 @@
-#!/bin/bash
-# FastAPI RAGサーバー起動スクリプト（Linux/macOS/WSL対応）
+#!/usr/bin/env bash
+set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-echo "🌸 Starting Elysia FastAPI RAG Server..."
+export PYTHONPATH="${PYTHONPATH:-$(pwd)}"
+export PYTHONUTF8="${PYTHONUTF8:-1}"
+HOST="${HOST:-127.0.0.1}"
+PORT="${FASTAPI_PORT:-8000}"
 
-# Python venv有効化
-if [ -f "python/venv/bin/activate" ]; then
-    source python/venv/bin/activate
-elif [ -f "python/venv/Scripts/activate" ]; then
-    source python/venv/Scripts/activate
+if [[ -x ".venv/bin/python" ]]; then
+  PYTHON_BIN=".venv/bin/python"
+elif [[ -x "python/venv/bin/python" ]]; then
+  PYTHON_BIN="python/venv/bin/python"
 else
-    echo "⚠️  Virtual environment not found. Run: ./scripts/setup-python.sh"
-    exit 1
+  PYTHON_BIN="${PYTHON:-python}"
 fi
 
-# FastAPIサーバー起動
-cd python
-python fastapi_server.py
+echo "Starting FastAPI kernel on http://${HOST}:${PORT} ..."
+exec "$PYTHON_BIN" -m uvicorn python.fastapi_server:app --host "$HOST" --port "$PORT"

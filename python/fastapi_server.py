@@ -86,6 +86,14 @@ class Settings(BaseSettings):
 _settings = Settings()
 IS_TEST_MODE = "pytest" in sys.modules or os.getenv("ELYSIA_TEST_MODE") == "1"
 
+
+def resolve_ollama_host(default_host: str = "http://127.0.0.1:11434") -> str:
+    """Resolve both Bun and FastAPI Ollama environment variable names."""
+    return os.getenv("OLLAMA_HOST") or os.getenv("OLLAMA_BASE_URL") or default_host
+
+
+_settings.OLLAMA_HOST = resolve_ollama_host(_settings.OLLAMA_HOST)
+
 # 既存コードとの互換性レイヤー (Dict based config)
 CONFIG = _settings.model_dump()
 CONFIG["EMBEDDING_PROVIDER"] = _settings.EMBEDDING_PROVIDER.lower()
