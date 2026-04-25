@@ -1,11 +1,11 @@
-import { writeFileSync, openSync, closeSync } from "node:fs";
+import { closeSync, openSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { logger } from "./logger";
 
 /**
  * 🧠 Abyssal Memory Manager (Phase 160)
  * "Synchronizing the Binary Soul across Runtimes."
- * 
+ *
  * This module manages a high-performance shared memory segment
  * used for ultra-low latency communication between Bun and Python.
  */
@@ -14,7 +14,7 @@ export class AbyssalMemoryManager {
 	private sab: SharedArrayBuffer;
 	private uint32: Uint32Array;
 	private buffer: Uint8Array;
-	
+
 	// Memory Map Indices
 	private readonly INDEX_LOCK = 0;
 	private readonly INDEX_STATE = 1;
@@ -23,15 +23,15 @@ export class AbyssalMemoryManager {
 
 	constructor() {
 		logger.info("📡 Initializing Abyssal Memory Segment...");
-		
+
 		// TRIAL 1: Standard SharedArrayBuffer
-		// Note: This works for worker threads, but for external processes, 
+		// Note: This works for worker threads, but for external processes,
 		// we need a file-backed memory map (mmap).
 		try {
 			this.sab = new SharedArrayBuffer(this.BUFFER_SIZE);
 			this.uint32 = new Uint32Array(this.sab);
 			this.buffer = new Uint8Array(this.sab);
-			
+
 			this.initializeStructure();
 			logger.info("✅ SharedArrayBuffer allocated in-process.");
 		} catch (e) {
@@ -41,9 +41,9 @@ export class AbyssalMemoryManager {
 	}
 
 	private initializeStructure() {
-		Atomics.store(this.uint32, this.INDEX_LOCK, 0);  // 0 = Unlocked, 1 = Locked
+		Atomics.store(this.uint32, this.INDEX_LOCK, 0); // 0 = Unlocked, 1 = Locked
 		Atomics.store(this.uint32, this.INDEX_STATE, 0); // 0 = Idle, 1 = DataReady, 2 = Processing
-		Atomics.store(this.uint32, this.INDEX_LEN, 0);   // Data Length
+		Atomics.store(this.uint32, this.INDEX_LEN, 0); // Data Length
 	}
 
 	/**
@@ -87,7 +87,9 @@ export class AbyssalMemoryManager {
 
 		try {
 			const len = Atomics.load(this.uint32, this.INDEX_LEN);
-			const data = Buffer.from(this.buffer.slice(this.DATA_OFFSET * 4, this.DATA_OFFSET * 4 + len)).toString();
+			const data = Buffer.from(
+				this.buffer.slice(this.DATA_OFFSET * 4, this.DATA_OFFSET * 4 + len),
+			).toString();
 			Atomics.store(this.uint32, this.INDEX_STATE, 0); // Back to Idle
 			return data;
 		} finally {

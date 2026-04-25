@@ -1,5 +1,5 @@
-import hashlib
 import random
+
 
 # Abyssal ZKP Math Foundation (Phase 172)
 # "Proof of Knowledge. Zero disclosure of Secret."
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     SECRET_X = zkp.generate_secret_key()
     PUBLIC_Y = zkp.compute_public_key(SECRET_X)
     print(f"[ZKP] Public Key (Y): {PUBLIC_Y}")
-    print(f"[ZKP] Private Key (X): HIDDEN")
+    print("[ZKP] Private Key (X): HIDDEN")
 
     # 2. Protocol Flow
     # Prover Step 1
