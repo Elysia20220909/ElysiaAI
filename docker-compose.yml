@@ -12,6 +12,7 @@ services:
       - NODE_ENV=production
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - PYTHONUNBUFFERED=1
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -46,7 +47,7 @@ services:
     container_name: elysia-nitter
     volumes:
       - ./deploy/nitter/nitter.conf:/src/nitter.conf:ro
-      - ./deploy/nitter/sessions.jsonl:/src/sessions.jsonl:ro
+#      - ./deploy/nitter/sessions.jsonl:/src/sessions.jsonl:ro
     depends_on:
       - nitter-redis
     restart: always
@@ -76,13 +77,17 @@ services:
       context: .
       dockerfile: config/docker/Dockerfile.production
     container_name: elysia-marathon-monitor
-    command: ["python", "scripts/marathon_hook_monitor.py", "--loop"]
+    entrypoint: ["python"]
+    command: ["scripts/marathon_hook_monitor.py", "--loop"]
     depends_on:
       - nitter
     restart: on-failure
     environment:
       - NITTER_HOST=${NITTER_HOST}
       - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/app/data:rw
 
 volumes:
   postgres_data:
