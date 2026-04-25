@@ -5,6 +5,7 @@
     "packages/*"
   ],
   "scripts": {
+    "boot": "bun scripts/boot.ts",
     "dev": "bun --cwd packages/server run dev",
     "start": "bun --cwd packages/server run start",
     "desktop": "bun tauri dev",

@@ -12,6 +12,7 @@ dependencies = [
     "pydantic-settings",
     "pymilvus[model]",
     "pytest",
+    "ruff",
     "python-dotenv",
     "pydantic"
 ]

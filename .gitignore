@@ -11,6 +11,7 @@ node_modules/
 
 # testing
 /coverage
+/.tmp/
 
 # production
 build/
@@ -164,4 +165,3 @@ src-tauri/target/
 *.dll
 *.so
 *.dylib
-

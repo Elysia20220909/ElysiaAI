@@ -71,6 +71,22 @@ describe("Docker Validation Tests", () => {
 		console.log(`   - Has restart policy: ${hasRestart}`);
 	});
 
+	test("docker debug compose uses the modular Bun entrypoint", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const composePath = path.join(
+			process.cwd(),
+			"config/docker/compose.debug.yaml",
+		);
+		const content = fs.readFileSync(composePath, "utf-8");
+
+		expect(content).toContain("config/docker/Dockerfile.production");
+		expect(content).toContain("packages/server/src/index.ts");
+		expect(content).not.toContain("dist/index.js");
+		console.log("✅ docker debug compose uses modular entrypoint");
+	});
+
 	test(".dockerignore is properly configured", async () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");

@@ -2,11 +2,13 @@ services:
   elysiaai:
     image: elysiaai
     build:
-      context: .
-      dockerfile: ./Dockerfile
+      context: ../..
+      dockerfile: config/docker/Dockerfile.production
     environment:
       NODE_ENV: development
+      PORT: 3000
+      FASTAPI_BASE_URL: http://host.docker.internal:8000
     ports:
       - 3000:3000
       - 9229:9229
-    command: ["node", "--inspect=0.0.0.0:9229", "dist/index.js"]
+    command: ["bun", "--inspect=0.0.0.0:9229", "packages/server/src/index.ts"]

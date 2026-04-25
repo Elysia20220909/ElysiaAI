@@ -1,32 +1,30 @@
-# Python環境セットアップスクリプト（Windows PowerShell）
+# Python environment setup script for Windows PowerShell
 
 $ErrorActionPreference = "Stop"
+$root = Split-Path $PSScriptRoot -Parent
+Push-Location $root
 
-Push-Location (Join-Path $PSScriptRoot "..")
+try {
+    Write-Host "Setting up Python environment..."
 
-Write-Host "Setting up Python environment..."
+    if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
+        throw "python was not found. Please install Python 3.11+."
+    }
 
-# Python 3チェック
-if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-    Write-Host "Error: python not found. Please install Python 3.8+" -ForegroundColor Red
+    if (-not (Test-Path ".venv\Scripts\python.exe")) {
+        Write-Host "Creating .venv..."
+        python -m venv .venv
+    }
+
+    $python = Join-Path $root ".venv\Scripts\python.exe"
+
+    Write-Host "Installing Python dependencies from requirements.txt..."
+    & $python -m pip install -U pip
+    & $python -m pip install -r requirements.txt
+
+    Write-Host "Python environment ready."
+    Write-Host "Activate with: .\.venv\Scripts\Activate.ps1"
+}
+finally {
     Pop-Location
-    exit 1
 }
-
-# venv作成
-if (-not (Test-Path "python\venv")) {
-    Write-Host "Creating virtual environment..."
-    python -m venv python\venv
-}
-
-# venv有効化とパッケージインストール
-Write-Host "Installing Python dependencies..."
-& python\venv\Scripts\Activate.ps1
-
-pip install -U pip
-pip install -U -r python\requirements.txt
-
-Write-Host "✅ Python environment ready!" -ForegroundColor Green
-Write-Host "To activate: python\venv\Scripts\Activate.ps1"
-
-Pop-Location

@@ -1,28 +1,23 @@
-#!/bin/bash
-# Python環境セットアップスクリプト（Linux/macOS/WSL対応）
+#!/usr/bin/env bash
+set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 echo "Setting up Python environment..."
 
-# Python 3チェック
-if ! command -v python3 &> /dev/null; then
-    echo "Error: python3 not found. Please install Python 3.8+"
-    exit 1
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Error: python3 was not found. Please install Python 3.11+." >&2
+  exit 1
 fi
 
-# venv作成
-if [ ! -d "python/venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv python/venv
+if [[ ! -x ".venv/bin/python" ]]; then
+  echo "Creating .venv..."
+  python3 -m venv .venv
 fi
 
-# venv有効化とパッケージインストール
-echo "Installing Python dependencies..."
-source python/venv/bin/activate 2>/dev/null || . python/venv/Scripts/activate 2>/dev/null
+echo "Installing Python dependencies from requirements.txt..."
+.venv/bin/python -m pip install -U pip
+.venv/bin/python -m pip install -r requirements.txt
 
-pip install -U pip
-pip install -U -r python/requirements.txt
-
-echo "✅ Python environment ready!"
-echo "To activate: source python/venv/bin/activate"
+echo "Python environment ready."
+echo "Activate with: source .venv/bin/activate"

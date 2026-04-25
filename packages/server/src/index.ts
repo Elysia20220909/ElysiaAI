@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 
-dotenv.config({ override: true });
+dotenv.config();
 
 import { existsSync } from "node:fs";
 import { cors } from "@elysiajs/cors";
