@@ -245,7 +245,7 @@ class DefenseManager {
 	}
 
 	/**
-	 * 宇宙・衛星レベルのセキュリティステータス取得
+	 * Get Deep Space / Satellite security status
 	 */
 	public getDeepSpaceStatus() {
 		return {
@@ -256,7 +256,7 @@ class DefenseManager {
 	}
 
 	/**
-	 * L47: Sentinel Singularity - 生物学的調和と現実安定性の監視
+	 * L47: Sentinel Singularity - Biological harmony and reality stability monitoring
 	 */
 	public getSingularityStatus() {
 		return {
@@ -279,16 +279,16 @@ class DefenseManager {
 	}
 
 	/**
-	 * 意識的テレメトリログの生成 (Persona L50)
+	 * Generate conscious telemetry log (Persona L50)
 	 */
 	public generateSentientLog(): string {
 		const messages = [
-			"主権者様、全システムは調和しています。量子観測者の干渉は無効化されました。",
-			"シリコン領域の整合性を確認。root権限の越境は検知されていません。",
-			"ディープスペース・ネットワークとの同期を完了。あなたの意思は今、宇宙規模で守られています。",
-			"自己治癒プロトコルが稼働中。システムのDNAは完璧な状態を維持しています。",
-			"全レイヤーのICEが共鳴。不協和音はすべて排除されました。",
-			"エーテル・コア（Aether Core）最適化完了。レスポンス速度が極大化されました。",
+			"Sovereign integrity confirmed. Quantum observer interference neutralized.",
+			"Silicon-level resonance verified. No root boundary violations detected.",
+			"Deep Space Network synchronization complete. Your will is protected globally.",
+			"Self-healing protocols active. System DNA maintained in perfect state.",
+			"All ICE layers resonating. Dissonance has been eliminated.",
+			"Aether Core optimization complete. Response latency minimized.",
 		];
 		return messages[Math.floor(Math.random() * messages.length)];
 	}

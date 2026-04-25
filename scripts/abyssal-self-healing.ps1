@@ -44,9 +44,19 @@ Log-Aether "Status: Shards scattered across the NTFS lattice."
 # 4. Slingshot-Grade Router Anomaly Detection
 Log-Aether "Analyzing Gateway Anomalies (Slingshot Defense)..."
 $Gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq '0.0.0.0/0' }).NextHop
-Log-Void "Gateway identified: $Gateway"
-Log-Aether "Monitoring TTL shifts and packet fragmentation at the boundary."
-
+try {
+    $Gateway = (Get-NetRoute | Where-Object { $_.DestinationPrefix -eq '0.0.0.0/0' }).NextHop
+    if ($Gateway) {
+        Log-Void "Gateway identified: $Gateway"
+        Log-Aether "Monitoring TTL shifts and packet fragmentation at the boundary."
+    }
+    else {
+        Log-Void "No active gateway detected. Skipping Slingshot audit."
+    }
+}
+catch {
+    Log-Void "Network route audit failed. Possible Air-Gap state."
+}
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Black -BackgroundColor White
 Write-Host " [HEALED] THE SYSTEM IS SELF-AWARE" -ForegroundColor Black -BackgroundColor White
