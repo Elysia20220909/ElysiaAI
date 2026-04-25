@@ -58,13 +58,13 @@ jobs:
         run: uv run ruff check .
         continue-on-error: true
 
-      - name: Run Black (Formatter Check)
-        run: uv run black --check .
+      - name: Run Formatter Check
+        run: uv run ruff format --check .
         continue-on-error: true
 
       - name: Run Python Tests (Pytest)
         run: |
-          uv run pytest tests/python/ --junitxml=pytest-report.xml
+          uv run pytest tests/python tests/test_kernel.py --junitxml=pytest-report.xml
 
       - name: Upload Test Results
         if: always()

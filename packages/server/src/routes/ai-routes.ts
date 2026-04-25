@@ -47,7 +47,10 @@ export function requireBearerToken(request: Request) {
 	}
 
 	try {
-		return jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as jwt.JwtPayload & {
+		return jwt.verify(
+			auth.substring(7),
+			CONFIG.JWT_SECRET,
+		) as jwt.JwtPayload & {
 			userId?: string;
 		};
 	} catch {
@@ -131,10 +134,7 @@ async function buildChatContext(body: ElysiaLoveBody) {
 	};
 }
 
-export async function handleElysiaLove(
-	body: ElysiaLoveBody,
-	request: Request,
-) {
+export async function handleElysiaLove(body: ElysiaLoveBody, request: Request) {
 	logger.info("🤖 [AI] Processing elysia-love request...");
 
 	let payload: jwt.JwtPayload & { userId?: string };
@@ -169,9 +169,7 @@ export async function handleElysiaLove(
 								),
 							);
 						}
-						controller.enqueue(
-							new TextEncoder().encode("data: [DONE]\n\n"),
-						);
+						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
 						controller.close();
 					} catch (error) {
 						controller.enqueue(
@@ -212,8 +210,7 @@ export async function handleElysiaLove(
 		return new Response(upstream.data, {
 			status: upstream.status,
 			headers: {
-				"Content-Type":
-					upstream.headers["content-type"] || "text/event-stream",
+				"Content-Type": upstream.headers["content-type"] || "text/event-stream",
 				"x-elysia-mode": mode,
 			},
 		});
@@ -259,10 +256,7 @@ function validateFeedback(body: FeedbackBody) {
 	return null;
 }
 
-export async function handleFeedback(
-	body: FeedbackBody,
-	request: Request,
-) {
+export async function handleFeedback(body: FeedbackBody, request: Request) {
 	let payload: jwt.JwtPayload & { userId?: string };
 	try {
 		payload = requireBearerToken(request);

@@ -52,8 +52,8 @@ liveDescribe("Elysia AI Server Tests", () => {
 			const response = await axios.post(
 				`${BASE_URL}/auth/token`,
 				{
-					username: "admin",
-					password: "elysiatest-001",
+					username: process.env.AUTH_USERNAME || "admin",
+					password: process.env.AUTH_PASSWORD || "elysiatest-001",
 				},
 				{ timeout: 5000 },
 			);
@@ -141,7 +141,7 @@ describe("Docker Configuration Tests", () => {
 
 		const content = fs.readFileSync(dockerfilePath, "utf-8");
 		expect(content).toContain("FROM");
-		expect(content).toContain("python:3.11-bookworm");
+		expect(content).toContain("python:3.12-slim-bookworm");
 
 		console.log("✅ Dockerfile.production valid");
 	});

@@ -76,8 +76,8 @@ describeLive("Authentication", () => {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				username: "elysia",
-				password: "elysia-dev-password",
+				username: process.env.AUTH_USERNAME || "admin",
+				password: process.env.AUTH_PASSWORD || "elysiatest-001",
 			}),
 		});
 
@@ -146,8 +146,8 @@ describeLive("Input Validation", () => {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				username: "elysia",
-				password: "elysia-dev-password",
+				username: process.env.AUTH_USERNAME || "admin",
+				password: process.env.AUTH_PASSWORD || "elysiatest-001",
 			}),
 		});
 		const data = await response.json();
@@ -197,8 +197,8 @@ describeLive("Rate Limiting", () => {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				username: "elysia",
-				password: "elysia-dev-password",
+				username: process.env.AUTH_USERNAME || "admin",
+				password: process.env.AUTH_PASSWORD || "elysiatest-001",
 			}),
 		});
 		const data = await response.json();
@@ -234,8 +234,8 @@ describeLive("Chat API", () => {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				username: "elysia",
-				password: "elysia-dev-password",
+				username: process.env.AUTH_USERNAME || "admin",
+				password: process.env.AUTH_PASSWORD || "elysiatest-001",
 			}),
 		});
 		const data = await response.json();

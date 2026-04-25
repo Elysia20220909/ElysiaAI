@@ -7,9 +7,9 @@ import unittest
 
 # Add project root to path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-sys.path.append(os.path.join(PROJECT_ROOT, "usr", "lib", "elysia"))
+sys.path.append(PROJECT_ROOT)
 
-from kernel import run_system_doctor
+from usr.lib.elysia.kernel import run_system_doctor
 
 
 class TestSovereignSkills(unittest.TestCase):

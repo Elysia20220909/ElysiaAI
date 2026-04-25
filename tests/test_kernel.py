@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from python.fastapi_server import app
+from usr.lib.elysia.kernel import app
 
 
 client = TestClient(app)
@@ -17,9 +17,5 @@ def test_health_check():
 def test_ledger_file_exists():
     """AEGIS Ledgerが正しく作成されているか確認"""
     import os
-    ledger_path = "./workspace/aegis_ledger.jsonl"
-    # テスト環境でもディレクトリが必要
-    if not os.path.exists("./workspace"):
-        os.makedirs("./workspace")
-    # 存在確認
+    ledger_path = "./AEGIS_LEDGER.md"
     assert os.path.exists(ledger_path)
