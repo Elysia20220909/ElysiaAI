@@ -45,23 +45,47 @@ liveDescribe("Elysia AI Server Tests", () => {
 		}
 	});
 
+	let accessToken = "";
+
+	test("Login and get token", async () => {
+		try {
+			const response = await axios.post(
+				`${BASE_URL}/auth/token`,
+				{
+					username: "admin",
+					password: "elysiatest-001",
+				},
+				{ timeout: 5000 },
+			);
+			expect(response.status).toBe(200);
+			expect(response.data).toHaveProperty("accessToken");
+			accessToken = response.data.accessToken;
+			console.log("✅ Login successful");
+		} catch (error) {
+			console.error("❌ Login failed:", error);
+			throw error;
+		}
+	});
+
 	test("Chat endpoint accepts POST requests", async () => {
 		try {
 			const response = await axios.post(
-				`${BASE_URL}/elysia-love`,
+				`${BASE_URL}/api/ai/elysia-love`,
 				{
 					messages: [{ role: "user", content: "こんにちは" }],
 				},
 				{
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${accessToken}`,
+					},
 					timeout: 30000,
-					validateStatus: () => true, // すべてのステータスコードを受け入れ
+					validateStatus: () => true,
 				},
 			);
 
-			// ストリーミングレスポンスなので、200または接続成功を確認
 			expect([200, 201, 202]).toContain(response.status);
-			console.log("✅ Chat endpoint accessible");
+			console.log("✅ Chat endpoint accessible with auth");
 		} catch (error) {
 			console.error("❌ Chat endpoint test failed:", error);
 			throw error;

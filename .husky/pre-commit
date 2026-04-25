@@ -1,2 +1,2 @@
-bunx biome check --write --no-errors-on-unmatched
-if [ -f "./.venv/Scripts/ruff" ]; then ./.venv/Scripts/ruff check --fix; else ./.venv/bin/ruff check --fix; fi
+bunx biome check --write --no-errors-on-unmatched .
+python -m ruff check . --fix
