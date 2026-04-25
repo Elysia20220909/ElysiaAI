@@ -1,23 +1,33 @@
-# FastAPI RAGサーバー起動スクリプト（Windows PowerShell）
+param(
+    [int]$Port = 8000,
+    [string]$HostName = "127.0.0.1"
+)
 
 $ErrorActionPreference = "Stop"
+$root = Split-Path $PSScriptRoot -Parent
+Push-Location $root
 
-Push-Location (Join-Path $PSScriptRoot "..")
+try {
+    $env:PYTHONPATH = $root
+    $env:PYTHONUTF8 = "1"
 
-Write-Host "🌸 Starting Elysia FastAPI RAG Server..." -ForegroundColor Magenta
+    $pythonCandidates = @(
+        (Join-Path $root ".venv\Scripts\python.exe"),
+        (Join-Path $root "python\venv\Scripts\python.exe")
+    )
 
-# Python venv有効化
-if (Test-Path "python\venv\Scripts\Activate.ps1") {
-    & python\venv\Scripts\Activate.ps1
-} else {
-    Write-Host "⚠️  Virtual environment not found. Run: .\scripts\setup-python.ps1" -ForegroundColor Yellow
-    Pop-Location
-    exit 1
+    $python = $pythonCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if (-not $python) {
+        $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
+        if (-not $pythonCommand) {
+            throw "Python is not installed or is not available on PATH."
+        }
+        $python = $pythonCommand.Source
+    }
+
+    Write-Host "Starting FastAPI kernel on http://${HostName}:$Port ..."
+    & $python -m uvicorn python.fastapi_server:app --host $HostName --port $Port
 }
-
-# FastAPIサーバー起動
-Push-Location python
-python fastapi_server.py
-Pop-Location
-
-Pop-Location
+finally {
+    Pop-Location
+}

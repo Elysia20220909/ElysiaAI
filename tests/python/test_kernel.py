@@ -2,6 +2,7 @@ import os
 
 from fastapi.testclient import TestClient
 
+from python.fastapi_server import resolve_ollama_host
 from usr.lib.elysia.kernel import app, parse_tool_calls
 
 
@@ -16,6 +17,14 @@ def test_health_check_status():
     data = response.json()
     assert data["status"] == "healthy"
     assert "embedding_provider" in data
+
+
+def test_ollama_base_url_alias(monkeypatch):
+    """FastAPI should honor the Bun-side OLLAMA_BASE_URL name too."""
+    monkeypatch.delenv("OLLAMA_HOST", raising=False)
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://ollama.test:11434")
+
+    assert resolve_ollama_host() == "http://ollama.test:11434"
 
 
 def test_system_monitor_structure():

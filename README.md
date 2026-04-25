@@ -13,7 +13,7 @@
 ElysiaAIを最も速く体験する方法です。
 
 ### 1. 準備
-- **Bun** (v1.1+) & **Python** (v3.11+)
+- **Bun** (v1.1+) & **Python** (v3.11+ / Docker は 3.12)
 - **Ollama** (ローカル推論用: `llama3.2` 推奨)
 
 ### 2. セットアップ
@@ -29,12 +29,36 @@ make install
 
 PowerShell では `Copy-Item .env.example .env` を使えます。
 
+Windows で `make` が使えない場合:
+
+```powershell
+Copy-Item .env.example .env
+bun install
+.\scripts\setup-python.ps1
+bunx prisma generate
+```
+
 ### 3. 起動
 ```bash
 make boot
 ```
 > [!TIP]
 > ブラウザで `http://localhost:3000` を開くと、Elysia Desktop環境が展開されます。
+
+PowerShell から直接起動する場合:
+
+```powershell
+.\scripts\boot.ps1
+```
+
+FastAPI と Bun を別々に起動したい場合:
+
+```powershell
+.\scripts\start-fastapi.ps1
+.\scripts\start-server.ps1
+```
+
+UNIX / WSL / macOS では同じ役割の `./scripts/boot.sh`、`./scripts/start-fastapi.sh`、`./scripts/start-server.sh` を使えます。
 
 ---
 
@@ -71,8 +95,8 @@ ElysiaAIの心臓部は、論理（Python Kernel）と高速通信（Bun/Elysia.
 
 ```mermaid
 graph LR
-    U[User] <-->|Socket| B[Bun Backend]
-    B <-->|IPC/HTTP| P[Python Kernel]
+    U[User] <-->|HTTP / UI| B[Bun Backend]
+    B <-->|HTTP proxy| P[FastAPI Kernel]
     P --> T[Tool Execution]
     P --> D[Decision Tree]
     P --> R[Local RAG]
@@ -90,7 +114,7 @@ graph LR
 | :--- | :--- |
 | **Frontend** | Alpine.js, Tailwind CSS, Lucide Icons |
 | **Backend** | Bun, Elysia.js, Prisma, SQLite |
-| **AI Kernel** | Python 3.11, FastAPI, LangChain |
+| **AI Kernel** | Python 3.11+, FastAPI, LangChain, Ollama |
 | **Memory** | Milvus Lite, Sentence-Transformers |
 | **Security** | AEGIS Ledger (Multi-layer ICE), JWT |
 

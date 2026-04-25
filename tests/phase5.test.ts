@@ -1,7 +1,12 @@
 import { beforeAll, describe, expect, it } from "bun:test";
-import { auditLogger } from "../packages/server/src/lib/audit-logger";
 import { cronScheduler } from "../packages/server/src/lib/cron-scheduler";
 import { jobQueue } from "../packages/server/src/lib/job-queue";
+
+process.env.AUDIT_LOG_DIR ??= "./.tmp/audit";
+
+const { auditLogger } = await import(
+	"../packages/server/src/lib/audit-logger"
+);
 
 describe("Phase 5 Features", () => {
 	describe("Audit Logger", () => {
