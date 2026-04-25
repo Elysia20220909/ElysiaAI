@@ -1,7 +1,7 @@
+import os
 import subprocess
 import time
-import json
-import os
+
 
 # [INTEL] Abyssal Silent Bridge (Phase 240)
 # "Bridging the performance gap. Stealth over speed."
@@ -17,7 +17,7 @@ class SilentBridge:
         Note: In a full implementation, we would use python-pythonnet 
         to talk to System.Management.Automation.dll directly.
         """
-        print(f"[BRIDGE] Injecting Stealth Command into Runspace...")
+        print("[BRIDGE] Injecting Stealth Command into Runspace...")
         
         # We use encoded command to bypass some simple string-based logging
         import base64
@@ -42,6 +42,7 @@ class SilentBridge:
         with open(self.shared_memory_path, "a") as f:
             f.write(f"{time.time()}|{key}|{value}\n")
         print(f"[BRIDGE] Shared State Updated: {key}")
+        return "OK"
 
 if __name__ == "__main__":
     bridge = SilentBridge()

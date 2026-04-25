@@ -16,7 +16,8 @@ class SovereignSentinel {
 	private threatLevel = 0;
 	private lastPulse = Date.now();
 	private lastLedgerLog = Date.now(); // Initialize to current time
-	private lastEntryHash = "0000000000000000000000000000000000000000000000000000000000000000"; // Genesis Hash
+	private lastEntryHash =
+		"0000000000000000000000000000000000000000000000000000000000000000"; // Genesis Hash
 	private sentinelActive = false;
 	private ledgerPath = join(process.cwd(), "AEGIS_LEDGER.md");
 	private dnsQueryLog: string[] = []; // Stateful DNS tracking
@@ -70,16 +71,20 @@ class SovereignSentinel {
 			}
 
 			this.lastPulse = Date.now();
-			
+
 			// Only log to ledger if significant time has passed or something is wrong
 			const oneHour = 3600000;
 			if (Date.now() - this.lastLedgerLog > oneHour) {
-				this.logToLedger("PULSE_NOMINAL", "System resonance stable (Hourly Heartbeat).");
+				this.logToLedger(
+					"PULSE_NOMINAL",
+					"System resonance stable (Hourly Heartbeat).",
+				);
 				this.lastLedgerLog = Date.now();
 			}
 		} catch (error) {
 			this.threatLevel += 10;
-			const errorMessage = error instanceof Error ? error.message : String(error);
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
 			logger.error(`[ERR] Pulse Divergence Detected: ${errorMessage}`);
 			this.logToLedger(
 				"PULSE_DIVERGENCE",
@@ -136,7 +141,9 @@ class SovereignSentinel {
 				if (chunk.includes("Pulsing CPU")) {
 					this.cpuSpikeCount++;
 					if (this.cpuSpikeCount > 3) {
-						logger.warn("[ALERT] ANOMALY: Side-Channel Thermal Pulsing Detected!");
+						logger.warn(
+							"[ALERT] ANOMALY: Side-Channel Thermal Pulsing Detected!",
+						);
 						this.threatLevel += 15;
 					}
 				}
@@ -166,13 +173,13 @@ class SovereignSentinel {
 	private logToLedger(event: string, detail: string) {
 		const timestamp = new Date().toISOString();
 		const rawContent = `${timestamp}|${event}|${detail}|${this.lastEntryHash}`;
-		
+
 		// Calculate new chain hash
 		const { createHash } = require("node:crypto");
 		const newHash = createHash("sha256").update(rawContent).digest("hex");
-		
+
 		const entry = `\n| ${timestamp} | ${event} | ${detail} | ${newHash.substring(0, 8)}... |`;
-		
+
 		try {
 			appendFileSync(this.ledgerPath, entry);
 			this.lastEntryHash = newHash; // Update chain state
