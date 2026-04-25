@@ -5,10 +5,13 @@ description = "AI Core for ElysiaAI"
 dependencies = [
     "fastapi",
     "uvicorn",
+    "httpx",
     "langchain",
     "langchain-community",
     "ollama",
+    "pydantic-settings",
     "pymilvus[model]",
+    "pytest",
     "python-dotenv",
     "pydantic"
 ]

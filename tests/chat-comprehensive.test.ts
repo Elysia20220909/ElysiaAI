@@ -22,8 +22,8 @@ describeLive("Chat Functionality - Comprehensive Tests", () => {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					username: process.env.AUTH_USERNAME || "elysia",
-					password: process.env.AUTH_PASSWORD || "elysia-dev-password",
+					username: process.env.AUTH_USERNAME || "admin",
+					password: process.env.AUTH_PASSWORD || "elysiatest-001",
 				}),
 			});
 
