@@ -19,20 +19,291 @@ import { secureVault } from "../lib/secure-vault";
 
 const casualChat = { generateCasualResponse, getRandomTopic };
 const openaiIntegration = { streamChatWithOpenAI };
+const validationErrors = new Set([
+	"Messages are required",
+	"Too many messages",
+	"Empty messages are not allowed",
+	"Messages must be 400 characters or fewer",
+]);
+
+type ChatMessage = { role: string; content: string };
+type ElysiaLoveBody = {
+	messages: ChatMessage[];
+	mode?: string;
+	sessionId?: string;
+};
+type FeedbackBody = {
+	query?: string;
+	answer?: string;
+	rating?: string;
+	reason?: string;
+};
+
+export function requireBearerToken(request: Request) {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer ")) {
+		logger.warn("❌ [AI] Rejected: Missing Bearer token");
+		throw new Error("Missing Bearer token");
+	}
+
+	try {
+		return jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as jwt.JwtPayload & {
+			userId?: string;
+		};
+	} catch {
+		logger.warn("❌ [AI] Rejected: Invalid token");
+		throw new Error("Invalid or expired token");
+	}
+}
+
+function validateAndSanitizeMessages(messages: ChatMessage[]) {
+	if (!Array.isArray(messages) || messages.length === 0) {
+		throw new Error("Messages are required");
+	}
+
+	if (messages.length > 8) {
+		throw new Error("Too many messages");
+	}
+
+	return messages.map((message) => {
+		const content = sanitizeHtml(message.content || "", {
+			allowedTags: [],
+			allowedAttributes: {},
+		}).trim();
+
+		if (!content) {
+			throw new Error("Empty messages are not allowed");
+		}
+
+		if (content.length > 400) {
+			throw new Error("Messages must be 400 characters or fewer");
+		}
+
+		if (containsDangerousKeywords(content)) {
+			throw new Error("Dangerous content detected");
+		}
+
+		return {
+			role: message.role,
+			content,
+		};
+	});
+}
+
+async function buildChatContext(body: ElysiaLoveBody) {
+	const mode = body.mode || "normal";
+	const personaContext = getPersonaConfig(mode);
+	const llmConfig = {
+		systemPrompt: personaContext.systemPrompt,
+		temperature: personaContext.temperature,
+		model: CONFIG.MODEL_NAME,
+	};
+
+	const sanitizedMessages = validateAndSanitizeMessages(body.messages);
+	let enhancedSystemPrompt = llmConfig.systemPrompt;
+	let fallbackCasualResponse = "今日はどんな一日でしたか？";
+
+	if (mode === "casual" && sanitizedMessages.length > 0) {
+		const lastUserMessage = sanitizedMessages[sanitizedMessages.length - 1];
+		if (lastUserMessage.role === "user") {
+			try {
+				const casualResponse = await casualChat.generateCasualResponse(
+					lastUserMessage.content,
+				);
+				const topicPrompt = casualChat.getRandomTopic().prompt;
+				fallbackCasualResponse =
+					Math.random() < 0.5 ? casualResponse : topicPrompt;
+				enhancedSystemPrompt += `\n\n参考情報: ${fallbackCasualResponse}`;
+			} catch {
+				fallbackCasualResponse = casualChat.getRandomTopic().prompt;
+			}
+		}
+	}
+
+	return {
+		mode,
+		llmConfig,
+		fallbackCasualResponse,
+		messagesWithSystem: [
+			{ role: "system", content: enhancedSystemPrompt },
+			...sanitizedMessages,
+		],
+	};
+}
+
+export async function handleElysiaLove(
+	body: ElysiaLoveBody,
+	request: Request,
+) {
+	logger.info("🤖 [AI] Processing elysia-love request...");
+
+	let payload: jwt.JwtPayload & { userId?: string };
+	try {
+		payload = requireBearerToken(request);
+	} catch (error) {
+		return jsonError(
+			401,
+			error instanceof Error ? error.message : "Unauthorized",
+		);
+	}
+
+	try {
+		const { mode, llmConfig, fallbackCasualResponse, messagesWithSystem } =
+			await buildChatContext(body);
+		const sessionId = body.sessionId || payload.userId || "default";
+
+		if (mode === "openai") {
+			const stream = new ReadableStream({
+				async start(controller) {
+					try {
+						for await (const chunk of openaiIntegration.streamChatWithOpenAI(
+							messagesWithSystem,
+							{
+								model: llmConfig.model,
+								temperature: llmConfig.temperature,
+							},
+						)) {
+							controller.enqueue(
+								new TextEncoder().encode(
+									`data: ${JSON.stringify({ content: chunk })}\n\n`,
+								),
+							);
+						}
+						controller.enqueue(
+							new TextEncoder().encode("data: [DONE]\n\n"),
+						);
+						controller.close();
+					} catch (error) {
+						controller.enqueue(
+							new TextEncoder().encode(
+								`data: ${JSON.stringify({ error: String(error), content: fallbackCasualResponse })}\n\n`,
+							),
+						);
+						controller.close();
+					}
+				},
+			});
+
+			return new Response(stream, {
+				headers: {
+					"Content-Type": "text/event-stream",
+					"x-elysia-mode": mode,
+				},
+			});
+		}
+
+		const upstream = await axios.post(
+			`${CONFIG.FASTAPI_BASE_URL}/chat`,
+			{
+				messages: messagesWithSystem,
+				session_id: sessionId,
+				stream: true,
+			},
+			{
+				headers: {
+					"X-API-Key": CONFIG.FASTAPI_API_KEY,
+					"Content-Type": "application/json",
+				},
+				responseType: "stream",
+				timeout: CONFIG.RAG_TIMEOUT,
+			},
+		);
+
+		return new Response(upstream.data, {
+			status: upstream.status,
+			headers: {
+				"Content-Type":
+					upstream.headers["content-type"] || "text/event-stream",
+				"x-elysia-mode": mode,
+			},
+		});
+	} catch (error: any) {
+		const message =
+			error instanceof Error ? error.message : "FastAPI chat upstream error";
+
+		if (message === "Dangerous content detected") {
+			return jsonError(500, message);
+		}
+
+		if (validationErrors.has(message)) {
+			return jsonError(400, message);
+		}
+
+		const status =
+			error.response?.status || (error.code === "ECONNREFUSED" ? 503 : 500);
+		logger.error(
+			"🤖 [AI] Chat Error:",
+			error instanceof Error ? error : undefined,
+		);
+		return jsonError(status, message);
+	}
+}
+
+function validateFeedback(body: FeedbackBody) {
+	const query = (body.query || "").trim();
+	const answer = (body.answer || "").trim();
+	const rating = (body.rating || "").trim();
+
+	if (!query || !answer || !rating) {
+		return "Missing feedback fields";
+	}
+
+	if (query.length > 400) {
+		return "Feedback query must be 400 characters or fewer";
+	}
+
+	if (!["up", "down"].includes(rating)) {
+		return "Invalid feedback rating";
+	}
+
+	return null;
+}
+
+export async function handleFeedback(
+	body: FeedbackBody,
+	request: Request,
+) {
+	let payload: jwt.JwtPayload & { userId?: string };
+	try {
+		payload = requireBearerToken(request);
+	} catch (error) {
+		return jsonError(
+			401,
+			error instanceof Error ? error.message : "Unauthorized",
+		);
+	}
+
+	const validationError = validateFeedback(body);
+	if (validationError) {
+		return jsonError(400, validationError);
+	}
+
+	if (!existsSync("data")) mkdirSync("data", { recursive: true });
+
+	try {
+		await feedbackService.create({
+			userId: payload.userId || "anon",
+			query: body.query!,
+			answer: body.answer!,
+			rating: body.rating!,
+			reason: body.reason,
+		});
+		return { ok: true };
+	} catch {
+		return jsonError(500, "Failed to store feedback");
+	}
+}
 
 export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 	{
 		beforeHandle: ({ request }) => {
-			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) {
-				logger.warn("❌ [AI] Rejected: Missing Bearer token");
-				throw new Error("Missing Bearer token");
-			}
 			try {
-				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
-			} catch {
-				logger.warn("❌ [AI] Rejected: Invalid token");
-				throw new Error("Invalid or expired token");
+				requireBearerToken(request);
+			} catch (error) {
+				return jsonError(
+					401,
+					error instanceof Error ? error.message : "Unauthorized",
+				);
 			}
 		},
 	},
@@ -40,132 +311,15 @@ export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 		app
 			.post(
 				"/elysia-love",
-				async ({
-					body,
-					request,
-				}: {
-					body: { messages: any[]; mode?: string };
-					request: Request;
-				}) => {
-					logger.info("🤖 [AI] Processing elysia-love request...");
-					const auth = request.headers.get("authorization") || "";
-					let userId = "anon";
-					try {
-						if (auth.startsWith("Bearer ")) {
-							const payload = jwt.verify(
-								auth.substring(7),
-								CONFIG.JWT_SECRET,
-							) as jwt.JwtPayload;
-							userId = (payload as { userId?: string }).userId || "anon";
-						}
-					} catch {}
-
-					const mode = body.mode || "normal";
-					const personaContext = getPersonaConfig(mode);
-					const llmConfig = {
-						systemPrompt: personaContext.systemPrompt,
-						temperature: personaContext.temperature,
-						model: CONFIG.MODEL_NAME,
-					};
-
-					const sanitizedMessages = body.messages.map((m: any) => {
-						const cleaned = sanitizeHtml(m.content, {
-							allowedTags: [],
-							allowedAttributes: {},
-						});
-						if (containsDangerousKeywords(cleaned))
-							throw new Error("Dangerous content detected");
-						return { ...m, content: cleaned };
-					});
-
-					let enhancedSystemPrompt = llmConfig.systemPrompt;
-					let fallbackCasualResponse = "今日はどんな一日でしたか？";
-
-					if (mode === "casual" && body.messages.length > 0) {
-						const lastUserMessage = body.messages[body.messages.length - 1];
-						if (lastUserMessage.role === "user") {
-							try {
-								const casualResponse = await casualChat.generateCasualResponse(
-									lastUserMessage.content,
-								);
-								const topicPrompt = casualChat.getRandomTopic().prompt;
-								fallbackCasualResponse =
-									Math.random() < 0.5 ? casualResponse : topicPrompt;
-								enhancedSystemPrompt += `\n\n参考情報: ${fallbackCasualResponse}`;
-							} catch {
-								fallbackCasualResponse = casualChat.getRandomTopic().prompt;
-							}
-						}
-					}
-
-					const messagesWithSystem = [
-						{ role: "system", content: enhancedSystemPrompt },
-						...sanitizedMessages,
-					];
-
-					if (mode === "openai") {
-						try {
-							const stream = new ReadableStream({
-								async start(controller) {
-									try {
-										for await (const chunk of openaiIntegration.streamChatWithOpenAI(
-											messagesWithSystem,
-											{
-												model: llmConfig.model,
-												temperature: llmConfig.temperature,
-											},
-										)) {
-											controller.enqueue(
-												new TextEncoder().encode(
-													`data: ${JSON.stringify({ content: chunk })}\n\n`,
-												),
-											);
-										}
-										controller.enqueue(
-											new TextEncoder().encode("data: [DONE]\n\n"),
-										);
-										controller.close();
-									} catch (error) {
-										controller.enqueue(
-											new TextEncoder().encode(
-												`data: ${JSON.stringify({ error: String(error), content: fallbackCasualResponse })}\n\n`,
-											),
-										);
-										controller.close();
-									}
-								},
-							});
-							return new Response(stream, {
-								headers: { "Content-Type": "text/event-stream" },
-							});
-						} catch (e) {
-							return jsonError(500, "OpenAI Error");
-						}
-					}
-
-					try {
-						const upstream = await axios.post(
-							CONFIG.RAG_API_URL,
-							{
-								messages: messagesWithSystem,
-								temperature: llmConfig.temperature,
-								model: llmConfig.model,
-							},
-							{ responseType: "stream", timeout: CONFIG.RAG_TIMEOUT },
-						);
-						return new Response(upstream.data, {
-							headers: { "Content-Type": "text/event-stream" },
-						});
-					} catch (e) {
-						return jsonError(500, "Ollama API error");
-					}
-				},
+				({ body, request }) =>
+					handleElysiaLove(body as ElysiaLoveBody, request),
 				{
 					body: t.Object({
 						messages: t.Array(
 							t.Object({ role: t.String(), content: t.String() }),
 						),
 						mode: t.Optional(t.String()),
+						sessionId: t.Optional(t.String()),
 					}),
 				},
 			)
@@ -186,7 +340,7 @@ export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 					const lines = file.trim().split("\n").filter(Boolean);
 					return lines
 						.slice(Math.max(0, lines.length - n))
-						.map((l: string) => JSON.parse(l));
+						.map((line: string) => JSON.parse(line));
 				} catch {
 					return jsonError(500, "Failed to read knowledge");
 				}
@@ -204,24 +358,18 @@ export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 					return jsonError(500, "Failed to store knowledge");
 				}
 			})
-			.post("/feedback", async ({ body, request }) => {
-				if (!existsSync("data")) mkdirSync("data", { recursive: true });
-				const auth = request.headers.get("authorization") || "";
-				const payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as any;
-				const userId = payload.userId;
-				try {
-					await feedbackService.create({
-						userId,
-						query: (body as any).query,
-						answer: (body as any).answer,
-						rating: (body as any).rating,
-						reason: (body as any).reason,
-					});
-					return { ok: true };
-				} catch {
-					return jsonError(500, "Failed to store feedback");
-				}
-			})
+			.post(
+				"/feedback",
+				({ body, request }) => handleFeedback(body as FeedbackBody, request),
+				{
+					body: t.Object({
+						query: t.String(),
+						answer: t.String(),
+						rating: t.String(),
+						reason: t.Optional(t.String()),
+					}),
+				},
+			)
 			.post(
 				"/summary",
 				async ({ body, request }) => {
@@ -253,7 +401,7 @@ export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 						);
 						return { summary: response.data.choices[0].message.content };
 					} catch (error: any) {
-						logger.error("🤖 [AI] Summary Error:", error.message);
+						logger.error("🤖 [AI] Summary Error:", error);
 						return jsonError(500, "Failed to generate neural summary");
 					}
 				},
