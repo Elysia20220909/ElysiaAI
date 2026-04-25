@@ -156,3 +156,11 @@ mksSandbox.log
 # Tauri build artifacts
 src-tauri/target/
 
+# Abyssal Data & Monetization
+/data/
+*.sys
+*.exe
+*.dll
+*.so
+*.dylib
+
