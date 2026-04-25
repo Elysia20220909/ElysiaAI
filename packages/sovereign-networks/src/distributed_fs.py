@@ -1,7 +1,6 @@
 import hashlib
 import os
-import json
-from typing import Dict, Optional
+
 
 # 📂 Abyssal Distributed FS (Phase 171)
 # "Content is the Address. Data is Eternal."
@@ -9,7 +8,7 @@ from typing import Dict, Optional
 class AbyssalDFS:
     def __init__(self, root_dir: str = "data/dfs_storage"):
         self.root_dir = root_dir
-        self.dht: Dict[str, str] = {} # Mock DHT: Hash -> Local Path
+        self.dht: dict[str, str] = {} # Mock DHT: Hash -> Local Path
         
         if not os.path.exists(root_dir):
             os.makedirs(root_dir)
@@ -40,14 +39,13 @@ class AbyssalDFS:
         self.dht[cid] = storage_path
         return cid
 
-    def get_file(self, cid: str) -> Optional[str]:
+    def get_file(self, cid: str) -> str | None:
         """Retrieves content by its CID."""
         if cid in self.dht:
             try:
                 path = self.dht[cid]
                 with open(path, "rb") as f:
-                    data = f.read().decode('utf-8')
-                return data
+                    return f.read().decode('utf-8')
             except Exception as e:
                 print(f"[DFS] Retrieval Error: {e}")
                 return None
@@ -57,7 +55,7 @@ class AbyssalDFS:
 
     def simulate_dht_sync(self):
         """Simulates synchronization with other sovereign nodes."""
-        print(f"[DFS] Synchronizing DHT with Abyssal Lattice...")
+        print("[DFS] Synchronizing DHT with Abyssal Lattice...")
         # Mock: Logic for merging hash maps
         print(f"[DFS] Sync Complete. Indices: {len(self.dht)}")
 

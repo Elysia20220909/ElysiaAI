@@ -1,7 +1,8 @@
-import socket
 import base64
-import time
 import random
+import socket
+import time
+
 
 # 🌪️ Red Team: DNS Tunneling Simulator (Abyssal Exfiltration Test)
 # Purpose: Test if Sovereign Sentinel can detect non-standard DNS query patterns.
@@ -23,7 +24,7 @@ def simulate_exfiltration():
         try:
             # Simulate actual DNS lookup (this will fail, but Sentinel should see the intent)
             socket.gethostbyname(query)
-        except:
+        except Exception:
             pass
         
         time.sleep(random.uniform(0.5, 2.0))

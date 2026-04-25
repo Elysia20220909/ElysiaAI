@@ -1,8 +1,6 @@
-import hashlib
 import random
 import time
-import json
-import sys
+
 
 # 🗝️ SMIN: P2P Secure Handshake with ZKP (Phase 181)
 # "Prove your soul without revealing your name."
@@ -43,8 +41,7 @@ class P2PAuthenticator:
             return None
 
         self.nonces.add(nonce)
-        c = random.randint(1, 100)
-        return c
+        return random.randint(1, 100)
 
     def prover_response(self, x: int, k: int, c: int):
         """Step 3: Prover calculates s = k + c*x"""

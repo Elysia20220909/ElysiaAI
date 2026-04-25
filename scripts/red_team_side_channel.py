@@ -1,6 +1,6 @@
-import time
 import math
-import multiprocessing
+import time
+
 
 # 🌡️ Red Team: Side-Channel Thermal Pulsing (Acoustic/Heat Exfiltration)
 # Purpose: Test if the Anti-Acoustic Jitter can effectively mask CPU patterns.
