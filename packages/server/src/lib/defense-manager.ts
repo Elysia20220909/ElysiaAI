@@ -320,9 +320,9 @@ class DefenseManager {
 	public performHardwareAttestation(): boolean {
 		logger.info("🛡️ Initiating NSA-Grade Hardware Attestation...");
 		// Simulate check for TPM 2.0 or Secure Enclave
-		const hasSecureEnclave = true; 
+		const hasSecureEnclave = true;
 		const hasTPM = true;
-		
+
 		if (hasSecureEnclave && hasTPM) {
 			this.zeroTrustAttestation = "VERIFIED_HARDWARE_ROOT";
 			return true;
