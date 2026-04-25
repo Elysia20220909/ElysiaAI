@@ -2,9 +2,11 @@
   "name": "elysia-ai",
   "version": "0.1.0",
   "scripts": {
-    "dev": "bun run --watch server.ts",
+    "dev": "bun run --watch packages/server/src/index.ts",
+    "start": "bun run packages/server/src/index.ts",
     "desktop": "bun tauri dev",
-    "test": "bun test"
+    "test": "bun test",
+    "lint": "bunx biome check . && python -m ruff check ."
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",

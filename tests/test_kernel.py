@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
-from kernel.main import app
+
+from python.fastapi_server import app
 
 
 client = TestClient(app)
@@ -10,7 +11,7 @@ def test_health_check():
     assert response.status_code == 200
     data = response.json()
     assert "status" in data
-    assert data["status"] == "ok"
+    assert data["status"] == "healthy"
     assert "ollama" in data
 
 def test_ledger_file_exists():
