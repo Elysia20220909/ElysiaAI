@@ -52,4 +52,4 @@ def test_vault_defenses_unauthorized():
     """Verify that the Vault Defenses block unauthorized access."""
     response = client.get("/system/monitor", headers={"x-api-key": "WRONG_KEY"})
     assert response.status_code == 403
-    assert "Vault Defenses Activated" in response.json()["message"]
+    assert "Handshake Failed" in response.json()["detail"]

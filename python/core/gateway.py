@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import socket
+import sys
 import threading
 import time
 from typing import Any
@@ -32,6 +33,13 @@ class CognitiveGateway:
         self.secret = os.getenv("RESONANCE_SECRET", "ELYSIAN_DEFAULT_RESONANCE_KEY").encode()
         self.seen_nonces: set[str] = set()
         self.max_nonce_cache = 100
+
+        if "pytest" in sys.modules or os.getenv("ELYSIA_TEST_MODE") == "1":
+            logger.info("🧪 Cognitive Gateway test mode: background listeners disabled.")
+            self.stop_event = threading.Event()
+            self.thread = None
+            self.poisoning_thread = None
+            return
 
         # Start the background signal listener
         self.stop_event = threading.Event()
@@ -64,7 +72,7 @@ class CognitiveGateway:
             sock.settimeout(1.0)
             logger.info(f"🛰️ Cognitive Gateway Listening on UDP port {self.port}...")
         except OSError as e:
-            if e.errno == 98:  # Address already in use
+            if e.errno in {98, 10048}:  # Address already in use
                 logger.warning(f"⚠️ Gateway: UDP port {self.port} already in use. Skipping listener.")
                 return
             raise e

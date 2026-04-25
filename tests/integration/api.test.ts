@@ -64,8 +64,8 @@ describeLive("Authentication Endpoints", () => {
 	let refreshToken: string;
 
 	const creds = {
-		username: "elysia",
-		password: process.env.AUTH_PASSWORD || "elysia-dev-password",
+		username: process.env.AUTH_USERNAME || "admin",
+		password: process.env.AUTH_PASSWORD || "elysiatest-001",
 	};
 
 	it("POST /auth/token - should login and get tokens", async () => {
