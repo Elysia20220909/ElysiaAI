@@ -1,13 +1,13 @@
-import { spawn, ChildProcess } from "node:child_process";
-import { join } from "node:path";
+import { type ChildProcess, spawn } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
-import { logger } from "../../server/src/lib/logger";
+import { join } from "node:path";
 import { abyssalMemory } from "../../server/src/lib/abyssal-memory-manager";
+import { logger } from "../../server/src/lib/logger";
 
 /**
  * 🌌 SMIN Orchestrator (Phase 180)
  * "The Weaver of the Abyssal Web."
- * 
+ *
  * Manages multiple autonomous Python nodes, orchestrating onion circuits,
  * distributed file storage, and ZKP-based peer validation.
  */
@@ -28,7 +28,7 @@ export class MeshOrchestrator {
 		for (let i = 0; i < this.nodeCount; i++) {
 			this.spawnNode(`NODE_0x${i.toString(16).toUpperCase()}`);
 		}
-		
+
 		this.meshStatus = "SYNCING";
 		this.monitorMeshHealth();
 	}
@@ -39,7 +39,13 @@ export class MeshOrchestrator {
 	 * 共有メモリ(abyssalMemory)を主軸にした非同期ポーリングを採用。
 	 */
 	private spawnNode(nodeId: string) {
-		const pythonPath = join(process.cwd(), "packages", "sovereign-mesh", "src", "abyssal_relay_node.py");
+		const pythonPath = join(
+			process.cwd(),
+			"packages",
+			"sovereign-mesh",
+			"src",
+			"abyssal_relay_node.py",
+		);
 		logger.info(`🔥 Igniting Mesh Node: ${nodeId}`);
 
 		const proc = spawn("python", [pythonPath, nodeId]);
@@ -47,7 +53,7 @@ export class MeshOrchestrator {
 		proc.stdout?.on("data", (data) => {
 			const msg = data.toString().trim();
 			logger.info(`[${nodeId}] ${msg}`);
-			
+
 			// 共有メモリへの書き込みテスト (Trial 1: 直接書き込み)
 			if (msg.includes("HANDSHAKE_READY")) {
 				abyssalMemory.write(`INIT_AUTH:${nodeId}`);
@@ -59,7 +65,9 @@ export class MeshOrchestrator {
 		});
 
 		proc.on("close", (code) => {
-			logger.warn(`🛑 Node ${nodeId} collapsed with exit code ${code}. Re-weaving...`);
+			logger.warn(
+				`🛑 Node ${nodeId} collapsed with exit code ${code}. Re-weaving...`,
+			);
 			this.nodes.delete(nodeId);
 			setTimeout(() => this.spawnNode(nodeId), 5000); // Self-healing
 		});
@@ -74,9 +82,11 @@ export class MeshOrchestrator {
 		setInterval(() => {
 			const activeCount = this.nodes.size;
 			const memoryState = abyssalMemory.read();
-			
-			logger.info(`📊 Mesh Status: ${activeCount}/${this.nodeCount} nodes online. Memory: ${memoryState || "IDLE"}`);
-			
+
+			logger.info(
+				`📊 Mesh Status: ${activeCount}/${this.nodeCount} nodes online. Memory: ${memoryState || "IDLE"}`,
+			);
+
 			if (activeCount === this.nodeCount) {
 				this.meshStatus = "STABLE";
 			} else {
@@ -91,7 +101,8 @@ export class MeshOrchestrator {
 	public async deployOnionCircuit(message: string): Promise<string> {
 		logger.info("🧅 Orchestrating Onion Circuit for message exfiltration...");
 		const nodeIds = Array.from(this.nodes.keys());
-		if (nodeIds.length < 3) throw new Error("Insufficient nodes for circuit construction.");
+		if (nodeIds.length < 3)
+			throw new Error("Insufficient nodes for circuit construction.");
 
 		// ランダムなホップ選択
 		const circuit = nodeIds.sort(() => 0.5 - Math.random()).slice(0, 3);
@@ -99,7 +110,7 @@ export class MeshOrchestrator {
 
 		// ここで Python 側に回路構築命令を Shared Memory 経由で飛ばす
 		abyssalMemory.write(`BUILD_CIRCUIT:${circuit.join(",")}:${message}`);
-		
+
 		return "CIRCUIT_DEPLOYED";
 	}
 }

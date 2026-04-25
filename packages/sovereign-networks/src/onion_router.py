@@ -1,7 +1,6 @@
-import hashlib
-import json
 import base64
-from typing import List, Dict
+import json
+
 
 # 🧅 Abyssal Onion Routing Simulation (Phase 170)
 # "Trust is decentralized. Identity is encrypted."
@@ -11,7 +10,7 @@ class OnionNode:
         self.node_id = node_id
         self.private_key = private_key # Simplified: Using string for mock decryption
 
-    def decrypt_layer(self, encrypted_package: str) -> Dict:
+    def decrypt_layer(self, encrypted_package: str) -> dict:
         """
         Attempts to decrypt the outermost layer.
         If successful, returns the next hop and the nested data.
@@ -24,17 +23,16 @@ class OnionNode:
             # Check if this node is the intended recipient of the layer
             if data['next_node_id'] == self.node_id:
                 return data['payload']
-            else:
-                raise Exception("Unauthorized Node Access")
+            raise Exception("Unauthorized Node Access")
         except Exception as e:
             print(f"[NODE {self.node_id}] Decryption Error: {e}")
             return None
 
 class OnionRouter:
-    def __init__(self, nodes: List[OnionNode]):
+    def __init__(self, nodes: list[OnionNode]):
         self.nodes = nodes
 
-    def create_onion_package(self, final_message: string, circuit: List[OnionNode]) -> str:
+    def create_onion_package(self, final_message: str, circuit: list[OnionNode]) -> str:
         """
         Wraps the message in layers of encryption from the last node to the first.
         TRIAL & ERROR: The order must be reversed for proper peeling.
@@ -60,7 +58,7 @@ class OnionRouter:
 
         return current_payload
 
-    def simulate_routing(self, package: str, circuit: List[OnionNode]):
+    def simulate_routing(self, package: str, circuit: list[OnionNode]):
         """Peels the onion as it travels through the nodes."""
         print("\n[ROUTER] Initiating Onion Routing Transmission...")
         current_package = package
