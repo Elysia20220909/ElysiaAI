@@ -1,2 +1,2 @@
 bunx biome check --write --no-errors-on-unmatched
-./.venv/Scripts/ruff check --fix
+if [ -f "./.venv/Scripts/ruff" ]; then ./.venv/Scripts/ruff check --fix; else ./.venv/bin/ruff check --fix; fi
