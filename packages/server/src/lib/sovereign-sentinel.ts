@@ -1,13 +1,13 @@
 import { spawn } from "node:child_process";
-import { existsSync, readFileSync, appendFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { logger } from "./logger";
 import { defenseManager } from "./defense-manager";
+import { logger } from "./logger";
 
 /**
  * 🌌 Sovereign Sentinel Core (Phase 150)
  * "The Watcher at the Edge of the Abyss."
- * 
+ *
  * This module orchestrates all Abyssal security scripts and maintains
  * system integrity through continuous trial, error, and reconciliation.
  */
@@ -37,7 +37,7 @@ class SovereignSentinel {
 		if (this.interval) clearInterval(this.interval);
 
 		const baseDelay = 30000; // 30s
-		const delay = Math.max(5000, baseDelay - (this.threatLevel * 500));
+		const delay = Math.max(5000, baseDelay - this.threatLevel * 500);
 
 		this.interval = setInterval(() => this.pulse(), delay);
 		logger.info(`💓 Pulse Synchronized: Frequency = ${delay}ms`);
@@ -52,7 +52,7 @@ class SovereignSentinel {
 
 		try {
 			logger.info("👁️ Sentinel Pulse: Scanning the Void...");
-			
+
 			// 1. ハードウェア整合性 (Counter-Espionage)
 			await this.executeAbyssalScript("abyssal-counter-espionage.ps1");
 
@@ -69,11 +69,13 @@ class SovereignSentinel {
 
 			this.lastPulse = Date.now();
 			this.logToLedger("PULSE_NOMINAL", "System resonance stable.");
-			
 		} catch (error) {
 			this.threatLevel += 10;
 			logger.error("🛑 Pulse Divergence Detected!", error as Error);
-			this.logToLedger("PULSE_DIVERGENCE", `Threat Level Elevated: ${this.threatLevel}`);
+			this.logToLedger(
+				"PULSE_DIVERGENCE",
+				`Threat Level Elevated: ${this.threatLevel}`,
+			);
 			this.startPulse(); // レートを上げて再試行
 		} finally {
 			this.sentinelActive = false;
@@ -92,8 +94,10 @@ class SovereignSentinel {
 
 			logger.info(`🔥 Executing Abyssal Protocol: ${scriptName}`);
 			const ps = spawn("powershell.exe", [
-				"-ExecutionPolicy", "Bypass",
-				"-File", scriptPath
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				scriptPath,
 			]);
 
 			let output = "";
@@ -102,7 +106,7 @@ class SovereignSentinel {
 			ps.stdout.on("data", (data) => {
 				const chunk = data.toString();
 				output += chunk;
-				
+
 				// --- Trial & Error: Stateful Anomaly Detection ---
 				// Initial attempt: Only check for "ALERT"
 				if (chunk.includes("ALERT")) this.threatLevel += 5;
@@ -112,7 +116,9 @@ class SovereignSentinel {
 				if (dnsMatch) {
 					this.dnsQueryLog.push(...dnsMatch);
 					if (this.dnsQueryLog.length > 5) {
-						logger.error("🛑 CRITICAL: DNS Tunneling Pattern Detected! (NSA-Grade Exfiltration)");
+						logger.error(
+							"🛑 CRITICAL: DNS Tunneling Pattern Detected! (NSA-Grade Exfiltration)",
+						);
 						this.threatLevel += 20;
 						this.dnsQueryLog = []; // Reset after trigger
 					}
@@ -136,7 +142,11 @@ class SovereignSentinel {
 				if (code === 0) {
 					resolve(output);
 				} else {
-					reject(new Error(`Protocol ${scriptName} failed with code ${code}\n${errorOutput}`));
+					reject(
+						new Error(
+							`Protocol ${scriptName} failed with code ${code}\n${errorOutput}`,
+						),
+					);
 				}
 			});
 		});
