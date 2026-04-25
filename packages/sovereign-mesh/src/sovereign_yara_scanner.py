@@ -1,6 +1,6 @@
 import os
-import hashlib
 import re
+
 
 # [SCAN] Sovereign YARA-Style Pattern Hunter (Phase 220)
 # "Scanning the DNA of the Abyss. Searching for foreign signatures."
