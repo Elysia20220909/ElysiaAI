@@ -2,6 +2,8 @@ import { cors } from "@elysiajs/cors";
 import { staticPlugin } from "@elysiajs/static";
 import { Elysia, t } from "elysia";
 import { defenseManager } from "./packages/server/src/lib/defense-manager";
+import { sovereignSentinel } from "./packages/server/src/lib/sovereign-sentinel";
+import { sentinelDashboard } from "./packages/server/src/lib/sentinel-dashboard";
 
 // --- Kernel Bridge (Sovereign Binary Stream) ---
 let pythonProcess: any;
@@ -104,6 +106,10 @@ const app = new Elysia()
 		},
 	)
 	.listen(3000);
+
+// Start Sovereign Sentinel Orchestration
+sovereignSentinel.escalateThreat(0); 
+sentinelDashboard; // Initialized
 
 console.log(
 	`🦊 Elysia (Sovereign Node) is running at ${app.server?.hostname}:${app.server?.port}`,
