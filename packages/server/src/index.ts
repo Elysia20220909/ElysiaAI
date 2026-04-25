@@ -3,25 +3,21 @@ import dotenv from "dotenv";
 dotenv.config({ override: true });
 
 import { existsSync } from "node:fs";
-import path from "node:path";
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
 import { swagger } from "@elysiajs/swagger";
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { helmet } from "elysia-helmet";
 import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
-import { auditLogger } from "./lib/audit-logger";
-import { createAuditMiddleware } from "./lib/audit-middleware";
-import { CONFIG, jsonError } from "./lib/constants";
+import { CONFIG, jsonError, proxyToFastAPI } from "./lib/constants";
 import { defenseManager } from "./lib/defense-manager";
+import { performHealthCheck } from "./lib/health";
 import { logger } from "./lib/logger";
 import { metricsCollector } from "./lib/metrics";
 import { applySecurityHeaders } from "./lib/security-utils";
-import { telemetry } from "./lib/telemetry";
 import { adminRoutes } from "./routes/admin-routes";
-import { aiRoutes } from "./routes/ai-routes";
-// Import Modular Routes
+import { aiRoutes, handleElysiaLove, handleFeedback } from "./routes/ai-routes";
 import { authRoutes } from "./routes/auth-routes";
 import { customizationRoutes } from "./routes/customization-routes";
 import { databaseRoutes } from "./routes/database-routes";
@@ -29,8 +25,8 @@ import { fileRoutes } from "./routes/file-routes";
 import { sessionRoutes } from "./routes/session-routes";
 import { systemRoutes } from "./routes/system-routes";
 
-const auditMiddleware = createAuditMiddleware();
 const app = new Elysia();
+const requestStartedAt = new WeakMap<Request, number>();
 
 app
 	.use(helmet())
@@ -60,6 +56,8 @@ app
 	)
 	.use(html())
 	.onBeforeHandle(({ request, error }: any) => {
+		requestStartedAt.set(request, Date.now());
+
 		const ip =
 			request.headers.get("x-forwarded-for") ||
 			request.headers.get("x-real-ip") ||
@@ -71,8 +69,6 @@ app
 		}
 
 		const url = new URL(request.url).pathname;
-
-		// 🛡️ L2 Blue ICE: 悪意あるスキャンやInfoStealerのプローブを検知
 		const suspiciousPaths = [
 			"/.env",
 			"/cmd.exe",
@@ -82,7 +78,7 @@ app
 			"/aws/credentials",
 			"/.git/config",
 		];
-		if (suspiciousPaths.some((p) => url.toLowerCase().includes(p))) {
+		if (suspiciousPaths.some((path) => url.toLowerCase().includes(path))) {
 			defenseManager.reportSuspiciousActivity(
 				ip,
 				`Attempted access to honeypot/sensitive path: ${url}`,
@@ -90,7 +86,6 @@ app
 			return error(403, "Access Denied by AEGIS Sandbox Isolation");
 		}
 
-		// 🛡️ サンドボックス/マルウェア検知 (User-Agent異常)
 		const userAgent = request.headers.get("user-agent") || "";
 		if (
 			userAgent.includes("curl") ||
@@ -98,7 +93,6 @@ app
 			userAgent.includes("Go-http-client") ||
 			userAgent.includes("Meterpreter")
 		) {
-			// legitimate uses exist, but for Elysia OS, these might be probes if not from localhost
 			if (ip !== "127.0.0.1" && ip !== "::1") {
 				defenseManager.reportSuspiciousActivity(
 					ip,
@@ -116,13 +110,27 @@ app
 			return error(429, rateLimit.reason || "Too Many Requests");
 		}
 	})
-	.error(({ code, error: rawError, set }) => {
+	.error(({ code, error: rawError, set, request }: any) => {
 		const isProduction = process.env.NODE_ENV === "production";
 		const message = isProduction
 			? "ごめんなさい、ちょっと考えがまとまらなくて……"
 			: rawError?.message || "Internal Error";
-		logger.error(`[${code}] Global Error:`, rawError?.message);
+
+		if (request) {
+			const pathname = new URL(request.url).pathname;
+			metricsCollector.incrementError(
+				request.method,
+				pathname,
+				code === "NOT_FOUND" ? "not_found" : "internal",
+			);
+		}
+
+		logger.error(
+			`[${code}] Global Error:`,
+			rawError instanceof Error ? rawError : undefined,
+		);
 		if (set?.headers) set.headers["content-type"] = "application/json";
+
 		return {
 			error: message,
 			status: code === "NOT_FOUND" ? 404 : 500,
@@ -131,8 +139,18 @@ app
 	})
 	.onAfterHandle(({ set, request }) => {
 		applySecurityHeaders(set, request.url);
+
+		const pathname = new URL(request.url).pathname;
+		const status = Number(set.status || 200);
+		const startedAt = requestStartedAt.get(request) || Date.now();
+		metricsCollector.incrementRequest(request.method, pathname, status);
+		metricsCollector.recordRequestDuration(
+			request.method,
+			pathname,
+			(Date.now() - startedAt) / 1000,
+		);
+		requestStartedAt.delete(request);
 	})
-	// Mounting Modular Routes
 	.use(authRoutes)
 	.use(aiRoutes)
 	.use(systemRoutes)
@@ -141,30 +159,105 @@ app
 	.use(customizationRoutes)
 	.use(fileRoutes)
 	.use(databaseRoutes)
-
+	.get("/health", async () => {
+		return await performHealthCheck(
+			CONFIG.REDIS_URL,
+			CONFIG.FASTAPI_BASE_URL,
+			CONFIG.OLLAMA_BASE_URL,
+		);
+	})
+	.get("/metrics", ({ set }) => {
+		set.headers["content-type"] = "text/plain; version=0.0.4; charset=utf-8";
+		return metricsCollector.toPrometheusFormat();
+	})
 	.get("/api/health", async () => {
-		const kernelHealth = (await proxyToFastAPI("/health", "GET")) as any;
+		const kernelHealth = await proxyToFastAPI("/health", "GET");
+		if (kernelHealth instanceof Response) {
+			return kernelHealth;
+		}
+
+		const serviceHealth = await performHealthCheck(
+			CONFIG.REDIS_URL,
+			CONFIG.FASTAPI_BASE_URL,
+			CONFIG.OLLAMA_BASE_URL,
+		);
+
 		return {
-			...kernelHealth,
+			status: kernelHealth.status || serviceHealth.status,
+			ollama: serviceHealth.services.ollama.status !== "down",
+			kernel: true,
+			workspace: kernelHealth.workspace ?? kernelHealth.milvus_connected ?? true,
+			embedding_provider: kernelHealth.embedding_provider,
+			quotes_loaded: kernelHealth.quotes_loaded,
 			aether: defenseManager.getAetherStatus(),
 		};
 	})
-	.post("/api/process", async ({ body }) => {
-		return await proxyToFastAPI("/chat", "POST", body);
-	})
-	.all("/elysia-love", async ({ body, request, set }) => {
-		// Forward to the new modular route
-		set.redirect = "/api/ai/elysia-love";
-	})
-	.get("/ping", () => ({ status: "ok", timestamp: new Date().toISOString() }))
+	.post(
+		"/api/process",
+		async ({ body }) => {
+			const query = (body as { query?: string }).query?.trim();
+			if (!query) {
+				return jsonError(400, "Missing query");
+			}
+
+			const response = await proxyToFastAPI("/chat", "POST", {
+				messages: [{ role: "user", content: query }],
+				session_id: "legacy-web-ui",
+				stream: false,
+			});
+
+			if (response instanceof Response) {
+				return response;
+			}
+
+			return {
+				response: response.response || "",
+				thoughts: response.quotes || [],
+				context: response.context || "",
+				status: "success",
+			};
+		},
+		{
+			body: t.Object({ query: t.String() }),
+		},
+	)
+	.post(
+		"/elysia-love",
+		({ body, request }) => handleElysiaLove(body as any, request),
+		{
+			body: t.Object({
+				messages: t.Array(t.Object({ role: t.String(), content: t.String() })),
+				mode: t.Optional(t.String()),
+				sessionId: t.Optional(t.String()),
+			}),
+		},
+	)
+	.post(
+		"/feedback",
+		({ body, request }) => handleFeedback(body as any, request),
+		{
+			body: t.Object({
+				query: t.String(),
+				answer: t.String(),
+				rating: t.String(),
+				reason: t.Optional(t.String()),
+			}),
+		},
+	)
+	.get("/ping", () => ({
+		ok: true,
+		status: "ok",
+		timestamp: new Date().toISOString(),
+	}))
 	.get("/", () => {
 		const publicPaths = [
 			"index.html",
+			"../../index.html",
 			"public/index.html",
 			"../../public/index.html",
 		];
-		for (const p of publicPaths) {
-			if (existsSync(p)) return (globalThis as any).Bun.file(p);
+		for (const assetPath of publicPaths) {
+			if (existsSync(assetPath)) return (globalThis as any).Bun.file(assetPath);
 		}
 		return "ElysiaAI Landing Page (Resource Missing)";
 	})
