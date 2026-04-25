@@ -186,7 +186,8 @@ app
 			status: kernelHealth.status || serviceHealth.status,
 			ollama: serviceHealth.services.ollama.status !== "down",
 			kernel: true,
-			workspace: kernelHealth.workspace ?? kernelHealth.milvus_connected ?? true,
+			workspace:
+				kernelHealth.workspace ?? kernelHealth.milvus_connected ?? true,
 			embedding_provider: kernelHealth.embedding_provider,
 			quotes_loaded: kernelHealth.quotes_loaded,
 			aether: defenseManager.getAetherStatus(),
