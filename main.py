@@ -37,8 +37,19 @@ def init_system():
         print(f"[KERNEL] Milvus Reset: {e}", file=sys.stderr)
         if os.path.exists(MILVUS_FILE):
             os.remove(MILVUS_FILE)
-        new_client = MilvusClient(MILVUS_FILE)
-        new_client.create_collection(collection_name="elysia_memories", dimension=768)
+        try:
+            new_client = MilvusClient(MILVUS_FILE)
+            print(f"[MILVUS] Connected to {MILVUS_FILE}")
+            new_client.create_collection(collection_name="elysia_memories", dimension=768)
+        except Exception as e:
+            print(f"[WARNING] Milvus initialization failed: {e}. Falling back to MockClient.")
+            class MockClient:
+                def __init__(self, *args, **kwargs): pass
+                def has_collection(self, *args, **kwargs): return True
+                def create_collection(self, *args, **kwargs): pass
+                def insert(self, *args, **kwargs): pass
+                def search(self, *args, **kwargs): return []
+            new_client = MockClient()
         return new_client
 
 client = init_system()
