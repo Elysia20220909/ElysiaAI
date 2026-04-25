@@ -57,7 +57,11 @@ function resolvePythonCommand() {
 	return "python";
 }
 
-function startProcess(label: string, cmd: string[], env: Record<string, string>) {
+function startProcess(
+	label: string,
+	cmd: string[],
+	env: Record<string, string>,
+) {
 	console.log(`\n> ${label}`);
 	console.log(`$ ${cmd.join(" ")}`);
 
@@ -88,7 +92,12 @@ async function stopChildren() {
 	await Promise.allSettled(runningChildren.map((child) => child.exited));
 }
 
-async function waitFor(url: string, label: string, attempts = 45, delayMs = 1000) {
+async function waitFor(
+	url: string,
+	label: string,
+	attempts = 45,
+	delayMs = 1000,
+) {
 	for (let attempt = 1; attempt <= attempts; attempt++) {
 		try {
 			const response = await fetch(url);
@@ -145,14 +154,10 @@ async function main() {
 		await shutdown(1);
 	}
 
-	const server = startProcess(
-		"Elysia server",
-		["bun", "run", "start"],
-		{
-			PORT: appPort,
-			FASTAPI_BASE_URL: fastApiBaseUrl,
-		},
-	);
+	const server = startProcess("Elysia server", ["bun", "run", "start"], {
+		PORT: appPort,
+		FASTAPI_BASE_URL: fastApiBaseUrl,
+	});
 
 	try {
 		await waitFor(`http://${healthHost}:${appPort}/ping`, "Elysia server");

@@ -72,7 +72,10 @@ describe("Integration Tests - Full Stack", () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const readme = fs.readFileSync(path.join(process.cwd(), "README.md"), "utf-8");
+		const readme = fs.readFileSync(
+			path.join(process.cwd(), "README.md"),
+			"utf-8",
+		);
 
 		expect(readme).toContain("make boot");
 		expect(readme).toContain(".\\scripts\\boot.ps1");
@@ -188,9 +191,7 @@ describe("Integration Tests - Full Stack", () => {
 			),
 			"utf-8",
 		);
-		expect(
-			databaseSource.includes("override: true"),
-		).toBe(false);
+		expect(databaseSource.includes("override: true")).toBe(false);
 		expect(bootPs1).toContain("bun run boot");
 		expect(bootSh).toContain("exec bun run boot");
 		expect(startServerPs1).toContain("bun run start");
