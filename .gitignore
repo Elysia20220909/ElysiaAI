@@ -5,6 +5,7 @@ src/.dev/
 # dependencies
 node_modules/
 **/node_modules/
+.venv/
 .pnp
 .pnp.js
 
