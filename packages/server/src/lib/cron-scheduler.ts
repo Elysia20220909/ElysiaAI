@@ -4,6 +4,7 @@
  */
 
 import { CronJob } from "cron";
+import { config } from "../../../../src/config.ts";
 import { backupScheduler } from "./backup-scheduler";
 import { fileUploadManager } from "./file-upload";
 import { jobQueue } from "./job-queue";
@@ -39,7 +40,7 @@ class CronScheduler {
 
 				await jobQueue.generateReport("daily", yesterday, today);
 			},
-			process.env.DAILY_REPORT_ENABLED === "true",
+			config.dailyReportEnabled,
 		);
 
 		// 週次レポート（毎週月曜日午前10時）
@@ -53,7 +54,7 @@ class CronScheduler {
 
 				await jobQueue.generateReport("weekly", lastWeek, today);
 			},
-			process.env.WEEKLY_REPORT_ENABLED === "true",
+			config.weeklyReportEnabled,
 		);
 
 		// 月次レポート（毎月1日午前10時）
@@ -71,7 +72,7 @@ class CronScheduler {
 
 				await jobQueue.generateReport("monthly", lastMonth, today);
 			},
-			process.env.MONTHLY_REPORT_ENABLED === "true",
+			config.monthlyReportEnabled,
 		);
 
 		// データベースバックアップ（毎日午前3時）
@@ -116,7 +117,7 @@ class CronScheduler {
 				await healthMonitor.runCheck("database");
 				await healthMonitor.runCheck("ollama");
 			},
-			process.env.HEALTH_CHECK_CRON_ENABLED === "true",
+			config.healthCheckCronEnabled,
 		);
 
 		logger.info("Cron scheduler initialized", {

@@ -5,6 +5,7 @@
 
 import type { Context } from "elysia";
 import { auditLogger } from "./audit-logger";
+import { CONFIG } from "./constants";
 
 interface AuditMiddlewareOptions {
 	excludePaths?: string[];
@@ -80,10 +81,7 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 			if (auth.startsWith("Bearer ")) {
 				try {
 					const jwt = await import("jsonwebtoken");
-					const decoded = jwt.verify(
-						auth.substring(7),
-						process.env.JWT_SECRET || "dev-secret",
-					) as {
+					const decoded = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as {
 						username?: string;
 					};
 					userId = decoded.username;

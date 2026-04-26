@@ -4,11 +4,12 @@
  */
 
 import OpenAI from "openai";
+import { config } from "../../../../src/config.ts";
 
 // ==================== 設定 ====================
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
-const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-4o-mini";
+const OPENAI_API_KEY = config.openaiApiKey;
+const DEFAULT_MODEL = config.openaiModel;
 
 // ==================== クライアント ====================
 

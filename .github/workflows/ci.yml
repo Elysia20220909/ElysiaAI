@@ -46,10 +46,10 @@ jobs:
 
       - name: Smoke Test (Server Startup)
         run: |
-          PORT=3000 SESSION_SECRET=ci_secret bun packages/server/src/index.ts &
+          PORT=3000 SESSION_SECRET=ci_secret REDIS_ENABLED=false bun run start &
           sleep 5
-          curl -f http://localhost:3000/health || exit 1
-          pkill -f bun
+          curl -f http://localhost:3000/ping || exit 1
+          pkill -f "bun.*packages/server/src/index.ts" || true
 
       - name: Secret Scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2

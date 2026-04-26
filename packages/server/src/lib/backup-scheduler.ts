@@ -5,6 +5,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { config } from "../../../../src/config.ts";
 import { logger } from "./logger";
 import { webhookManager } from "./webhook-events";
 
@@ -22,10 +23,10 @@ class BackupScheduler {
 
 	constructor() {
 		this.config = {
-			enabled: process.env.AUTO_BACKUP_ENABLED === "true",
-			interval: Number(process.env.BACKUP_INTERVAL_MINUTES) || 60, // デフォルト1時間
-			maxBackups: Number(process.env.MAX_BACKUP_GENERATIONS) || 7, // デフォルト7世代
-			backupDir: process.env.BACKUP_DIR || "./backups",
+			enabled: config.autoBackupEnabled,
+			interval: config.backupIntervalMinutes,
+			maxBackups: config.maxBackupGenerations,
+			backupDir: config.backupDir,
 		};
 
 		// バックアップディレクトリの作成
@@ -92,8 +93,7 @@ class BackupScheduler {
 			logger.info("Starting automatic backup", { file: backupFileName });
 
 			// SQLiteデータベースのコピー
-			const dbPath =
-				process.env.DATABASE_URL?.replace("file:", "") || "./data/elysia.db";
+			const dbPath = config.dbUrl.replace("file:", "") || "./data/elysia.db";
 
 			if (!fs.existsSync(dbPath)) {
 				throw new Error(`Database file not found: ${dbPath}`);

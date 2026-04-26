@@ -24,10 +24,32 @@ export interface HealthStatus {
 }
 
 export interface ServiceHealth {
-	status: "up" | "down" | "degraded";
+	status: "up" | "down" | "degraded" | "disabled";
 	responseTime?: number;
 	error?: string;
 	lastCheck: string;
+}
+
+export function disabledServiceHealth(reason: string): ServiceHealth {
+	return {
+		status: "disabled",
+		error: reason,
+		lastCheck: new Date().toISOString(),
+	};
+}
+
+export function summarizeHealthStatus(
+	services: ServiceHealth[],
+): HealthStatus["status"] {
+	const activeServices = services.filter(
+		(service) => service.status !== "disabled",
+	);
+	if (activeServices.length === 0) return "healthy";
+
+	const allUp = activeServices.every((service) => service.status === "up");
+	const anyDown = activeServices.some((service) => service.status === "down");
+
+	return allUp ? "healthy" : anyDown ? "unhealthy" : "degraded";
 }
 
 // Redis Health Check
@@ -148,18 +170,16 @@ export function getSystemMetrics() {
 // Comprehensive Health Check
 export async function performHealthCheck(): Promise<HealthStatus> {
 	const [redis, fastapi, ollama] = await Promise.all([
-		checkRedis(config.redisUrl),
+		config.redisEnabled
+			? checkRedis(config.redisUrl)
+			: Promise.resolve(disabledServiceHealth("Redis is disabled")),
 		checkFastAPI(config.fastApiBaseUrl),
 		checkOllama(config.ollamaBaseUrl),
 	]);
 
 	const system = getSystemMetrics();
 
-	// Determine overall status
-	const allUp = [redis, fastapi, ollama].every((s) => s.status === "up");
-	const anyDown = [redis, fastapi, ollama].some((s) => s.status === "down");
-
-	const status = allUp ? "healthy" : anyDown ? "unhealthy" : "degraded";
+	const status = summarizeHealthStatus([redis, fastapi, ollama]);
 
 	return {
 		status,
