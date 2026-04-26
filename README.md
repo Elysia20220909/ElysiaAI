@@ -29,13 +29,11 @@ bun scripts/manage.ts setup-python
 
 PowerShell では `Copy-Item .env.example .env` を使えます。
 
-Windows で `make` が使えない場合:
+Windows / PowerShell でも同じ管理CLIを使えます:
 
 ```powershell
-Copy-Item .env.example .env
-bun install
-.\scripts\setup-python.ps1
-bunx prisma generate
+bun scripts/manage.ts setup
+bun scripts/manage.ts setup-python
 ```
 
 ### 3. 起動

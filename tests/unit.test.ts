@@ -1,6 +1,10 @@
 // Unit Tests for Library Modules
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { CacheManager } from "../packages/server/src/lib/cache";
+import {
+	disabledServiceHealth,
+	summarizeHealthStatus,
+} from "../packages/server/src/lib/health";
 import { logger } from "../packages/server/src/lib/logger";
 import { metricsCollector } from "../packages/server/src/lib/metrics";
 
@@ -69,6 +73,28 @@ describe("Logger", () => {
 		expect(() =>
 			logger.logRequest("GET", "/test", 200, 123.45, "127.0.0.1", "user123"),
 		).not.toThrow();
+	});
+});
+
+describe("Health Status", () => {
+	it("should ignore disabled optional services when summarizing health", () => {
+		const status = summarizeHealthStatus([
+			disabledServiceHealth("Redis is disabled"),
+			{ status: "up", lastCheck: new Date().toISOString() },
+			{ status: "up", lastCheck: new Date().toISOString() },
+		]);
+
+		expect(status).toBe("healthy");
+	});
+
+	it("should still report unhealthy when an enabled service is down", () => {
+		const status = summarizeHealthStatus([
+			disabledServiceHealth("Redis is disabled"),
+			{ status: "up", lastCheck: new Date().toISOString() },
+			{ status: "down", lastCheck: new Date().toISOString() },
+		]);
+
+		expect(status).toBe("unhealthy");
 	});
 });
 

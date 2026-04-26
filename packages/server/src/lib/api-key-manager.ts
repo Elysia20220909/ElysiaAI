@@ -4,6 +4,7 @@
  */
 
 import * as crypto from "node:crypto";
+import { config } from "../../../../src/config.ts";
 import { logger } from "./logger";
 
 interface APIKey {
@@ -35,7 +36,7 @@ class APIKeyManager {
 	 * 環境変数からAPIキーを読み込み
 	 */
 	private loadKeysFromEnv() {
-		const masterKey = process.env.MASTER_API_KEY;
+		const masterKey = config.masterApiKey;
 		if (masterKey) {
 			this.keys.set(masterKey, {
 				key: masterKey,
