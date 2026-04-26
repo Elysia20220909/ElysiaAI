@@ -39,6 +39,7 @@ describe("Integration Tests - Full Stack", () => {
 		expect(rootPkg.scripts).toHaveProperty("start");
 		expect(rootPkg.scripts).toHaveProperty("test");
 		expect(serverPkg.scripts).toHaveProperty("dev");
+		expect(rootPkg.scripts.boot).toContain("scripts/boot.ts");
 		expect(serverPkg.scripts).toHaveProperty("db:init");
 		expect(serverPkg.scripts).toHaveProperty("db:migrate");
 		console.log("✅ Current workflow scripts present");
@@ -77,10 +78,9 @@ describe("Integration Tests - Full Stack", () => {
 			"utf-8",
 		);
 
-		expect(readme).toContain("make boot");
-		expect(readme).toContain(".\\scripts\\boot.ps1");
-		expect(readme).toContain(".\\scripts\\setup-python.ps1");
-		expect(readme).toContain("./scripts/boot.sh");
+		expect(readme).toContain("bun scripts/manage.ts setup");
+		expect(readme).toContain("bun scripts/manage.ts setup-python");
+		expect(readme).toContain("bun scripts/manage.ts dev");
 		expect(readme).toContain("FastAPI Kernel");
 		expect(readme).toContain("HTTP proxy");
 		console.log("✅ README local boot flow is current");
@@ -101,26 +101,22 @@ describe("Integration Tests - Full Stack", () => {
 		console.log("✅ Environment template covers runtime aliases");
 	});
 
-	test("Python setup scripts use the root virtualenv contract", async () => {
+	test("Management CLI uses the root virtualenv contract", async () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
 
-		const setupPs1 = fs.readFileSync(
-			path.join(process.cwd(), "scripts", "setup-python.ps1"),
-			"utf-8",
-		);
-		const setupSh = fs.readFileSync(
-			path.join(process.cwd(), "scripts", "setup-python.sh"),
+		const manageSource = fs.readFileSync(
+			path.join(process.cwd(), "scripts", "manage.ts"),
 			"utf-8",
 		);
 
-		expect(setupPs1).toContain(".venv\\Scripts\\python.exe");
-		expect(setupPs1).toContain("requirements.txt");
-		expect(setupPs1).not.toContain("python\\requirements.txt");
-		expect(setupSh).toContain(".venv/bin/python");
-		expect(setupSh).toContain("requirements.txt");
-		expect(setupSh).not.toContain("python/requirements.txt");
-		console.log("✅ Python setup scripts use root virtualenv");
+		expect(manageSource).toContain('"setup-python"');
+		expect(manageSource).toContain("requirements.txt");
+		expect(manageSource).toContain("venvPythonPath()");
+		expect(manageSource).not.toContain("python/requirements.txt");
+		expect(manageSource).not.toContain("cp .env.example .env");
+		expect(manageSource).not.toContain("which ");
+		console.log("✅ Management CLI uses root virtualenv");
 	});
 
 	test("Compatibility entrypoints point to the modular server", async () => {
@@ -129,48 +125,12 @@ describe("Integration Tests - Full Stack", () => {
 
 		const legacyServerPath = path.join(process.cwd(), "server.ts");
 		const bootScriptPath = path.join(process.cwd(), "scripts", "boot.ts");
-		const bootPs1Path = path.join(process.cwd(), "scripts", "boot.ps1");
-		const bootShPath = path.join(process.cwd(), "scripts", "boot.sh");
-		const startServerPs1Path = path.join(
-			process.cwd(),
-			"scripts",
-			"start-server.ps1",
-		);
-		const startServerShPath = path.join(
-			process.cwd(),
-			"scripts",
-			"start-server.sh",
-		);
-		const startServerTsPath = path.join(
-			process.cwd(),
-			"scripts",
-			"start-server.ts",
-		);
-		const startFastApiPs1Path = path.join(
-			process.cwd(),
-			"scripts",
-			"start-fastapi.ps1",
-		);
-		const startFastApiShPath = path.join(
-			process.cwd(),
-			"scripts",
-			"start-fastapi.sh",
-		);
+		const managePath = path.join(process.cwd(), "scripts", "manage.ts");
 		const legacyServer = fs.readFileSync(legacyServerPath, "utf-8");
 		const bootScript = fs.readFileSync(bootScriptPath, "utf-8");
+		const manageSource = fs.readFileSync(managePath, "utf-8");
 		const serverIndex = fs.readFileSync(
 			path.join(process.cwd(), "packages", "server", "src", "index.ts"),
-			"utf-8",
-		);
-		const bootPs1 = fs.readFileSync(bootPs1Path, "utf-8");
-		const bootSh = fs.readFileSync(bootShPath, "utf-8");
-		const startServerPs1 = fs.readFileSync(startServerPs1Path, "utf-8");
-		const startServerSh = fs.readFileSync(startServerShPath, "utf-8");
-		const startServerTs = fs.readFileSync(startServerTsPath, "utf-8");
-		const startFastApiPs1 = fs.readFileSync(startFastApiPs1Path, "utf-8");
-		const startFastApiSh = fs.readFileSync(startFastApiShPath, "utf-8");
-		const startAllPs1 = fs.readFileSync(
-			path.join(process.cwd(), "scripts", "start-all.ps1"),
 			"utf-8",
 		);
 
@@ -192,18 +152,26 @@ describe("Integration Tests - Full Stack", () => {
 			"utf-8",
 		);
 		expect(databaseSource.includes("override: true")).toBe(false);
-		expect(bootPs1).toContain("bun run boot");
-		expect(bootSh).toContain("exec bun run boot");
-		expect(startServerPs1).toContain("bun run start");
-		expect(startServerPs1).not.toContain("bun run src/index.ts");
-		expect(startServerSh).toContain("exec bun run start");
-		expect(startServerSh).not.toContain("dist/index.js");
-		expect(startServerTs).toContain("packages/server/src/index.ts");
-		expect(startFastApiPs1).toContain("python.fastapi_server:app");
-		expect(startFastApiSh).toContain("python.fastapi_server:app");
-		expect(startAllPs1).toContain("boot.ps1");
-		expect(startAllPs1).not.toContain("bun src/index.ts");
+		expect(manageSource).toContain('case "dev"');
+		expect(manageSource).toContain('"boot"');
+		expect(manageSource).not.toContain("bun run src/index.ts");
 		console.log("✅ Compatibility entrypoints aligned");
+	});
+
+	test("CI smoke test uses the lightweight ping endpoint", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const workflow = fs.readFileSync(
+			path.join(process.cwd(), ".github", "workflows", "ci.yml"),
+			"utf-8",
+		);
+
+		expect(workflow).toContain("bun run start");
+		expect(workflow).toContain("REDIS_ENABLED=false");
+		expect(workflow).toContain("localhost:3000/ping");
+		expect(workflow).not.toContain("localhost:3000/health || exit 1");
+		console.log("✅ CI smoke test uses ping");
 	});
 });
 

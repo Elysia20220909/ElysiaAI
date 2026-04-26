@@ -5,7 +5,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { config } from "../../../../src/config.ts";
+import { config, getEnv } from "../../../../src/config.ts";
 import { logger } from "./logger";
 
 interface AuditLog {
@@ -43,7 +43,7 @@ class AuditLoggerService {
 	private logCounter: number;
 
 	constructor() {
-		this.LOG_DIR = config.auditLogDir;
+		this.LOG_DIR = getEnv("AUDIT_LOG_DIR", config.auditLogDir);
 		this.LOG_FILE = path.join(this.LOG_DIR, "audit.jsonl");
 		this.logs = [];
 		this.logCounter = 0;

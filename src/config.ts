@@ -28,6 +28,7 @@ export const config = {
 	// Security & Hardening
 	forceHttps: getEnv("FORCE_HTTPS", "false") === "true",
 	cspEnabled: getEnv("CSP_ENABLED", "true") === "true",
+	masterApiKey: getEnv("MASTER_API_KEY", ""),
 	encryptionSecret: getEnv(
 		"ENCRYPTION_SECRET",
 		"elysia-default-shadow-key-777",
@@ -52,6 +53,8 @@ export const config = {
 	ollamaBaseUrl: getEnv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
 	ollamaModel: getEnv("OLLAMA_MODEL", "llama3.2"),
 	groqApiKey: getEnv("GROQ_API_KEY", ""),
+	openaiApiKey: getEnv("OPENAI_API_KEY", ""),
+	openaiModel: getEnv("OPENAI_MODEL", "gpt-4o-mini"),
 
 	// VOICEVOX (TTS)
 	voicevoxBaseUrl: getEnv("VOICEVOX_BASE_URL", "http://127.0.0.1:50021"),
@@ -94,6 +97,21 @@ export const config = {
 	logCleanupIntervalHours: getEnv("LOG_CLEANUP_INTERVAL_HOURS", "24"),
 	logCompressionEnabled: getEnv("LOG_COMPRESSION_ENABLED", "false") === "true",
 	logLevel: getEnv("LOG_LEVEL", "info"),
+	debugSql: getEnv("DEBUG_SQL", "false") === "true",
+
+	// Backup and scheduled jobs
+	autoBackupEnabled: getEnv("AUTO_BACKUP_ENABLED", "false") === "true",
+	backupIntervalMinutes: Number(getEnv("BACKUP_INTERVAL_MINUTES", "60")),
+	maxBackupGenerations: Number(getEnv("MAX_BACKUP_GENERATIONS", "7")),
+	backupDir: getEnv("BACKUP_DIR", "./backups"),
+	dailyReportEnabled: getEnv("DAILY_REPORT_ENABLED", "false") === "true",
+	weeklyReportEnabled: getEnv("WEEKLY_REPORT_ENABLED", "false") === "true",
+	monthlyReportEnabled: getEnv("MONTHLY_REPORT_ENABLED", "false") === "true",
+	healthCheckCronEnabled:
+		getEnv("HEALTH_CHECK_CRON_ENABLED", "false") === "true",
+
+	// Localization
+	defaultLocale: getEnv("DEFAULT_LOCALE", "en"),
 
 	// Monitoring & Telemetry
 	healthMonitoringEnabled:
