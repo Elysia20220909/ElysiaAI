@@ -1,5 +1,6 @@
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { config } from "../../../../src/config.ts";
+import { config, getEnv } from "../../../../src/config.ts";
 import { logger } from "./logger";
 
 interface DefenseRules {
@@ -41,8 +42,8 @@ class DefenseManager {
 	 */
 	private getRulesPath(): string {
 		return (
-			config.defenseRulesFile ||
-			join(process.cwd(), "../../config/defense/rules.json")
+			getEnv("DEFENSE_RULES_FILE", config.defenseRulesFile) ||
+			join(process.cwd(), "config/defense/rules.json")
 		);
 	}
 

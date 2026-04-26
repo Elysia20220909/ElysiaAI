@@ -4,6 +4,7 @@
  */
 
 import { PrismaClient } from "@prisma/client";
+import { config } from "../../../../src/config.ts";
 import { logger } from "./logger";
 
 // Prisma Client インスタンス
@@ -26,7 +27,7 @@ export const prisma = new PrismaClient({
 
 // ログイベントリスナー
 prisma.$on("query", (e: any) => {
-	if (process.env.DEBUG_SQL === "true") {
+	if (config.debugSql) {
 		logger.debug(`Query: ${e.query}`);
 		logger.debug(`Params: ${JSON.stringify(e.params)}`);
 		logger.debug(`Duration: ${e.duration}ms`);

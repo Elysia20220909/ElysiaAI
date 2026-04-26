@@ -5,6 +5,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
+import { config } from "../../../../src/config.ts";
 import { logger } from "./logger";
 import { secureVault } from "./secure-vault";
 
@@ -12,7 +13,7 @@ import { secureVault } from "./secure-vault";
 dotenv.config();
 
 // Prisma client singleton
-const dbUrl = process.env.DATABASE_URL;
+const dbUrl = config.dbUrl;
 
 let prisma: PrismaClient;
 
@@ -23,9 +24,7 @@ try {
 
 	prisma = new PrismaClient({
 		log:
-			process.env.NODE_ENV === "development"
-				? ["query", "error", "warn"]
-				: ["error"],
+			config.nodeEnv === "development" ? ["query", "error", "warn"] : ["error"],
 	});
 
 	logger.info("✅ Sovereign Database: Prisma Client Initialized (PostgreSQL)");
