@@ -4,10 +4,10 @@
  */
 
 import { type Job, Queue, Worker } from "bullmq";
+import { config } from "../../../../src/config.ts";
 import { emailNotifier } from "./email-notifier";
 import { logger } from "./logger";
 import { webhookManager } from "./webhook-events";
-import { config } from "../../../../src/config.ts";
 
 interface JobData {
 	type: string;
@@ -42,9 +42,14 @@ class JobQueueManager {
 		try {
 			// Redis接続設定（TLS対応）
 			const redisHost = config.redisHost || new URL(this.REDIS_URL).hostname;
-			const redisPort = Number(config.redisPort) || Number(new URL(this.REDIS_URL).port) || 6379;
-			const redisPassword = config.redisPassword || new URL(this.REDIS_URL).password;
-			const redisUsername = config.redisUsername || new URL(this.REDIS_URL).username || "";
+			const redisPort =
+				Number(config.redisPort) ||
+				Number(new URL(this.REDIS_URL).port) ||
+				6379;
+			const redisPassword =
+				config.redisPassword || new URL(this.REDIS_URL).password;
+			const redisUsername =
+				config.redisUsername || new URL(this.REDIS_URL).username || "";
 			const useTLS = config.redisTls;
 
 			const connection: Record<string, unknown> = {
@@ -54,10 +59,7 @@ class JobQueueManager {
 				maxRetriesPerRequest: null, // BullMQ 推奨設定
 				connectTimeout: Number(config.redisConnectTimeout),
 				retryStrategy: (times: number) => {
-					const delay = Math.min(
-						times * Number(config.redisRetryDelay),
-						10000,
-					);
+					const delay = Math.min(times * Number(config.redisRetryDelay), 10000);
 					logger.warn(`Redis reconnect attempt ${times}, retry in ${delay}ms`);
 					return delay;
 				},

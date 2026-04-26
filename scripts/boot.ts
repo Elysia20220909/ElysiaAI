@@ -36,10 +36,16 @@ await loadDotEnv();
 import { getEnv } from "../../src/config.ts";
 
 const bindHost = getEnv("BIND_HOST", getEnv("HOST", "127.0.0.1"));
-const healthHost = getEnv("HEALTH_HOST", bindHost === "0.0.0.0" ? "127.0.0.1" : bindHost);
+const healthHost = getEnv(
+	"HEALTH_HOST",
+	bindHost === "0.0.0.0" ? "127.0.0.1" : bindHost,
+);
 const appPort = getEnv("PORT", "3000");
 const fastApiPort = getEnv("FASTAPI_PORT", "8000");
-const fastApiBaseUrl = getEnv("FASTAPI_BASE_URL", `http://${healthHost}:${fastApiPort}`);
+const fastApiBaseUrl = getEnv(
+	"FASTAPI_BASE_URL",
+	`http://${healthHost}:${fastApiPort}`,
+);
 
 const children = new Set<Bun.Subprocess>();
 

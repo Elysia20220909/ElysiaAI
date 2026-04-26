@@ -5,8 +5,8 @@
 
 import type { Transporter } from "nodemailer";
 import nodemailer from "nodemailer";
-import { logger } from "./logger";
 import { config } from "../../../../src/config.ts";
+import { logger } from "./logger";
 
 interface EmailConfig {
 	enabled: boolean;

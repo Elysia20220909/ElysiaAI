@@ -5,8 +5,8 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { logger } from "./logger";
 import { config } from "../../../../src/config.ts";
+import { logger } from "./logger";
 
 interface LogCleanupConfig {
 	enabled: boolean;
