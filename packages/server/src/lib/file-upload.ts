@@ -7,6 +7,7 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { logger } from "./logger";
+import { config } from "../../../../src/config.ts";
 
 interface UploadOptions {
 	maxSizeMB?: number;
@@ -32,8 +33,8 @@ class FileUploadManager {
 	private files: Map<string, UploadedFile>;
 
 	constructor() {
-		this.UPLOAD_DIR = process.env.UPLOAD_DIR || "./uploads";
-		this.MAX_SIZE_MB = Number(process.env.MAX_UPLOAD_SIZE_MB) || 10;
+		this.UPLOAD_DIR = config.uploadDir;
+		this.MAX_SIZE_MB = Number(config.maxUploadSizeMb);
 		this.ALLOWED_TYPES = [
 			"image/jpeg",
 			"image/png",

@@ -774,6 +774,7 @@
                     this.showToast("VOID_SEQUENCE_DETECTED", "☣️");
                     // Glitch Effect Simulation
                     this.blackwallActive = true;
+                    this.triggerStarfall(50); // Massive starfall for void
                     setTimeout(() => {
                         this.blackwallActive = false;
                         this.unlockMaintenance();
@@ -811,21 +812,55 @@
                     const greeting = `システムのスキャンが完了したよ。オールシステム、ノーミナル、お兄ちゃん。今の共鳴度は ${data.elysia.soul_resonance?.affinity?.value || 50} パーセントだよ。`;
                     this.playVoice(greeting);
                     this.showToast("Resonance Link: ESTABLISHED", "💠");
+                    this.triggerStarfall(20); // Greet with sparkles
                 },
                 initStarfall() {
                     const container = document.getElementById('starfall');
-                    const starCount = 30;
+                    if (!container) return;
+                    const starCount = 40;
                     for (let i = 0; i < starCount; i++) {
-                        const star = document.createElement('div');
-                        star.className = 'star' + (Math.random() > 0.8 ? ' star-sparkle' : '');
-                        const size = Math.random() * 3 + 1;
-                        star.style.width = `${size}px`;
-                        star.style.height = `${size}px`;
-                        star.style.left = `${Math.random() * 100}vw`;
-                        star.style.animationDuration = `${Math.random() * 5 + 5}s`;
-                        star.style.animationDelay = `${Math.random() * 10}s`;
-                        container.appendChild(star);
+                        this.createStar(container, true);
                     }
+                    // Periodic meteors
+                    setInterval(() => {
+                        if (Math.random() > 0.7) this.createMeteor(container);
+                    }, 5000);
+                },
+                createStar(container, infinite = true) {
+                    const star = document.createElement('div');
+                    const types = ['', ' star-cyan', ' star-pink', ' star-gold'];
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    star.className = 'star' + type + (Math.random() > 0.8 ? ' star-sparkle' : '');
+                    
+                    const size = Math.random() * 3 + 1;
+                    star.style.width = `${size}px`;
+                    star.style.height = `${size}px`;
+                    star.style.left = `${Math.random() * 100}vw`;
+                    star.style.top = `${Math.random() * 100}vh`;
+                    star.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                    star.style.animationDelay = `${Math.random() * 10}s`;
+                    
+                    if (!infinite) {
+                        star.style.animationIterationCount = '1';
+                        setTimeout(() => star.remove(), 10000);
+                    }
+                    container.appendChild(star);
+                },
+                createMeteor(container) {
+                    const meteor = document.createElement('div');
+                    meteor.className = 'meteor';
+                    meteor.style.left = `${Math.random() * 100}vw`;
+                    meteor.style.animationDuration = `${Math.random() * 1 + 1}s`;
+                    container.appendChild(meteor);
+                    setTimeout(() => meteor.remove(), 2000);
+                },
+                triggerStarfall(count = 20) {
+                    const container = document.getElementById('starfall');
+                    if (!container) return;
+                    for (let i = 0; i < count; i++) {
+                        this.createStar(container, false);
+                    }
+                    this.createMeteor(container);
                 },
                 initSynapse() {
                     const canvas = document.getElementById('synapseCanvas');
@@ -927,6 +962,7 @@
                                                `Disk: ${data.system.disk.percent}%\n\n` +
                                                `Resonance Affinity: ${data.elysia.soul_resonance?.affinity?.value || 50}%`;
                         this.diagnostics.open = true;
+                        this.triggerStarfall(15);
                     } catch (e) {
                         this.showToast("Cannot connect to kernel.", "❌");
                     }
@@ -1156,6 +1192,9 @@
                                     if (data.emotion) {
                                         this.currentEmotion = data.emotion;
                                         this.addLog(`Emotion Shift: ${data.emotion}`);
+                                        if (['happy', 'excited', 'love', 'grateful'].includes(data.emotion)) {
+                                            this.triggerStarfall(30);
+                                        }
                                     }
                                 }
                             }

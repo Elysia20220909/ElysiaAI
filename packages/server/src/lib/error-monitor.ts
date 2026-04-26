@@ -4,6 +4,7 @@
  */
 
 import { logger } from "./logger";
+import { getEnv } from "../../../../src/config.ts";
 
 interface ErrorAlert {
 	message: string;
@@ -19,16 +20,16 @@ interface WebhookConfig {
 	enabled: boolean;
 }
 
-class ErrorMonitor {
+export class ErrorMonitor {
 	private webhookConfig: WebhookConfig;
 	private errorCounts: Map<string, { count: number; lastSeen: Date }>;
 	private readonly RATE_LIMIT = 5; // 5分以内に同じエラーは1回だけ通知
 
 	constructor() {
 		this.webhookConfig = {
-			discord: process.env.DISCORD_WEBHOOK_URL,
-			slack: process.env.SLACK_WEBHOOK_URL,
-			enabled: process.env.ERROR_ALERTS_ENABLED === "true",
+			discord: getEnv("DISCORD_WEBHOOK_URL", ""),
+			slack: getEnv("SLACK_WEBHOOK_URL", ""),
+			enabled: getEnv("ERROR_ALERTS_ENABLED", "false") === "true",
 		};
 		this.errorCounts = new Map();
 	}
@@ -107,6 +108,22 @@ class ErrorMonitor {
 	}
 
 	/**
+	 * Fetch with retry
+	 */
+	private async retryFetch(url: string, options: RequestInit, retries = 3): Promise<Response> {
+		for (let i = 0; i < retries; i++) {
+			try {
+				const response = await fetch(url, options);
+				if (response.ok) return response;
+			} catch {
+				// Retry on failure
+			}
+			await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+		}
+		return await fetch(url, options);
+	}
+
+	/**
 	 * Discord Webhook
 	 */
 	private async sendDiscordWebhook(alert: ErrorAlert) {
@@ -158,12 +175,11 @@ class ErrorMonitor {
 		};
 
 		try {
-			const response = await fetch(this.webhookConfig.discord, {
+			const response = await this.retryFetch(this.webhookConfig.discord, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(payload),
 			});
-
 			if (!response.ok) {
 				logger.warn("Discord webhook failed", { status: response.status });
 			}
@@ -234,12 +250,11 @@ class ErrorMonitor {
 		};
 
 		try {
-			const response = await fetch(this.webhookConfig.slack, {
+			const response = await this.retryFetch(this.webhookConfig.slack, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(payload),
 			});
-
 			if (!response.ok) {
 				logger.warn("Slack webhook failed", { status: response.status });
 			}

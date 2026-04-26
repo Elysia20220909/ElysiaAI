@@ -1,6 +1,9 @@
+import { config } from "../../../../src/config.ts";
+
 export const applySecurityHeaders = (set: any, url: string) => {
-	const csp =
-		"default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; img-src 'self' data: https:; connect-src 'self' ws: wss: https:;";
+	const csp = config.cspEnabled
+		? "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:; img-src 'self' data: https:; connect-src 'self' ws: wss: https:;"
+		: "";
 
 	const securityHeaders: Record<string, string> = {
 		"X-Content-Type-Options": "nosniff",
@@ -17,11 +20,11 @@ export const applySecurityHeaders = (set: any, url: string) => {
 	}
 
 	const reqUrl = new URL(url);
-	if (!reqUrl.pathname.startsWith("/swagger")) {
+	if (csp && !reqUrl.pathname.startsWith("/swagger")) {
 		headers["Content-Security-Policy"] = csp;
 	}
 
-	if (url.startsWith("https://")) {
+	if (config.forceHttps || url.startsWith("https://")) {
 		headers["Strict-Transport-Security"] =
 			"max-age=31536000; includeSubDomains";
 	}

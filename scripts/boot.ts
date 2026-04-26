@@ -33,13 +33,14 @@ async function loadDotEnv(path = join(rootDir, ".env")) {
 
 await loadDotEnv();
 
-const bindHost = process.env.BIND_HOST || process.env.HOST || "127.0.0.1";
-const healthHost =
-	process.env.HEALTH_HOST || (bindHost === "0.0.0.0" ? "127.0.0.1" : bindHost);
-const appPort = process.env.PORT || "3000";
-const fastApiPort = process.env.FASTAPI_PORT || "8000";
-const fastApiBaseUrl =
-	process.env.FASTAPI_BASE_URL || `http://${healthHost}:${fastApiPort}`;
+import { getEnv } from "../../src/config.ts";
+
+const bindHost = getEnv("BIND_HOST", getEnv("HOST", "127.0.0.1"));
+const healthHost = getEnv("HEALTH_HOST", bindHost === "0.0.0.0" ? "127.0.0.1" : bindHost);
+const appPort = getEnv("PORT", "3000");
+const fastApiPort = getEnv("FASTAPI_PORT", "8000");
+const fastApiBaseUrl = getEnv("FASTAPI_BASE_URL", `http://${healthHost}:${fastApiPort}`);
+
 const children = new Set<Bun.Subprocess>();
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
