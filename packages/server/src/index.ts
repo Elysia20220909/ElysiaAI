@@ -10,7 +10,8 @@ import { swagger } from "@elysiajs/swagger";
 import { Elysia, t } from "elysia";
 import { helmet } from "elysia-helmet";
 import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
-import { CONFIG, jsonError, proxyToFastAPI } from "./lib/constants";
+import { config, isProd } from "../../../src/config.ts";
+import { jsonError, proxyToFastAPI } from "./lib/constants";
 import { defenseManager } from "./lib/defense-manager";
 import { performHealthCheck } from "./lib/health";
 import { logger } from "./lib/logger";
@@ -111,8 +112,7 @@ app
 		}
 	})
 	.error(({ code, error: rawError, set, request }: any) => {
-		const isProduction = process.env.NODE_ENV === "production";
-		const message = isProduction
+		const message = isProd
 			? "ごめんなさい、ちょっと考えがまとまらなくて……"
 			: rawError?.message || "Internal Error";
 
@@ -160,11 +160,7 @@ app
 	.use(fileRoutes)
 	.use(databaseRoutes)
 	.get("/health", async () => {
-		return await performHealthCheck(
-			CONFIG.REDIS_URL,
-			CONFIG.FASTAPI_BASE_URL,
-			CONFIG.OLLAMA_BASE_URL,
-		);
+		return await performHealthCheck();
 	})
 	.get("/metrics", ({ set }) => {
 		set.headers["content-type"] = "text/plain; version=0.0.4; charset=utf-8";
@@ -176,11 +172,7 @@ app
 			return kernelHealth;
 		}
 
-		const serviceHealth = await performHealthCheck(
-			CONFIG.REDIS_URL,
-			CONFIG.FASTAPI_BASE_URL,
-			CONFIG.OLLAMA_BASE_URL,
-		);
+		const serviceHealth = await performHealthCheck();
 
 		return {
 			status: kernelHealth.status || serviceHealth.status,
@@ -262,8 +254,38 @@ app
 		}
 		return "ElysiaAI Landing Page (Resource Missing)";
 	})
-	.listen(CONFIG.PORT);
+	.listen(config.port);
 
 logger.info(
-	`🌸 ElysiaAI Sovereign Server started on port ${CONFIG.PORT} (Modular Mode)`,
+	`🌸 ElysiaAI Sovereign Server started on port ${config.port} (Modular Mode)`,
 );
+
+// Graceful Shutdown Logic
+const handleShutdown = async (signal: string) => {
+	logger.info(`🛑 Received ${signal}, starting graceful shutdown...`);
+	
+	const shutdownTimeout = setTimeout(() => {
+		logger.error("强制終了: Shutdown timed out, forcing exit.");
+		process.exit(1);
+	}, 5000);
+
+	try {
+		await app.stop();
+		logger.info("Server stopped.");
+
+		const { healthMonitor } = await import("./lib/health-monitor");
+		const { logCleanupManager } = await import("./lib/log-cleanup");
+		healthMonitor.stop();
+		logCleanupManager.stop();
+		
+		clearTimeout(shutdownTimeout);
+		logger.info("✅ Graceful shutdown complete. See you again! ♡");
+		process.exit(0);
+	} catch (error) {
+		logger.error("Shutdown error:", error as Error);
+		process.exit(1);
+	}
+};
+
+process.on("SIGTERM", () => handleShutdown("SIGTERM"));
+process.on("SIGINT", () => handleShutdown("SIGINT"));

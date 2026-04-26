@@ -7,6 +7,7 @@ import { type Job, Queue, Worker } from "bullmq";
 import { emailNotifier } from "./email-notifier";
 import { logger } from "./logger";
 import { webhookManager } from "./webhook-events";
+import { config } from "../../../../src/config.ts";
 
 interface JobData {
 	type: string;
@@ -31,7 +32,7 @@ class JobQueueManager {
 	private readonly REDIS_URL: string;
 
 	constructor() {
-		this.REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+		this.REDIS_URL = config.redisUrl;
 	}
 
 	/**
@@ -40,27 +41,21 @@ class JobQueueManager {
 	async initialize() {
 		try {
 			// Redis接続設定（TLS対応）
-			const redisHost =
-				process.env.REDIS_HOST || new URL(this.REDIS_URL).hostname;
-			const redisPort =
-				Number(process.env.REDIS_PORT) ||
-				Number(new URL(this.REDIS_URL).port) ||
-				6379;
-			const redisPassword =
-				process.env.REDIS_PASSWORD || new URL(this.REDIS_URL).password;
-			const redisUsername =
-				process.env.REDIS_USERNAME || new URL(this.REDIS_URL).username || "";
-			const useTLS = process.env.REDIS_TLS === "true";
+			const redisHost = config.redisHost || new URL(this.REDIS_URL).hostname;
+			const redisPort = Number(config.redisPort) || Number(new URL(this.REDIS_URL).port) || 6379;
+			const redisPassword = config.redisPassword || new URL(this.REDIS_URL).password;
+			const redisUsername = config.redisUsername || new URL(this.REDIS_URL).username || "";
+			const useTLS = config.redisTls;
 
 			const connection: Record<string, unknown> = {
 				host: redisHost,
 				port: redisPort,
 				password: redisPassword,
 				maxRetriesPerRequest: null, // BullMQ 推奨設定
-				connectTimeout: Number(process.env.REDIS_CONNECT_TIMEOUT) || 10000,
+				connectTimeout: Number(config.redisConnectTimeout),
 				retryStrategy: (times: number) => {
 					const delay = Math.min(
-						times * Number(process.env.REDIS_RETRY_DELAY_MS || 2000),
+						times * Number(config.redisRetryDelay),
 						10000,
 					);
 					logger.warn(`Redis reconnect attempt ${times}, retry in ${delay}ms`);
@@ -176,7 +171,7 @@ class JobQueueManager {
 		};
 
 		// メール送信
-		const adminEmail = process.env.ADMIN_EMAIL;
+		const adminEmail = config.adminEmail;
 		if (adminEmail) {
 			await emailNotifier.send({
 				to: adminEmail,
