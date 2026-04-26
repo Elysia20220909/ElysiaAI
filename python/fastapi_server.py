@@ -17,14 +17,14 @@ import time
 import uuid
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 import numpy as np
 from fastapi import Body, Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyHeader
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings
 
 from kernel.arch.x86.gdt import gdt
@@ -279,11 +279,14 @@ class MemoryAddRequest(BaseModel):
 
 class VoiceRequest(BaseModel):
     text: str
-    speaker_id: Optional[int] = None
-    speedScale: Optional[float] = None
-    pitchScale: Optional[float] = None
-    intonationScale: Optional[float] = None
-    volumeScale: Optional[float] = None
+    speaker_id: int | None = None
+    speed_scale: float | None = Field(None, alias="speedScale")
+    pitch_scale: float | None = Field(None, alias="pitchScale")
+    intonation_scale: float | None = Field(None, alias="intonationScale")
+    volume_scale: float | None = Field(None, alias="volumeScale")
+
+    class Config:
+        populate_by_name = True
 
 
 # ==================== Helper Functions ====================
@@ -1209,10 +1212,10 @@ async def tts(req: VoiceRequest):
             query_data = query_res.json()
             
             # 2. パラメータ調整 (可愛さのブラッシュアップ)
-            query_data["speedScale"] = req.speedScale if req.speedScale is not None else CONFIG["VOICEVOX_SPEED"]
-            query_data["pitchScale"] = req.pitchScale if req.pitchScale is not None else CONFIG["VOICEVOX_PITCH"]
-            query_data["intonationScale"] = req.intonationScale if req.intonationScale is not None else CONFIG["VOICEVOX_INTONATION"]
-            query_data["volumeScale"] = req.volumeScale if req.volumeScale is not None else CONFIG["VOICEVOX_VOLUME"]
+            query_data["speedScale"] = req.speed_scale if req.speed_scale is not None else CONFIG["VOICEVOX_SPEED"]
+            query_data["pitchScale"] = req.pitch_scale if req.pitch_scale is not None else CONFIG["VOICEVOX_PITCH"]
+            query_data["intonationScale"] = req.intonation_scale if req.intonation_scale is not None else CONFIG["VOICEVOX_INTONATION"]
+            query_data["volumeScale"] = req.volume_scale if req.volume_scale is not None else CONFIG["VOICEVOX_VOLUME"]
             
             # 3. 音声合成
             synth_res = await client.post(

@@ -9,8 +9,8 @@ import { staticPlugin } from "@elysiajs/static";
 import { swagger } from "@elysiajs/swagger";
 import { Elysia, t } from "elysia";
 import { helmet } from "elysia-helmet";
-import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
 import { config, isProd } from "../../../src/config.ts";
+import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
 import { jsonError, proxyToFastAPI } from "./lib/constants";
 import { defenseManager } from "./lib/defense-manager";
 import { performHealthCheck } from "./lib/health";
@@ -263,7 +263,7 @@ logger.info(
 // Graceful Shutdown Logic
 const handleShutdown = async (signal: string) => {
 	logger.info(`🛑 Received ${signal}, starting graceful shutdown...`);
-	
+
 	const shutdownTimeout = setTimeout(() => {
 		logger.error("强制終了: Shutdown timed out, forcing exit.");
 		process.exit(1);
@@ -277,7 +277,7 @@ const handleShutdown = async (signal: string) => {
 		const { logCleanupManager } = await import("./lib/log-cleanup");
 		healthMonitor.stop();
 		logCleanupManager.stop();
-		
+
 		clearTimeout(shutdownTimeout);
 		logger.info("✅ Graceful shutdown complete. See you again! ♡");
 		process.exit(0);

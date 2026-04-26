@@ -3,8 +3,8 @@
  * Discord/Slack Webhook連携でエラー通知
  */
 
-import { logger } from "./logger";
 import { getEnv } from "../../../../src/config.ts";
+import { logger } from "./logger";
 
 interface ErrorAlert {
 	message: string;
@@ -110,7 +110,11 @@ export class ErrorMonitor {
 	/**
 	 * Fetch with retry
 	 */
-	private async retryFetch(url: string, options: RequestInit, retries = 3): Promise<Response> {
+	private async retryFetch(
+		url: string,
+		options: RequestInit,
+		retries = 3,
+	): Promise<Response> {
 		for (let i = 0; i < retries; i++) {
 			try {
 				const response = await fetch(url, options);

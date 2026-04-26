@@ -3,8 +3,8 @@
  * イベント駆動型の外部サービス連携
  */
 
-import { logger } from "./logger";
 import { config } from "../../../../src/config.ts";
+import { logger } from "./logger";
 
 export type WebhookEvent =
 	| "user.registered"

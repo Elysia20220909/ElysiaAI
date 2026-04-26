@@ -4,8 +4,8 @@ import {
 	randomBytes,
 	scryptSync,
 } from "node:crypto";
-import { logger } from "./logger";
 import { config } from "../../../../src/config.ts";
+import { logger } from "./logger";
 
 /**
  * Sovereign Cryptography Suite (NSA/CIA Grade)
