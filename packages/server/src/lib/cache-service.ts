@@ -1,5 +1,5 @@
-import { logger } from "./logger";
 import { config } from "../../../../src/config.ts";
+import { logger } from "./logger";
 
 interface CacheOptions {
 	ttl?: number; // Time to live in seconds

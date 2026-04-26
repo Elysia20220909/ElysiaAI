@@ -3,10 +3,10 @@
  * サービス稼働監視と自動アラート
  */
 
+import { config } from "../../../../src/config.ts";
 import { emailNotifier } from "./email-notifier";
 import { logger } from "./logger";
 import { webhookManager } from "./webhook-events";
-import { config } from "../../../../src/config.ts";
 
 interface HealthCheck {
 	name: string;
