@@ -6,6 +6,7 @@
 import { emailNotifier } from "./email-notifier";
 import { logger } from "./logger";
 import { webhookManager } from "./webhook-events";
+import { config } from "../../../../src/config.ts";
 
 interface HealthCheck {
 	name: string;
@@ -33,7 +34,7 @@ class HealthMonitor {
 		this.checks = new Map();
 		this.statuses = new Map();
 		this.intervals = new Map();
-		this.enabled = process.env.HEALTH_MONITORING_ENABLED !== "false";
+		this.enabled = config.healthMonitoringEnabled;
 
 		this.initializeDefaultChecks();
 	}
@@ -49,7 +50,7 @@ class HealthMonitor {
 				try {
 					const { PrismaClient } = await import("@prisma/client");
 					const { PrismaLibSql } = await import("@prisma/adapter-libsql");
-					const url = process.env.DATABASE_URL || "file:./dev.db";
+					const url = config.dbUrl;
 					const adapter = new PrismaLibSql({ url });
 					const prisma = new PrismaClient({ adapter });
 					await prisma.$queryRaw`SELECT 1`;
@@ -73,8 +74,7 @@ class HealthMonitor {
 			name: "ollama",
 			check: async () => {
 				try {
-					const ollamaUrl =
-						process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+					const ollamaUrl = config.ollamaBaseUrl;
 					// Use the correct endpoint for Ollama health check
 					const response = await fetch(`${ollamaUrl}/api/version`, {
 						signal: AbortSignal.timeout(5000),
@@ -90,15 +90,13 @@ class HealthMonitor {
 		});
 
 		// Redis接続チェック（オプション）
-		if (process.env.REDIS_ENABLED === "true") {
+		if (config.redisEnabled) {
 			this.addCheck({
 				name: "redis",
 				check: async () => {
 					try {
 						const Redis = (await import("ioredis")).default;
-						const redis = new Redis(
-							process.env.REDIS_URL || "redis://localhost:6379",
-						);
+						const redis = new Redis(config.redisUrl);
 						await redis.ping();
 						redis.disconnect();
 						return true;

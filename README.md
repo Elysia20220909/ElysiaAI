@@ -22,9 +22,9 @@ ElysiaAIを最も速く体験する方法です。
 git clone git@github.com:Elysia20210806/ElysiaAI.git
 cd ElysiaAI
 
-# 環境設定と依存関係のインストール
-cp .env.example .env
-make install
+# 統合管理CLIによるセットアップ
+bun scripts/manage.ts setup
+bun scripts/manage.ts setup-python
 ```
 
 PowerShell では `Copy-Item .env.example .env` を使えます。
@@ -40,25 +40,10 @@ bunx prisma generate
 
 ### 3. 起動
 ```bash
-make boot
+bun scripts/manage.ts dev
 ```
 > [!TIP]
 > ブラウザで `http://localhost:3000` を開くと、Elysia Desktop環境が展開されます。
-
-PowerShell から直接起動する場合:
-
-```powershell
-.\scripts\boot.ps1
-```
-
-FastAPI と Bun を別々に起動したい場合:
-
-```powershell
-.\scripts\start-fastapi.ps1
-.\scripts\start-server.ps1
-```
-
-UNIX / WSL / macOS では同じ役割の `./scripts/boot.sh`、`./scripts/start-fastapi.sh`、`./scripts/start-server.sh` を使えます。
 
 ---
 

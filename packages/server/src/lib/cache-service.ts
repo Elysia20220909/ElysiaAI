@@ -1,4 +1,5 @@
 import { logger } from "./logger";
+import { config } from "../../../../src/config.ts";
 
 interface CacheOptions {
 	ttl?: number; // Time to live in seconds
@@ -25,7 +26,7 @@ class CacheService {
 			}
 
 			this.client = redis.createClient({
-				url: process.env.REDIS_URL || "redis://localhost:6379",
+				url: config.redisUrl,
 			});
 
 			this.client.on("error", (err: Error) => {

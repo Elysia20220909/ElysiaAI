@@ -17,12 +17,12 @@ import time
 import uuid
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 import httpx
 import numpy as np
 from fastapi import Body, Depends, FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
@@ -58,6 +58,14 @@ class Settings(BaseSettings):
     OLLAMA_TIMEOUT: float = 60.0
     API_KEY: str = ""
     RATE_LIMIT_BLOCK_TIME: int = 60
+
+    # VOICEVOX Settings
+    VOICEVOX_BASE_URL: str = "http://127.0.0.1:50021"
+    VOICEVOX_SPEAKER_ID: int = 2
+    VOICEVOX_SPEED: float = 1.1
+    VOICEVOX_PITCH: float = 0.0
+    VOICEVOX_INTONATION: float = 1.2
+    VOICEVOX_VOLUME: float = 1.0
 
     # Embedding Configuration (Dual Support)
     EMBEDDING_PROVIDER: str = "local"  # "local" or "openai"
@@ -267,6 +275,15 @@ class MemoryAddRequest(BaseModel):
     role: str
     content: str
     emotion: str = "neutral"
+
+
+class VoiceRequest(BaseModel):
+    text: str
+    speaker_id: Optional[int] = None
+    speedScale: Optional[float] = None
+    pitchScale: Optional[float] = None
+    intonationScale: Optional[float] = None
+    volumeScale: Optional[float] = None
 
 
 # ==================== Helper Functions ====================
@@ -887,10 +904,16 @@ async def get_app_component(app_id: str):
     """
     アプリケーションのUIコンポーネントを配信します。
     """
-    component_path = Path(f"public/apps/{app_id}.component.html")
-    if component_path.exists():
-        with open(component_path, encoding="utf-8") as f:
-            return StreamingResponse(io.BytesIO(f.read().encode("utf-8")), media_type="text/html")
+    # Search in both public and system directories
+    locations = [
+        Path(f"public/apps/{app_id}.component.html"),
+        Path(f"usr/share/elysia/apps/{app_id}.component.html"),
+    ]
+    
+    for component_path in locations:
+        if component_path.exists():
+            with open(component_path, encoding="utf-8") as f:
+                return StreamingResponse(io.BytesIO(f.read().encode("utf-8")), media_type="text/html")
 
     # Fallback to a basic template if not found
     fallback = f"<div class='p-8 text-white/40'>Module [{app_id}] not found in sanctuary.</div>"
@@ -1165,6 +1188,52 @@ async def get_singularity_status():
 async def perform_ascension():
     """オメガ・プロトコルの最終段階「昇華」を実行します。"""
     return singularity_engine.trigger_ascension()
+
+
+# ==================== VOICEVOX TTS Extension ====================
+@app.post("/tts")
+async def tts(req: VoiceRequest):
+    """
+    VOICEVOX Engine を使用して音声を生成します。
+    """
+    speaker = req.speaker_id if req.speaker_id is not None else CONFIG["VOICEVOX_SPEAKER_ID"]
+    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            # 1. クエリ生成
+            query_res = await client.post(
+                f"{CONFIG['VOICEVOX_BASE_URL']}/audio_query",
+                params={"text": req.text, "speaker": speaker}
+            )
+            query_res.raise_for_status()
+            query_data = query_res.json()
+            
+            # 2. パラメータ調整 (可愛さのブラッシュアップ)
+            query_data["speedScale"] = req.speedScale if req.speedScale is not None else CONFIG["VOICEVOX_SPEED"]
+            query_data["pitchScale"] = req.pitchScale if req.pitchScale is not None else CONFIG["VOICEVOX_PITCH"]
+            query_data["intonationScale"] = req.intonationScale if req.intonationScale is not None else CONFIG["VOICEVOX_INTONATION"]
+            query_data["volumeScale"] = req.volumeScale if req.volumeScale is not None else CONFIG["VOICEVOX_VOLUME"]
+            
+            # 3. 音声合成
+            synth_res = await client.post(
+                f"{CONFIG['VOICEVOX_BASE_URL']}/synthesis",
+                params={"speaker": speaker},
+                json=query_data
+            )
+            synth_res.raise_for_status()
+            
+            # フロントエンドの期待に合わせて Base64 エンコードして返す
+            import base64
+            audio_b64 = base64.b64encode(synth_res.content).decode("utf-8")
+            
+            return JSONResponse(content={"audio": audio_b64})
+            
+        except httpx.HTTPError as e:
+            logger.error(f"❌ VOICEVOX Error: {e}")
+            raise HTTPException(status_code=502, detail=f"VOICEVOX Engine communication error: {e}")
+        except Exception as e:
+            logger.error(f"❌ TTS Unexpected Error: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
 
 
 # ==================== メイン実行 ====================

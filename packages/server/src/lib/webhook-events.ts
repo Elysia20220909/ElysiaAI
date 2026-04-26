@@ -4,6 +4,7 @@
  */
 
 import { logger } from "./logger";
+import { config } from "../../../../src/config.ts";
 
 export type WebhookEvent =
 	| "user.registered"
@@ -40,9 +41,9 @@ class WebhookManager {
 	 * 環境変数からWebhook設定を読み込み
 	 */
 	private loadSubscriptionsFromEnv() {
-		const discordUrl = process.env.DISCORD_WEBHOOK_URL;
-		const slackUrl = process.env.SLACK_WEBHOOK_URL;
-		const customUrl = process.env.CUSTOM_WEBHOOK_URL;
+		const discordUrl = config.discordWebhookUrl;
+		const slackUrl = config.slackWebhookUrl;
+		const customUrl = config.customWebhookUrl;
 
 		if (discordUrl) {
 			this.subscribe("discord", {
@@ -68,7 +69,7 @@ class WebhookManager {
 			this.subscribe("custom", {
 				url: customUrl,
 				events: ["chat.message", "feedback.created"],
-				secret: process.env.CUSTOM_WEBHOOK_SECRET,
+				secret: config.customWebhookSecret,
 				enabled: true,
 			});
 		}

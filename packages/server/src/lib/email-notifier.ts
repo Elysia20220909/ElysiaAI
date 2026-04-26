@@ -6,6 +6,7 @@
 import type { Transporter } from "nodemailer";
 import nodemailer from "nodemailer";
 import { logger } from "./logger";
+import { config } from "../../../../src/config.ts";
 
 interface EmailConfig {
 	enabled: boolean;
@@ -32,15 +33,15 @@ class EmailNotifier {
 
 	constructor() {
 		this.config = {
-			enabled: process.env.EMAIL_NOTIFICATIONS_ENABLED === "true",
-			host: process.env.SMTP_HOST || "smtp.gmail.com",
-			port: Number(process.env.SMTP_PORT) || 587,
-			secure: process.env.SMTP_SECURE === "true",
+			enabled: config.emailNotificationsEnabled,
+			host: config.smtpHost,
+			port: Number(config.smtpPort),
+			secure: config.smtpSecure,
 			auth: {
-				user: process.env.SMTP_USER || "",
-				pass: process.env.SMTP_PASS || "",
+				user: config.smtpUser,
+				pass: config.smtpPass,
 			},
-			from: process.env.EMAIL_FROM || "noreply@elysia-ai.com",
+			from: config.emailFrom,
 		};
 
 		if (this.config.enabled && this.config.auth.user && this.config.auth.pass) {
@@ -109,7 +110,7 @@ class EmailNotifier {
 	 * エラー通知メールを送信
 	 */
 	async sendErrorNotification(error: Error, context?: Record<string, unknown>) {
-		const adminEmail = process.env.ADMIN_EMAIL;
+		const adminEmail = config.adminEmail;
 		if (!adminEmail) return;
 
 		const html = `
@@ -155,7 +156,7 @@ class EmailNotifier {
 		size: number;
 		duration: number;
 	}) {
-		const adminEmail = process.env.ADMIN_EMAIL;
+		const adminEmail = config.adminEmail;
 		if (!adminEmail) return;
 
 		const html = `
@@ -177,7 +178,7 @@ class EmailNotifier {
 	 * ヘルスチェック失敗通知メールを送信
 	 */
 	async sendHealthCheckFailure(service: string, details: string) {
-		const adminEmail = process.env.ADMIN_EMAIL;
+		const adminEmail = config.adminEmail;
 		if (!adminEmail) return;
 
 		const html = `

@@ -5,6 +5,7 @@ import {
 	scryptSync,
 } from "node:crypto";
 import { logger } from "./logger";
+import { config } from "../../../../src/config.ts";
 
 /**
  * Sovereign Cryptography Suite (NSA/CIA Grade)
@@ -16,9 +17,8 @@ class SovereignCrypto {
 	private readonly key: Buffer;
 
 	constructor() {
-		const secret =
-			process.env.ENCRYPTION_SECRET || "elysia-default-shadow-key-777";
-		const salt = process.env.ENCRYPTION_SALT || "abyssal-salt";
+		const secret = config.encryptionSecret;
+		const salt = config.encryptionSalt;
 		// Generate a 32-byte key using scrypt
 		this.key = scryptSync(secret, salt, 32);
 		logger.info("🔐 Sovereign Cryptography Suite Initialized (AES-256-GCM)");
