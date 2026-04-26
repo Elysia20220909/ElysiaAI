@@ -28,13 +28,26 @@ jobs:
 
       - name: Run Biome (Format & Lint Check)
         run: bun run lint
-        continue-on-error: true
 
       - name: Run Bun Tests
         run: bun test
 
+      - name: Generate Bun Coverage
+        run: bun run test --coverage
+
+      - name: Upload Bun Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: bun-coverage
+          path: coverage/
+
       - name: Bun Audit (Dependency Check)
         run: bun pm audit
+
+      - name: Secret Scan (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ==============================
       # 2. Python (FastAPI & OS)
