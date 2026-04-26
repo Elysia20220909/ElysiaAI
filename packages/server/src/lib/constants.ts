@@ -2,22 +2,22 @@ import axios from "axios";
 import { t } from "elysia";
 import { logger } from "./logger";
 
+import { config } from "../../../../src/config.ts";
+
 export const CONFIG = {
-	PORT: process.env.PORT || 3000,
-	REDIS_URL: process.env.REDIS_URL || "redis://127.0.0.1:6379",
-	FASTAPI_BASE_URL: process.env.FASTAPI_BASE_URL || "http://127.0.0.1:8000",
-	FASTAPI_API_KEY: process.env.FASTAPI_API_KEY || "",
-	JWT_SECRET: process.env.JWT_SECRET || "elysia-sovereign-secret",
-	JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || "elysia-refresh-secret",
-	MODEL_NAME: process.env.MODEL_NAME || "elysia-v2",
-	OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434",
-	RAG_API_URL:
-		process.env.RAG_API_URL ||
-		`${process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434"}/api/generate`,
+	PORT: config.port,
+	REDIS_URL: config.redisUrl,
+	FASTAPI_BASE_URL: config.fastApiBaseUrl,
+	FASTAPI_API_KEY: config.fastApiApiKey,
+	JWT_SECRET: config.jwtSecret,
+	JWT_REFRESH_SECRET: config.jwtRefreshSecret,
+	MODEL_NAME: config.ollamaModel,
+	OLLAMA_BASE_URL: config.ollamaBaseUrl,
+	RAG_API_URL: `${config.ollamaBaseUrl}/api/generate`,
 	RAG_TIMEOUT: 60000,
-	AUTH_USERNAME: process.env.AUTH_USERNAME || "admin",
-	AUTH_PASSWORD: process.env.AUTH_PASSWORD || "elysiatest-001",
-	GROQ_API_KEY: process.env.GROQ_API_KEY || "",
+	AUTH_USERNAME: config.authUsername,
+	AUTH_PASSWORD: config.authPassword,
+	GROQ_API_KEY: config.groqApiKey,
 };
 
 export const jsonError = (status: number, message: string) => {

@@ -6,7 +6,7 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1; /* Above background, below windows */
+    z-index: 1;
     overflow: hidden;
 }
 
@@ -15,8 +15,13 @@
     background: white;
     border-radius: 50%;
     opacity: 0;
+    filter: drop-shadow(0 0 5px white);
     animation: starfall linear infinite;
 }
+
+.star-cyan { background: #00f2ff; filter: drop-shadow(0 0 8px #00f2ff); }
+.star-pink { background: #ff00ba; filter: drop-shadow(0 0 8px #ff00ba); }
+.star-gold { background: #ffd700; filter: drop-shadow(0 0 8px #ffd700); }
 
 @keyframes starfall {
     0% {
@@ -35,6 +40,36 @@
     }
 }
 
+/* 🌠 Meteor (Shooting Star) */
+.meteor {
+    position: absolute;
+    width: 2px;
+    height: 150px;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+    opacity: 0;
+    pointer-events: none;
+    animation: meteor-fall 2s ease-in infinite;
+}
+
+@keyframes meteor-fall {
+    0% {
+        transform: translate(100vw, -10vh) rotate(215deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-20vw, 110vh) rotate(215deg);
+        opacity: 0;
+    }
+}
+
 .star-sparkle {
-    box-shadow: 0 0 10px white, 0 0 20px cyan;
+    animation: starfall linear infinite, twinkling 1.5s ease-in-out infinite alternate !important;
+}
+
+@keyframes twinkling {
+    from { filter: brightness(1) blur(0px); }
+    to { filter: brightness(1.5) blur(1px) drop-shadow(0 0 12px white); }
 }

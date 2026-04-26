@@ -1,6 +1,6 @@
-// Health Check Module - Comprehensive service monitoring
 import axios from "axios";
 import Redis from "ioredis";
+import { config } from "../../../../src/config.ts";
 
 export interface HealthStatus {
 	status: "healthy" | "degraded" | "unhealthy";
@@ -146,15 +146,11 @@ export function getSystemMetrics() {
 }
 
 // Comprehensive Health Check
-export async function performHealthCheck(
-	redisUrl: string,
-	fastAPIUrl: string,
-	ollamaUrl: string,
-): Promise<HealthStatus> {
+export async function performHealthCheck(): Promise<HealthStatus> {
 	const [redis, fastapi, ollama] = await Promise.all([
-		checkRedis(redisUrl),
-		checkFastAPI(fastAPIUrl),
-		checkOllama(ollamaUrl),
+		checkRedis(config.redisUrl),
+		checkFastAPI(config.fastApiBaseUrl),
+		checkOllama(config.ollamaBaseUrl),
 	]);
 
 	const system = getSystemMetrics();
