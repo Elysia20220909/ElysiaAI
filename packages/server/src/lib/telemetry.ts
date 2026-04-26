@@ -306,9 +306,7 @@ class Telemetry {
 }
 
 // Singleton instance
-export const telemetry = new Telemetry(
-	config.telemetryEnabled,
-);
+export const telemetry = new Telemetry(config.telemetryEnabled);
 
 /**
  * Middleware helper to extract trace context from request
