@@ -44,6 +44,13 @@ jobs:
       - name: Bun Audit (Dependency Check)
         run: bun pm audit
 
+      - name: Smoke Test (Server Startup)
+        run: |
+          PORT=3000 SESSION_SECRET=ci_secret bun packages/server/src/index.ts &
+          sleep 5
+          curl -f http://localhost:3000/health || exit 1
+          pkill -f bun
+
       - name: Secret Scan (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
         env:

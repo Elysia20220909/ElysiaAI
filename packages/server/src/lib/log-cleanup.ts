@@ -6,6 +6,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { logger } from "./logger";
+import { config } from "../../../../src/config.ts";
 
 interface LogCleanupConfig {
 	enabled: boolean;
@@ -23,12 +24,12 @@ class LogCleanupManager {
 
 	constructor() {
 		this.config = {
-			enabled: process.env.LOG_CLEANUP_ENABLED !== "false",
-			logDir: process.env.LOG_DIR || "./logs",
-			maxAgeDays: Number(process.env.LOG_MAX_AGE_DAYS) || 30,
-			maxSizeMB: Number(process.env.LOG_MAX_SIZE_MB) || 500,
-			checkInterval: Number(process.env.LOG_CLEANUP_INTERVAL_HOURS) || 24,
-			compressionEnabled: process.env.LOG_COMPRESSION_ENABLED === "true",
+			enabled: config.logCleanupEnabled,
+			logDir: config.logDir,
+			maxAgeDays: Number(config.logMaxAgeDays),
+			maxSizeMB: Number(config.logMaxSizeMb),
+			checkInterval: Number(config.logCleanupIntervalHours),
+			compressionEnabled: config.logCompressionEnabled,
 		};
 	}
 

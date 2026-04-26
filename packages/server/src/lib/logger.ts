@@ -1,6 +1,7 @@
 // Structured Logging System
 import { appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { config } from "../../../../src/config.ts";
 
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 
@@ -227,5 +228,5 @@ class Logger {
 
 export const logger = new Logger(
 	"logs",
-	(process.env.LOG_LEVEL as LogLevel) || "info",
+	(config.logLevel as LogLevel) || "info",
 );

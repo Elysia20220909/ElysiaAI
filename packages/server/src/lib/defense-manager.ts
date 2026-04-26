@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { logger } from "./logger";
+import { config } from "../../../../src/config.ts";
 
 interface DefenseRules {
 	blocked_ips: string[];
@@ -41,7 +41,7 @@ class DefenseManager {
 	 */
 	private getRulesPath(): string {
 		return (
-			process.env.DEFENSE_RULES_FILE ||
+			config.defenseRulesFile ||
 			join(process.cwd(), "../../config/defense/rules.json")
 		);
 	}

@@ -1,5 +1,6 @@
 // OpenTelemetry Distributed Tracing Module
 import { hrtime } from "node:process";
+import { config } from "../../../../src/config.ts";
 
 export interface Span {
 	traceId: string;
@@ -306,7 +307,7 @@ class Telemetry {
 
 // Singleton instance
 export const telemetry = new Telemetry(
-	process.env.TELEMETRY_ENABLED !== "false",
+	config.telemetryEnabled,
 );
 
 /**
