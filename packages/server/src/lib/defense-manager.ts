@@ -1,6 +1,6 @@
 import { dirname, join } from "node:path";
-import { logger } from "./logger";
 import { config } from "../../../../src/config.ts";
+import { logger } from "./logger";
 
 interface DefenseRules {
 	blocked_ips: string[];
