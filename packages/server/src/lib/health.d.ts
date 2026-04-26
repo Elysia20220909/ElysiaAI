@@ -19,11 +19,15 @@ export interface HealthStatus {
 	};
 }
 export interface ServiceHealth {
-	status: "up" | "down" | "degraded";
+	status: "up" | "down" | "degraded" | "disabled";
 	responseTime?: number;
 	error?: string;
 	lastCheck: string;
 }
+export declare function disabledServiceHealth(reason: string): ServiceHealth;
+export declare function summarizeHealthStatus(
+	services: ServiceHealth[],
+): HealthStatus["status"];
 export declare function checkRedis(redisUrl: string): Promise<ServiceHealth>;
 export declare function checkFastAPI(fastAPIUrl: string): Promise<ServiceHealth>;
 export declare function checkOllama(ollamaUrl: string): Promise<ServiceHealth>;
@@ -37,9 +41,5 @@ export declare function getSystemMetrics(): {
 		usage: number;
 	};
 };
-export declare function performHealthCheck(
-	redisUrl: string,
-	fastAPIUrl: string,
-	ollamaUrl: string,
-): Promise<HealthStatus>;
+export declare function performHealthCheck(): Promise<HealthStatus>;
 //# sourceMappingURL=health.d.ts.map

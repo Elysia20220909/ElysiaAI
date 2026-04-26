@@ -1,6 +1,7 @@
 // i18n Internationalization Module
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { config } from "../../../../src/config.ts";
 
 export type SupportedLocale = "en" | "ja" | "zh" | "ko" | "es" | "fr" | "de";
 
@@ -216,7 +217,7 @@ export class I18n {
 
 // Singleton instance
 export const i18n = new I18n({
-	defaultLocale: (process.env.DEFAULT_LOCALE as SupportedLocale) || "en",
+	defaultLocale: config.defaultLocale as SupportedLocale,
 	supportedLocales: ["en", "ja", "zh", "ko"],
 	localesPath: "locales",
 });
