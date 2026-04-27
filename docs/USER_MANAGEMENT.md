@@ -20,11 +20,11 @@ Access control is enforced at the API gateway level (ElysiaJS) and verified at t
 ### Permission Matrix
 | Resource | OWNER | ADMIN | USER | GUEST |
 | :--- | :---: | :---: | :---: | :---: |
-| Chat Interaction | ✅ | ✅ | ✅ | ❌ |
-| Personal Memory | ✅ | ✅ | ✅ (Own) | ❌ |
-| System Logs | ✅ | ✅ | ❌ | ❌ |
-| HW Orchestration | ✅ | ❌ | ❌ | ❌ |
-| User Management | ✅ | ✅ | ❌ | ❌ |
+| Chat Interaction | ✁E| ✁E| ✁E| ❁E|
+| Personal Memory | ✁E| ✁E| ✁E(Own) | ❁E|
+| System Logs | ✁E| ✁E| ❁E| ❁E|
+| HW Orchestration | ✁E| ❁E| ❁E| ❁E|
+| User Management | ✁E| ✁E| ❁E| ❁E|
 
 ## 3. Data Sovereignty
 

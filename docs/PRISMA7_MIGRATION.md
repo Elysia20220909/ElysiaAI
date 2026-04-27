@@ -1,29 +1,24 @@
-# Prisma 7 + LibSQL 移行ガイド
-
-## 概要
-
-ElysiaAIは Prisma 7 と LibSQL アダプタを使用してデータベース接続を実現しています。このガイドでは、Prisma 7への移行プロセスと設定方法を説明します。
-
+# Prisma 7 + LibSQL 移行ガイチE
+## 概要E
+ElysiaAIは Prisma 7 と LibSQL アダプタを使用してチE�Eタベ�Eス接続を実現してぁE��す。このガイドでは、Prisma 7への移行�Eロセスと設定方法を説明します、E
 ## 主な変更点
 
 ### Prisma v6 から v7 への変更
 
 1. **`datasourceUrl` オプションの削除**
    - Prisma v7 では、コンストラクタで `datasourceUrl` を渡すことができなくなりました
-   - 代わりに、アダプタパターンを使用します
+   - 代わりに、アダプタパターンを使用しまぁE
+2. **エンジンタイプ�E変更**
+   - Bun ランタイムではチE��ォルトで `"client"` エンジンタイプが使用されまぁE   - `accelerateUrl` また�Eアダプタが忁E��になりました
 
-2. **エンジンタイプの変更**
-   - Bun ランタイムではデフォルトで `"client"` エンジンタイプが使用されます
-   - `accelerateUrl` またはアダプタが必須になりました
-
-3. **アダプタパターンの導入**
+3. **アダプタパターンの導�E**
    - `@prisma/adapter-libsql` と `@libsql/client` を使用
-   - 柔軟なデータベース接続が可能
+   - 柔軟なチE�Eタベ�Eス接続が可能
 
-## インストール
+## インスト�Eル
 
 ```bash
-# Prisma 7 と LibSQL アダプタのインストール
+# Prisma 7 と LibSQL アダプタのインスト�Eル
 bun add @prisma/client@latest
 bun add -d prisma@latest
 bun add @prisma/adapter-libsql @libsql/client
@@ -65,7 +60,7 @@ model User {
   @@index([createdAt])
 }
 
-// 他のモデル定義...
+// 他�EモチE��定義...
 ```
 
 ### 3. `src/lib/database.ts`
@@ -77,39 +72,37 @@ import { createClient } from "@libsql/client";
 
 const databaseUrl = process.env.DATABASE_URL || "file:./dev.db";
 
-// LibSQL クライアント作成
+// LibSQL クライアント作�E
 const libsql = createClient({
   url: databaseUrl,
 });
 
-// Prisma アダプタ設定
-const adapter = new PrismaLibSQL(libsql);
+// Prisma アダプタ設宁Econst adapter = new PrismaLibSQL(libsql);
 
-// Prisma クライアント作成
+// Prisma クライアント作�E
 export const prisma = new PrismaClient({ adapter });
 
-// スキーマ自動作成関数
+// スキーマ�E動作�E関数
 async function ensureSchema() {
-  // CREATE TABLE IF NOT EXISTS ステートメント...
+  // CREATE TABLE IF NOT EXISTS スチE�EトメンチE..
 }
 
-// データベース接続とスキーマ作成
+// チE�Eタベ�Eス接続とスキーマ作�E
 await ensureSchema();
-console.log("✅ Prisma database connected via LibSQL adapter");
+console.log("✁EPrisma database connected via LibSQL adapter");
 ```
 
-## 移行手順
-
-### ステップ 1: パッケージ更新
+## 移行手頁E
+### スチE��チE1: パッケージ更新
 
 ```bash
 bun add @prisma/client@latest -d prisma@latest
 bun add @prisma/adapter-libsql @libsql/client
 ```
 
-### ステップ 2: スキーマ更新
+### スチE��チE2: スキーマ更新
 
-`prisma/schema.prisma` を SQLite プロバイダに変更:
+`prisma/schema.prisma` めESQLite プロバイダに変更:
 
 ```diff
 datasource db {
@@ -119,7 +112,7 @@ datasource db {
 }
 ```
 
-### ステップ 3: database.ts 更新
+### スチE��チE3: database.ts 更新
 
 LibSQL アダプタを使用するように変更:
 
@@ -132,25 +125,23 @@ const adapter = new PrismaLibSQL(libsql);
 export const prisma = new PrismaClient({ adapter });
 ```
 
-### ステップ 4: Prisma クライアント生成
-
+### スチE��チE4: Prisma クライアント生戁E
 ```bash
 bunx prisma generate
 ```
 
-### ステップ 5: サーバー起動
-
+### スチE��チE5: サーバ�E起勁E
 ```bash
 bun ./start-server.ts
 ```
 
-## トラブルシューティング
+## トラブルシューチE��ング
 
 ### エラー: "Invalid `prisma.xxx()` invocation"
 
-**原因**: Prisma クライアントが生成されていない、または古いバージョンが使用されている
+**原因**: Prisma クライアントが生�EされてぁE��ぁE��また�E古ぁE��ージョンが使用されてぁE��
 
-**解決策**:
+**解決筁E*:
 ```bash
 bunx prisma generate
 rm -rf node_modules/.prisma
@@ -159,20 +150,17 @@ bun install
 
 ### エラー: "PrismaClientValidationError: datasourceUrl"
 
-**原因**: Prisma v7 で削除された `datasourceUrl` オプションを使用している
+**原因**: Prisma v7 で削除されぁE`datasourceUrl` オプションを使用してぁE��
 
-**解決策**: アダプタパターンに移行してください（上記のステップ3参照）
-
+**解決筁E*: アダプタパターンに移行してください�E�上記�EスチE��チE参�E�E�E
 ### エラー: "adapter or accelerateUrl is required"
 
-**原因**: Bun ランタイムで client エンジンタイプを使用するにはアダプタが必要
+**原因**: Bun ランタイムで client エンジンタイプを使用するにはアダプタが忁E��E
+**解決筁E*: LibSQL アダプタをインスト�Eルして設定してください
 
-**解決策**: LibSQL アダプタをインストールして設定してください
+## 本番環墁E��の展開
 
-## 本番環境への展開
-
-### PostgreSQL を使用する場合
-
+### PostgreSQL を使用する場吁E
 ```typescript
 import { PrismaClient } from "@prisma/client";
 import { Pool, neonConfig } from "@neondatabase/serverless";
@@ -188,8 +176,7 @@ const adapter = new PrismaNeon(pool);
 export const prisma = new PrismaClient({ adapter });
 ```
 
-### Turso (LibSQL) を使用する場合
-
+### Turso (LibSQL) を使用する場吁E
 ```typescript
 import { createClient } from "@libsql/client";
 import { PrismaLibSQL } from "@prisma/adapter-libsql";
@@ -203,22 +190,18 @@ const adapter = new PrismaLibSQL(libsql);
 export const prisma = new PrismaClient({ adapter });
 ```
 
-## パフォーマンス最適化
-
-### 1. コネクションプール設定
-
+## パフォーマンス最適匁E
+### 1. コネクションプ�Eル設宁E
 ```typescript
 const libsql = createClient({
   url: databaseUrl,
-  // 本番環境ではコネクションプールを設定
-  syncUrl: process.env.TURSO_SYNC_URL,
+  // 本番環墁E��はコネクションプ�Eルを設宁E  syncUrl: process.env.TURSO_SYNC_URL,
 });
 ```
 
-### 2. クエリ最適化
-
+### 2. クエリ最適匁E
 ```typescript
-// インデックスを活用したクエリ
+// インチE��クスを活用したクエリ
 const users = await prisma.user.findMany({
   where: { username: { contains: "test" } },
   orderBy: { createdAt: "desc" },
@@ -226,20 +209,18 @@ const users = await prisma.user.findMany({
 });
 ```
 
-### 3. バッチ処理
-
+### 3. バッチ�E琁E
 ```typescript
-// 複数のクエリを並列実行
-const [users, sessions, messages] = await Promise.all([
+// 褁E��のクエリを並列実衁Econst [users, sessions, messages] = await Promise.all([
   prisma.user.findMany(),
   prisma.chatSession.findMany(),
   prisma.message.findMany(),
 ]);
 ```
 
-## 参考リンク
+## 参老E��ンク
 
-- [Prisma 7 リリースノート](https://www.prisma.io/docs/orm/overview/releases#7.0.0)
+- [Prisma 7 リリースノ�EチE(https://www.prisma.io/docs/orm/overview/releases#7.0.0)
 - [Prisma Database Adapters](https://www.prisma.io/docs/orm/overview/databases/database-drivers)
 - [LibSQL Client](https://github.com/tursodatabase/libsql-client-ts)
 - [Turso Documentation](https://docs.turso.tech/)
