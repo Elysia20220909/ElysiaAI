@@ -477,9 +477,58 @@ services:
       - app
     restart: unless-stopped
 
-volumes:
-  postgres_data:
   redis_data:
+
+---
+
+## 🏗️ Tauri デスクトップアプリのビルド
+
+ElysiaAI のデスクトップクライアントをビルドする手順です。
+
+### 1. 準備
+- **Rust**: [公式の Rust インストール手順](https://www.rust-lang.org/tools/install)に従ってください。
+- **WebView2**: Windows の場合は WebView2 ランタイムが必要です。
+
+### 2. ビルド実行
+```bash
+# クライアントのビルド (src-tauri 下で実行)
+cd src-tauri
+cargo build --release
+
+# または Bun を使用
+bun run build:desktop
+```
+ビルドされたバイナリは `src-tauri/target/release/` に生成されます。
+
+---
+
+## 🐳 Docker Compose による一括起動
+
+Docker Compose を使用して、すべての依存ツール（Milvus, VOICEVOX等）を含むスタックを一括で起動する方法です。
+
+```bash
+# プロジェクトルートで実行
+docker-compose up -d
+```
+
+`docker-compose.yml` には以下のサービスが含まれています：
+- **Elysia Server**: Bun/ElysiaJS バックエンド
+- **AI Kernel**: FastAPI/Python カーネル
+- **Milvus**: ベクトルデータベース
+- **Redis**: レート制限・キャッシュ
+- **VOICEVOX**: 音声合成エンジン（オプション）
+
+---
+
+## 🦀 Rust (Shield Agent) のコンパイル
+
+セキュリティ防壁として機能する Shield Agent のビルド手順です。
+
+```bash
+cd packages/shield
+cargo build --release
+```
+生成されたバイナリを `bin/` ディレクトリに配置することで、OSが起動時に自動的にロードします。
 ```
 
 ### 2. Nginx設定

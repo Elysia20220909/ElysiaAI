@@ -136,7 +136,15 @@ async function runCommand(command: string) {
 			break;
 		case "test":
 			console.log("🧪 Running tests...");
+			console.log("--- Bun Tests ---");
 			await run("bun", ["test"]);
+			console.log("--- Python Tests ---");
+			const venvPython = venvPythonPath();
+			if (existsSync(venvPython)) {
+				await run(venvPython, ["-m", "pytest", "tests/"]);
+			} else {
+				console.log("⚠️ Python venv not found. Skipping Python tests.");
+			}
 			break;
 		case "lint":
 			console.log("🧹 Linting...");
