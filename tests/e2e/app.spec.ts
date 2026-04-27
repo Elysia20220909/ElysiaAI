@@ -75,8 +75,7 @@ test.describe("Chat Functionality", () => {
 });
 
 test.describe("Mode Switching", () => {
-	test.skip("should switch between modes", async ({ page }) => {
-		// Mode selector not implemented in demo-airi.html
+	test("should switch between modes", async ({ page }) => {
 		await page.goto("/demo-airi.html");
 
 		// Test mode selector
@@ -94,8 +93,7 @@ test.describe("Mode Switching", () => {
 });
 
 test.describe("Feedback", () => {
-	test.skip("should submit positive feedback", async ({ page }) => {
-		// Feedback buttons not implemented in demo-airi.html
+	test("should submit positive feedback", async ({ page }) => {
 		await page.goto("/demo-airi.html");
 
 		// Send a message first
@@ -136,8 +134,7 @@ test.describe("Responsive Design", () => {
 });
 
 test.describe("Accessibility", () => {
-	test.skip("should have no accessibility violations", async ({ page }) => {
-		// Accessibility attributes not fully implemented in demo-airi.html
+	test("should have no accessibility violations", async ({ page }) => {
 		await page.goto("/demo-airi.html");
 
 		// Check for basic accessibility

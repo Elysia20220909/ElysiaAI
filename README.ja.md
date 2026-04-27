@@ -3,7 +3,7 @@
 ### 感性と論理が共鳴する、次世代AI-Native OS。
 
 [![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
-[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20210806/ElysiaAI)
+[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 ---
@@ -19,7 +19,7 @@ ElysiaAIを最も速く体験する方法です。
 ### 2. セットアップ
 ```bash
 # リポジトリの取得
-git clone git@github.com:Elysia20210806/ElysiaAI.git
+git clone git@github.com:Elysia20220909/ElysiaAI.git
 cd ElysiaAI
 
 # 環境設定と依存関係のインストール
@@ -33,6 +33,11 @@ make boot
 ```
 > [!TIP]
 > ブラウザで `http://localhost:3000` を開くと、Elysia Desktop環境が展開されます。
+
+### 4. 依存ツールのセットアップ (重要)
+- **Milvus Lite**: セマンティック記憶（RAG）に使用されます。`bun scripts/manage.ts setup-python` で自動インストールされます。
+- **VOICEVOX**: 音声合成に使用されます。[公式サイト](https://voicevox.hiroshiba.jp/)からエンジンをダウンロードし、起動しておいてください。
+- **Windows セットアップ**: Windows環境では `scripts/setup-security.ps1` を実行して、セキュアなディレクトリ権限を設定することを推奨します。
 
 ---
 
@@ -65,6 +70,37 @@ graph LR
 
 ---
 
+## 🗺️ ロードマップ
+
+ElysiaAIは以下のフェーズを経て進化します。
+
+### Phase 1: Foundation (現在)
+- [x] Bun & Python Kernelの統合
+- [x] ローカルRAG (Milvus Lite) の実装
+- [x] 統合管理CLI (manage.ts) の開発
+
+### Phase 2: Resonance (次期)
+- [ ] **複数ユーザー対応**: マルチユーザー管理と権限制御 (RBAC)。
+- [ ] **メモリ暗号化**: Milvus記憶領域とログの AES-256-GCM 暗号化。
+- [ ] **高度なCI/CD**: 自動テストカバレッジの向上。
+
+### Phase 3: Transcendence
+- [ ] **AbyssRTOS 統合**: 完全隔離された実行環境。
+- [ ] **Shield Agent**: Rustによるリアルタイム脅威検知。
+- [ ] **Sovereign Mesh**: 分散型AI OSネットワーク。
+
+---
+
+## 🔒 セキュリティ概念
+
+ElysiaAIは、以下の独自概念でユーザーの主権を保護します。
+
+- **White ICE**: システム保護のための表層防壁。
+- **Black ICE**: 悪意ある入力を遮断する深層防壁。
+- **AbyssRTOS**: プロセスを外部から隠蔽する隔離実行環境。
+
+---
+
 ## 🛠️ 技術スタック
 
 | Layer | Technologies |
@@ -87,4 +123,4 @@ ElysiaAIは、技術と感性の調和を信じる全ての開発者のために
 
 ---
 
-© 2026 Elysia20210806 // ElysiaAI Main // Crafted with passion in a laundry factory.
+© 2026 Elysia20220909 // ElysiaAI Main // Crafted with passion in a laundry factory.
