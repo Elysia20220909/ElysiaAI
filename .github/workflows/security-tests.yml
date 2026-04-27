@@ -72,7 +72,9 @@ jobs:
       - name: ZAP Scan
         uses: zaproxy/action-baseline@v0.15.0
         with:
-          target: 'https://elysia.io' # 実際のURLまたはテストURLに変更
+          # Note: In a real scenario, stand up a local server before scanning
+          # Example: target: 'http://localhost:3000'
+          target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
 
@@ -80,11 +82,14 @@ jobs:
     name: "📡 Meteor Status Report"
     runs-on: ubuntu-latest
     if: always()
-    needs: [security-audit, unit-tests]
+    needs: [security-audit, unit-tests, zap-scan]
     steps:
       - name: Notify Meteor#6267
         run: |
-          # Webhookを使用して実行結果を通知 (Meteor#6267名義)
+          if [ -z "${{ secrets.DISCORD_WEBHOOK_URL }}" ]; then
+            echo "Skipping notification: DISCORD_WEBHOOK_URL not set."
+            exit 0
+          fi
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"username\": \"Meteor#6267\", \"content\": \"🛡️ **Security Audit Complete**\nAudit: ${{ needs.security-audit.result }}\nTests: ${{ needs.unit-tests.result }}\nTimestamp: $(date)\"}" \
+          -d "{\"username\": \"Meteor#6267\", \"content\": \"🛡️ **Security Audit Complete**\nAudit: ${{ needs.security-audit.result }}\nTests: ${{ needs.unit-tests.result }}\nZAP: ${{ needs.zap-scan.result }}\nTimestamp: $(date)\"}" \
           ${{ secrets.DISCORD_WEBHOOK_URL }}
