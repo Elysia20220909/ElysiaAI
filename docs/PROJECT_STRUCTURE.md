@@ -1,4 +1,4 @@
-﻿# elysia-ai Project Structure
+# elysia-ai Project Structure
 
 ## 女・・Directory Overview
 

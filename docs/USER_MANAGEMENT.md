@@ -1,4 +1,4 @@
-﻿# ElysiaAI: Multi-User & RBAC Design (Proposed)
+# ElysiaAI: Multi-User & RBAC Design (Proposed)
 
 This document outlines the design for implementing multi-user support and Role-Based Access Control (RBAC) in ElysiaAI.
 

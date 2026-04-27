@@ -1,4 +1,4 @@
-﻿# Benchmark Results
+# Benchmark Results
 
 Last Updated: 2025-12-03
 

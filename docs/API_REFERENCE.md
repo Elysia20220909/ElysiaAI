@@ -1,4 +1,4 @@
-﻿# Elysia OS: API Reference (v3.0 Sovereign)
+# Elysia OS: API Reference (v3.0 Sovereign)
 
 縺薙・繝峨く繝･繝｡繝ｳ繝医〒縺ｯ縲・lysia OS 繧ｫ繝ｼ繝阪Ν縺梧署萓帙☆繧・REST API 縺翫ｈ縺ｳ縲後せ繧ｭ繝ｫ・・kill・峨�阪・謚�陦謎ｻ墓ｧ倥↓縺､縺・※隧ｳ霑ｰ縺励∪縺吶�・
 ## 1. Core API (REST)
