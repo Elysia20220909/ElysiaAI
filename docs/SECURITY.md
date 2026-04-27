@@ -46,6 +46,13 @@ Elysia OS は、多層防御（Defense in Depth）戦略に基づき、デジタ
 
 ## Ⅳ. 実装済みセキュリティ機能 (Appendix)
 
+### 0. 透過的暗号化 (Transparent Encryption) ✅
+Elysia OS は、データの保存時に自動的に暗号化を施し、メモリ展開時にのみ復号します。
+
+- **Milvus (記憶領域)**: 長期記憶（Engrams）の内容を AES-256-GCM で保護。
+- **Voice Logs**: 音声入力のテキストデータを DB 保存時に暗号化。
+- **Action Logs**: 操作履歴の機密情報を保護。
+- **Key Management**: `scryptSync` を使用した強固な鍵導出により、環境変数 `JWT_SECRET` から安全に暗号化キーを生成します。
 
 ### 1. 入力バリデーション (Input Validation)
 
