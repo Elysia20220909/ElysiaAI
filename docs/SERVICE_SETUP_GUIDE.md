@@ -1,52 +1,43 @@
-# 🚀 サービス起動ガイド
-
-このガイドでは、Elysia AIの全機能を有効化するための3つのサービスの起動方法を説明します。
-
+# 🚀 サービス起動ガイチE
+こ�Eガイドでは、Elysia AIの全機�Eを有効化するため�E3つのサービスの起動方法を説明します、E
 ---
 
-## 📋 必要なサービス
+## 📋 忁E��なサービス
 
-| サービス    | ポート | 機能                     | 必須度       |
+| サービス    | ポ�EチE| 機�E                     | 忁E��度       |
 | ----------- | ------ | ------------------------ | ------------ |
-| **Redis**   | 6379   | レート制限、キャッシング | オプショナル |
+| **Redis**   | 6379   | レート制限、キャチE��ング | オプショナル |
 | **Ollama**  | 11434  | LLM推論エンジン          | 推奨         |
-| **FastAPI** | 8000   | RAG (検索拡張生成)       | オプショナル |
+| **FastAPI** | 8000   | RAG (検索拡張生�E)       | オプショナル |
 
-**注意**: これらのサービスがなくてもElysiaサーバーは動作しますが、一部機能が制限されます。
-
+**注愁E*: これら�EサービスがなくてめElysiaサーバ�Eは動作しますが、一部機�Eが制限されます、E
 ---
 
-## 🔧 インストールと起動方法
-
-### 方法1: 自動起動スクリプト (推奨)
+## 🔧 インスト�Eルと起動方況E
+### 方況E: 自動起動スクリプト (推奨)
 
 ```powershell
-# 全サービスを一括起動
-.\scripts\start-all-services.ps1 -All
+# 全サービスを一括起勁E.\scripts\start-all-services.ps1 -All
 
-# または個別に起動
-.\scripts\start-all-services.ps1 -Redis
+# また�E個別に起勁E.\scripts\start-all-services.ps1 -Redis
 .\scripts\start-all-services.ps1 -Ollama
 .\scripts\start-all-services.ps1 -FastAPI
 ```
 
-### 方法2: Docker Compose (要Docker)
+### 方況E: Docker Compose (要Docker)
 
 ```powershell
-# Dockerがインストールされている場合
-docker compose -f config/docker/docker-compose.yml up -d
+# Dockerがインスト�EルされてぁE��場吁Edocker compose -f config/docker/docker-compose.yml up -d
 
-# 特定のサービスのみ起動
-docker compose -f config/docker/docker-compose.yml up -d redis ollama fastapi
+# 特定�Eサービスのみ起勁Edocker compose -f config/docker/docker-compose.yml up -d redis ollama fastapi
 ```
 
-### 方法3: 手動起動
-
+### 方況E: 手動起勁E
 ---
 
-## 1️⃣ Redis - レート制限とキャッシング
+## 1�E�⃣ Redis - レート制限とキャチE��ング
 
-### インストール
+### インスト�Eル
 
 **Windows (WSL2推奨)**:
 
@@ -56,11 +47,9 @@ wsl sudo apt-get update
 wsl sudo apt-get install redis-server
 ```
 
-**Windows (ネイティブ)**:
+**Windows (ネイチE��チE**:
 
-1. [Redis for Windows](https://github.com/microsoftarchive/redis/releases) からダウンロード
-2. `redis-server.exe` を実行
-
+1. [Redis for Windows](https://github.com/microsoftarchive/redis/releases) からダウンローチE2. `redis-server.exe` を実衁E
 **macOS/Linux**:
 
 ```bash
@@ -74,222 +63,196 @@ sudo apt-get install redis-server
 sudo yum install redis
 ```
 
-### 起動
-
+### 起勁E
 ```powershell
 # Windows (WSL2)
 wsl sudo service redis-server start
 
-# Windows (ネイティブ)
+# Windows (ネイチE��チE
 redis-server
 
 # macOS/Linux
 redis-server
-# またはバックグラウンド実行
-redis-server --daemonize yes
+# また�Eバックグラウンド実衁Eredis-server --daemonize yes
 ```
 
-### 動作確認
-
+### 動作確誁E
 ```powershell
-# 接続テスト
-redis-cli ping
-# 期待される出力: PONG
+# 接続テスチEredis-cli ping
+# 期征E��れる出劁E PONG
 
-# または
+# また�E
 curl http://localhost:6379
 ```
 
-### 環境変数設定 (.env)
+### 環墁E��数設宁E(.env)
 
 ```env
 REDIS_ENABLED=true
 REDIS_URL=redis://localhost:6379
 ```
 
-### 有効化される機能
+### 有効化される機�E
 
-✅ **レート制限**: ユーザーごとに60リクエスト/分  
-✅ **セッション管理**: 高速なセッションストレージ  
-✅ **キャッシング**: API応答の高速化
+✁E**レート制陁E*: ユーザーごとに60リクエスチE刁E 
+✁E**セチE��ョン管琁E*: 高速なセチE��ョンストレージ  
+✁E**キャチE��ング**: API応答�E高速化
 
 ---
 
-## 2️⃣ Ollama - LLM推論エンジン
+## 2�E�⃣ Ollama - LLM推論エンジン
 
-### インストール
+### インスト�Eル
 
 **Windows/macOS/Linux**:
 
-1. [Ollama公式サイト](https://ollama.ai/download) からダウンロード
-2. インストーラーを実行
-
+1. [Ollama公式サイチE(https://ollama.ai/download) からダウンローチE2. インスト�Eラーを実衁E
 **コマンドライン (Linux)**:
 
 ```bash
 curl -fsSL https://ollama.ai/install.sh | sh
 ```
 
-### モデルのダウンロード
-
+### モチE��のダウンローチE
 ```powershell
-# 推奨モデル (7B - バランス型)
+# 推奨モチE�� (7B - バランス垁E
 ollama pull llama3.2
 
-# 高性能モデル (70B - 高精度、要GPU)
+# 高性能モチE�� (70B - 高精度、要GPU)
 ollama pull llama3.2:70b
 
-# 軽量モデル (3B - 高速、低スペックPC向け)
+# 軽量モチE�� (3B - 高速、低スペックPC向け)
 ollama pull llama3.2:3b
 
-# 日本語特化モデル
+# 日本語特化モチE��
 ollama pull elyza:jp-llama2
 ```
 
-### 起動
-
+### 起勁E
 ```powershell
-# サービスとして起動 (自動的に起動することが多い)
+# サービスとして起勁E(自動的に起動することが多い)
 ollama serve
 
-# バックグラウンド実行
-Start-Process ollama -ArgumentList "serve" -WindowStyle Hidden
+# バックグラウンド実衁EStart-Process ollama -ArgumentList "serve" -WindowStyle Hidden
 ```
 
-### 動作確認
-
+### 動作確誁E
 ```powershell
-# モデル一覧表示
+# モチE��一覧表示
 ollama list
 
-# テスト実行
-ollama run llama3.2 "Hello, how are you?"
+# チE��ト実衁Eollama run llama3.2 "Hello, how are you?"
 
-# APIテスト
-curl http://localhost:11434/api/tags
+# APIチE��チEcurl http://localhost:11434/api/tags
 ```
 
-### 環境変数設定 (.env)
+### 環墁E��数設宁E(.env)
 
 ```env
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.2
 ```
 
-### 有効化される機能
+### 有効化される機�E
 
-✅ **AIチャット**: エリシアAIとの自然な会話  
-✅ **コンテキスト理解**: 会話履歴を考慮した応答  
-✅ **ストリーミング**: リアルタイムな応答表示  
-✅ **多言語対応**: 日本語・英語・その他言語
-
+✁E**AIチャチE��**: エリシアAIとの自然な会話  
+✁E**コンチE��スト理解**: 会話履歴を老E�Eした応筁E 
+✁E**ストリーミング**: リアルタイムな応答表示  
+✁E**多言語対忁E*: 日本語�E英語�Eそ�E他言誁E
 ---
 
-## 3️⃣ FastAPI - RAG (検索拡張生成)
+## 3�E�⃣ FastAPI - RAG (検索拡張生�E)
 
 ### 前提条件
 
-Python 3.11以降がインストールされていること:
+Python 3.11以降がインスト�EルされてぁE��こと:
 
 ```powershell
 python --version
-# Python 3.11.0 以上
-```
+# Python 3.11.0 以丁E```
 
-### インストール
+### インスト�Eル
 
 ```powershell
-# 依存関係のインストール
+# 依存関係�Eインスト�Eル
 cd python
 pip install -r requirements.txt
 
-# または仮想環境を使用 (推奨)
+# また�E仮想環墁E��使用 (推奨)
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-### 起動
-
+### 起勁E
 ```powershell
-# スクリプトから起動 (推奨)
+# スクリプトから起勁E(推奨)
 .\scripts\start-fastapi.ps1
 
-# または直接実行
-python python/fastapi_server.py
+# また�E直接実衁Epython python/fastapi_server.py
 
-# 開発モード (ホットリロード)
+# 開発モーチE(ホットリローチE
 uvicorn fastapi_server:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 動作確認
-
+### 動作確誁E
 ```powershell
-# ヘルスチェック
+# ヘルスチェチE��
 curl http://localhost:8000/health
 
-# API仕様確認
-start http://localhost:8000/docs
+# API仕様確誁Estart http://localhost:8000/docs
 ```
 
-### 環境変数設定 (.env)
+### 環墁E��数設宁E(.env)
 
 ```env
 FASTAPI_BASE_URL=http://localhost:8000
 RAG_ENABLED=true
 ```
 
-### 有効化される機能
+### 有効化される機�E
 
-✅ **RAG検索**: 知識ベースからの情報検索  
-✅ **ベクトル検索**: セマンティック検索  
-✅ **ドキュメント処理**: PDF/テキストファイルの解析  
-✅ **知識管理**: 学習データの追加・更新
+✁E**RAG検索**: 知識�Eースからの惁E��検索  
+✁E**ベクトル検索**: セマンチE��チE��検索  
+✁E**ドキュメント�E琁E*: PDF/チE��ストファイルの解极E 
+✁E**知識管琁E*: 学習データの追加・更新
 
 ---
 
-## 🔍 サービス状態の確認
-
-### PowerShellで確認
-
+## 🔍 サービス状態�E確誁E
+### PowerShellで確誁E
 ```powershell
-# Redisプロセス確認
-Get-Process redis-server -ErrorAction SilentlyContinue
+# Redisプロセス確誁EGet-Process redis-server -ErrorAction SilentlyContinue
 
-# Ollamaプロセス確認
-Get-Process ollama -ErrorAction SilentlyContinue
+# Ollamaプロセス確誁EGet-Process ollama -ErrorAction SilentlyContinue
 
-# FastAPIポート確認
-Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
+# FastAPIポ�Eト確誁EGet-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
 
-# または一括確認スクリプト
+# また�E一括確認スクリプト
 .\scripts\check-services.ps1
 ```
 
-### ブラウザで確認
-
+### ブラウザで確誁E
 - **Ollama**: http://localhost:11434/api/tags
 - **FastAPI**: http://localhost:8000/docs
 - **Redis**: `redis-cli ping` (CLIのみ)
 
 ---
 
-## 🚀 Elysiaサーバーの起動
-
-全サービスが起動したら、Elysiaサーバーを起動します:
+## 🚀 Elysiaサーバ�Eの起勁E
+全サービスが起動したら、Elysiaサーバ�Eを起動しまぁE
 
 ```powershell
-# 開発モード
-bun run dev
+# 開発モーチEbun run dev
 
-# または
+# また�E
 npm run dev
 ```
 
-アクセス先:
+アクセス允E
 
 - **メインアプリ**: http://localhost:3000
-- **管理画面**: http://localhost:3000/admin-extended.html
+- **管琁E��面**: http://localhost:3000/admin-extended.html
 - **Swagger API**: http://localhost:3000/swagger
 
 ---
@@ -317,23 +280,20 @@ docker compose -f config/docker/docker-compose.yml down
 
 ---
 
-## 🔧 トラブルシューティング
+## 🔧 トラブルシューチE��ング
 
-### ポートが既に使用されている
+### ポ�Eトが既に使用されてぁE��
 
 ```powershell
-# ポート使用状況確認
-netstat -ano | findstr "6379"    # Redis
+# ポ�Eト使用状況確誁Enetstat -ano | findstr "6379"    # Redis
 netstat -ano | findstr "11434"   # Ollama
 netstat -ano | findstr "8000"    # FastAPI
 
-# プロセス終了
-Stop-Process -Id <PID> -Force
+# プロセス終亁EStop-Process -Id <PID> -Force
 ```
 
-### サービスが起動しない
-
-1. **ログ確認**:
+### サービスが起動しなぁE
+1. **ログ確誁E*:
 
    ```powershell
    # Elysiaログ
@@ -343,27 +303,26 @@ Stop-Process -Id <PID> -Force
    Get-Content logs/fastapi.log -Tail 50
    ```
 
-2. **依存関係確認**:
+2. **依存関係確誁E*:
 
    ```powershell
-   # Python依存関係
-   pip list
+   # Python依存関俁E   pip list
 
    # Bunパッケージ
    bun install
    ```
 
-3. **環境変数確認**:
+3. **環墁E��数確誁E*:
    ```powershell
    Get-Content .env
    ```
 
 ### メモリ不足
 
-Ollamaの使用メモリを削減:
+Ollamaの使用メモリを削渁E
 
 ```powershell
-# 軽量モデルに変更
+# 軽量モチE��に変更
 ollama pull llama3.2:3b
 
 # .envを更新
@@ -372,46 +331,43 @@ OLLAMA_MODEL=llama3.2:3b
 
 ---
 
-## 📊 推奨構成
+## 📊 推奨構�E
 
-### 最小構成 (開発用)
-
-```
-✅ Elysia Server のみ
-❌ Redis (フォールバック機能で動作)
-❌ Ollama (AI機能は無効)
-❌ FastAPI (RAG機能は無効)
-```
-
-### 標準構成 (推奨)
+### 最小構�E (開発用)
 
 ```
-✅ Elysia Server
-✅ Ollama + llama3.2
-❌ Redis (オプショナル)
-❌ FastAPI (オプショナル)
+✁EElysia Server のみ
+❁ERedis (フォールバック機�Eで動佁E
+❁EOllama (AI機�Eは無効)
+❁EFastAPI (RAG機�Eは無効)
 ```
 
-### フル構成 (本番環境)
+### 標準構�E (推奨)
 
 ```
-✅ Elysia Server
-✅ Redis (レート制限)
-✅ Ollama + llama3.2
-✅ FastAPI (RAG機能)
+✁EElysia Server
+✁EOllama + llama3.2
+❁ERedis (オプショナル)
+❁EFastAPI (オプショナル)
+```
+
+### フル構�E (本番環墁E
+
+```
+✁EElysia Server
+✁ERedis (レート制陁E
+✁EOllama + llama3.2
+✁EFastAPI (RAG機�E)
 ```
 
 ---
 
-## 🎯 次のステップ
-
-1. ✅ サービス起動確認
-2. ✅ Elysiaサーバー起動 (`bun run dev`)
-3. ✅ ブラウザでアクセス (http://localhost:3000)
-4. ✅ AIチャットテスト
-5. ✅ 管理画面確認 (http://localhost:3000/admin-extended.html)
+## 🎯 次のスチE��チE
+1. ✁Eサービス起動確誁E2. ✁EElysiaサーバ�E起勁E(`bun run dev`)
+3. ✁Eブラウザでアクセス (http://localhost:3000)
+4. ✁EAIチャチE��チE��チE5. ✁E管琁E��面確誁E(http://localhost:3000/admin-extended.html)
 
 ---
 
-**作成日**: 2025-12-04  
+**作�E日**: 2025-12-04  
 **最終更新**: 2025-12-04

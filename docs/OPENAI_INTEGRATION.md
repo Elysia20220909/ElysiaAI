@@ -1,29 +1,22 @@
-# OpenAI統合ガイド
-
-## 概要
-
-Elysia AIにOpenAI GPTモデルを統合しました。既存のOllamaベースのシステムに加えて、OpenAI APIを使用した高品質な応答が可能になります。
-
-## 実装内容
+# OpenAI統合ガイチE
+## 概要E
+Elysia AIにOpenAI GPTモチE��を統合しました。既存�EOllamaベ�EスのシスチE��に加えて、OpenAI APIを使用した高品質な応答が可能になります、E
+## 実裁E�E容
 
 ### 1. OpenAI統合ライブラリ (`src/lib/openai-integration.ts`)
 
-**主な機能:**
+**主な機�E:**
 
-- **クライアント管理**: OpenAIクライアントの初期化と管理
-- **チャット機能**: 非ストリーミング/ストリーミング両対応
-- **簡易API**: シンプルなチャット関数
-- **会話履歴管理**: 会話コンテキストの保持
-- **ユーティリティ**: モデル一覧、トークン推定
-
-**エクスポート関数:**
+- **クライアント管琁E*: OpenAIクライアント�E初期化と管琁E- **チャチE��機�E**: 非ストリーミング/ストリーミング両対忁E- **簡易API**: シンプルなチャチE��関数
+- **会話履歴管琁E*: 会話コンチE��スト�E保持
+- **ユーチE��リチE��**: モチE��一覧、トークン推宁E
+**エクスポ�Eト関数:**
 
 ```typescript
-// 初期化
-initializeOpenAI(apiKey?: string): OpenAI
+// 初期匁EinitializeOpenAI(apiKey?: string): OpenAI
 getOpenAIClient(): OpenAI
 
-// チャット
+// チャチE��
 chatWithOpenAI(messages, options): Promise<string>
 streamChatWithOpenAI(messages, options): AsyncGenerator<string>
 
@@ -31,15 +24,15 @@ streamChatWithOpenAI(messages, options): AsyncGenerator<string>
 simpleChat(userMessage, systemPrompt?, options): Promise<string>
 conversationChat(history, newUserMessage, options): Promise<{response, updatedHistory}>
 
-// ユーティリティ
+// ユーチE��リチE��
 isOpenAIAvailable(): boolean
 listAvailableModels(): Promise<string[]>
 estimateTokens(text: string): number
 ```
 
-### 2. 新しいモード: `openai`
+### 2. 新しいモーチE `openai`
 
-**LLM設定** (`.internal/app/llm/llm-config.ts`):
+**LLM設宁E* (`.internal/app/llm/llm-config.ts`):
 
 ```typescript
 openai: {
@@ -50,19 +43,18 @@ openai: {
 }
 ```
 
-**切り替えコマンド:**
+**刁E��替えコマンチE**
 
 - `/openai`
 - `/gpt`
 
-### 3. API統合 (`src/index.ts`)
+### 3. API統吁E(`src/index.ts`)
 
-**処理フロー:**
+**処琁E��ロー:**
 
 1. モードが `openai` の場合、OpenAI APIを使用
-2. ストリーミングレスポンスを生成
-3. SSE形式でクライアントに送信
-4. 他のモードは従来通りOllamaを使用
+2. ストリーミングレスポンスを生戁E3. SSE形式でクライアントに送信
+4. 他�Eモード�E従来通りOllamaを使用
 
 **レスポンスヘッダー:**
 
@@ -71,53 +63,40 @@ X-Elysia-Mode: openai
 X-Elysia-Provider: openai
 ```
 
-## 環境設定
-
-### 必須環境変数
+## 環墁E��宁E
+### 忁E��環墁E��数
 
 `.env` ファイルに追加:
 
 ```env
 OPENAI_API_KEY=sk-proj-your-api-key-here
-OPENAI_MODEL=gpt-5.1-codex-max  # 既定モデル（GPT-5.1-Codex-Max Preview）
-```
+OPENAI_MODEL=gpt-5.1-codex-max  # 既定モチE���E�EPT-5.1-Codex-Max Preview�E�E```
 
-> **注意**: GPT-5.1-Codex-Max は Preview モデルです。OpenAI アカウントでアクセス権限を確認してください。
+> **注愁E*: GPT-5.1-Codex-Max は Preview モチE��です。OpenAI アカウントでアクセス権限を確認してください、E
+### 利用可能なモチE��
 
-### 利用可能なモデル
-
-- `gpt-5.1-codex-max`: **最新プレビューモデル** - コード生成・補完に最適化（推奨）
-- `gpt-4o-mini`: 高速・コスト効率的
+- `gpt-5.1-codex-max`: **最新プレビューモチE��** - コード生成�E補完に最適化（推奨�E�E- `gpt-4o-mini`: 高速�Eコスト効玁E��
 - `gpt-4o`: 最高品質
-- `gpt-4-turbo`: バランス型
-- `gpt-3.5-turbo`: 低コスト
-
-## 使用方法
-
-### 1. テスト実行
-
+- `gpt-4-turbo`: バランス垁E- `gpt-3.5-turbo`: 低コスチE
+## 使用方況E
+### 1. チE��ト実衁E
 ```bash
-# 環境変数を設定
-export OPENAI_API_KEY=sk-proj-...
+# 環墁E��数を設宁Eexport OPENAI_API_KEY=sk-proj-...
 
-# テスト実行
-bun run test-openai.ts
+# チE��ト実衁Ebun run test-openai.ts
 ```
 
-**テスト内容:**
+**チE��ト�E容:**
 
-- APIキー確認
-- クライアント初期化
-- 簡単なチャット
-- システムプロンプト付きチャット
-- 会話履歴付きチャット
-- トークン推定
-- モデル一覧取得
-
+- APIキー確誁E- クライアント�E期化
+- 簡単なチャチE��
+- シスチE��プロンプト付きチャチE��
+- 会話履歴付きチャチE��
+- ト�Eクン推宁E- モチE��一覧取征E
 ### 2. API経由で使用
 
 ```bash
-# OpenAIモードでチャット
+# OpenAIモードでチャチE��
 curl -X POST http://localhost:3000/elysia-love \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -134,65 +113,60 @@ curl -X POST http://localhost:3000/elysia-love \
 ```typescript
 import { simpleChat, conversationChat } from "./src/lib/openai-integration";
 
-// シンプルなチャット
-const response = await simpleChat("今日の天気は?", "あなたは親切なAIアシスタントです。", { model: "gpt-4o-mini", temperature: 0.7 });
+// シンプルなチャチE��
+const response = await simpleChat("今日の天気�E?", "あなた�E親刁E��AIアシスタントです、E, { model: "gpt-4o-mini", temperature: 0.7 });
 
 // 会話履歴付き
-let history = [{ role: "system", content: "あなたは日本語で話すAIです。" }];
+let history = [{ role: "system", content: "あなた�E日本語で話すAIです、E }];
 
-const turn1 = await conversationChat(history, "私の名前はタロウです。");
+const turn1 = await conversationChat(history, "私�E名前はタロウです、E);
 console.log(turn1.response);
 history = turn1.updatedHistory;
 
-const turn2 = await conversationChat(history, "私の名前は何でしたか?");
-console.log(turn2.response); // "タロウ"と覚えている
+const turn2 = await conversationChat(history, "私�E名前は何でしたぁE");
+console.log(turn2.response); // "タロウ"と覚えてぁE��
 ```
 
-## モード比較
-
-| モード       | プロバイダー | モデル          | 特徴                   |
+## モード比輁E
+| モーチE      | プロバイダー | モチE��          | 特徴                   |
 | ------------ | ------------ | --------------- | ---------------------- |
 | sweet        | Ollama       | llama3.2        | 公式Elysiaキャラクター |
 | normal       | Ollama       | llama3.2        | フレンドリー           |
 | professional | Ollama       | llama3.2        | フォーマル             |
-| casual       | Ollama       | llama3.2        | タメ口、Web検索対応    |
-| creative     | Ollama       | llama3.2        | 創造的                 |
+| casual       | Ollama       | llama3.2        | タメ口、Web検索対忁E   |
+| creative     | Ollama       | llama3.2        | 創造皁E                |
 | technical    | Ollama       | llama3.2        | 技術的                 |
-| **openai**   | **OpenAI**   | **gpt-4o-mini** | **高品質、広範な知識** |
+| **openai**   | **OpenAI**   | **gpt-4o-mini** | **高品質、庁E��E��知譁E* |
 
-## コスト管理
-
-### トークン推定
-
+## コスト管琁E
+### ト�Eクン推宁E
 ```typescript
 import { estimateTokens } from "./src/lib/openai-integration";
 
-const text = "こんにちは、今日はいい天気ですね。";
-const tokens = estimateTokens(text); // 約30トークン
+const text = "こんにちは、今日はぁE��天気です�E、E;
+const tokens = estimateTokens(text); // 紁E0ト�Eクン
 ```
 
-### 料金目安
-
+### 料��目宁E
 **gpt-4o-mini:**
-- 入力: $0.15 / 1M トークン
-- 出力: $0.60 / 1M トークン
+- 入劁E $0.15 / 1M ト�Eクン
+- 出劁E $0.60 / 1M ト�Eクン
 
 **gpt-5.1-codex-max (Preview):**
-- 料金は OpenAI の最新ドキュメントを確認してください
-- コード生成・補完で高いコストパフォーマンスを発揮
+- 料��は OpenAI の最新ドキュメントを確認してください
+- コード生成�E補完で高いコストパフォーマンスを発揮
 
-**例 (gpt-4o-mini):**
-- 100文字の質問 → 約150トークン → $0.0000225
-- 300文字の応答 → 約450トークン → $0.000270
-- **合計:** $0.0002925 (約0.03円)
+**侁E(gpt-4o-mini):**
+- 100斁E���E質啁EↁE紁E50ト�Eクン ↁE$0.0000225
+- 300斁E���E応筁EↁE紁E50ト�Eクン ↁE$0.000270
+- **合訁E** $0.0002925 (紁E.03冁E
 
 ## エラーハンドリング
 
-### APIキー未設定
-
+### APIキー未設宁E
 ```typescript
 if (!isOpenAIAvailable()) {
-  console.log("OPENAI_API_KEY が設定されていません");
+  console.log("OPENAI_API_KEY が設定されてぁE��せん");
 }
 ```
 
@@ -203,39 +177,31 @@ try {
   const response = await simpleChat("こんにちは");
 } catch (error) {
   console.error("OpenAI API エラー:", error);
-  // フォールバック: Ollamaモードに切り替え
-}
+  // フォールバック: Ollamaモードに刁E��替ぁE}
 ```
 
-## セキュリティ
+## セキュリチE��
 
-- API キーは環境変数で管理
-- `.env` ファイルは `.gitignore` に含める
-- プロダクション環境では secrets management を使用推奨
+- API キーは環墁E��数で管琁E- `.env` ファイルは `.gitignore` に含める
+- プロダクション環墁E��は secrets management を使用推奨
 
-## 次のステップ
-
-1. **環境変数設定**: `OPENAI_API_KEY` を `.env` に追加
-2. **テスト実行**: `bun run test-openai.ts`
-3. **サーバー起動**: `bun run dev`
+## 次のスチE��チE
+1. **環墁E��数設宁E*: `OPENAI_API_KEY` めE`.env` に追加
+2. **チE��ト実衁E*: `bun run test-openai.ts`
+3. **サーバ�E起勁E*: `bun run dev`
 4. **OpenAIモード使用**: `mode: "openai"` でAPIコール
 
-## トラブルシューティング
+## トラブルシューチE��ング
 
-### エラー: "OpenAI API キーが設定されていません"
+### エラー: "OpenAI API キーが設定されてぁE��せん"
 
 ```bash
-# .env ファイルを確認
-cat .env | grep OPENAI_API_KEY
+# .env ファイルを確誁Ecat .env | grep OPENAI_API_KEY
 
-# 設定されていない場合
-echo "OPENAI_API_KEY=sk-proj-your-key-here" >> .env
+# 設定されてぁE��ぁE��吁Eecho "OPENAI_API_KEY=sk-proj-your-key-here" >> .env
 ```
 
 ### エラー: "OpenAI API error"
 
-- APIキーが正しいか確認
-- レート制限を確認
-- OpenAIのステータスページを確認
-
-これでElysiaAIは Ollama と OpenAI の両方をサポートし、用途に応じて使い分けられるようになりました！
+- APIキーが正しいか確誁E- レート制限を確誁E- OpenAIのスチE�Eタスペ�Eジを確誁E
+これでElysiaAIは Ollama と OpenAI の両方をサポ�Eトし、用途に応じて使ぁE�Eけられるようになりました�E�E

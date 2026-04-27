@@ -145,7 +145,7 @@ description: "Enterprise-grade RAG chat system with multi-LLM support",
 contact: {
 name: "API Support",
 email: "support@elysia-ai.com",
-url: "https://github.com/chloeamethyst/ElysiaJS",
+url: "https://github.com/Elysia20220909/ElysiaAI",
 },
 license: {
 name: "MIT",

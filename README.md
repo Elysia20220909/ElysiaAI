@@ -157,4 +157,4 @@ ElysiaAIは、技術と感性の調和を信じる全ての開発者のために
 
 ## 🌌 Overview
 ElysiaAI is a Sovereign-Native AI OS designed for Deep Resonance.
-© 2026 Elysia20220909 // ElysiaAI Main // Crafted with passion.
+© 2026 **Elysia20220909** // ElysiaAI Main // Created and Orchestrated by the Sovereign.
