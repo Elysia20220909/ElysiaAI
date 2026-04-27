@@ -86,3 +86,23 @@ graph LR
 - **Local-First**: すべての推論（Ollama）および記憶（Milvus Lite）はローカルで実行され、秘密が外部に漏れることはありません。
 - **Encrypted Vault**: 認証情報は隔離された設定ファイルで管理。
 - **Integrity Check**: 起動時の `system_doctor` による整合性検査。
+
+## 6. Advanced Security: The ICE Protocol
+
+Elysia OS は、独自の ICE (Intrusion Countermeasure Electronics) 層によって、システムの整合性とユーザーの主権を保護します。
+
+### 6.1 White ICE (表層防壁)
+- **役割**: システムへの正当なアクセスを検証し、トラフィックを制御する。
+- **機能**: APIキー検証、レート制限、基本パケットフィルタリング。
+
+### 6.2 Black ICE (深層防壁)
+- **役割**: 悪意ある入力を能動的に検知し、攻撃を無力化する。
+- **機能**: プロンプトインジェクションの検知、サンドボックス外への脱獄防止、攻撃者IPの自動ブラックリスト化。
+
+### 6.3 AbyssRTOS (深淵の実行環境)
+- **役割**: 知性のプロセスを物理的・論理的に完全に隔離する。
+- **機能**: プロセス隠蔽、メモリ暗号化、外部ネットワークからの完全な切断状態での推論実行。
+
+---
+
+© 2026 Elysia20220909 // ElysiaAI Main // Crafted with passion in a laundry factory.

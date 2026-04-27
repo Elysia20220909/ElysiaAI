@@ -3,7 +3,7 @@
 ### 感性と論理が共鳴する、次世代AI-Native OS。
 
 [![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
-[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20210806/ElysiaAI)
+[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 ---
@@ -19,7 +19,7 @@ ElysiaAIを最も速く体験する方法です。
 ### 2. セットアップ
 ```bash
 # リポジトリの取得
-git clone git@github.com:Elysia20210806/ElysiaAI.git
+git clone git@github.com:Elysia20220909/ElysiaAI.git
 cd ElysiaAI
 
 # 統合管理CLIによるセットアップ
@@ -42,6 +42,11 @@ bun scripts/manage.ts dev
 ```
 > [!TIP]
 > ブラウザで `http://localhost:3000` を開くと、Elysia Desktop環境が展開されます。
+
+### 4. 依存ツールのセットアップ (重要)
+- **Milvus Lite**: セマンティック記憶（RAG）に使用されます。`bun scripts/manage.ts setup-python` で自動インストールされます。
+- **VOICEVOX**: 音声合成に使用されます。[公式サイト](https://voicevox.hiroshiba.jp/)からエンジンをダウンロードし、起動しておいてください。
+- **Windows セットアップ**: Windows環境では `scripts/setup-security.ps1` を実行して、セキュアなディレクトリ権限を設定することを推奨します。
 
 ---
 
@@ -91,6 +96,39 @@ graph LR
 
 ---
 
+## 🗺️ Roadmap: The Evolution of Paradise
+
+ElysiaAIは以下のフェーズを経て、真の「楽園」へと進化します。
+
+### Phase 1: Foundation (Current)
+- [x] Bun & Python Kernelの統合
+- [x] ローカルRAG (Milvus Lite) の実装
+- [x] 統合管理CLI (manage.ts) の開発
+
+### Phase 2: Resonance (Next)
+- [ ] **Multi-User Support**: 複数ユーザー対応と権限管理 (RBAC)。
+- [ ] **Memory Encryption**: Milvus記憶領域とログの AES-256-GCM による透過的暗号化。
+- [ ] **Advanced CI/CD**: 自動単体テストおよび結合テストの100%カバレッジ。
+
+### Phase 3: Transcendence
+- [ ] **AbyssRTOS Integration**: 完全隔離された実行環境。
+- [ ] **Shield Agent**: Rust製防壁によるリアルタイム脅威検知。
+- [ ] **Sovereign Mesh**: 分散型AI OSネットワーク。
+
+---
+
+## 🔒 Security: The ICE Layers
+
+ElysiaAIは、独自のセキュリティ概念に基づき、あなたの主権を保護します。
+
+- **White ICE**: 健全な対話とシステム保護のための表層防壁。
+- **Black ICE**: 悪意ある侵入やコード実行を能動的に遮断する深層防壁。
+- **AbyssRTOS**: 思考プロセスを外部から完全に隠蔽する「深淵」の実行環境。
+
+詳細は [SECURITY.md](./docs/SECURITY.md) および [ARCHITECTURE.md](./docs/ARCHITECTURE.md) を参照してください。
+
+---
+
 ## 🛠️ 技術スタック
 
 | Layer | Technologies |
@@ -130,4 +168,4 @@ q6vj8uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj
 
 ## 🌌 Overview
 ElysiaAI is a Sovereign-Native AI OS designed for Deep Resonance.
-© 2026 Elysia20210806 // ElysiaAI Main // Crafted with passion in a laundry factory.
+© 2026 Elysia20220909 // ElysiaAI Main // Crafted with passion in a laundry factory.

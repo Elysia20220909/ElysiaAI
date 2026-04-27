@@ -1,7 +1,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { config, getEnv } from "../../../../src/config.ts";
 import { logger } from "./logger";
+
+const defaultRulesPath = join(
+	dirname(fileURLToPath(import.meta.url)),
+	"../../../../config/defense/rules.json",
+);
 
 interface DefenseRules {
 	blocked_ips: string[];
@@ -42,8 +48,7 @@ class DefenseManager {
 	 */
 	private getRulesPath(): string {
 		return (
-			getEnv("DEFENSE_RULES_FILE", config.defenseRulesFile) ||
-			join(process.cwd(), "config/defense/rules.json")
+			getEnv("DEFENSE_RULES_FILE", config.defenseRulesFile) || defaultRulesPath
 		);
 	}
 

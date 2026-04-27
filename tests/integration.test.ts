@@ -40,6 +40,8 @@ describe("Integration Tests - Full Stack", () => {
 		expect(rootPkg.scripts).toHaveProperty("test");
 		expect(serverPkg.scripts).toHaveProperty("dev");
 		expect(rootPkg.scripts.boot).toContain("scripts/boot.ts");
+		expect(rootPkg.scripts.start).toBe("bun run --cwd packages/server start");
+		expect(rootPkg.scripts.dev).toBe("bun run --cwd packages/server dev");
 		expect(serverPkg.scripts).toHaveProperty("db:init");
 		expect(serverPkg.scripts).toHaveProperty("db:migrate");
 		console.log("✅ Current workflow scripts present");
@@ -84,6 +86,25 @@ describe("Integration Tests - Full Stack", () => {
 		expect(readme).toContain("FastAPI Kernel");
 		expect(readme).toContain("HTTP proxy");
 		console.log("✅ README local boot flow is current");
+	});
+
+	test("Airi demo exposes the expected chat controls", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const demo = fs.readFileSync(
+			path.join(process.cwd(), "public", "demo-airi.html"),
+			"utf-8",
+		);
+
+		expect(demo).toContain('name="mode"');
+		expect(demo).toContain('value="professional"');
+		expect(demo).toContain('value="sweet"');
+		expect(demo).toContain('placeholder="メッセージを入力してください"');
+		expect(demo).toContain('aria-label="メッセージ入力"');
+		expect(demo).toContain("feedback-up");
+		expect(demo).toContain("feedback-success");
+		console.log("✅ Airi demo chat controls are present");
 	});
 
 	test("Environment template covers both server and kernel names", async () => {
@@ -155,6 +176,21 @@ describe("Integration Tests - Full Stack", () => {
 		expect(manageSource).toContain('case "dev"');
 		expect(manageSource).toContain('"boot"');
 		expect(manageSource).not.toContain("bun run src/index.ts");
+		const defenseManagerSource = fs.readFileSync(
+			path.join(
+				process.cwd(),
+				"packages",
+				"server",
+				"src",
+				"lib",
+				"defense-manager.ts",
+			),
+			"utf-8",
+		);
+		expect(defenseManagerSource).toContain("fileURLToPath(import.meta.url)");
+		expect(defenseManagerSource).not.toContain(
+			'join(process.cwd(), "config/defense/rules.json")',
+		);
 		console.log("✅ Compatibility entrypoints aligned");
 	});
 
