@@ -1,9 +1,10 @@
-import base64
-import os
 import hashlib
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+import os
 from pathlib import Path
+
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from dotenv import load_dotenv
+
 
 # Load environment
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
