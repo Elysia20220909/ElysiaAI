@@ -28,7 +28,7 @@ class SovereignCrypto {
 	 * Encrypt data with AAD (Additional Authenticated Data)
 	 */
 	public encrypt(text: string, aad = "ELYSIOS"): string {
-		const iv = randomBytes(16);
+		const iv = randomBytes(12); // Standard GCM nonce length
 		const cipher = createCipheriv(this.algorithm, this.key, iv);
 
 		cipher.setAAD(Buffer.from(aad));
