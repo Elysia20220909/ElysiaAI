@@ -1,4 +1,4 @@
-﻿# 孱・・ElysiaAI: Threat Model & Security Boundaries
+# 孱・・ElysiaAI: Threat Model & Security Boundaries
 
 This document provides a technical translation of ElysiaAI's "ICE Protocol" into industry-standard security terminology. It defines the threat landscape, trust boundaries, and mitigation strategies.
 

@@ -1,4 +1,4 @@
-﻿# Linux/macOS/WSL Setup Guide
+# Linux/macOS/WSL Setup Guide
 
 縺薙・繧ｬ繧､繝峨〒縺ｯ縲・lysia AI繧鱈inux/macOS/WSL迺ｰ蠅・〒繧ｻ繝・ヨ繧｢繝・・縺吶ｋ謇矩�・ｒ隱ｬ譏弱＠縺ｾ縺吶�・
 ## 繧ｷ繧ｹ繝・Β隕∽ｻｶ

@@ -1,4 +1,4 @@
-﻿# 🌸 ElysiaAI - Contribution Guide
+# 🌸 ElysiaAI - Contribution Guide
 
 Thank you for considering contributing to ElysiaAI! We are building a paradisical AI OS and your help is invaluable.
 

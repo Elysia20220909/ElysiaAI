@@ -1,23 +1,23 @@
-# ファイル構�E整琁E��画
+# ファイル構�E整琁E��画
 
-## 🗂�E�E実施する整琁E
+## 🗂�E�E実施する整琁E
 ### 1. 重複READMEの統吁E
 - `README.md` (メイン) - 保持
 - `README.ja.md` (日本誁E - 保持
 - `README.en.md` (英誁E - 保持
-- ❁E`README.old.md` - 削除�E�古ぁE��ージョン�E�E- ❁E`README.new.md` - 削除�E�一時ファイル�E�E
-### 2. ドキュメント�E整琁E�E統吁E
-#### 削除対象�E�重褁E�E古ぁE��報�E�E
-- ❁E`CLEANUP_REPORT.md` - 一時レポ�EチE- ❁E`DEPLOYMENT_READY_REPORT.md` - 一時レポ�EチE- ❁E`docs/DEEP_STRUCTURE_UPDATE.md` - 古ぁE��造惁E��
-- ❁E`docs/STRUCTURE_UPDATE.md` - 古ぁE��造惁E��
-- ❁E`docs/OPTIMIZATION_REPORT.md` - 一時レポ�EチE- ❁E`docs/UPGRADE_REPORT.md` - 一時レポ�EチE
+- ❁E`README.old.md` - 削除�E�古ぁE��ージョン�E�E- ❁E`README.new.md` - 削除�E�一時ファイル�E�E
+### 2. ドキュメント�E整琁E�E統吁E
+#### 削除対象�E�重褁E�E古ぁE��報�E�E
+- ❁E`CLEANUP_REPORT.md` - 一時レポ�EチE- ❁E`DEPLOYMENT_READY_REPORT.md` - 一時レポ�EチE- ❁E`docs/DEEP_STRUCTURE_UPDATE.md` - 古ぁE��造惁E��
+- ❁E`docs/STRUCTURE_UPDATE.md` - 古ぁE��造惁E��
+- ❁E`docs/OPTIMIZATION_REPORT.md` - 一時レポ�EチE- ❁E`docs/UPGRADE_REPORT.md` - 一時レポ�EチE
 #### 統合対象
 
 - `docs/DEPLOYMENT_GUIDE.md` + `DEPLOYMENT.md` ↁE`docs/DEPLOYMENT_GUIDE.md`
 - `docs/SECURITY_ARCHITECTURE.md` + `docs/SECURITY_HARDENING.md` + `SECURITY.md` ↁE`docs/SECURITY.md`
 - `docs/PHASE5_API_SPEC.md` + `docs/PHASE5_PLUS_SUMMARY.md` ↁE`docs/PHASE5_COMPLETE.md`
 
-### 3. 整琁E���E構造
+### 3. 整琁E���E構造
 
 ```
 elysia-ai/
@@ -51,8 +51,8 @@ elysia-ai/
 
 ## 📋 実施手頁E
 1. 古いREADMEを削除
-2. レポ�Eトファイルを削除
-3. ドキュメントを統吁E4. 新しいGETTING_STARTEDを作�E
+2. レポ�Eトファイルを削除
+3. ドキュメントを統吁E4. 新しいGETTING_STARTEDを作�E
 5. リンクを更新
 
 ## ✁E削減効极E

@@ -1,4 +1,4 @@
-﻿# Disaster Recovery Plan
+# Disaster Recovery Plan
 
 ## Overview
 
