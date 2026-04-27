@@ -1,7 +1,8 @@
 [project]
 name = "elysia-ai-kernel"
-version = "0.1.0"
+version = "1.3.0"
 description = "AI Core for ElysiaAI"
+authors = [{name = "Elysia20220909"}]
 dependencies = [
     "fastapi",
     "uvicorn",
