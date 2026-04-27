@@ -52,6 +52,17 @@ jobs:
       - name: Run Bun Tests
         run: bun test
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Python Tests (Pytest)
+        run: pytest tests/
+
   zap-scan:
     name: "🛡️ OWASP ZAP Security Scan"
     runs-on: ubuntu-latest
