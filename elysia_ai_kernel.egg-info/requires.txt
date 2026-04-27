@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-langchain
-langchain-community
-ollama
-pymilvus[model]
-python-dotenv
-pydantic
