@@ -1,4 +1,4 @@
-﻿# 🌸 ElysiaAI // INFINITE RESONANCE
+# 🌸 ElysiaAI // INFINITE RESONANCE
 
 ### 感性と論理が共鳴する、次世代AI-Native OS。
 

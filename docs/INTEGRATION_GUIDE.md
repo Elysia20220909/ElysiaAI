@@ -1,4 +1,4 @@
-﻿// Integration Guide for i18n, Telemetry, and OpenAPI
+// Integration Guide for i18n, Telemetry, and OpenAPI
 
 /\*\*
 

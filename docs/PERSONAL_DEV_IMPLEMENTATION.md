@@ -1,4 +1,4 @@
-﻿---
+---
 title: 蛟倶ｺｺ髢狗匱讖溯・螳溯｣・ｮ御ｺ・date: 2025-12-05
 status: COMPLETE
 version: 1.0.0

@@ -1,4 +1,4 @@
-﻿Third-Party Notices
+Third-Party Notices
 
 This repository contains multiple components with different licenses. Please review the following:
 
