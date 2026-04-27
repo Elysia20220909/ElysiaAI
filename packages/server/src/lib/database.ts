@@ -252,22 +252,34 @@ export const voiceService = {
 		emotion: string;
 		audioUrl?: string;
 	}) {
-		return prisma.voiceLog.create({ data });
+		const encryptedData = {
+			...data,
+			text: secureVault.encrypt(data.text),
+		};
+		return prisma.voiceLog.create({ data: encryptedData });
 	},
 
 	async getRecent(limit = 100) {
-		return prisma.voiceLog.findMany({
+		const logs = await prisma.voiceLog.findMany({
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
+		return logs.map((log) => ({
+			...log,
+			text: secureVault.decrypt(log.text),
+		}));
 	},
 
 	async getByUser(username: string, limit = 50) {
-		return prisma.voiceLog.findMany({
+		const logs = await prisma.voiceLog.findMany({
 			where: { username },
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
+		return logs.map((log) => ({
+			...log,
+			text: secureVault.decrypt(log.text),
+		}));
 	},
 
 	async deleteOldLogs(daysOld = 30) {
@@ -277,5 +289,27 @@ export const voiceService = {
 		return prisma.voiceLog.deleteMany({
 			where: { createdAt: { lt: cutoffDate } },
 		});
+	},
+};
+
+// ==================== アクションログ ====================
+export const actionLogService = {
+	async create(data: { action: string; status: string; hash: string }) {
+		const encryptedData = {
+			...data,
+			action: secureVault.encrypt(data.action),
+		};
+		return prisma.actionLog.create({ data: encryptedData });
+	},
+
+	async getAll(limit = 100) {
+		const logs = await prisma.actionLog.findMany({
+			orderBy: { createdAt: "desc" },
+			take: limit,
+		});
+		return logs.map((log) => ({
+			...log,
+			action: secureVault.decrypt(log.action),
+		}));
 	},
 };
