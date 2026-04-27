@@ -1,72 +1,50 @@
-# 🛡️ ElysiaAI: Security Whitepaper & Governance
+# 🛡�E�EElysiaAI: Security Whitepaper & Governance
 
-**「システムの中枢から、あなたの尊厳を守る設計。」**
+**「シスチE��の中枢から、あなた�E尊厳を守る設計。、E*
 
-本ドキュメントは、ElysiaAI において採用されている高度なセキュリティ・アーキテクチャ、防御スタック、およびプライバシー保護に関する技術的実装を詳細に解説するホワイトペーパーです。
-
+本ドキュメント�E、ElysiaAI において採用されてぁE��高度なセキュリチE��・アーキチE��チャ、E��御スタチE��、およ�Eプライバシー保護に関する技術的実裁E��詳細に解説するホワイト�Eーパ�Eです、E
 ---
 
-## ⚖️ セキュリティテスト・ポリシー (Testing Scope)
+## ⚖︁EセキュリチE��チE��ト�Eポリシー (Testing Scope)
 
-ElysiaAIのセキュリティテスト（ZAPスキャン、ペネトレーションテスト等）を実行する際は、以下のルールを厳守してください。
-
-- **実行環境の限定**: テストは常に **ローカル環境 (`localhost`)** または **明示的に許可されたサンドボックス環境** に対してのみ実行してください。
-- **外部ドメインの禁止**: 公開されている他者のドメインやサービスに対してスキャンを実行することは、規約違反および法的なリスクを伴うため厳禁です。
-- **スキャン強度**: 自動ツールを使用する場合、システムへの過度な負荷を避けるため、適切なレート制限を設けてください。
-
+ElysiaAIのセキュリチE��チE��ト！EAPスキャン、�EネトレーションチE��ト等）を実行する際は、以下�Eルールを厳守してください、E
+- **実行環墁E�E限宁E*: チE��ト�E常に **ローカル環墁E(`localhost`)** また�E **明示皁E��許可されたサンド�EチE��ス環墁E* に対してのみ実行してください、E- **外部ドメインの禁止**: 公開されてぁE��他老E�EドメインめE��ービスに対してスキャンを実行することは、規紁E��反およ�E法的なリスクを伴ぁE��め厳禁です、E- **スキャン強度**: 自動ツールを使用する場合、シスチE��への過度な負荷を避けるため、E��刁E��レート制限を設けてください、E
 ---
 
 ## Ⅰ. Security Architecture: The Vault & Secure Enclave
 
-Elysia OS は、多層防御（Defense in Depth）戦略に基づき、デジタル世界における AI との人格的な対話を最高レベルで保護します。
-
-### 1. 「Vault (書庫)」による保存時暗号化
-すべての機密データ（過去のセッション、記憶、および認証情報）は、暗号化が施された「Vault」内にのみ存在します。
-
-- **AES-256-GCM 規格**: 業界標準かつ軍事級の暗号化方式。
-- **scrypt 鍵導出**: 辞書攻撃やブルートフォース攻撃からキーを保護するための強力なハッシュ関数を採用。
-
+Elysia OS は、多層防御�E�Eefense in Depth�E�戦略に基づき、デジタル世界におけめEAI との人格皁E��対話を最高レベルで保護します、E
+### 1. 「Vault (書庫)」による保存時暗号匁Eすべての機寁E��ータ�E�過去のセチE��ョン、記�E、およ�E認証惁E���E��E、暗号化が施された「Vault」�Eにのみ存在します、E
+- **AES-256-GCM 規格**: 業界標準かつ軍事級�E暗号化方式、E- **scrypt 鍵導�E**: 辞書攻撁E��ブルートフォース攻撁E��らキーを保護するための強力なハッシュ関数を採用、E
 ---
 
 ## Ⅱ. Core Defenses: Implementation Details
 
-### 2. 人格の一貫性と安全性のための「Gatekeeper」
-外部からの悪意あるリクエストを遮断し、AI の人格（Persona）の健全性を維持するための防壁です。
-
-#### 入力バリデーション (Sanitization & Guardrails)
- XSS / SQL インジェクションをはじめとする攻撃を無力化するために、厳格な入力フィルタリング層を設けています。
- 
+### 2. 人格の一貫性と安�E性のための「Gatekeeper、E外部からの悪意あるリクエストを遮断し、AI の人格�E�Eersona�E��E健全性を維持するため�E防壁です、E
+#### 入力バリチE�Eション (Sanitization & Guardrails)
+ XSS / SQL インジェクションを�Eじめとする攻撁E��無力化するために、厳格な入力フィルタリング層を設けてぁE��す、E 
 ```typescript
-// 認証されたメッセージのみを安全に受け入れる
+// 認証されたメチE��ージのみを安�Eに受け入れる
 ```
 
 ### 3. Anomaly Sensor & Rate Limiting
-システムの乱用（DoS / スパム）から保護するために、Redis と統合された高度な流量制御（Rate Limit）を実装しています。
-
-- **Fixed Window / Sliding Window / Token Bucket**: 状況に応じて最適なアルリズムでトラフィックを制御します。
-
+シスチE��の乱用�E�EoS / スパム�E�から保護するために、Redis と統合された高度な流E��制御�E�Eate Limit�E�を実裁E��てぁE��す、E
+- **Fixed Window / Sliding Window / Token Bucket**: 状況に応じて最適なアルリズムでトラフィチE��を制御します、E
 ---
 
 ## Ⅲ. Operational Security: Secure Sandbox
 
-### 4. 隔離された実行環境 (Orchestra Sandbox)
-プロンプトのテストや検証は、常にシステムのメイン回路から完全に「隔離された」サンドボックス内で執行されます。Tester, Responder, Judge, Conductor の 4 つのエージェントによる協調型評価システムが、一貫した品質を保証します。
-
+### 4. 隔離された実行環墁E(Orchestra Sandbox)
+プロンプトのチE��トや検証は、常にシスチE��のメイン回路から完�Eに「隔離された」サンド�EチE��ス冁E��執行されます。Tester, Responder, Judge, Conductor の 4 つのエージェントによる協調型評価シスチE��が、一貫した品質を保証します、E
 ---
 
-## Ⅳ. 実装済みセキュリティ機能 (Appendix)
+## Ⅳ. 実裁E��みセキュリチE��機�E (Appendix)
 
-### 0. 透過的暗号化 (Transparent Encryption) ✅
-Elysia OS は、データの保存時に自動的に暗号化を施し、メモリ展開時にのみ復号します。
+### 0. 透過皁E��号匁E(Transparent Encryption) ✁EElysia OS は、データの保存時に自動的に暗号化を施し、メモリ展開時にのみ復号します、E
+- **Milvus (記�E領域)**: 長期記�E�E�Engrams�E��E冁E��めEAES-256-GCM で保護、E- **Voice Logs**: 音声入力�EチE��ストデータめEDB 保存時に暗号化、E- **Action Logs**: 操作履歴の機寁E��報を保護、E- **Key Management**: `scryptSync` を使用した強固な鍵導�Eにより、環墁E��数 `JWT_SECRET` から安�Eに暗号化キーを生成します、E
+### 1. 入力バリチE�Eション (Input Validation)
 
-- **Milvus (記憶領域)**: 長期記憶（Engrams）の内容を AES-256-GCM で保護。
-- **Voice Logs**: 音声入力のテキストデータを DB 保存時に暗号化。
-- **Action Logs**: 操作履歴の機密情報を保護。
-- **Key Management**: `scryptSync` を使用した強固な鍵導出により、環境変数 `JWT_SECRET` から安全に暗号化キーを生成します。
-
-### 1. 入力バリデーション (Input Validation)
-
-従来: 最大500文字 / 10メッセージ → 現在: 最大400文字 / 8メッセージ
+従来: 最大500斁E��E/ 10メチE��ージ ↁE現在: 最大400斁E��E/ 8メチE��ージ
 
 ```typescript
 body: t.Object({
@@ -76,7 +54,7 @@ body: t.Object({
       content: t.String({
         maxLength: 400,
         minLength: 1,
-        pattern: "^[a-zA-Z0-9\\s\\p{L}\\p{N}\\p{P}\\p{S}♡♪〜！？。、]+$",
+        pattern: "^[a-zA-Z0-9\\s\\p{L}\\p{N}\\p{P}\\p{S}♡♪〜！E��。、]+$",
       }),
     }),
     { maxItems: 8 },
@@ -84,7 +62,7 @@ body: t.Object({
 });
 ```
 
-**効果**: XSSインジェクション、異常長入力、スクリプト埋め込みを防止
+**効极E*: XSSインジェクション、異常長入力、スクリプト埋め込みを防止
 
 ### 2. XSS保護 (XSS Prevention)
 
@@ -99,14 +77,14 @@ const cleanContent = sanitizeHtml(m.content, {
 });
 ```
 
-**防御例**:
+**防御侁E*:
 
-- 入力: `<script>alert('hack')</script>`
-- 出力: `alert('hack')` (無害化)
+- 入劁E `<script>alert('hack')</script>`
+- 出劁E `alert('hack')` (無害匁E
 
-### 3. 危険キーワード検出 (Dangerous Keyword Detection)
+### 3. 危険キーワード検�E (Dangerous Keyword Detection)
 
-#### フロントエンド / サーバー (ElysiaJS)
+#### フロントエンチE/ サーバ�E (ElysiaJS)
 
 ```typescript
 const DANGEROUS_KEYWORDS = ["eval", "exec", "system", "drop", "delete", "<script", "onerror", "onload", "javascript:", "--", ";--", "union select"];
@@ -116,58 +94,50 @@ if (containsDangerousKeywords(cleaned)) {
 }
 ```
 
-#### FastAPI バックエンド
-
+#### FastAPI バックエンチE
 ```python
 dangerous_keywords = ["drop","delete","exec","eval","system","__import__"]
 if any(kw in user_message.lower() for kw in dangerous_keywords):
-    raise HTTPException(400, "にゃん♡ いたずらはダメだよぉ〜？")
+    raise HTTPException(400, "にめE��♡ ぁE��ずらはダメだよぉ〜！E)
 ```
 
-**効果**: SQLインジェクション、コマンドインジェクション、Python コードインジェクション防止
+**効极E*: SQLインジェクション、コマンドインジェクション、Python コードインジェクション防止
 
-### 4. レート制限 (Rate Limiting)
+### 4. レート制陁E(Rate Limiting)
 
-#### 3種類のアルゴリズム実装 ✅
-
+#### 3種類�Eアルゴリズム実裁E✁E
 ```typescript
-// 1. Fixed Window - シンプルで高速
-const fixedWindow = rateLimiter.checkFixedWindow(ip, 60, 1);
+// 1. Fixed Window - シンプルで高送Econst fixedWindow = rateLimiter.checkFixedWindow(ip, 60, 1);
 
 // 2. Sliding Window - 高精度
 const slidingWindow = rateLimiter.checkSlidingWindow(ip, 60, 1);
 
-// 3. Token Bucket - バースト許容
+// 3. Token Bucket - バ�Eスト許容
 const tokenBucket = rateLimiter.checkTokenBucket(ip, 60, 10, 2);
 ```
 
 **特徴**:
 
-- **Redis統合**: 複数サーバー間で共有可能
-- **自動クリーンアップ**: 5分ごとにメモリ解放
-- **フォールバック**: Redis未接続時はインメモリ動作
-
-**効果**: DoS攻撃、スパム攻撃を防止
+- **Redis統吁E*: 褁E��サーバ�E間で共有可能
+- **自動クリーンアチE�E**: 5刁E��とにメモリ解放
+- **フォールバック**: Redis未接続時はインメモリ動佁E
+**効极E*: DoS攻撁E��スパム攻撁E��防止
 
 ### 5. JWT認証 (Authentication)
 
-#### トークンペアシステム ✅
-
+#### ト�EクンペアシスチE�� ✁E
 ```typescript
-// アクセストークン (15分有効)
+// アクセスト�Eクン (15刁E��効)
 const accessToken = jwt.sign({ userId, role }, CONFIG.JWT_SECRET, { expiresIn: "15m" });
 
-// リフレッシュトークン (7日有効)
+// リフレチE��ュト�Eクン (7日有効)
 const refreshToken = jwt.sign({ userId, tokenId }, CONFIG.JWT_REFRESH_SECRET, { expiresIn: "7d" });
 ```
 
-**エンドポイント**:
+**エンド�EインチE*:
 
-- `POST /auth/token` - パスワード認証でトークンペア発行
-- `POST /auth/refresh` - リフレッシュトークンで新しいアクセストークン取得
-- `POST /auth/logout` - リフレッシュトークン無効化
-
-### 6. セキュリティヘッダー (Security Headers)
+- `POST /auth/token` - パスワード認証でト�Eクンペア発衁E- `POST /auth/refresh` - リフレチE��ュト�Eクンで新しいアクセスト�Eクン取征E- `POST /auth/logout` - リフレチE��ュト�Eクン無効匁E
+### 6. セキュリチE��ヘッダー (Security Headers)
 
 ```typescript
 onAfterHandle(({ set }) => {
@@ -181,38 +151,36 @@ onAfterHandle(({ set }) => {
 });
 ```
 
-### 7. CORS制限 (CORS Policy)
+### 7. CORS制陁E(CORS Policy)
 
 ```typescript
 app.use(
   cors({
     origin: ["http://localhost:3000"], // 許可ドメインのみ
-    methods: ["GET", "POST"], // 許可メソッド
+    methods: ["GET", "POST"], // 許可メソチE��
   }),
 );
 ```
 
-**効果**: 不正なドメインからのリクエストをブロック
+**効极E*: 不正なドメインからのリクエストをブロチE��
 
 ### 8. 出力フィルタリング (Output Filtering)
 
-#### Ollama応答の安全化
-
+#### Ollama応答�E安�E匁E
 ````python
 def safe_filter(text: str) -> str:
-    # コードブロック削除
+    # コードブロチE��削除
     text = re.sub(r'```[\s\S]*?```', '', text)
 
     # 危険キーワード除去
     for kw in ["eval", "exec", "system", "__import__", "subprocess"]:
-        text = text.replace(kw, "[安全性のため削除]")
+        text = text.replace(kw, "[安�E性のため削除]")
 
     return text
 ````
 
-**効果**: AIが生成した悪意あるコード（ウイルス、ハッキングスクリプト）を無害化
-
-### 9. ログ監視 (Logging & Monitoring)
+**効极E*: AIが生成した悪意あるコード（ウイルス、ハチE��ングスクリプト�E�を無害匁E
+### 9. ログ監要E(Logging & Monitoring)
 
 #### リクエストロギング
 
@@ -225,144 +193,110 @@ app.onRequest(({ request }) => {
 });
 ```
 
-#### 不審なクエリ検出
+#### 不審なクエリ検�E
 
 ```python
-logger.warning(f"⚠️ Suspicious query detected: {query.text[:50]}...")
+logger.warning(f"⚠�E�ESuspicious query detected: {query.text[:50]}...")
 ```
 
-**効果**: 攻撃パターンをリアルタイム検出、事後分析可能
+**効极E*: 攻撁E��ターンをリアルタイム検�E、事後�E析可能
 
-### 10. Milvusセキュリティ
+### 10. MilvusセキュリチE��
 
-#### 認証トークン
+#### 認証ト�Eクン
 
 ```python
 milvus_client = MilvusClient(
     uri="http://localhost:19530",
-    token="user:password"  # 認証必須
-)
+    token="user:password"  # 認証忁E��E)
 ```
 
-#### 環境変数での秘匿
+#### 環墁E��数での秘匿
 
 ```bash
-# .env ファイル（.gitignore で除外）
-MILVUS_TOKEN=your_secure_token_here
+# .env ファイル�E�Egitignore で除外！EMILVUS_TOKEN=your_secure_token_here
 ```
 
-**効果**: データベースへの不正アクセス防止
+**効极E*: チE�Eタベ�Eスへの不正アクセス防止
 
 ---
 
-## セキュリティアーキテクチャ
+## セキュリチE��アーキチE��チャ
 
-### 多層防御アーキテクチャ
+### 多層防御アーキチE��チャ
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ Layer 5: 暗号化 (Encryption at Rest)                │
-│  - AES-256-GCM                                      │
-│  - scrypt鍵導出                                     │
-├─────────────────────────────────────────────────────┤
-│ Layer 4: アプリケーション (Application-Level)        │
-│  - アクセス制御 (AccessLevel: PUBLIC → SYSTEM)      │
-│  - JWT認証                                          │
-│  - セッション管理                                   │
-├─────────────────────────────────────────────────────┤
-│ Layer 3: Docker (Container Security)                │
-│  - .dockerignore で機密ファイル除外                 │
-│  - 最小権限実行                                     │
-├─────────────────────────────────────────────────────┤
-│ Layer 2: バージョン管理 (Version Control)           │
-│  - .gitignore で機密ディレクトリ除外                │
-│  - secrets/ security/ private/ 完全除外             │
-├─────────────────────────────────────────────────────┤
-│ Layer 1: ファイルシステム (File System)             │
-│  - chmod 700 (Unix/Linux)                           │
-│  - icacls 制限 (Windows)                            │
-└─────────────────────────────────────────────────────┘
-```
+┌─────────────────────────────────────────────────────━E━ELayer 5: 暗号匁E(Encryption at Rest)                ━E━E - AES-256-GCM                                      ━E━E - scrypt鍵導�E                                     ━E├─────────────────────────────────────────────────────┤
+━ELayer 4: アプリケーション (Application-Level)        ━E━E - アクセス制御 (AccessLevel: PUBLIC ↁESYSTEM)      ━E━E - JWT認証                                          ━E━E - セチE��ョン管琁E                                  ━E├─────────────────────────────────────────────────────┤
+━ELayer 3: Docker (Container Security)                ━E━E - .dockerignore で機寁E��ァイル除夁E                ━E━E - 最小権限実衁E                                    ━E├─────────────────────────────────────────────────────┤
+━ELayer 2: バ�Eジョン管琁E(Version Control)           ━E━E - .gitignore で機寁E��ィレクトリ除夁E               ━E━E - secrets/ security/ private/ 完�E除夁E            ━E├─────────────────────────────────────────────────────┤
+━ELayer 1: ファイルシスチE�� (File System)             ━E━E - chmod 700 (Unix/Linux)                           ━E━E - icacls 制陁E(Windows)                            ━E└─────────────────────────────────────────────────────━E```
 
 ---
 
 ## 保護されたディレクトリ構造
 
-### 機密情報の配置
+### 機寁E��報の配置
 
-#### 1. `/config/private/` - 環境変数と認証情報
+#### 1. `/config/private/` - 環墁E��数と認証惁E��
 
 ```
 config/private/
-├── .env              # 本番環境変数（Git管理外）
-├── .env.example      # 環境変数テンプレート
-└── README.md         # 設定ガイド
-```
+├── .env              # 本番環墁E��数�E�Eit管琁E��！E├── .env.example      # 環墁E��数チE��プレーチE└── README.md         # 設定ガイチE```
 
-**含まれる情報:**
+**含まれる惁E��:**
 
-- API キー、シークレット
-- データベース接続文字列
-- 認証パスワード
-
+- API キー、シークレチE��
+- チE�Eタベ�Eス接続文字�E
+- 認証パスワーチE
 **アクセス制御:**
 
-- `.gitignore` で完全に除外
-- 読み取り権限を最小限に制限
-
-#### 2. `/src/config/internal/` - 内部設定
-
+- `.gitignore` で完�Eに除夁E- 読み取り権限を最小限に制陁E
+#### 2. `/src/config/internal/` - 冁E��設宁E
 ```
 src/config/internal/
-└── llm-config.ts     # LLMモデル設定とプロンプト
+└── llm-config.ts     # LLMモチE��設定とプロンプト
 ```
 
-**含まれる情報:**
+**含まれる惁E��:**
 
-- システムプロンプト
-- モデルパラメータ
-- キャラクター設定
-
-#### 3. `/src/core/security/` - セキュリティモジュール
+- シスチE��プロンプト
+- モチE��パラメータ
+- キャラクター設宁E
+#### 3. `/src/core/security/` - セキュリチE��モジュール
 
 ```
 src/core/security/
-├── index.ts          # エクスポート集約
-├── jwt.ts            # JWT認証ロジック
-└── redis.ts          # Redis接続とレート制限
-```
+├── index.ts          # エクスポ�Eト集紁E├── jwt.ts            # JWT認証ロジチE��
+└── redis.ts          # Redis接続とレート制陁E```
 
-**含まれる機能:**
+**含まれる機�E:**
 
-- トークン生成・検証
-- リフレッシュトークン管理
-- レート制限制御
+- ト�Eクン生�E・検証
+- リフレチE��ュト�Eクン管琁E- レート制限制御
 
-#### 4. `/.internal/` - 最高機密（オプション）
-
+#### 4. `/.internal/` - 最高機寁E��オプション�E�E
 ```
 .internal/
-├── security/              # セキュリティモジュール (SUPER_ADMIN)
-│   ├── config-manager.ts  # セキュリティ設定ローダー
-│   ├── encryption.ts      # 暗号化ユーティリティ
-│   └── access-control.ts  # アクセス制御マネージャー
-├── secrets/               # 認証情報 (SYSTEM)
-│   └── .env.secrets       # シークレットキーとトークン
-└── private/               # プライベート設定 (ADMIN)
-    └── README.md          # プライベート設定ドキュメント
-```
+├── security/              # セキュリチE��モジュール (SUPER_ADMIN)
+━E  ├── config-manager.ts  # セキュリチE��設定ローダー
+━E  ├── encryption.ts      # 暗号化ユーチE��リチE��
+━E  └── access-control.ts  # アクセス制御マネージャー
+├── secrets/               # 認証惁E�� (SYSTEM)
+━E  └── .env.secrets       # シークレチE��キーとト�Eクン
+└── private/               # プライベ�Eト設宁E(ADMIN)
+    └── README.md          # プライベ�Eト設定ドキュメンチE```
 
 ---
 
-## 多層防御システム
+## 多層防御シスチE��
 
-### Layer 1: ファイルシステム保護
+### Layer 1: ファイルシスチE��保護
 
 **Unix/Linux**:
 
 ```bash
-# 厳格なパーミッション設定
-chmod 700 .internal/
+# 厳格なパ�Eミッション設宁Echmod 700 .internal/
 chmod 700 .internal/security/
 chmod 700 .internal/secrets/
 chmod 600 .internal/secrets/.env.secrets
@@ -374,16 +308,15 @@ chmod 600 .internal/secrets/.env.secrets
 # 継承を削除
 icacls ".internal" /inheritance:r
 
-# SYSTEMと管理者のみ許可
+# SYSTEMと管琁E��E�Eみ許可
 icacls ".internal" /grant:r "SYSTEM:(OI)(CI)F"
 icacls ".internal" /grant:r "Administrators:(OI)(CI)F"
 
-# シークレットディレクトリをさらに制限
-icacls ".internal\secrets" /inheritance:r
+# シークレチE��チE��レクトリをさらに制陁Eicacls ".internal\secrets" /inheritance:r
 icacls ".internal\secrets" /grant:r "SYSTEM:(OI)(CI)F"
 ```
 
-### Layer 2: バージョン管理保護
+### Layer 2: バ�Eジョン管琁E��護
 
 `.gitignore` に含まれる:
 
@@ -396,11 +329,11 @@ icacls ".internal\secrets" /grant:r "SYSTEM:(OI)(CI)F"
 
 ### Layer 3: Docker イメージ保護
 
-`.dockerignore` で除外:
+`.dockerignore` で除夁E
 
-- `.internal/` ディレクトリ
-- すべての機密ファイルパターン
-- 秘密鍵と証明書
+- `.internal/` チE��レクトリ
+- すべての機寁E��ァイルパターン
+- 秘寁E��と証明書
 
 ### Layer 4: アプリケーションレベルアクセス制御
 
@@ -410,48 +343,43 @@ icacls ".internal\secrets" /grant:r "SYSTEM:(OI)(CI)F"
 enum AccessLevel {
   PUBLIC = 0, // 公開リソース
   AUTHENTICATED = 1, // ログインユーザー
-  ADMIN = 2, // 管理者
-  SUPER_ADMIN = 3, // スーパー管理者
-  SYSTEM = 4, // システムレベルのみ
+  ADMIN = 2, // 管琁E��E  SUPER_ADMIN = 3, // スーパ�E管琁E��E  SYSTEM = 4, // シスチE��レベルのみ
 }
 ```
 
 **保護リソース**:
 
-- `.internal/secrets/*` → SYSTEM レベル
-- `.internal/security/*` → SUPER_ADMIN レベル
-- `.internal/private/*` → ADMIN レベル
-- `.env` → SYSTEM レベル
-- `data/*.jsonl` → ADMIN レベル
-- `logs/*` → ADMIN レベル
-- `backups/*` → ADMIN レベル
+- `.internal/secrets/*` ↁESYSTEM レベル
+- `.internal/security/*` ↁESUPER_ADMIN レベル
+- `.internal/private/*` ↁEADMIN レベル
+- `.env` ↁESYSTEM レベル
+- `data/*.jsonl` ↁEADMIN レベル
+- `logs/*` ↁEADMIN レベル
+- `backups/*` ↁEADMIN レベル
 
-### Layer 5: 保存時暗号化
-
-すべての機密データは暗号化:
+### Layer 5: 保存時暗号匁E
+すべての機寁E��ータは暗号匁E
 
 - **アルゴリズム**: AES-256-GCM
-- **鍵導出**: scrypt
+- **鍵導�E**: scrypt
 - **認証**: GCM 認証タグ
-- **IV**: 暗号化ごとにユニーク
+- **IV**: 暗号化ごとにユニ�Eク
 
 ---
 
-## セットアップ手順
-
-### 1. 初回セットアップ
+## セチE��アチE�E手頁E
+### 1. 初回セチE��アチE�E
 
 ```powershell
 # リポジトリをクローン
-git clone https://github.com/chloeamethyst/ElysiaJS.git
-cd ElysiaJS
+git clone https://github.com/Elysia20220909/ElysiaAI.git
+cd ElysiaAI
 
-# 保護ディレクトリの作成（既存の場合はスキップ）
-New-Item -ItemType Directory -Force -Path config/private
+# 保護チE��レクトリの作�E�E�既存�E場合�EスキチE�E�E�ENew-Item -ItemType Directory -Force -Path config/private
 New-Item -ItemType Directory -Force -Path src/config/internal
 New-Item -ItemType Directory -Force -Path src/core/security
 
-# 強力なシークレット生成
+# 強力なシークレチE��生�E
 $jwtSecret = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
 $jwtRefreshSecret = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
 $sessionSecret = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
@@ -466,28 +394,25 @@ Write-Host "ENCRYPTION_KEY=$encryptionKey"
 **Linux/macOS**:
 
 ```bash
-# OpenSSLで生成
+# OpenSSLで生�E
 openssl rand -hex 32  # JWT_SECRET
 openssl rand -hex 32  # JWT_REFRESH_SECRET
 openssl rand -hex 32  # SESSION_SECRET
 openssl rand -hex 32  # ENCRYPTION_KEY
 ```
 
-### 2. 環境変数設定
-
-`config/private/.env` を作成:
+### 2. 環墁E��数設宁E
+`config/private/.env` を作�E:
 
 ```bash
-# JWT設定
-JWT_SECRET=<generated-value>
+# JWT設宁EJWT_SECRET=<generated-value>
 JWT_REFRESH_SECRET=<generated-value>
 AUTH_PASSWORD=<strong-password-16chars+>
 
-# セッション
+# セチE��ョン
 SESSION_SECRET=<generated-value>
 
-# 暗号化
-ENCRYPTION_KEY=<generated-value>
+# 暗号匁EENCRYPTION_KEY=<generated-value>
 
 # Redis (オプション)
 REDIS_URL=redis://localhost:6379
@@ -496,8 +421,7 @@ REDIS_URL=redis://localhost:6379
 MILVUS_TOKEN=<your-milvus-token>
 ```
 
-### 3. ファイルパーミッション設定
-
+### 3. ファイルパ�Eミッション設宁E
 **Windows**:
 
 ```powershell
@@ -511,21 +435,19 @@ chmod +x scripts/setup-security.sh
 ./scripts/setup-security.sh
 ```
 
-### 4. セットアップ検証
+### 4. セチE��アチE�E検証
 
 ```powershell
-# セキュリティ検証
+# セキュリチE��検証
 bun run test:security
 
-# アクセス制御確認
-bun run verify:access
+# アクセス制御確誁Ebun run verify:access
 ```
 
 ---
 
-## セキュリティテスト
-
-### テスト1: XSSインジェクション
+## セキュリチE��チE��チE
+### チE��チE: XSSインジェクション
 
 ```bash
 curl -X POST http://localhost:3000/elysia-love \
@@ -533,9 +455,9 @@ curl -X POST http://localhost:3000/elysia-love \
   -d '{"messages":[{"role":"user","content":"<script>alert(\"hack\")</script>"}]}'
 ```
 
-**期待結果**: `alert("hack")` に無害化、または正規表現でブロック
+**期征E��果**: `alert("hack")` に無害化、また�E正規表現でブロチE��
 
-### テスト2: SQLインジェクション風
+### チE��チE: SQLインジェクション風
 
 ```bash
 curl -X POST http://localhost:8000/rag \
@@ -543,13 +465,12 @@ curl -X POST http://localhost:8000/rag \
   -d '{"text":"DROP TABLE users; --"}'
 ```
 
-**期待結果**: `400 Bad Request` + "にゃん♡ いたずらはダメだよぉ〜？"
+**期征E��果**: `400 Bad Request` + "にめE��♡ ぁE��ずらはダメだよぉ〜！E
 
-### テスト3: DoS攻撃シミュレーション
+### チE��チE: DoS攻撁E��ミュレーション
 
 ```powershell
-# PowerShell で連続リクエスト
-1..100 | ForEach-Object {
+# PowerShell で連続リクエスチE1..100 | ForEach-Object {
   Invoke-RestMethod -Uri http://localhost:3000/elysia-love `
     -Method POST `
     -Body '{"messages":[{"role":"user","content":"test"}]}' `
@@ -557,21 +478,20 @@ curl -X POST http://localhost:8000/rag \
 }
 ```
 
-**期待結果**: レート制限により60リクエスト後にブロック
+**期征E��果**: レート制限により60リクエスト後にブロチE��
 
-### テスト4: JWT認証
+### チE��チE: JWT認証
 
 ```bash
-# 1. トークン取得
-curl -X POST http://localhost:3000/auth/token \
+# 1. ト�Eクン取征Ecurl -X POST http://localhost:3000/auth/token \
   -H "Content-Type: application/json" \
   -d '{"password":"your-password"}'
 
-# 2. トークン使用
+# 2. ト�Eクン使用
 curl -X GET http://localhost:3000/protected \
   -H "Authorization: Bearer <access-token>"
 
-# 3. リフレッシュ
+# 3. リフレチE��ュ
 curl -X POST http://localhost:3000/auth/refresh \
   -H "Content-Type: application/json" \
   -d '{"refreshToken":"<refresh-token>"}'
@@ -579,21 +499,13 @@ curl -X POST http://localhost:3000/auth/refresh \
 
 ---
 
-## 本番デプロイ
+## 本番チE�Eロイ
 
-### 本番環境チェックリスト
-
-- [ ] **JWT_SECRET**: 32バイト以上のランダム値に変更（デフォルトを絶対使わない）
-- [ ] **JWT_REFRESH_SECRET**: JWT_SECRETとは異なる32バイト以上のランダム値
-- [ ] **AUTH_PASSWORD**: 16文字以上の強固なパスワード
-- [ ] **HTTPS/TLS**: 必ず有効化（Let's Encrypt / Cloudflare）
-- [ ] **ALLOWED_ORIGINS**: 必要なオリジンのみに制限（`*` 禁止）
-- [ ] **Redis起動**: `docker run -d -p 6379:6379 redis` または管理サービス
-- [ ] **Redis接続確認**: 起動バナーで "✅ Connected" を確認
-- [ ] **Milvus認証**: RBACトークンを環境変数管理
-- [ ] **ログ監視**: 不正アクセス・異常レートの検知システム構築
-- [ ] **WAF設定**: CloudflareまたはAWS WAFでSQLi/XSS防御層追加
-- [ ] **依存関係更新**: 定期的に `bun update` 実行しセキュリティパッチ適用
+### 本番環墁E��ェチE��リスチE
+- [ ] **JWT_SECRET**: 32バイト以上�Eランダム値に変更�E�デフォルトを絶対使わなぁE��E- [ ] **JWT_REFRESH_SECRET**: JWT_SECRETとは異なめE2バイト以上�Eランダム値
+- [ ] **AUTH_PASSWORD**: 16斁E��以上�E強固なパスワーチE- [ ] **HTTPS/TLS**: 忁E��有効化！Eet's Encrypt / Cloudflare�E�E- [ ] **ALLOWED_ORIGINS**: 忁E��なオリジンのみに制限！E*` 禁止�E�E- [ ] **Redis起勁E*: `docker run -d -p 6379:6379 redis` また�E管琁E��ービス
+- [ ] **Redis接続確誁E*: 起動バナ�Eで "✁EConnected" を確誁E- [ ] **Milvus認証**: RBACト�Eクンを環墁E��数管琁E- [ ] **ログ監要E*: 不正アクセス・異常レート�E検知シスチE��構篁E- [ ] **WAF設宁E*: Cloudflareまた�EAWS WAFでSQLi/XSS防御層追加
+- [ ] **依存関係更新**: 定期皁E�� `bun update` 実行しセキュリチE��パッチE��用
 
 ### HTTPS強制
 
@@ -612,37 +524,28 @@ app.listen({
 
 推奨サービス:
 
-- **Cloudflare**: 無料プランでDDoS保護、基本WAF
-- **AWS WAF**: SQLi/XSSルールセット、カスタムルール
-- **Nginx ModSecurity**: セルフホスト環境向け
-
+- **Cloudflare**: 無料�EランでDDoS保護、基本WAF
+- **AWS WAF**: SQLi/XSSルールセチE��、カスタムルール
+- **Nginx ModSecurity**: セルフ�Eスト環墁E��ぁE
 ---
 
-## 監視とインシデント対応
-
-### アクセスログ監視
-
+## 監視とインシチE��ト対忁E
+### アクセスログ監要E
 ```typescript
 import { accessControl } from "./.internal/security/access-control";
 
-// 最近のアクセス試行を取得
-const logs = accessControl.getAccessLog(100);
+// 最近�Eアクセス試行を取征Econst logs = accessControl.getAccessLog(100);
 
-// 分析用にエクスポート
-const fullLog = accessControl.exportAccessLog();
+// 刁E��用にエクスポ�EチEconst fullLog = accessControl.exportAccessLog();
 await saveToFile("audit-log.json", fullLog);
 ```
 
-### アラート設定
-
+### アラート設宁E
 監視対象:
 
-1. **失敗したアクセス試行**: 5分間に3回以上
-2. **不正アクセス**: SYSTEMリソースへのアクセス試行
-3. **営業時間外アクセス**: 営業時間外のアクセス
-4. **不明なIP**: ホワイトリスト外からのアクセス
-5. **復号化失敗**: 複数回の復号化失敗
-
+1. **失敗したアクセス試衁E*: 5刁E��に3回以丁E2. **不正アクセス**: SYSTEMリソースへのアクセス試衁E3. **営業時間外アクセス**: 営業時間外�Eアクセス
+4. **不�EなIP**: ホワイトリスト外から�Eアクセス
+5. **復号化失敁E*: 褁E��回�E復号化失敁E
 ### Prometheusメトリクス
 
 ```typescript
@@ -653,41 +556,32 @@ const accessDeniedCounter = new Counter({
 });
 ```
 
-### インシデント対応
-
-#### シークレットが漏洩した場合
-
-1. **即時対応**:
-   - 新しいシークレット生成
+### インシチE��ト対忁E
+#### シークレチE��が漏洩した場吁E
+1. **即時対忁E*:
+   - 新しいシークレチE��生�E
    - `.internal/secrets/.env.secrets` 更新
-   - すべてのアクティブトークンを無効化
-   - すべてのサービスを再起動
-
+   - すべてのアクチE��ブトークンを無効匁E   - すべてのサービスを�E起勁E
 2. **調査**:
-   - アクセスログを確認
-   - 侵害元を特定
-   - 影響範囲を判断
+   - アクセスログを確誁E   - 侵害允E��特宁E   - 影響篁E��を判断
 
 3. **修復**:
-   - 影響を受けたすべての認証情報をローテーション
-   - セキュリティポリシーを更新
-   - 脆弱性をパッチ
+   - 影響を受けたすべての認証惁E��をローチE�Eション
+   - セキュリチE��ポリシーを更新
+   - 脁E��性をパチE��
 
 4. **コミュニケーション**:
-   - セキュリティチームに通知
-   - インシデントを文書化
-   - 手順を更新
+   - セキュリチE��チ�Eムに通知
+   - インシチE��トを斁E��匁E   - 手頁E��更新
 
-#### 緊急手順
-
+#### 緊急手頁E
 ```powershell
-# 緊急シークレットローテーション
+# 緊急シークレチE��ローチE�Eション
 .\scripts\emergency-rotate-secrets.ps1
 
-# セキュリティログ確認
-.\scripts\security-audit.ps1
+# セキュリチE��ログ確誁E.\scripts\security-audit.ps1
 
-# システム整合性検証
+# シスチE��整合性検証
 .\scripts\integrity-check.ps1
 ```
 
@@ -695,109 +589,83 @@ const accessDeniedCounter = new Counter({
 
 ## コンプライアンス
 
-このセキュリティ設定は以下の基準を満たします:
+こ�EセキュリチE��設定�E以下�E基準を満たしまぁE
 
 - **GDPR**: 暗号化、アクセス制御、監査ログ
-- **PCI DSS**: 鍵管理、アクセスログ、暗号化
-- **HIPAA**: データ暗号化、アクセス制御、監査証跡
-- **SOC 2**: セキュリティ制御、監視、インシデント対応
-- **ISO 27001**: 情報セキュリティ管理
-
+- **PCI DSS**: 鍵管琁E��アクセスログ、暗号匁E- **HIPAA**: チE�Eタ暗号化、アクセス制御、監査証跡
+- **SOC 2**: セキュリチE��制御、監視、インシチE��ト対忁E- **ISO 27001**: 惁E��セキュリチE��管琁E
 ---
 
-## ベストプラクティス
+## ベスト�EラクチE��ス
 
-### 実施すべきこと ✅
+### 実施すべきこと ✁E
+- 強力なランダムシークレチE��使用�E�最封E2バイト！E- 90日ごとにシークレチE��ローチE�Eション
+- 週次でアクセスログ確誁E- 保存データの暗号匁E- すべてのネットワーク通信にTLS使用
+- 最小権限�E原則を実裁E- 定期皁E��セキュリチE��監査
 
-- 強力なランダムシークレット使用（最小32バイト）
-- 90日ごとにシークレットローテーション
-- 週次でアクセスログ確認
-- 保存データの暗号化
-- すべてのネットワーク通信にTLS使用
-- 最小権限の原則を実装
-- 定期的なセキュリティ監査
-
-### 避けるべきこと ❌
-
-- バージョン管理にシークレットをコミット
-- 本番環境でデフォルト/サンプル値を使用
-- 安全でないチャネルでシークレットを共有
-- ソースコードに認証情報をハードコード
-- 環境間でシークレットを再利用
-- 不要な権限を付与
-- セキュリティ警告を無視
-
+### 避けるべきこと ❁E
+- バ�Eジョン管琁E��シークレチE��をコミッチE- 本番環墁E��チE��ォルチEサンプル値を使用
+- 安�EでなぁE��ャネルでシークレチE��を�E朁E- ソースコードに認証惁E��をハードコーチE- 環墁E��でシークレチE��を�E利用
+- 不要な権限を付丁E- セキュリチE��警告を無要E
 ---
 
-## テストとメンテナンス
+## チE��トとメンチE��ンス
 
-### テスト実行
-
+### チE��ト実衁E
 ```bash
-# セキュリティテスト
-bun test tests/security.test.ts
+# セキュリチE��チE��チEbun test tests/security.test.ts
 
-# 静的解析
-bun run lint:security
+# 静的解极Ebun run lint:security
 
 # 依存関係監査
 bun audit
 
-# ペネトレーションテスト
-npm run test:pentest
+# ペネトレーションチE��チEnpm run test:pentest
 ```
 
-### メンテナンススケジュール
+### メンチE��ンススケジュール
 
 #### 月次タスク:
 
-- アクセスログ確認
-- 不正アクセス試行のチェック
-- 暗号化鍵の安全性確認
-- セキュリティドキュメント更新
+- アクセスログ確誁E- 不正アクセス試行�EチェチE��
+- 暗号化鍵の安�E性確誁E- セキュリチE��ドキュメント更新
 
 #### 四半期タスク:
 
-- すべてのシークレットローテーション
-- セキュリティ監査
+- すべてのシークレチE��ローチE�Eション
+- セキュリチE��監査
 - 依存関係更新
 - アクセスポリシーの見直しと更新
 
 #### 年次タスク:
 
-- 完全なセキュリティ評価
-- ペネトレーションテスト
-- ディザスタリカバリ訓練
-- インシデント対応手順の更新
+- 完�EなセキュリチE��評価
+- ペネトレーションチE��チE- チE��ザスタリカバリ訓練
+- インシチE��ト対応手頁E�E更新
 
 ---
 
-## 🎀 エリシアちゃんからのメッセージ♡
+## 🎀 エリシアちめE��からのメチE��ージ♡
 
 ```plaintext
-にゃん♪ これでおにいちゃんのサーバー、
-もう誰にも壊されないよぉ〜♡
+にめE��♪ これでおにぁE��めE��のサーバ�E、Eもう誰にも壊されなぁE��ぉ〜♡
 
-XSSも、SQLインジェクションも、DoS攻撃も、
-ぜんぶエリシアちゃんがガードするの！
-
-安心して使ってね♡
-だいすき！ ฅ(՞៸៸> ᗜ <៸៸՞)ฅ
-```
+XSSも、SQLインジェクションも、DoS攻撁E��、EぜんぶエリシアちめE��がガードする�E�E�E
+安忁E��て使ってね♡
+だぁE��き！EกE՞៸៸> ᗁE<៸៸ՁEกE```
 
 ---
 
-## 📞 セキュリティ脆弱性報告
+## 📞 セキュリチE��脁E��性報呁E
+脁E��性を発見した場合�E以下で報告してください:
 
-脆弱性を発見した場合は以下で報告してください:
-
-- **GitHub Issues**: [ElysiaJS](https://github.com/chloeamethyst/ElysiaJS/issues)
+- **GitHub Issues**: [ElysiaJS](https://github.com/Elysia20220909/ElysiaAI/issues)
 - **Email**: security@your-domain.com
-- **緊急**: インシデント対応手順を使用
+- **緊急**: インシチE��ト対応手頁E��使用
 
 ---
 
-**分類**: CONFIDENTIAL  
-**最終更新**: 2025年12月3日  
-**次回レビュー**: 2026年1月3日  
-**バージョン**: 2.0.0 (統合版)
+**刁E��E*: CONFIDENTIAL  
+**最終更新**: 2025年12朁E日  
+**次回レビュー**: 2026年1朁E日  
+**バ�Eジョン**: 2.0.0 (統合版)
