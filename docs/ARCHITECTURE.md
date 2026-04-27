@@ -84,6 +84,7 @@ graph LR
 ## 5. セキュリティと主権 (Security by Sovereignty)
 
 - **Local-First**: すべての推論（Ollama）および記憶（Milvus Lite）はローカルで実行され、秘密が外部に漏れることはありません。
+- **Unified Encryption Standard**: Node.js と Python の両スタックで共通の **AES-256-GCM** および **scrypt KDF** を採用。Milvus の記憶領域や機密設定ファイルは透過的に暗号化されます。
 - **Multi-User RBAC**: データベース層での役割ベースの権限管理（User, Admin, Owner）を統合。`auth/register` および `auth/token` による安全な認証フロー。
 - **Encrypted Vault**: 認証情報は隔離された設定ファイルで管理。
 - **Integrity Check**: 起動時の `system_doctor` による整合性検査。
