@@ -29,11 +29,11 @@ function Optimize-QMConfig {
     
     if (Test-Path $ConfPath) {
         $json = Get-Content $ConfPath | ConvertFrom-Json
-        $json.optimizeProfiles = "Efficient"
+        $json.optimizeProfiles = "High"
         $json.bProfitabilitySwitch = $true
-        $json.bEnableCPUMining = $false
+        $json.bEnableCPUMining = $true
         $json | ConvertTo-Json | Set-Content $ConfPath
-        Log-Opt "Applied Efficient profile settings to config."
+        Log-Opt "Applied High performance profile and enabled CPU mining."
     }
 }
 
