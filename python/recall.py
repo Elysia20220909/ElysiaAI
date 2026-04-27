@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 
 from pymilvus import DataType, MilvusClient
+from python.lib.vault_shroud import shroud
 
 
 logger = logging.getLogger(__name__)
@@ -78,9 +79,11 @@ class AbyssalRecall:
 
             for chunk in chunks:
                 emb = embedding_fn(chunk)
+                # Encrypt chunk content before storing in Milvus
+                shrouded_content = shroud.encrypt(chunk)
                 data = {
                     "path": str(path),
-                    "content": chunk,
+                    "content": shrouded_content,
                     "type": "ledger" if "LEDGER" in path.name else "code",
                     "embedding": emb,
                 }
@@ -102,7 +105,14 @@ class AbyssalRecall:
         results = []
         for hits in search_res:
             for hit in hits:
-                results.append(hit["entity"])
+                entity = hit["entity"]
+                # Decrypt the content before returning
+                try:
+                    entity["content"] = shroud.decrypt(entity["content"])
+                except Exception as e:
+                    logger.warning(f"🔐 Decryption failed for Milvus entity: {e}")
+                    entity["content"] = "[DECRYPTION_FAILURE: INTEGRITY_VIOLATED]"
+                results.append(entity)
         return results
 
     def publish_fragment(self, agent, content, embedding):
