@@ -9,6 +9,18 @@
 
 ---
 
+## 🗺️ Repository Map
+
+- `packages/server/` - Bun / Elysia backend (Experience Layer)
+- `python/` - FastAPI AI Kernel (Cognitive Layer)
+- `packages/shield-agent/` - Rust Shield Agent (Native Layer)
+- `docs/` - Architecture, API, and Security guides
+- `scripts/` - Unified management and setup scripts
+- `prisma/` - Database schema and migrations
+- `public/` - Static assets and frontend entry points
+
+---
+
 ## 🚀 Quick Start (5 min)
 
 ElysiaAIを最も速く体験する方法です。
