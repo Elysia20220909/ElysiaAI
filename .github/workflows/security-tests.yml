@@ -8,8 +8,15 @@ on:
     branches: [ "master", "main", "dev" ]
     paths:
       - 'packages/**'
+      - 'python/**'
       - 'scripts/**'
-      - '.github/workflows/security-tests.yml'
+      - 'docs/**'
+      - 'README.md'
+      - 'requirements.txt'
+      - 'package.json'
+      - 'bun.lockb'
+      - 'prisma/**'
+      - '.github/workflows/**'
 
 jobs:
   security-audit:
@@ -49,8 +56,8 @@ jobs:
       - name: Install JS Dependencies
         run: bun install
 
-      - name: Run Bun Tests
-        run: bun test
+      - name: Run Bun Tests with Coverage
+        run: bun test --coverage
 
       - name: Setup Python
         uses: actions/setup-python@f6742a91b3c76390a3c94444657152f20703664d # v5.1.0
@@ -58,10 +65,12 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python Dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install pytest-cov
 
-      - name: Run Python Tests (Pytest)
-        run: pytest tests/
+      - name: Run Python Tests with Coverage
+        run: pytest --cov=python --cov-report=term-missing tests/
 
   zap-scan:
     name: "🛡️ OWASP ZAP Security Scan"
