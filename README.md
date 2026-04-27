@@ -4,7 +4,7 @@
 
 [![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
 [![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT or Apache 2.0](https://img.shields.io/badge/License-MIT%20or%20Apache%202.0-blue.svg)](LICENSE)
 [![Resonance](https://img.shields.io/badge/Phase-2_Resonance-blueviolet)](CHANGELOG.md)
 
 ---
@@ -77,7 +77,7 @@ Every push triggers the `Resonance Integrity` workflow, which performs:
 To run the full automated test suite and verify both the orchestrator and the kernel:
 ```bash
 # Run both Bun and Python tests
-make test
+bun scripts/manage.ts test
 ```
 
 ElysiaAIの心臓部は、論理（Python Kernel）と高速通信（Bun/Elysia.js）の共鳴によって動いています。
@@ -101,19 +101,20 @@ graph LR
 
 ElysiaAIは以下のフェーズを経て、真の「楽園」へと進化します。
 
-### Phase 1: Foundation (Current)
+### Phase 1: Foundation (Current) - [Implemented]
 - [x] Bun & Python Kernelの統合
 - [x] ローカルRAG (Milvus Lite) の実装
 - [x] 統合管理CLI (manage.ts) の開発
 
-### Phase 2: Resonance (Next)
-- [ ] **Multi-User Support**: 複数ユーザー対応と権限管理 (RBAC)。
-- [ ] **Memory Encryption**: Milvus記憶領域とログの AES-256-GCM による透過的暗号化。
-- [ ] **Advanced CI/CD**: 自動単体テストおよび結合テストの100%カバレッジ。
+### Phase 2: Resonance (Next) - [Partial / Experimental]
+- [x] **Memory Encryption**: Milvus記憶領域の AES-256-GCM による透過的暗号化。 [Implemented]
+- [x] **RBAC Foundation**: 役割ベースの権限管理ガードの実装。 [Implemented]
+- [ ] **Multi-User Support**: UIレベルでの複数ユーザー切り替え・管理。 [Planned]
+- [ ] **Advanced CI/CD**: ZAPスキャンおよび自動結合テストの100%カバレッジ。 [Experimental]
 
-### Phase 3: Transcendence
+### Phase 3: Transcendence - [Planned]
 - [ ] **AbyssRTOS Integration**: 完全隔離された実行環境。
-- [ ] **Shield Agent**: Rust製防壁によるリアルタイム脅威検知。
+- [x] **Shield Agent**: Rust製防壁によるリアルタイム脅威検知。 [Implemented / Experimental]
 - [ ] **Sovereign Mesh**: 分散型AI OSネットワーク。
 
 ---
