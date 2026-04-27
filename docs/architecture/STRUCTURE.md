@@ -81,7 +81,7 @@ native/                   # Native Node.js bindings
 python/                   # FastAPI RAG service
 ```
 
-### â˜E¸ECloud Deployment
+### â˜Eï¿½ï¿½ECloud Deployment
 
 ```
 cloud/
