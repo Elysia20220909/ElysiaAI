@@ -32,7 +32,7 @@ Visit **http://localhost:3000** to access the Resonance Interface.
 
 ---
 
-## ğŸ› ï¸ Management Commands
+## ğŸ› EEManagement Commands
 
 | Command | Description |
 | :--- | :--- |
@@ -44,7 +44,7 @@ Visit **http://localhost:3000** to access the Resonance Interface.
 
 ---
 
-## ğŸ›¡ï¸ Security First
+## ğŸ›¡EESecurity First
 
 - **Identity**: Register at `/auth/register` and get your token at `/auth/token`.
 - **Encryption**: All memories (Milvus) and logs are encrypted at rest using AES-256-GCM.

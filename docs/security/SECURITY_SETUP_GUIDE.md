@@ -1,44 +1,33 @@
 # Elysia AI - Complete Security Setup Guide
 
-## 概要 (Overview)
+## 概要E(Overview)
 
-このガイドは、ElysiaAIの本番環境に向けたすべてのセキュリティ設定を実行するためのもので、以下の項目をカバーしています：
-
-- ✅ ファイアウォール設定 (UFW)
-- ✅ SSH セキュリティ強化
-- ✅ SSL/TLS 証明書（Let's Encrypt）
-- ✅ 自動バックアップ
-- ✅ ログ監視
-- ✅ 侵入検出システム (Fail2Ban)
-- ✅ セキュリティ監査 (Lynis, AIDE)
+こ�Eガイド�E、ElysiaAIの本番環墁E��向けたすべてのセキュリチE��設定を実行するため�Eも�Eで、以下�E頁E��をカバ�EしてぁE��す！E
+- ✁Eファイアウォール設宁E(UFW)
+- ✁ESSH セキュリチE��強匁E- ✁ESSL/TLS 証明書�E�Eet's Encrypt�E�E- ✁E自動バチE��アチE�E
+- ✁Eログ監要E- ✁E侵入検�EシスチE�� (Fail2Ban)
+- ✁EセキュリチE��監査 (Lynis, AIDE)
 
 ---
 
 ## 1. 準備作業
 
-### システム要件
+### シスチE��要件
 
 ```bash
-- Linux (Ubuntu 20.04+ または CentOS 7+)
-- Root アクセス権限
-- インターネット接続
-- 最小 10GB ディスク容量（バックアップ用）
-```
+- Linux (Ubuntu 20.04+ また�E CentOS 7+)
+- Root アクセス権陁E- インターネット接綁E- 最封E10GB チE��スク容量（バチE��アチE�E用�E�E```
 
-### 前提条件の確認
-
+### 前提条件の確誁E
 ```bash
-# SSH でサーバーにログイン
+# SSH でサーバ�Eにログイン
 ssh user@your-server-ip
 
-# Root に切り替え
-sudo -i
+# Root に刁E��替ぁEsudo -i
 
-# スクリプトの存在確認
-ls -la /opt/elysia-ai/scripts/
+# スクリプトの存在確誁Els -la /opt/elysia-ai/scripts/
 
-# ファイルが存在することを確認
-# - backup-setup.sh
+# ファイルが存在することを確誁E# - backup-setup.sh
 # - log-monitoring-setup.sh
 # - fail2ban-setup.sh
 # - security-audit-setup.sh
@@ -50,241 +39,177 @@ ls -la /opt/elysia-ai/scripts/
 
 ---
 
-## 2. セキュリティセットアップの実行
-
-### オプション A: 統合スクリプト（推奨）
-
-すべてのセキュリティ設定を一度に実行：
-
+## 2. セキュリチE��セチE��アチE�Eの実衁E
+### オプション A: 統合スクリプト�E�推奨�E�E
+すべてのセキュリチE��設定を一度に実行！E
 ```bash
-# スクリプトディレクトリに移動
-cd /opt/elysia-ai/scripts
+# スクリプトチE��レクトリに移勁Ecd /opt/elysia-ai/scripts
 
-# 統合セットアップスクリプトを実行
-sudo bash complete-security-setup.sh
+# 統合セチE��アチE�Eスクリプトを実衁Esudo bash complete-security-setup.sh
 ```
 
-このスクリプトは以下を順序立てて実行します：
-
-1. セキュリティ認証情報の生成
-2. ファイアウォール設定
-3. SSH強化
-4. SSL/TLS設定
-5. バックアップ設定
-6. ログ監視
-7. Fail2Ban設定
-8. セキュリティ監査ツール設定
-
-### オプション B: 個別スクリプト実行
-
-各セキュリティ機能を個別に設定する場合：
-
-#### 2.1 ファイアウォール設定
-
+こ�Eスクリプトは以下を頁E��立てて実行します！E
+1. セキュリチE��認証惁E��の生�E
+2. ファイアウォール設宁E3. SSH強匁E4. SSL/TLS設宁E5. バックアチE�E設宁E6. ログ監要E7. Fail2Ban設宁E8. セキュリチE��監査チE�Eル設宁E
+### オプション B: 個別スクリプト実衁E
+吁E��キュリチE��機�Eを個別に設定する場合！E
+#### 2.1 ファイアウォール設宁E
 ```bash
 sudo bash /opt/elysia-ai/scripts/firewall-setup.sh
 ```
 
-このスクリプトが実行すること：
-
-- UFW（Uncomplicated Firewall）をインストール・設定
-- デフォルトポリシー設定（受信拒否、送信許可）
-- SSH（22）, HTTP（80）, HTTPS（443）ポートを開放
-- Elysia（3000）ポートの設定（選択可能）
-- ファイアウォール有効化
-
-**出力例：**
+こ�Eスクリプトが実行すること�E�E
+- UFW�E�Encomplicated Firewall�E�をインスト�Eル・設宁E- チE��ォルト�Eリシー設定（受信拒否、E��信許可�E�E- SSH�E�E2�E�E HTTP�E�E0�E�E HTTPS�E�E43�E��Eートを開放
+- Elysia�E�E000�E��Eート�E設定（選択可能�E�E- ファイアウォール有効匁E
+**出力例！E*
 
 ```
-✓ UFW Status: active
-✓ Firewall rules configured
+✁EUFW Status: active
+✁EFirewall rules configured
   - SSH: 22/tcp
   - HTTP: 80/tcp
   - HTTPS: 443/tcp
 ```
 
-#### 2.2 SSH セキュリティ強化
-
+#### 2.2 SSH セキュリチE��強匁E
 ```bash
 sudo bash /opt/elysia-ai/scripts/ssh-security.sh
 ```
 
-このスクリプトが実行すること：
-
-- SSH設定のバックアップを作成
-- パスワード認証を無効化（公開鍵認証のみ）
-- Root ログインを禁止
-- X11 フォワーディングを無効化
-- ブルートフォース攻撃対策（MaxAuthTries=3）
-- 強力な暗号スイートの設定
-- SSH サービスの再起動
-
-**重要:** 設定変更前に、現在のSSH接続がアクティブなままでテストしてください。
-
-#### 2.3 SSL/TLS 証明書設定
-
+こ�Eスクリプトが実行すること�E�E
+- SSH設定�EバックアチE�Eを作�E
+- パスワード認証を無効化（�E開鍵認証のみ�E�E- Root ログインを禁止
+- X11 フォワーチE��ングを無効匁E- ブルートフォース攻撁E��策！EaxAuthTries=3�E�E- 強力な暗号スイート�E設宁E- SSH サービスの再起勁E
+**重要E** 設定変更前に、現在のSSH接続がアクチE��ブなままでチE��トしてください、E
+#### 2.3 SSL/TLS 証明書設宁E
 ```bash
 sudo bash /opt/elysia-ai/scripts/ssl-setup.sh example.com
 ```
 
-このスクリプトが実行すること：
-
-- Certbot（Let's Encrypt）のインストール
-- SSL証明書の生成・インストール
-- 自動更新の設定
-- Nginx SSL設定テンプレートの作成
-- HTTP → HTTPS リダイレクト設定
-- セキュリティヘッダーの設定
-
+こ�Eスクリプトが実行すること�E�E
+- Certbot�E�Eet's Encrypt�E��Eインスト�Eル
+- SSL証明書の生�E・インスト�Eル
+- 自動更新の設宁E- Nginx SSL設定テンプレート�E作�E
+- HTTP ↁEHTTPS リダイレクト設宁E- セキュリチE��ヘッダーの設宁E
 **パラメータ:**
 
 ```bash
-# 基本的な使用法
-sudo bash ssl-setup.sh example.com
+# 基本皁E��使用況Esudo bash ssl-setup.sh example.com
 
 # www サブドメイン付き
 sudo bash ssl-setup.sh example.com www
 
-# 複数ドメイン
+# 褁E��ドメイン
 sudo bash ssl-setup.sh example.com www,api,staging
 ```
 
-#### 2.4 自動バックアップ設定
-
+#### 2.4 自動バチE��アチE�E設宁E
 ```bash
 sudo bash /opt/elysia-ai/scripts/backup-setup.sh
 ```
 
-このスクリプトが実行すること：
-
-- バックアップディレクトリ作成（/backup）
-- 自動バックアップスクリプト配置
-- PostgreSQL データベースバックアップ
-- アプリケーションファイルバックアップ
-- アップロード/データバックアップ
-- Cron ジョブ設定（毎日 2:00 AM）
-- 古いバックアップの自動削除（30日保持）
-
-**バックアップ対象:**
+こ�Eスクリプトが実行すること�E�E
+- バックアチE�EチE��レクトリ作�E�E�Ebackup�E�E- 自動バチE��アチE�Eスクリプト配置
+- PostgreSQL チE�Eタベ�EスバックアチE�E
+- アプリケーションファイルバックアチE�E
+- アチE�EローチEチE�EタバックアチE�E
+- Cron ジョブ設定（毎日 2:00 AM�E�E- 古ぁE��チE��アチE�Eの自動削除�E�E0日保持�E�E
+**バックアチE�E対象:**
 
 ```
 - Database: PostgreSQL dump (SQL.gz)
-- Application: tar.gz (node_modules 除外)
+- Application: tar.gz (node_modules 除夁E
 - Uploads: tar.gz
 - Data: tar.gz
 ```
 
-**手動バックアップ:**
+**手動バックアチE�E:**
 
 ```bash
 /opt/backup-elysia-ai.sh
 
-# ログ確認
-tail -f /var/log/elysia-backup.log
+# ログ確誁Etail -f /var/log/elysia-backup.log
 ```
 
-#### 2.5 ログ監視設定
-
+#### 2.5 ログ監視設宁E
 ```bash
 sudo bash /opt/elysia-ai/scripts/log-monitoring-setup.sh
 ```
 
-このスクリプトが実行すること：
-
-- ログディレクトリ作成（/var/log/elysia）
-- Logrotate 設定（ログローテーション）
-- ログ監視スクリプト配置
-- Systemd service/timer 設定
-- ホーリー監視 Cron ジョブ設定
-
-**ログ監視レポート:**
+こ�Eスクリプトが実行すること�E�E
+- ログチE��レクトリ作�E�E�Evar/log/elysia�E�E- Logrotate 設定（ログローチE�Eション�E�E- ログ監視スクリプト配置
+- Systemd service/timer 設宁E- ホ�Eリー監要ECron ジョブ設宁E
+**ログ監視レポ�EチE**
 
 ```bash
-# 手動実行
-/opt/monitor-elysia-logs.sh
+# 手動実衁E/opt/monitor-elysia-logs.sh
 
-# 出力内容:
-# - エラー分析
-# - 警告分析
-# - セキュリティ監査
-# - パフォーマンス指標
-# - システムヘルス
+# 出力�E容:
+# - エラー刁E��
+# - 警告�E极E# - セキュリチE��監査
+# - パフォーマンス持E��E# - シスチE��ヘルス
 ```
 
-#### 2.6 Fail2Ban（侵入検出）設定
-
+#### 2.6 Fail2Ban�E�侵入検�E�E�設宁E
 ```bash
 sudo bash /opt/elysia-ai/scripts/fail2ban-setup.sh
 ```
 
-このスクリプトが実行すること：
-
-- Fail2Ban（侵入検出システム）インストール
-- API、SSH、DDoS フィルター設定
-- Jail ルール設定
-- 自動アンバン スクリプト配置
-- Cron ジョブで期限切れバンを自動解除
+こ�Eスクリプトが実行すること�E�E
+- Fail2Ban�E�侵入検�EシスチE���E�インスト�Eル
+- API、SSH、DDoS フィルター設宁E- Jail ルール設宁E- 自動アンバン スクリプト配置
+- Cron ジョブで期限刁E��バンを�E動解除
 
 **ルール:**
 
 ```
 Elysia API:
-  - 5 回の失敗で 1 時間ブロック
-  - 10 分間のウィンドウ
+  - 5 回�E失敗で 1 時間ブロチE��
+  - 10 刁E��のウィンドウ
 
 SSH:
-  - 3 回の失敗で 30 分ブロック
-  - 10 分間のウィンドウ
+  - 3 回�E失敗で 30 刁E��ロチE��
+  - 10 刁E��のウィンドウ
 
 SSH DDoS:
-  - 10 回の失敗で 10 分ブロック
-  - 1 分間のウィンドウ
+  - 10 回�E失敗で 10 刁E��ロチE��
+  - 1 刁E��のウィンドウ
 ```
 
-**監視:**
+**監要E**
 
 ```bash
-# 状態確認
-fail2ban-client status
+# 状態確誁Efail2ban-client status
 
-# ジェイル状態
-fail2ban-client status elysia-api
+# ジェイル状慁Efail2ban-client status elysia-api
 
 # 手動モニタリング
 /opt/monitor-fail2ban.sh
 
-# ログ確認
-tail -f /var/log/fail2ban.log
+# ログ確誁Etail -f /var/log/fail2ban.log
 ```
 
-#### 2.7 セキュリティ監査設定
-
+#### 2.7 セキュリチE��監査設宁E
 ```bash
 sudo bash /opt/elysia-ai/scripts/security-audit-setup.sh
 ```
 
-このスクリプトが実行すること：
-
-- Lynis（セキュリティ監査ツール）インストール
-- AIDE（ファイル整合性監視）インストール・設定
-- 監査スクリプト配置
-- 定期監査スケジュール設定
-
+こ�Eスクリプトが実行すること�E�E
+- Lynis�E�セキュリチE��監査チE�Eル�E�インスト�Eル
+- AIDE�E�ファイル整合性監視）インスト�Eル・設宁E- 監査スクリプト配置
+- 定期監査スケジュール設宁E
 **監査スケジュール:**
 
 ```
-- Lynis: 週 1 回（日曜 2:00 AM）
-- AIDE: 毎日（3:00 AM）
-- 総合監査: 月 1 回（1 日 4:00 AM）
-```
+- Lynis: 週 1 回（日曁E2:00 AM�E�E- AIDE: 毎日�E�E:00 AM�E�E- 総合監査: 朁E1 回！E 日 4:00 AM�E�E```
 
-**手動実行:**
+**手動実衁E**
 
 ```bash
 # Lynis 監査
 /opt/run-security-audit.sh
 
-# AIDE チェック
+# AIDE チェチE��
 /opt/run-aide-check.sh
 
 # 総合監査
@@ -293,104 +218,85 @@ sudo bash /opt/elysia-ai/scripts/security-audit-setup.sh
 
 ---
 
-## 3. セキュリティ設定の検証
+## 3. セキュリチE��設定�E検証
 
-### セットアップ完了後の確認
-
+### セチE��アチE�E完亁E���E確誁E
 ```bash
-# 1. ファイアウォール確認
-sudo ufw status
-# 出力: Status: active
+# 1. ファイアウォール確誁Esudo ufw status
+# 出劁E Status: active
 
-# 2. Fail2Ban 確認
-sudo fail2ban-client status
-# 出力: Fail2Ban is running
+# 2. Fail2Ban 確誁Esudo fail2ban-client status
+# 出劁E Fail2Ban is running
 
-# 3. SSH 確認
-sudo systemctl status ssh
-# 出力: Active (running)
+# 3. SSH 確誁Esudo systemctl status ssh
+# 出劁E Active (running)
 
-# 4. バックアップ確認
-ls -la /backup/
-# 出力: 最新のバックアップディレクトリが存在
+# 4. バックアチE�E確誁Els -la /backup/
+# 出劁E 最新のバックアチE�EチE��レクトリが存在
 
-# 5. ログ確認
-tail -f /var/log/elysia/elysia.log
+# 5. ログ確誁Etail -f /var/log/elysia/elysia.log
 
-# 6. セキュリティスコア確認
-/opt/comprehensive-security-audit.sh
+# 6. セキュリチE��スコア確誁E/opt/comprehensive-security-audit.sh
 ```
 
-### 出力例
-
+### 出力侁E
 ```
-✓ UFW Firewall: Active
-✓ Fail2Ban: Active
-✓ SSH Service: Active
-✓ aide: Installed
-✓ lynis: Installed
-✓ logrotate: Installed
+✁EUFW Firewall: Active
+✁EFail2Ban: Active
+✁ESSH Service: Active
+✁Eaide: Installed
+✁Elynis: Installed
+✁Elogrotate: Installed
 
 Security checks: 7/7 passed
 ```
 
 ---
 
-## 4. 本番環境への適用
+## 4. 本番環墁E��の適用
 
-### 4.1 環境変数の設定
-
-セットアップ完了後、以下の認証情報を `.env` ファイルに設定します：
-
+### 4.1 環墁E��数の設宁E
+セチE��アチE�E完亁E��、以下�E認証惁E��めE`.env` ファイルに設定します！E
 ```bash
-# .env ファイルを編集
-nano /opt/elysia-ai/.env
+# .env ファイルを編雁Enano /opt/elysia-ai/.env
 
-# または既存の .env を確認
-cat /opt/elysia-ai/.env
+# また�E既存�E .env を確誁Ecat /opt/elysia-ai/.env
 ```
 
-必須の環境変数：
-
+忁E���E環墁E��数�E�E
 ```bash
 # JWT 認証
-JWT_SECRET=<生成されたランダム文字列>
-JWT_REFRESH_SECRET=<生成されたランダム文字列>
+JWT_SECRET=<生�Eされたランダム斁E���E>
+JWT_REFRESH_SECRET=<生�Eされたランダム斁E���E>
 
-# データベース
+# チE�Eタベ�Eス
 DATABASE_URL=postgresql://elysia_user:<password>@localhost/elysia_ai
 
 # Redis
 REDIS_URL=redis://localhost:6379
 REDIS_TLS=true
 
-# API キー（必要に応じて）
-OPENAI_API_KEY=<キー>
+# API キー�E�忁E��に応じて�E�EOPENAI_API_KEY=<キー>
 ```
 
-### 4.2 Docker Compose デプロイ
+### 4.2 Docker Compose チE�Eロイ
 
 ```bash
-# プロジェクトディレクトリに移動
-cd /opt/elysia-ai
+# プロジェクトディレクトリに移勁Ecd /opt/elysia-ai
 
-# Docker Compose でサービス起動
-sudo docker-compose up -d
+# Docker Compose でサービス起勁Esudo docker-compose up -d
 
-# ステータス確認
-sudo docker-compose ps
+# スチE�Eタス確誁Esudo docker-compose ps
 
-# ログ確認
-sudo docker-compose logs -f
+# ログ確誁Esudo docker-compose logs -f
 ```
 
-### 4.3 Systemd サービス設定
-
+### 4.3 Systemd サービス設宁E
 ```bash
-# サービスファイルを作成
+# サービスファイルを作�E
 sudo nano /etc/systemd/system/elysia-ai.service
 
-# 内容（例）:
+# 冁E���E�例！E
 [Unit]
 Description=Elysia AI Service
 After=network.target docker.service
@@ -407,154 +313,120 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target
 
-# サービスを有効化・起動
-sudo systemctl enable elysia-ai
+# サービスを有効化�E起勁Esudo systemctl enable elysia-ai
 sudo systemctl start elysia-ai
 sudo systemctl status elysia-ai
 ```
 
 ---
 
-## 5. 日常的な保守作業
+## 5. 日常皁E��保守作業
 
-### 5.1 ログ確認
-
+### 5.1 ログ確誁E
 ```bash
-# エラーログ確認
-tail -100 /var/log/elysia/elysia.log | grep -i error
+# エラーログ確誁Etail -100 /var/log/elysia/elysia.log | grep -i error
 
-# セキュリティログ確認
-tail -50 /var/log/fail2ban.log
+# セキュリチE��ログ確誁Etail -50 /var/log/fail2ban.log
 
-# バックアップログ確認
-tail -20 /var/log/elysia-backup.log
+# バックアチE�Eログ確誁Etail -20 /var/log/elysia-backup.log
 
-# システムログ確認
-journalctl -u elysia-ai -n 50 -f
+# シスチE��ログ確誁Ejournalctl -u elysia-ai -n 50 -f
 ```
 
-### 5.2 バックアップ確認
-
+### 5.2 バックアチE�E確誁E
 ```bash
-# バックアップディレクトリ確認
-du -sh /backup/
+# バックアチE�EチE��レクトリ確誁Edu -sh /backup/
 ls -lah /backup/ | head -20
 
-# 最新のバックアップ
+# 最新のバックアチE�E
 ls -lt /backup/ | head -5
 
-# バックアップテスト（毎週推奨）
-/opt/backup-elysia-ai.sh
+# バックアチE�EチE��ト（毎週推奨�E�E/opt/backup-elysia-ai.sh
 ```
 
-### 5.3 セキュリティアップデート
-
+### 5.3 セキュリチE��アチE�EチE�EチE
 ```bash
-# アップデート確認
-apt list --upgradable | grep -i security
+# アチE�EチE�Eト確誁Eapt list --upgradable | grep -i security
 
-# セキュリティアップデート適用
+# セキュリチE��アチE�EチE�Eト適用
 sudo apt-get update
 sudo apt-get upgrade -y
 
-# カーネルアップデート確認
-sudo needrestart
+# カーネルアチE�EチE�Eト確誁Esudo needrestart
 ```
 
-### 5.4 セキュリティ監査
+### 5.4 セキュリチE��監査
 
 ```bash
-# 月 1 回の総合監査
+# 朁E1 回�E総合監査
 /opt/comprehensive-security-audit.sh
 
-# 監査レポート確認
-ls -lah /var/log/elysia/audit/
+# 監査レポ�Eト確誁Els -lah /var/log/elysia/audit/
 
-# 最新のレポート表示
+# 最新のレポ�Eト表示
 cat /var/log/elysia/audit/comprehensive-audit-*.txt | tail -100
 ```
 
 ---
 
-## 6. トラブルシューティング
+## 6. トラブルシューチE��ング
 
-### SSH 接続問題
-
+### SSH 接続問顁E
 ```bash
-# SSH サービス確認
-sudo systemctl status ssh
+# SSH サービス確誁Esudo systemctl status ssh
 
-# SSH ログ確認
-sudo tail -50 /var/log/auth.log | grep ssh
+# SSH ログ確誁Esudo tail -50 /var/log/auth.log | grep ssh
 
-# SSH 設定構文チェック
+# SSH 設定構文チェチE��
 sudo sshd -t
 
-# SSH 再起動
-sudo systemctl restart ssh
+# SSH 再起勁Esudo systemctl restart ssh
 
-# ファイアウォール確認
-sudo ufw allow ssh
+# ファイアウォール確誁Esudo ufw allow ssh
 sudo ufw status
 ```
 
-### ファイアウォール問題
-
+### ファイアウォール問顁E
 ```bash
-# UFW 状態確認
-sudo ufw status verbose
+# UFW 状態確誁Esudo ufw status verbose
 
-# ルール確認
-sudo ufw show added
+# ルール確誁Esudo ufw show added
 
-# 特定ポート開放
+# 特定�Eート開放
 sudo ufw allow 3000/tcp
 
-# 特定ポート閉鎖
-sudo ufw delete allow 3000/tcp
+# 特定�Eート閉鎁Esudo ufw delete allow 3000/tcp
 
-# UFW 再起動
-sudo systemctl restart ufw
+# UFW 再起勁Esudo systemctl restart ufw
 ```
 
-### バックアップ問題
-
+### バックアチE�E問顁E
 ```bash
-# バックアップスクリプトテスト
-sudo bash /opt/backup-elysia-ai.sh
+# バックアチE�EスクリプトチE��チEsudo bash /opt/backup-elysia-ai.sh
 
-# ログ確認
-tail -f /var/log/elysia-backup.log
+# ログ確誁Etail -f /var/log/elysia-backup.log
 
-# ディスク空き容量確認
-df -h /backup
+# チE��スク空き容量確誁Edf -h /backup
 
-# バックアップ削除（手動）
-sudo rm -rf /backup/elysia-YYYYMMDD-HHMMSS
+# バックアチE�E削除�E�手動！Esudo rm -rf /backup/elysia-YYYYMMDD-HHMMSS
 ```
 
-### Fail2Ban 問題
-
+### Fail2Ban 問顁E
 ```bash
-# Fail2Ban サービス再起動
-sudo systemctl restart fail2ban
+# Fail2Ban サービス再起勁Esudo systemctl restart fail2ban
 
-# ジェイル状態確認
-sudo fail2ban-client status
+# ジェイル状態確誁Esudo fail2ban-client status
 
 # IP 手動アンバン
 sudo fail2ban-client set elysia-api banip remove <IP>
 
-# ログ確認
-tail -f /var/log/fail2ban.log
+# ログ確誁Etail -f /var/log/fail2ban.log
 ```
 
 ---
 
-## 7. セキュリティチェックリスト
-
-本番デプロイ前に以下を確認してください：
-
+## 7. セキュリチE��チェチE��リスチE
+本番チE�Eロイ前に以下を確認してください�E�E
 - [ ] UFW ファイアウォール有効
 
   ```bash
@@ -573,7 +445,7 @@ tail -f /var/log/fail2ban.log
   sudo grep PermitRootLogin /etc/ssh/sshd_config
   ```
 
-- [ ] SSL/TLS 証明書インストール
+- [ ] SSL/TLS 証明書インスト�Eル
 
   ```bash
   sudo ls /etc/letsencrypt/live/
@@ -585,8 +457,7 @@ tail -f /var/log/fail2ban.log
   sudo fail2ban-client status
   ```
 
-- [ ] 自動バックアップ設定
-
+- [ ] 自動バチE��アチE�E設宁E
   ```bash
   crontab -l | grep backup
   ```
@@ -603,68 +474,58 @@ tail -f /var/log/fail2ban.log
   crontab -l | grep audit
   ```
 
-- [ ] セキュリティアップデート適用
+- [ ] セキュリチE��アチE�EチE�Eト適用
 
   ```bash
   apt list --upgradable | grep -i security
   ```
 
-- [ ] データベースパスワード変更
+- [ ] チE�Eタベ�Eスパスワード変更
 
   ```bash
   sudo -u postgres psql
   \password elysia_user
   ```
 
-- [ ] JWT シークレット変更（強力なランダム値）
-
+- [ ] JWT シークレチE��変更�E�強力なランダム値�E�E
   ```bash
   grep JWT_SECRET /opt/elysia-ai/.env
   ```
 
-- [ ] ディスク空き容量確認
-
+- [ ] チE��スク空き容量確誁E
   ```bash
   df -h
   ```
 
-- [ ] メモリ使用率確認
-  ```bash
+- [ ] メモリ使用玁E��誁E  ```bash
   free -h
   ```
 
 ---
 
-## 8. セキュリティアラート設定
-
-### メール通知の設定
-
+## 8. セキュリチE��アラート設宁E
+### メール通知の設宁E
 ```bash
-# Postfix のインストール（メール送信用）
-sudo apt-get install -y postfix
+# Postfix のインスト�Eル�E�メール送信用�E�Esudo apt-get install -y postfix
 
-# Fail2Ban メール通知設定
-sudo nano /etc/fail2ban/jail.d/elysia-api.conf
+# Fail2Ban メール通知設宁Esudo nano /etc/fail2ban/jail.d/elysia-api.conf
 
 # 以下を追加:
 action = sendmail-whois[name=Elysia, dest=admin@example.com]
 
-# Fail2Ban 再起動
-sudo systemctl restart fail2ban
+# Fail2Ban 再起勁Esudo systemctl restart fail2ban
 ```
 
-### モニタリングダッシュボード（オプション）
-
-Prometheus + Grafana でメトリクスを監視：
-
+### モニタリングダチE��ュボ�Eド（オプション�E�E
+Prometheus + Grafana でメトリクスを監視！E
 ```bash
-# Prometheus インストール
+# Prometheus インスト�Eル
 sudo apt-get install -y prometheus
 
-# Grafana インストール
+# Grafana インスト�Eル
 sudo apt-get install -y grafana-server
 
-# ダッシュボードアクセス
+# ダチE��ュボ�Eドアクセス
 # http://your-server:3000
 ```
 
@@ -672,35 +533,30 @@ sudo apt-get install -y grafana-server
 
 ## 9. さらに学ぶ
 
-### 参考リソース
+### 参老E��ソース
 
-- [UFW（ファイアウォール）ドキュメント](https://help.ubuntu.com/community/UFW)
-- [Fail2Ban 公式ドキュメント](https://www.fail2ban.org/wiki/index.php/Main_Page)
-- [Let's Encrypt 情報](https://letsencrypt.org/)
-- [Lynis セキュリティ監査](https://cisofy.com/lynis/)
+- [UFW�E�ファイアウォール�E�ドキュメンチE(https://help.ubuntu.com/community/UFW)
+- [Fail2Ban 公式ドキュメンチE(https://www.fail2ban.org/wiki/index.php/Main_Page)
+- [Let's Encrypt 惁E��](https://letsencrypt.org/)
+- [Lynis セキュリチE��監査](https://cisofy.com/lynis/)
 - [AIDE ファイル整合性](https://aide.github.io/)
 
-### セキュリティベストプラクティス
+### セキュリチE��ベスト�EラクチE��ス
 
-1. **定期的な更新**: 週 1 回以上のセキュリティアップデート確認
-2. **ログ監視**: 毎日のログレビュー
-3. **バックアップテスト**: 月 1 回の復元テスト
-4. **アクセス制御**: 最小権限の原則を適用
-5. **監査**: 月 1 回の包括的なセキュリティ監査
-6. **インシデント対応**: セキュリティ問題の早期検出・対応
-
+1. **定期皁E��更新**: 週 1 回以上�EセキュリチE��アチE�EチE�Eト確誁E2. **ログ監要E*: 毎日のログレビュー
+3. **バックアチE�EチE��チE*: 朁E1 回�E復允E��スチE4. **アクセス制御**: 最小権限�E原則を適用
+5. **監査**: 朁E1 回�E匁E��皁E��セキュリチE��監査
+6. **インシチE��ト対忁E*: セキュリチE��問題�E早期検�E・対忁E
 ---
 
-## 10. サポートと連絡先
-
-セキュリティに関する質問や問題がある場合：
-
+## 10. サポ�Eトと連絡允E
+セキュリチE��に関する質問や問題がある場合！E
 - **ログファイル**: `/var/log/elysia/`, `/var/log/fail2ban.log`
-- **ドキュメント**: `PRODUCTION_SETUP_GUIDE.md`
-- **ヘルプコマンド**: `man <コマンド名>`
+- **ドキュメンチE*: `PRODUCTION_SETUP_GUIDE.md`
+- **ヘルプコマンチE*: `man <コマンド名>`
 
 ---
 
-**最後更新**: 2025年12月6日
-**バージョン**: 1.0
-**ステータス**: 本番環境対応
+**最後更新**: 2025年12朁E日
+**バ�Eジョン**: 1.0
+**スチE�Eタス**: 本番環墁E��忁E

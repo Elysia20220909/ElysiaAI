@@ -1,18 +1,11 @@
-# 📋 ElysiaAI 開発タスクリスト (Backlog)
+# 📋 ElysiaAI 開発タスクリスチE(Backlog)
 
-## 🎨 ユーザー体験 (User Experience)
-- [x] **VOICEVOX 連携の調整**: 音声の可愛さをさらにブラッシュアップする。
-- [x] **ターミナル演出**: 起動時や特定コマンド実行時に、ターミナルに星が降るようなアニメーションを追加。
-- [ ] **季節イベント**: 特定の日に実行した際の隠しメッセージや特殊演出の追加。
-
-## ⚙️ インフラ・バックエンド (Infrastructure)
-- [ ] **完全ローカル動作 (Ollama)**: オフライン環境でも Ollama を使用して動作するように検証と設定の追加。
-- [x] **スクリプトの TypeScript 化**: `scripts/` 内の主要な `.ps1`, `.sh` を `scripts/manage.ts` に統合完了。
-
-## 🔒 セキュリティ・安定性 (Security & Stability)
-- [x] **本番環境用セキュリティ設定**: `FORCE_HTTPS`, `CSP` などの設定を `src/config.ts` で一元管理完了。
-- [x] **モニタリング**: Prometheus メトリクスの導入、ヘルスチェックの改善、Graceful Shutdown の実装完了。
-
+## 🎨 ユーザー体騁E(User Experience)
+- [x] **VOICEVOX 連携の調整**: 音声の可愛さをさらにブラチE��ュアチE�Eする、E- [x] **ターミナル演�E**: 起動時めE��定コマンド実行時に、ターミナルに星が降るようなアニメーションを追加、E- [ ] **季節イベンチE*: 特定�E日に実行した際の隠しメチE��ージめE��殊演�Eの追加、E
+## ⚙︁Eインフラ・バックエンチE(Infrastructure)
+- [ ] **完�Eローカル動佁E(Ollama)**: オフライン環墁E��めEOllama を使用して動作するよぁE��検証と設定�E追加、E- [x] **スクリプトの TypeScript 匁E*: `scripts/` 冁E�E主要な `.ps1`, `.sh` めE`scripts/manage.ts` に統合完亁E��E
+## 🔒 セキュリチE��・安定性 (Security & Stability)
+- [x] **本番環墁E��セキュリチE��設宁E*: `FORCE_HTTPS`, `CSP` などの設定を `src/config.ts` で一允E��琁E��亁E��E- [x] **モニタリング**: Prometheus メトリクスの導�E、�EルスチェチE��の改喁E��Graceful Shutdown の実裁E��亁E��E
 ---
 > [!NOTE]
-> このファイルは `docs/TODO.md` の内容を元に作成されました。実装が進むごとにチェックを入れていきます。
+> こ�Eファイルは `docs/TODO.md` の冁E��を�Eに作�Eされました。実裁E��進むごとにチェチE��を�EれてぁE��ます、E

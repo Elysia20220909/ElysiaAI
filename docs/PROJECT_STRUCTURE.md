@@ -1,70 +1,58 @@
 # elysia-ai Project Structure
 
-## 🏗️ Directory Overview
+## 🏗�E�EDirectory Overview
 
 ````text
 elysia-ai/
 ├── config/                         # Configuration files
-│   └── private/                    # 🔒 Private configuration (not in git)
-│       ├── .env                    # Environment variables
-│       ├── .env.example            # Environment template
-│       └── README.md               # Configuration guide
-│
-├── src/                            # Source code
-│   ├── config/                     # Application configuration
-│   │   └── internal/               # 🔒 Internal settings
-│   │       └── llm-config.ts       # LLM model configuration
-│   │
-│   ├── core/                       # Core functionality
-│   │   └── security/               # 🔒 Security modules
-│   │       ├── index.ts            # Security exports
-│   │       ├── jwt.ts              # JWT authentication
-│   │       └── redis.ts            # Rate limiting & caching
-│   │
-│   ├── database/                   # Database layer
-│   │   └── config/                 # 🔒 Database configuration
-│   │       └── index.ts            # DB connection settings
-│   │
-│   ├── index.ts                    # Main server entry
-│   ├── index-fixed.ts              # Alternative entry
-│   └── server.ts                   # Server configuration
-│
-├── public/                         # Static assets
-│   ├── index.html                  # Main web interface
-│   ├── index-new.html              # Updated interface
-│   └── index-old.html              # Legacy interface
-│
-├── docs/                           # Documentation
-│   ├── SECURITY.md                 # Integrated security guide
-│   ├── STRUCTURE_UPDATE.md         # Structure change log
-│   ├── LINUX_SETUP.md              # Linux setup guide
-│   ├── VOICE_GUIDE.md              # Voice feature guide
-│   └── VOICEVOX_SETUP.md           # VOICEVOX integration
-│
-├── scripts/                        # Utility scripts
-│   ├── dev.ps1                     # Windows development script
-│   ├── dev.sh                      # Unix development script
-│   ├── setup-*.ps1/sh              # Setup scripts
-│   └── start-*.ps1/sh              # Startup scripts
-│
-├── tests/                          # Test files
-│   ├── docker.test.ts              # Docker tests
-│   ├── integration.test.ts         # Integration tests
-│   └── server.test.ts              # Server tests
-│
-├── cloud/                          # Cloud deployment
-│   ├── aws/                        # AWS CloudFormation
-│   └── gcp/                        # Google Cloud Platform
-│
-├── deploy/                         # Deployment configs
-│   └── nginx.conf.example          # Nginx configuration
-│
-├── python/                         # Python backend
-│   ├── ai_backend.py               # AI processing
-│   ├── fastapi_server.py           # FastAPI server
-│   └── requirements.txt            # Python dependencies
-│
-├── mobile/                         # React Native mobile app
+━E  └── private/                    # 🔒 Private configuration (not in git)
+━E      ├── .env                    # Environment variables
+━E      ├── .env.example            # Environment template
+━E      └── README.md               # Configuration guide
+━E├── src/                            # Source code
+━E  ├── config/                     # Application configuration
+━E  ━E  └── internal/               # 🔒 Internal settings
+━E  ━E      └── llm-config.ts       # LLM model configuration
+━E  ━E━E  ├── core/                       # Core functionality
+━E  ━E  └── security/               # 🔒 Security modules
+━E  ━E      ├── index.ts            # Security exports
+━E  ━E      ├── jwt.ts              # JWT authentication
+━E  ━E      └── redis.ts            # Rate limiting & caching
+━E  ━E━E  ├── database/                   # Database layer
+━E  ━E  └── config/                 # 🔒 Database configuration
+━E  ━E      └── index.ts            # DB connection settings
+━E  ━E━E  ├── index.ts                    # Main server entry
+━E  ├── index-fixed.ts              # Alternative entry
+━E  └── server.ts                   # Server configuration
+━E├── public/                         # Static assets
+━E  ├── index.html                  # Main web interface
+━E  ├── index-new.html              # Updated interface
+━E  └── index-old.html              # Legacy interface
+━E├── docs/                           # Documentation
+━E  ├── SECURITY.md                 # Integrated security guide
+━E  ├── STRUCTURE_UPDATE.md         # Structure change log
+━E  ├── LINUX_SETUP.md              # Linux setup guide
+━E  ├── VOICE_GUIDE.md              # Voice feature guide
+━E  └── VOICEVOX_SETUP.md           # VOICEVOX integration
+━E├── scripts/                        # Utility scripts
+━E  ├── dev.ps1                     # Windows development script
+━E  ├── dev.sh                      # Unix development script
+━E  ├── setup-*.ps1/sh              # Setup scripts
+━E  └── start-*.ps1/sh              # Startup scripts
+━E├── tests/                          # Test files
+━E  ├── docker.test.ts              # Docker tests
+━E  ├── integration.test.ts         # Integration tests
+━E  └── server.test.ts              # Server tests
+━E├── cloud/                          # Cloud deployment
+━E  ├── aws/                        # AWS CloudFormation
+━E  └── gcp/                        # Google Cloud Platform
+━E├── deploy/                         # Deployment configs
+━E  └── nginx.conf.example          # Nginx configuration
+━E├── python/                         # Python backend
+━E  ├── ai_backend.py               # AI processing
+━E  ├── fastapi_server.py           # FastAPI server
+━E  └── requirements.txt            # Python dependencies
+━E├── mobile/                         # React Native mobile app
 ├── desktop/                        # Electron desktop app
 ├── native/                         # Native C++ modules
 ├── cuda/                           # CUDA acceleration
