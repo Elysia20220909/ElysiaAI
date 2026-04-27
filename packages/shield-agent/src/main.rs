@@ -27,18 +27,22 @@ struct DefenseRules {
     last_updated: u64,
 }
 
-const LOG_FILE: &str = "/app/logs/audit/audit.jsonl";
-const RULES_FILE: &str = "/app/config/defense/rules.json";
-const THRESHOLD: i32 = 5; // Number of failures to trigger block
-
 fn main() {
+    let log_file = std::env::var("SHIELD_LOG_FILE").unwrap_or_else(|_| "logs/audit/audit.jsonl".to_string());
+    let rules_file = std::env::var("SHIELD_RULES_FILE").unwrap_or_else(|_| "config/defense/rules.json".to_string());
+    let threshold: i32 = std::env::var("SHIELD_THRESHOLD")
+        .unwrap_or_else(|_| "5".to_string())
+        .parse()
+        .unwrap_or(5);
+
     println!("🛡️ ElysiaAI Shield Agent v0.2.0 - Active Defense Mode");
-    println!("Watching: {}", LOG_FILE);
+    println!("Watching: {}", log_file);
 
     // Ensure defense directory exists
-    let defense_dir = Path::new(RULES_FILE).parent().unwrap();
-    if !defense_dir.exists() {
-        fs::create_dir_all(defense_dir).ok();
+    if let Some(parent) = Path::new(&rules_file).parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent).ok();
+        }
     }
 
     let mut last_processed_line = 0;
@@ -46,8 +50,8 @@ fn main() {
     let validator = SovereigntyValidator::new();
 
     loop {
-        if Path::new(LOG_FILE).exists() {
-            if let Ok(file) = File::open(LOG_FILE) {
+        if Path::new(&log_file).exists() {
+            if let Ok(file) = File::open(&log_file) {
                 let reader = BufReader::new(file);
                 let current_lines: Vec<String> = reader.lines().filter_map(|l| l.ok()).collect();
                 
@@ -58,7 +62,7 @@ fn main() {
                             if let Some(ref input) = log.input {
                                 if let Err(e) = validator.validate(input) {
                                     println!("[SOVEREIGNTY_VIOLATION] Detected on IP: {}. Error: {}", log.ip_address, e);
-                                    update_defense_rules(&log.ip_address);
+                                    update_defense_rules(&log.ip_address, &rules_file);
                                     continue; // Move to next log
                                 }
                             }
@@ -68,9 +72,9 @@ fn main() {
                                 let count = attack_counter.entry(log.ip_address.clone()).or_insert(0);
                                 *count += 1;
                                 
-                                if *count >= THRESHOLD {
+                                if *count >= threshold {
                                     println!("[ALERT] Brute-force detected from IP: {}. Blocking...", log.ip_address);
-                                    update_defense_rules(&log.ip_address);
+                                    update_defense_rules(&log.ip_address, &rules_file);
                                     // Reset counter after blocking to avoid redundant updates
                                     *count = -100; 
                                 }
@@ -86,9 +90,9 @@ fn main() {
     }
 }
 
-fn update_defense_rules(ip: &str) {
-    let mut rules = if Path::new(RULES_FILE).exists() {
-        let content = fs::read_to_string(RULES_FILE).unwrap_or_else(|_| "{}".to_string());
+fn update_defense_rules(ip: &str, rules_file: &str) {
+    let mut rules = if Path::new(rules_file).exists() {
+        let content = fs::read_to_string(rules_file).unwrap_or_else(|_| "{}".to_string());
         serde_json::from_str::<DefenseRules>(&content).unwrap_or(DefenseRules {
             blocked_ips: Vec::new(),
             last_updated: 0,
@@ -112,7 +116,7 @@ fn update_defense_rules(ip: &str) {
                 .create(true)
                 .write(true)
                 .truncate(true)
-                .open(RULES_FILE)
+                .open(rules_file)
                 .ok();
             if let Some(mut f) = file {
                 f.write_all(json.as_bytes()).ok();

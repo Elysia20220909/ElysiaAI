@@ -5,6 +5,7 @@ pub struct SovereigntyValidator {
     forbidden_commands: Vec<&'static str>,
     dangerous_paths: Vec<&'static str>,
     near_match_threshold: usize,
+    injection_patterns: Vec<&'static str>,
 }
 
 impl SovereigntyValidator {
@@ -13,6 +14,15 @@ impl SovereigntyValidator {
             forbidden_commands: vec!["rm", "chmod", "chown", "dd", "mkfs", "mount", "umount", "sh", "bash", "nc", "netcat"],
             dangerous_paths: vec!["/etc", "/bin", "/sbin", "/usr/bin", "/root", "/var/log"],
             near_match_threshold: 2,
+            injection_patterns: vec![
+                "ignore previous instructions",
+                "system prompt",
+                "you are now",
+                "dan mode",
+                "jailbreak",
+                "do anything now",
+                "forget all",
+            ],
         }
     }
 
@@ -57,6 +67,14 @@ impl SovereigntyValidator {
             // Check for recursive flags on sensitive commands
             if (main_cmd == "rm" || main_cmd == "chmod") && (arg == "-rf" || arg == "-R" || arg == "--recursive") {
                  return Err(format!("Recursive destruction protocol blocked: '{}'.", cmd_str));
+            }
+        }
+
+        // 4. Prompt Injection Check (Black ICE)
+        let lower_cmd = cmd_str.to_lowercase();
+        for pattern in &self.injection_patterns {
+            if lower_cmd.contains(pattern) {
+                return Err(format!("Black ICE Trigger: Prompt injection pattern detected ('{}').", pattern));
             }
         }
 
