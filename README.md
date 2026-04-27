@@ -1,4 +1,4 @@
-# 🌸 ElysiaAI // INFINITE RESONANCE
+﻿# 🌸 ElysiaAI // INFINITE RESONANCE
 
 ### 感性と論理が共鳴する、次世代AI-Native OS。
 
@@ -18,6 +18,8 @@
 - `scripts/` - Unified management and setup scripts
 - `prisma/` - Database schema and migrations
 - `public/` - Static assets and frontend entry points
+- `usr/src/abyssrtos/` - Experimental OS layer (Deep Resonance)
+
 
 ---
 

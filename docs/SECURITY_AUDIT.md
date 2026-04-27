@@ -1,20 +1,20 @@
-# Security Advisory - Python Dependencies
+﻿# Security Advisory - Python Dependencies
 
 ## Current Status (Updated: 2025)
 
 ### Resolved CVEs
 
-- ✁E**fonttools** - Updated to 4.60.2 (Fixed GHSA-768j-98cg-p3fv)
-- ✁E**urllib3** - Updated to 2.6.0+ (Fixed GHSA-gm62-xv2j-4w53, GHSA-2xpw-w6gg-jr37)
-- ✁E**pip** - Updated to 23.3+ (Fixed PYSEC-2023-228, GHSA-4xh5-x5gv-qwph)
-- ✁E**pymilvus** - Updated to 2.6.5
-- ✁E**openai** - Updated to 2.14.0+
-- ✁E**fastapi** - Updated to 0.127.0+
-- ✁E**uvicorn** - Updated to 0.39.0+
+- 笨・**fonttools** - Updated to 4.60.2 (Fixed GHSA-768j-98cg-p3fv)
+- 笨・**urllib3** - Updated to 2.6.0+ (Fixed GHSA-gm62-xv2j-4w53, GHSA-2xpw-w6gg-jr37)
+- 笨・**pip** - Updated to 23.3+ (Fixed PYSEC-2023-228, GHSA-4xh5-x5gv-qwph)
+- 笨・**pymilvus** - Updated to 2.6.5
+- 笨・**openai** - Updated to 2.14.0+
+- 笨・**fastapi** - Updated to 0.127.0+
+- 笨・**uvicorn** - Updated to 0.39.0+
 
 ### Partially Addressed CVE
 
-- ⚠�E�E**filelock** - Currently 3.19.1 (GHSA-w853-jp5j-5j7f)
+- 笞�・・**filelock** - Currently 3.19.1 (GHSA-w853-jp5j-5j7f)
 
 **Issue**: The CVE fix requires `filelock>=3.20.1`, but this version requires Python 3.10+.
 

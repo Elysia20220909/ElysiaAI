@@ -1,4 +1,4 @@
-# ElysiaAI: Multi-User & RBAC Design (Proposed)
+﻿# ElysiaAI: Multi-User & RBAC Design (Proposed)
 
 This document outlines the design for implementing multi-user support and Role-Based Access Control (RBAC) in ElysiaAI.
 
@@ -20,11 +20,11 @@ Access control is enforced at the API gateway level (ElysiaJS) and verified at t
 ### Permission Matrix
 | Resource | OWNER | ADMIN | USER | GUEST |
 | :--- | :---: | :---: | :---: | :---: |
-| Chat Interaction | ✁E| ✁E| ✁E| ❁E|
-| Personal Memory | ✁E| ✁E| ✁E(Own) | ❁E|
-| System Logs | ✁E| ✁E| ❁E| ❁E|
-| HW Orchestration | ✁E| ❁E| ❁E| ❁E|
-| User Management | ✁E| ✁E| ❁E| ❁E|
+| Chat Interaction | 笨・| 笨・| 笨・| 笶・|
+| Personal Memory | 笨・| 笨・| 笨・(Own) | 笶・|
+| System Logs | 笨・| 笨・| 笶・| 笶・|
+| HW Orchestration | 笨・| 笶・| 笶・| 笶・|
+| User Management | 笨・| 笨・| 笶・| 笶・|
 
 ## 3. Data Sovereignty
 
@@ -41,4 +41,4 @@ Each user has a dedicated partition in the vector database (Milvus) and personal
 
 ---
 
-© 2026 Elysia20220909 // ElysiaAI Main
+ﾂｩ 2026 Elysia20220909 // ElysiaAI Main

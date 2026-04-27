@@ -1,4 +1,4 @@
-# 📜 Certificate of Authenticity: ElysiaAI
+﻿# 📜 Certificate of Authenticity: ElysiaAI
 
 **Project**: ElysiaAI  
 **Version**: 1.3.0 "Resonance"  

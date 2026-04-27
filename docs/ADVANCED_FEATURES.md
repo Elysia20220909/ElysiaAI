@@ -1,30 +1,30 @@
-# 🎉 新機�E実裁E��亁E��ポ�EチE
-## 実裁E��ぁEつの高度な機�E
+﻿# 脂 譁ｰ讖溯・螳溯｣・ｮ御ｺ・Ξ繝昴・繝・
+## 螳溯｣・＠縺・縺､縺ｮ鬮伜ｺｦ縺ｪ讖溯・
 
-### 1. ✁EWebhookイベントシスチE��
+### 1. 笨・Webhook繧､繝吶Φ繝医す繧ｹ繝・Β
 
-**ファイル:** `src/lib/webhook-events.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/webhook-events.ts`
 
-**機�E:**
+**讖溯・:**
 
-- Discord/Slack/カスタムWebhook統吁E- イベント駁E��型通知�E�Eser.registered, error.critical, backup.completed等！E- HMAC-SHA256署名によるセキュアな通信
-- Webhook購読管琁EPI
+- Discord/Slack/繧ｫ繧ｹ繧ｿ繝�Webhook邨ｱ蜷・- 繧､繝吶Φ繝磯ｧ・虚蝙矩�夂衍・・ser.registered, error.critical, backup.completed遲会ｼ・- HMAC-SHA256鄂ｲ蜷阪↓繧医ｋ繧ｻ繧ｭ繝･繧｢縺ｪ騾壻ｿ｡
+- Webhook雉ｼ隱ｭ邂｡逅・PI
 
-**新規API:**
+**譁ｰ隕就PI:**
 
-- `GET /admin/webhooks` - Webhook一覧取征E
+- `GET /admin/webhooks` - Webhook荳�隕ｧ蜿門ｾ・
 ---
 
-### 2. ✁E自動バチE��アチE�Eスケジューラー
+### 2. 笨・閾ｪ蜍輔ヰ繝・け繧｢繝・・繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｩ繝ｼ
 
-**ファイル:** `src/lib/backup-scheduler.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/backup-scheduler.ts`
 
-**機�E:**
+**讖溯・:**
 
-- 定期皁E��SQLiteチE�Eタベ�EスバックアチE�E�E�デフォルチE時間ごと�E�E- 世代管琁E��デフォルチE世代保持�E�E- 自動クリーンアチE�E
-- 手動バックアチE�Eトリガー
+- 螳壽悄逧・↑SQLite繝・・繧ｿ繝吶・繧ｹ繝舌ャ繧ｯ繧｢繝・・・医ョ繝輔か繝ｫ繝・譎る俣縺斐→・・- 荳紋ｻ｣邂｡逅・ｼ医ョ繝輔か繝ｫ繝・荳紋ｻ｣菫晄戟・・- 閾ｪ蜍輔け繝ｪ繝ｼ繝ｳ繧｢繝・・
+- 謇句虚繝舌ャ繧ｯ繧｢繝・・繝医Μ繧ｬ繝ｼ
 
-**環墁E��数:**
+**迺ｰ蠅・､画焚:**
 
 ```env
 AUTO_BACKUP_ENABLED=true
@@ -33,48 +33,48 @@ MAX_BACKUP_GENERATIONS=7
 BACKUP_DIR=./backups
 ```
 
-**新規API:**
+**譁ｰ隕就PI:**
 
-- `GET /admin/backups` - バックアチE�E状態�E履歴取征E- `POST /admin/backups/trigger` - 手動バックアチE�E実衁E
+- `GET /admin/backups` - 繝舌ャ繧ｯ繧｢繝・・迥ｶ諷九・螻･豁ｴ蜿門ｾ・- `POST /admin/backups/trigger` - 謇句虚繝舌ャ繧ｯ繧｢繝・・螳溯｡・
 ---
 
-### 3. ✁EAPIキー管琁E��スチE��
+### 3. 笨・API繧ｭ繝ｼ邂｡逅・す繧ｹ繝・Β
 
-**ファイル:** `src/lib/api-key-manager.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/api-key-manager.ts`
 
-**機�E:**
+**讖溯・:**
 
-- APIキー生�E・無効化�E削除
-- 1時間あたり�Eレート制陁E- 有効期限設宁E- 使用統計追跡
-- ユーザー別キー管琁E
-**新規API:**
+- API繧ｭ繝ｼ逕滓・繝ｻ辟｡蜉ｹ蛹悶・蜑企勁
+- 1譎る俣縺ゅ◆繧翫・繝ｬ繝ｼ繝亥宛髯・- 譛牙柑譛滄剞險ｭ螳・- 菴ｿ逕ｨ邨ｱ險郁ｿｽ霍｡
+- 繝ｦ繝ｼ繧ｶ繝ｼ蛻･繧ｭ繝ｼ邂｡逅・
+**譁ｰ隕就PI:**
 
-- `POST /admin/api-keys` - 新規APIキー生�E
-- `GET /admin/api-keys` - APIキー一覧・統計取征E
+- `POST /admin/api-keys` - 譁ｰ隕就PI繧ｭ繝ｼ逕滓・
+- `GET /admin/api-keys` - API繧ｭ繝ｼ荳�隕ｧ繝ｻ邨ｱ險亥叙蠕・
 ---
 
-### 4. ✁EダチE��ュボ�Eドチャート！Ehart.js統合！E
-**ファイル:** `public/admin.html`�E�更新�E�E
-**機�E:**
+### 4. 笨・繝�繝・す繝･繝懊・繝峨メ繝｣繝ｼ繝茨ｼ・hart.js邨ｱ蜷茨ｼ・
+**繝輔ぃ繧､繝ｫ:** `public/admin.html`・域峩譁ｰ・・
+**讖溯・:**
 
-- エンド�Eイント別リクエスト数�E�棒グラフ！E- 時間別リクエスト推移�E�折れ線グラフ！E- レスポンスタイム刁E��E���Eグラフ！E- リアルタイム統計可視化
+- 繧ｨ繝ｳ繝峨・繧､繝ｳ繝亥挨繝ｪ繧ｯ繧ｨ繧ｹ繝域焚・域｣偵げ繝ｩ繝包ｼ・- 譎る俣蛻･繝ｪ繧ｯ繧ｨ繧ｹ繝域耳遘ｻ・域釜繧檎ｷ壹げ繝ｩ繝包ｼ・- 繝ｬ繧ｹ繝昴Φ繧ｹ繧ｿ繧､繝�蛻・ｸ・ｼ亥・繧ｰ繝ｩ繝包ｼ・- 繝ｪ繧｢繝ｫ繧ｿ繧､繝�邨ｱ險亥庄隕門喧
 
 **CDN:** Chart.js 4.5.1
 
 ---
 
-### 5. ✁Eメール通知機�E
+### 5. 笨・繝｡繝ｼ繝ｫ騾夂衍讖溯・
 
-**ファイル:** `src/lib/email-notifier.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/email-notifier.ts`
 
-**機�E:**
+**讖溯・:**
 
-- Nodemailerによるメール送信
-- エラー通知メール
-- ウェルカムメール�E�ユーザー登録時！E- バックアチE�E完亁E��知
-- ヘルスチェチE��失敗通知
+- Nodemailer縺ｫ繧医ｋ繝｡繝ｼ繝ｫ騾∽ｿ｡
+- 繧ｨ繝ｩ繝ｼ騾夂衍繝｡繝ｼ繝ｫ
+- 繧ｦ繧ｧ繝ｫ繧ｫ繝�繝｡繝ｼ繝ｫ・医Θ繝ｼ繧ｶ繝ｼ逋ｻ骭ｲ譎ゑｼ・- 繝舌ャ繧ｯ繧｢繝・・螳御ｺ・�夂衍
+- 繝倥Ν繧ｹ繝√ぉ繝・け螟ｱ謨鈴�夂衍
 
-**環墁E��数:**
+**迺ｰ蠅・､画焚:**
 
 ```env
 EMAIL_NOTIFICATIONS_ENABLED=true
@@ -87,69 +87,69 @@ EMAIL_FROM=noreply@elysia-ai.com
 ADMIN_EMAIL=admin@example.com
 ```
 
-**依存関俁E** `nodemailer@7.0.11`, `@types/nodemailer@7.0.4`
+**萓晏ｭ倬未菫・** `nodemailer@7.0.11`, `@types/nodemailer@7.0.4`
 
 ---
 
-### 6. ✁EA/BチE��ト機�E
+### 6. 笨・A/B繝・せ繝域ｩ溯・
 
-**ファイル:** `src/lib/ab-testing.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/ab-testing.ts`
 
-**機�E:**
+**讖溯・:**
 
-- プロンプトスタイル・レスポンス長のA/BチE��チE- 重み付けランダム割り当て
-- コンバ�Eジョン追跡
-- 評価スコア記録
-- チE��ト結果統計�E极E
-**チE��ォルトテスチE**
+- 繝励Ο繝ｳ繝励ヨ繧ｹ繧ｿ繧､繝ｫ繝ｻ繝ｬ繧ｹ繝昴Φ繧ｹ髟ｷ縺ｮA/B繝・せ繝・- 驥阪∩莉倥￠繝ｩ繝ｳ繝�繝�蜑ｲ繧雁ｽ薙※
+- 繧ｳ繝ｳ繝舌・繧ｸ繝ｧ繝ｳ霑ｽ霍｡
+- 隧穂ｾ｡繧ｹ繧ｳ繧｢險倬鹸
+- 繝・せ繝育ｵ先棡邨ｱ險亥・譫・
+**繝・ヵ繧ｩ繝ｫ繝医ユ繧ｹ繝・**
 
-- プロンプトスタイルチE��ト（オリジナル vs 詳細持E���E�E- レスポンス長チE��ト（短ぁEvs 長ぁE��E
-**新規API:**
+- 繝励Ο繝ｳ繝励ヨ繧ｹ繧ｿ繧､繝ｫ繝・せ繝茨ｼ医が繝ｪ繧ｸ繝翫Ν vs 隧ｳ邏ｰ謖・､ｺ・・- 繝ｬ繧ｹ繝昴Φ繧ｹ髟ｷ繝・せ繝茨ｼ育洒縺・vs 髟ｷ縺・ｼ・
+**譁ｰ隕就PI:**
 
-- `GET /admin/ab-tests` - A/BチE��ト一覧
-- `GET /admin/ab-tests/:testId` - チE��ト結果取征E
+- `GET /admin/ab-tests` - A/B繝・せ繝井ｸ�隕ｧ
+- `GET /admin/ab-tests/:testId` - 繝・せ繝育ｵ先棡蜿門ｾ・
 ---
 
-### 7. ✁EユーザーセチE��ョン管琁E
-**ファイル:** `src/lib/session-manager.ts`
+### 7. 笨・繝ｦ繝ｼ繧ｶ繝ｼ繧ｻ繝・す繝ｧ繝ｳ邂｡逅・
+**繝輔ぃ繧､繝ｫ:** `src/lib/session-manager.ts`
 
-**機�E:**
+**讖溯・:**
 
-- セチE��ョンID生�E・検証
-- チE��イスタイプ検�E�E�Eobile/tablet/desktop�E�E- アクチE��ビティログ�E�Eogin/chat/feedback/logout�E�E- 褁E��チE��イス管琁E��最大5セチE��ョン/ユーザー�E�E- 自動期限�EれクリーンアチE�E�E�E4時間�E�E
-**新規API:**
+- 繧ｻ繝・す繝ｧ繝ｳID逕滓・繝ｻ讀懆ｨｼ
+- 繝・ヰ繧､繧ｹ繧ｿ繧､繝玲､懷・・・obile/tablet/desktop・・- 繧｢繧ｯ繝・ぅ繝薙ユ繧｣繝ｭ繧ｰ・・ogin/chat/feedback/logout・・- 隍・焚繝・ヰ繧､繧ｹ邂｡逅・ｼ域怙螟ｧ5繧ｻ繝・す繝ｧ繝ｳ/繝ｦ繝ｼ繧ｶ繝ｼ・・- 閾ｪ蜍墓悄髯仙・繧後け繝ｪ繝ｼ繝ｳ繧｢繝・・・・4譎る俣・・
+**譁ｰ隕就PI:**
 
-- `GET /admin/sessions` - ユーザーセチE��ョン一覧・統訁E
+- `GET /admin/sessions` - 繝ｦ繝ｼ繧ｶ繝ｼ繧ｻ繝・す繝ｧ繝ｳ荳�隕ｧ繝ｻ邨ｱ險・
 ---
 
-### 8. ✁E自動�Eルスモニタリング
+### 8. 笨・閾ｪ蜍輔・繝ｫ繧ｹ繝｢繝九ち繝ｪ繝ｳ繧ｰ
 
-**ファイル:** `src/lib/health-monitor.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/health-monitor.ts`
 
-**機�E:**
+**讖溯・:**
 
-- チE�Eタベ�Eス接続監要E- Ollama接続監要E- Redis接続監視（オプション�E�E- チE��スク容量監要E- 連続失敗時の自動アラート！Eebhook + メール�E�E- 復旧時�E通知
+- 繝・・繧ｿ繝吶・繧ｹ謗･邯夂屮隕・- Ollama謗･邯夂屮隕・- Redis謗･邯夂屮隕厄ｼ医が繝励す繝ｧ繝ｳ・・- 繝・ぅ繧ｹ繧ｯ螳ｹ驥冗屮隕・- 騾｣邯壼､ｱ謨玲凾縺ｮ閾ｪ蜍輔い繝ｩ繝ｼ繝茨ｼ・ebhook + 繝｡繝ｼ繝ｫ・・- 蠕ｩ譌ｧ譎ゅ・騾夂衍
 
-**環墁E��数:**
+**迺ｰ蠅・､画焚:**
 
 ```env
 HEALTH_MONITORING_ENABLED=true
 ```
 
-**新規API:**
+**譁ｰ隕就PI:**
 
-- `GET /admin/health-monitor` - ヘルスチェチE��状態取征E
+- `GET /admin/health-monitor` - 繝倥Ν繧ｹ繝√ぉ繝・け迥ｶ諷句叙蠕・
 ---
 
-### 9. ✁EログクリーンアチE�E自動化
+### 9. 笨・繝ｭ繧ｰ繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・閾ｪ蜍募喧
 
-**ファイル:** `src/lib/log-cleanup.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/log-cleanup.ts`
 
-**機�E:**
+**讖溯・:**
 
-- 古ぁE��グファイル自動削除�E�デフォルチE0日�E�E- サイズ制限による削除�E�デフォルチE00MB�E�E- ログ圧縮�E�Ezip�E�E- ログローチE�Eション
-- 定期実行（デフォルチE4時間ごと�E�E
-**環墁E��数:**
+- 蜿､縺・Ο繧ｰ繝輔ぃ繧､繝ｫ閾ｪ蜍募炎髯､・医ョ繝輔か繝ｫ繝・0譌･・・- 繧ｵ繧､繧ｺ蛻ｶ髯舌↓繧医ｋ蜑企勁・医ョ繝輔か繝ｫ繝・00MB・・- 繝ｭ繧ｰ蝨ｧ邵ｮ・・zip・・- 繝ｭ繧ｰ繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ
+- 螳壽悄螳溯｡鯉ｼ医ョ繝輔か繝ｫ繝・4譎る俣縺斐→・・
+**迺ｰ蠅・､画焚:**
 
 ```env
 LOG_CLEANUP_ENABLED=true
@@ -160,12 +160,12 @@ LOG_CLEANUP_INTERVAL_HOURS=24
 LOG_COMPRESSION_ENABLED=true
 ```
 
-**新規API:**
+**譁ｰ隕就PI:**
 
-- `GET /admin/logs/cleanup` - クリーンアチE�E統訁E- `POST /admin/logs/cleanup/trigger` - 手動クリーンアチE�E実衁E
+- `GET /admin/logs/cleanup` - 繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・邨ｱ險・- `POST /admin/logs/cleanup/trigger` - 謇句虚繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・螳溯｡・
 ---
 
-## 📦 追加された依存関俁E
+## 逃 霑ｽ蜉�縺輔ｌ縺滉ｾ晏ｭ倬未菫・
 ```json
 {
   "dependencies": {
@@ -180,59 +180,59 @@ LOG_COMPRESSION_ENABLED=true
 
 ---
 
-## 🚀 起動時の自動実衁E
-以下�E機�Eがサーバ�E起動時に自動的に開始されまぁE
+## 噫 襍ｷ蜍墓凾縺ｮ閾ｪ蜍募ｮ溯｡・
+莉･荳九・讖溯・縺後し繝ｼ繝舌・襍ｷ蜍墓凾縺ｫ閾ｪ蜍慕噪縺ｫ髢句ｧ九＆繧後∪縺・
 
 ```typescript
 // src/index.ts
-backupScheduler.start(); // 自動バチE��アチE�E
-healthMonitor.start(); // ヘルスモニタリング
-logCleanupManager.start(); // ログクリーンアチE�E
+backupScheduler.start(); // 閾ｪ蜍輔ヰ繝・け繧｢繝・・
+healthMonitor.start(); // 繝倥Ν繧ｹ繝｢繝九ち繝ｪ繝ｳ繧ｰ
+logCleanupManager.start(); // 繝ｭ繧ｰ繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・
 ```
 
 ---
 
-## 🎯 新しいAPI一覧
+## 識 譁ｰ縺励＞API荳�隕ｧ
 
-### Webhook管琁E
-- `GET /admin/webhooks` - Webhook購読一覧
+### Webhook邂｡逅・
+- `GET /admin/webhooks` - Webhook雉ｼ隱ｭ荳�隕ｧ
 
-### APIキー管琁E
-- `POST /admin/api-keys` - APIキー生�E
-- `GET /admin/api-keys` - APIキー一覧・統訁E
-### バックアチE�E管琁E
-- `GET /admin/backups` - バックアチE�E状態�E履歴
-- `POST /admin/backups/trigger` - 手動バックアチE�E
+### API繧ｭ繝ｼ邂｡逅・
+- `POST /admin/api-keys` - API繧ｭ繝ｼ逕滓・
+- `GET /admin/api-keys` - API繧ｭ繝ｼ荳�隕ｧ繝ｻ邨ｱ險・
+### 繝舌ャ繧ｯ繧｢繝・・邂｡逅・
+- `GET /admin/backups` - 繝舌ャ繧ｯ繧｢繝・・迥ｶ諷九・螻･豁ｴ
+- `POST /admin/backups/trigger` - 謇句虚繝舌ャ繧ｯ繧｢繝・・
 
-### ヘルスモニタリング
+### 繝倥Ν繧ｹ繝｢繝九ち繝ｪ繝ｳ繧ｰ
 
-- `GET /admin/health-monitor` - ヘルスチェチE��状慁E
-### セチE��ョン管琁E
-- `GET /admin/sessions` - セチE��ョン一覧・統訁E
-### A/BチE��チE
-- `GET /admin/ab-tests` - チE��ト一覧
-- `GET /admin/ab-tests/:testId` - チE��ト結果
+- `GET /admin/health-monitor` - 繝倥Ν繧ｹ繝√ぉ繝・け迥ｶ諷・
+### 繧ｻ繝・す繝ｧ繝ｳ邂｡逅・
+- `GET /admin/sessions` - 繧ｻ繝・す繝ｧ繝ｳ荳�隕ｧ繝ｻ邨ｱ險・
+### A/B繝・せ繝・
+- `GET /admin/ab-tests` - 繝・せ繝井ｸ�隕ｧ
+- `GET /admin/ab-tests/:testId` - 繝・せ繝育ｵ先棡
 
-### ログ管琁E
-- `GET /admin/logs/cleanup` - クリーンアチE�E統訁E- `POST /admin/logs/cleanup/trigger` - 手動クリーンアチE�E
+### 繝ｭ繧ｰ邂｡逅・
+- `GET /admin/logs/cleanup` - 繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・邨ｱ險・- `POST /admin/logs/cleanup/trigger` - 謇句虚繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・
 
 ---
 
-## ⚙︁E推奨環墁E��数設宁E
+## 笞呻ｸ・謗ｨ螂ｨ迺ｰ蠅・､画焚險ｭ螳・
 ```env
-# Webhook通知
+# Webhook騾夂衍
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 CUSTOM_WEBHOOK_URL=https://your-webhook.com/endpoint
 CUSTOM_WEBHOOK_SECRET=your-secret-key
 
-# 自動バチE��アチE�E
+# 閾ｪ蜍輔ヰ繝・け繧｢繝・・
 AUTO_BACKUP_ENABLED=true
 BACKUP_INTERVAL_MINUTES=60
 MAX_BACKUP_GENERATIONS=7
 BACKUP_DIR=./backups
 
-# メール通知
+# 繝｡繝ｼ繝ｫ騾夂衍
 EMAIL_NOTIFICATIONS_ENABLED=true
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -241,10 +241,10 @@ SMTP_PASS=your-app-password
 EMAIL_FROM=noreply@elysia-ai.com
 ADMIN_EMAIL=admin@example.com
 
-# ヘルスモニタリング
+# 繝倥Ν繧ｹ繝｢繝九ち繝ｪ繝ｳ繧ｰ
 HEALTH_MONITORING_ENABLED=true
 
-# ログクリーンアチE�E
+# 繝ｭ繧ｰ繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・
 LOG_CLEANUP_ENABLED=true
 LOG_MAX_AGE_DAYS=30
 LOG_MAX_SIZE_MB=500
@@ -253,19 +253,19 @@ LOG_COMPRESSION_ENABLED=true
 
 ---
 
-## ✨ ビルド結果
+## 笨ｨ 繝薙Ν繝臥ｵ先棡
 
 ```
-✁Eビルド�E劁E webpack 5.103.0 compiled successfully
-📦 出劁E dist/index.js
-🎉 全9機�Eが正常に統合されました
+笨・繝薙Ν繝画・蜉・ webpack 5.103.0 compiled successfully
+逃 蜃ｺ蜉・ dist/index.js
+脂 蜈ｨ9讖溯・縺梧ｭ｣蟶ｸ縺ｫ邨ｱ蜷医＆繧後∪縺励◆
 ```
 
 ---
 
-## 🎊 完�E度
+## 至 螳梧・蠎ｦ
 
-- **実裁E��み機�E:** 9/9 (100%)
-- **新規ファイル:** 9倁E- **新規API:** 15倁E- **ビルド状慁E** ✁E成功
-- **依存関俁E** ✁Eインスト�Eル完亁E
-すべての機�Eがエンタープライズレベルで実裁E��れ、本番環墁E��チE�Eロイ可能な状態です、E
+- **螳溯｣・ｸ医∩讖溯・:** 9/9 (100%)
+- **譁ｰ隕上ヵ繧｡繧､繝ｫ:** 9蛟・- **譁ｰ隕就PI:** 15蛟・- **繝薙Ν繝臥憾諷・** 笨・謌仙粥
+- **萓晏ｭ倬未菫・** 笨・繧､繝ｳ繧ｹ繝医・繝ｫ螳御ｺ・
+縺吶∋縺ｦ縺ｮ讖溯・縺後お繝ｳ繧ｿ繝ｼ繝励Λ繧､繧ｺ繝ｬ繝吶Ν縺ｧ螳溯｣・＆繧後�∵悽逡ｪ迺ｰ蠅・↓繝・・繝ｭ繧､蜿ｯ閭ｽ縺ｪ迥ｶ諷九〒縺吶�・

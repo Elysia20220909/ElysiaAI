@@ -1,4 +1,4 @@
-# ðŸ“¡ ElysiaAI: API Specification (v1.3.0)
+# 📡 ElysiaAI: API Specification (v1.3.0)
 
 ElysiaAI provides a modular REST API for interacting with the sovereign intelligence kernel and managing the system.
 
@@ -15,7 +15,7 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
-## ðŸ”‘ 1. Auth Endpoints
+## 🔑 1. Auth Endpoints
 
 ### POST `/auth/register`
 Register a new user.
@@ -25,22 +25,38 @@ Register a new user.
   ```json
   { "message": "User registered successfully", "userId": "uuid-v4" }
   ```
+- **Example**:
+  ```bash
+  curl -X POST http://localhost:3000/auth/register \
+    -H "Content-Type: application/json" \
+    -d '{"username":"elysia","password":"strong-password"}'
+  ```
 
 ### POST `/auth/token`
 Obtain access and refresh tokens.
 - **Body**: `{ "username": "...", "password": "..." }`
 - **Returns (200 OK)**:
   ```json
-  { "accessToken": "...", "refreshToken": "..." }
+  { "accessToken": "...", "refreshToken": "...", "expiresIn": 900 }
+  ```
+- **Example**:
+  ```bash
+  curl -X POST http://localhost:3000/auth/token \
+    -H "Content-Type: application/json" \
+    -d '{"username":"elysia","password":"strong-password"}'
   ```
 
 ### POST `/auth/refresh`
 Refresh an expired access token using a refresh token.
 - **Body**: `{ "refreshToken": "..." }`
+- **Response (200 OK)**:
+  ```json
+  { "accessToken": "...", "refreshToken": "...", "expiresIn": 900 }
+  ```
 
 ---
 
-## ðŸ§  2. Intelligence Endpoints
+## 🧠 2. Intelligence Endpoints
 
 ### POST `/api/process`
 Primary interface for synchronous AI interaction (Resonance Loop).
@@ -50,8 +66,15 @@ Primary interface for synchronous AI interaction (Resonance Loop).
   {
     "response": "AI processing result...",
     "context": ["Source 1", "Source 2"],
-    "thoughts": "The model's internal reasoning process..."
+    "thoughts": ["The model's internal reasoning process..."]
   }
+  ```
+- **Example**:
+  ```bash
+  curl -X POST http://localhost:3000/api/process \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer <accessToken>" \
+    -d '{"query":"Who are you?"}'
   ```
 
 ### POST `/elysia-love`
@@ -61,6 +84,10 @@ Direct chat interface for expressive and emotional interactions.
 ### POST `/feedback`
 Submit user feedback for AI responses to improve future resonance and training.
 - **Body**: `{ "query": "...", "answer": "...", "rating": 1-5, "reason": "..." }`
+- **Response (200 OK)**:
+  ```json
+  { "status": "success", "message": "Feedback received" }
+  ```
 
 ---
 
@@ -71,6 +98,11 @@ Submit user feedback for AI responses to improve future resonance and training.
 
 ### GET `/admin/analytics`
 Export system analytics in JSON format for external monitoring.
+- **Example**:
+  ```bash
+  curl http://localhost:3000/admin/analytics \
+    -H "Authorization: Bearer <accessToken>"
+  ```
 
 ### GET `/admin/api-keys`
 List active API keys and their associated usage statistics.
@@ -90,6 +122,12 @@ Basic service health check. Returns `200 OK` if the Bun server is alive.
 
 ### GET `/metrics`
 Prometheus-formatted system metrics for monitoring and alerting.
+- **Response Example**:
+  ```text
+  # HELP http_requests_total Total number of HTTP requests
+  # TYPE http_requests_total counter
+  http_requests_total{method="GET",path="/health",status="200"} 42
+  ```
 
 ---
 
@@ -105,4 +143,4 @@ Prometheus-formatted system metrics for monitoring and alerting.
 | **500 Internal Error** | An unexpected error occurred within the AI Kernel or Server. |
 
 ---
-Â© 2026 Elysia20220909 // ElysiaAI Main
+© 2026 Elysia20220909 // ElysiaAI Main

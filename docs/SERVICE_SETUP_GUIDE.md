@@ -1,55 +1,55 @@
-# 🚀 サービス起動ガイチE
-こ�Eガイドでは、Elysia AIの全機�Eを有効化するため�E3つのサービスの起動方法を説明します、E
+﻿# 噫 繧ｵ繝ｼ繝薙せ襍ｷ蜍輔ぎ繧､繝・
+縺薙・繧ｬ繧､繝峨〒縺ｯ縲・lysia AI縺ｮ蜈ｨ讖溯・繧呈怏蜉ｹ蛹悶☆繧九◆繧√・3縺､縺ｮ繧ｵ繝ｼ繝薙せ縺ｮ襍ｷ蜍墓婿豕輔ｒ隱ｬ譏弱＠縺ｾ縺吶�・
 ---
 
-## 📋 忁E��なサービス
+## 搭 蠢・ｦ√↑繧ｵ繝ｼ繝薙せ
 
-| サービス    | ポ�EチE| 機�E                     | 忁E��度       |
+| 繧ｵ繝ｼ繝薙せ    | 繝昴・繝・| 讖溯・                     | 蠢・�亥ｺｦ       |
 | ----------- | ------ | ------------------------ | ------------ |
-| **Redis**   | 6379   | レート制限、キャチE��ング | オプショナル |
-| **Ollama**  | 11434  | LLM推論エンジン          | 推奨         |
-| **FastAPI** | 8000   | RAG (検索拡張生�E)       | オプショナル |
+| **Redis**   | 6379   | 繝ｬ繝ｼ繝亥宛髯舌�√く繝｣繝・す繝ｳ繧ｰ | 繧ｪ繝励す繝ｧ繝翫Ν |
+| **Ollama**  | 11434  | LLM謗ｨ隲悶お繝ｳ繧ｸ繝ｳ          | 謗ｨ螂ｨ         |
+| **FastAPI** | 8000   | RAG (讀懃ｴ｢諡｡蠑ｵ逕滓・)       | 繧ｪ繝励す繝ｧ繝翫Ν |
 
-**注愁E*: これら�EサービスがなくてめElysiaサーバ�Eは動作しますが、一部機�Eが制限されます、E
+**豕ｨ諢・*: 縺薙ｌ繧峨・繧ｵ繝ｼ繝薙せ縺後↑縺上※繧・lysia繧ｵ繝ｼ繝舌・縺ｯ蜍穂ｽ懊＠縺ｾ縺吶′縲∽ｸ�驛ｨ讖溯・縺悟宛髯舌＆繧後∪縺吶�・
 ---
 
-## 🔧 インスト�Eルと起動方況E
-### 方況E: 自動起動スクリプト (推奨)
+## 肌 繧､繝ｳ繧ｹ繝医・繝ｫ縺ｨ襍ｷ蜍墓婿豕・
+### 譁ｹ豕・: 閾ｪ蜍戊ｵｷ蜍輔せ繧ｯ繝ｪ繝励ヨ (謗ｨ螂ｨ)
 
 ```powershell
-# 全サービスを一括起勁E.\scripts\start-all-services.ps1 -All
+# 蜈ｨ繧ｵ繝ｼ繝薙せ繧剃ｸ�諡ｬ襍ｷ蜍・.\scripts\start-all-services.ps1 -All
 
-# また�E個別に起勁E.\scripts\start-all-services.ps1 -Redis
+# 縺ｾ縺溘・蛟句挨縺ｫ襍ｷ蜍・.\scripts\start-all-services.ps1 -Redis
 .\scripts\start-all-services.ps1 -Ollama
 .\scripts\start-all-services.ps1 -FastAPI
 ```
 
-### 方況E: Docker Compose (要Docker)
+### 譁ｹ豕・: Docker Compose (隕．ocker)
 
 ```powershell
-# Dockerがインスト�EルされてぁE��場吁Edocker compose -f config/docker/docker-compose.yml up -d
+# Docker縺後う繝ｳ繧ｹ繝医・繝ｫ縺輔ｌ縺ｦ縺・ｋ蝣ｴ蜷・docker compose -f config/docker/docker-compose.yml up -d
 
-# 特定�Eサービスのみ起勁Edocker compose -f config/docker/docker-compose.yml up -d redis ollama fastapi
+# 迚ｹ螳壹・繧ｵ繝ｼ繝薙せ縺ｮ縺ｿ襍ｷ蜍・docker compose -f config/docker/docker-compose.yml up -d redis ollama fastapi
 ```
 
-### 方況E: 手動起勁E
+### 譁ｹ豕・: 謇句虚襍ｷ蜍・
 ---
 
-## 1�E�⃣ Redis - レート制限とキャチE��ング
+## 1・鞘Ε Redis - 繝ｬ繝ｼ繝亥宛髯舌→繧ｭ繝｣繝・す繝ｳ繧ｰ
 
-### インスト�Eル
+### 繧､繝ｳ繧ｹ繝医・繝ｫ
 
-**Windows (WSL2推奨)**:
+**Windows (WSL2謗ｨ螂ｨ)**:
 
 ```powershell
-# WSL2を使用
+# WSL2繧剃ｽｿ逕ｨ
 wsl sudo apt-get update
 wsl sudo apt-get install redis-server
 ```
 
-**Windows (ネイチE��チE**:
+**Windows (繝阪う繝・ぅ繝・**:
 
-1. [Redis for Windows](https://github.com/microsoftarchive/redis/releases) からダウンローチE2. `redis-server.exe` を実衁E
+1. [Redis for Windows](https://github.com/microsoftarchive/redis/releases) 縺九ｉ繝�繧ｦ繝ｳ繝ｭ繝ｼ繝・2. `redis-server.exe` 繧貞ｮ溯｡・
 **macOS/Linux**:
 
 ```bash
@@ -63,203 +63,203 @@ sudo apt-get install redis-server
 sudo yum install redis
 ```
 
-### 起勁E
+### 襍ｷ蜍・
 ```powershell
 # Windows (WSL2)
 wsl sudo service redis-server start
 
-# Windows (ネイチE��チE
+# Windows (繝阪う繝・ぅ繝・
 redis-server
 
 # macOS/Linux
 redis-server
-# また�Eバックグラウンド実衁Eredis-server --daemonize yes
+# 縺ｾ縺溘・繝舌ャ繧ｯ繧ｰ繝ｩ繧ｦ繝ｳ繝牙ｮ溯｡・redis-server --daemonize yes
 ```
 
-### 動作確誁E
+### 蜍穂ｽ懃｢ｺ隱・
 ```powershell
-# 接続テスチEredis-cli ping
-# 期征E��れる出劁E PONG
+# 謗･邯壹ユ繧ｹ繝・redis-cli ping
+# 譛溷ｾ・＆繧後ｋ蜃ｺ蜉・ PONG
 
-# また�E
+# 縺ｾ縺溘・
 curl http://localhost:6379
 ```
 
-### 環墁E��数設宁E(.env)
+### 迺ｰ蠅・､画焚險ｭ螳・(.env)
 
 ```env
 REDIS_ENABLED=true
 REDIS_URL=redis://localhost:6379
 ```
 
-### 有効化される機�E
+### 譛牙柑蛹悶＆繧後ｋ讖溯・
 
-✁E**レート制陁E*: ユーザーごとに60リクエスチE刁E 
-✁E**セチE��ョン管琁E*: 高速なセチE��ョンストレージ  
-✁E**キャチE��ング**: API応答�E高速化
+笨・**繝ｬ繝ｼ繝亥宛髯・*: 繝ｦ繝ｼ繧ｶ繝ｼ縺斐→縺ｫ60繝ｪ繧ｯ繧ｨ繧ｹ繝・蛻・ 
+笨・**繧ｻ繝・す繝ｧ繝ｳ邂｡逅・*: 鬮倬�溘↑繧ｻ繝・す繝ｧ繝ｳ繧ｹ繝医Ξ繝ｼ繧ｸ  
+笨・**繧ｭ繝｣繝・す繝ｳ繧ｰ**: API蠢懃ｭ斐・鬮倬�溷喧
 
 ---
 
-## 2�E�⃣ Ollama - LLM推論エンジン
+## 2・鞘Ε Ollama - LLM謗ｨ隲悶お繝ｳ繧ｸ繝ｳ
 
-### インスト�Eル
+### 繧､繝ｳ繧ｹ繝医・繝ｫ
 
 **Windows/macOS/Linux**:
 
-1. [Ollama公式サイチE(https://ollama.ai/download) からダウンローチE2. インスト�Eラーを実衁E
-**コマンドライン (Linux)**:
+1. [Ollama蜈ｬ蠑上し繧､繝・(https://ollama.ai/download) 縺九ｉ繝�繧ｦ繝ｳ繝ｭ繝ｼ繝・2. 繧､繝ｳ繧ｹ繝医・繝ｩ繝ｼ繧貞ｮ溯｡・
+**繧ｳ繝槭Φ繝峨Λ繧､繝ｳ (Linux)**:
 
 ```bash
 curl -fsSL https://ollama.ai/install.sh | sh
 ```
 
-### モチE��のダウンローチE
+### 繝｢繝・Ν縺ｮ繝�繧ｦ繝ｳ繝ｭ繝ｼ繝・
 ```powershell
-# 推奨モチE�� (7B - バランス垁E
+# 謗ｨ螂ｨ繝｢繝・Ν (7B - 繝舌Λ繝ｳ繧ｹ蝙・
 ollama pull llama3.2
 
-# 高性能モチE�� (70B - 高精度、要GPU)
+# 鬮俶�ｧ閭ｽ繝｢繝・Ν (70B - 鬮倡ｲｾ蠎ｦ縲∬ｦ；PU)
 ollama pull llama3.2:70b
 
-# 軽量モチE�� (3B - 高速、低スペックPC向け)
+# 霆ｽ驥上Δ繝・Ν (3B - 鬮倬�溘�∽ｽ弱せ繝壹ャ繧ｯPC蜷代￠)
 ollama pull llama3.2:3b
 
-# 日本語特化モチE��
+# 譌･譛ｬ隱樒音蛹悶Δ繝・Ν
 ollama pull elyza:jp-llama2
 ```
 
-### 起勁E
+### 襍ｷ蜍・
 ```powershell
-# サービスとして起勁E(自動的に起動することが多い)
+# 繧ｵ繝ｼ繝薙せ縺ｨ縺励※襍ｷ蜍・(閾ｪ蜍慕噪縺ｫ襍ｷ蜍輔☆繧九％縺ｨ縺悟､壹＞)
 ollama serve
 
-# バックグラウンド実衁EStart-Process ollama -ArgumentList "serve" -WindowStyle Hidden
+# 繝舌ャ繧ｯ繧ｰ繝ｩ繧ｦ繝ｳ繝牙ｮ溯｡・Start-Process ollama -ArgumentList "serve" -WindowStyle Hidden
 ```
 
-### 動作確誁E
+### 蜍穂ｽ懃｢ｺ隱・
 ```powershell
-# モチE��一覧表示
+# 繝｢繝・Ν荳�隕ｧ陦ｨ遉ｺ
 ollama list
 
-# チE��ト実衁Eollama run llama3.2 "Hello, how are you?"
+# 繝・せ繝亥ｮ溯｡・ollama run llama3.2 "Hello, how are you?"
 
-# APIチE��チEcurl http://localhost:11434/api/tags
+# API繝・せ繝・curl http://localhost:11434/api/tags
 ```
 
-### 環墁E��数設宁E(.env)
+### 迺ｰ蠅・､画焚險ｭ螳・(.env)
 
 ```env
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.2
 ```
 
-### 有効化される機�E
+### 譛牙柑蛹悶＆繧後ｋ讖溯・
 
-✁E**AIチャチE��**: エリシアAIとの自然な会話  
-✁E**コンチE��スト理解**: 会話履歴を老E�Eした応筁E 
-✁E**ストリーミング**: リアルタイムな応答表示  
-✁E**多言語対忁E*: 日本語�E英語�Eそ�E他言誁E
+笨・**AI繝√Ε繝・ヨ**: 繧ｨ繝ｪ繧ｷ繧｢AI縺ｨ縺ｮ閾ｪ辟ｶ縺ｪ莨夊ｩｱ  
+笨・**繧ｳ繝ｳ繝・く繧ｹ繝育炊隗｣**: 莨夊ｩｱ螻･豁ｴ繧定�・・縺励◆蠢懃ｭ・ 
+笨・**繧ｹ繝医Μ繝ｼ繝溘Φ繧ｰ**: 繝ｪ繧｢繝ｫ繧ｿ繧､繝�縺ｪ蠢懃ｭ碑｡ｨ遉ｺ  
+笨・**螟夊ｨ�隱槫ｯｾ蠢・*: 譌･譛ｬ隱槭・闍ｱ隱槭・縺昴・莉冶ｨ�隱・
 ---
 
-## 3�E�⃣ FastAPI - RAG (検索拡張生�E)
+## 3・鞘Ε FastAPI - RAG (讀懃ｴ｢諡｡蠑ｵ逕滓・)
 
-### 前提条件
+### 蜑肴署譚｡莉ｶ
 
-Python 3.11以降がインスト�EルされてぁE��こと:
+Python 3.11莉･髯阪′繧､繝ｳ繧ｹ繝医・繝ｫ縺輔ｌ縺ｦ縺・ｋ縺薙→:
 
 ```powershell
 python --version
-# Python 3.11.0 以丁E```
+# Python 3.11.0 莉･荳・```
 
-### インスト�Eル
+### 繧､繝ｳ繧ｹ繝医・繝ｫ
 
 ```powershell
-# 依存関係�Eインスト�Eル
+# 萓晏ｭ倬未菫ゅ・繧､繝ｳ繧ｹ繝医・繝ｫ
 cd python
 pip install -r requirements.txt
 
-# また�E仮想環墁E��使用 (推奨)
+# 縺ｾ縺溘・莉ｮ諠ｳ迺ｰ蠅・ｒ菴ｿ逕ｨ (謗ｨ螂ｨ)
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-### 起勁E
+### 襍ｷ蜍・
 ```powershell
-# スクリプトから起勁E(推奨)
+# 繧ｹ繧ｯ繝ｪ繝励ヨ縺九ｉ襍ｷ蜍・(謗ｨ螂ｨ)
 .\scripts\start-fastapi.ps1
 
-# また�E直接実衁Epython python/fastapi_server.py
+# 縺ｾ縺溘・逶ｴ謗･螳溯｡・python python/fastapi_server.py
 
-# 開発モーチE(ホットリローチE
+# 髢狗匱繝｢繝ｼ繝・(繝帙ャ繝医Μ繝ｭ繝ｼ繝・
 uvicorn fastapi_server:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 動作確誁E
+### 蜍穂ｽ懃｢ｺ隱・
 ```powershell
-# ヘルスチェチE��
+# 繝倥Ν繧ｹ繝√ぉ繝・け
 curl http://localhost:8000/health
 
-# API仕様確誁Estart http://localhost:8000/docs
+# API莉墓ｧ倡｢ｺ隱・start http://localhost:8000/docs
 ```
 
-### 環墁E��数設宁E(.env)
+### 迺ｰ蠅・､画焚險ｭ螳・(.env)
 
 ```env
 FASTAPI_BASE_URL=http://localhost:8000
 RAG_ENABLED=true
 ```
 
-### 有効化される機�E
+### 譛牙柑蛹悶＆繧後ｋ讖溯・
 
-✁E**RAG検索**: 知識�Eースからの惁E��検索  
-✁E**ベクトル検索**: セマンチE��チE��検索  
-✁E**ドキュメント�E琁E*: PDF/チE��ストファイルの解极E 
-✁E**知識管琁E*: 学習データの追加・更新
+笨・**RAG讀懃ｴ｢**: 遏･隴倥・繝ｼ繧ｹ縺九ｉ縺ｮ諠・�ｱ讀懃ｴ｢  
+笨・**繝吶け繝医Ν讀懃ｴ｢**: 繧ｻ繝槭Φ繝・ぅ繝・け讀懃ｴ｢  
+笨・**繝峨く繝･繝｡繝ｳ繝亥・逅・*: PDF/繝・く繧ｹ繝医ヵ繧｡繧､繝ｫ縺ｮ隗｣譫・ 
+笨・**遏･隴倡ｮ｡逅・*: 蟄ｦ鄙偵ョ繝ｼ繧ｿ縺ｮ霑ｽ蜉�繝ｻ譖ｴ譁ｰ
 
 ---
 
-## 🔍 サービス状態�E確誁E
-### PowerShellで確誁E
+## 剥 繧ｵ繝ｼ繝薙せ迥ｶ諷九・遒ｺ隱・
+### PowerShell縺ｧ遒ｺ隱・
 ```powershell
-# Redisプロセス確誁EGet-Process redis-server -ErrorAction SilentlyContinue
+# Redis繝励Ο繧ｻ繧ｹ遒ｺ隱・Get-Process redis-server -ErrorAction SilentlyContinue
 
-# Ollamaプロセス確誁EGet-Process ollama -ErrorAction SilentlyContinue
+# Ollama繝励Ο繧ｻ繧ｹ遒ｺ隱・Get-Process ollama -ErrorAction SilentlyContinue
 
-# FastAPIポ�Eト確誁EGet-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
+# FastAPI繝昴・繝育｢ｺ隱・Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
 
-# また�E一括確認スクリプト
+# 縺ｾ縺溘・荳�諡ｬ遒ｺ隱阪せ繧ｯ繝ｪ繝励ヨ
 .\scripts\check-services.ps1
 ```
 
-### ブラウザで確誁E
+### 繝悶Λ繧ｦ繧ｶ縺ｧ遒ｺ隱・
 - **Ollama**: http://localhost:11434/api/tags
 - **FastAPI**: http://localhost:8000/docs
-- **Redis**: `redis-cli ping` (CLIのみ)
+- **Redis**: `redis-cli ping` (CLI縺ｮ縺ｿ)
 
 ---
 
-## 🚀 Elysiaサーバ�Eの起勁E
-全サービスが起動したら、Elysiaサーバ�Eを起動しまぁE
+## 噫 Elysia繧ｵ繝ｼ繝舌・縺ｮ襍ｷ蜍・
+蜈ｨ繧ｵ繝ｼ繝薙せ縺瑚ｵｷ蜍輔＠縺溘ｉ縲・lysia繧ｵ繝ｼ繝舌・繧定ｵｷ蜍輔＠縺ｾ縺・
 
 ```powershell
-# 開発モーチEbun run dev
+# 髢狗匱繝｢繝ｼ繝・bun run dev
 
-# また�E
+# 縺ｾ縺溘・
 npm run dev
 ```
 
-アクセス允E
+繧｢繧ｯ繧ｻ繧ｹ蜈・
 
-- **メインアプリ**: http://localhost:3000
-- **管琁E��面**: http://localhost:3000/admin-extended.html
+- **繝｡繧､繝ｳ繧｢繝励Μ**: http://localhost:3000
+- **邂｡逅・判髱｢**: http://localhost:3000/admin-extended.html
 - **Swagger API**: http://localhost:3000/swagger
 
 ---
 
-## 🛑 サービスの停止
+## 尅 繧ｵ繝ｼ繝薙せ縺ｮ蛛懈ｭ｢
 
-### 個別停止
+### 蛟句挨蛛懈ｭ｢
 
 ```powershell
 # Redis
@@ -272,7 +272,7 @@ Stop-Process -Name ollama -Force
 Stop-Process -Name python -Force | Where-Object { $_.CommandLine -like "*fastapi*" }
 ```
 
-### Docker Composeで停止
+### Docker Compose縺ｧ蛛懈ｭ｢
 
 ```powershell
 docker compose -f config/docker/docker-compose.yml down
@@ -280,94 +280,94 @@ docker compose -f config/docker/docker-compose.yml down
 
 ---
 
-## 🔧 トラブルシューチE��ング
+## 肌 繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ
 
-### ポ�Eトが既に使用されてぁE��
+### 繝昴・繝医′譌｢縺ｫ菴ｿ逕ｨ縺輔ｌ縺ｦ縺・ｋ
 
 ```powershell
-# ポ�Eト使用状況確誁Enetstat -ano | findstr "6379"    # Redis
+# 繝昴・繝井ｽｿ逕ｨ迥ｶ豕∫｢ｺ隱・netstat -ano | findstr "6379"    # Redis
 netstat -ano | findstr "11434"   # Ollama
 netstat -ano | findstr "8000"    # FastAPI
 
-# プロセス終亁EStop-Process -Id <PID> -Force
+# 繝励Ο繧ｻ繧ｹ邨ゆｺ・Stop-Process -Id <PID> -Force
 ```
 
-### サービスが起動しなぁE
-1. **ログ確誁E*:
+### 繧ｵ繝ｼ繝薙せ縺瑚ｵｷ蜍輔＠縺ｪ縺・
+1. **繝ｭ繧ｰ遒ｺ隱・*:
 
    ```powershell
-   # Elysiaログ
+   # Elysia繝ｭ繧ｰ
    Get-Content logs/app.log -Tail 50
 
-   # FastAPIログ
+   # FastAPI繝ｭ繧ｰ
    Get-Content logs/fastapi.log -Tail 50
    ```
 
-2. **依存関係確誁E*:
+2. **萓晏ｭ倬未菫ら｢ｺ隱・*:
 
    ```powershell
-   # Python依存関俁E   pip list
+   # Python萓晏ｭ倬未菫・   pip list
 
-   # Bunパッケージ
+   # Bun繝代ャ繧ｱ繝ｼ繧ｸ
    bun install
    ```
 
-3. **環墁E��数確誁E*:
+3. **迺ｰ蠅・､画焚遒ｺ隱・*:
    ```powershell
    Get-Content .env
    ```
 
-### メモリ不足
+### 繝｡繝｢繝ｪ荳崎ｶｳ
 
-Ollamaの使用メモリを削渁E
+Ollama縺ｮ菴ｿ逕ｨ繝｡繝｢繝ｪ繧貞炎貂・
 
 ```powershell
-# 軽量モチE��に変更
+# 霆ｽ驥上Δ繝・Ν縺ｫ螟画峩
 ollama pull llama3.2:3b
 
-# .envを更新
+# .env繧呈峩譁ｰ
 OLLAMA_MODEL=llama3.2:3b
 ```
 
 ---
 
-## 📊 推奨構�E
+## 投 謗ｨ螂ｨ讒区・
 
-### 最小構�E (開発用)
-
-```
-✁EElysia Server のみ
-❁ERedis (フォールバック機�Eで動佁E
-❁EOllama (AI機�Eは無効)
-❁EFastAPI (RAG機�Eは無効)
-```
-
-### 標準構�E (推奨)
+### 譛�蟆乗ｧ区・ (髢狗匱逕ｨ)
 
 ```
-✁EElysia Server
-✁EOllama + llama3.2
-❁ERedis (オプショナル)
-❁EFastAPI (オプショナル)
+笨・Elysia Server 縺ｮ縺ｿ
+笶・Redis (繝輔か繝ｼ繝ｫ繝舌ャ繧ｯ讖溯・縺ｧ蜍穂ｽ・
+笶・Ollama (AI讖溯・縺ｯ辟｡蜉ｹ)
+笶・FastAPI (RAG讖溯・縺ｯ辟｡蜉ｹ)
 ```
 
-### フル構�E (本番環墁E
+### 讓呎ｺ匁ｧ区・ (謗ｨ螂ｨ)
 
 ```
-✁EElysia Server
-✁ERedis (レート制陁E
-✁EOllama + llama3.2
-✁EFastAPI (RAG機�E)
+笨・Elysia Server
+笨・Ollama + llama3.2
+笶・Redis (繧ｪ繝励す繝ｧ繝翫Ν)
+笶・FastAPI (繧ｪ繝励す繝ｧ繝翫Ν)
+```
+
+### 繝輔Ν讒区・ (譛ｬ逡ｪ迺ｰ蠅・
+
+```
+笨・Elysia Server
+笨・Redis (繝ｬ繝ｼ繝亥宛髯・
+笨・Ollama + llama3.2
+笨・FastAPI (RAG讖溯・)
 ```
 
 ---
 
-## 🎯 次のスチE��チE
-1. ✁Eサービス起動確誁E2. ✁EElysiaサーバ�E起勁E(`bun run dev`)
-3. ✁Eブラウザでアクセス (http://localhost:3000)
-4. ✁EAIチャチE��チE��チE5. ✁E管琁E��面確誁E(http://localhost:3000/admin-extended.html)
+## 識 谺｡縺ｮ繧ｹ繝・ャ繝・
+1. 笨・繧ｵ繝ｼ繝薙せ襍ｷ蜍慕｢ｺ隱・2. 笨・Elysia繧ｵ繝ｼ繝舌・襍ｷ蜍・(`bun run dev`)
+3. 笨・繝悶Λ繧ｦ繧ｶ縺ｧ繧｢繧ｯ繧ｻ繧ｹ (http://localhost:3000)
+4. 笨・AI繝√Ε繝・ヨ繝・せ繝・5. 笨・邂｡逅・判髱｢遒ｺ隱・(http://localhost:3000/admin-extended.html)
 
 ---
 
-**作�E日**: 2025-12-04  
-**最終更新**: 2025-12-04
+**菴懈・譌･**: 2025-12-04  
+**譛�邨よ峩譁ｰ**: 2025-12-04
