@@ -1,31 +1,35 @@
-﻿# 訣 ElysiaAI 迺ｰ蠅・､画焚繧ｬ繧､繝・
-ElysiaAI 縺ｮ蜍穂ｽ懊ｒ繧ｫ繧ｹ繧ｿ繝槭う繧ｺ縺吶ｋ縺溘ａ縺ｮ迺ｰ蠅・､画焚縺ｮ荳�隕ｧ縺ｧ縺吶�・縺薙ｌ繧峨・螟画焚縺ｯ縲√・繝ｭ繧ｸ繧ｧ繧ｯ繝医Ν繝ｼ繝医・ `.env` 繝輔ぃ繧､繝ｫ縺ｫ險倩ｿｰ縺吶ｋ縺九�∝ｮ溯｡檎腸蠅・・繧ｷ繧ｹ繝・Β螟画焚縺ｨ縺励※險ｭ螳壹＠縺ｦ縺上□縺輔＞縲・
-## 泊 蠢・�医・驥崎ｦ・(Core Settings)
-| 螟画焚蜷・| 繝・ヵ繧ｩ繝ｫ繝亥�､ | 隱ｬ譏・|
-|--------|--------------|------|
-| `PORT` | `3000` | ElysiaAI 繧ｵ繝ｼ繝舌・縺ｮ蠕・女繝昴・繝医�・|
-| `NODE_ENV` | `development` | `development` 縺ｾ縺溘・ `production`縲よ悽逡ｪ迺ｰ蠅・〒縺ｯ蠢・★ `production` 繧呈欠螳壹＠縺ｦ縺上□縺輔＞縲・|
-| `DB_URL` | (蠢・�・譛ｬ逡ｪ) | 繝・・繧ｿ繝吶・繧ｹ縺ｸ縺ｮ謗･邯壽枚蟄怜・縲・|
-| `SESSION_SECRET` | `dev_secret_only` | 繧ｻ繝・す繝ｧ繝ｳ證怜捷蛹也畑縺ｮ遘伜ｯ・嵯縲よ悽逡ｪ迺ｰ蠅・〒縺ｯ蠢・★繝ｦ繝九・繧ｯ縺ｪ譁・ｭ怜・繧定ｨｭ螳壹＠縺ｦ縺上□縺輔＞縲・|
+# ⚙️ ElysiaAI: 環境変数ガイド (Environment Variables)
 
-## 孱・・繧ｻ繧ｭ繝･繝ｪ繝・ぅ (Security Hardening)
-| 螟画焚蜷・| 繝・ヵ繧ｩ繝ｫ繝亥�､ | 隱ｬ譏・|
-|--------|--------------|------|
-| `FORCE_HTTPS` | `false` | `true` 縺ｫ險ｭ螳壹☆繧九→縲∝ｸｸ縺ｫ HSTS (Strict-Transport-Security) 繝倥ャ繝�繝ｼ繧帝�∽ｿ｡縺励∪縺吶�・|
-| `CSP_ENABLED` | `true` | 繧ｳ繝ｳ繝・Φ繝・そ繧ｭ繝･繝ｪ繝・ぅ繝昴Μ繧ｷ繝ｼ (CSP) 繝倥ャ繝�繝ｼ繧呈怏蜉ｹ縺ｫ縺励∪縺吶�・|
-| `ERROR_ALERTS_ENABLED` | `false` | 繧ｨ繝ｩ繝ｼ逋ｺ逕滓凾縺ｮ Webhook 騾夂衍繧呈怏蜉ｹ縺ｫ縺励∪縺吶�・|
+ElysiaAI の動作をカスタマイズするための環境変数の一覧です。これらの変数は、プロジェクトルートの `.env` ファイルに記述するか、実行環境のシステム変数として設定してください。
 
-## 討 騾夂衍 (Notifications)
-| 螟画焚蜷・| 隱ｬ譏・|
-|--------|------|
-| `DISCORD_WEBHOOK_URL` | 繧ｨ繝ｩ繝ｼ騾夂衍繧帝�∽ｿ｡縺吶ｋ Discord Webhook 縺ｮ URL縲・|
-| `SLACK_WEBHOOK_URL` | 繧ｨ繝ｩ繝ｼ騾夂衍繧帝�∽ｿ｡縺吶ｋ Slack Webhook 縺ｮ URL縲・|
+## 核心設定 (Core Settings)
 
-## 笞呻ｸ・髢狗匱繝ｻ繝・ヰ繝・げ (Development)
-| 螟画焚蜷・| 繝・ヵ繧ｩ繝ｫ繝亥�､ | 隱ｬ譏・|
-|--------|--------------|------|
-| `DEBUG` | `false` | 隧ｳ邏ｰ縺ｪ繝ｭ繧ｰ蜃ｺ蜉帙ｒ譛牙柑縺ｫ縺励∪縺吶�・|
+| 変数名 | デフォルト値 | 説明 |
+| :--- | :--- | :--- |
+| `PORT` | `3000` | ElysiaAI サーバーの待ち受けポート。 |
+| `NODE_ENV` | `development` | `development` または `production`。本番環境では必ず `production` を指定してください。 |
+| `DB_URL` | (必須) | データベースへの接続文字列 (SQLite/PostgreSQL)。 |
+| `SESSION_SECRET` | `dev_secret` | セッション暗号化用の秘密鍵。本番環境では必ずユニークな文字列を設定してください。 |
+
+## セキュリティ (Security Hardening)
+
+| 変数名 | デフォルト値 | 説明 |
+| :--- | :--- | :--- |
+| `ELYSIA_TEST_MODE` | `0` | `1` に設定すると、AI Kernelをモックし、テスト用のアカウントバイパスを有効にします。 |
+| `FORCE_HTTPS` | `false` | `true` に設定すると、常に HSTS ヘッダーを送信します。 |
+| `CSP_ENABLED` | `true` | コンテンツセキュリティポリシー (CSP) を有効にします。 |
+| `REDIS_ENABLED` | `true` | レート制限とセッション管理に Redis を使用するかどうか。 |
+
+## AI & 外部連携 (AI & Integrations)
+
+| 変数名 | デフォルト値 | 説明 |
+| :--- | :--- | :--- |
+| `OLLAMA_URL` | `http://localhost:11434` | ローカルの Ollama サーバーの URL。 |
+| `MILVUS_URL` | `data/milvus.db` | Milvus Lite のデータベースファイルパス。 |
+| `VOICEVOX_URL` | `http://localhost:50021` | VOICEVOX エンジンの URL。 |
 
 ---
 > [!TIP]
-> 髢狗匱迺ｰ蠅・〒縺ｯ `.env.example` 繧偵さ繝斐・縺励※ `.env` 繧剃ｽ懈・縺励�∝ｿ・ｦ√↑蛟､繧堤ｷｨ髮・☆繧九％縺ｨ繧偵♀蜍ｧ繧√＠縺ｾ縺吶�・
+> 開発環境では `.env.example` をコピーして `.env` を作成し、必要な値を編集することをお勧めします。
+
+© 2026 Elysia20220909 // ElysiaAI
