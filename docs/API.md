@@ -4,7 +4,7 @@ ElysiaAI provides a modular REST API for interacting with the sovereign intellig
 
 ---
 
-## 🛡️ Authentication
+## 🛡�E�EAuthentication
 
 All API requests (except `/auth/*` and `/health`) require a JWT token in the `Authorization` header.
 
@@ -64,7 +64,7 @@ Submit user feedback for AI responses to improve future resonance and training.
 
 ---
 
-## 🛡️ 3. Administration (Admin/Owner Role Required)
+## 🛡�E�E3. Administration (Admin/Owner Role Required)
 
 > [!IMPORTANT]
 > Access to these endpoints requires a JWT with `role: admin` or `role: owner`.
@@ -83,7 +83,7 @@ Retrieve detailed health status, latency, and resource usage of all internal ser
 
 ---
 
-## ⚙️ 4. System Endpoints
+## ⚙︁E4. System Endpoints
 
 ### GET `/health`
 Basic service health check. Returns `200 OK` if the Bun server is alive.
@@ -93,7 +93,7 @@ Prometheus-formatted system metrics for monitoring and alerting.
 
 ---
 
-## ❌ Error Codes
+## ❁EError Codes
 
 | Code | Description |
 | :--- | :--- |

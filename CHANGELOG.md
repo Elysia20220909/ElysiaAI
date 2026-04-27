@@ -12,8 +12,9 @@ All notable changes to this project will be documented in this file.
 ### 🏗️ Architecture & Cleanup
 - **License Unification**: Standardized to MIT OR Apache-2.0 dual license.
 - **Orchestration**: Replaced legacy scripts with a unified `manage.ts` CLI.
-- **Repository Cleanup**: Removed 170+ legacy scripts and redundant documentation.
-- **CI/CD Hardening**: Updated security workflows, fixed ZAP targets, and made notifications robust.
+- **Complete Deletion**: Purged all legacy roleplay artifacts, lore files, and non-technical noise to professionalize the repository.
+- **Significant Lightweighting**: Removed 10MB+ of non-core sub-packages, mining scripts, and simulation modules to focus on the AI OS core.
+- **CI/CD Hardening**: Updated workflows with branch fixes (`master`), SHA pinning, and automated ZAP server startup.
 
 ### 📚 Documentation
 - **Quick Start**: Created a high-impact, 5-minute onboarding guide.

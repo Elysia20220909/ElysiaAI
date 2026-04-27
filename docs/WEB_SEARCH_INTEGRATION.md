@@ -1,82 +1,72 @@
-# インターネット接続機能の追加
+# インターネット接続機�Eの追加
 
-## 実装内容
+## 実裁E�E容
 
 ### 1. Web検索ライブラリ (`src/lib/web-search.ts`)
 
-インターネットから情報を取得する包括的な検索機能を実装しました。
+インターネットから情報を取得する包括皁E��検索機�Eを実裁E��ました、E
+**機�E:**
 
-**機能:**
+- **Wikipedia検索**: 日本語Wikipediaから概要を取征E- **天気情報**: Open-Meteo API経由で日本の主要E0都市�E天気を取征E- **ニュース**: NHKニュースのRSSフィードから最新ニュースを取征E- **Web検索**: DuckDuckGo APIで一般皁E��検索
+- **統合検索**: 質問�E容に応じて適刁E��検索を�E動選抁E
+**対応�E币E(天氁E:**
+東京、大阪、名古屋、札幌、福岡、京都、神戸、横浜、仙台、庁E��
 
-- **Wikipedia検索**: 日本語Wikipediaから概要を取得
-- **天気情報**: Open-Meteo API経由で日本の主要10都市の天気を取得
-- **ニュース**: NHKニュースのRSSフィードから最新ニュースを取得
-- **Web検索**: DuckDuckGo APIで一般的な検索
-- **統合検索**: 質問内容に応じて適切な検索を自動選択
-
-**対応都市 (天気):**
-東京、大阪、名古屋、札幌、福岡、京都、神戸、横浜、仙台、広島
-
-**ニュースカテゴリ:**
+**ニュースカチE��リ:**
 
 - general: 一般ニュース
 - technology: 技術ニュース
-- sports: スポーツニュース
-- culture: 文化ニュース
+- sports: スポ�EチE��ュース
+- culture: 斁E��ニュース
 
-### 2. カジュアルチャット連携 (`src/lib/casual-chat.ts`)
+### 2. カジュアルチャチE��連携 (`src/lib/casual-chat.ts`)
 
-日常会話機能にWeb検索を統合しました。
-
+日常会話機�EにWeb検索を統合しました、E
 **変更点:**
 
-- `generateCasualResponse()` を async 関数に変更
-- `needsWebSearch()` で検索が必要か自動判定
-- 検索結果を会話形式で返す `formatSearchResultForChat()`
+- `generateCasualResponse()` めEasync 関数に変更
+- `needsWebSearch()` で検索が忁E��か自動判宁E- 検索結果を会話形式で返す `formatSearchResultForChat()`
 
-**検索トリガーキーワード:**
+**検索トリガーキーワーチE**
 
 - 天気、気温、ニュース、最新、今日、現在
 - what is, who is, when, where
-- について、とは、って何、教えて
+- につぁE��、とは、って何、教えて
 
-### 3. API統合 (`src/index.ts`)
+### 3. API統吁E(`src/index.ts`)
 
 **カジュアルモードでの自動検索:**
 
 ```typescript
-// カジュアルモードの場合、Web検索を試行
-if (mode === "casual" && body.messages.length > 0) {
+// カジュアルモード�E場合、Web検索を試衁Eif (mode === "casual" && body.messages.length > 0) {
   const lastUserMessage = body.messages[body.messages.length - 1];
   if (lastUserMessage.role === "user") {
     const casualResponse = await casualChat.generateCasualResponse(lastUserMessage.content);
     if (casualResponse) {
-      enhancedSystemPrompt += `\n\n参考情報: ${casualResponse}`;
+      enhancedSystemPrompt += `\n\n参老E��報: ${casualResponse}`;
     }
   }
 }
 ```
 
-**新しいAPIエンドポイント:**
+**新しいAPIエンド�EインチE**
 
 ```
 GET /api/search?q=検索クエリ
 ```
 
-### 4. テストファイル (`test-web-search.ts`)
+### 4. チE��トファイル (`test-web-search.ts`)
 
-全ての検索機能をテストするスクリプトを作成しました。
-
-**テスト内容:**
+全ての検索機�Eをテストするスクリプトを作�Eしました、E
+**チE��ト�E容:**
 
 1. Wikipedia検索 (人工知能)
 2. 天気情報 (東京)
 3. 最新ニュース
 4. Web検索 (TypeScript)
-5. 統合検索 (今日の天気)
+5. 統合検索 (今日の天氁E
 
-## 使用方法
-
+## 使用方況E
 ### カジュアルモードで使用
 
 ```bash
@@ -85,7 +75,7 @@ curl -X POST http://localhost:3000/elysia-love \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "messages": [
-      {"role": "user", "content": "今日の東京の天気は?"}
+      {"role": "user", "content": "今日の東京の天気�E?"}
     ],
     "mode": "casual"
   }'
@@ -94,67 +84,49 @@ curl -X POST http://localhost:3000/elysia-love \
 ### 直接検索API使用
 
 ```bash
-curl "http://localhost:3000/api/search?q=今日の天気"
+curl "http://localhost:3000/api/search?q=今日の天氁E
 ```
 
-### テスト実行
-
+### チE��ト実衁E
 ```bash
 bun run test-web-search.ts
 ```
 
-## 会話例
+## 会話侁E
+**質啁E*: 「今日の東京の天気どぁE、E**応筁E*: 「ちめE��と調べてみたよ�E�E
+東京の天氁E 晴れ、気温15℁E��湿度60%、E��送Em/s
 
-**質問**: 「今日の東京の天気どう?」
-**応答**: 「ちょっと調べてみたよ！
-
-東京の天気: 晴れ、気温15℃、湿度60%、風速3m/s
-
-これで合ってるかな？他に知りたいことある?」
-
-**質問**: 「最新のニュース教えて」
-**応答**: 「ちょっと調べてみたよ！
-
+これで合ってるかな�E�他に知りたぁE��とある?、E
+**質啁E*: 「最新のニュース教えて、E**応筁E*: 「ちめE��と調べてみたよ�E�E
 最新ニュース:
 ・○○○○のニュース
-・△△△△の話題
-・□□□□について
+・△△△△の話顁E・□□□□につぁE��
 
-これで合ってるかな？他に知りたいことある?」
-
-**質問**: 「人工知能って何?」
-**応答**: 「ちょっと調べてみたよ！
-
-人工知能について:
-人工知能とは、コンピュータを使って、学習・推論・判断など人間の知能のはたらきを人工的に実現したものである。...
+これで合ってるかな�E�他に知りたぁE��とある?、E
+**質啁E*: 「人工知能って佁E、E**応筁E*: 「ちめE��と調べてみたよ�E�E
+人工知能につぁE��:
+人工知能とは、コンピュータを使って、学習�E推論�E判断など人間�E知能のはたらきを人工皁E��実現したも�Eである、E..
 
 詳細: https://ja.wikipedia.org/wiki/人工知能
 
-これで合ってるかな?他に知りたいことある?」
-
-## 技術仕様
-
+これで合ってるかな?他に知りたぁE��とある?、E
+## 技術仕槁E
 ### 外部API
 
 - **Wikipedia API**: https://ja.wikipedia.org/w/api.php
-- **Open-Meteo API**: https://api.open-meteo.com (無料、登録不要)
+- **Open-Meteo API**: https://api.open-meteo.com (無料、登録不要E
 - **NHKニュースRSS**: https://www.nhk.or.jp/rss/
 - **DuckDuckGo API**: https://api.duckduckgo.com
 
-### タイムアウト設定
-
-全ての外部API呼び出しに10秒のタイムアウトを設定しています。
-
+### タイムアウト設宁E
+全ての外部API呼び出しに10秒�Eタイムアウトを設定してぁE��す、E
 ### エラーハンドリング
 
-- ネットワークエラー: コンソールログに記録し、null/空配列を返す
-- タイムアウト: 自動的にフォールバック
-- API利用不可: 他の検索方法を試行
-
-## 次のステップ
-
-1. **テスト実行**: `bun run test-web-search.ts`
-2. **サーバー再起動**: `bun run dev`
-3. **動作確認**: カジュアルモードで天気やニュースを質問
-
-これで日常会話がリアルタイム情報に対応し、より実用的になりました！
+- ネットワークエラー: コンソールログに記録し、null/空配�Eを返す
+- タイムアウチE 自動的にフォールバック
+- API利用不可: 他�E検索方法を試衁E
+## 次のスチE��チE
+1. **チE��ト実衁E*: `bun run test-web-search.ts`
+2. **サーバ�E再起勁E*: `bun run dev`
+3. **動作確誁E*: カジュアルモードで天気やニュースを質啁E
+これで日常会話がリアルタイム惁E��に対応し、より実用皁E��なりました�E�E

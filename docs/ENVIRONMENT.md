@@ -1,34 +1,31 @@
-# 🌍 ElysiaAI 環境変数ガイド
-
-ElysiaAI の動作をカスタマイズするための環境変数の一覧です。
-これらの変数は、プロジェクトルートの `.env` ファイルに記述するか、実行環境のシステム変数として設定してください。
-
-## 🔑 必須・重要 (Core Settings)
-| 変数名 | デフォルト値 | 説明 |
+# 🌍 ElysiaAI 環墁E��数ガイチE
+ElysiaAI の動作をカスタマイズするための環墁E��数の一覧です、Eこれら�E変数は、�Eロジェクトルート�E `.env` ファイルに記述するか、実行環墁E�EシスチE��変数として設定してください、E
+## 🔑 忁E���E重要E(Core Settings)
+| 変数吁E| チE��ォルト値 | 説昁E|
 |--------|--------------|------|
-| `PORT` | `3000` | ElysiaAI サーバーの待受ポート。 |
-| `NODE_ENV` | `development` | `development` または `production`。本番環境では必ず `production` を指定してください。 |
-| `DB_URL` | (必須/本番) | データベースへの接続文字列。 |
-| `SESSION_SECRET` | `dev_secret_only` | セッション暗号化用の秘密鍵。本番環境では必ずユニークな文字列を設定してください。 |
+| `PORT` | `3000` | ElysiaAI サーバ�Eの征E��ポ�Eト、E|
+| `NODE_ENV` | `development` | `development` また�E `production`。本番環墁E��は忁E�� `production` を指定してください、E|
+| `DB_URL` | (忁E��E本番) | チE�Eタベ�Eスへの接続文字�E、E|
+| `SESSION_SECRET` | `dev_secret_only` | セチE��ョン暗号化用の秘寁E��。本番環墁E��は忁E��ユニ�Eクな斁E���Eを設定してください、E|
 
-## 🛡️ セキュリティ (Security Hardening)
-| 変数名 | デフォルト値 | 説明 |
+## 🛡�E�EセキュリチE�� (Security Hardening)
+| 変数吁E| チE��ォルト値 | 説昁E|
 |--------|--------------|------|
-| `FORCE_HTTPS` | `false` | `true` に設定すると、常に HSTS (Strict-Transport-Security) ヘッダーを送信します。 |
-| `CSP_ENABLED` | `true` | コンテンツセキュリティポリシー (CSP) ヘッダーを有効にします。 |
-| `ERROR_ALERTS_ENABLED` | `false` | エラー発生時の Webhook 通知を有効にします。 |
+| `FORCE_HTTPS` | `false` | `true` に設定すると、常に HSTS (Strict-Transport-Security) ヘッダーを送信します、E|
+| `CSP_ENABLED` | `true` | コンチE��チE��キュリチE��ポリシー (CSP) ヘッダーを有効にします、E|
+| `ERROR_ALERTS_ENABLED` | `false` | エラー発生時の Webhook 通知を有効にします、E|
 
 ## 📢 通知 (Notifications)
-| 変数名 | 説明 |
+| 変数吁E| 説昁E|
 |--------|------|
-| `DISCORD_WEBHOOK_URL` | エラー通知を送信する Discord Webhook の URL。 |
-| `SLACK_WEBHOOK_URL` | エラー通知を送信する Slack Webhook の URL。 |
+| `DISCORD_WEBHOOK_URL` | エラー通知を送信する Discord Webhook の URL、E|
+| `SLACK_WEBHOOK_URL` | エラー通知を送信する Slack Webhook の URL、E|
 
-## ⚙️ 開発・デバッグ (Development)
-| 変数名 | デフォルト値 | 説明 |
+## ⚙︁E開発・チE��チE�� (Development)
+| 変数吁E| チE��ォルト値 | 説昁E|
 |--------|--------------|------|
-| `DEBUG` | `false` | 詳細なログ出力を有効にします。 |
+| `DEBUG` | `false` | 詳細なログ出力を有効にします、E|
 
 ---
 > [!TIP]
-> 開発環境では `.env.example` をコピーして `.env` を作成し、必要な値を編集することをお勧めします。
+> 開発環墁E��は `.env.example` をコピ�Eして `.env` を作�Eし、忁E��な値を編雁E��ることをお勧めします、E
