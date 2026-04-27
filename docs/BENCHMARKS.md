@@ -1,4 +1,4 @@
-# Benchmark Results
+﻿# Benchmark Results
 
 Last Updated: 2025-12-03
 
@@ -202,10 +202,10 @@ Error Rate (spike): 2.1%
 
 | Load Level       | Current | Target | Status                      |
 | ---------------- | ------- | ------ | --------------------------- |
-| Concurrent Users | 50      | 200    | ⚠�E�ENeeds optimization       |
-| Requests/sec     | 25      | 100    | ⚠�E�ENeeds horizontal scaling |
-| P95 Latency      | 1.2s    | <500ms | ⚠�E�ENeeds GPU for LLM        |
-| Uptime           | 99.5%   | 99.9%  | ✁EAchievable               |
+| Concurrent Users | 50      | 200    | 笞�・・Needs optimization       |
+| Requests/sec     | 25      | 100    | 笞�・・Needs horizontal scaling |
+| P95 Latency      | 1.2s    | <500ms | 笞�・・Needs GPU for LLM        |
+| Uptime           | 99.5%   | 99.9%  | 笨・Achievable               |
 
 ### Optimization Priorities
 

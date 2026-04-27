@@ -1,54 +1,54 @@
-# Elysia AI チE�EロイメントガイチE
-## 目次
+﻿# Elysia AI 繝・・繝ｭ繧､繝｡繝ｳ繝医ぎ繧､繝・
+## 逶ｮ谺｡
 
-1. [シスチE��要件](#シスチE��要件)
-2. [環墁E��数設定](#環墁E��数設宁E
-3. [チE�Eタベ�EスセチE��アチE�E](#チE�Eタベ�EスセチE��アチE�E)
-4. [RedisセチE��アチE�E](#redisセチE��アチE�E)
-5. [アプリケーションチE�Eロイ](#アプリケーションチE�Eロイ)
-6. [DockerチE�Eロイ](#dockerチE�Eロイ)
-7. [監視と運用](#監視と運用)
-8. [トラブルシューチE��ング](#トラブルシューチE��ング)
+1. [繧ｷ繧ｹ繝・Β隕∽ｻｶ](#繧ｷ繧ｹ繝・Β隕∽ｻｶ)
+2. [迺ｰ蠅・､画焚險ｭ螳咯(#迺ｰ蠅・､画焚險ｭ螳・
+3. [繝・・繧ｿ繝吶・繧ｹ繧ｻ繝・ヨ繧｢繝・・](#繝・・繧ｿ繝吶・繧ｹ繧ｻ繝・ヨ繧｢繝・・)
+4. [Redis繧ｻ繝・ヨ繧｢繝・・](#redis繧ｻ繝・ヨ繧｢繝・・)
+5. [繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繝・・繝ｭ繧､](#繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繝・・繝ｭ繧､)
+6. [Docker繝・・繝ｭ繧､](#docker繝・・繝ｭ繧､)
+7. [逶｣隕悶→驕狗畑](#逶｣隕悶→驕狗畑)
+8. [繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ](#繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ)
 
 ---
 
-## シスチE��要件
+## 繧ｷ繧ｹ繝・Β隕∽ｻｶ
 
-### 最小要件
+### 譛�蟆剰ｦ∽ｻｶ
 
-- **CPU**: 2コア
+- **CPU**: 2繧ｳ繧｢
 - **RAM**: 4GB
-- **ストレージ**: 20GB
+- **繧ｹ繝医Ξ繝ｼ繧ｸ**: 20GB
 - **OS**: Ubuntu 20.04+ / Windows Server 2019+ / macOS 11+
 
-### 推奨要件
+### 謗ｨ螂ｨ隕∽ｻｶ
 
-- **CPU**: 4コア以丁E- **RAM**: 8GB以丁E- **ストレージ**: 50GB SSD
+- **CPU**: 4繧ｳ繧｢莉･荳・- **RAM**: 8GB莉･荳・- **繧ｹ繝医Ξ繝ｼ繧ｸ**: 50GB SSD
 - **OS**: Ubuntu 22.04 LTS
 
-### 依存ソフトウェア
+### 萓晏ｭ倥た繝輔ヨ繧ｦ繧ｧ繧｢
 
-- **Bun**: 1.0.0+ (ランタイム)
-- **PostgreSQL**: 14+ (チE�Eタベ�Eス)
-- **Redis**: 7.0+ (キャチE��ュ/セチE��ョン)
-- **Node.js**: 18+ (オプション - 開発環墁E
-- **Docker**: 24.0+ (コンチE��利用晁E
-- **Nginx**: 1.20+ (リバ�Eスプロキシ)
+- **Bun**: 1.0.0+ (繝ｩ繝ｳ繧ｿ繧､繝�)
+- **PostgreSQL**: 14+ (繝・・繧ｿ繝吶・繧ｹ)
+- **Redis**: 7.0+ (繧ｭ繝｣繝・す繝･/繧ｻ繝・す繝ｧ繝ｳ)
+- **Node.js**: 18+ (繧ｪ繝励す繝ｧ繝ｳ - 髢狗匱迺ｰ蠅・
+- **Docker**: 24.0+ (繧ｳ繝ｳ繝・リ蛻ｩ逕ｨ譎・
+- **Nginx**: 1.20+ (繝ｪ繝舌・繧ｹ繝励Ο繧ｭ繧ｷ)
 
 ---
 
-## 環墁E��数設宁E
-### 忁E��環墁E��数
+## 迺ｰ蠅・､画焚險ｭ螳・
+### 蠢・�育腸蠅・､画焚
 
 ```bash
-# サーバ�E設宁EPORT=3000
+# 繧ｵ繝ｼ繝舌・險ｭ螳・PORT=3000
 NODE_ENV=production
 
-# JWT認証
+# JWT隱崎ｨｼ
 JWT_SECRET=your-production-jwt-secret-minimum-32-characters
 JWT_REFRESH_SECRET=your-production-refresh-secret-minimum-32-characters
 
-# チE�Eタベ�Eス
+# 繝・・繧ｿ繝吶・繧ｹ
 DATABASE_URL=postgresql://user:password@localhost:5432/elysia_ai
 DB_HOST=localhost
 DB_PORT=5432
@@ -67,17 +67,17 @@ MODEL_NAME=llama3.2
 # CORS
 ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 
-# レート制陁ERATE_LIMIT_RPM=60
+# 繝ｬ繝ｼ繝亥宛髯・RATE_LIMIT_RPM=60
 
-# 認証惁E��
+# 隱崎ｨｼ諠・�ｱ
 AUTH_USERNAME=admin
 AUTH_PASSWORD=secure_admin_password
 ```
 
-### オプション環墁E��数
+### 繧ｪ繝励す繝ｧ繝ｳ迺ｰ蠅・､画焚
 
 ```bash
-# メール通知
+# 繝｡繝ｼ繝ｫ騾夂衍
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
@@ -87,52 +87,52 @@ SMTP_FROM=noreply@yourdomain.com
 # Webhook
 WEBHOOK_SECRET=webhook-secret-key
 
-# ファイルアチE�EローチEMAX_FILE_SIZE=10485760  # 10MB
+# 繝輔ぃ繧､繝ｫ繧｢繝・・繝ｭ繝ｼ繝・MAX_FILE_SIZE=10485760  # 10MB
 UPLOAD_DIR=./uploads
 
-# ログ設宁ELOG_LEVEL=info
+# 繝ｭ繧ｰ險ｭ螳・LOG_LEVEL=info
 LOG_DIR=./logs
 
-# バックアチE�E
+# 繝舌ャ繧ｯ繧｢繝・・
 BACKUP_DIR=./backups
 BACKUP_RETENTION_DAYS=30
 
-# 監要EHEALTH_CHECK_INTERVAL=60000  # 60私E```
+# 逶｣隕・HEALTH_CHECK_INTERVAL=60000  # 60遘・```
 
-### .env ファイル作�E
+### .env 繝輔ぃ繧､繝ｫ菴懈・
 
 ```bash
-# 本番環墁E�� .env ファイル
+# 譛ｬ逡ｪ迺ｰ蠅・畑 .env 繝輔ぃ繧､繝ｫ
 cp .env.example .env
-nano .env  # また�E vim .env
+nano .env  # 縺ｾ縺溘・ vim .env
 ```
 
-### 環墁E��数検証
+### 迺ｰ蠅・､画焚讀懆ｨｼ
 
 ```bash
-# 起動前に環墁E��数を検証
+# 襍ｷ蜍募燕縺ｫ迺ｰ蠅・､画焚繧呈､懆ｨｼ
 bun run src/lib/env-validator.ts
 ```
 
 ---
 
-## チE�Eタベ�EスセチE��アチE�E
+## 繝・・繧ｿ繝吶・繧ｹ繧ｻ繝・ヨ繧｢繝・・
 
-### PostgreSQL インスト�Eル (Ubuntu)
+### PostgreSQL 繧､繝ｳ繧ｹ繝医・繝ｫ (Ubuntu)
 
 ```bash
-# PostgreSQL 14 インスト�Eル
+# PostgreSQL 14 繧､繝ｳ繧ｹ繝医・繝ｫ
 sudo apt update
 sudo apt install postgresql-14 postgresql-contrib
 
-# サービス開姁Esudo systemctl start postgresql
+# 繧ｵ繝ｼ繝薙せ髢句ｧ・sudo systemctl start postgresql
 sudo systemctl enable postgresql
 ```
 
-### チE�Eタベ�Eス作�E
+### 繝・・繧ｿ繝吶・繧ｹ菴懈・
 
 ```bash
-# PostgreSQL ユーザー作�E
+# PostgreSQL 繝ｦ繝ｼ繧ｶ繝ｼ菴懈・
 sudo -u postgres psql
 postgres=# CREATE USER elysia_user WITH PASSWORD 'secure_password_here';
 postgres=# CREATE DATABASE elysia_ai OWNER elysia_user;
@@ -140,16 +140,16 @@ postgres=# GRANT ALL PRIVILEGES ON DATABASE elysia_ai TO elysia_user;
 postgres=# \q
 ```
 
-### スキーマ�E期化
+### 繧ｹ繧ｭ繝ｼ繝槫・譛溷喧
 
 ```bash
-# マイグレーション実衁Epsql -U elysia_user -d elysia_ai -f sql/schema.sql
+# 繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ螳溯｡・psql -U elysia_user -d elysia_ai -f sql/schema.sql
 ```
 
-### チE�Eブル一覧
+### 繝・・繝悶Ν荳�隕ｧ
 
 ```sql
--- フィードバチE��
+-- 繝輔ぅ繝ｼ繝峨ヰ繝・け
 CREATE TABLE feedback (
     id SERIAL PRIMARY KEY,
     user_id TEXT,
@@ -159,7 +159,7 @@ CREATE TABLE feedback (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- ナレチE��ベ�Eス
+-- 繝翫Ξ繝・ず繝吶・繧ｹ
 CREATE TABLE knowledge (
     id SERIAL PRIMARY KEY,
     user_id TEXT,
@@ -168,7 +168,7 @@ CREATE TABLE knowledge (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- ユーザー
+-- 繝ｦ繝ｼ繧ｶ繝ｼ
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
@@ -177,7 +177,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- セチE��ョン
+-- 繧ｻ繝・す繝ｧ繝ｳ
 CREATE TABLE sessions (
     id TEXT PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -185,7 +185,7 @@ CREATE TABLE sessions (
     data JSONB
 );
 
--- APIキー
+-- API繧ｭ繝ｼ
 CREATE TABLE api_keys (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -195,7 +195,7 @@ CREATE TABLE api_keys (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 監査ログ
+-- 逶｣譟ｻ繝ｭ繧ｰ
 CREATE TABLE audit_logs (
     id SERIAL PRIMARY KEY,
     timestamp TIMESTAMP DEFAULT NOW(),
@@ -210,14 +210,14 @@ CREATE TABLE audit_logs (
 );
 ```
 
-### インチE��クス作�E
+### 繧､繝ｳ繝・ャ繧ｯ繧ｹ菴懈・
 
 ```bash
-# パフォーマンス最適化�EためインチE��クスを作�E
+# 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ譛�驕ｩ蛹悶・縺溘ａ繧､繝ｳ繝・ャ繧ｯ繧ｹ繧剃ｽ懈・
 bun run scripts/create-indexes.ts
 ```
 
-また�E手動で:
+縺ｾ縺溘・謇句虚縺ｧ:
 
 ```sql
 -- Feedback indexes
@@ -238,9 +238,9 @@ CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp DESC);
 CREATE INDEX idx_audit_composite ON audit_logs(user_id, action, timestamp DESC);
 ```
 
-### バックアチE�E設宁E
+### 繝舌ャ繧ｯ繧｢繝・・險ｭ螳・
 ```bash
-# 日次バックアチE�Eスクリプト
+# 譌･谺｡繝舌ャ繧ｯ繧｢繝・・繧ｹ繧ｯ繝ｪ繝励ヨ
 #!/bin/bash
 BACKUP_DIR=/var/backups/elysia
 DATE=$(date +%Y%m%d_%H%M%S)
@@ -248,123 +248,123 @@ DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p $BACKUP_DIR
 pg_dump -U elysia_user elysia_ai | gzip > $BACKUP_DIR/elysia_ai_$DATE.sql.gz
 
-# 30日以上前のバックアチE�Eを削除
+# 30譌･莉･荳雁燕縺ｮ繝舌ャ繧ｯ繧｢繝・・繧貞炎髯､
 find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
 ```
 
-cron設宁E
+cron險ｭ螳・
 
 ```bash
 crontab -e
-# 毎日午前3時にバックアチE�E
+# 豈取律蜊亥燕3譎ゅ↓繝舌ャ繧ｯ繧｢繝・・
 0 3 * * * /path/to/backup-script.sh
 ```
 
 ---
 
-## RedisセチE��アチE�E
+## Redis繧ｻ繝・ヨ繧｢繝・・
 
-### Redis インスト�Eル (Ubuntu)
+### Redis 繧､繝ｳ繧ｹ繝医・繝ｫ (Ubuntu)
 
 ```bash
-# Redis 7.0 インスト�Eル
+# Redis 7.0 繧､繝ｳ繧ｹ繝医・繝ｫ
 sudo apt install redis-server
 
-# 設定ファイル編雁Esudo nano /etc/redis/redis.conf
+# 險ｭ螳壹ヵ繧｡繧､繝ｫ邱ｨ髮・sudo nano /etc/redis/redis.conf
 ```
 
-### Redis設宁E
+### Redis險ｭ螳・
 ```conf
 # /etc/redis/redis.conf
 
-# パスワード設宁Erequirepass your_redis_password_here
+# 繝代せ繝ｯ繝ｼ繝芽ｨｭ螳・requirepass your_redis_password_here
 
-# 永続化設宁Eappendonly yes
+# 豌ｸ邯壼喧險ｭ螳・appendonly yes
 appendfsync everysec
 
-# メモリ制陁Emaxmemory 2gb
+# 繝｡繝｢繝ｪ蛻ｶ髯・maxmemory 2gb
 maxmemory-policy allkeys-lru
 
-# ネットワーク
+# 繝阪ャ繝医Ρ繝ｼ繧ｯ
 bind 127.0.0.1
 port 6379
 
-# セキュリチE��
+# 繧ｻ繧ｭ繝･繝ｪ繝・ぅ
 protected-mode yes
 ```
 
-### Redis起勁E
+### Redis襍ｷ蜍・
 ```bash
 sudo systemctl restart redis-server
 sudo systemctl enable redis-server
 
-# 接続テスチEredis-cli -a your_redis_password_here ping
+# 謗･邯壹ユ繧ｹ繝・redis-cli -a your_redis_password_here ping
 # => PONG
 ```
 
-### Redisクラスタ (オプション)
+### Redis繧ｯ繝ｩ繧ｹ繧ｿ (繧ｪ繝励す繝ｧ繝ｳ)
 
-本番環墁E��は高可用性のためRedisクラスタを推奨:
+譛ｬ逡ｪ迺ｰ蠅・〒縺ｯ鬮伜庄逕ｨ諤ｧ縺ｮ縺溘ａRedis繧ｯ繝ｩ繧ｹ繧ｿ繧呈耳螂ｨ:
 
 ```bash
-# Redis Sentinel また�E Redis Cluster
-# 詳細は Redis 公式ドキュメント参照
+# Redis Sentinel 縺ｾ縺溘・ Redis Cluster
+# 隧ｳ邏ｰ縺ｯ Redis 蜈ｬ蠑上ラ繧ｭ繝･繝｡繝ｳ繝亥盾辣ｧ
 ```
 
 ---
 
-## アプリケーションチE�Eロイ
+## 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繝・・繝ｭ繧､
 
-### 1. ソースコード取征E
+### 1. 繧ｽ繝ｼ繧ｹ繧ｳ繝ｼ繝牙叙蠕・
 ```bash
 git clone https://github.com/yourusername/elysia-ai.git
 cd elysia-ai
 ```
 
-### 2. 依存関係インスト�Eル
+### 2. 萓晏ｭ倬未菫ゅう繝ｳ繧ｹ繝医・繝ｫ
 
 ```bash
-# Bun インスト�Eル
+# Bun 繧､繝ｳ繧ｹ繝医・繝ｫ
 curl -fsSL https://bun.sh/install | bash
 
-# パッケージインスト�Eル
+# 繝代ャ繧ｱ繝ｼ繧ｸ繧､繝ｳ繧ｹ繝医・繝ｫ
 bun install
 ```
 
-### 3. ビルチE
+### 3. 繝薙Ν繝・
 ```bash
-# 本番用ビルチEbun run build
+# 譛ｬ逡ｪ逕ｨ繝薙Ν繝・bun run build
 
-# 出力確誁Els -la dist/
+# 蜃ｺ蜉帷｢ｺ隱・ls -la dist/
 ```
 
-### 4. 環墁E��数設宁E
+### 4. 迺ｰ蠅・､画焚險ｭ螳・
 ```bash
 cp .env.example .env.production
 nano .env.production
-# 上記�E環墁E��数を設宁E```
+# 荳願ｨ倥・迺ｰ蠅・､画焚繧定ｨｭ螳・```
 
-### 5. チE�Eタベ�Eス初期匁E
+### 5. 繝・・繧ｿ繝吶・繧ｹ蛻晄悄蛹・
 ```bash
-# スキーマ作�E
+# 繧ｹ繧ｭ繝ｼ繝樔ｽ懈・
 psql -U elysia_user -d elysia_ai -f sql/schema.sql
 
-# インチE��クス作�E
+# 繧､繝ｳ繝・ャ繧ｯ繧ｹ菴懈・
 bun run scripts/create-indexes.ts
 ```
 
-### 6. アプリケーション起勁E
+### 6. 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ襍ｷ蜍・
 ```bash
-# フォアグラウンド実衁ENODE_ENV=production bun run src/index.ts
+# 繝輔か繧｢繧ｰ繝ｩ繧ｦ繝ｳ繝牙ｮ溯｡・NODE_ENV=production bun run src/index.ts
 
-# バックグラウンド実衁E(PM2使用)
+# 繝舌ャ繧ｯ繧ｰ繝ｩ繧ｦ繝ｳ繝牙ｮ溯｡・(PM2菴ｿ逕ｨ)
 npm install -g pm2
 pm2 start src/index.ts --interpreter bun --name elysia-ai
 pm2 save
 pm2 startup
 ```
 
-### PM2 設定ファイル
+### PM2 險ｭ螳壹ヵ繧｡繧､繝ｫ
 
 ```javascript
 // ecosystem.config.js
@@ -389,7 +389,7 @@ module.exports = {
 };
 ```
 
-起勁E
+襍ｷ蜍・
 
 ```bash
 pm2 start ecosystem.config.js
@@ -397,7 +397,7 @@ pm2 start ecosystem.config.js
 
 ---
 
-## DockerチE�Eロイ
+## Docker繝・・繝ｭ繧､
 
 ### 1. Docker Compose
 
@@ -452,43 +452,43 @@ services:
 
 ---
 
-## 🏗�E�ETauri チE��クトップアプリのビルチE
-ElysiaAI のチE��クトップクライアントをビルドする手頁E��す、E
-### 1. 準備
-- **Rust**: [公式�E Rust インスト�Eル手頁E(https://www.rust-lang.org/tools/install)に従ってください、E- **WebView2**: Windows の場合�E WebView2 ランタイムが忁E��です、E
-### 2. ビルド実衁E```bash
-# クライアント�EビルチE(src-tauri 下で実衁E
+## 女・・Tauri 繝・せ繧ｯ繝医ャ繝励い繝励Μ縺ｮ繝薙Ν繝・
+ElysiaAI 縺ｮ繝・せ繧ｯ繝医ャ繝励け繝ｩ繧､繧｢繝ｳ繝医ｒ繝薙Ν繝峨☆繧区焔鬆・〒縺吶�・
+### 1. 貅門ｙ
+- **Rust**: [蜈ｬ蠑上・ Rust 繧､繝ｳ繧ｹ繝医・繝ｫ謇矩�・(https://www.rust-lang.org/tools/install)縺ｫ蠕薙▲縺ｦ縺上□縺輔＞縲・- **WebView2**: Windows 縺ｮ蝣ｴ蜷医・ WebView2 繝ｩ繝ｳ繧ｿ繧､繝�縺悟ｿ・ｦ√〒縺吶�・
+### 2. 繝薙Ν繝牙ｮ溯｡・```bash
+# 繧ｯ繝ｩ繧､繧｢繝ｳ繝医・繝薙Ν繝・(src-tauri 荳九〒螳溯｡・
 cd src-tauri
 cargo build --release
 
-# また�E Bun を使用
+# 縺ｾ縺溘・ Bun 繧剃ｽｿ逕ｨ
 bun run build:desktop
 ```
-ビルドされたバイナリは `src-tauri/target/release/` に生�Eされます、E
+繝薙Ν繝峨＆繧後◆繝舌う繝翫Μ縺ｯ `src-tauri/target/release/` 縺ｫ逕滓・縺輔ｌ縺ｾ縺吶�・
 ---
 
-## 🐳 Docker Compose による一括起勁E
-Docker Compose を使用して、すべての依存ツール�E�Eilvus, VOICEVOX等）を含むスタチE��を一括で起動する方法です、E
+## 正 Docker Compose 縺ｫ繧医ｋ荳�諡ｬ襍ｷ蜍・
+Docker Compose 繧剃ｽｿ逕ｨ縺励※縲√☆縺ｹ縺ｦ縺ｮ萓晏ｭ倥ヤ繝ｼ繝ｫ・・ilvus, VOICEVOX遲会ｼ峨ｒ蜷ｫ繧�繧ｹ繧ｿ繝・け繧剃ｸ�諡ｬ縺ｧ襍ｷ蜍輔☆繧区婿豕輔〒縺吶�・
 ```bash
-# プロジェクトルートで実衁Edocker-compose up -d
+# 繝励Ο繧ｸ繧ｧ繧ｯ繝医Ν繝ｼ繝医〒螳溯｡・docker-compose up -d
 ```
 
-`docker-compose.yml` には以下�Eサービスが含まれてぁE��す！E- **Elysia Server**: Bun/ElysiaJS バックエンチE- **AI Kernel**: FastAPI/Python カーネル
-- **Milvus**: ベクトルチE�Eタベ�Eス
-- **Redis**: レート制限�EキャチE��ュ
-- **VOICEVOX**: 音声合�Eエンジン�E�オプション�E�E
+`docker-compose.yml` 縺ｫ縺ｯ莉･荳九・繧ｵ繝ｼ繝薙せ縺悟性縺ｾ繧後※縺・∪縺呻ｼ・- **Elysia Server**: Bun/ElysiaJS 繝舌ャ繧ｯ繧ｨ繝ｳ繝・- **AI Kernel**: FastAPI/Python 繧ｫ繝ｼ繝阪Ν
+- **Milvus**: 繝吶け繝医Ν繝・・繧ｿ繝吶・繧ｹ
+- **Redis**: 繝ｬ繝ｼ繝亥宛髯舌・繧ｭ繝｣繝・す繝･
+- **VOICEVOX**: 髻ｳ螢ｰ蜷域・繧ｨ繝ｳ繧ｸ繝ｳ・医が繝励す繝ｧ繝ｳ・・
 ---
 
-## 🦀 Rust (Shield Agent) のコンパイル
+## ｦ� Rust (Shield Agent) 縺ｮ繧ｳ繝ｳ繝代う繝ｫ
 
-セキュリチE��防壁として機�Eする Shield Agent のビルド手頁E��す、E
+繧ｻ繧ｭ繝･繝ｪ繝・ぅ髦ｲ螢√→縺励※讖溯・縺吶ｋ Shield Agent 縺ｮ繝薙Ν繝画焔鬆・〒縺吶�・
 ```bash
 cd packages/shield
 cargo build --release
 ```
-生�EされたバイナリめE`bin/` チE��レクトリに配置することで、OSが起動時に自動的にロードします、E```
+逕滓・縺輔ｌ縺溘ヰ繧､繝翫Μ繧・`bin/` 繝・ぅ繝ｬ繧ｯ繝医Μ縺ｫ驟咲ｽｮ縺吶ｋ縺薙→縺ｧ縲＾S縺瑚ｵｷ蜍墓凾縺ｫ閾ｪ蜍慕噪縺ｫ繝ｭ繝ｼ繝峨＠縺ｾ縺吶�・```
 
-### 2. Nginx設宁E
+### 2. Nginx險ｭ螳・
 ```nginx
 # nginx.conf
 upstream elysia_backend {
@@ -539,43 +539,43 @@ server {
 }
 ```
 
-### 3. チE�Eロイ実衁E
+### 3. 繝・・繝ｭ繧､螳溯｡・
 ```bash
-# ビルチE起勁Edocker-compose up -d
+# 繝薙Ν繝・襍ｷ蜍・docker-compose up -d
 
-# ログ確誁Edocker-compose logs -f app
+# 繝ｭ繧ｰ遒ｺ隱・docker-compose logs -f app
 
-# 停止
+# 蛛懈ｭ｢
 docker-compose down
 
-# 再起勁Edocker-compose restart app
+# 蜀崎ｵｷ蜍・docker-compose restart app
 ```
 
 ---
 
-## 監視と運用
+## 逶｣隕悶→驕狗畑
 
-### ヘルスチェチE��
+### 繝倥Ν繧ｹ繝√ぉ繝・け
 
 ```bash
-# アプリケーションヘルスチェチE��
+# 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繝倥Ν繧ｹ繝√ぉ繝・け
 curl http://localhost:3000/health
 
-# チE�Eタベ�Eス接続確誁Ecurl http://localhost:3000/health/db
+# 繝・・繧ｿ繝吶・繧ｹ謗･邯夂｢ｺ隱・curl http://localhost:3000/health/db
 
-# Redis接続確誁Ecurl http://localhost:3000/health/redis
+# Redis謗･邯夂｢ｺ隱・curl http://localhost:3000/health/redis
 ```
 
-### メトリクス収集
+### 繝｡繝医Μ繧ｯ繧ｹ蜿朱寔
 
 ```bash
-# Prometheusメトリクス
+# Prometheus繝｡繝医Μ繧ｯ繧ｹ
 curl http://localhost:3000/metrics
 ```
 
-### ログ管琁E
+### 繝ｭ繧ｰ邂｡逅・
 ```bash
-# ログローチE�Eション設宁E# /etc/logrotate.d/elysia-ai
+# 繝ｭ繧ｰ繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ險ｭ螳・# /etc/logrotate.d/elysia-ai
 /var/log/elysia-ai/*.log {
     daily
     rotate 30
@@ -590,80 +590,80 @@ curl http://localhost:3000/metrics
 }
 ```
 
-### 監視ツール推奨
+### 逶｣隕悶ヤ繝ｼ繝ｫ謗ｨ螂ｨ
 
-- **PM2**: プロセス監要E- **Prometheus + Grafana**: メトリクス可視化
-- **ELK Stack**: ログ雁E��E�E刁E��
-- **Uptime Kuma**: アチE�Eタイム監要E
+- **PM2**: 繝励Ο繧ｻ繧ｹ逶｣隕・- **Prometheus + Grafana**: 繝｡繝医Μ繧ｯ繧ｹ蜿ｯ隕門喧
+- **ELK Stack**: 繝ｭ繧ｰ髮・ｴ・・蛻・梵
+- **Uptime Kuma**: 繧｢繝・・繧ｿ繧､繝�逶｣隕・
 ---
 
-## トラブルシューチE��ング
+## 繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ
 
-### アプリケーションが起動しなぁE
+### 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ縺瑚ｵｷ蜍輔＠縺ｪ縺・
 ```bash
-# ログ確誁Epm2 logs elysia-ai
+# 繝ｭ繧ｰ遒ｺ隱・pm2 logs elysia-ai
 
-# 環墁E��数確誁Epm2 env 0
+# 迺ｰ蠅・､画焚遒ｺ隱・pm2 env 0
 
-# ポ�Eト使用状況確誁Esudo netstat -tulpn | grep 3000
+# 繝昴・繝井ｽｿ逕ｨ迥ｶ豕∫｢ｺ隱・sudo netstat -tulpn | grep 3000
 ```
 
-### チE�Eタベ�Eス接続エラー
+### 繝・・繧ｿ繝吶・繧ｹ謗･邯壹お繝ｩ繝ｼ
 
 ```bash
-# PostgreSQL起動確誁Esudo systemctl status postgresql
+# PostgreSQL襍ｷ蜍慕｢ｺ隱・sudo systemctl status postgresql
 
-# 接続テスチEpsql -U elysia_user -d elysia_ai -h localhost
+# 謗･邯壹ユ繧ｹ繝・psql -U elysia_user -d elysia_ai -h localhost
 
-# 認証設定確誁Esudo nano /etc/postgresql/14/main/pg_hba.conf
+# 隱崎ｨｼ險ｭ螳夂｢ｺ隱・sudo nano /etc/postgresql/14/main/pg_hba.conf
 ```
 
-### Redis接続エラー
+### Redis謗･邯壹お繝ｩ繝ｼ
 
 ```bash
-# Redis起動確誁Esudo systemctl status redis-server
+# Redis襍ｷ蜍慕｢ｺ隱・sudo systemctl status redis-server
 
-# 接続テスチEredis-cli -a your_password ping
+# 謗･邯壹ユ繧ｹ繝・redis-cli -a your_password ping
 
-# ログ確誁Esudo tail -f /var/log/redis/redis-server.log
+# 繝ｭ繧ｰ遒ｺ隱・sudo tail -f /var/log/redis/redis-server.log
 ```
 
-### WebSocket接続失敁E
-1. Nginx設定を確誁E2. ファイアウォール設定を確誁E3. プロキシタイムアウト設定を確誁E
-### パフォーマンス問顁E
+### WebSocket謗･邯壼､ｱ謨・
+1. Nginx險ｭ螳壹ｒ遒ｺ隱・2. 繝輔ぃ繧､繧｢繧ｦ繧ｩ繝ｼ繝ｫ險ｭ螳壹ｒ遒ｺ隱・3. 繝励Ο繧ｭ繧ｷ繧ｿ繧､繝�繧｢繧ｦ繝郁ｨｭ螳壹ｒ遒ｺ隱・
+### 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ蝠城｡・
 ```bash
-# クエリ統計確誁Ecurl http://localhost:3000/admin/query-stats
+# 繧ｯ繧ｨ繝ｪ邨ｱ險育｢ｺ隱・curl http://localhost:3000/admin/query-stats
 
-# 遁E��クエリ確誁Ecurl http://localhost:3000/admin/slow-queries
+# 驕・＞繧ｯ繧ｨ繝ｪ遒ｺ隱・curl http://localhost:3000/admin/slow-queries
 
-# Redis統計確誁Eredis-cli INFO stats
+# Redis邨ｱ險育｢ｺ隱・redis-cli INFO stats
 ```
 
 ---
 
-## セキュリチE��チェチE��リスチE
-- [ ] JWT_SECRET を強力なも�Eに変更
-- [ ] チE�Eタベ�Eスパスワードを強力なも�Eに変更
-- [ ] Redisパスワードを設宁E- [ ] HTTPS を有効匁E(Let's Encrypt推奨)
-- [ ] ファイアウォールを設宁E(UFW, iptables)
-- [ ] SSH鍵認証を使用
-- [ ] 不要なポ�Eトを閉じめE- [ ] セキュリチE��アチE�EチE�Eトを定期皁E��実衁E- [ ] 監査ログを定期皁E��レビュー
-- [ ] バックアチE�Eを定期皁E��チE��チE
+## 繧ｻ繧ｭ繝･繝ｪ繝・ぅ繝√ぉ繝・け繝ｪ繧ｹ繝・
+- [ ] JWT_SECRET 繧貞ｼｷ蜉帙↑繧ゅ・縺ｫ螟画峩
+- [ ] 繝・・繧ｿ繝吶・繧ｹ繝代せ繝ｯ繝ｼ繝峨ｒ蠑ｷ蜉帙↑繧ゅ・縺ｫ螟画峩
+- [ ] Redis繝代せ繝ｯ繝ｼ繝峨ｒ險ｭ螳・- [ ] HTTPS 繧呈怏蜉ｹ蛹・(Let's Encrypt謗ｨ螂ｨ)
+- [ ] 繝輔ぃ繧､繧｢繧ｦ繧ｩ繝ｼ繝ｫ繧定ｨｭ螳・(UFW, iptables)
+- [ ] SSH骰ｵ隱崎ｨｼ繧剃ｽｿ逕ｨ
+- [ ] 荳崎ｦ√↑繝昴・繝医ｒ髢峨§繧・- [ ] 繧ｻ繧ｭ繝･繝ｪ繝・ぅ繧｢繝・・繝・・繝医ｒ螳壽悄逧・↓螳溯｡・- [ ] 逶｣譟ｻ繝ｭ繧ｰ繧貞ｮ壽悄逧・↓繝ｬ繝薙Η繝ｼ
+- [ ] 繝舌ャ繧ｯ繧｢繝・・繧貞ｮ壽悄逧・↓繝・せ繝・
 ---
 
-## 本番環墁E��ェチE��リスチE
-- [ ] 環墁E��数をすべて設宁E- [ ] チE�Eタベ�Eスを�E期化
-- [ ] Redisを設宁E- [ ] インチE��クスを作�E
-- [ ] Nginx/リバ�Eスプロキシを設宁E- [ ] SSL証明書をインスト�Eル
-- [ ] ファイアウォールを設宁E- [ ] PM2/Dockerで起勁E- [ ] ヘルスチェチE��を確誁E- [ ] ログローチE�Eションを設宁E- [ ] バックアチE�Eを設宁E- [ ] 監視ツールを設宁E- [ ] ドキュメントを更新
+## 譛ｬ逡ｪ迺ｰ蠅・メ繧ｧ繝・け繝ｪ繧ｹ繝・
+- [ ] 迺ｰ蠅・､画焚繧偵☆縺ｹ縺ｦ險ｭ螳・- [ ] 繝・・繧ｿ繝吶・繧ｹ繧貞・譛溷喧
+- [ ] Redis繧定ｨｭ螳・- [ ] 繧､繝ｳ繝・ャ繧ｯ繧ｹ繧剃ｽ懈・
+- [ ] Nginx/繝ｪ繝舌・繧ｹ繝励Ο繧ｭ繧ｷ繧定ｨｭ螳・- [ ] SSL險ｼ譏取嶌繧偵う繝ｳ繧ｹ繝医・繝ｫ
+- [ ] 繝輔ぃ繧､繧｢繧ｦ繧ｩ繝ｼ繝ｫ繧定ｨｭ螳・- [ ] PM2/Docker縺ｧ襍ｷ蜍・- [ ] 繝倥Ν繧ｹ繝√ぉ繝・け繧堤｢ｺ隱・- [ ] 繝ｭ繧ｰ繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ繧定ｨｭ螳・- [ ] 繝舌ャ繧ｯ繧｢繝・・繧定ｨｭ螳・- [ ] 逶｣隕悶ヤ繝ｼ繝ｫ繧定ｨｭ螳・- [ ] 繝峨く繝･繝｡繝ｳ繝医ｒ譖ｴ譁ｰ
 
 ---
 
-## サポ�EチE
-問題が発生した場吁E
+## 繧ｵ繝昴・繝・
+蝠城｡後′逋ｺ逕溘＠縺溷�ｴ蜷・
 
-1. ログを確誁E(`/logs` また�E `pm2 logs`)
-2. ヘルスチェチE��を実衁E3. GitHub Issuesで報呁E4. Discordコミュニティで質啁E
+1. 繝ｭ繧ｰ繧堤｢ｺ隱・(`/logs` 縺ｾ縺溘・ `pm2 logs`)
+2. 繝倥Ν繧ｹ繝√ぉ繝・け繧貞ｮ溯｡・3. GitHub Issues縺ｧ蝣ｱ蜻・4. Discord繧ｳ繝溘Η繝九ユ繧｣縺ｧ雉ｪ蝠・
 ---
 
-**チE�Eロイメント完亁E** 🎉
+**繝・・繝ｭ繧､繝｡繝ｳ繝亥ｮ御ｺ・** 脂

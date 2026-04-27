@@ -1,4 +1,4 @@
-# Disaster Recovery Plan
+﻿# Disaster Recovery Plan
 
 ## Overview
 
@@ -270,15 +270,15 @@ https://status.yourdomain.com
 
 ```
 Primary Region (US-East)
-├── Load Balancer
-├── API Server (3 instances)
-├── Redis Cluster (3 nodes)
-└── Storage (Replicated)
+笏懌楳笏� Load Balancer
+笏懌楳笏� API Server (3 instances)
+笏懌楳笏� Redis Cluster (3 nodes)
+笏披楳笏� Storage (Replicated)
 
 Backup Region (US-West)
-├── Standby Load Balancer
-├── API Server (2 instances)
-└── Synced Storage
+笏懌楳笏� Standby Load Balancer
+笏懌楳笏� API Server (2 instances)
+笏披楳笏� Synced Storage
 ```
 
 ### Failover Triggers

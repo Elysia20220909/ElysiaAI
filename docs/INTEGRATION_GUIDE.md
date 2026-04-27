@@ -1,4 +1,4 @@
-// Integration Guide for i18n, Telemetry, and OpenAPI
+﻿// Integration Guide for i18n, Telemetry, and OpenAPI
 
 /\*\*
 
@@ -385,7 +385,7 @@ API_VERSION=1.0.0
 describe("i18n", () => {
 it("should translate to Japanese", () => {
 const text = i18n.t("common.hello", "ja");
-expect(text).toBe("こんにちは");
+expect(text).toBe("縺薙ｓ縺ｫ縺｡縺ｯ");
 });
 
     it("should detect locale from header", () => {

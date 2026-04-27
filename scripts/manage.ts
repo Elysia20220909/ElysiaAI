@@ -19,6 +19,7 @@ Usage: bun scripts/manage.ts <command> [options]
 
 Commands:
   dev           Start the full local stack
+  dev:ci        Start the server in lightweight CI mode (mocked AI)
   setup         Run initial environment setup (Bun & env file)
   setup-python  Run Python environment setup (.venv)
   build         Build the project for production
@@ -151,6 +152,12 @@ async function runCommand(command: string) {
 	switch (command) {
 		case "dev":
 			console.log("🚀 Starting ElysiaAI local stack...");
+			await run("bun", ["run", "boot"]);
+			break;
+		case "dev:ci":
+			console.log("🧪 Starting ElysiaAI in CI (Mocked) mode...");
+			process.env.ELYSIA_TEST_MODE = "1";
+			process.env.REDIS_ENABLED = "false";
 			await run("bun", ["run", "boot"]);
 			break;
 		case "setup":
