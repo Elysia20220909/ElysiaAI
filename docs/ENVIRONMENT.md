@@ -1,31 +1,31 @@
-# 🌍 ElysiaAI 環墁E��数ガイチE
-ElysiaAI の動作をカスタマイズするための環墁E��数の一覧です、Eこれら�E変数は、�Eロジェクトルート�E `.env` ファイルに記述するか、実行環墁E�EシスチE��変数として設定してください、E
-## 🔑 忁E���E重要E(Core Settings)
-| 変数吁E| チE��ォルト値 | 説昁E|
+﻿# 訣 ElysiaAI 迺ｰ蠅・､画焚繧ｬ繧､繝・
+ElysiaAI 縺ｮ蜍穂ｽ懊ｒ繧ｫ繧ｹ繧ｿ繝槭う繧ｺ縺吶ｋ縺溘ａ縺ｮ迺ｰ蠅・､画焚縺ｮ荳�隕ｧ縺ｧ縺吶�・縺薙ｌ繧峨・螟画焚縺ｯ縲√・繝ｭ繧ｸ繧ｧ繧ｯ繝医Ν繝ｼ繝医・ `.env` 繝輔ぃ繧､繝ｫ縺ｫ險倩ｿｰ縺吶ｋ縺九�∝ｮ溯｡檎腸蠅・・繧ｷ繧ｹ繝・Β螟画焚縺ｨ縺励※險ｭ螳壹＠縺ｦ縺上□縺輔＞縲・
+## 泊 蠢・�医・驥崎ｦ・(Core Settings)
+| 螟画焚蜷・| 繝・ヵ繧ｩ繝ｫ繝亥�､ | 隱ｬ譏・|
 |--------|--------------|------|
-| `PORT` | `3000` | ElysiaAI サーバ�Eの征E��ポ�Eト、E|
-| `NODE_ENV` | `development` | `development` また�E `production`。本番環墁E��は忁E�� `production` を指定してください、E|
-| `DB_URL` | (忁E��E本番) | チE�Eタベ�Eスへの接続文字�E、E|
-| `SESSION_SECRET` | `dev_secret_only` | セチE��ョン暗号化用の秘寁E��。本番環墁E��は忁E��ユニ�Eクな斁E���Eを設定してください、E|
+| `PORT` | `3000` | ElysiaAI 繧ｵ繝ｼ繝舌・縺ｮ蠕・女繝昴・繝医�・|
+| `NODE_ENV` | `development` | `development` 縺ｾ縺溘・ `production`縲よ悽逡ｪ迺ｰ蠅・〒縺ｯ蠢・★ `production` 繧呈欠螳壹＠縺ｦ縺上□縺輔＞縲・|
+| `DB_URL` | (蠢・�・譛ｬ逡ｪ) | 繝・・繧ｿ繝吶・繧ｹ縺ｸ縺ｮ謗･邯壽枚蟄怜・縲・|
+| `SESSION_SECRET` | `dev_secret_only` | 繧ｻ繝・す繝ｧ繝ｳ證怜捷蛹也畑縺ｮ遘伜ｯ・嵯縲よ悽逡ｪ迺ｰ蠅・〒縺ｯ蠢・★繝ｦ繝九・繧ｯ縺ｪ譁・ｭ怜・繧定ｨｭ螳壹＠縺ｦ縺上□縺輔＞縲・|
 
-## 🛡�E�EセキュリチE�� (Security Hardening)
-| 変数吁E| チE��ォルト値 | 説昁E|
+## 孱・・繧ｻ繧ｭ繝･繝ｪ繝・ぅ (Security Hardening)
+| 螟画焚蜷・| 繝・ヵ繧ｩ繝ｫ繝亥�､ | 隱ｬ譏・|
 |--------|--------------|------|
-| `FORCE_HTTPS` | `false` | `true` に設定すると、常に HSTS (Strict-Transport-Security) ヘッダーを送信します、E|
-| `CSP_ENABLED` | `true` | コンチE��チE��キュリチE��ポリシー (CSP) ヘッダーを有効にします、E|
-| `ERROR_ALERTS_ENABLED` | `false` | エラー発生時の Webhook 通知を有効にします、E|
+| `FORCE_HTTPS` | `false` | `true` 縺ｫ險ｭ螳壹☆繧九→縲∝ｸｸ縺ｫ HSTS (Strict-Transport-Security) 繝倥ャ繝�繝ｼ繧帝�∽ｿ｡縺励∪縺吶�・|
+| `CSP_ENABLED` | `true` | 繧ｳ繝ｳ繝・Φ繝・そ繧ｭ繝･繝ｪ繝・ぅ繝昴Μ繧ｷ繝ｼ (CSP) 繝倥ャ繝�繝ｼ繧呈怏蜉ｹ縺ｫ縺励∪縺吶�・|
+| `ERROR_ALERTS_ENABLED` | `false` | 繧ｨ繝ｩ繝ｼ逋ｺ逕滓凾縺ｮ Webhook 騾夂衍繧呈怏蜉ｹ縺ｫ縺励∪縺吶�・|
 
-## 📢 通知 (Notifications)
-| 変数吁E| 説昁E|
+## 討 騾夂衍 (Notifications)
+| 螟画焚蜷・| 隱ｬ譏・|
 |--------|------|
-| `DISCORD_WEBHOOK_URL` | エラー通知を送信する Discord Webhook の URL、E|
-| `SLACK_WEBHOOK_URL` | エラー通知を送信する Slack Webhook の URL、E|
+| `DISCORD_WEBHOOK_URL` | 繧ｨ繝ｩ繝ｼ騾夂衍繧帝�∽ｿ｡縺吶ｋ Discord Webhook 縺ｮ URL縲・|
+| `SLACK_WEBHOOK_URL` | 繧ｨ繝ｩ繝ｼ騾夂衍繧帝�∽ｿ｡縺吶ｋ Slack Webhook 縺ｮ URL縲・|
 
-## ⚙︁E開発・チE��チE�� (Development)
-| 変数吁E| チE��ォルト値 | 説昁E|
+## 笞呻ｸ・髢狗匱繝ｻ繝・ヰ繝・げ (Development)
+| 螟画焚蜷・| 繝・ヵ繧ｩ繝ｫ繝亥�､ | 隱ｬ譏・|
 |--------|--------------|------|
-| `DEBUG` | `false` | 詳細なログ出力を有効にします、E|
+| `DEBUG` | `false` | 隧ｳ邏ｰ縺ｪ繝ｭ繧ｰ蜃ｺ蜉帙ｒ譛牙柑縺ｫ縺励∪縺吶�・|
 
 ---
 > [!TIP]
-> 開発環墁E��は `.env.example` をコピ�Eして `.env` を作�Eし、忁E��な値を編雁E��ることをお勧めします、E
+> 髢狗匱迺ｰ蠅・〒縺ｯ `.env.example` 繧偵さ繝斐・縺励※ `.env` 繧剃ｽ懈・縺励�∝ｿ・ｦ√↑蛟､繧堤ｷｨ髮・☆繧九％縺ｨ繧偵♀蜍ｧ繧√＠縺ｾ縺吶�・

@@ -1,64 +1,64 @@
-# elysia-ai Project Structure
+﻿# elysia-ai Project Structure
 
-## 🏗�E�EDirectory Overview
+## 女・・Directory Overview
 
 ````text
 elysia-ai/
-├── config/                         # Configuration files
-━E  └── private/                    # 🔒 Private configuration (not in git)
-━E      ├── .env                    # Environment variables
-━E      ├── .env.example            # Environment template
-━E      └── README.md               # Configuration guide
-━E├── src/                            # Source code
-━E  ├── config/                     # Application configuration
-━E  ━E  └── internal/               # 🔒 Internal settings
-━E  ━E      └── llm-config.ts       # LLM model configuration
-━E  ━E━E  ├── core/                       # Core functionality
-━E  ━E  └── security/               # 🔒 Security modules
-━E  ━E      ├── index.ts            # Security exports
-━E  ━E      ├── jwt.ts              # JWT authentication
-━E  ━E      └── redis.ts            # Rate limiting & caching
-━E  ━E━E  ├── database/                   # Database layer
-━E  ━E  └── config/                 # 🔒 Database configuration
-━E  ━E      └── index.ts            # DB connection settings
-━E  ━E━E  ├── index.ts                    # Main server entry
-━E  ├── index-fixed.ts              # Alternative entry
-━E  └── server.ts                   # Server configuration
-━E├── public/                         # Static assets
-━E  ├── index.html                  # Main web interface
-━E  ├── index-new.html              # Updated interface
-━E  └── index-old.html              # Legacy interface
-━E├── docs/                           # Documentation
-━E  ├── SECURITY.md                 # Integrated security guide
-━E  ├── STRUCTURE_UPDATE.md         # Structure change log
-━E  ├── LINUX_SETUP.md              # Linux setup guide
-━E  ├── VOICE_GUIDE.md              # Voice feature guide
-━E  └── VOICEVOX_SETUP.md           # VOICEVOX integration
-━E├── scripts/                        # Utility scripts
-━E  ├── dev.ps1                     # Windows development script
-━E  ├── dev.sh                      # Unix development script
-━E  ├── setup-*.ps1/sh              # Setup scripts
-━E  └── start-*.ps1/sh              # Startup scripts
-━E├── tests/                          # Test files
-━E  ├── docker.test.ts              # Docker tests
-━E  ├── integration.test.ts         # Integration tests
-━E  └── server.test.ts              # Server tests
-━E├── cloud/                          # Cloud deployment
-━E  ├── aws/                        # AWS CloudFormation
-━E  └── gcp/                        # Google Cloud Platform
-━E├── deploy/                         # Deployment configs
-━E  └── nginx.conf.example          # Nginx configuration
-━E├── python/                         # Python backend
-━E  ├── ai_backend.py               # AI processing
-━E  ├── fastapi_server.py           # FastAPI server
-━E  └── requirements.txt            # Python dependencies
-━E├── mobile/                         # React Native mobile app
-├── desktop/                        # Electron desktop app
-├── native/                         # Native C++ modules
-├── cuda/                           # CUDA acceleration
-└── swift/                          # Swift iOS integration
+笏懌楳笏� config/                         # Configuration files
+笏・  笏披楳笏� private/                    # 白 Private configuration (not in git)
+笏・      笏懌楳笏� .env                    # Environment variables
+笏・      笏懌楳笏� .env.example            # Environment template
+笏・      笏披楳笏� README.md               # Configuration guide
+笏・笏懌楳笏� src/                            # Source code
+笏・  笏懌楳笏� config/                     # Application configuration
+笏・  笏・  笏披楳笏� internal/               # 白 Internal settings
+笏・  笏・      笏披楳笏� llm-config.ts       # LLM model configuration
+笏・  笏・笏・  笏懌楳笏� core/                       # Core functionality
+笏・  笏・  笏披楳笏� security/               # 白 Security modules
+笏・  笏・      笏懌楳笏� index.ts            # Security exports
+笏・  笏・      笏懌楳笏� jwt.ts              # JWT authentication
+笏・  笏・      笏披楳笏� redis.ts            # Rate limiting & caching
+笏・  笏・笏・  笏懌楳笏� database/                   # Database layer
+笏・  笏・  笏披楳笏� config/                 # 白 Database configuration
+笏・  笏・      笏披楳笏� index.ts            # DB connection settings
+笏・  笏・笏・  笏懌楳笏� index.ts                    # Main server entry
+笏・  笏懌楳笏� index-fixed.ts              # Alternative entry
+笏・  笏披楳笏� server.ts                   # Server configuration
+笏・笏懌楳笏� public/                         # Static assets
+笏・  笏懌楳笏� index.html                  # Main web interface
+笏・  笏懌楳笏� index-new.html              # Updated interface
+笏・  笏披楳笏� index-old.html              # Legacy interface
+笏・笏懌楳笏� docs/                           # Documentation
+笏・  笏懌楳笏� SECURITY.md                 # Integrated security guide
+笏・  笏懌楳笏� STRUCTURE_UPDATE.md         # Structure change log
+笏・  笏懌楳笏� LINUX_SETUP.md              # Linux setup guide
+笏・  笏懌楳笏� VOICE_GUIDE.md              # Voice feature guide
+笏・  笏披楳笏� VOICEVOX_SETUP.md           # VOICEVOX integration
+笏・笏懌楳笏� scripts/                        # Utility scripts
+笏・  笏懌楳笏� dev.ps1                     # Windows development script
+笏・  笏懌楳笏� dev.sh                      # Unix development script
+笏・  笏懌楳笏� setup-*.ps1/sh              # Setup scripts
+笏・  笏披楳笏� start-*.ps1/sh              # Startup scripts
+笏・笏懌楳笏� tests/                          # Test files
+笏・  笏懌楳笏� docker.test.ts              # Docker tests
+笏・  笏懌楳笏� integration.test.ts         # Integration tests
+笏・  笏披楳笏� server.test.ts              # Server tests
+笏・笏懌楳笏� cloud/                          # Cloud deployment
+笏・  笏懌楳笏� aws/                        # AWS CloudFormation
+笏・  笏披楳笏� gcp/                        # Google Cloud Platform
+笏・笏懌楳笏� deploy/                         # Deployment configs
+笏・  笏披楳笏� nginx.conf.example          # Nginx configuration
+笏・笏懌楳笏� python/                         # Python backend
+笏・  笏懌楳笏� ai_backend.py               # AI processing
+笏・  笏懌楳笏� fastapi_server.py           # FastAPI server
+笏・  笏披楳笏� requirements.txt            # Python dependencies
+笏・笏懌楳笏� mobile/                         # React Native mobile app
+笏懌楳笏� desktop/                        # Electron desktop app
+笏懌楳笏� native/                         # Native C++ modules
+笏懌楳笏� cuda/                           # CUDA acceleration
+笏披楳笏� swift/                          # Swift iOS integration
 
-## 📦 Main Modules
+## 逃 Main Modules
 
 ### Core Application
 - `src/index.ts` - Main Elysia server with JWT auth, Redis rate limiting
@@ -79,7 +79,7 @@ elysia-ai/
 - Ollama integration for LLM inference
 - Milvus Lite for vector search
 
-## 🔒 Security-Sensitive Directories
+## 白 Security-Sensitive Directories
 
 **Never commit these directories:**
 
@@ -88,7 +88,7 @@ elysia-ai/
 - `src/core/security/` - Security implementation (consider excluding from public repos)
 - `src/database/config/` - Database credentials
 
-## 🚀 Quick Start
+## 噫 Quick Start
 
 ```bash
 # Install dependencies
@@ -106,14 +106,14 @@ bun run build
 bun run start
 ````
 
-## 📚 Additional Resources
+## 答 Additional Resources
 
 - [README.md](../README.md) - Project overview
-- [README.ja.md](../README.ja.md) - 日本語版README
+- [README.ja.md](../README.ja.md) - 譌･譛ｬ隱樒沿README
 - [DEPLOYMENT.md](../DEPLOYMENT.md) - Deployment guide
 - [SECURITY.md](./SECURITY.md) - Integrated security guide
 
-## 🔍 Key Features
+## 剥 Key Features
 
 - **Multi-LLM Modes**: Sweet (Elysia), Normal, Professional
 - **RAG Integration**: Context-aware responses using Milvus
@@ -123,7 +123,7 @@ bun run start
 - **Cross-Platform**: Web, Mobile (React Native), Desktop (Electron)
 - **Cloud Ready**: AWS, GCP deployment configs included
 
-## 📝 Notes
+## 統 Notes
 
 - Built with Bun + Elysia.js for high performance
 - TypeScript for type safety

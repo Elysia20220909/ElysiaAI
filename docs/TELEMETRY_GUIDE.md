@@ -1,4 +1,4 @@
-# 🔍 OpenTelemetry Distributed Tracing
+﻿# 剥 OpenTelemetry Distributed Tracing
 
 ## Overview
 
@@ -6,13 +6,13 @@ Lightweight distributed tracing implementation compatible with W3C Trace Context
 
 ## Features
 
-- ✁EW3C Trace Context support
-- ✁EDistributed tracing across services
-- ✁ESpan lifecycle management
-- ✁ESpan events and attributes
-- ✁EError tracking
-- ✁EPerformance profiling
-- ✁ETrace export for collectors
+- 笨・W3C Trace Context support
+- 笨・Distributed tracing across services
+- 笨・Span lifecycle management
+- 笨・Span events and attributes
+- 笨・Error tracking
+- 笨・Performance profiling
+- 笨・Trace export for collectors
 
 ## Quick Start
 

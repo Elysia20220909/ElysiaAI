@@ -1,4 +1,4 @@
-# 🔐 Secret & Key Management Guide
+﻿# 柏 Secret & Key Management Guide
 
 ElysiaAI utilizes high-grade cryptographic standards to protect user sovereignty. This guide outlines the generation, rotation, and operation of secrets.
 
@@ -30,4 +30,4 @@ When setting up a new environment:
 Phase 3 (Transcendence) will introduce support for **HSM (Hardware Security Modules)** and TPM-backed key storage for AbyssRTOS environments.
 
 ---
-© 2026 Elysia20220909 // ElysiaAI Security
+ﾂｩ 2026 Elysia20220909 // ElysiaAI Security

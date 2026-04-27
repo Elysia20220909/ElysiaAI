@@ -1,4 +1,4 @@
-# 🌸 ElysiaAI // INFINITE RESONANCE
+﻿# 🌸 ElysiaAI // INFINITE RESONANCE
 
 ### Next-Gen AI-Native OS where Sensitivity and Logic Resonate.
 
