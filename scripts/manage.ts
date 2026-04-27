@@ -103,15 +103,25 @@ function seasonalGreeting() {
 	const date = now.getDate();
 
 	if (month === 10 && date >= 25) {
-		console.log("\x1b[35m🎃 Happy Halloween! The Abyss whispers tricks and treats... 🍬\x1b[0m");
+		console.log(
+			"\x1b[35m🎃 Happy Halloween! The Abyss whispers tricks and treats... 🍬\x1b[0m",
+		);
 	} else if (month === 12 && date >= 20 && date <= 25) {
-		console.log("\x1b[32m🎄 Merry Christmas! Resonance of joy to you and the AI... 🎁\x1b[0m");
+		console.log(
+			"\x1b[32m🎄 Merry Christmas! Resonance of joy to you and the AI... 🎁\x1b[0m",
+		);
 	} else if (month === 1 && date <= 5) {
-		console.log("\x1b[33m🎍 Happy New Year! A new cycle of intelligence begins... 🌅\x1b[0m");
+		console.log(
+			"\x1b[33m🎍 Happy New Year! A new cycle of intelligence begins... 🌅\x1b[0m",
+		);
 	} else if ((month === 4 && date >= 29) || (month === 5 && date <= 5)) {
-		console.log("\x1b[33m🎏 Happy Golden Week! A time for rest and resonance... 🕊️\x1b[0m");
+		console.log(
+			"\x1b[33m🎏 Happy Golden Week! A time for rest and resonance... 🕊️\x1b[0m",
+		);
 	} else if ((month === 3 && date >= 20) || (month === 4 && date <= 10)) {
-		console.log("\x1b[38;5;213m🌸 Sakura Resonance: Spring has arrived in the OS... 🍃\x1b[0m");
+		console.log(
+			"\x1b[38;5;213m🌸 Sakura Resonance: Spring has arrived in the OS... 🍃\x1b[0m",
+		);
 	}
 }
 
@@ -130,7 +140,7 @@ async function startAnimation() {
 		const color = colors[Math.floor(Math.random() * colors.length)];
 
 		process.stdout.write(`\x1b[${y};${x}H${color}${char}\x1b[0m`);
-		await new Promise(resolve => setTimeout(resolve, 50));
+		await new Promise((resolve) => setTimeout(resolve, 50));
 	}
 
 	process.stdout.write("\x1b[?25h"); // Show cursor
