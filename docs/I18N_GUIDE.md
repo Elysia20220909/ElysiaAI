@@ -6,13 +6,13 @@ Lightweight internationalization library with automatic locale detection, plural
 
 ## Features
 
-- ✅ Multiple locale support (en, ja, zh, ko, es, fr, de)
-- ✅ Nested translation keys with dot notation
-- ✅ Parameter interpolation `{{key}}`
-- ✅ Pluralization support
-- ✅ Automatic locale detection from `Accept-Language` header
-- ✅ Fallback locale handling
-- ✅ Dynamic translation updates
+- ✁EMultiple locale support (en, ja, zh, ko, es, fr, de)
+- ✁ENested translation keys with dot notation
+- ✁EParameter interpolation `{{key}}`
+- ✁EPluralization support
+- ✁EAutomatic locale detection from `Accept-Language` header
+- ✁EFallback locale handling
+- ✁EDynamic translation updates
 
 ## Usage
 
@@ -48,7 +48,7 @@ const count1 = i18n.plural("messages", 1, "en"); // "1 message"
 const count5 = i18n.plural("messages", 5, "en"); // "5 messages"
 
 // Japanese (same for singular and plural)
-const count_ja = i18n.plural("messages", 5, "ja"); // "5件のメッセージ"
+const count_ja = i18n.plural("messages", 5, "ja"); // "5件のメチE��ージ"
 ```
 
 ### Locale Detection
@@ -101,8 +101,8 @@ app.get("/api/data", ({ request }) => {
     "loginSuccess": "ログインに成功しました"
   },
   "messages": {
-    "one": "{{count}}件のメッセージ",
-    "other": "{{count}}件のメッセージ"
+    "one": "{{count}}件のメチE��ージ",
+    "other": "{{count}}件のメチE��ージ"
   }
 }
 ```

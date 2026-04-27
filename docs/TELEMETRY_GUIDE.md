@@ -6,13 +6,13 @@ Lightweight distributed tracing implementation compatible with W3C Trace Context
 
 ## Features
 
-- ✅ W3C Trace Context support
-- ✅ Distributed tracing across services
-- ✅ Span lifecycle management
-- ✅ Span events and attributes
-- ✅ Error tracking
-- ✅ Performance profiling
-- ✅ Trace export for collectors
+- ✁EW3C Trace Context support
+- ✁EDistributed tracing across services
+- ✁ESpan lifecycle management
+- ✁ESpan events and attributes
+- ✁EError tracking
+- ✁EPerformance profiling
+- ✁ETrace export for collectors
 
 ## Quick Start
 
