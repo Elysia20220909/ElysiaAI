@@ -32,6 +32,21 @@ export const proxyToFastAPI = async (
 	method: string,
 	body?: unknown,
 ) => {
+	if (process.env.ELYSIA_TEST_MODE === "1") {
+		logger.info(`[TEST MODE] Mocking FastAPI request to: ${path}`);
+		if (path === "/health") {
+			return { status: "ok", milvus_connected: true, embedding_provider: "mock" };
+		}
+		if (path === "/chat") {
+			return {
+				response: "I am Elysia, in test mode. How can I help you? ♡",
+				quotes: ["Self-reflection is the first step to wisdom."],
+				context: "Testing Environment",
+			};
+		}
+		return { status: "ok", message: "Mocked response" };
+	}
+
 	try {
 		const response = await axios({
 			method,

@@ -1,342 +1,342 @@
-# 🎯 個人開発向け追加機�E - 実裁E��亁E��ポ�EチE
-**実裁E��:** 2025年12朁E日  
-**プロジェクチE** Elysia AI  
-**対象:** 個人開発の生産性向丁E
+﻿# 識 蛟倶ｺｺ髢狗匱蜷代￠霑ｽ蜉�讖溯・ - 螳溯｣・ｮ御ｺ・Ξ繝昴・繝・
+**螳溯｣・律:** 2025蟷ｴ12譛・譌･  
+**繝励Ο繧ｸ繧ｧ繧ｯ繝・** Elysia AI  
+**蟇ｾ雎｡:** 蛟倶ｺｺ髢狗匱縺ｮ逕溽肇諤ｧ蜷台ｸ・
 ---
 
-## ✁Eフェーズ4: 実用皁E��個人開発機�E (2025/12/4 NEW)
+## 笨・繝輔ぉ繝ｼ繧ｺ4: 螳溽畑逧・↑蛟倶ｺｺ髢狗匱讖溯・ (2025/12/4 NEW)
 
-### 1. ジョブキュー (Job Queue)
+### 1. 繧ｸ繝ｧ繝悶く繝･繝ｼ (Job Queue)
 
-**ファイル:** `src/lib/job-queue.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/job-queue.ts`
 
-**機�E:**
+**讖溯・:**
 
-- BullMQを使用した非同期タスク処琁E- メール送信、レポ�Eト生成、データクリーンアチE�E、Webhook送信
-- Redis対忁E(オプション、インメモリフォールバック付き)
+- BullMQ繧剃ｽｿ逕ｨ縺励◆髱槫酔譛溘ち繧ｹ繧ｯ蜃ｦ逅・- 繝｡繝ｼ繝ｫ騾∽ｿ｡縲√Ξ繝昴・繝育函謌舌�√ョ繝ｼ繧ｿ繧ｯ繝ｪ繝ｼ繝ｳ繧｢繝・・縲仝ebhook騾∽ｿ｡
+- Redis蟇ｾ蠢・(繧ｪ繝励す繝ｧ繝ｳ縲√う繝ｳ繝｡繝｢繝ｪ繝輔か繝ｼ繝ｫ繝舌ャ繧ｯ莉倥″)
 
 **API:**
 
 ```bash
-GET /admin/jobs/stats           # ジョブ統訁EPOST /admin/jobs/email          # メール送信ジョチEPOST /admin/jobs/report         # レポ�Eト生成ジョチE```
+GET /admin/jobs/stats           # 繧ｸ繝ｧ繝也ｵｱ險・POST /admin/jobs/email          # 繝｡繝ｼ繝ｫ騾∽ｿ｡繧ｸ繝ｧ繝・POST /admin/jobs/report         # 繝ｬ繝昴・繝育函謌舌ず繝ｧ繝・```
 
 ---
 
-### 2. ファイルアチE�EローチE(File Upload)
+### 2. 繝輔ぃ繧､繝ｫ繧｢繝・・繝ｭ繝ｼ繝・(File Upload)
 
-**ファイル:** `src/lib/file-upload.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/file-upload.ts`
 
-**機�E:**
+**讖溯・:**
 
-- 画像�EPDF・チE��ストファイルのアチE�EローチE- サイズ制陁E(チE��ォルチE0MB)
-- ユーザー別ファイル管琁E- 自動クリーンアチE�E (30日経過)
+- 逕ｻ蜒上・PDF繝ｻ繝・く繧ｹ繝医ヵ繧｡繧､繝ｫ縺ｮ繧｢繝・・繝ｭ繝ｼ繝・- 繧ｵ繧､繧ｺ蛻ｶ髯・(繝・ヵ繧ｩ繝ｫ繝・0MB)
+- 繝ｦ繝ｼ繧ｶ繝ｼ蛻･繝輔ぃ繧､繝ｫ邂｡逅・- 閾ｪ蜍輔け繝ｪ繝ｼ繝ｳ繧｢繝・・ (30譌･邨碁℃)
 
 **API:**
 
 ```bash
-POST /upload                    # ファイルアチE�EローチEGET /files                      # ファイル一覧
-GET /files/:fileId              # ファイルダウンローチE```
+POST /upload                    # 繝輔ぃ繧､繝ｫ繧｢繝・・繝ｭ繝ｼ繝・GET /files                      # 繝輔ぃ繧､繝ｫ荳�隕ｧ
+GET /files/:fileId              # 繝輔ぃ繧､繝ｫ繝�繧ｦ繝ｳ繝ｭ繝ｼ繝・```
 
 ---
 
-### 3. Cronスケジューラー (Cron Scheduler)
+### 3. Cron繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｩ繝ｼ (Cron Scheduler)
 
-**ファイル:** `src/lib/cron-scheduler.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/cron-scheduler.ts`
 
-**機�E:**
+**讖溯・:**
 
-- 定期タスクのスケジューリング
-- 7つのチE��ォルトタスク (日次/週次/月次レポ�Eト、バチE��アチE�E、クリーンアチE�E筁E
-- タスクの有効匁E無効匁E
+- 螳壽悄繧ｿ繧ｹ繧ｯ縺ｮ繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｪ繝ｳ繧ｰ
+- 7縺､縺ｮ繝・ヵ繧ｩ繝ｫ繝医ち繧ｹ繧ｯ (譌･谺｡/騾ｱ谺｡/譛域ｬ｡繝ｬ繝昴・繝医�√ヰ繝・け繧｢繝・・縲√け繝ｪ繝ｼ繝ｳ繧｢繝・・遲・
+- 繧ｿ繧ｹ繧ｯ縺ｮ譛牙柑蛹・辟｡蜉ｹ蛹・
 **API:**
 
 ```bash
-GET /admin/cron/tasks           # タスク一覧
-GET /admin/cron/stats           # Cron統訁EPOST /admin/cron/tasks/:name/run # タスク手動実衁E```
+GET /admin/cron/tasks           # 繧ｿ繧ｹ繧ｯ荳�隕ｧ
+GET /admin/cron/stats           # Cron邨ｱ險・POST /admin/cron/tasks/:name/run # 繧ｿ繧ｹ繧ｯ謇句虚螳溯｡・```
 
-**チE��ォルトタスク:**
+**繝・ヵ繧ｩ繝ｫ繝医ち繧ｹ繧ｯ:**
 
-- daily-report: 毎日 9:00 AM
-- weekly-report: 毎週月曜 10:00 AM
-- monthly-report: 毎月1日 10:00 AM
-- db-backup: 毎日 3:00 AM
-- log-cleanup: 毎日 4:00 AM
-- file-cleanup: 毎週日曁E5:00 AM
-- health-check: 10刁E��と
+- daily-report: 豈取律 9:00 AM
+- weekly-report: 豈朱�ｱ譛域屆 10:00 AM
+- monthly-report: 豈取怦1譌･ 10:00 AM
+- db-backup: 豈取律 3:00 AM
+- log-cleanup: 豈取律 4:00 AM
+- file-cleanup: 豈朱�ｱ譌･譖・5:00 AM
+- health-check: 10蛻・＃縺ｨ
 
 ---
 
-### 4. 監査ログ (Audit Log)
+### 4. 逶｣譟ｻ繝ｭ繧ｰ (Audit Log)
 
-**ファイル:** `src/lib/audit-logger.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/audit-logger.ts`
 
-**機�E:**
+**讖溯・:**
 
-- 全ユーザー操作�E記録
-- IPアドレス、タイムスタンプ、変更前後�E値を保孁E- 検索・フィルタリング機�E
-- JSON/CSV形式でのエクスポ�EチE
+- 蜈ｨ繝ｦ繝ｼ繧ｶ繝ｼ謫堺ｽ懊・險倬鹸
+- IP繧｢繝峨Ξ繧ｹ縲√ち繧､繝�繧ｹ繧ｿ繝ｳ繝励�∝､画峩蜑榊ｾ後・蛟､繧剃ｿ晏ｭ・- 讀懃ｴ｢繝ｻ繝輔ぅ繝ｫ繧ｿ繝ｪ繝ｳ繧ｰ讖溯・
+- JSON/CSV蠖｢蠑上〒縺ｮ繧ｨ繧ｯ繧ｹ繝昴・繝・
 **API:**
 
 ```bash
-GET /admin/audit/logs           # ログ検索
-GET /admin/audit/stats          # ログ統訁EGET /admin/audit/export         # ログエクスポ�EチE(JSON/CSV)
+GET /admin/audit/logs           # 繝ｭ繧ｰ讀懃ｴ｢
+GET /admin/audit/stats          # 繝ｭ繧ｰ邨ｱ險・GET /admin/audit/export         # 繝ｭ繧ｰ繧ｨ繧ｯ繧ｹ繝昴・繝・(JSON/CSV)
 ```
 
 ---
 
-### 5. WebSocketマネージャー (実裁E��み、統合完亁E
+### 5. WebSocket繝槭ロ繝ｼ繧ｸ繝｣繝ｼ (螳溯｣・ｸ医∩縲∫ｵｱ蜷亥ｮ御ｺ・
 
-**ファイル:** `src/lib/websocket-manager.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/websocket-manager.ts`
 
-**機�E:**
+**讖溯・:**
 
-- リアルタイム通信シスチE��
-- チャチE��、E��知、ダチE��ュボ�Eド更新
-- ルームベ�EスのブロードキャスチE- ハ�Eトビート機�E (30秒間隁E
+- 繝ｪ繧｢繝ｫ繧ｿ繧､繝�騾壻ｿ｡繧ｷ繧ｹ繝・Β
+- 繝√Ε繝・ヨ縲・�夂衍縲√ム繝・す繝･繝懊・繝画峩譁ｰ
+- 繝ｫ繝ｼ繝�繝吶・繧ｹ縺ｮ繝悶Ο繝ｼ繝峨く繝｣繧ｹ繝・- 繝上・繝医ン繝ｼ繝域ｩ溯・ (30遘帝俣髫・
 
-**状況E** Phase 5で統合完亁E��管琁E��チE��ュボ�Eドで使用可能、E
+**迥ｶ豕・** Phase 5縺ｧ邨ｱ蜷亥ｮ御ｺ・�らｮ｡逅・ム繝・す繝･繝懊・繝峨〒菴ｿ逕ｨ蜿ｯ閭ｽ縲・
 ---
 
-## フェーズ1-3: 既存実裁E���E (以前完亁E
+## 繝輔ぉ繝ｼ繧ｺ1-3: 譌｢蟄伜ｮ溯｣・ｩ溯・ (莉･蜑榊ｮ御ｺ・
 
 ---
 
-### 1. 環墁E��数の検証・バリチE�Eション
+### 1. 迺ｰ蠅・､画焚縺ｮ讀懆ｨｼ繝ｻ繝舌Μ繝・・繧ｷ繝ｧ繝ｳ
 
-**ファイル:** `src/lib/env-validator.ts`
+**繝輔ぃ繧､繝ｫ:** `src/lib/env-validator.ts`
 
-**機�E:**
+**讖溯・:**
 
-- サーバ�E起動時に忁E��環墁E��数を�E動チェチE��
-- 不足してぁE��設定を警告表示
-- JWT_SECRET、AUTH_PASSWORDなど重要E��E��の検証
-- チE��ォルト値の自動適用
+- 繧ｵ繝ｼ繝舌・襍ｷ蜍墓凾縺ｫ蠢・�育腸蠅・､画焚繧定・蜍輔メ繧ｧ繝・け
+- 荳崎ｶｳ縺励※縺・ｋ險ｭ螳壹ｒ隴ｦ蜻願｡ｨ遉ｺ
+- JWT_SECRET縲、UTH_PASSWORD縺ｪ縺ｩ驥崎ｦ・�・岼縺ｮ讀懆ｨｼ
+- 繝・ヵ繧ｩ繝ｫ繝亥�､縺ｮ閾ｪ蜍暮←逕ｨ
 
-**使ぁE��:**
+**菴ｿ縺・婿:**
 
 ```typescript
-// src/index.ts で自動実衁Eimport { checkEnvironmentOrExit } from "./lib/env-validator";
+// src/index.ts 縺ｧ閾ｪ蜍募ｮ溯｡・import { checkEnvironmentOrExit } from "./lib/env-validator";
 checkEnvironmentOrExit();
 ```
 
-**効极E**
+**蜉ｹ譫・**
 
-- 設定ミスによるバグを起動時に検�E
-- チE�Eロイ時�Eトラブル削渁E
+- 險ｭ螳壹Α繧ｹ縺ｫ繧医ｋ繝舌げ繧定ｵｷ蜍墓凾縺ｫ讀懷・
+- 繝・・繝ｭ繧､譎ゅ・繝医Λ繝悶Ν蜑頑ｸ・
 ---
 
-### 2. チE�Eタベ�EスバックアチE�Eスクリプト
+### 2. 繝・・繧ｿ繝吶・繧ｹ繝舌ャ繧ｯ繧｢繝・・繧ｹ繧ｯ繝ｪ繝励ヨ
 
-**ファイル:**
+**繝輔ぃ繧､繝ｫ:**
 
-- `scripts/backup-db.ps1` (手動バックアチE�E)
-- `scripts/restore-db.ps1` (リストア)
-- `scripts/setup-backup-schedule.ps1` (自動化設宁E
+- `scripts/backup-db.ps1` (謇句虚繝舌ャ繧ｯ繧｢繝・・)
+- `scripts/restore-db.ps1` (繝ｪ繧ｹ繝医い)
+- `scripts/setup-backup-schedule.ps1` (閾ｪ蜍募喧險ｭ螳・
 
-**機�E:**
+**讖溯・:**
 
-- SQLiteチE�Eタベ�Eス(dev.db)の自動バチE��アチE�E
-- タイムスタンプ付きバックアチE�Eファイル作�E
-- 古ぁE��チE��アチE�Eの自動削除(最大10個保持)
-- 簡単なリストア機�E
+- SQLite繝・・繧ｿ繝吶・繧ｹ(dev.db)縺ｮ閾ｪ蜍輔ヰ繝・け繧｢繝・・
+- 繧ｿ繧､繝�繧ｹ繧ｿ繝ｳ繝嶺ｻ倥″繝舌ャ繧ｯ繧｢繝・・繝輔ぃ繧､繝ｫ菴懈・
+- 蜿､縺・ヰ繝・け繧｢繝・・縺ｮ閾ｪ蜍募炎髯､(譛�螟ｧ10蛟倶ｿ晄戟)
+- 邁｡蜊倥↑繝ｪ繧ｹ繝医い讖溯・
 
-**使ぁE��:**
+**菴ｿ縺・婿:**
 
 ```powershell
-# 手動バックアチE�E
+# 謇句虚繝舌ャ繧ｯ繧｢繝・・
 .\scripts\backup-db.ps1
 
-# リストア
+# 繝ｪ繧ｹ繝医い
 .\scripts\restore-db.ps1
 
-# 自動バチE��アチE�E設宁E毎日3:00AM)
+# 閾ｪ蜍輔ヰ繝・け繧｢繝・・險ｭ螳・豈取律3:00AM)
 .\scripts\setup-backup-schedule.ps1
 ```
 
-**効极E**
+**蜉ｹ譫・**
 
-- チE�Eタロス防止
-- 開発中の安�Eな実騁E
+- 繝・・繧ｿ繝ｭ繧ｹ髦ｲ豁｢
+- 髢狗匱荳ｭ縺ｮ螳牙・縺ｪ螳滄ｨ・
 ---
 
-### 3. 開発用ダチE��ュボ�EチE
-**ファイル:** `public/admin.html`
+### 3. 髢狗匱逕ｨ繝�繝・す繝･繝懊・繝・
+**繝輔ぃ繧､繝ｫ:** `public/admin.html`
 
-**機�E:**
+**讖溯・:**
 
-- フィードバチE��統計�Eリアルタイム表示
-- ナレチE��ベ�Eス管琁E検証・削除)
-- モダンなUI/UX
-- JWT認証対応�EAdmin API追加
+- 繝輔ぅ繝ｼ繝峨ヰ繝・け邨ｱ險医・繝ｪ繧｢繝ｫ繧ｿ繧､繝�陦ｨ遉ｺ
+- 繝翫Ξ繝・ず繝吶・繧ｹ邂｡逅・讀懆ｨｼ繝ｻ蜑企勁)
+- 繝｢繝�繝ｳ縺ｪUI/UX
+- JWT隱崎ｨｼ蟇ｾ蠢懊・Admin API霑ｽ蜉�
 
-**新規API:**
+**譁ｰ隕就PI:**
 
-- `GET /admin/feedback/stats` - フィードバチE��統訁E- `GET /admin/feedback` - フィードバチE��一覧
-- `GET /admin/knowledge` - ナレチE��一覧
-- `POST /admin/knowledge/:id/verify` - ナレチE��検証
-- `DELETE /admin/knowledge/:id` - ナレチE��削除
+- `GET /admin/feedback/stats` - 繝輔ぅ繝ｼ繝峨ヰ繝・け邨ｱ險・- `GET /admin/feedback` - 繝輔ぅ繝ｼ繝峨ヰ繝・け荳�隕ｧ
+- `GET /admin/knowledge` - 繝翫Ξ繝・ず荳�隕ｧ
+- `POST /admin/knowledge/:id/verify` - 繝翫Ξ繝・ず讀懆ｨｼ
+- `DELETE /admin/knowledge/:id` - 繝翫Ξ繝・ず蜑企勁
 
-**アクセス:**
+**繧｢繧ｯ繧ｻ繧ｹ:**
 
 ```
 http://localhost:3000/admin.html
 ```
 
-**効极E**
+**蜉ｹ譫・**
 
-- チE�Eタの可視化
-- 管琁E��業の効玁E��
+- 繝・・繧ｿ縺ｮ蜿ｯ隕門喧
+- 邂｡逅・ｽ懈･ｭ縺ｮ蜉ｹ邇・喧
 
 ---
 
-### 4. ログローチE�Eション自動化
+### 4. 繝ｭ繧ｰ繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ閾ｪ蜍募喧
 
-**ファイル:**
+**繝輔ぃ繧､繝ｫ:**
 
-- `scripts/rotate-logs.ps1` (ローチE�Eション実衁E
-- `scripts/setup-log-rotation.ps1` (自動化設宁E
+- `scripts/rotate-logs.ps1` (繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ螳溯｡・
+- `scripts/setup-log-rotation.ps1` (閾ｪ蜍募喧險ｭ螳・
 
-**機�E:**
+**讖溯・:**
 
-- 50MB以上�Eログファイルを�E動圧縮
-- 30日以上古ぁE��グを�E動削除
-- 圧縮ファイルは5個まで保持
-- 毎週日曜日2:00AMに自動実衁E
-**使ぁE��:**
+- 50MB莉･荳翫・繝ｭ繧ｰ繝輔ぃ繧､繝ｫ繧定・蜍募悸邵ｮ
+- 30譌･莉･荳雁商縺・Ο繧ｰ繧定・蜍募炎髯､
+- 蝨ｧ邵ｮ繝輔ぃ繧､繝ｫ縺ｯ5蛟九∪縺ｧ菫晄戟
+- 豈朱�ｱ譌･譖懈律2:00AM縺ｫ閾ｪ蜍募ｮ溯｡・
+**菴ｿ縺・婿:**
 
 ```powershell
-# 手動実衁E.\scripts\rotate-logs.ps1
+# 謇句虚螳溯｡・.\scripts\rotate-logs.ps1
 
-# 自動ローチE�Eション設宁E.\scripts\setup-log-rotation.ps1
+# 閾ｪ蜍輔Ο繝ｼ繝・・繧ｷ繝ｧ繝ｳ險ｭ螳・.\scripts\setup-log-rotation.ps1
 
-# カスタム設宁E.\scripts\rotate-logs.ps1 -MaxSizeMB 100 -MaxAgeDays 60 -KeepCompressed 10
+# 繧ｫ繧ｹ繧ｿ繝�險ｭ螳・.\scripts\rotate-logs.ps1 -MaxSizeMB 100 -MaxAgeDays 60 -KeepCompressed 10
 ```
 
-**効极E**
+**蜉ｹ譫・**
 
-- チE��スク容量�E節紁E- ログ管琁E�E自動化
+- 繝・ぅ繧ｹ繧ｯ螳ｹ驥上・遽�邏・- 繝ｭ繧ｰ邂｡逅・・閾ｪ蜍募喧
 
 ---
 
-### 5. Docker Compose簡素匁E
-**ファイル:**
+### 5. Docker Compose邁｡邏�蛹・
+**繝輔ぃ繧､繝ｫ:**
 
-- `docker-compose.yml` (全サービス定義)
-- `python/Dockerfile` (FastAPI用)
-- `scripts/start-docker-env.ps1` (起動スクリプト)
+- `docker-compose.yml` (蜈ｨ繧ｵ繝ｼ繝薙せ螳夂ｾｩ)
+- `python/Dockerfile` (FastAPI逕ｨ)
+- `scripts/start-docker-env.ps1` (襍ｷ蜍輔せ繧ｯ繝ｪ繝励ヨ)
 
-**含まれるサービス:**
+**蜷ｫ縺ｾ繧後ｋ繧ｵ繝ｼ繝薙せ:**
 
-- Redis (レート制陁E
-- Ollama (LLMエンジン)
-- FastAPI (RAGサービス)
-- VOICEVOX (音声合�E)
+- Redis (繝ｬ繝ｼ繝亥宛髯・
+- Ollama (LLM繧ｨ繝ｳ繧ｸ繝ｳ)
+- FastAPI (RAG繧ｵ繝ｼ繝薙せ)
+- VOICEVOX (髻ｳ螢ｰ蜷域・)
 
-**使ぁE��:**
+**菴ｿ縺・婿:**
 
 ```powershell
-# 1コマンドで全サービス起勁E.\scripts\start-docker-env.ps1
+# 1繧ｳ繝槭Φ繝峨〒蜈ｨ繧ｵ繝ｼ繝薙せ襍ｷ蜍・.\scripts\start-docker-env.ps1
 
-# また�E直接
+# 縺ｾ縺溘・逶ｴ謗･
 docker-compose up -d
 
-# 停止
+# 蛛懈ｭ｢
 docker-compose down
 
-# ログ確誁Edocker-compose logs -f
+# 繝ｭ繧ｰ遒ｺ隱・docker-compose logs -f
 ```
 
-**効极E**
+**蜉ｹ譫・**
 
-- 開発環墁E�EセチE��アチE�Eが簡十E- 依存サービスの管琁E��楽
+- 髢狗匱迺ｰ蠅・・繧ｻ繝・ヨ繧｢繝・・縺檎ｰ｡蜊・- 萓晏ｭ倥し繝ｼ繝薙せ縺ｮ邂｡逅・′讌ｽ
 
 ---
 
-## 📊 実裁E��果サマリー
+## 投 螳溯｣・ｵ先棡繧ｵ繝槭Μ繝ｼ
 
-| 機�E               | ファイル数 | コード行数  | 効极E          |
+| 讖溯・               | 繝輔ぃ繧､繝ｫ謨ｰ | 繧ｳ繝ｼ繝芽｡梧焚  | 蜉ｹ譫・          |
 | ------------------ | ---------- | ----------- | -------------- |
-| 環墁E��数検証       | 1          | 150衁E      | バグ予防       |
-| DBバックアチE�E     | 3          | 180衁E      | チE�Eタ保護     |
-| 管琁E��チE��ュボ�EチE| 2          | 500衁E      | 可視化         |
-| ログローチE�Eション | 2          | 120衁E      | 自動化         |
-| Docker Compose     | 3          | 200衁E      | 環墁E��篁E      |
-| **合訁E*           | **11**     | **1,150衁E* | **生産性向丁E* |
+| 迺ｰ蠅・､画焚讀懆ｨｼ       | 1          | 150陦・      | 繝舌げ莠磯亟       |
+| DB繝舌ャ繧ｯ繧｢繝・・     | 3          | 180陦・      | 繝・・繧ｿ菫晁ｭｷ     |
+| 邂｡逅・ム繝・す繝･繝懊・繝・| 2          | 500陦・      | 蜿ｯ隕門喧         |
+| 繝ｭ繧ｰ繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ | 2          | 120陦・      | 閾ｪ蜍募喧         |
+| Docker Compose     | 3          | 200陦・      | 迺ｰ蠅・ｧ狗ｯ・      |
+| **蜷郁ｨ・*           | **11**     | **1,150陦・* | **逕溽肇諤ｧ蜷台ｸ・* |
 
 ---
 
-## 🚀 次のスチE��チE
-### すぐに使える機�E
+## 噫 谺｡縺ｮ繧ｹ繝・ャ繝・
+### 縺吶＄縺ｫ菴ｿ縺医ｋ讖溯・
 
-1. サーバ�E起動すると環墁E��数チェチE��が�E動実衁E✁E2. `.\scripts\backup-db.ps1` でチE�EタバックアチE�E
-3. `http://localhost:3000/admin.html` で管琁E��面アクセス
+1. 繧ｵ繝ｼ繝舌・襍ｷ蜍輔☆繧九→迺ｰ蠅・､画焚繝√ぉ繝・け縺瑚・蜍募ｮ溯｡・笨・2. `.\scripts\backup-db.ps1` 縺ｧ繝・・繧ｿ繝舌ャ繧ｯ繧｢繝・・
+3. `http://localhost:3000/admin.html` 縺ｧ邂｡逅・判髱｢繧｢繧ｯ繧ｻ繧ｹ
 
-### 推奨設宁E
+### 謗ｨ螂ｨ險ｭ螳・
 ```powershell
-# 自動バチE��アチE�E設宁E毎日3:00AM)
+# 閾ｪ蜍輔ヰ繝・け繧｢繝・・險ｭ螳・豈取律3:00AM)
 .\scripts\setup-backup-schedule.ps1
 
-# ログローチE�Eション設宁E毎週日曁E:00AM)
+# 繝ｭ繧ｰ繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ險ｭ螳・豈朱�ｱ譌･譖・:00AM)
 .\scripts\setup-log-rotation.ps1
 
-# Docker環墁E��勁E.\scripts\start-docker-env.ps1
+# Docker迺ｰ蠅・ｵｷ蜍・.\scripts\start-docker-env.ps1
 ```
 
 ---
 
-## 💡 使用侁E
-### シナリオ1: 開発開始時
+## 庁 菴ｿ逕ｨ萓・
+### 繧ｷ繝翫Μ繧ｪ1: 髢狗匱髢句ｧ区凾
 
 ```powershell
-# Docker環墁E��勁E.\scripts\start-docker-env.ps1
+# Docker迺ｰ蠅・ｵｷ蜍・.\scripts\start-docker-env.ps1
 
-# Elysiaサーバ�E起勁E環墁E��数チェチE��自動実衁E
+# Elysia繧ｵ繝ｼ繝舌・襍ｷ蜍・迺ｰ蠅・､画焚繝√ぉ繝・け閾ｪ蜍募ｮ溯｡・
 bun run dev
 ```
 
-### シナリオ2: チE�Eタ確誁E
+### 繧ｷ繝翫Μ繧ｪ2: 繝・・繧ｿ遒ｺ隱・
 ```powershell
-# 管琁E��チE��ュボ�Eドにアクセス
+# 邂｡逅・ム繝・す繝･繝懊・繝峨↓繧｢繧ｯ繧ｻ繧ｹ
 Start-Process "http://localhost:3000/admin.html"
 
-# また�E Prisma Studio
+# 縺ｾ縺溘・ Prisma Studio
 bunx prisma studio
 ```
 
-### シナリオ3: トラブル晁E
+### 繧ｷ繝翫Μ繧ｪ3: 繝医Λ繝悶Ν譎・
 ```powershell
-# バックアチE�Eから復允E.\scripts\restore-db.ps1
+# 繝舌ャ繧ｯ繧｢繝・・縺九ｉ蠕ｩ蜈・.\scripts\restore-db.ps1
 
-# ログ確誁EGet-Content .\logs\app.log -Tail 50
+# 繝ｭ繧ｰ遒ｺ隱・Get-Content .\logs\app.log -Tail 50
 ```
 
 ---
 
-## ✨ 改喁E��れた開発体騁E
+## 笨ｨ 謾ｹ蝟・＆繧後◆髢狗匱菴馴ｨ・
 **Before:**
 
-- 手動で環墁E��数チェチE��
-- チE�EタバックアチE�Eは自劁E- ログが溜まり続けめE- Dockerサービスを個別起勁E- チE�Eタ確認�ESQL直打ち
+- 謇句虚縺ｧ迺ｰ蠅・､画焚繝√ぉ繝・け
+- 繝・・繧ｿ繝舌ャ繧ｯ繧｢繝・・縺ｯ閾ｪ蜉・- 繝ｭ繧ｰ縺梧ｺ懊∪繧顔ｶ壹￠繧・- Docker繧ｵ繝ｼ繝薙せ繧貞�句挨襍ｷ蜍・- 繝・・繧ｿ遒ｺ隱阪・SQL逶ｴ謇薙■
 
 **After:**
 
-- ✁E起動時に自動検証
-- ✁E自動バチE��アチE�E(毎日3:00AM)
-- ✁E自動ログローチE�Eション(毎週日曁E
-- ✁E1コマンドで全サービス起勁E- ✁Eブラウザで簡単データ管琁E
+- 笨・襍ｷ蜍墓凾縺ｫ閾ｪ蜍墓､懆ｨｼ
+- 笨・閾ｪ蜍輔ヰ繝・け繧｢繝・・(豈取律3:00AM)
+- 笨・閾ｪ蜍輔Ο繧ｰ繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ(豈朱�ｱ譌･譖・
+- 笨・1繧ｳ繝槭Φ繝峨〒蜈ｨ繧ｵ繝ｼ繝薙せ襍ｷ蜍・- 笨・繝悶Λ繧ｦ繧ｶ縺ｧ邁｡蜊倥ョ繝ｼ繧ｿ邂｡逅・
 ---
 
-## 🎓 学べること
+## 雌 蟄ｦ縺ｹ繧九％縺ｨ
 
-こ�E実裁E��ら学べる技衁E
+縺薙・螳溯｣・°繧牙ｭｦ縺ｹ繧区橿陦・
 
-1. **環墁E��数バリチE�Eション** - 設定ミス防止パターン
-2. **自動バチE��アチE�E** - チE�Eタ保護のベスト�EラクチE��ス
-3. **タスクスケジューラ** - Windows自動化
-4. **Docker Compose** - マルチサービス管琁E5. **Admin API設訁E* - 管琁E���Eの実裁E��ターン
+1. **迺ｰ蠅・､画焚繝舌Μ繝・・繧ｷ繝ｧ繝ｳ** - 險ｭ螳壹Α繧ｹ髦ｲ豁｢繝代ち繝ｼ繝ｳ
+2. **閾ｪ蜍輔ヰ繝・け繧｢繝・・** - 繝・・繧ｿ菫晁ｭｷ縺ｮ繝吶せ繝医・繝ｩ繧ｯ繝・ぅ繧ｹ
+3. **繧ｿ繧ｹ繧ｯ繧ｹ繧ｱ繧ｸ繝･繝ｼ繝ｩ** - Windows閾ｪ蜍募喧
+4. **Docker Compose** - 繝槭Ν繝√し繝ｼ繝薙せ邂｡逅・5. **Admin API險ｭ險・* - 邂｡逅・ｩ溯・縺ｮ螳溯｣・ヱ繧ｿ繝ｼ繝ｳ
 
 ---
 
-**実裁E��亁E** 🎉
+**螳溯｣・ｮ御ｺ・** 脂
 
-これで個人開発に忁E��な基本機�Eが�Eて揁E��ました、E
+縺薙ｌ縺ｧ蛟倶ｺｺ髢狗匱縺ｫ蠢・ｦ√↑蝓ｺ譛ｬ讖溯・縺悟・縺ｦ謠・＞縺ｾ縺励◆縲・

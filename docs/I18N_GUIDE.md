@@ -1,4 +1,4 @@
-# 🌍 i18n Internationalization
+﻿# 訣 i18n Internationalization
 
 ## Overview
 
@@ -6,13 +6,13 @@ Lightweight internationalization library with automatic locale detection, plural
 
 ## Features
 
-- ✁EMultiple locale support (en, ja, zh, ko, es, fr, de)
-- ✁ENested translation keys with dot notation
-- ✁EParameter interpolation `{{key}}`
-- ✁EPluralization support
-- ✁EAutomatic locale detection from `Accept-Language` header
-- ✁EFallback locale handling
-- ✁EDynamic translation updates
+- 笨・Multiple locale support (en, ja, zh, ko, es, fr, de)
+- 笨・Nested translation keys with dot notation
+- 笨・Parameter interpolation `{{key}}`
+- 笨・Pluralization support
+- 笨・Automatic locale detection from `Accept-Language` header
+- 笨・Fallback locale handling
+- 笨・Dynamic translation updates
 
 ## Usage
 
@@ -23,7 +23,7 @@ import { i18n } from "./lib/i18n";
 
 // Simple translation
 const greeting = i18n.t("common.hello", "en"); // "Hello"
-const greeting_ja = i18n.t("common.hello", "ja"); // "こんにちは"
+const greeting_ja = i18n.t("common.hello", "ja"); // "縺薙ｓ縺ｫ縺｡縺ｯ"
 
 // Nested keys
 const welcome = i18n.t("auth.loginSuccess", "en"); // "Login successful"
@@ -48,7 +48,7 @@ const count1 = i18n.plural("messages", 1, "en"); // "1 message"
 const count5 = i18n.plural("messages", 5, "en"); // "5 messages"
 
 // Japanese (same for singular and plural)
-const count_ja = i18n.plural("messages", 5, "ja"); // "5件のメチE��ージ"
+const count_ja = i18n.plural("messages", 5, "ja"); // "5莉ｶ縺ｮ繝｡繝・そ繝ｼ繧ｸ"
 ```
 
 ### Locale Detection
@@ -93,16 +93,16 @@ app.get("/api/data", ({ request }) => {
 ```json
 {
   "common": {
-    "hello": "こんにちは",
-    "welcome": "Elysia AIへようこそ"
+    "hello": "縺薙ｓ縺ｫ縺｡縺ｯ",
+    "welcome": "Elysia AI縺ｸ繧医≧縺薙◎"
   },
   "auth": {
-    "login": "ログイン",
-    "loginSuccess": "ログインに成功しました"
+    "login": "繝ｭ繧ｰ繧､繝ｳ",
+    "loginSuccess": "繝ｭ繧ｰ繧､繝ｳ縺ｫ謌仙粥縺励∪縺励◆"
   },
   "messages": {
-    "one": "{{count}}件のメチE��ージ",
-    "other": "{{count}}件のメチE��ージ"
+    "one": "{{count}}莉ｶ縺ｮ繝｡繝・そ繝ｼ繧ｸ",
+    "other": "{{count}}莉ｶ縺ｮ繝｡繝・そ繝ｼ繧ｸ"
   }
 }
 ```
@@ -190,7 +190,7 @@ import { i18n, getLocaleFromRequest } from "./lib/i18n";
 
 describe("i18n", () => {
   it("should translate to Japanese", () => {
-    expect(i18n.t("common.hello", "ja")).toBe("こんにちは");
+    expect(i18n.t("common.hello", "ja")).toBe("縺薙ｓ縺ｫ縺｡縺ｯ");
   });
 
   it("should interpolate parameters", () => {
