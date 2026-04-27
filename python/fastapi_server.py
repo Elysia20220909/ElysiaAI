@@ -46,6 +46,7 @@ from python.lib.guardian import guardian
 from python.lib.soul_forge import soul_forge
 from python.recall import abyssal_recall
 from scripts.security.generate_ledger import generate_ledger
+from usr.lib.elysia.secure_enclave import secure_enclave
 
 
 # ==================== 設定 (Pydantic Settings) ====================
@@ -511,10 +512,11 @@ async def add_memory(req: MemoryAddRequest) -> dict[str, Any]:
 
     try:
         emb = await get_embedding(req.content)
+        encrypted_content = secure_enclave.encrypt(req.content)
         data = {
             "session_id": req.session_id,
             "role": req.role,
-            "content": req.content,
+            "content": encrypted_content,
             "emotion": req.emotion,
             "timestamp": time.time(),
             "embedding": emb,
@@ -579,8 +581,9 @@ async def rag_search(query: Query = Body(...)) -> dict[str, Any]:
             for hits in search_res:
                 for hit in hits:
                     entity = hit["entity"]
+                    decrypted_content = secure_enclave.decrypt(entity["content"])
                     memories.append(
-                        f"[{entity['role'].upper()}] (feeling {entity.get('emotion', 'neutral')}): {entity['content']}"
+                        f"[{entity['role'].upper()}] (feeling {entity.get('emotion', 'neutral')}): {decrypted_content}"
                     )
 
         context_parts = []
