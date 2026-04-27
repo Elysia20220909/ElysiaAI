@@ -10,7 +10,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 		"/token",
 		async ({ body }: { body: { username: string; password: string } }) => {
 			const { username, password } = body;
-			
+
 			const authResult = await authenticateUser(username, password);
 
 			if (!authResult.success || !authResult.user) {
