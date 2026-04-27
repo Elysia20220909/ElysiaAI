@@ -5,7 +5,7 @@ on:
     - cron: '0 0 * * *'  # 毎日深夜に実行
   workflow_dispatch:      # 手動実行
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "master", "main", "dev" ]
     paths:
       - 'packages/**'
       - 'scripts/**'
@@ -16,16 +16,16 @@ jobs:
     name: "🔍 セキュリティ監査 (Audit)"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@28935578f7e7191638217316717a61f364003d15 # v2.0.1
 
       - name: Bun Audit (JS/TS)
         run: bun pm audit
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@f6742a91b3c76390a3c94444657152f20703664d # v5.1.0
         with:
           python-version: "3.11"
 
@@ -41,10 +41,10 @@ jobs:
     name: "🧪 統合テスト (Tests)"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@28935578f7e7191638217316717a61f364003d15 # v2.0.1
 
       - name: Install JS Dependencies
         run: bun install
@@ -53,7 +53,7 @@ jobs:
         run: bun test
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@f6742a91b3c76390a3c94444657152f20703664d # v5.1.0
         with:
           python-version: "3.11"
 
@@ -66,14 +66,29 @@ jobs:
   zap-scan:
     name: "🛡️ OWASP ZAP Security Scan"
     runs-on: ubuntu-latest
-    # 本番環境またはテスト環境のURLに対して実行
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@28935578f7e7191638217316717a61f364003d15 # v2.0.1
+
+      - name: Install Dependencies & Setup Env
+        run: |
+          bun install
+          cp .env.example .env
+          # Use a mock secret for testing if needed
+          sed -i 's/JWT_SECRET=.*/JWT_SECRET=zap-scan-secret-key/' .env
+
+      - name: Start Server in Background
+        run: |
+          bun scripts/manage.ts dev &
+          # Wait for server to be ready
+          timeout 60s bash -c 'until curl -s http://localhost:3000/health; do sleep 2; done'
+
       - name: ZAP Scan
-        uses: zaproxy/action-baseline@v0.15.0
+        uses: zaproxy/action-baseline@903697920364e8333538c642823a17082f66a24 # v0.15.0
         with:
-          # Note: In a real scenario, stand up a local server before scanning
-          # Example: target: 'http://localhost:3000'
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'

@@ -107,4 +107,18 @@ Elysia OS は、独自の ICE (Intrusion Countermeasure Electronics) 層によ�
 
 ---
 
-© 2026 Elysia20220909 // ElysiaAI Main // Crafted with passion in a laundry factory.
+## 🏗️ 実装ディレクトリ対応表 (Implementation Mapping)
+
+| レイヤー | 主要コンポーネント | 実ファイル / ディレクトリ |
+| :--- | :--- | :--- |
+| **Experience Layer** | Web UI (Bun) | `packages/server/src/routes/` |
+| **Cognitive Layer** | AI Kernel (Python) | `python/kernel/`, `python/main.py` |
+| **Native Layer** | Security Bridge (Rust) | `packages/shield-agent/src/` |
+| **Memory Layer** | RAG / Vector DB | `python/recall.py`, `data/milvus/` |
+| **Governance** | Auth / RBAC / DB | `packages/server/src/lib/`, `prisma/` |
+| **Operations** | Management CLI | `scripts/manage.ts` |
+| **Automation** | CI/CD Workflows | `.github/workflows/` |
+
+---
+
+© 2026 Elysia20220909 // ElysiaAI Main // Crafted with passion.
