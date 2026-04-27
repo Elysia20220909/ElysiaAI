@@ -4,29 +4,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.3.0] - 2026-04-27
-### Added
-- **AES-256-GCM Encryption**: Upgraded from CBC to GCM for the server's `secureVault` and the Python kernel's `SecureEnclave`.
-- **Transparent Memory Encryption**: Integrated encryption for Milvus long-term memory content.
-- **Log Encryption**: Added encryption for `VoiceLog` and `ActionLog` in the database service.
-- **Python Security Parity**: Implemented `usr/lib/elysia/secure_enclave.py` with scrypt key derivation to match the server's security standards.
-- **Multi-User Foundation**: Updated Prisma schema with `User`, `ChatSession`, and `RefreshToken` models.
-- **Enhanced CI/CD**: Added Python test execution (pytest) to GitHub Actions (`resonance-integrity.yml` and `security-tests.yml`).
-- **Management CLI**: Added `test` support for Python and `check` command for project auditing in `manage.ts`.
+### 🛡️ Security & Privacy (Resonance Upgrade)
+- **Advanced Encryption (AES-256-GCM)**: 
+  - Upgraded the core encryption engine from CBC to **GCM (Galois/Counter Mode)** across the entire stack (Node.js & Python).
+  - This ensures not only confidentiality but also **Integrity** (detecting any tampering with the encrypted data).
+  - Synchronized Key Derivation Function (KDF) using `scrypt` with matching parameters (`N=16384, r=8, p=1`) in both JS and Python environments.
+- **Sovereign Memory Encryption**:
+  - Implemented transparent encryption for **Milvus Lite** memory content. Every "Engram" stored in the long-term memory is now encrypted at rest.
+  - Implemented encryption for **Voice Logs** and **Action Logs** in the database, ensuring that user interactions are never stored as plain text.
+- **Black ICE Protocol (Shield Agent)**:
+  - Enhanced the Rust-based **Shield Agent** with real-time prompt injection detection.
+  - Added semantic validation to block "Jailbreak" patterns (e.g., "ignore previous instructions").
+  - Made agent configuration dynamic via environment variables (`SHIELD_LOG_FILE`, `SHIELD_RULES_FILE`).
 
-### Changed
-- **README**: Corrected repository URLs and added detailed setup guides for Milvus Lite, VOICEVOX, and Windows environments.
-- **Deployment Guide**: Added sections for Tauri, Docker Compose, and Rust binary compilation.
+### 🏗️ Infrastructure & CI/CD
+- **Prisma Schema Synchronization**:
+  - Overhauled `schema.prisma` to fully support the planned multi-user architecture, adding models for `User`, `ChatSession`, `RefreshToken`, and `KnowledgeBase`.
+- **Cross-Environment CI/CD**:
+  - Enhanced GitHub Actions (`resonance-integrity.yml` and `security-tests.yml`) to include **Python Pytest** execution alongside Bun tests.
+  - Achieved higher security audit standards with the inclusion of `uv` and `safety` checks for Python dependencies.
+- **Management CLI (manage.ts)**:
+  - Added `test` command support for Python virtual environments.
+  - Integrated a `check` command for auditing configuration centralization and script surface bloat.
+
+### 📝 Documentation & UX
+- **Architecture Whitepaper**: Updated `ARCHITECTURE.md` with technical deep-dives into **AbyssRTOS** and **ICE layers**.
+- **Deployment & Builds**: Added comprehensive guides for **Tauri** desktop builds, **Docker Compose** orchestration, and **Rust** binary compilation.
+- **Roadmap**: Established clear milestones for Phase 2 (Resonance) and Phase 3 (Transcendence) in the README.
 
 ## [0.2.0] - 2026-04-20
 ### Added
-- **Shield Agent**: Initial implementation of the Rust-based threat detection system.
-- **Milvus Lite Integration**: Switched to Milvus Lite for local-first long-term memory.
-- **VOICEVOX Support**: Added support for high-quality Japanese voice synthesis.
+- **Shield Agent**: Initial implementation of the Rust-based threat detection system for monitoring log anomalies.
+- **Milvus Lite Integration**: Transitioned to Milvus Lite to support a "Local-First" sovereign memory architecture without external server dependencies.
+- **VOICEVOX Support**: Integrated local Japanese voice synthesis for expressive AI responses.
 
 ## [0.1.0] - 2026-04-10
 ### Added
-- **Initial Release**: Core ElysiaJS server and FastAPI AI kernel.
-- **AbyssRTOS Branding**: Initial architecture and concept release.
+- **Initial Release**: Core ElysiaJS server (Backend) and FastAPI AI kernel (Intelligence Hub).
+- **AbyssRTOS Concept**: Initial branding and architectural philosophy release.
 
 ---
 © 2026 Elysia20220909 // ElysiaAI Main

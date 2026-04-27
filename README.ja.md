@@ -5,6 +5,7 @@
 [![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
 [![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![Changelog](https://img.shields.io/badge/Changelog-Ja-blue?style=for-the-badge)](CHANGELOG.ja.md)
 
 ---
 
