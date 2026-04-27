@@ -10,41 +10,34 @@
 ### ステップ1: プロジェクトのクローン
 
 ```bash
-git clone https://github.com/yourusername/elysia-ai.git
-cd elysia-ai
+git clone https://github.com/Elysia20220909/ElysiaAI.git
+cd ElysiaAI
 ```
 
-### ステップ2: 依存関係のインストール
+### ステップ2: 環境構築 (統合CLI)
+
+ElysiaAI は `manage.ts` を使用してセットアップを一括管理します。
 
 ```bash
-bun install
+# 依存関係のインストールと .env の作成
+bun scripts/manage.ts setup
+
+# Python 仮想環境 (.venv) の構築
+bun scripts/manage.ts setup-python
 ```
 
-### ステップ3: 環境変数の設定
+### ステップ3: サーバーの起動
 
 ```bash
-cp .env.example .env
-```
-
-`.env` ファイルを編集:
-
-```env
-PORT=3000
-JWT_SECRET=your-secret-key-here
-JWT_REFRESH_SECRET=your-refresh-secret-here
-```
-
-### ステップ4: サーバーの起動
-
-```bash
-bun run dev
+# ローカルスタック（Server & Kernel）を一括起動
+bun scripts/manage.ts dev
 ```
 
 サーバーが起動したら、ブラウザで以下にアクセス:
 
 - Web UI: http://localhost:3000
-- Swagger API: http://localhost:3000/swagger
-- ヘルスチェック: http://localhost:3000/health
+- API Docs: http://localhost:3000/swagger
+- 🧪 星空の観測: `bun scripts/manage.ts stars`
 
 ## 📝 基本的な使い方
 

@@ -2,29 +2,31 @@ import { Elysia, t } from "elysia";
 import jwt from "jsonwebtoken";
 import { CONFIG, jsonError } from "../lib/constants";
 import { logger } from "../lib/logger";
+import { authenticateUser, createUser } from "../lib/security";
 
 export const authRoutes = new Elysia({ prefix: "/auth" })
 	// Auth: token issuance
 	.post(
 		"/token",
-		async ({ body }: { body: { username: string; password: unknown } }) => {
+		async ({ body }: { body: { username: string; password: string } }) => {
 			const { username, password } = body;
-			if (
-				username !== CONFIG.AUTH_USERNAME ||
-				password !== CONFIG.AUTH_PASSWORD
-			)
-				return jsonError(401, "Invalid credentials");
+			
+			const authResult = await authenticateUser(username, password);
 
-			const userId = username;
+			if (!authResult.success || !authResult.user) {
+				return jsonError(401, authResult.error || "Invalid credentials");
+			}
+
+			const user = authResult.user as any;
 
 			try {
 				const accessToken = jwt.sign(
-					{ userId, username, role: "user" },
+					{ userId: user.id, username: user.username, role: user.role },
 					CONFIG.JWT_SECRET,
 					{ expiresIn: "15m" },
 				);
 				const refreshToken = jwt.sign(
-					{ userId, username, role: "user" },
+					{ userId: user.id, username: user.username, role: user.role },
 					CONFIG.JWT_REFRESH_SECRET,
 					{ expiresIn: "7d" },
 				);
@@ -48,6 +50,26 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			body: t.Object({
 				username: t.String({ minLength: 1, maxLength: 128 }),
 				password: t.String({ minLength: 1, maxLength: 128 }),
+			}),
+		},
+	)
+	// Auth: register new user
+	.post(
+		"/register",
+		async ({ body }: { body: { username: string; password: string } }) => {
+			const { username, password } = body;
+			try {
+				const newUser = await createUser(username, password);
+				return { message: "User registered successfully", userId: newUser.id };
+			} catch (error) {
+				logger.error("User registration failed:", error as Error);
+				return jsonError(400, "User already exists or registration failed");
+			}
+		},
+		{
+			body: t.Object({
+				username: t.String({ minLength: 3, maxLength: 128 }),
+				password: t.String({ minLength: 8, maxLength: 128 }),
 			}),
 		},
 	)

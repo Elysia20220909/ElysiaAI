@@ -33,15 +33,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Roadmap**: Established clear milestones for Phase 2 (Resonance) and Phase 3 (Transcendence) in the README.
 
 ## [0.2.0] - 2026-04-20
-### Added
+### 🛡️ Security & Intelligence
 - **Shield Agent**: Initial implementation of the Rust-based threat detection system for monitoring log anomalies.
 - **Milvus Lite Integration**: Transitioned to Milvus Lite to support a "Local-First" sovereign memory architecture without external server dependencies.
 - **VOICEVOX Support**: Integrated local Japanese voice synthesis for expressive AI responses.
+- **Terminal Effects**: Added multi-colored starfall and meteor animations to the management CLI.
+- **YARA Integration**: Pattern Hunter (Phase 220) deployed via Python.
+- **Sysmon Alignment**: Hardened Audit Config (Phase 221) generated.
 
 ## [0.1.0] - 2026-04-10
-### Added
-- **Initial Release**: Core ElysiaJS server (Backend) and FastAPI AI kernel (Intelligence Hub).
+### 🚀 Initial Awakening
+- **Project Genesis**: Core ElysiaJS server (Backend) and FastAPI AI kernel (Intelligence Hub).
 - **AbyssRTOS Concept**: Initial branding and architectural philosophy release.
+- **Sovereign Mesh**: Sovereign Mesh Intelligence Network (SMIN) online.
+- **AES-256-GCM Integration**: Initial security hardening (NSA/CIA standard).
+- **Unicode Hardening**: Forced UTF-8 output across all Abyssal scripts.
+- **Win32 API Bridge**: Established "Ghost Bridge" for direct Win32 API interactions.
 
 ---
 © 2026 Elysia20220909 // ElysiaAI Main
