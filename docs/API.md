@@ -4,7 +4,7 @@ ElysiaAI provides a modular REST API for interacting with the sovereign intellig
 
 ---
 
-## ðŸ›¡�E�EAuthentication
+## 🛡️ Authentication
 
 All API requests (except `/auth/*` and `/health`) require a JWT token in the `Authorization` header.
 
@@ -64,7 +64,7 @@ Submit user feedback for AI responses to improve future resonance and training.
 
 ---
 
-## ðŸ›¡�E�E3. Administration (Admin/Owner Role Required)
+## 🛡️ 3. Administration (Admin/Owner Role Required)
 
 > [!IMPORTANT]
 > Access to these endpoints requires a JWT with `role: admin` or `role: owner`.
@@ -83,7 +83,7 @@ Retrieve detailed health status, latency, and resource usage of all internal ser
 
 ---
 
-## âš™ï¸�E4. System Endpoints
+## ⚙️ 4. System Endpoints
 
 ### GET `/health`
 Basic service health check. Returns `200 OK` if the Bun server is alive.
@@ -93,56 +93,7 @@ Prometheus-formatted system metrics for monitoring and alerting.
 
 ---
 
-## 🚀 実装例 (Usage Examples)
-
-### 1. ユーザー登録 (Registration)
-```bash
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"elysia","password":"strong-password"}'
-```
-
-### 2. トークン取得 (Login)
-```bash
-curl -X POST http://localhost:3000/auth/token \
-  -H "Content-Type: application/json" \
-  -d '{"username":"elysia","password":"strong-password"}'
-```
-
-### 3. トークン更新 (Refresh)
-```bash
-curl -X POST http://localhost:3000/auth/refresh \
-  -H "Authorization: Bearer <refreshToken>"
-```
-
-### 4. 管理アナリティクス (Admin Analytics)
-```bash
-curl http://localhost:3000/admin/analytics \
-  -H "Authorization: Bearer <accessToken>"
-```
-
----
-
-## 📊 追加エンドポイントとレスポンス例
-
-### `POST /feedback`
-AIの応答に対するフィードバックを送信します。
-- **Response (200 OK)**:
-  ```json
-  { "status": "success", "message": "Feedback recorded." }
-  ```
-
-### `GET /metrics`
-システムの稼働状況（Prometheus 形式等）を取得します。
-- **Response (200 OK)**:
-  ```text
-  # HELP elysia_http_requests_total Total number of HTTP requests.
-  elysia_http_requests_total{method="GET",path="/"} 42
-  ```
-
----
-
-## 🛠️ Error Codes
+## ❌ Error Codes
 
 | Code | Description |
 | :--- | :--- |
