@@ -1,19 +1,18 @@
-# Elysia AI デプロイメントガイド
-
+# Elysia AI チE�EロイメントガイチE
 ## 目次
 
-1. [システム要件](#システム要件)
-2. [環境変数設定](#環境変数設定)
-3. [データベースセットアップ](#データベースセットアップ)
-4. [Redisセットアップ](#redisセットアップ)
-5. [アプリケーションデプロイ](#アプリケーションデプロイ)
-6. [Dockerデプロイ](#dockerデプロイ)
+1. [シスチE��要件](#シスチE��要件)
+2. [環墁E��数設定](#環墁E��数設宁E
+3. [チE�Eタベ�EスセチE��アチE�E](#チE�Eタベ�EスセチE��アチE�E)
+4. [RedisセチE��アチE�E](#redisセチE��アチE�E)
+5. [アプリケーションチE�Eロイ](#アプリケーションチE�Eロイ)
+6. [DockerチE�Eロイ](#dockerチE�Eロイ)
 7. [監視と運用](#監視と運用)
-8. [トラブルシューティング](#トラブルシューティング)
+8. [トラブルシューチE��ング](#トラブルシューチE��ング)
 
 ---
 
-## システム要件
+## シスチE��要件
 
 ### 最小要件
 
@@ -24,36 +23,32 @@
 
 ### 推奨要件
 
-- **CPU**: 4コア以上
-- **RAM**: 8GB以上
-- **ストレージ**: 50GB SSD
+- **CPU**: 4コア以丁E- **RAM**: 8GB以丁E- **ストレージ**: 50GB SSD
 - **OS**: Ubuntu 22.04 LTS
 
 ### 依存ソフトウェア
 
 - **Bun**: 1.0.0+ (ランタイム)
-- **PostgreSQL**: 14+ (データベース)
-- **Redis**: 7.0+ (キャッシュ/セッション)
-- **Node.js**: 18+ (オプション - 開発環境)
-- **Docker**: 24.0+ (コンテナ利用時)
-- **Nginx**: 1.20+ (リバースプロキシ)
+- **PostgreSQL**: 14+ (チE�Eタベ�Eス)
+- **Redis**: 7.0+ (キャチE��ュ/セチE��ョン)
+- **Node.js**: 18+ (オプション - 開発環墁E
+- **Docker**: 24.0+ (コンチE��利用晁E
+- **Nginx**: 1.20+ (リバ�Eスプロキシ)
 
 ---
 
-## 環境変数設定
-
-### 必須環境変数
+## 環墁E��数設宁E
+### 忁E��環墁E��数
 
 ```bash
-# サーバー設定
-PORT=3000
+# サーバ�E設宁EPORT=3000
 NODE_ENV=production
 
 # JWT認証
 JWT_SECRET=your-production-jwt-secret-minimum-32-characters
 JWT_REFRESH_SECRET=your-production-refresh-secret-minimum-32-characters
 
-# データベース
+# チE�Eタベ�Eス
 DATABASE_URL=postgresql://user:password@localhost:5432/elysia_ai
 DB_HOST=localhost
 DB_PORT=5432
@@ -72,15 +67,14 @@ MODEL_NAME=llama3.2
 # CORS
 ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 
-# レート制限
-RATE_LIMIT_RPM=60
+# レート制陁ERATE_LIMIT_RPM=60
 
-# 認証情報
+# 認証惁E��
 AUTH_USERNAME=admin
 AUTH_PASSWORD=secure_admin_password
 ```
 
-### オプション環境変数
+### オプション環墁E��数
 
 ```bash
 # メール通知
@@ -93,57 +87,52 @@ SMTP_FROM=noreply@yourdomain.com
 # Webhook
 WEBHOOK_SECRET=webhook-secret-key
 
-# ファイルアップロード
-MAX_FILE_SIZE=10485760  # 10MB
+# ファイルアチE�EローチEMAX_FILE_SIZE=10485760  # 10MB
 UPLOAD_DIR=./uploads
 
-# ログ設定
-LOG_LEVEL=info
+# ログ設宁ELOG_LEVEL=info
 LOG_DIR=./logs
 
-# バックアップ
+# バックアチE�E
 BACKUP_DIR=./backups
 BACKUP_RETENTION_DAYS=30
 
-# 監視
-HEALTH_CHECK_INTERVAL=60000  # 60秒
-```
+# 監要EHEALTH_CHECK_INTERVAL=60000  # 60私E```
 
-### .env ファイル作成
+### .env ファイル作�E
 
 ```bash
-# 本番環境用 .env ファイル
+# 本番環墁E�� .env ファイル
 cp .env.example .env
-nano .env  # または vim .env
+nano .env  # また�E vim .env
 ```
 
-### 環境変数検証
+### 環墁E��数検証
 
 ```bash
-# 起動前に環境変数を検証
+# 起動前に環墁E��数を検証
 bun run src/lib/env-validator.ts
 ```
 
 ---
 
-## データベースセットアップ
+## チE�Eタベ�EスセチE��アチE�E
 
-### PostgreSQL インストール (Ubuntu)
+### PostgreSQL インスト�Eル (Ubuntu)
 
 ```bash
-# PostgreSQL 14 インストール
+# PostgreSQL 14 インスト�Eル
 sudo apt update
 sudo apt install postgresql-14 postgresql-contrib
 
-# サービス開始
-sudo systemctl start postgresql
+# サービス開姁Esudo systemctl start postgresql
 sudo systemctl enable postgresql
 ```
 
-### データベース作成
+### チE�Eタベ�Eス作�E
 
 ```bash
-# PostgreSQL ユーザー作成
+# PostgreSQL ユーザー作�E
 sudo -u postgres psql
 postgres=# CREATE USER elysia_user WITH PASSWORD 'secure_password_here';
 postgres=# CREATE DATABASE elysia_ai OWNER elysia_user;
@@ -151,17 +140,16 @@ postgres=# GRANT ALL PRIVILEGES ON DATABASE elysia_ai TO elysia_user;
 postgres=# \q
 ```
 
-### スキーマ初期化
+### スキーマ�E期化
 
 ```bash
-# マイグレーション実行
-psql -U elysia_user -d elysia_ai -f sql/schema.sql
+# マイグレーション実衁Epsql -U elysia_user -d elysia_ai -f sql/schema.sql
 ```
 
-### テーブル一覧
+### チE�Eブル一覧
 
 ```sql
--- フィードバック
+-- フィードバチE��
 CREATE TABLE feedback (
     id SERIAL PRIMARY KEY,
     user_id TEXT,
@@ -171,7 +159,7 @@ CREATE TABLE feedback (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- ナレッジベース
+-- ナレチE��ベ�Eス
 CREATE TABLE knowledge (
     id SERIAL PRIMARY KEY,
     user_id TEXT,
@@ -189,7 +177,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- セッション
+-- セチE��ョン
 CREATE TABLE sessions (
     id TEXT PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -222,14 +210,14 @@ CREATE TABLE audit_logs (
 );
 ```
 
-### インデックス作成
+### インチE��クス作�E
 
 ```bash
-# パフォーマンス最適化のためインデックスを作成
+# パフォーマンス最適化�EためインチE��クスを作�E
 bun run scripts/create-indexes.ts
 ```
 
-または手動で:
+また�E手動で:
 
 ```sql
 -- Feedback indexes
@@ -250,10 +238,9 @@ CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp DESC);
 CREATE INDEX idx_audit_composite ON audit_logs(user_id, action, timestamp DESC);
 ```
 
-### バックアップ設定
-
+### バックアチE�E設宁E
 ```bash
-# 日次バックアップスクリプト
+# 日次バックアチE�Eスクリプト
 #!/bin/bash
 BACKUP_DIR=/var/backups/elysia
 DATE=$(date +%Y%m%d_%H%M%S)
@@ -261,132 +248,116 @@ DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p $BACKUP_DIR
 pg_dump -U elysia_user elysia_ai | gzip > $BACKUP_DIR/elysia_ai_$DATE.sql.gz
 
-# 30日以上前のバックアップを削除
+# 30日以上前のバックアチE�Eを削除
 find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
 ```
 
-cron設定:
+cron設宁E
 
 ```bash
 crontab -e
-# 毎日午前3時にバックアップ
+# 毎日午前3時にバックアチE�E
 0 3 * * * /path/to/backup-script.sh
 ```
 
 ---
 
-## Redisセットアップ
+## RedisセチE��アチE�E
 
-### Redis インストール (Ubuntu)
+### Redis インスト�Eル (Ubuntu)
 
 ```bash
-# Redis 7.0 インストール
+# Redis 7.0 インスト�Eル
 sudo apt install redis-server
 
-# 設定ファイル編集
-sudo nano /etc/redis/redis.conf
+# 設定ファイル編雁Esudo nano /etc/redis/redis.conf
 ```
 
-### Redis設定
-
+### Redis設宁E
 ```conf
 # /etc/redis/redis.conf
 
-# パスワード設定
-requirepass your_redis_password_here
+# パスワード設宁Erequirepass your_redis_password_here
 
-# 永続化設定
-appendonly yes
+# 永続化設宁Eappendonly yes
 appendfsync everysec
 
-# メモリ制限
-maxmemory 2gb
+# メモリ制陁Emaxmemory 2gb
 maxmemory-policy allkeys-lru
 
 # ネットワーク
 bind 127.0.0.1
 port 6379
 
-# セキュリティ
+# セキュリチE��
 protected-mode yes
 ```
 
-### Redis起動
-
+### Redis起勁E
 ```bash
 sudo systemctl restart redis-server
 sudo systemctl enable redis-server
 
-# 接続テスト
-redis-cli -a your_redis_password_here ping
+# 接続テスチEredis-cli -a your_redis_password_here ping
 # => PONG
 ```
 
 ### Redisクラスタ (オプション)
 
-本番環境では高可用性のためRedisクラスタを推奨:
+本番環墁E��は高可用性のためRedisクラスタを推奨:
 
 ```bash
-# Redis Sentinel または Redis Cluster
+# Redis Sentinel また�E Redis Cluster
 # 詳細は Redis 公式ドキュメント参照
 ```
 
 ---
 
-## アプリケーションデプロイ
+## アプリケーションチE�Eロイ
 
-### 1. ソースコード取得
-
+### 1. ソースコード取征E
 ```bash
 git clone https://github.com/yourusername/elysia-ai.git
 cd elysia-ai
 ```
 
-### 2. 依存関係インストール
+### 2. 依存関係インスト�Eル
 
 ```bash
-# Bun インストール
+# Bun インスト�Eル
 curl -fsSL https://bun.sh/install | bash
 
-# パッケージインストール
+# パッケージインスト�Eル
 bun install
 ```
 
-### 3. ビルド
-
+### 3. ビルチE
 ```bash
-# 本番用ビルド
-bun run build
+# 本番用ビルチEbun run build
 
-# 出力確認
-ls -la dist/
+# 出力確誁Els -la dist/
 ```
 
-### 4. 環境変数設定
-
+### 4. 環墁E��数設宁E
 ```bash
 cp .env.example .env.production
 nano .env.production
-# 上記の環境変数を設定
-```
+# 上記�E環墁E��数を設宁E```
 
-### 5. データベース初期化
-
+### 5. チE�Eタベ�Eス初期匁E
 ```bash
-# スキーマ作成
+# スキーマ作�E
 psql -U elysia_user -d elysia_ai -f sql/schema.sql
 
-# インデックス作成
+# インチE��クス作�E
 bun run scripts/create-indexes.ts
 ```
 
-### 6. アプリケーション起動
-
+### 6. アプリケーション起勁E
 ```bash
-# フォアグラウンド実行
-NODE_ENV=production bun run src/index.ts
+# フォアグラウンド実衁ENODE_ENV=production bun run src/index.ts
 
-# バックグラウンド実行 (PM2使用)
+# バックグラウンド実衁E(PM2使用)
 npm install -g pm2
 pm2 start src/index.ts --interpreter bun --name elysia-ai
 pm2 save
@@ -418,7 +389,7 @@ module.exports = {
 };
 ```
 
-起動:
+起勁E
 
 ```bash
 pm2 start ecosystem.config.js
@@ -426,7 +397,7 @@ pm2 start ecosystem.config.js
 
 ---
 
-## Dockerデプロイ
+## DockerチE�Eロイ
 
 ### 1. Docker Compose
 
@@ -481,58 +452,43 @@ services:
 
 ---
 
-## 🏗️ Tauri デスクトップアプリのビルド
-
-ElysiaAI のデスクトップクライアントをビルドする手順です。
-
+## 🏗�E�ETauri チE��クトップアプリのビルチE
+ElysiaAI のチE��クトップクライアントをビルドする手頁E��す、E
 ### 1. 準備
-- **Rust**: [公式の Rust インストール手順](https://www.rust-lang.org/tools/install)に従ってください。
-- **WebView2**: Windows の場合は WebView2 ランタイムが必要です。
-
-### 2. ビルド実行
-```bash
-# クライアントのビルド (src-tauri 下で実行)
+- **Rust**: [公式�E Rust インスト�Eル手頁E(https://www.rust-lang.org/tools/install)に従ってください、E- **WebView2**: Windows の場合�E WebView2 ランタイムが忁E��です、E
+### 2. ビルド実衁E```bash
+# クライアント�EビルチE(src-tauri 下で実衁E
 cd src-tauri
 cargo build --release
 
-# または Bun を使用
+# また�E Bun を使用
 bun run build:desktop
 ```
-ビルドされたバイナリは `src-tauri/target/release/` に生成されます。
-
+ビルドされたバイナリは `src-tauri/target/release/` に生�Eされます、E
 ---
 
-## 🐳 Docker Compose による一括起動
-
-Docker Compose を使用して、すべての依存ツール（Milvus, VOICEVOX等）を含むスタックを一括で起動する方法です。
-
+## 🐳 Docker Compose による一括起勁E
+Docker Compose を使用して、すべての依存ツール�E�Eilvus, VOICEVOX等）を含むスタチE��を一括で起動する方法です、E
 ```bash
-# プロジェクトルートで実行
-docker-compose up -d
+# プロジェクトルートで実衁Edocker-compose up -d
 ```
 
-`docker-compose.yml` には以下のサービスが含まれています：
-- **Elysia Server**: Bun/ElysiaJS バックエンド
-- **AI Kernel**: FastAPI/Python カーネル
-- **Milvus**: ベクトルデータベース
-- **Redis**: レート制限・キャッシュ
-- **VOICEVOX**: 音声合成エンジン（オプション）
-
+`docker-compose.yml` には以下�Eサービスが含まれてぁE��す！E- **Elysia Server**: Bun/ElysiaJS バックエンチE- **AI Kernel**: FastAPI/Python カーネル
+- **Milvus**: ベクトルチE�Eタベ�Eス
+- **Redis**: レート制限�EキャチE��ュ
+- **VOICEVOX**: 音声合�Eエンジン�E�オプション�E�E
 ---
 
 ## 🦀 Rust (Shield Agent) のコンパイル
 
-セキュリティ防壁として機能する Shield Agent のビルド手順です。
-
+セキュリチE��防壁として機�Eする Shield Agent のビルド手頁E��す、E
 ```bash
 cd packages/shield
 cargo build --release
 ```
-生成されたバイナリを `bin/` ディレクトリに配置することで、OSが起動時に自動的にロードします。
-```
+生�EされたバイナリめE`bin/` チE��レクトリに配置することで、OSが起動時に自動的にロードします、E```
 
-### 2. Nginx設定
-
+### 2. Nginx設宁E
 ```nginx
 # nginx.conf
 upstream elysia_backend {
@@ -583,37 +539,31 @@ server {
 }
 ```
 
-### 3. デプロイ実行
-
+### 3. チE�Eロイ実衁E
 ```bash
-# ビルド&起動
-docker-compose up -d
+# ビルチE起勁Edocker-compose up -d
 
-# ログ確認
-docker-compose logs -f app
+# ログ確誁Edocker-compose logs -f app
 
 # 停止
 docker-compose down
 
-# 再起動
-docker-compose restart app
+# 再起勁Edocker-compose restart app
 ```
 
 ---
 
 ## 監視と運用
 
-### ヘルスチェック
+### ヘルスチェチE��
 
 ```bash
-# アプリケーションヘルスチェック
+# アプリケーションヘルスチェチE��
 curl http://localhost:3000/health
 
-# データベース接続確認
-curl http://localhost:3000/health/db
+# チE�Eタベ�Eス接続確誁Ecurl http://localhost:3000/health/db
 
-# Redis接続確認
-curl http://localhost:3000/health/redis
+# Redis接続確誁Ecurl http://localhost:3000/health/redis
 ```
 
 ### メトリクス収集
@@ -623,11 +573,9 @@ curl http://localhost:3000/health/redis
 curl http://localhost:3000/metrics
 ```
 
-### ログ管理
-
+### ログ管琁E
 ```bash
-# ログローテーション設定
-# /etc/logrotate.d/elysia-ai
+# ログローチE�Eション設宁E# /etc/logrotate.d/elysia-ai
 /var/log/elysia-ai/*.log {
     daily
     rotate 30
@@ -644,117 +592,78 @@ curl http://localhost:3000/metrics
 
 ### 監視ツール推奨
 
-- **PM2**: プロセス監視
-- **Prometheus + Grafana**: メトリクス可視化
-- **ELK Stack**: ログ集約・分析
-- **Uptime Kuma**: アップタイム監視
-
+- **PM2**: プロセス監要E- **Prometheus + Grafana**: メトリクス可視化
+- **ELK Stack**: ログ雁E��E�E刁E��
+- **Uptime Kuma**: アチE�Eタイム監要E
 ---
 
-## トラブルシューティング
+## トラブルシューチE��ング
 
-### アプリケーションが起動しない
-
+### アプリケーションが起動しなぁE
 ```bash
-# ログ確認
-pm2 logs elysia-ai
+# ログ確誁Epm2 logs elysia-ai
 
-# 環境変数確認
-pm2 env 0
+# 環墁E��数確誁Epm2 env 0
 
-# ポート使用状況確認
-sudo netstat -tulpn | grep 3000
+# ポ�Eト使用状況確誁Esudo netstat -tulpn | grep 3000
 ```
 
-### データベース接続エラー
+### チE�Eタベ�Eス接続エラー
 
 ```bash
-# PostgreSQL起動確認
-sudo systemctl status postgresql
+# PostgreSQL起動確誁Esudo systemctl status postgresql
 
-# 接続テスト
-psql -U elysia_user -d elysia_ai -h localhost
+# 接続テスチEpsql -U elysia_user -d elysia_ai -h localhost
 
-# 認証設定確認
-sudo nano /etc/postgresql/14/main/pg_hba.conf
+# 認証設定確誁Esudo nano /etc/postgresql/14/main/pg_hba.conf
 ```
 
 ### Redis接続エラー
 
 ```bash
-# Redis起動確認
-sudo systemctl status redis-server
+# Redis起動確誁Esudo systemctl status redis-server
 
-# 接続テスト
-redis-cli -a your_password ping
+# 接続テスチEredis-cli -a your_password ping
 
-# ログ確認
-sudo tail -f /var/log/redis/redis-server.log
+# ログ確誁Esudo tail -f /var/log/redis/redis-server.log
 ```
 
-### WebSocket接続失敗
-
-1. Nginx設定を確認
-2. ファイアウォール設定を確認
-3. プロキシタイムアウト設定を確認
-
-### パフォーマンス問題
-
+### WebSocket接続失敁E
+1. Nginx設定を確誁E2. ファイアウォール設定を確誁E3. プロキシタイムアウト設定を確誁E
+### パフォーマンス問顁E
 ```bash
-# クエリ統計確認
-curl http://localhost:3000/admin/query-stats
+# クエリ統計確誁Ecurl http://localhost:3000/admin/query-stats
 
-# 遅いクエリ確認
-curl http://localhost:3000/admin/slow-queries
+# 遁E��クエリ確誁Ecurl http://localhost:3000/admin/slow-queries
 
-# Redis統計確認
-redis-cli INFO stats
+# Redis統計確誁Eredis-cli INFO stats
 ```
 
 ---
 
-## セキュリティチェックリスト
-
-- [ ] JWT_SECRET を強力なものに変更
-- [ ] データベースパスワードを強力なものに変更
-- [ ] Redisパスワードを設定
-- [ ] HTTPS を有効化 (Let's Encrypt推奨)
-- [ ] ファイアウォールを設定 (UFW, iptables)
+## セキュリチE��チェチE��リスチE
+- [ ] JWT_SECRET を強力なも�Eに変更
+- [ ] チE�Eタベ�Eスパスワードを強力なも�Eに変更
+- [ ] Redisパスワードを設宁E- [ ] HTTPS を有効匁E(Let's Encrypt推奨)
+- [ ] ファイアウォールを設宁E(UFW, iptables)
 - [ ] SSH鍵認証を使用
-- [ ] 不要なポートを閉じる
-- [ ] セキュリティアップデートを定期的に実行
-- [ ] 監査ログを定期的にレビュー
-- [ ] バックアップを定期的にテスト
+- [ ] 不要なポ�Eトを閉じめE- [ ] セキュリチE��アチE�EチE�Eトを定期皁E��実衁E- [ ] 監査ログを定期皁E��レビュー
+- [ ] バックアチE�Eを定期皁E��チE��チE
+---
+
+## 本番環墁E��ェチE��リスチE
+- [ ] 環墁E��数をすべて設宁E- [ ] チE�Eタベ�Eスを�E期化
+- [ ] Redisを設宁E- [ ] インチE��クスを作�E
+- [ ] Nginx/リバ�Eスプロキシを設宁E- [ ] SSL証明書をインスト�Eル
+- [ ] ファイアウォールを設宁E- [ ] PM2/Dockerで起勁E- [ ] ヘルスチェチE��を確誁E- [ ] ログローチE�Eションを設宁E- [ ] バックアチE�Eを設宁E- [ ] 監視ツールを設宁E- [ ] ドキュメントを更新
 
 ---
 
-## 本番環境チェックリスト
+## サポ�EチE
+問題が発生した場吁E
 
-- [ ] 環境変数をすべて設定
-- [ ] データベースを初期化
-- [ ] Redisを設定
-- [ ] インデックスを作成
-- [ ] Nginx/リバースプロキシを設定
-- [ ] SSL証明書をインストール
-- [ ] ファイアウォールを設定
-- [ ] PM2/Dockerで起動
-- [ ] ヘルスチェックを確認
-- [ ] ログローテーションを設定
-- [ ] バックアップを設定
-- [ ] 監視ツールを設定
-- [ ] ドキュメントを更新
-
+1. ログを確誁E(`/logs` また�E `pm2 logs`)
+2. ヘルスチェチE��を実衁E3. GitHub Issuesで報呁E4. Discordコミュニティで質啁E
 ---
 
-## サポート
-
-問題が発生した場合:
-
-1. ログを確認 (`/logs` または `pm2 logs`)
-2. ヘルスチェックを実行
-3. GitHub Issuesで報告
-4. Discordコミュニティで質問
-
----
-
-**デプロイメント完了!** 🎉
+**チE�Eロイメント完亁E** 🎉

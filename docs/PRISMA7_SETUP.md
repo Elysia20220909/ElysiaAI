@@ -1,53 +1,41 @@
-# Prisma 7 セットアップガイド - Elysia AI
+# Prisma 7 セチE��アチE�EガイチE- Elysia AI
 
-## 概要
-
-このガイドは、Elysia AI プロジェクトで Prisma 7 を正しく設定し、データベースを初期化する方法を説明します。
-
+## 概要E
+こ�Eガイド�E、Elysia AI プロジェクトで Prisma 7 を正しく設定し、データベ�Eスを�E期化する方法を説明します、E
 ## 前提条件
 
 - Bun >= 1.0
 - Node.js >= 18 (オプション)
 - SQLite 3
 
-## セットアップ手順
-
-### 1. 環境変数の設定
-
-`.env` ファイルに `DATABASE_URL` を設定します：
-
+## セチE��アチE�E手頁E
+### 1. 環墁E��数の設宁E
+`.env` ファイルに `DATABASE_URL` を設定します！E
 ```env
 DATABASE_URL="file:./prisma/dev.db"
 ```
 
-### 2. Prisma クライアント生成
-
+### 2. Prisma クライアント生戁E
 ```bash
 bunx prisma generate
 ```
 
-このコマンドで `@prisma/client` が自動生成されます。
+こ�Eコマンドで `@prisma/client` が�E動生成されます、E
+### 3. チE�Eタベ�Eスマイグレーション
 
-### 3. データベースマイグレーション
-
-#### オプション A: Prisma Migrate Dev（推奨）
-
+#### オプション A: Prisma Migrate Dev�E�推奨�E�E
 ```bash
 bunx prisma migrate dev --name init
 ```
 
-**注意**: Bun で実行する場合、`prisma.config.js` が正しく読み込まれることを確認してください。
-
-#### オプション B: Node.js で実行
-
+**注愁E*: Bun で実行する場合、`prisma.config.js` が正しく読み込まれることを確認してください、E
+#### オプション B: Node.js で実衁E
 ```bash
 npx prisma migrate dev --name init
 ```
 
-### 4. Prisma Studio（オプション）
-
-ブラウザで データベースを管理：
-
+### 4. Prisma Studio�E�オプション�E�E
+ブラウザで チE�Eタベ�Eスを管琁E��E
 ```bash
 bunx prisma studio
 ```
@@ -56,10 +44,9 @@ bunx prisma studio
 
 ### Schema から Datasource URL の削除
 
-**Prisma 7 では、`schema.prisma` に datasource URL を記述できません。**
+**Prisma 7 では、`schema.prisma` に datasource URL を記述できません、E*
 
-❌ 間違い：
-
+❁E間違ぁE��E
 ```prisma
 datasource db {
   provider = "sqlite"
@@ -67,9 +54,8 @@ datasource db {
 }
 ```
 
-✅ 正しい方法：
-
-**方法 1: prisma.config.js で設定**
+✁E正しい方法！E
+**方況E1: prisma.config.js で設宁E*
 
 ```javascript
 // prisma/prisma.config.js
@@ -84,7 +70,7 @@ module.exports = {
 };
 ```
 
-**方法 2: PrismaClient コンストラクタで設定**
+**方況E2: PrismaClient コンストラクタで設宁E*
 
 ```typescript
 import { PrismaClient } from "@prisma/client";
@@ -94,17 +80,14 @@ const prisma = new PrismaClient({
 });
 ```
 
-## トラブルシューティング
+## トラブルシューチE��ング
 
 ### エラー: "The datasource property is required in your Prisma config file"
 
-**原因**: `prisma.config.js` が見つからないか、`datasources` が定義されていない
+**原因**: `prisma.config.js` が見つからなぁE��、`datasources` が定義されてぁE��ぁE
+**解決筁E*:
 
-**解決策**:
-
-1. `prisma/prisma.config.js` が存在することを確認
-2. ファイルに以下の内容があることを確認：
-
+1. `prisma/prisma.config.js` が存在することを確誁E2. ファイルに以下�E冁E��があることを確認！E
 ```javascript
 require("dotenv/config");
 
@@ -119,53 +102,47 @@ module.exports = {
 
 ### エラー: Prisma database not configured
 
-**原因**: PrismaClient 初期化時に `datasourceUrl` が設定されていない
-
-**解決策**: `src/lib/database.ts` を確認：
-
+**原因**: PrismaClient 初期化時に `datasourceUrl` が設定されてぁE��ぁE
+**解決筁E*: `src/lib/database.ts` を確認！E
 ```typescript
 const prisma = new PrismaClient({
   datasourceUrl: process.env.DATABASE_URL || "file:./prisma/dev.db",
 });
 ```
 
-### ポート 3000 が既に使用中
+### ポ�EチE3000 が既に使用中
 
-**解決策**:
+**解決筁E*:
 
 ```powershell
-# Windows: Bun プロセスを全て停止
+# Windows: Bun プロセスを�Eて停止
 Get-Process bun | Stop-Process -Force
 
 # Unix/Linux:
 killall bun
 ```
 
-## マイグレーション作成
+## マイグレーション作�E
 
-スキーマを変更した後、新しいマイグレーションを作成：
-
+スキーマを変更した後、新しいマイグレーションを作�E�E�E
 ```bash
 bunx prisma migrate dev --name <migration_name>
 ```
 
-例：
-
+例！E
 ```bash
 bunx prisma migrate dev --name add_voice_logs
 ```
 
-## データベースリセット（開発用）
-
-⚠️ **本番環境では使用しないでください**
+## チE�Eタベ�EスリセチE���E�開発用�E�E
+⚠�E�E**本番環墁E��は使用しなぁE��ください**
 
 ```bash
 bunx prisma migrate reset
 ```
 
-このコマンドはすべてのデータを削除し、マイグレーション履歴を初期化します。
-
-## プロダクション環境でのデプロイ
+こ�Eコマンド�EすべてのチE�Eタを削除し、�Eイグレーション履歴を�E期化します、E
+## プロダクション環墁E��のチE�Eロイ
 
 ### マイグレーション適用
 
@@ -173,21 +150,18 @@ bunx prisma migrate reset
 bunx prisma migrate deploy
 ```
 
-または Node.js で：
-
+また�E Node.js で�E�E
 ```bash
 npx prisma migrate deploy
 ```
 
-### 本番環境での設定
-
-`.env.production` で `DATABASE_URL` を設定：
-
+### 本番環墁E��の設宁E
+`.env.production` で `DATABASE_URL` を設定！E
 ```env
 DATABASE_URL="postgresql://user:password@host:port/dbname"
 ```
 
-## 参考資料
+## 参老E��E��
 
 - [Prisma 7 Migration Guide](https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-to-prisma-7)
 - [Prisma Config Documentation](https://www.prisma.io/docs/orm/reference/prisma-schema-reference#datasource)
@@ -195,12 +169,10 @@ DATABASE_URL="postgresql://user:password@host:port/dbname"
 
 ## 関連ファイル
 
-- `prisma/schema.prisma` - データベーススキーマ定義
-- `prisma/prisma.config.js` - Prisma 7 設定
-- `src/lib/database.ts` - PrismaClient 初期化
-- `.env` - 環境変数
+- `prisma/schema.prisma` - チE�Eタベ�Eススキーマ定義
+- `prisma/prisma.config.js` - Prisma 7 設宁E- `src/lib/database.ts` - PrismaClient 初期匁E- `.env` - 環墁E��数
 - `prisma/migrations/` - マイグレーション履歴
 
 ---
 
-**最終更新**: 2025年12月4日
+**最終更新**: 2025年12朁E日

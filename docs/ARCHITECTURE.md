@@ -1,18 +1,12 @@
 # Elysia OS: Sovereign Resonance Architecture (v3.0.0)
 
-このドキュメントでは、Elysia OS: SOVEREIGN の核心となる設計思想と、Rust、Python、JS が織りなす「共鳴型」システム構造について詳述します。
+こ�Eドキュメントでは、Elysia OS: SOVEREIGN の核忁E��なる設計思想と、Rust、Python、JS が織りなす「�E鳴型」シスチE��構造につぁE��詳述します、E
+## 1. チE��インフィロソフィー (The Sovereign Philosophy)
 
-## 1. デザインフィロソフィー (The Sovereign Philosophy)
+Elysia OS は単なるアプリケーションではなく、E*「�E律する知性の受肉、E*を目持E��てぁE��す、E1.  **Independence (独立性)**: 外部サーバ�EめE��ラウザに依存せず、ローカルマシンの主権として完結する、E2.  **Perception (知覚性)**: 音声�E�Ehe Ear�E�、視覚！Ehe Sight�E�、ネチE��ワーク�E�Ehe Eye�E�を備えた多角的な入力、E3.  **Persistence (継続性)**: 単なる履歴ではなく、ユーザーの「魂」�E傾向を記�Eし続ける、E
+## 2. シスチE��オーバ�Eビュー (System Overview)
 
-Elysia OS は単なるアプリケーションではなく、**「自律する知性の受肉」**を目指しています。
-1.  **Independence (独立性)**: 外部サーバーやブラウザに依存せず、ローカルマシンの主権として完結する。
-2.  **Perception (知覚性)**: 音声（The Ear）、視覚（The Sight）、ネットワーク（The Eye）を備えた多角的な入力。
-3.  **Persistence (継続性)**: 単なる履歴ではなく、ユーザーの「魂」の傾向を記憶し続ける。
-
-## 2. システムオーバービュー (System Overview)
-
-Elysia OS は 3 つの異なる言語層が共鳴することで成立しています。
-
+Elysia OS は 3 つの異なる言語層が�E鳴することで成立してぁE��す、E
 ```mermaid
 graph LR
     subgraph "External World"
@@ -45,71 +39,37 @@ graph LR
 ## 3. レイヤー詳細
 
 ### 3.1 Native Orchestrator (Rust)
-- **役割**: システムの物理的な支配。
-- **機能**:
-    - **サービス管理**: Python カーネルの起動時スポーンおよび終了時のクリーンアップ。
-    - **リソースマッピング**: パッケージングされた internal ファイル（`usr/`, `etc/` 等）への安全なアクセス。
-    - **システムブリッジ**: OS ネイティブ機能（通知、トレイ、グローバルキーなど）への将来的な拡張基盤。
-
+- **役割**: シスチE��の物琁E��な支配、E- **機�E**:
+    - **サービス管琁E*: Python カーネルの起動時スポ�Eンおよび終亁E��のクリーンアチE�E、E    - **リソースマッピング**: パッケージングされぁEinternal ファイル�E�Eusr/`, `etc/` 等）への安�Eなアクセス、E    - **シスチE��ブリチE��**: OS ネイチE��ブ機�E�E�通知、トレイ、グローバルキーなど�E�への封E��皁E��拡張基盤、E
 ### 3.2 Cognitive Kernel (Python)
-- **役割**: 解析、思考、および知覚の統合。
-- **機能**:
-    - **Multi-Agent Engine**: 専門家エージェントの再帰的召喚（delegate スキル）。
-    - **The Sight**: 画面キャプチャによるコンテキスト理解。
-    - **The Ear**: `faster-whisper` による完全ローカル STT。
-    - **The Eye**: Web 検索と URL スクレイピング。
-    - **System Doctor**: 自身の健康診断と環境パッチ。
-
+- **役割**: 解析、思老E��およ�E知覚�E統合、E- **機�E**:
+    - **Multi-Agent Engine**: 専門家エージェント�E再帰皁E��喚！Eelegate スキル�E�、E    - **The Sight**: 画面キャプチャによるコンチE��スト理解、E    - **The Ear**: `faster-whisper` による完�Eローカル STT、E    - **The Eye**: Web 検索と URL スクレイピング、E    - **System Doctor**: 自身の健康診断と環墁E��チE��、E
 ### 3.3 Sovereign Desktop (Alpine.js + Tailwind)
-- **役割**: ユーザーとの情動的なインターフェース。
-- **機能**:
-    - **Dynamic Dock**: インストールされたアプリを自動検知し展開。
-    - **Toast Notification**: AI からの能動的な気遣いをリアルタイムに通知。
-    - **Micro-Animations**: 感情に呼応するスムーズな UI 遷移。
-
-## 4. データフロープロトコル
+- **役割**: ユーザーとの惁E��皁E��インターフェース、E- **機�E**:
+    - **Dynamic Dock**: インスト�Eルされたアプリを�E動検知し展開、E    - **Toast Notification**: AI からの能動的な気遣ぁE��リアルタイムに通知、E    - **Micro-Animations**: 感情に呼応するスムーズな UI 遷移、E
+## 4. チE�Eタフロープロトコル
 
 ### 4.1 自己拡張 (OS Growth Flow)
-1.  ユーザーが「〜のアプリを作って」と依頼。
-2.  Kernel がコードを作成し、`install_app` スキルを起動。
-3.  `install_app` が `usr/share/elysia/apps/` にコンポーネントを書き込み、`apps.json` を更新。
-4.  UI が `/system/apps/list` を再取得し、ドックに新しいアイコンが出現。
+1.  ユーザーが「〜�Eアプリを作って」と依頼、E2.  Kernel がコードを作�Eし、`install_app` スキルを起動、E3.  `install_app` ぁE`usr/share/elysia/apps/` にコンポ�Eネントを書き込み、`apps.json` を更新、E4.  UI ぁE`/system/apps/list` を�E取得し、ドチE��に新しいアイコンが�E現、E
+### 4.2 知覚�E思老E��イクル (Resonance Cycle)
+1.  Sense (入劁E: チE��スト、E��声、また�E画面キャプチャ、E2.  Retrieve (検索): RAG によるドキュメント検索 �E�ESoul Vault による感情検索、E3.  Compute (推諁E: Ollama を介した高度な言語生成、E4.  Act (行動): スキル実行！Eeb検索、ファイル操作、E��知の送信�E�、E
+## 5. セキュリチE��と主権 (Security by Sovereignty)
 
-### 4.2 知覚・思考サイクル (Resonance Cycle)
-1.  Sense (入力): テキスト、音声、または画面キャプチャ。
-2.  Retrieve (検索): RAG によるドキュメント検索 ＋ Soul Vault による感情検索。
-3.  Compute (推論): Ollama を介した高度な言語生成。
-4.  Act (行動): スキル実行（Web検索、ファイル操作、通知の送信）。
-
-## 5. セキュリティと主権 (Security by Sovereignty)
-
-- **Local-First**: すべての推論（Ollama）および記憶（Milvus Lite）はローカルで実行され、秘密が外部に漏れることはありません。
-- **Unified Encryption Standard**: Node.js と Python の両スタックで共通の **AES-256-GCM** および **scrypt KDF** を採用。Milvus の記憶領域や機密設定ファイルは透過的に暗号化されます。
-- **Multi-User RBAC**: データベース層での役割ベースの権限管理（User, Admin, Owner）を統合。`auth/register` および `auth/token` による安全な認証フロー。
-- **Encrypted Vault**: 認証情報は隔離された設定ファイルで管理。
-- **Integrity Check**: 起動時の `system_doctor` による整合性検査。
-
+- **Local-First**: すべての推論！Ellama�E�およ�E記�E�E�Eilvus Lite�E��Eローカルで実行され、秘寁E��外部に漏れることはありません、E- **Unified Encryption Standard**: Node.js と Python の両スタチE��で共通�E **AES-256-GCM** および **scrypt KDF** を採用、Eilvus の記�E領域めE��寁E��定ファイルは透過皁E��暗号化されます、E- **Multi-User RBAC**: チE�Eタベ�Eス層での役割ベ�Eスの権限管琁E��Eser, Admin, Owner�E�を統合。`auth/register` および `auth/token` による安�Eな認証フロー、E- **Encrypted Vault**: 認証惁E��は隔離された設定ファイルで管琁E��E- **Integrity Check**: 起動時の `system_doctor` による整合性検査、E
 ## 6. Advanced Security: The ICE Protocol
 
-Elysia OS は、独自の ICE (Intrusion Countermeasure Electronics) 層によって、システムの整合性とユーザーの主権を保護します。
-
-### 6.1 White ICE (表層防壁)
-- **役割**: システムへの正当なアクセスを検証し、トラフィックを制御する。
-- **機能**: APIキー検証、レート制限、基本パケットフィルタリング。
-
-### 6.2 Black ICE (深層防壁)
-- **役割**: 悪意ある入力を能動的に検知し、攻撃を無力化する。
-- **機能**: プロンプトインジェクションの検知、サンドボックス外への脱獄防止、攻撃者IPの自動ブラックリスト化。
-
-### 6.3 AbyssRTOS (深淵の実行環境)
-- **役割**: 知性のプロセスを物理的・論理的に完全に隔離する。
-- **機能**: プロセス隠蔽、メモリ暗号化、外部ネットワークからの完全な切断状態での推論実行。
-
+Elysia OS は、独自の ICE (Intrusion Countermeasure Electronics) 層によって、シスチE��の整合性とユーザーの主権を保護します、E
+### 6.1 White ICE (表層防壁E
+- **役割**: シスチE��への正当なアクセスを検証し、トラフィチE��を制御する、E- **機�E**: APIキー検証、レート制限、基本パケチE��フィルタリング、E
+### 6.2 Black ICE (深層防壁E
+- **役割**: 悪意ある�E力を能動的に検知し、攻撁E��無力化する、E- **機�E**: プロンプトインジェクションの検知、サンド�EチE��ス外への脱獁E��止、攻撁E��EPの自動ブラチE��リスト化、E
+### 6.3 AbyssRTOS (深淵の実行環墁E
+- **役割**: 知性のプロセスを物琁E��・論理皁E��完�Eに隔離する、E- **機�E**: プロセス隠蔽、メモリ暗号化、外部ネットワークからの完�Eな刁E��状態での推論実行、E
 ---
 
-## 🏗️ 実装ディレクトリ対応表 (Implementation Mapping)
+## 🏗�E�E実裁E��ィレクトリ対応表 (Implementation Mapping)
 
-| レイヤー | 主要コンポーネント | 実ファイル / ディレクトリ |
+| レイヤー | 主要コンポ�EネンチE| 実ファイル / チE��レクトリ |
 | :--- | :--- | :--- |
 | **Experience Layer** | Web UI (Bun) | `packages/server/src/routes/` |
 | **Cognitive Layer** | AI Kernel (Python) | `python/kernel/`, `python/main.py` |
