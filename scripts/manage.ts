@@ -134,7 +134,7 @@ async function runCommand(command: string) {
 			console.log("🏗️ Building project...");
 			await run("bun", ["run", "build"]);
 			break;
-		case "test":
+		case "test": {
 			console.log("🧪 Running tests...");
 			console.log("--- Bun Tests ---");
 			await run("bun", ["test"]);
@@ -146,6 +146,7 @@ async function runCommand(command: string) {
 				console.log("⚠️ Python venv not found. Skipping Python tests.");
 			}
 			break;
+		}
 		case "lint":
 			console.log("🧹 Linting...");
 			await run("bun", ["run", "lint"]);
