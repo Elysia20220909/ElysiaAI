@@ -28,7 +28,7 @@ export const secureVault = {
 	decrypt(encryptedText: string): string {
 		try {
 			const [ivHex, authTagHex, encrypted] = encryptedText.split(":");
-			if (!ivHex || !authTagHex || !encrypted) return text; // Fallback for old data or non-encrypted
+			if (!ivHex || !authTagHex || !encrypted) return encryptedText; // Fallback for old data or non-encrypted
 			const iv = Buffer.from(ivHex, "hex");
 			const authTag = Buffer.from(authTagHex, "hex");
 			const decipher = createDecipheriv(ALGORITHM, KEY, iv);
