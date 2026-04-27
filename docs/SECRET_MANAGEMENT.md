@@ -1,4 +1,4 @@
-﻿# 柏 Secret & Key Management Guide
+# 柏 Secret & Key Management Guide
 
 ElysiaAI utilizes high-grade cryptographic standards to protect user sovereignty. This guide outlines the generation, rotation, and operation of secrets.
 

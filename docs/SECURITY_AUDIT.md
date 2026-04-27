@@ -1,4 +1,4 @@
-﻿# Security Advisory - Python Dependencies
+# Security Advisory - Python Dependencies
 
 ## Current Status (Updated: 2025)
 

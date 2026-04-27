@@ -1,4 +1,4 @@
-﻿# 剥 OpenTelemetry Distributed Tracing
+# 剥 OpenTelemetry Distributed Tracing
 
 ## Overview
 
