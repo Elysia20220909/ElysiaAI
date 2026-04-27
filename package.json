@@ -10,6 +10,7 @@
     "boot": "bun scripts/boot.ts",
     "dev": "bun run --cwd packages/server dev",
     "start": "bun run --cwd packages/server start",
+    "dev:ci": "bun scripts/boot.ts --ci",
     "desktop": "bun tauri dev",
     "test": "bun test",
     "lint": "bunx biome check ."
