@@ -202,10 +202,10 @@ Error Rate (spike): 2.1%
 
 | Load Level       | Current | Target | Status                      |
 | ---------------- | ------- | ------ | --------------------------- |
-| Concurrent Users | 50      | 200    | ‚ö†Ô∏è Needs optimization       |
-| Requests/sec     | 25      | 100    | ‚ö†Ô∏è Needs horizontal scaling |
-| P95 Latency      | 1.2s    | <500ms | ‚ö†Ô∏è Needs GPU for LLM        |
-| Uptime           | 99.5%   | 99.9%  | ‚úÖ Achievable               |
+| Concurrent Users | 50      | 200    | ‚ö†ÅEÅENeeds optimization       |
+| Requests/sec     | 25      | 100    | ‚ö†ÅEÅENeeds horizontal scaling |
+| P95 Latency      | 1.2s    | <500ms | ‚ö†ÅEÅENeeds GPU for LLM        |
+| Uptime           | 99.5%   | 99.9%  | ‚úÅEAchievable               |
 
 ### Optimization Priorities
 

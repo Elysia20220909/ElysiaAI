@@ -1,77 +1,63 @@
-# UI/UXカスタマイズ & セキュリティ強化 - 実装完了ガイド
+# UI/UXカスタマイズ & セキュリチE��強匁E- 実裁E��亁E��イチE
+## ✁E実裁E�E容
 
-## ✅ 実装内容
+### 1. UI/UXカスタマイズ機�E
 
-### 1. UI/UXカスタマイズ機能
-
-#### プロンプトテンプレート
-
-- **6つのデフォルトテンプレート**
-  - 甘々デフォルト / 甘々テンション高め
-  - 通常デフォルト / 通常フレンドリー
-  - プロフェッショナルデフォルト / プロフェッショナル技術的
+#### プロンプトチE��プレーチE
+- **6つのチE��ォルトテンプレーチE*
+  - 甘、E��フォルチE/ 甘、E��ンション高め
+  - 通常チE��ォルチE/ 通常フレンドリー
+  - プロフェチE��ョナルチE��ォルチE/ プロフェチE��ョナル技術的
 
 ```bash
-# テンプレート一覧取得
-curl http://localhost:3000/customization/templates
+# チE��プレート一覧取征Ecurl http://localhost:3000/customization/templates
 ```
 
-#### テーマ設定
+#### チE�Eマ設宁E
+- **4つのプリセチE��チE�EチE*
+  - ピンク可愛い (チE��ォルチE
+  - ブループロフェチE��ョナル
+  - パ�EプルエレガンチE  - ダークモーチE
+```bash
+# チE�Eマ一覧取征Ecurl http://localhost:3000/customization/themes
+```
 
-- **4つのプリセットテーマ**
-  - ピンク可愛い (デフォルト)
-  - ブループロフェッショナル
-  - パープルエレガント
-  - ダークモード
+#### チャチE��モーチE
+- **5つのモーチE*
+  - 💕 甘、E��ーチE(temperature: 0.8)
+  - 💬 通常モーチE(temperature: 0.7)
+  - 💼 プロフェチE��ョナルモーチE(temperature: 0.5)
+  - 🎨 クリエイチE��ブモーチE(temperature: 0.9)
+  - 🔧 チE��ニカルモーチE(temperature: 0.3)
 
 ```bash
-# テーマ一覧取得
-curl http://localhost:3000/customization/themes
+# モード一覧取征Ecurl http://localhost:3000/customization/modes
 ```
 
-#### チャットモード
-
-- **5つのモード**
-  - 💕 甘々モード (temperature: 0.8)
-  - 💬 通常モード (temperature: 0.7)
-  - 💼 プロフェッショナルモード (temperature: 0.5)
-  - 🎨 クリエイティブモード (temperature: 0.9)
-  - 🔧 テクニカルモード (temperature: 0.3)
-
-```bash
-# モード一覧取得
-curl http://localhost:3000/customization/modes
-```
-
-#### エクスポート形式
-
+#### エクスポ�Eト形弁E
 - JSON / Markdown / TXT / HTML
 
 ```bash
-# エクスポート形式一覧取得
-curl http://localhost:3000/customization/export-formats
+# エクスポ�Eト形式一覧取征Ecurl http://localhost:3000/customization/export-formats
 ```
 
-### 2. セキュリティ強化機能
+### 2. セキュリチE��強化機�E
 
 #### 入力サニタイゼーション
 
-- **XSS対策**: HTMLエスケープ (`escapeHtml`)
-- **SQLインジェクション対策**: 危険文字除去 (`sanitizeSqlInput`)
-- **パストラバーサル対策**: ディレクトリ遡り防止 (`sanitizeFilePath`)
+- **XSS対筁E*: HTMLエスケーチE(`escapeHtml`)
+- **SQLインジェクション対筁E*: 危険斁E��除去 (`sanitizeSqlInput`)
+- **パストラバ�Eサル対筁E*: チE��レクトリ遡り防止 (`sanitizeFilePath`)
 
 ```typescript
 import { escapeHtml, sanitizeSqlInput, sanitizeFilePath } from "./lib/security";
 
-// 使用例
-const safe = escapeHtml(userInput);
+// 使用侁Econst safe = escapeHtml(userInput);
 ```
 
-#### レート制限
-
-- **メモリベースのレート制限** (本番ではRedis推奨)
-- デフォルト: 100リクエスト/分
-
+#### レート制陁E
+- **メモリベ�Eスのレート制陁E* (本番ではRedis推奨)
+- チE��ォルチE 100リクエスチE刁E
 ```typescript
 import { checkRateLimit } from "./lib/security";
 
@@ -85,7 +71,7 @@ if (!result.allowed) {
 }
 ```
 
-#### セキュリティヘッダー
+#### セキュリチE��ヘッダー
 
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
@@ -99,19 +85,18 @@ import { getSecurityHeaders } from "./lib/security";
 const headers = getSecurityHeaders();
 ```
 
-## 📖 API使用例
-
-### プロンプトテンプレートの適用
+## 📖 API使用侁E
+### プロンプトチE��プレート�E適用
 
 ```typescript
 import { applyTemplate } from "./lib/customization";
 
-const template = "にゃん♡ おにいちゃん、{query}について教えてあげるね〜！";
+const template = "にめE��♡ おにぁE��めE��、{query}につぁE��教えてあげる�E〜！E;
 const result = applyTemplate(template, { query: "TypeScript" });
-// => "にゃん♡ おにいちゃん、TypeScriptについて教えてあげるね〜！"
+// => "にめE��♡ おにぁE��めE��、TypeScriptにつぁE��教えてあげる�E〜！E
 ```
 
-### テーマの適用
+### チE�Eマ�E適用
 
 ```typescript
 import { applyTheme, defaultThemes } from "./lib/customization";
@@ -121,10 +106,10 @@ const cssVars = applyTheme(theme);
 // CSS変数として適用可能
 ```
 
-### チャットモードの使用
+### チャチE��モード�E使用
 
 ```bash
-# 甘々モードでチャット
+# 甘、E��ードでチャチE��
 curl -X POST http://localhost:3000/elysia-love \
   -H "Content-Type: application/json" \
   -d '{
@@ -133,9 +118,9 @@ curl -X POST http://localhost:3000/elysia-love \
   }'
 ```
 
-## 🔒 セキュリティベストプラクティス
+## 🔒 セキュリチE��ベスト�EラクチE��ス
 
-### 1. ユーザー入力の検証
+### 1. ユーザー入力�E検証
 
 ```typescript
 // 常にサニタイゼーション
@@ -143,11 +128,10 @@ const cleanInput = escapeHtml(userInput);
 const cleanPath = sanitizeFilePath(filePath);
 ```
 
-### 2. レート制限の適用
+### 2. レート制限�E適用
 
 ```typescript
-// エンドポイントごとに適切な制限を設定
-app.post("/api/sensitive", async ({ request }) => {
+// エンド�Eイントごとに適刁E��制限を設宁Eapp.post("/api/sensitive", async ({ request }) => {
   const ip = request.headers.get("x-forwarded-for") || "unknown";
   const limit = checkRateLimit(ip, { maxRequests: 10, windowMs: 60000 });
 
@@ -155,14 +139,12 @@ app.post("/api/sensitive", async ({ request }) => {
     return error(429, "Too many requests");
   }
 
-  // 処理続行
-});
+  // 処琁E��衁E});
 ```
 
-### 3. セキュリティヘッダーの設定
-
+### 3. セキュリチE��ヘッダーの設宁E
 ```typescript
-// すべてのレスポンスにセキュリティヘッダーを追加
+// すべてのレスポンスにセキュリチE��ヘッダーを追加
 const headers = {
   ...getSecurityHeaders(),
   "Content-Type": "application/json",
@@ -171,75 +153,59 @@ const headers = {
 return new Response(data, { headers });
 ```
 
-## 🚀 GitHub Collaborator 設定
+## 🚀 GitHub Collaborator 設宁E
+### 方況E: Invite collaborator (☁E�E☁E�E☁E最強推奨)
 
-### 方法1: Invite collaborator (★★★★★ 最強推奨)
+**手軽ぁE*: ☁E�E☁E�E☁E**安�E性**: ☁E�E☁E�E☁E**推奨度**: ☁E�E☁E�E☁E
+#### 手頁E
 
-**手軽さ**: ★★★★★
-**安全性**: ★★★★★
-**推奨度**: ★★★★★
-
-#### 手順:
-
-1. GitHubリポジトリページを開く: https://github.com/chloeamethyst/ElysiaAI
-2. **Settings** タブをクリック
-3. 左サイドバーの **Collaborators** をクリック
-4. 「**Add people**」ボタンをクリック
-5. GitHub IDに `grok-readonly` と入力
-6. **Select a role** で「**Read**」を選択
-7. 「**Add to repository**」をクリックして招待送信
+1. GitHubリポジトリペ�Eジを開ぁE https://github.com/Elysia20220909/ElysiaAI
+2. **Settings** タブをクリチE��
+3. 左サイドバーの **Collaborators** をクリチE��
+4. 、E*Add people**」�EタンをクリチE��
+5. GitHub IDに `grok-readonly` と入劁E6. **Select a role** で、E*Read**」を選抁E7. 、E*Add to repository**」をクリチE��して招征E��信
 
 #### 特徴:
 
-- ✅ 読み取り専用アクセス
-- ✅ リポジトリ全体へのアクセス
-- ✅ GitHub UIから簡単に管理可能
-- ✅ いつでも削除可能
-- ✅ 最もセキュアな方法
+- ✁E読み取り専用アクセス
+- ✁Eリポジトリ全体へのアクセス
+- ✁EGitHub UIから簡単に管琁E��能
+- ✁EぁE��でも削除可能
+- ✁E最もセキュアな方況E
+### 代替方況E Personal Access Token (非推奨)
 
-### 代替方法: Personal Access Token (非推奨)
+セキュリチE��上�E琁E��から、CollaboratorのRead権限による招征E��強く推奨します、E
+## 📁 実裁E��ァイル
 
-セキュリティ上の理由から、CollaboratorのRead権限による招待を強く推奨します。
+### 新規作�E
 
-## 📁 実装ファイル
-
-### 新規作成
-
-- `src/lib/customization.ts` - UI/UXカスタマイズ機能
-- `docs/CUSTOMIZATION_SECURITY_GUIDE.md` - このガイド
-
+- `src/lib/customization.ts` - UI/UXカスタマイズ機�E
+- `docs/CUSTOMIZATION_SECURITY_GUIDE.md` - こ�EガイチE
 ### 更新
 
-- `src/lib/security.ts` - セキュリティ機能追加
-- `src/index.ts` - カスタマイズAPIエンドポイント追加
+- `src/lib/security.ts` - セキュリチE��機�E追加
+- `src/index.ts` - カスタマイズAPIエンド�Eイント追加
 
-## 🧪 テスト
-
+## 🧪 チE��チE
 ```bash
-# カスタマイズAPIのテスト
-curl http://localhost:3000/customization/templates
+# カスタマイズAPIのチE��チEcurl http://localhost:3000/customization/templates
 curl http://localhost:3000/customization/themes
 curl http://localhost:3000/customization/modes
 curl http://localhost:3000/customization/export-formats
 
-# セキュリティ機能のテスト
-bun test tests/security.test.ts
+# セキュリチE��機�EのチE��チEbun test tests/security.test.ts
 ```
 
-## 📊 次のステップ
-
-1. ✅ UI/UXカスタマイズ機能 - **完了**
-2. ✅ セキュリティ強化 - **完了**
-3. ⏳ フロントエンドへの統合
-4. ⏳ ユーザー設定の永続化
-5. ⏳ 本番環境へのデプロイ
+## 📊 次のスチE��チE
+1. ✁EUI/UXカスタマイズ機�E - **完亁E*
+2. ✁EセキュリチE��強匁E- **完亁E*
+3. ⏳ フロントエンドへの統吁E4. ⏳ ユーザー設定�E永続化
+5. ⏳ 本番環墁E��のチE�Eロイ
 
 ---
 
-## 💡 使用例
-
-### デスクトップアプリでのテーマ切り替え
-
+## 💡 使用侁E
+### チE��クトップアプリでのチE�Eマ�Eり替ぁE
 ```javascript
 // desktop/index.html
 async function loadThemes() {
@@ -257,12 +223,10 @@ async function loadThemes() {
 function applyTheme(themeId) {
   const theme = themes.find((t) => t.id === themeId);
   document.documentElement.style.setProperty("--color-primary", theme.colors.primary);
-  // ... 他の色も設定
-}
+  // ... 他�E色も設宁E}
 ```
 
-### モバイルアプリでのモード選択
-
+### モバイルアプリでのモード選抁E
 ```typescript
 // mobile/app/ChatScreen.tsx
 const modes = await fetch('/customization/modes').then(r => r.json());
@@ -283,6 +247,6 @@ const modes = await fetch('/customization/modes').then(r => r.json());
 
 ---
 
-**実装完了日**: 2025年12月5日
-**バージョン**: v2.0.0
-**担当**: GitHub Copilot
+**実裁E��亁E��**: 2025年12朁E日
+**バ�Eジョン**: v2.0.0
+**拁E��E*: GitHub Copilot
