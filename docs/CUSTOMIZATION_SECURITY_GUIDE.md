@@ -1,63 +1,63 @@
-# UI/UXカスタマイズ & セキュリチE��強匁E- 実裁E��亁E��イチE
-## ✁E実裁E�E容
+﻿# UI/UX繧ｫ繧ｹ繧ｿ繝槭う繧ｺ & 繧ｻ繧ｭ繝･繝ｪ繝・ぅ蠑ｷ蛹・- 螳溯｣・ｮ御ｺ・ぎ繧､繝・
+## 笨・螳溯｣・・螳ｹ
 
-### 1. UI/UXカスタマイズ機�E
+### 1. UI/UX繧ｫ繧ｹ繧ｿ繝槭う繧ｺ讖溯・
 
-#### プロンプトチE��プレーチE
-- **6つのチE��ォルトテンプレーチE*
-  - 甘、E��フォルチE/ 甘、E��ンション高め
-  - 通常チE��ォルチE/ 通常フレンドリー
-  - プロフェチE��ョナルチE��ォルチE/ プロフェチE��ョナル技術的
-
-```bash
-# チE��プレート一覧取征Ecurl http://localhost:3000/customization/templates
-```
-
-#### チE�Eマ設宁E
-- **4つのプリセチE��チE�EチE*
-  - ピンク可愛い (チE��ォルチE
-  - ブループロフェチE��ョナル
-  - パ�EプルエレガンチE  - ダークモーチE
-```bash
-# チE�Eマ一覧取征Ecurl http://localhost:3000/customization/themes
-```
-
-#### チャチE��モーチE
-- **5つのモーチE*
-  - 💕 甘、E��ーチE(temperature: 0.8)
-  - 💬 通常モーチE(temperature: 0.7)
-  - 💼 プロフェチE��ョナルモーチE(temperature: 0.5)
-  - 🎨 クリエイチE��ブモーチE(temperature: 0.9)
-  - 🔧 チE��ニカルモーチE(temperature: 0.3)
+#### 繝励Ο繝ｳ繝励ヨ繝・Φ繝励Ξ繝ｼ繝・
+- **6縺､縺ｮ繝・ヵ繧ｩ繝ｫ繝医ユ繝ｳ繝励Ξ繝ｼ繝・*
+  - 逕倥�・ョ繝輔か繝ｫ繝・/ 逕倥�・ユ繝ｳ繧ｷ繝ｧ繝ｳ鬮倥ａ
+  - 騾壼ｸｸ繝・ヵ繧ｩ繝ｫ繝・/ 騾壼ｸｸ繝輔Ξ繝ｳ繝峨Μ繝ｼ
+  - 繝励Ο繝輔ぉ繝・す繝ｧ繝翫Ν繝・ヵ繧ｩ繝ｫ繝・/ 繝励Ο繝輔ぉ繝・す繝ｧ繝翫Ν謚�陦鍋噪
 
 ```bash
-# モード一覧取征Ecurl http://localhost:3000/customization/modes
+# 繝・Φ繝励Ξ繝ｼ繝井ｸ�隕ｧ蜿門ｾ・curl http://localhost:3000/customization/templates
 ```
 
-#### エクスポ�Eト形弁E
+#### 繝・・繝櫁ｨｭ螳・
+- **4縺､縺ｮ繝励Μ繧ｻ繝・ヨ繝・・繝・*
+  - 繝斐Φ繧ｯ蜿ｯ諢帙＞ (繝・ヵ繧ｩ繝ｫ繝・
+  - 繝悶Ν繝ｼ繝励Ο繝輔ぉ繝・す繝ｧ繝翫Ν
+  - 繝代・繝励Ν繧ｨ繝ｬ繧ｬ繝ｳ繝・  - 繝�繝ｼ繧ｯ繝｢繝ｼ繝・
+```bash
+# 繝・・繝樔ｸ�隕ｧ蜿門ｾ・curl http://localhost:3000/customization/themes
+```
+
+#### 繝√Ε繝・ヨ繝｢繝ｼ繝・
+- **5縺､縺ｮ繝｢繝ｼ繝・*
+  - 瀦 逕倥�・Δ繝ｼ繝・(temperature: 0.8)
+  - 町 騾壼ｸｸ繝｢繝ｼ繝・(temperature: 0.7)
+  - 直 繝励Ο繝輔ぉ繝・す繝ｧ繝翫Ν繝｢繝ｼ繝・(temperature: 0.5)
+  - 耳 繧ｯ繝ｪ繧ｨ繧､繝・ぅ繝悶Δ繝ｼ繝・(temperature: 0.9)
+  - 肌 繝・け繝九き繝ｫ繝｢繝ｼ繝・(temperature: 0.3)
+
+```bash
+# 繝｢繝ｼ繝我ｸ�隕ｧ蜿門ｾ・curl http://localhost:3000/customization/modes
+```
+
+#### 繧ｨ繧ｯ繧ｹ繝昴・繝亥ｽ｢蠑・
 - JSON / Markdown / TXT / HTML
 
 ```bash
-# エクスポ�Eト形式一覧取征Ecurl http://localhost:3000/customization/export-formats
+# 繧ｨ繧ｯ繧ｹ繝昴・繝亥ｽ｢蠑丈ｸ�隕ｧ蜿門ｾ・curl http://localhost:3000/customization/export-formats
 ```
 
-### 2. セキュリチE��強化機�E
+### 2. 繧ｻ繧ｭ繝･繝ｪ繝・ぅ蠑ｷ蛹匁ｩ溯・
 
-#### 入力サニタイゼーション
+#### 蜈･蜉帙し繝九ち繧､繧ｼ繝ｼ繧ｷ繝ｧ繝ｳ
 
-- **XSS対筁E*: HTMLエスケーチE(`escapeHtml`)
-- **SQLインジェクション対筁E*: 危険斁E��除去 (`sanitizeSqlInput`)
-- **パストラバ�Eサル対筁E*: チE��レクトリ遡り防止 (`sanitizeFilePath`)
+- **XSS蟇ｾ遲・*: HTML繧ｨ繧ｹ繧ｱ繝ｼ繝・(`escapeHtml`)
+- **SQL繧､繝ｳ繧ｸ繧ｧ繧ｯ繧ｷ繝ｧ繝ｳ蟇ｾ遲・*: 蜊ｱ髯ｺ譁・ｭ鈴勁蜴ｻ (`sanitizeSqlInput`)
+- **繝代せ繝医Λ繝舌・繧ｵ繝ｫ蟇ｾ遲・*: 繝・ぅ繝ｬ繧ｯ繝医Μ驕｡繧企亟豁｢ (`sanitizeFilePath`)
 
 ```typescript
 import { escapeHtml, sanitizeSqlInput, sanitizeFilePath } from "./lib/security";
 
-// 使用侁Econst safe = escapeHtml(userInput);
+// 菴ｿ逕ｨ萓・const safe = escapeHtml(userInput);
 ```
 
-#### レート制陁E
-- **メモリベ�Eスのレート制陁E* (本番ではRedis推奨)
-- チE��ォルチE 100リクエスチE刁E
+#### 繝ｬ繝ｼ繝亥宛髯・
+- **繝｡繝｢繝ｪ繝吶・繧ｹ縺ｮ繝ｬ繝ｼ繝亥宛髯・* (譛ｬ逡ｪ縺ｧ縺ｯRedis謗ｨ螂ｨ)
+- 繝・ヵ繧ｩ繝ｫ繝・ 100繝ｪ繧ｯ繧ｨ繧ｹ繝・蛻・
 ```typescript
 import { checkRateLimit } from "./lib/security";
 
@@ -71,7 +71,7 @@ if (!result.allowed) {
 }
 ```
 
-#### セキュリチE��ヘッダー
+#### 繧ｻ繧ｭ繝･繝ｪ繝・ぅ繝倥ャ繝�繝ｼ
 
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
@@ -85,53 +85,53 @@ import { getSecurityHeaders } from "./lib/security";
 const headers = getSecurityHeaders();
 ```
 
-## 📖 API使用侁E
-### プロンプトチE��プレート�E適用
+## 当 API菴ｿ逕ｨ萓・
+### 繝励Ο繝ｳ繝励ヨ繝・Φ繝励Ξ繝ｼ繝医・驕ｩ逕ｨ
 
 ```typescript
 import { applyTemplate } from "./lib/customization";
 
-const template = "にめE��♡ おにぁE��めE��、{query}につぁE��教えてあげる�E〜！E;
+const template = "縺ｫ繧・ｓ笙｡ 縺翫↓縺・■繧・ｓ縲＋query}縺ｫ縺､縺・※謨吶∴縺ｦ縺ゅ￡繧九・縲懶ｼ・;
 const result = applyTemplate(template, { query: "TypeScript" });
-// => "にめE��♡ おにぁE��めE��、TypeScriptにつぁE��教えてあげる�E〜！E
+// => "縺ｫ繧・ｓ笙｡ 縺翫↓縺・■繧・ｓ縲ゝypeScript縺ｫ縺､縺・※謨吶∴縺ｦ縺ゅ￡繧九・縲懶ｼ・
 ```
 
-### チE�Eマ�E適用
+### 繝・・繝槭・驕ｩ逕ｨ
 
 ```typescript
 import { applyTheme, defaultThemes } from "./lib/customization";
 
-const theme = defaultThemes[0]; // ピンク可愛い
+const theme = defaultThemes[0]; // 繝斐Φ繧ｯ蜿ｯ諢帙＞
 const cssVars = applyTheme(theme);
-// CSS変数として適用可能
+// CSS螟画焚縺ｨ縺励※驕ｩ逕ｨ蜿ｯ閭ｽ
 ```
 
-### チャチE��モード�E使用
+### 繝√Ε繝・ヨ繝｢繝ｼ繝峨・菴ｿ逕ｨ
 
 ```bash
-# 甘、E��ードでチャチE��
+# 逕倥�・Δ繝ｼ繝峨〒繝√Ε繝・ヨ
 curl -X POST http://localhost:3000/elysia-love \
   -H "Content-Type: application/json" \
   -d '{
-    "messages": [{"role": "user", "content": "こんにちは"}],
+    "messages": [{"role": "user", "content": "縺薙ｓ縺ｫ縺｡縺ｯ"}],
     "mode": "sweet"
   }'
 ```
 
-## 🔒 セキュリチE��ベスト�EラクチE��ス
+## 白 繧ｻ繧ｭ繝･繝ｪ繝・ぅ繝吶せ繝医・繝ｩ繧ｯ繝・ぅ繧ｹ
 
-### 1. ユーザー入力�E検証
+### 1. 繝ｦ繝ｼ繧ｶ繝ｼ蜈･蜉帙・讀懆ｨｼ
 
 ```typescript
-// 常にサニタイゼーション
+// 蟶ｸ縺ｫ繧ｵ繝九ち繧､繧ｼ繝ｼ繧ｷ繝ｧ繝ｳ
 const cleanInput = escapeHtml(userInput);
 const cleanPath = sanitizeFilePath(filePath);
 ```
 
-### 2. レート制限�E適用
+### 2. 繝ｬ繝ｼ繝亥宛髯舌・驕ｩ逕ｨ
 
 ```typescript
-// エンド�Eイントごとに適刁E��制限を設宁Eapp.post("/api/sensitive", async ({ request }) => {
+// 繧ｨ繝ｳ繝峨・繧､繝ｳ繝医＃縺ｨ縺ｫ驕ｩ蛻・↑蛻ｶ髯舌ｒ險ｭ螳・app.post("/api/sensitive", async ({ request }) => {
   const ip = request.headers.get("x-forwarded-for") || "unknown";
   const limit = checkRateLimit(ip, { maxRequests: 10, windowMs: 60000 });
 
@@ -139,12 +139,12 @@ const cleanPath = sanitizeFilePath(filePath);
     return error(429, "Too many requests");
   }
 
-  // 処琁E��衁E});
+  // 蜃ｦ逅・ｶ夊｡・});
 ```
 
-### 3. セキュリチE��ヘッダーの設宁E
+### 3. 繧ｻ繧ｭ繝･繝ｪ繝・ぅ繝倥ャ繝�繝ｼ縺ｮ險ｭ螳・
 ```typescript
-// すべてのレスポンスにセキュリチE��ヘッダーを追加
+// 縺吶∋縺ｦ縺ｮ繝ｬ繧ｹ繝昴Φ繧ｹ縺ｫ繧ｻ繧ｭ繝･繝ｪ繝・ぅ繝倥ャ繝�繝ｼ繧定ｿｽ蜉�
 const headers = {
   ...getSecurityHeaders(),
   "Content-Type": "application/json",
@@ -153,59 +153,59 @@ const headers = {
 return new Response(data, { headers });
 ```
 
-## 🚀 GitHub Collaborator 設宁E
-### 方況E: Invite collaborator (☁E�E☁E�E☁E最強推奨)
+## 噫 GitHub Collaborator 險ｭ螳・
+### 譁ｹ豕・: Invite collaborator (笘・・笘・・笘・譛�蠑ｷ謗ｨ螂ｨ)
 
-**手軽ぁE*: ☁E�E☁E�E☁E**安�E性**: ☁E�E☁E�E☁E**推奨度**: ☁E�E☁E�E☁E
-#### 手頁E
+**謇玖ｻｽ縺・*: 笘・・笘・・笘・**螳牙・諤ｧ**: 笘・・笘・・笘・**謗ｨ螂ｨ蠎ｦ**: 笘・・笘・・笘・
+#### 謇矩�・
 
-1. GitHubリポジトリペ�Eジを開ぁE https://github.com/Elysia20220909/ElysiaAI
-2. **Settings** タブをクリチE��
-3. 左サイドバーの **Collaborators** をクリチE��
-4. 、E*Add people**」�EタンをクリチE��
-5. GitHub IDに `grok-readonly` と入劁E6. **Select a role** で、E*Read**」を選抁E7. 、E*Add to repository**」をクリチE��して招征E��信
+1. GitHub繝ｪ繝昴ず繝医Μ繝壹・繧ｸ繧帝幕縺・ https://github.com/Elysia20220909/ElysiaAI
+2. **Settings** 繧ｿ繝悶ｒ繧ｯ繝ｪ繝・け
+3. 蟾ｦ繧ｵ繧､繝峨ヰ繝ｼ縺ｮ **Collaborators** 繧偵け繝ｪ繝・け
+4. 縲・*Add people**縲阪・繧ｿ繝ｳ繧偵け繝ｪ繝・け
+5. GitHub ID縺ｫ `grok-readonly` 縺ｨ蜈･蜉・6. **Select a role** 縺ｧ縲・*Read**縲阪ｒ驕ｸ謚・7. 縲・*Add to repository**縲阪ｒ繧ｯ繝ｪ繝・け縺励※諡帛ｾ・�∽ｿ｡
 
-#### 特徴:
+#### 迚ｹ蠕ｴ:
 
-- ✁E読み取り専用アクセス
-- ✁Eリポジトリ全体へのアクセス
-- ✁EGitHub UIから簡単に管琁E��能
-- ✁EぁE��でも削除可能
-- ✁E最もセキュアな方況E
-### 代替方況E Personal Access Token (非推奨)
+- 笨・隱ｭ縺ｿ蜿悶ｊ蟆ら畑繧｢繧ｯ繧ｻ繧ｹ
+- 笨・繝ｪ繝昴ず繝医Μ蜈ｨ菴薙∈縺ｮ繧｢繧ｯ繧ｻ繧ｹ
+- 笨・GitHub UI縺九ｉ邁｡蜊倥↓邂｡逅・庄閭ｽ
+- 笨・縺・▽縺ｧ繧ょ炎髯､蜿ｯ閭ｽ
+- 笨・譛�繧ゅそ繧ｭ繝･繧｢縺ｪ譁ｹ豕・
+### 莉｣譖ｿ譁ｹ豕・ Personal Access Token (髱樊耳螂ｨ)
 
-セキュリチE��上�E琁E��から、CollaboratorのRead権限による招征E��強く推奨します、E
-## 📁 実裁E��ァイル
+繧ｻ繧ｭ繝･繝ｪ繝・ぅ荳翫・逅・罰縺九ｉ縲，ollaborator縺ｮRead讓ｩ髯舌↓繧医ｋ諡帛ｾ・ｒ蠑ｷ縺乗耳螂ｨ縺励∪縺吶�・
+## 刀 螳溯｣・ヵ繧｡繧､繝ｫ
 
-### 新規作�E
+### 譁ｰ隕丈ｽ懈・
 
-- `src/lib/customization.ts` - UI/UXカスタマイズ機�E
-- `docs/CUSTOMIZATION_SECURITY_GUIDE.md` - こ�EガイチE
-### 更新
+- `src/lib/customization.ts` - UI/UX繧ｫ繧ｹ繧ｿ繝槭う繧ｺ讖溯・
+- `docs/CUSTOMIZATION_SECURITY_GUIDE.md` - 縺薙・繧ｬ繧､繝・
+### 譖ｴ譁ｰ
 
-- `src/lib/security.ts` - セキュリチE��機�E追加
-- `src/index.ts` - カスタマイズAPIエンド�Eイント追加
+- `src/lib/security.ts` - 繧ｻ繧ｭ繝･繝ｪ繝・ぅ讖溯・霑ｽ蜉�
+- `src/index.ts` - 繧ｫ繧ｹ繧ｿ繝槭う繧ｺAPI繧ｨ繝ｳ繝峨・繧､繝ｳ繝郁ｿｽ蜉�
 
-## 🧪 チE��チE
+## ｧｪ 繝・せ繝・
 ```bash
-# カスタマイズAPIのチE��チEcurl http://localhost:3000/customization/templates
+# 繧ｫ繧ｹ繧ｿ繝槭う繧ｺAPI縺ｮ繝・せ繝・curl http://localhost:3000/customization/templates
 curl http://localhost:3000/customization/themes
 curl http://localhost:3000/customization/modes
 curl http://localhost:3000/customization/export-formats
 
-# セキュリチE��機�EのチE��チEbun test tests/security.test.ts
+# 繧ｻ繧ｭ繝･繝ｪ繝・ぅ讖溯・縺ｮ繝・せ繝・bun test tests/security.test.ts
 ```
 
-## 📊 次のスチE��チE
-1. ✁EUI/UXカスタマイズ機�E - **完亁E*
-2. ✁EセキュリチE��強匁E- **完亁E*
-3. ⏳ フロントエンドへの統吁E4. ⏳ ユーザー設定�E永続化
-5. ⏳ 本番環墁E��のチE�Eロイ
+## 投 谺｡縺ｮ繧ｹ繝・ャ繝・
+1. 笨・UI/UX繧ｫ繧ｹ繧ｿ繝槭う繧ｺ讖溯・ - **螳御ｺ・*
+2. 笨・繧ｻ繧ｭ繝･繝ｪ繝・ぅ蠑ｷ蛹・- **螳御ｺ・*
+3. 竢ｳ 繝輔Ο繝ｳ繝医お繝ｳ繝峨∈縺ｮ邨ｱ蜷・4. 竢ｳ 繝ｦ繝ｼ繧ｶ繝ｼ險ｭ螳壹・豌ｸ邯壼喧
+5. 竢ｳ 譛ｬ逡ｪ迺ｰ蠅・∈縺ｮ繝・・繝ｭ繧､
 
 ---
 
-## 💡 使用侁E
-### チE��クトップアプリでのチE�Eマ�Eり替ぁE
+## 庁 菴ｿ逕ｨ萓・
+### 繝・せ繧ｯ繝医ャ繝励い繝励Μ縺ｧ縺ｮ繝・・繝槫・繧頑崛縺・
 ```javascript
 // desktop/index.html
 async function loadThemes() {
@@ -223,10 +223,10 @@ async function loadThemes() {
 function applyTheme(themeId) {
   const theme = themes.find((t) => t.id === themeId);
   document.documentElement.style.setProperty("--color-primary", theme.colors.primary);
-  // ... 他�E色も設宁E}
+  // ... 莉悶・濶ｲ繧りｨｭ螳・}
 ```
 
-### モバイルアプリでのモード選抁E
+### 繝｢繝舌う繝ｫ繧｢繝励Μ縺ｧ縺ｮ繝｢繝ｼ繝蛾∈謚・
 ```typescript
 // mobile/app/ChatScreen.tsx
 const modes = await fetch('/customization/modes').then(r => r.json());
@@ -247,6 +247,6 @@ const modes = await fetch('/customization/modes').then(r => r.json());
 
 ---
 
-**実裁E��亁E��**: 2025年12朁E日
-**バ�Eジョン**: v2.0.0
-**拁E��E*: GitHub Copilot
+**螳溯｣・ｮ御ｺ・律**: 2025蟷ｴ12譛・譌･
+**繝舌・繧ｸ繝ｧ繝ｳ**: v2.0.0
+**諡・ｽ・*: GitHub Copilot

@@ -1,4 +1,4 @@
-# 🏆 Achievements of the Sovereign: Elysia20220909
+﻿# 🏆 Achievements of the Sovereign: Elysia20220909
 
 **「無から有を、カオスから秩序を。主権者の意志が、知性の新天地を拓く。」**
 

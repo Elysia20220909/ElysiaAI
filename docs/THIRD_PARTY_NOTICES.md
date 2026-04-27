@@ -1,4 +1,4 @@
-Third-Party Notices
+﻿Third-Party Notices
 
 This repository contains multiple components with different licenses. Please review the following:
 
@@ -40,7 +40,7 @@ pip-licenses --from=mixed --with-system --summary
 6. Attribution reminders
 
 - When redistributing binaries or packaged artifacts, include:
-  - This repository’s `LICENSE`
+  - This repository窶冱 `LICENSE`
   - `network_simulation/LICENSE` (unchanged)
   - Third-party license summaries generated above (optional but recommended)
 - If you bundle model files, include their license and Terms in your distribution.

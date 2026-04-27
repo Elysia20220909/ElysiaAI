@@ -1,52 +1,52 @@
-# Prisma 7 セチE��アチE�EガイチE- Elysia AI
+﻿# Prisma 7 繧ｻ繝・ヨ繧｢繝・・繧ｬ繧､繝・- Elysia AI
 
-## 概要E
-こ�Eガイド�E、Elysia AI プロジェクトで Prisma 7 を正しく設定し、データベ�Eスを�E期化する方法を説明します、E
-## 前提条件
+## 讎りｦ・
+縺薙・繧ｬ繧､繝峨・縲・lysia AI 繝励Ο繧ｸ繧ｧ繧ｯ繝医〒 Prisma 7 繧呈ｭ｣縺励￥險ｭ螳壹＠縲√ョ繝ｼ繧ｿ繝吶・繧ｹ繧貞・譛溷喧縺吶ｋ譁ｹ豕輔ｒ隱ｬ譏弱＠縺ｾ縺吶�・
+## 蜑肴署譚｡莉ｶ
 
 - Bun >= 1.0
-- Node.js >= 18 (オプション)
+- Node.js >= 18 (繧ｪ繝励す繝ｧ繝ｳ)
 - SQLite 3
 
-## セチE��アチE�E手頁E
-### 1. 環墁E��数の設宁E
-`.env` ファイルに `DATABASE_URL` を設定します！E
+## 繧ｻ繝・ヨ繧｢繝・・謇矩�・
+### 1. 迺ｰ蠅・､画焚縺ｮ險ｭ螳・
+`.env` 繝輔ぃ繧､繝ｫ縺ｫ `DATABASE_URL` 繧定ｨｭ螳壹＠縺ｾ縺呻ｼ・
 ```env
 DATABASE_URL="file:./prisma/dev.db"
 ```
 
-### 2. Prisma クライアント生戁E
+### 2. Prisma 繧ｯ繝ｩ繧､繧｢繝ｳ繝育函謌・
 ```bash
 bunx prisma generate
 ```
 
-こ�Eコマンドで `@prisma/client` が�E動生成されます、E
-### 3. チE�Eタベ�Eスマイグレーション
+縺薙・繧ｳ繝槭Φ繝峨〒 `@prisma/client` 縺瑚・蜍慕函謌舌＆繧後∪縺吶�・
+### 3. 繝・・繧ｿ繝吶・繧ｹ繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ
 
-#### オプション A: Prisma Migrate Dev�E�推奨�E�E
+#### 繧ｪ繝励す繝ｧ繝ｳ A: Prisma Migrate Dev・域耳螂ｨ・・
 ```bash
 bunx prisma migrate dev --name init
 ```
 
-**注愁E*: Bun で実行する場合、`prisma.config.js` が正しく読み込まれることを確認してください、E
-#### オプション B: Node.js で実衁E
+**豕ｨ諢・*: Bun 縺ｧ螳溯｡後☆繧句�ｴ蜷医�～prisma.config.js` 縺梧ｭ｣縺励￥隱ｭ縺ｿ霎ｼ縺ｾ繧後ｋ縺薙→繧堤｢ｺ隱阪＠縺ｦ縺上□縺輔＞縲・
+#### 繧ｪ繝励す繝ｧ繝ｳ B: Node.js 縺ｧ螳溯｡・
 ```bash
 npx prisma migrate dev --name init
 ```
 
-### 4. Prisma Studio�E�オプション�E�E
-ブラウザで チE�Eタベ�Eスを管琁E��E
+### 4. Prisma Studio・医が繝励す繝ｧ繝ｳ・・
+繝悶Λ繧ｦ繧ｶ縺ｧ 繝・・繧ｿ繝吶・繧ｹ繧堤ｮ｡逅・ｼ・
 ```bash
 bunx prisma studio
 ```
 
-## Prisma 7 の主な変更点
+## Prisma 7 縺ｮ荳ｻ縺ｪ螟画峩轤ｹ
 
-### Schema から Datasource URL の削除
+### Schema 縺九ｉ Datasource URL 縺ｮ蜑企勁
 
-**Prisma 7 では、`schema.prisma` に datasource URL を記述できません、E*
+**Prisma 7 縺ｧ縺ｯ縲～schema.prisma` 縺ｫ datasource URL 繧定ｨ倩ｿｰ縺ｧ縺阪∪縺帙ｓ縲・*
 
-❁E間違ぁE��E
+笶・髢馴＆縺・ｼ・
 ```prisma
 datasource db {
   provider = "sqlite"
@@ -54,8 +54,8 @@ datasource db {
 }
 ```
 
-✁E正しい方法！E
-**方況E1: prisma.config.js で設宁E*
+笨・豁｣縺励＞譁ｹ豕包ｼ・
+**譁ｹ豕・1: prisma.config.js 縺ｧ險ｭ螳・*
 
 ```javascript
 // prisma/prisma.config.js
@@ -70,7 +70,7 @@ module.exports = {
 };
 ```
 
-**方況E2: PrismaClient コンストラクタで設宁E*
+**譁ｹ豕・2: PrismaClient 繧ｳ繝ｳ繧ｹ繝医Λ繧ｯ繧ｿ縺ｧ險ｭ螳・*
 
 ```typescript
 import { PrismaClient } from "@prisma/client";
@@ -80,14 +80,14 @@ const prisma = new PrismaClient({
 });
 ```
 
-## トラブルシューチE��ング
+## 繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ
 
-### エラー: "The datasource property is required in your Prisma config file"
+### 繧ｨ繝ｩ繝ｼ: "The datasource property is required in your Prisma config file"
 
-**原因**: `prisma.config.js` が見つからなぁE��、`datasources` が定義されてぁE��ぁE
-**解決筁E*:
+**蜴溷屏**: `prisma.config.js` 縺瑚ｦ九▽縺九ｉ縺ｪ縺・°縲～datasources` 縺悟ｮ夂ｾｩ縺輔ｌ縺ｦ縺・↑縺・
+**隗｣豎ｺ遲・*:
 
-1. `prisma/prisma.config.js` が存在することを確誁E2. ファイルに以下�E冁E��があることを確認！E
+1. `prisma/prisma.config.js` 縺悟ｭ伜惠縺吶ｋ縺薙→繧堤｢ｺ隱・2. 繝輔ぃ繧､繝ｫ縺ｫ莉･荳九・蜀・ｮｹ縺後≠繧九％縺ｨ繧堤｢ｺ隱搾ｼ・
 ```javascript
 require("dotenv/config");
 
@@ -100,79 +100,79 @@ module.exports = {
 };
 ```
 
-### エラー: Prisma database not configured
+### 繧ｨ繝ｩ繝ｼ: Prisma database not configured
 
-**原因**: PrismaClient 初期化時に `datasourceUrl` が設定されてぁE��ぁE
-**解決筁E*: `src/lib/database.ts` を確認！E
+**蜴溷屏**: PrismaClient 蛻晄悄蛹匁凾縺ｫ `datasourceUrl` 縺瑚ｨｭ螳壹＆繧後※縺・↑縺・
+**隗｣豎ｺ遲・*: `src/lib/database.ts` 繧堤｢ｺ隱搾ｼ・
 ```typescript
 const prisma = new PrismaClient({
   datasourceUrl: process.env.DATABASE_URL || "file:./prisma/dev.db",
 });
 ```
 
-### ポ�EチE3000 が既に使用中
+### 繝昴・繝・3000 縺梧里縺ｫ菴ｿ逕ｨ荳ｭ
 
-**解決筁E*:
+**隗｣豎ｺ遲・*:
 
 ```powershell
-# Windows: Bun プロセスを�Eて停止
+# Windows: Bun 繝励Ο繧ｻ繧ｹ繧貞・縺ｦ蛛懈ｭ｢
 Get-Process bun | Stop-Process -Force
 
 # Unix/Linux:
 killall bun
 ```
 
-## マイグレーション作�E
+## 繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ菴懈・
 
-スキーマを変更した後、新しいマイグレーションを作�E�E�E
+繧ｹ繧ｭ繝ｼ繝槭ｒ螟画峩縺励◆蠕後�∵眠縺励＞繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ繧剃ｽ懈・・・
 ```bash
 bunx prisma migrate dev --name <migration_name>
 ```
 
-例！E
+萓具ｼ・
 ```bash
 bunx prisma migrate dev --name add_voice_logs
 ```
 
-## チE�Eタベ�EスリセチE���E�開発用�E�E
-⚠�E�E**本番環墁E��は使用しなぁE��ください**
+## 繝・・繧ｿ繝吶・繧ｹ繝ｪ繧ｻ繝・ヨ・磯幕逋ｺ逕ｨ・・
+笞�・・**譛ｬ逡ｪ迺ｰ蠅・〒縺ｯ菴ｿ逕ｨ縺励↑縺・〒縺上□縺輔＞**
 
 ```bash
 bunx prisma migrate reset
 ```
 
-こ�Eコマンド�EすべてのチE�Eタを削除し、�Eイグレーション履歴を�E期化します、E
-## プロダクション環墁E��のチE�Eロイ
+縺薙・繧ｳ繝槭Φ繝峨・縺吶∋縺ｦ縺ｮ繝・・繧ｿ繧貞炎髯､縺励�√・繧､繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ螻･豁ｴ繧貞・譛溷喧縺励∪縺吶�・
+## 繝励Ο繝�繧ｯ繧ｷ繝ｧ繝ｳ迺ｰ蠅・〒縺ｮ繝・・繝ｭ繧､
 
-### マイグレーション適用
+### 繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ驕ｩ逕ｨ
 
 ```bash
 bunx prisma migrate deploy
 ```
 
-また�E Node.js で�E�E
+縺ｾ縺溘・ Node.js 縺ｧ・・
 ```bash
 npx prisma migrate deploy
 ```
 
-### 本番環墁E��の設宁E
-`.env.production` で `DATABASE_URL` を設定！E
+### 譛ｬ逡ｪ迺ｰ蠅・〒縺ｮ險ｭ螳・
+`.env.production` 縺ｧ `DATABASE_URL` 繧定ｨｭ螳夲ｼ・
 ```env
 DATABASE_URL="postgresql://user:password@host:port/dbname"
 ```
 
-## 参老E��E��
+## 蜿り�・ｳ・侭
 
 - [Prisma 7 Migration Guide](https://www.prisma.io/docs/orm/more/upgrade-guides/upgrading-to-prisma-7)
 - [Prisma Config Documentation](https://www.prisma.io/docs/orm/reference/prisma-schema-reference#datasource)
 - [Prisma Migrate Documentation](https://www.prisma.io/docs/orm/prisma-migrate/understanding-prisma-migrate/overview)
 
-## 関連ファイル
+## 髢｢騾｣繝輔ぃ繧､繝ｫ
 
-- `prisma/schema.prisma` - チE�Eタベ�Eススキーマ定義
-- `prisma/prisma.config.js` - Prisma 7 設宁E- `src/lib/database.ts` - PrismaClient 初期匁E- `.env` - 環墁E��数
-- `prisma/migrations/` - マイグレーション履歴
+- `prisma/schema.prisma` - 繝・・繧ｿ繝吶・繧ｹ繧ｹ繧ｭ繝ｼ繝槫ｮ夂ｾｩ
+- `prisma/prisma.config.js` - Prisma 7 險ｭ螳・- `src/lib/database.ts` - PrismaClient 蛻晄悄蛹・- `.env` - 迺ｰ蠅・､画焚
+- `prisma/migrations/` - 繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ螻･豁ｴ
 
 ---
 
-**最終更新**: 2025年12朁E日
+**譛�邨よ峩譁ｰ**: 2025蟷ｴ12譛・譌･
