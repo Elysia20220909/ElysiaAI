@@ -1,5 +1,10 @@
 import datetime
 import os
+import sys
+
+# Force UTF-8 for IO in Windows environments
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
 
 from dotenv import load_dotenv
 

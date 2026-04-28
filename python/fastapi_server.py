@@ -15,6 +15,12 @@ import os
 import sys
 import time
 import uuid
+
+# Force UTF-8 for IO in Windows environments
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stdin.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
