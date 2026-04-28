@@ -1,6 +1,12 @@
 # 🛡️ Elysia OS - Universal PowerShell Utility Library
 # Version 1.0 (Phase 17 Robust Infrastructure)
 
+# Force UTF-8 Encoding for Windows Console
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+
 function Get-ElysiaFiles {
     <#
     .SYNOPSIS
