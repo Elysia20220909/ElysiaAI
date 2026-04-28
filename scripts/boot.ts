@@ -5,6 +5,10 @@ import { join } from "node:path";
 
 const rootDir = process.cwd();
 
+// Force UTF-8 environment for child processes
+process.env.PYTHONUTF8 = "1";
+process.env.LANG = "en_US.UTF-8";
+
 async function loadDotEnv(path = join(rootDir, ".env")) {
 	if (!existsSync(path)) return;
 
@@ -148,7 +152,7 @@ async function main() {
 			"--port",
 			fastApiPort,
 		],
-		{},
+		{ PYTHONUTF8: "1" },
 	);
 
 	try {

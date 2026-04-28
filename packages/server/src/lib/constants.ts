@@ -23,7 +23,7 @@ export const CONFIG = {
 export const jsonError = (status: number, message: string) => {
 	return new Response(JSON.stringify({ error: message }), {
 		status,
-		headers: { "Content-Type": "application/json" },
+		headers: { "Content-Type": "application/json; charset=utf-8" },
 	});
 };
 
@@ -54,7 +54,7 @@ export const proxyToFastAPI = async (
 			data: body,
 			headers: {
 				"X-API-Key": CONFIG.FASTAPI_API_KEY,
-				"Content-Type": "application/json",
+				"Content-Type": "application/json; charset=utf-8",
 			},
 		});
 		return response.data;
