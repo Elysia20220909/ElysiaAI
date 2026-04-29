@@ -11,6 +11,7 @@ load_dotenv()
 # Webhook URLs
 MARATHON_WEBHOOK_URL = os.getenv("MARATHON_WEBHOOK_URL") or "https://discord.com/api/webhooks/1499047057447583744/G6AV8xGcIefoBx_hUQ6aTRgRmflv3UU89yGFvCotxV61u6PuIKZsGyjERdyzg6G_dy0d"
 ABYSSAL_WEBHOOK_URL = os.getenv("ABYSSAL_WEBHOOK_URL") or "https://discord.com/api/webhooks/1499058592643551426/jrI5cKj8YXGK6s8mVUReqajp8k2KgcXYH6Z5mSuIjUdjNwEEhM1VfI4do2MAeQ-hH9Ch"
+FF14_WEBHOOK_URL = os.getenv("FF14_WEBHOOK_URL") or "https://discord.com/api/webhooks/1499081898717351980/LCLFh-hZdYkEVlfT0HJJGZbFeaa76YEXCze9-QD03b47emzKf6GMF8n69tmBhIk0pS8-"
 
 class MarathonNotifier:
     """
