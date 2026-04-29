@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElysiaAI | Network Optimizer</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { background-image: url('bg.png'); }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="container">
+        <header>
+            <h1>ABYSSAL NETWORK</h1>
+            <p class="subtitle">ElysiaAI Advanced Synchronization Interface</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="ping-val">-- ms</div>
+                <div class="stat-label">Latency</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">ENABLED</div>
+                <div class="stat-label">BBR/CUBIC</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">OPTIMIZED</div>
+                <div class="stat-label">TCP Stack</div>
+            </div>
+        </div>
+
+        <div class="action-area">
+            <button class="btn" id="optimize-btn">RUN CALIBRATION</button>
+            <p style="margin-top: 15px; font-size: 0.8rem; color: var(--text-secondary);">
+                Applying system-level tweaks for low-latency gaming & streaming.
+            </p>
+        </div>
+
+        <div class="log-window" id="logs">
+            <div class="log-entry info">[SYSTEM] Ready for initialization...</div>
+        </div>
+    </div>
+
+    <script>
+        const logWindow = document.getElementById('logs');
+        const btn = document.getElementById('optimize-btn');
+        const pingVal = document.getElementById('ping-val');
+
+        function addLog(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log-entry ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logWindow.appendChild(div);
+            logWindow.scrollTop = logWindow.scrollHeight;
+        }
+
+        // Mock Ping
+        setInterval(() => {
+            const p = Math.floor(Math.random() * 5) + 2;
+            pingVal.textContent = p + ' ms';
+        }, 2000);
+
+        btn.addEventListener('click', () => {
+            btn.disabled = true;
+            btn.textContent = 'CALIBRATING...';
+            
+            const steps = [
+                { msg: "Initiating Abyssal handshake...", type: "info" },
+                { msg: "Purging legacy DNS buffers...", type: "info" },
+                { msg: "Injecting TCP CUBIC parameters...", type: "success" },
+                { msg: "Disabling Nagle's Algorithm...", type: "success" },
+                { msg: "Optimizing NIC Interrupt Moderation...", type: "success" },
+                { msg: "Network Calibration Complete.", type: "success" }
+            ];
+
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i < steps.length) {
+                    addLog(steps[i].msg, steps[i].type);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                    btn.textContent = 'SYSTEM OPTIMIZED';
+                    addLog("Manual reboot required for full synchronization.", "warn");
+                }
+            }, 800);
+        });
+    </script>
+</body>
+</html>
