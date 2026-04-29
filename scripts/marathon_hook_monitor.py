@@ -5,13 +5,33 @@ import random
 from datetime import datetime, timezone
 from marathon_templates import MarathonNotifier
 
-# Mock data for simulation
+# Mock data for simulation (Post-Launch 2026 Context)
+# All data tuples now include a source link
 MOCK_FEEDS = [
-    {"type": "cryo", "data": ("Neural Link Fragment", "Sector-A1", "Legendary")},
-    {"type": "patch", "data": ("1.2.0", "New extraction zones discovered in the Lowlands.", "https://marathon.thebe.com/updates")},
-    {"type": "kit", "data": ("Ghost-Walker", "• Cloak duration +2s\n• Movement speed increased while crouched.")},
-    {"type": "balance", "data": ("Plasma Rifles", "Projectile speed increased by 10%; overheat threshold reduced.")},
-    {"type": "cryo", "data": ("MIDA Multi-Tool Relic", "Lost Archive", "Exotic")},
+    {
+        "type": "cryo", 
+        "data": ("Neural Link Fragment", "ニューラルリンクの断片", "Sector-A1", "セクターA1", "Legendary", "https://www.marathonthegame.com/database/A1")
+    },
+    {
+        "type": "patch", 
+        "data": ("1.0.5", "Optimized server resonance.", "サーバーの共鳴を最適化。", "https://www.marathonthegame.com/updates")
+    },
+    {
+        "type": "kit", 
+        "data": ("Ghost-Walker", "ゴースト・ウォーカー", "Increased stealth.", "隠密性能の向上。", "https://www.marathonthegame.com/kits/ghost-walker")
+    },
+    {
+        "type": "balance", 
+        "data": ("Plasma Rifles", "プラズマライフル", "Damage increased.", "ダメージの増加。", "https://www.marathonthegame.com/sandbox")
+    },
+    {
+        "type": "reddit", 
+        "data": ("marathon", "Is Ghost-Walker meta?", "ゴースト・ウォーカーはメタか？", "Discussing the new kit.", "新キットに関する議論。", "3.5k", "https://reddit.com/r/marathon")
+    },
+    {
+        "type": "director", 
+        "data": ("Joe Ziegler", "Season 1 content reveal soon.", "シーズン1の情報を近日公開。", "X (Twitter)")
+    }
 ]
 
 def run_monitor(loop=False):
@@ -35,12 +55,16 @@ def run_monitor(loop=False):
                 notifier.notify_kit_update(*event["data"])
             elif event["type"] == "balance":
                 notifier.notify_combat_balance(*event["data"])
+            elif event["type"] == "reddit":
+                notifier.notify_reddit_signal(*event["data"])
+            elif event["type"] == "director":
+                notifier.notify_director_signal(*event["data"])
                 
             if not loop:
                 break
                 
             # Wait for next check
-            wait_time = random.randint(30, 60)
+            wait_time = random.randint(15, 30) # Faster loop for demonstration
             print(f"[*] Sleeping for {wait_time}s...")
             time.sleep(wait_time)
             

@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+# Webhook URL provided by user
+MARATHON_WEBHOOK_URL = "https://discord.com/api/webhooks/1499047057447583744/G6AV8xGcIefoBx_hUQ6aTRgRmflv3UU89yGFvCotxV61u6PuIKZsGyjERdyzg6G_dy0d"
 
 class MarathonNotifier:
     """
@@ -27,25 +28,25 @@ class MarathonNotifier:
     }
 
     @staticmethod
-    def send_webhook(embed):
-        if not WEBHOOK_URL or "your_discord" in WEBHOOK_URL:
-            print("[!] DISCORD_WEBHOOK_URL not configured. Embed would have been:")
+    def send_webhook(embed, username="Marathon Sentinel", avatar_url="https://raw.githubusercontent.com/hosih/ElysiaAI/main/public/marathon_logo.png"):
+        if not MARATHON_WEBHOOK_URL:
+            print("[!] MARATHON_WEBHOOK_URL not configured. Embed would have been:")
             print(json.dumps(embed, indent=2, ensure_ascii=False))
             return
 
         payload = {
             "embeds": [embed],
-            "username": "Marathon Sentinel",
-            "avatar_url": "https://raw.githubusercontent.com/hosih/ElysiaAI/main/public/marathon_logo.png"
+            "username": username,
+            "avatar_url": avatar_url
         }
         
         try:
             with httpx.Client() as client:
-                response = client.post(WEBHOOK_URL, json=payload)
+                response = client.post(MARATHON_WEBHOOK_URL, json=payload)
                 response.raise_for_status()
-                print("[+] Notification dispatched successfully.")
+                print("[+] Marathon Signal dispatched successfully.")
         except Exception as e:
-            print(f"[-] Failed to dispatch notification: {e}")
+            print(f"[-] Failed to dispatch signal: {e}")
 
     def notify_leak_signal(self, title_en, title_ja, content_en, content_ja, source="Unknown", link=None):
         """リーク・噂話 / Leak & Rumor (Clandestine Signal)"""
@@ -98,7 +99,7 @@ class MarathonNotifier:
         }
         self.send_webhook(embed)
 
-    def notify_cryo_archive(self, item_name_en, item_name_ja, sector_en, sector_ja, rarity="Legendary"):
+    def notify_cryo_archive(self, item_name_en, item_name_ja, sector_en, sector_ja, rarity="Legendary", link=None):
         """低温アーカイブ通知 / Cryo Archive Notification (Bilingual)"""
         embed = {
             "title": "❄️ CRYO ARCHIVE: DATA RECOVERY SUCCESSFUL",
@@ -112,6 +113,8 @@ class MarathonNotifier:
             "footer": {"text": f"Archive ID: {datetime.now().strftime('%Y%m%d-%H%M%S')}"},
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+        if link:
+            embed["url"] = link
         self.send_webhook(embed)
 
     def notify_patch_notes(self, version, summary_en, summary_ja, link=None):
@@ -130,7 +133,7 @@ class MarathonNotifier:
             embed["url"] = link
         self.send_webhook(embed)
 
-    def notify_kit_update(self, kit_name_en, kit_name_ja, changes_en, changes_ja):
+    def notify_kit_update(self, kit_name_en, kit_name_ja, changes_en, changes_ja, link=None):
         """キット更新 / Kit Update (Bilingual)"""
         embed = {
             "title": f"🎒 KIT CALIBRATION: {kit_name_ja} / {kit_name_en}",
@@ -143,9 +146,11 @@ class MarathonNotifier:
             "footer": {"text": "UEC Supply Requisition"},
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+        if link:
+            embed["url"] = link
         self.send_webhook(embed)
 
-    def notify_combat_balance(self, category_en, category_ja, change_summary_en, change_summary_ja):
+    def notify_combat_balance(self, category_en, category_ja, change_summary_en, change_summary_ja, link=None):
         """戦闘バランス変更 / Combat Balance Changes (Bilingual)"""
         embed = {
             "title": f"⚖️ TACTICAL RE-ALIGNMENT: {category_ja} / {category_en}",
@@ -158,6 +163,8 @@ class MarathonNotifier:
             "footer": {"text": "Combat Protocol: V0.7-E"},
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
+        if link:
+            embed["url"] = link
         self.send_webhook(embed)
 
 if __name__ == "__main__":
