@@ -17,10 +17,11 @@ SEEN_FILE = "seen_marathon_news.json"
 
 SEARCH_QUERIES = [
     ("https://news.google.com/rss/search?q=Marathon%20Bungie%20latest&hl=ja&gl=JP&ceid=JP:ja", "ja"),
+    ("https://news.google.com/rss/search?q=site:famitsu.com%20Marathon&hl=ja&gl=JP&ceid=JP:ja", "ja"),
+    ("https://news.google.com/rss/search?q=site:4gamer.net%20Marathon&hl=ja&gl=JP&ceid=JP:ja", "ja"),
+    ("https://news.google.com/rss/search?q=site:dengekionline.com%20Marathon&hl=ja&gl=JP&ceid=JP:ja", "ja"),
     ("https://news.google.com/rss/search?q=Marathon%20Bungie%20game%20news&hl=en-US&gl=US&ceid=US:en", "en"),
-    ("https://news.google.com/rss/search?q=Marathon%20Bungie%20patch%20notes%20update&hl=en-US&gl=US&ceid=US:en", "en"),
-    ("https://news.google.com/rss/search?q=Marathon%20game%20Reddit%20leaks%20rumors&hl=en-US&gl=US&ceid=US:en", "en"),
-    ("https://news.google.com/rss/search?q=Marathon%20Bungie%20Director%20Ziegler&hl=en-US&gl=US&ceid=US:en", "en")
+    ("https://news.google.com/rss/search?q=Marathon%20game%20Reddit%20leaks%20rumors&hl=en-US&gl=US&ceid=US:en", "en")
 ]
 
 def load_seen():

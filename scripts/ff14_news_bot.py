@@ -10,6 +10,9 @@ import asyncio
 # Configuration
 SEARCH_QUERIES = [
     ("https://news.google.com/rss/search?q=Final%20Fantasy%20XIV%20news%20latest&hl=ja&gl=JP&ceid=JP:ja", "ja"),
+    ("https://news.google.com/rss/search?q=site:famitsu.com%20FF14&hl=ja&gl=JP&ceid=JP:ja", "ja"),
+    ("https://news.google.com/rss/search?q=site:4gamer.net%20FF14&hl=ja&gl=JP&ceid=JP:ja", "ja"),
+    ("https://news.google.com/rss/search?q=site:dengekionline.com%20FF14&hl=ja&gl=JP&ceid=JP:ja", "ja"),
     ("https://news.google.com/rss/search?q=FFXIV%20Reddit%20leaks%20rumors&hl=en-US&gl=US&ceid=US:en", "en"),
     ("https://news.google.com/rss/search?q=FF14%20Dawntrail%20update&hl=ja&gl=JP&ceid=JP:ja", "ja")
 ]
