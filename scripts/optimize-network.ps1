@@ -29,6 +29,10 @@ netsh int tcp set global timestamps=disabled
 netsh int tcp set global fastopen=enabled
 netsh int tcp set global initialrto=2000
 netsh int tcp set global maxsynretransmissions=2
+# Gaming Specific: Disable HyStart and Pacing to reduce micro-jitter
+netsh int tcp set global hystart=disabled
+netsh int tcp set global pacingprofile=off
+
 
 # Congestion Provider Check (BBR support)
 $tcpStats = netsh int tcp show supplemental
@@ -52,6 +56,14 @@ Get-ChildItem $RegPath | ForEach-Object {
 $SysProfile = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
 Set-ItemProperty -Path $SysProfile -Name "NetworkThrottlingIndex" -Value 0xFFFFFFFF -Type DWord
 Set-ItemProperty -Path $SysProfile -Name "SystemResponsiveness" -Value 0 -Type DWord
+
+# MMCSS Gaming Priority
+$TaskPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games"
+Set-ItemProperty -Path $TaskPath -Name "GPU Priority" -Value 8 -Type DWord
+Set-ItemProperty -Path $TaskPath -Name "Priority" -Value 6 -Type DWord
+Set-ItemProperty -Path $TaskPath -Name "Scheduling Category" -Value "High" -Type String
+Set-ItemProperty -Path $TaskPath -Name "SFIO Priority" -Value "High" -Type String
+
 
 # 3. Hardware Adapter Optimization
 Write-Elysia "[3/4] Fine-tuning Hardware Adapters..."
