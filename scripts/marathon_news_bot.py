@@ -11,7 +11,7 @@ from marathon_templates import MarathonNotifier
 load_dotenv()
 
 # Configuration from .env or defaults
-KEYWORDS = [k.strip().lower() for k in os.getenv("KEYWORDS", "Marathon,Bungie,Rook,Joe Ziegler,Ziegler,Sandbox,Balance,Cryo Archive,Low Temp Storage,WSTR,MIDA,Traxus,U.E.S.C.,Extraction Shooter,Runner,Depleted Shield Charges,Patch Kits,Sponsored Kit,AI targets").split(",") if k.strip()]
+KEYWORDS = [k.strip().lower() for k in os.getenv("KEYWORDS", "Marathon,Bungie,Rook,Joe Ziegler,Ziegler,Sandbox,Balance,Cryo Archive,Low Temp Storage,WSTR,MIDA,Traxus,U.E.S.C.,Extraction Shooter,Runner,Mercy Kit,Abyssal Vault,Tau Ceti,CyberAcme").split(",") if k.strip()]
 
 SEEN_FILE = "seen_marathon_news.json"
 

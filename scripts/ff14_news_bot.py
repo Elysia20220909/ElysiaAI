@@ -9,14 +9,15 @@ import asyncio
 
 # Configuration
 SEARCH_QUERIES = [
-    ("https://news.google.com/rss/search?q=Final%20Fantasy%20XIV%20news%20latest&hl=ja&gl=JP&ceid=JP:ja", "ja"),
-    ("https://news.google.com/rss/search?q=site:famitsu.com%20FF14&hl=ja&gl=JP&ceid=JP:ja", "ja"),
-    ("https://news.google.com/rss/search?q=site:4gamer.net%20FF14&hl=ja&gl=JP&ceid=JP:ja", "ja"),
-    ("https://news.google.com/rss/search?q=site:dengekionline.com%20FF14&hl=ja&gl=JP&ceid=JP:ja", "ja"),
     ("https://news.google.com/rss/search?q=FFXIV%20Reddit%20leaks%20rumors&hl=en-US&gl=US&ceid=US:en", "en"),
-    ("https://news.google.com/rss/search?q=FF14%20Dawntrail%20update&hl=ja&gl=JP&ceid=JP:ja", "ja")
+    ("https://news.google.com/rss/search?q=FFXIV%20datamine%204chan%20spoiler&hl=en-US&gl=US&ceid=US:en", "en")
 ]
-KEYWORDS = ["FFXIV", "FF14", "Final Fantasy", "Dawntrail", "Yoshi-P", "Square Enix", "黄金のレガシー", "吉田直樹"]
+KEYWORDS = [
+    "FFXIV", "FF14", "Final Fantasy XIV", "Dawntrail", "Yoshi-P", "Square Enix", 
+    "黄金のレガシー", "吉田直樹", "Evercold", "Argent Wanderer", "白銀のワンダラー", 
+    "Spellblade", "魔法剣士", "Beastmaster", "魔獣使い", "Dancing Mad", "絶ケフカ", 
+    "Evangelion", "エヴァコラボ"
+]
 SEEN_FILE = "seen_ff14_news.json"
 
 def load_seen():
