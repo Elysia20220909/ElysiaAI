@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Webhook URL provided by user
-MARATHON_WEBHOOK_URL = "https://discord.com/api/webhooks/1499047057447583744/G6AV8xGcIefoBx_hUQ6aTRgRmflv3UU89yGFvCotxV61u6PuIKZsGyjERdyzg6G_dy0d"
+# Webhook URLs
+MARATHON_WEBHOOK_URL = os.getenv("MARATHON_WEBHOOK_URL") or "https://discord.com/api/webhooks/1499047057447583744/G6AV8xGcIefoBx_hUQ6aTRgRmflv3UU89yGFvCotxV61u6PuIKZsGyjERdyzg6G_dy0d"
+ABYSSAL_WEBHOOK_URL = os.getenv("ABYSSAL_WEBHOOK_URL") or "https://discord.com/api/webhooks/1499058592643551426/jrI5cKj8YXGK6s8mVUReqajp8k2KgcXYH6Z5mSuIjUdjNwEEhM1VfI4do2MAeQ-hH9Ch"
 
 class MarathonNotifier:
     """
@@ -28,76 +30,71 @@ class MarathonNotifier:
     }
 
     @staticmethod
-    def send_webhook(embed, username="Marathon Sentinel", avatar_url="https://raw.githubusercontent.com/hosih/ElysiaAI/main/public/marathon_logo.png"):
-        if not MARATHON_WEBHOOK_URL:
-            print("[!] MARATHON_WEBHOOK_URL not configured. Embed would have been:")
-            print(json.dumps(embed, indent=2, ensure_ascii=False))
+    def send_webhook(content=None, embed=None, username="Marathon Sentinel", avatar_url="https://raw.githubusercontent.com/hosih/ElysiaAI/main/public/marathon_logo.png", webhook_url=None):
+        target_url = webhook_url or MARATHON_WEBHOOK_URL
+        if not target_url:
             return
 
         payload = {
-            "embeds": [embed],
             "username": username,
             "avatar_url": avatar_url
         }
+        if content:
+            payload["content"] = content
+        if embed:
+            payload["embeds"] = [embed]
         
         try:
             with httpx.Client() as client:
-                response = client.post(MARATHON_WEBHOOK_URL, json=payload)
+                response = client.post(target_url, json=payload)
                 response.raise_for_status()
-                print("[+] Marathon Signal dispatched successfully.")
+                print(f"[+] Marathon Signal dispatched to {target_url[:40]}...")
         except Exception as e:
             print(f"[-] Failed to dispatch signal: {e}")
 
     def notify_leak_signal(self, title_en, title_ja, content_en, content_ja, source="Unknown", link=None):
-        """リーク・噂話 / Leak & Rumor (Clandestine Signal)"""
-        # Wrap content in Discord spoiler tags
-        spoilered_ja = f"||{content_ja}||"
-        spoilered_en = f"||{content_en}||"
-        spoilered_link = f"||{link}||" if link else "Classified"
-
-        embed = {
-            "title": f"⚠️ ABYSSAL SIGNAL: LEAK / RUMOR DETECTED",
-            "description": f"**[JP] {title_ja}**\n{spoilered_ja}\n\n**[EN] {title_en}**\n{spoilered_en}",
-            "color": self.COLORS["LEAK"],
-            "fields": [
-                {"name": "Origin", "value": f"`{source}`", "inline": True},
-                {"name": "Hidden Link", "value": spoilered_link, "inline": True}
-            ],
-            "footer": {"text": "WARNING: UNVERIFIED DATA - PROCEED WITH CAUTION"},
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-        self.send_webhook(embed)
+        """リーク・噂話 / Leak & Rumor (Terminal Edition)"""
+        text = "```\n"
+        text += "[ ACCESSING ABYSSAL DATA NODE... ]\n"
+        text += "--------------------------------------------------\n"
+        text += f"SIGNAL: LEAK / RUMOR DETECTED\n"
+        text += f"ORIGIN: {source}\n"
+        text += "--------------------------------------------------\n"
+        text += f"[JP] {title_ja}\n"
+        text += f"> {content_ja}\n\n"
+        text += f"[EN] {title_en}\n"
+        text += f"> {content_en}\n"
+        text += "--------------------------------------------------\n"
+        if link:
+            text += f"LINK: {link}\n"
+        text += "[ CONNECTION STABLE - END OF PACKET ]\n"
+        text += "```"
+        self.send_webhook(content=text, webhook_url=ABYSSAL_WEBHOOK_URL)
 
     def notify_reddit_signal(self, subreddit, title_en, title_ja, content_en, content_ja, score, link=None):
-        """Reddit 信号 / Reddit Signal (Bilingual)"""
-        embed = {
-            "title": f"🧡 REDDIT TRENDING: r/{subreddit}",
-            "description": f"**[JP] ||{title_ja}||**\n||{content_ja}||\n\n**[EN] ||{title_en}||**\n||{content_en}||",
-            "color": self.COLORS["REDDIT"],
-            "url": link if link else "https://reddit.com/r/" + subreddit,
-            "fields": [
-                {"name": "Karma Score", "value": f"🔥 {score}", "inline": True},
-                {"name": "Status", "value": "Recommended Post", "inline": True}
-            ],
-            "footer": {"text": "Traxus Data Harvest"},
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-        self.send_webhook(embed)
+        """Reddit 信号 / Reddit Signal (Terminal Edition)"""
+        text = "```\n"
+        text += f"[ HARVESTING REDDIT INTEL: r/{subreddit} ]\n"
+        text += "--------------------------------------------------\n"
+        text += f"KARMA SCORE: 🔥 {score}\n"
+        text += "--------------------------------------------------\n"
+        text += f"[JP] {title_ja}\n"
+        text += f"> {content_ja}\n\n"
+        text += f"[EN] {title_en}\n"
+        text += f"> {content_en}\n"
+        text += "--------------------------------------------------\n"
+        text += f"LINK: {link if link else 'https://reddit.com/r/'+subreddit}\n"
+        text += "```"
+        self.send_webhook(content=text, webhook_url=ABYSSAL_WEBHOOK_URL)
 
     def notify_director_signal(self, author, text_en, text_ja, platform="X/Twitter"):
-        """ディレクター発言 / Director's Signal (Bilingual)"""
-        embed = {
-            "title": f"📡 DIRECTOR'S SIGNAL: {author}",
-            "description": f"**[JP]**\n{text_ja}\n\n**[EN]**\n{text_en}",
-            "color": self.COLORS["DIRECTOR"],
-            "fields": [
-                {"name": "Source", "value": platform, "inline": True},
-                {"name": "Security Clearance", "value": "Level 5", "inline": True}
-            ],
-            "footer": {"text": "Traxus Intelligence Intercept"},
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-        self.send_webhook(embed)
+        """ディレクター発言 / Director's Signal (Plain Text Edition)"""
+        text = f"**📡 DIRECTOR'S SIGNAL: {author}**\n"
+        text += f"**[JP]**\n{text_ja}\n\n"
+        text += f"**[EN]**\n{text_en}\n"
+        text += f"**Source:** {platform}\n"
+        text += "---\n"
+        self.send_webhook(content=text)
 
     def notify_cryo_archive(self, item_name_en, item_name_ja, sector_en, sector_ja, rarity="Legendary", link=None):
         """低温アーカイブ通知 / Cryo Archive Notification (Bilingual)"""
@@ -118,20 +115,14 @@ class MarathonNotifier:
         self.send_webhook(embed)
 
     def notify_patch_notes(self, version, summary_en, summary_ja, link=None):
-        """パッチ情報 / Patch Information (Bilingual)"""
-        embed = {
-            "title": f"🛠️ SYSTEM UPDATE: VERSION {version}",
-            "description": f"**[JP]** {summary_ja}\n\n**[EN]** {summary_en}",
-            "color": self.COLORS["PATCH"],
-            "fields": [
-                {"name": "Action Required", "value": "Node reboot recommended.", "inline": False}
-            ],
-            "footer": {"text": "Traxus Global Operations"},
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
+        """パッチ情報 / Patch Information (Plain Text Edition)"""
+        text = f"**🛠️ SYSTEM UPDATE: VERSION {version}**\n"
+        text += f"**[JP]** {summary_ja}\n"
+        text += f"**[EN]** {summary_en}\n"
         if link:
-            embed["url"] = link
-        self.send_webhook(embed)
+            text += f"**Full Notes:** <{link}>\n"
+        text += "---\n"
+        self.send_webhook(content=text)
 
     def notify_kit_update(self, kit_name_en, kit_name_ja, changes_en, changes_ja, link=None):
         """キット更新 / Kit Update (Bilingual)"""
