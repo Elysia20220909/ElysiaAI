@@ -28,8 +28,8 @@ def run_resilient_service():
             subprocess.run([sys.executable, "scripts/ff14_news_bot.py"])
             
             # Recency & Rate Limit control
-            print("[*] Sweep complete. Next monitoring pulse in 60 minutes...")
-            time.sleep(3600)
+            print("[*] Sweep complete. Next monitoring pulse in 10 minutes...")
+            time.sleep(600)
             
     except KeyboardInterrupt:
         print("\n[!] Shutdown requested by user.")
