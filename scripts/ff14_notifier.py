@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+FF14_WEBHOOK_URL = os.getenv("FF14_WEBHOOK_URL")
 FF14_CHANNEL_ID = 1499070875251769557
 
 class FF14Notifier:
@@ -13,6 +14,17 @@ class FF14Notifier:
         self.client = client
 
     async def send_message(self, content, channel_id=FF14_CHANNEL_ID):
+        if FF14_WEBHOOK_URL:
+            try:
+                import httpx
+                payload = {"content": content, "username": "FF14 Crystal Monitor"}
+                async with httpx.AsyncClient() as client:
+                    await client.post(FF14_WEBHOOK_URL, json=payload)
+                print(f"[+] FF14 Signal dispatched via Webhook")
+                return
+            except Exception as e:
+                print(f"[-] Webhook failed, falling back to Bot: {e}")
+
         if not self.client:
             # Standalone mode
             intents = discord.Intents.default()
