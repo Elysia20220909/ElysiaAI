@@ -53,38 +53,28 @@ class MarathonNotifier:
             print(f"[-] Failed to dispatch signal: {e}")
 
     def notify_leak_signal(self, title_en, title_ja, content_en, content_ja, source="Unknown", link=None):
-        """リーク・噂話 / Leak & Rumor (Terminal Edition)"""
-        text = "```\n"
-        text += "[ ACCESSING ABYSSAL DATA NODE... ]\n"
+        """リーク・噂話 / Leak & Rumor (Raw Text Edition)"""
+        text = f"**⚠️ ABYSSAL SIGNAL: LEAK / RUMOR DETECTED**\n"
+        text += f"**ORIGIN:** {source}\n"
         text += "--------------------------------------------------\n"
-        text += f"SIGNAL: LEAK / RUMOR DETECTED\n"
-        text += f"ORIGIN: {source}\n"
-        text += "--------------------------------------------------\n"
-        text += f"[JP] {title_ja}\n"
-        text += f"> {content_ja}\n\n"
-        text += f"[EN] {title_en}\n"
-        text += f"> {content_en}\n"
+        text += f"**[JP] {title_ja}**\n{content_ja}\n\n"
+        text += f"**[EN] {title_en}**\n{content_en}\n"
         text += "--------------------------------------------------\n"
         if link:
-            text += f"LINK: {link}\n"
-        text += "[ CONNECTION STABLE - END OF PACKET ]\n"
-        text += "```"
+            text += f"**LINK:** <{link}>\n"
+        text += "---"
         self.send_webhook(content=text, webhook_url=ABYSSAL_WEBHOOK_URL)
 
     def notify_reddit_signal(self, subreddit, title_en, title_ja, content_en, content_ja, score, link=None):
-        """Reddit 信号 / Reddit Signal (Terminal Edition)"""
-        text = "```\n"
-        text += f"[ HARVESTING REDDIT INTEL: r/{subreddit} ]\n"
+        """Reddit 信号 / Reddit Signal (Raw Text Edition)"""
+        text = f"**🧡 REDDIT INTEL: r/{subreddit}**\n"
+        text += f"**KARMA:** 🔥 {score}\n"
         text += "--------------------------------------------------\n"
-        text += f"KARMA SCORE: 🔥 {score}\n"
+        text += f"**[JP] {title_ja}**\n{content_ja}\n\n"
+        text += f"**[EN] {title_en}**\n{content_en}\n"
         text += "--------------------------------------------------\n"
-        text += f"[JP] {title_ja}\n"
-        text += f"> {content_ja}\n\n"
-        text += f"[EN] {title_en}\n"
-        text += f"> {content_en}\n"
-        text += "--------------------------------------------------\n"
-        text += f"LINK: {link if link else 'https://reddit.com/r/'+subreddit}\n"
-        text += "```"
+        text += f"**LINK:** <{link if link else 'https://reddit.com/r/'+subreddit}>\n"
+        text += "---"
         self.send_webhook(content=text, webhook_url=ABYSSAL_WEBHOOK_URL)
 
     def notify_director_signal(self, author, text_en, text_ja, platform="X/Twitter"):
@@ -123,6 +113,14 @@ class MarathonNotifier:
             text += f"**Full Notes:** <{link}>\n"
         text += "---\n"
         self.send_webhook(content=text)
+
+    def notify_raw_intel(self, title_ja, content_ja, title_en, content_en, webhook_url=None):
+        """完全プレーンテキスト形式 / Pure Raw Text Edition"""
+        text = f"### {title_ja} / {title_en}\n\n"
+        text += f"**[JP]**\n{content_ja}\n\n"
+        text += f"**[EN]**\n{content_en}\n"
+        text += "---\n"
+        self.send_webhook(content=text, webhook_url=webhook_url)
 
     def notify_kit_update(self, kit_name_en, kit_name_ja, changes_en, changes_ja, link=None):
         """キット更新 / Kit Update (Bilingual)"""
