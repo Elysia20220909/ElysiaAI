@@ -1,46 +1,56 @@
-from marathon_templates import MarathonNotifier
+import os
+import sys
+from marathon_templates import MarathonNotifier, ABYSSAL_WEBHOOK_URL
+from dotenv import load_dotenv
 
-def send_intel():
+# Ensure UTF-8 for Windows
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
+load_dotenv()
+
+def dispatch_marathon_intel():
     notifier = MarathonNotifier()
     
-    print("[*] Dispatching Marathon Abyssal Intel (April 2026)...")
+    print("[*] Commencing Marathon 'Abyssal Sector' Intel Transfer...")
     
-    # 1. Major Gameplay Shift (Balance)
-    notifier.notify_combat_balance(
-        "Extraction Protocol",
-        "抽出プロトコル",
-        "Extraction points have been moved from fixed to randomized locations to prevent 'extraction camping'.",
-        "「脱出地点待ち伏せ」を防止するため、脱出地点が固定からランダム配置に変更されました。",
-        "https://www.marathonthegame.com/sandbox"
-    )
+    # Intelligence Data
+    intel_items = [
+        {
+            "title_en": "Theater Update: Abyssal Swamp Map",
+            "title_ja": "新マップ: 深淵の沼地 (Abyssal Swamp)",
+            "content_en": "Media event leaks confirm the 'Abyssal Swamp' biome. High-hazard terrain with a 15-minute 'Lockdown' trigger. Red bubbles indicate POI entry points.",
+            "content_ja": "メディア公開により『深淵の沼地』バイオームが確定。マッチ開始15分で発生する『封鎖』イベントでは、POIが赤い泡に包まれ高難度化します。",
+            "source": "Shanghai Media Event / Sector-04 Leak"
+        },
+        {
+            "title_en": "Protocol Delta: C.A.R.R.I. Implementation",
+            "title_ja": "プロトコル: C.A.R.R.I. 実装",
+            "content_en": "CyberAcme Runner Reinforcement Initiative is now active. Reinforced shield gating and tactical feedback during extraction phases.",
+            "content_ja": "CyberAcme Runner Reinforcement Initiative が有効化されました。脱出フェーズ中のシールド性能向上と戦術フィードバックが提供されます。",
+            "source": "Patch 1.0.6.2 Release Notes"
+        },
+        {
+            "title_en": "Datamined Strings: Sector-99 & Isolation Zone",
+            "title_ja": "解析データ: Sector-99 & 隔離区域",
+            "content_en": "Strings for 'Isolation Zone' (Subterranean Lab) and 'Sector-99 Protocol' found in the core binary. Likely Season 2 content.",
+            "content_ja": "コアバイナリから『隔離区域（地下研究所）』および『Sector-99 プロトコル』の文字列を検出。シーズン2に向けた伏線の可能性が高いです。",
+            "source": "Deep Abyssal Binary Scrape"
+        }
+    ]
+
+    for item in intel_items:
+        notifier.notify_leak_signal(
+            title_en=item["title_en"],
+            title_ja=item["title_ja"],
+            content_en=item["content_en"],
+            content_ja=item["content_ja"],
+            source=item["source"],
+            webhook_url=ABYSSAL_WEBHOOK_URL
+        )
     
-    # 2. Weapon Tuning
-    notifier.notify_kit_update(
-        "WSTR / Snipe Calibration",
-        "WSTR / スナイパー調整",
-        "Reduced recoil for WSTR rifles; slight damage falloff increase for high-power knives.",
-        "WSTRライフルの反動を軽減。高威力ナイフのダメージ減衰率をわずかに増加。",
-        "https://www.marathonthegame.com/kits"
-    )
-    
-    # 3. Director Signal (Ziegler)
-    notifier.notify_director_signal(
-        "Joe Ziegler",
-        "Our goal is to make the PvPvE sandbox feel alive and unpredictable. These changes are the first step towards that vision.",
-        "我々の目標は、PvPvEのサンドボックスを生き生きとした、予測不可能なものにすることです。今回の変更はそのビジョンへの第一歩です。",
-        "Bungie Internal Interview"
-    )
-    
-    # 4. Reddit Trending (Community Reaction)
-    notifier.notify_reddit_signal(
-        "marathon",
-        "The random extraction points are making the game much more tense (and harder).",
-        "ランダムな脱出地点のせいで、ゲームがより緊張感のある（そして難しい）ものになっている。",
-        "Mixed community reactions; veteran players appreciate the challenge, while newer players find it unforgiving.",
-        "コミュニティの反応は分かれています。ベテランは挑戦を楽しんでいますが、新規プレイヤーには厳しすぎるとの声も。",
-        "4.8k",
-        "https://reddit.com/r/marathon"
-    )
+    print("\n[+] Marathon Intel Transfer Complete.")
 
 if __name__ == "__main__":
-    send_intel()
+    dispatch_marathon_intel()
