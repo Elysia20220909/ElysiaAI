@@ -22,17 +22,23 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install monitor dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install python-dotenv httpx feedparser
+
       - name: Run Sentinel Action
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          MARATHON_WEBHOOK_URL: ${{ secrets.MARATHON_WEBHOOK_URL }}
+          ABYSSAL_WEBHOOK_URL: ${{ secrets.ABYSSAL_WEBHOOK_URL }}
         run: |
-          python scripts/sentinel_action.py
-          python scripts/bungie_broadcast.py
-          python scripts/marathon_hook_monitor.py
+          python scripts/marathon_hook_monitor.py --once
 
       - name: Commit State Changes
         run: |
           git config --global user.name "Meteor#6267"
           git config --global user.email "meteor@elysia.ai"
-          git add data/sentinel_state.json data/bungie_state.json data/marathon_hook_state.json
+          git add data/marathon_hook_state.json
+          [ -f data/seen_marathon_news.json ] && git add data/seen_marathon_news.json || true
           git diff --quiet && git diff --staged --quiet || (git commit -m "chore(sentinel): update intelligence state [skip ci]" && git push)
