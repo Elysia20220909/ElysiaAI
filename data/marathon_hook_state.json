@@ -1,0 +1,11 @@
+{
+  "runs": 0,
+  "failures": 0,
+  "last_success_at": null,
+  "last_error": null,
+  "last_result": {
+    "checked": 0,
+    "posted": 0,
+    "would_post": 0
+  }
+}

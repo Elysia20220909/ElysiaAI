@@ -7,11 +7,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Webhook URL provided by user
-# Webhook URLs
-MARATHON_WEBHOOK_URL = os.getenv("MARATHON_WEBHOOK_URL") or "https://discord.com/api/webhooks/1499047057447583744/G6AV8xGcIefoBx_hUQ6aTRgRmflv3UU89yGFvCotxV61u6PuIKZsGyjERdyzg6G_dy0d"
-ABYSSAL_WEBHOOK_URL = os.getenv("ABYSSAL_WEBHOOK_URL") or "https://discord.com/api/webhooks/1499058592643551426/jrI5cKj8YXGK6s8mVUReqajp8k2KgcXYH6Z5mSuIjUdjNwEEhM1VfI4do2MAeQ-hH9Ch"
-FF14_WEBHOOK_URL = os.getenv("FF14_WEBHOOK_URL") or "https://discord.com/api/webhooks/1499081898717351980/LCLFh-hZdYkEVlfT0HJJGZbFeaa76YEXCze9-QD03b47emzKf6GMF8n69tmBhIk0pS8-"
+MARATHON_WEBHOOK_URL = os.getenv("MARATHON_WEBHOOK_URL") or os.getenv("DISCORD_WEBHOOK_URL")
+ABYSSAL_WEBHOOK_URL = os.getenv("ABYSSAL_WEBHOOK_URL") or MARATHON_WEBHOOK_URL
+FF14_WEBHOOK_URL = os.getenv("FF14_WEBHOOK_URL") or MARATHON_WEBHOOK_URL
 
 class MarathonNotifier:
     """
@@ -33,8 +31,9 @@ class MarathonNotifier:
     @staticmethod
     def send_webhook(content=None, embed=None, username=None, avatar_url="https://raw.githubusercontent.com/hosih/ElysiaAI/main/public/marathon_logo.png", webhook_url=None):
         target_url = webhook_url or MARATHON_WEBHOOK_URL
-        if not target_url:
-            return
+        if not target_url or "your_discord_webhook_url_here" in target_url:
+            print("[!] Webhook URL is not configured; skipping dispatch.")
+            return False
 
         # Use provided username, or environment variable, or fallback
         default_name = os.getenv("METEOR_USERNAME", "𝐌𝐞𝐭𝐞𝐨𝐫")
@@ -50,12 +49,14 @@ class MarathonNotifier:
             payload["embeds"] = [embed]
         
         try:
-            with httpx.Client() as client:
+            with httpx.Client(timeout=20.0) as client:
                 response = client.post(target_url, json=payload)
                 response.raise_for_status()
                 print(f"[+] Marathon Signal dispatched to {target_url[:40]}...")
+                return True
         except Exception as e:
             print(f"[-] Failed to dispatch signal: {e}")
+            return False
 
     def notify_leak_signal(self, title_en, title_ja, content_en, content_ja, source="Unknown", link=None, webhook_url=None):
         """リーク・噂話 / Leak & Rumor (Raw Text Edition)"""
@@ -68,7 +69,7 @@ class MarathonNotifier:
         if link:
             text += f"**LINK:** <{link}>\n"
         text += "---"
-        self.send_webhook(content=text, webhook_url=webhook_url or ABYSSAL_WEBHOOK_URL)
+        return self.send_webhook(content=text, webhook_url=webhook_url or ABYSSAL_WEBHOOK_URL)
 
     def notify_reddit_signal(self, subreddit, title_en, title_ja, content_en, content_ja, score, link=None, webhook_url=None):
         """Reddit 信号 / Reddit Signal (Raw Text Edition)"""
@@ -80,7 +81,7 @@ class MarathonNotifier:
         text += "--------------------------------------------------\n"
         text += f"**LINK:** <{link if link else 'https://reddit.com/r/'+subreddit}>\n"
         text += "---"
-        self.send_webhook(content=text, webhook_url=webhook_url or ABYSSAL_WEBHOOK_URL)
+        return self.send_webhook(content=text, webhook_url=webhook_url or ABYSSAL_WEBHOOK_URL)
 
     def notify_director_signal(self, author, text_en, text_ja, platform="X/Twitter", webhook_url=None):
         """ディレクター発言 / Director's Signal (Plain Text Edition)"""
@@ -89,7 +90,7 @@ class MarathonNotifier:
         text += f"**[EN]**\n{text_en}\n"
         text += f"**Source:** {platform}\n"
         text += "---\n"
-        self.send_webhook(content=text, webhook_url=webhook_url)
+        return self.send_webhook(content=text, webhook_url=webhook_url)
 
     def notify_cryo_archive(self, item_name_en, item_name_ja, sector_en, sector_ja, rarity="Legendary", link=None, webhook_url=None):
         """低温アーカイブ通知 / Cryo Archive Notification (Bilingual)"""
@@ -107,7 +108,7 @@ class MarathonNotifier:
         }
         if link:
             embed["url"] = link
-        self.send_webhook(embed=embed, webhook_url=webhook_url)
+        return self.send_webhook(embed=embed, webhook_url=webhook_url)
 
     def notify_patch_notes(self, version, summary_en, summary_ja, link=None, webhook_url=None):
         """パッチ情報 / Patch Information (Plain Text Edition)"""
@@ -117,7 +118,7 @@ class MarathonNotifier:
         if link:
             text += f"**Full Notes:** <{link}>\n"
         text += "---\n"
-        self.send_webhook(content=text, webhook_url=webhook_url)
+        return self.send_webhook(content=text, webhook_url=webhook_url)
 
     def notify_raw_intel(self, title_ja, content_ja, title_en, content_en, webhook_url=None):
         """完全プレーンテキスト形式 / Pure Raw Text Edition"""
@@ -125,7 +126,7 @@ class MarathonNotifier:
         text += f"**[JP]**\n{content_ja}\n\n"
         text += f"**[EN]**\n{content_en}\n"
         text += "---\n"
-        self.send_webhook(content=text, webhook_url=webhook_url)
+        return self.send_webhook(content=text, webhook_url=webhook_url)
 
     def notify_kit_update(self, kit_name_en, kit_name_ja, changes_en, changes_ja, link=None, webhook_url=None):
         """キット更新 / Kit Update (Bilingual)"""
@@ -142,7 +143,7 @@ class MarathonNotifier:
         }
         if link:
             embed["url"] = link
-        self.send_webhook(embed=embed, webhook_url=webhook_url)
+        return self.send_webhook(embed=embed, webhook_url=webhook_url)
 
     def notify_combat_balance(self, category_en, category_ja, change_summary_en, change_summary_ja, link=None, webhook_url=None):
         """戦闘バランス変更 / Combat Balance Changes (Bilingual)"""
@@ -159,7 +160,7 @@ class MarathonNotifier:
         }
         if link:
             embed["url"] = link
-        self.send_webhook(embed=embed, webhook_url=webhook_url)
+        return self.send_webhook(embed=embed, webhook_url=webhook_url)
 
 if __name__ == "__main__":
     # Test/Demo
