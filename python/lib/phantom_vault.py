@@ -3,8 +3,10 @@ import json
 import uuid
 import time
 import logging
+import random
 from typing import List, Dict, Any
 from python.lib.vault_shroud import shroud
+from python.lib.abyssal_scatter import scatter_fragments
 
 logger = logging.getLogger("PhantomVault")
 
@@ -44,10 +46,10 @@ class PhantomVault:
         with open(self.registry_path, "w", encoding="utf-8") as f:
             f.write(shrouded)
 
-    def shroud_video(self, file_path: str, chunk_size_mb: int = 10, camo_type: str = "dll") -> str:
+    def shroud_video(self, file_path: str, chunk_size_mb: int = 10, camo_type: str = "dll", scatter_root: str = None) -> str:
         """
         Shatters a video into encrypted, camouflaged fragments.
-        Returns the Phantom ID.
+        If scatter_root is provided, scatters them deep into that root.
         """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Source video not found: {file_path}")
@@ -88,11 +90,19 @@ class PhantomVault:
                 fragments.append({
                     "name": frag_name,
                     "order": part_num,
-                    "header_size": len(header)
+                    "header_size": len(header),
+                    "local_path": frag_path
                 })
                 part_num += 1
 
-        # 4. Update Registry
+        # 4. Deep Scattering (Optional)
+        if scatter_root:
+            frag_paths = [f["local_path"] for f in fragments]
+            scatter_map = scatter_fragments(frag_paths, scatter_root, depth=random.randint(5, 8))
+            for f in fragments:
+                f["local_path"] = scatter_map[f["name"]]
+
+        # 5. Update Registry
         registry = self._get_registry()
         registry[phantom_id] = {
             "original_name": file_name,
@@ -122,7 +132,7 @@ class PhantomVault:
         
         with open(output_path, "wb") as out_f:
             for frag_meta in fragments:
-                frag_path = os.path.join(self.vault_dir, frag_meta["name"])
+                frag_path = frag_meta.get("local_path") or os.path.join(self.vault_dir, frag_meta["name"])
                 if not os.path.exists(frag_path):
                     raise FileNotFoundError(f"Missing fragment: {frag_path}")
                 
