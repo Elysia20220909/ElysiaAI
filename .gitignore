@@ -161,7 +161,9 @@ mksSandbox.log
 src-tauri/target/
 
 # Abyssal Data & Monetization
-/data/
+/data/*
+!/data/marathon_hook_state.json
+!/data/seen_marathon_news.json
 *.sys
 *.exe
 *.dll
