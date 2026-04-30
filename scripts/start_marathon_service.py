@@ -22,7 +22,7 @@ def run_resilient_service():
             
             # 2. Run the Game Intelligence Sweeps
             print(f"\n[*] [{time.strftime('%H:%M:%S')}] Periodic Sweep: Marathon Intel...")
-            subprocess.run([sys.executable, "scripts/marathon_news_bot.py"])
+            subprocess.run([sys.executable, "scripts/marathon_hook_monitor.py", "--once"])
             
             print(f"[*] [{time.strftime('%H:%M:%S')}] Periodic Sweep: FF14 Intel...")
             subprocess.run([sys.executable, "scripts/ff14_news_bot.py"])
