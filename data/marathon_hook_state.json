@@ -1,11 +1,14 @@
 {
-  "runs": 0,
+  "runs": 9,
   "failures": 0,
-  "last_success_at": null,
+  "last_success_at": "2026-04-30T02:16:38.941486+00:00",
   "last_error": null,
   "last_result": {
-    "checked": 0,
+    "checked": 11,
     "posted": 0,
-    "would_post": 0
-  }
+    "would_post": 0,
+    "primed": 0
+  },
+  "last_started_at": "2026-04-30T02:16:37.817021+00:00",
+  "updated_at": "2026-04-30T02:16:38.941682+00:00"
 }
