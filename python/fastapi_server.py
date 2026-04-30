@@ -53,6 +53,8 @@ from python.lib.soul_forge import soul_forge
 from python.recall import abyssal_recall
 from scripts.security.generate_ledger import generate_ledger
 from usr.lib.elysia.secure_enclave import secure_enclave
+from python.lib.phantom_vault import phantom_vault
+import shutil
 
 
 # ==================== 設定 (Pydantic Settings) ====================
@@ -1201,6 +1203,65 @@ async def perform_ascension():
     """オメガ・プロトコルの最終段階「昇華」を実行します。"""
     return singularity_engine.trigger_ascension()
 
+
+# ==================== AETHER Shroud: Stealth Vault ====================
+class RevealRequest(BaseModel):
+    phantom_id: str
+    output_name: str | None = None
+
+@app.post("/api/aether/shroud", dependencies=peripheral_white_ice)
+async def aether_shroud(
+    file: UploadFile = File(...),
+    chunk_size: int = Body(10),
+    camo_type: str = Body("dll")
+):
+    """
+    Shatters and camouflages an uploaded video file.
+    """
+    temp_path = f"python/data/temp_{uuid.uuid4()}.tmp"
+    os.makedirs("python/data", exist_ok=True)
+    
+    try:
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        phantom_id = phantom_vault.shroud_video(temp_path, chunk_size_mb=chunk_size, camo_type=camo_type)
+        return {"status": "success", "phantom_id": phantom_id, "message": "Target has been shrouded in the Abyss."}
+    except Exception as e:
+        logger.error(f"❌ AETHER Shroud Failure: {e}")
+        raise HTTPException(500, str(e))
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+@app.post("/api/aether/reveal", dependencies=peripheral_white_ice)
+async def aether_reveal(req: RevealRequest):
+    """
+    Reconstructs a shrouded video from the Abyss.
+    """
+    try:
+        output_path = phantom_vault.reveal_video(req.phantom_id)
+        return {"status": "success", "path": output_path, "message": "Target has materialized from the Abyss."}
+    except Exception as e:
+        logger.error(f"❌ AETHER Reveal Failure: {e}")
+        raise HTTPException(500, str(e))
+
+@app.get("/api/aether/list", dependencies=peripheral_white_ice)
+async def aether_list():
+    """
+    Lists all shrouded entities in the vault.
+    """
+    registry = phantom_vault._get_registry()
+    return {"entities": registry}
+
+
+@app.get("/aether", dependencies=peripheral_white_ice)
+async def aether_dashboard():
+    """
+    Serves the AETHER Vault dashboard HTML.
+    """
+    from fastapi.responses import FileResponse
+    return FileResponse("dashboard/aether.html")
 
 # ==================== VOICEVOX TTS Extension ====================
 @app.post("/tts")
