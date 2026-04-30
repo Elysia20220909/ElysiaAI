@@ -39,6 +39,32 @@ DATAMINE_TERMS = [
     "噂",
     "リーク",
     "データマイニング",
+    "dark web",
+    "darkweb",
+    "dark net",
+    "darknet",
+    "tor",
+    "onion",
+    "breach",
+    "compromised",
+    "credentials",
+    "stolen",
+    "ダークウェブ",
+    "ダークネット",
+]
+EXCLUDE_TERMS = [
+    "review",
+    "reviews",
+    "review in progress",
+    "preview",
+    "hands-on",
+    "impressions",
+    "played",
+    "プレイレポ",
+    "レビュー",
+    "感想",
+    "インプレッション",
+    "先行プレイ",
 ]
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -58,10 +84,13 @@ GENERAL_SEARCH_QUERIES = [
 DATAMINE_SEARCH_QUERIES = [
     ("https://news.google.com/rss/search?q=Marathon%20Bungie%20datamine%20OR%20datamined%20OR%20datamining%20when:30d&hl=en-US&gl=US&ceid=US:en", "en"),
     ("https://news.google.com/rss/search?q=Marathon%20Bungie%20leak%20OR%20leaked%20OR%20rumor%20when:30d&hl=en-US&gl=US&ceid=US:en", "en"),
+    ("https://news.google.com/rss/search?q=Marathon%20Bungie%20dark%20web%20OR%20darknet%20OR%20Tor%20OR%20breach%20when:30d&hl=en-US&gl=US&ceid=US:en", "en"),
     ("https://news.google.com/rss/search?q=Marathon%20Bungie%20%E3%83%AA%E3%83%BC%E3%82%AF%20OR%20%E3%83%87%E3%83%BC%E3%82%BF%E3%83%9E%E3%82%A4%E3%83%8B%E3%83%B3%E3%82%B0%20when:30d&hl=ja&gl=JP&ceid=JP:ja", "ja"),
+    ("https://news.google.com/rss/search?q=Marathon%20Bungie%20%E3%83%80%E3%83%BC%E3%82%AF%E3%82%A6%E3%82%A7%E3%83%96%20OR%20%E3%83%80%E3%83%BC%E3%82%AF%E3%83%8D%E3%83%83%E3%83%88%20when:30d&hl=ja&gl=JP&ceid=JP:ja", "ja"),
 ]
 
-SEARCH_QUERIES = DATAMINE_SEARCH_QUERIES if FEED_MODE in {"datamine", "leak", "leaks"} else GENERAL_SEARCH_QUERIES
+INTEL_MODES = {"datamine", "leak", "leaks", "intel", "darkweb", "dark-web"}
+SEARCH_QUERIES = DATAMINE_SEARCH_QUERIES if FEED_MODE in INTEL_MODES else GENERAL_SEARCH_QUERIES
 
 def load_seen(seen_file=SEEN_FILE):
     seen_file = Path(seen_file)
@@ -85,7 +114,9 @@ def make_id(url, title):
 
 def is_related(title, summary):
     text = f"{title} {summary}".lower()
-    if FEED_MODE in {"datamine", "leak", "leaks"}:
+    if any(term in text for term in EXCLUDE_TERMS):
+        return False
+    if FEED_MODE in INTEL_MODES:
         return "marathon" in text and any(term in text for term in DATAMINE_TERMS)
     if "marathon" in text and "bungie" in text:
         return True
