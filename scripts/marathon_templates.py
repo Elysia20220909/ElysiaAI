@@ -31,13 +31,17 @@ class MarathonNotifier:
     }
 
     @staticmethod
-    def send_webhook(content=None, embed=None, username="Marathon Sentinel", avatar_url="https://raw.githubusercontent.com/hosih/ElysiaAI/main/public/marathon_logo.png", webhook_url=None):
+    def send_webhook(content=None, embed=None, username=None, avatar_url="https://raw.githubusercontent.com/hosih/ElysiaAI/main/public/marathon_logo.png", webhook_url=None):
         target_url = webhook_url or MARATHON_WEBHOOK_URL
         if not target_url:
             return
 
+        # Use provided username, or environment variable, or fallback
+        default_name = os.getenv("METEOR_USERNAME", "𝐌𝐞𝐭𝐞𝐨𝐫")
+        final_username = username or default_name
+
         payload = {
-            "username": username,
+            "username": final_username,
             "avatar_url": avatar_url
         }
         if content:
@@ -53,7 +57,7 @@ class MarathonNotifier:
         except Exception as e:
             print(f"[-] Failed to dispatch signal: {e}")
 
-    def notify_leak_signal(self, title_en, title_ja, content_en, content_ja, source="Unknown", link=None):
+    def notify_leak_signal(self, title_en, title_ja, content_en, content_ja, source="Unknown", link=None, webhook_url=None):
         """リーク・噂話 / Leak & Rumor (Raw Text Edition)"""
         text = f"**⚠️ ABYSSAL SIGNAL: LEAK / RUMOR DETECTED**\n"
         text += f"**ORIGIN:** {source}\n"
@@ -64,9 +68,9 @@ class MarathonNotifier:
         if link:
             text += f"**LINK:** <{link}>\n"
         text += "---"
-        self.send_webhook(content=text, webhook_url=ABYSSAL_WEBHOOK_URL)
+        self.send_webhook(content=text, webhook_url=webhook_url or ABYSSAL_WEBHOOK_URL)
 
-    def notify_reddit_signal(self, subreddit, title_en, title_ja, content_en, content_ja, score, link=None):
+    def notify_reddit_signal(self, subreddit, title_en, title_ja, content_en, content_ja, score, link=None, webhook_url=None):
         """Reddit 信号 / Reddit Signal (Raw Text Edition)"""
         text = f"**🧡 REDDIT INTEL: r/{subreddit}**\n"
         text += f"**KARMA:** 🔥 {score}\n"
@@ -76,18 +80,18 @@ class MarathonNotifier:
         text += "--------------------------------------------------\n"
         text += f"**LINK:** <{link if link else 'https://reddit.com/r/'+subreddit}>\n"
         text += "---"
-        self.send_webhook(content=text, webhook_url=ABYSSAL_WEBHOOK_URL)
+        self.send_webhook(content=text, webhook_url=webhook_url or ABYSSAL_WEBHOOK_URL)
 
-    def notify_director_signal(self, author, text_en, text_ja, platform="X/Twitter"):
+    def notify_director_signal(self, author, text_en, text_ja, platform="X/Twitter", webhook_url=None):
         """ディレクター発言 / Director's Signal (Plain Text Edition)"""
         text = f"**📡 DIRECTOR'S SIGNAL: {author}**\n"
         text += f"**[JP]**\n{text_ja}\n\n"
         text += f"**[EN]**\n{text_en}\n"
         text += f"**Source:** {platform}\n"
         text += "---\n"
-        self.send_webhook(content=text)
+        self.send_webhook(content=text, webhook_url=webhook_url)
 
-    def notify_cryo_archive(self, item_name_en, item_name_ja, sector_en, sector_ja, rarity="Legendary", link=None):
+    def notify_cryo_archive(self, item_name_en, item_name_ja, sector_en, sector_ja, rarity="Legendary", link=None, webhook_url=None):
         """低温アーカイブ通知 / Cryo Archive Notification (Bilingual)"""
         embed = {
             "title": "❄️ CRYO ARCHIVE: DATA RECOVERY SUCCESSFUL",
@@ -99,13 +103,13 @@ class MarathonNotifier:
                 {"name": "Status", "value": "Stored in Secure Terminal", "inline": False}
             ],
             "footer": {"text": f"Archive ID: {datetime.now().strftime('%Y%m%d-%H%M%S')}"},
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
         }
         if link:
             embed["url"] = link
-        self.send_webhook(embed)
+        self.send_webhook(embed=embed, webhook_url=webhook_url)
 
-    def notify_patch_notes(self, version, summary_en, summary_ja, link=None):
+    def notify_patch_notes(self, version, summary_en, summary_ja, link=None, webhook_url=None):
         """パッチ情報 / Patch Information (Plain Text Edition)"""
         text = f"**🛠️ SYSTEM UPDATE: VERSION {version}**\n"
         text += f"**[JP]** {summary_ja}\n"
@@ -113,7 +117,7 @@ class MarathonNotifier:
         if link:
             text += f"**Full Notes:** <{link}>\n"
         text += "---\n"
-        self.send_webhook(content=text)
+        self.send_webhook(content=text, webhook_url=webhook_url)
 
     def notify_raw_intel(self, title_ja, content_ja, title_en, content_en, webhook_url=None):
         """完全プレーンテキスト形式 / Pure Raw Text Edition"""
@@ -123,7 +127,7 @@ class MarathonNotifier:
         text += "---\n"
         self.send_webhook(content=text, webhook_url=webhook_url)
 
-    def notify_kit_update(self, kit_name_en, kit_name_ja, changes_en, changes_ja, link=None):
+    def notify_kit_update(self, kit_name_en, kit_name_ja, changes_en, changes_ja, link=None, webhook_url=None):
         """キット更新 / Kit Update (Bilingual)"""
         embed = {
             "title": f"🎒 KIT CALIBRATION: {kit_name_ja} / {kit_name_en}",
@@ -134,13 +138,13 @@ class MarathonNotifier:
                 {"name": "Modifications (EN)", "value": changes_en, "inline": False}
             ],
             "footer": {"text": "UEC Supply Requisition"},
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
         }
         if link:
             embed["url"] = link
-        self.send_webhook(embed)
+        self.send_webhook(embed=embed, webhook_url=webhook_url)
 
-    def notify_combat_balance(self, category_en, category_ja, change_summary_en, change_summary_ja, link=None):
+    def notify_combat_balance(self, category_en, category_ja, change_summary_en, change_summary_ja, link=None, webhook_url=None):
         """戦闘バランス変更 / Combat Balance Changes (Bilingual)"""
         embed = {
             "title": f"⚖️ TACTICAL RE-ALIGNMENT: {category_ja} / {category_en}",
@@ -155,7 +159,7 @@ class MarathonNotifier:
         }
         if link:
             embed["url"] = link
-        self.send_webhook(embed)
+        self.send_webhook(embed=embed, webhook_url=webhook_url)
 
 if __name__ == "__main__":
     # Test/Demo

@@ -7,20 +7,21 @@ from deep_translator import GoogleTranslator
 from marathon_templates import MarathonNotifier
 
 # Ensure UTF-8 output for Windows
-if sys.platform == "win32":
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+# if sys.platform == "win32":
+#     import io
+#     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 load_dotenv()
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 TARGET_CHANNELS = [
-    1478425018898841701, # #マラソン公式-お知らせ
+    1478425018898841701, # #マラソン公式-お知らせ / Marathonメイン
+    1499058397734109295, # #reddit＆リーク噂話🤫
+    1480228067787149353, # #情報収集保管庫ch
     1359654977991082317, # #marathon-news
     1461490806329180334, # #social-comms
     1475611837910356132, # #dev-updates
-    1475547886392709253, # #server-status
-    1499058397734109295  # #reddit＆リーク噂話🤫
+    1475547886392709253  # #server-status
 ]
 
 class MarathonTranslatorBot(discord.Client):
@@ -90,6 +91,15 @@ class MarathonTranslatorBot(discord.Client):
                     text_ja=translated_text[:1000],
                     platform=f"#{message.channel.name}"
                 )
+            elif "情報" in ch_name or "保管庫" in ch_name:
+                self.notifier.notify_cryo_archive(
+                    item_name_en=raw_text[:50],
+                    item_name_ja=translated_text[:50],
+                    sector_en="Intelligence Storage",
+                    sector_ja="情報収集保管庫",
+                    rarity="Exotic",
+                    link=f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}"
+                )
             else:
                 self.notifier.notify_leak_signal(
                     title_en="Channel Update",
@@ -106,9 +116,16 @@ class MarathonTranslatorBot(discord.Client):
             print(f"[-] Translation/Dispatch error: {e}")
 
 if __name__ == "__main__":
+    print("[*] Starting Bot...")
     if not BOT_TOKEN:
-        print("[!] DISCORD_BOT_TOKEN not found.")
+        print("[!] Token not found.")
         sys.exit(1)
 
+    print("[*] Connecting...")
     bot = MarathonTranslatorBot()
-    asyncio.run(bot.start(BOT_TOKEN))
+    try:
+        asyncio.run(bot.start(BOT_TOKEN))
+    except KeyboardInterrupt:
+        print("\n[*] Shutting down safely...")
+    except Exception as e:
+        print(f"[!] Critical Error: {e}")
