@@ -2,8 +2,15 @@ import os
 import time
 import argparse
 import random
+import json
+import sys
+from pathlib import Path
 from datetime import datetime, timezone
 from marathon_templates import MarathonNotifier
+from marathon_news_bot import run_sweep
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 # Mock data for simulation (Post-Launch 2026 Context)
 # All data tuples now include a source link
@@ -34,7 +41,43 @@ MOCK_FEEDS = [
     }
 ]
 
-def run_monitor(loop=False):
+ROOT_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = Path(os.getenv("MARATHON_DATA_DIR", ROOT_DIR / "data"))
+STATE_FILE = Path(os.getenv("MARATHON_STATE_FILE", DATA_DIR / "marathon_hook_state.json"))
+DEFAULT_INTERVAL_SECONDS = int(os.getenv("MARATHON_MONITOR_INTERVAL_SECONDS", "900"))
+
+def load_state():
+    if not STATE_FILE.exists():
+        return {"runs": 0, "failures": 0, "last_success_at": None, "last_error": None}
+    try:
+        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {"runs": 0, "failures": 0, "last_success_at": None, "last_error": "state read failed"}
+
+def save_state(state):
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    state["updated_at"] = datetime.now(timezone.utc).isoformat()
+    STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+
+def run_autonomous_sweep(dry_run=False):
+    state = load_state()
+    state["runs"] = int(state.get("runs", 0)) + 1
+    state["last_started_at"] = datetime.now(timezone.utc).isoformat()
+
+    try:
+        result = run_sweep(dry_run=dry_run)
+        state["last_result"] = result
+        state["last_success_at"] = datetime.now(timezone.utc).isoformat()
+        state["last_error"] = None
+        save_state(state)
+        return result
+    except Exception as exc:
+        state["failures"] = int(state.get("failures", 0)) + 1
+        state["last_error"] = repr(exc)
+        save_state(state)
+        raise
+
+def run_mock_monitor(loop=False):
     notifier = MarathonNotifier()
     print("[*] Marathon Hook Monitor: ACTIVE")
     print(f"[*] Monitoring target: {os.getenv('NITTER_HOST', 'Mock Service')}")
@@ -71,14 +114,36 @@ def run_monitor(loop=False):
     except KeyboardInterrupt:
         print("[*] Monitor offline.")
 
+def run_monitor(loop=False, interval=DEFAULT_INTERVAL_SECONDS, dry_run=False):
+    print("[*] Marathon Autonomous Monitor: ACTIVE")
+    print(f"[*] State file: {STATE_FILE}")
+
+    try:
+        while True:
+            started = datetime.now(timezone.utc).isoformat()
+            print(f"[*] Sweep started at {started}")
+            result = run_autonomous_sweep(dry_run=dry_run)
+            print(f"[*] Sweep finished: {result}")
+
+            if not loop:
+                break
+
+            print(f"[*] Sleeping for {interval}s...")
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        print("[*] Monitor offline.")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Marathon Hook Monitor")
     parser.add_argument("--loop", action="store_true", help="Run in a continuous loop")
+    parser.add_argument("--once", action="store_true", help="Run one autonomous sweep and exit")
     parser.add_argument("--mock", action="store_true", help="Send a single mock notification and exit")
+    parser.add_argument("--dry-run", action="store_true", help="Fetch and classify without posting or updating seen state")
+    parser.add_argument("--interval", type=int, default=DEFAULT_INTERVAL_SECONDS, help="Loop interval in seconds")
     
     args = parser.parse_args()
     
     if args.mock:
-        run_monitor(loop=False)
+        run_mock_monitor(loop=False)
     else:
-        run_monitor(loop=args.loop)
+        run_monitor(loop=args.loop and not args.once, interval=args.interval, dry_run=args.dry_run)
