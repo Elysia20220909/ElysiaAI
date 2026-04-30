@@ -59,13 +59,13 @@ def save_state(state):
     state["updated_at"] = datetime.now(timezone.utc).isoformat()
     STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
-def run_autonomous_sweep(dry_run=False):
+def run_autonomous_sweep(dry_run=False, prime_seen=False):
     state = load_state()
     state["runs"] = int(state.get("runs", 0)) + 1
     state["last_started_at"] = datetime.now(timezone.utc).isoformat()
 
     try:
-        result = run_sweep(dry_run=dry_run)
+        result = run_sweep(dry_run=dry_run, prime_seen=prime_seen)
         state["last_result"] = result
         state["last_success_at"] = datetime.now(timezone.utc).isoformat()
         state["last_error"] = None
@@ -114,7 +114,7 @@ def run_mock_monitor(loop=False):
     except KeyboardInterrupt:
         print("[*] Monitor offline.")
 
-def run_monitor(loop=False, interval=DEFAULT_INTERVAL_SECONDS, dry_run=False):
+def run_monitor(loop=False, interval=DEFAULT_INTERVAL_SECONDS, dry_run=False, prime_seen=False):
     print("[*] Marathon Autonomous Monitor: ACTIVE")
     print(f"[*] State file: {STATE_FILE}")
 
@@ -122,10 +122,10 @@ def run_monitor(loop=False, interval=DEFAULT_INTERVAL_SECONDS, dry_run=False):
         while True:
             started = datetime.now(timezone.utc).isoformat()
             print(f"[*] Sweep started at {started}")
-            result = run_autonomous_sweep(dry_run=dry_run)
+            result = run_autonomous_sweep(dry_run=dry_run, prime_seen=prime_seen)
             print(f"[*] Sweep finished: {result}")
 
-            if not loop:
+            if not loop or prime_seen:
                 break
 
             print(f"[*] Sleeping for {interval}s...")
@@ -139,6 +139,7 @@ if __name__ == "__main__":
     parser.add_argument("--once", action="store_true", help="Run one autonomous sweep and exit")
     parser.add_argument("--mock", action="store_true", help="Send a single mock notification and exit")
     parser.add_argument("--dry-run", action="store_true", help="Fetch and classify without posting or updating seen state")
+    parser.add_argument("--prime-seen", action="store_true", help="Mark current matching updates as seen without posting")
     parser.add_argument("--interval", type=int, default=DEFAULT_INTERVAL_SECONDS, help="Loop interval in seconds")
     
     args = parser.parse_args()
@@ -146,4 +147,9 @@ if __name__ == "__main__":
     if args.mock:
         run_mock_monitor(loop=False)
     else:
-        run_monitor(loop=args.loop and not args.once, interval=args.interval, dry_run=args.dry_run)
+        run_monitor(
+            loop=args.loop and not args.once,
+            interval=args.interval,
+            dry_run=args.dry_run,
+            prime_seen=args.prime_seen,
+        )
