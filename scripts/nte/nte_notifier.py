@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
-NTE_CHANNEL_ID = 1499218325614493840
+NTE_CHANNEL_ID = int(os.getenv("NTE_CHANNEL_ID", "1499218573930008681"))
 
 class NTENotifier:
     """
