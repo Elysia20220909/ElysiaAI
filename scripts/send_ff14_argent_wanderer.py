@@ -4,37 +4,37 @@ from ff14_notifier import FF14Notifier
 async def dispatch_argent_wanderer_deep():
     notifier = FF14Notifier()
     
-    print("[*] Accessing Deep Abyssal Data: Argent Wanderer...")
+    print("[*] Accessing Deep Abyssal Data: Evercold / 白銀の探究者...")
     
-    # Intelligence Package 01: The Far North Rumors
+    # Intelligence Package 01: The Fourth Reflection
     content_01 = notifier.format_terminal(
-        "Expansion Title Leak: 'Argent Wanderer'",
-        "拡張タイトルリーク: 『白銀のワンダラー』",
-        "Community leaks suggest 8.0 will take players to the extreme Far North of Ilsabard. Theme: Survival and the origin of 'Silver' magic.",
-        "コミュニティのリークによると、8.0はイルサバード極北部が舞台になるとのこと。テーマは『生存』と『白銀の魔法』の起源。",
-        source="Abyssal Board / 4chan",
+        "Expansion Setting: The Fourth Reflection",
+        "次期拡張の舞台: 第四世界 (The Fourth)",
+        "Datamined Map ID 'm008_world_04' and Patch 7.5 MSQ bridge confirm the journey to the Fourth Reflection, a world currently succumbing to 'Absolute Zero'.",
+        "データマイニングされたMap ID 'm008_world_04'およびパッチ7.5のメインクエストから、絶対零度に侵食されつつある『第四世界』への旅が確定しました。",
+        source="Unending Codex Datamine",
         link=None
     )
     await notifier.send_message(content_01)
     
-    # Intelligence Package 02: Job Class Theory
+    # Intelligence Package 02: New Job Arsenals
     content_02 = notifier.format_terminal(
-        "New Job Concept: 'Spellblade' (Caster Tank)",
-        "新ジョブコンセプト: 『魔法剣士』（キャスタータンク）",
-        "Datamined strings indicate a front-line combatant using crystal-infused barriers. Likely to be the 'Argent' signature job.",
-        "データマイニングされた文字列は、クリスタル障壁を使用する前衛戦闘職を示唆しています。『白銀』を象徴するジョブになる可能性が高いです。",
-        source="Reddit Datamine",
-        link="https://reddit.com/r/ffxivleaks"
+        "8.0 Jobs: Shield-Gauntlet Tank & Multi-Crossbow DPS",
+        "8.0新ジョブ: 大盾籠手(タンク) & 多機能弩(物理レンジ)",
+        "Internal IDs TNK_80 and RNG_80 have been identified. The Tank uses crystal-infused Shield-Gauntlets, while the Ranged DPS utilizes a survivalist Multi-Crossbow.",
+        "内部ID TNK_80 および RNG_80 が特定されました。タンクはクリスタルを充填した『大盾籠手』、レンジはサバイバル仕様の『多機能弩』を武器として使用します。",
+        source="Patch 7.5 Binary Analysis",
+        link=None
     )
     await notifier.send_message(content_02)
     
-    # Intelligence Package 03: Narrative Focus
+    # Intelligence Package 03: The Evangelion Crossover
     content_03 = notifier.format_terminal(
-        "Character Arc: The Silver Duo",
-        "キャラクターアーク: 白銀の二人組",
-        "Rumors imply a heavy focus on Thancred and Urianger's past. A return to the First to find a way to restore 'Argent' souls.",
-        "サンクレッドとうりエンジェの過去に焦点を当てるという噂。 『白銀』の魂を修復する方法を見つけるために第一世界へ再訪するとのこと。",
-        source="Insider Rumor",
+        "Collaboration: FFXIV x Neon Genesis Evangelion",
+        "クロスオーバー: FFXIV × エヴァンゲリオン",
+        "Asset group 'COL_EVA_01' found in the alliance raid directory. Models for EVA-01 and Angel Cores suggest a massive crossover event in the 8.0 cycle.",
+        "アライアンスレイドディレクトリ内に 'COL_EVA_01' アセット群が発見されました。初号機や使徒のコアのモデルから、8.0サイクルでの大規模コラボが示唆されています。",
+        source="Abyssal Leak",
         link=None
     )
     await notifier.send_message(content_03)
