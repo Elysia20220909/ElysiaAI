@@ -1,0 +1,80 @@
+{
+  "guild_id": "695637918626218044",
+  "channel_id": "1499763349083132176",
+  "channel_name": "rss-cyber-news",
+  "max_posts": 5,
+  "per_feed": 8,
+  "feeds": [
+    {
+      "name": "JPCERT/CC Unified",
+      "url": "https://www.jpcert.or.jp/rss/jpcert-all.rdf",
+      "category": "security",
+      "language": "ja",
+      "priority": 95
+    },
+    {
+      "name": "CISA Cybersecurity Advisories",
+      "url": "https://www.cisa.gov/cybersecurity-advisories/all.xml",
+      "category": "security",
+      "language": "en",
+      "priority": 92
+    },
+    {
+      "name": "ITmedia NEWS Security",
+      "url": "https://rss.itmedia.co.jp/rss/2.0/news_security.xml",
+      "category": "security",
+      "language": "ja",
+      "priority": 82
+    },
+    {
+      "name": "BleepingComputer",
+      "url": "https://www.bleepingcomputer.com/feed/",
+      "category": "cyber",
+      "language": "en",
+      "priority": 78
+    },
+    {
+      "name": "ITmedia NEWS Technology",
+      "url": "https://rss.itmedia.co.jp/rss/2.0/news_technology.xml",
+      "category": "cyber",
+      "language": "ja",
+      "priority": 66
+    },
+    {
+      "name": "Gizmodo Japan",
+      "url": "https://www.gizmodo.jp/index.xml",
+      "category": "daily-tech",
+      "language": "ja",
+      "priority": 62
+    },
+    {
+      "name": "窓の杜",
+      "url": "https://forest.watch.impress.co.jp/data/rss/1.0/wf/feed.rdf",
+      "category": "daily-tech",
+      "language": "ja",
+      "priority": 58
+    },
+    {
+      "name": "Google News JP Cyber",
+      "url": "https://news.google.com/rss/search?q=%E3%82%B5%E3%82%A4%E3%83%90%E3%83%BC%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3%20OR%20%E6%83%85%E5%A0%B1%E3%82%BB%E3%82%AD%E3%83%A5%E3%83%AA%E3%83%86%E3%82%A3&hl=ja&gl=JP&ceid=JP:ja",
+      "category": "cyber",
+      "language": "ja",
+      "priority": 55
+    },
+    {
+      "name": "Google News JP Daily",
+      "url": "https://news.google.com/rss/search?q=%E6%9A%AE%E3%82%89%E3%81%97%20OR%20%E7%94%9F%E6%B4%BB%20OR%20%E9%98%B2%E7%81%BD%20OR%20%E5%AE%B6%E9%9B%BB&hl=ja&gl=JP&ceid=JP:ja",
+      "category": "daily-life",
+      "language": "ja",
+      "priority": 35
+    },
+    {
+      "name": "Google News JP Top",
+      "url": "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja",
+      "category": "general",
+      "language": "ja",
+      "priority": 25
+    }
+  ],
+  "updated_at": "2026-05-01T13:23:43.283067+00:00"
+}
