@@ -16,6 +16,7 @@ sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 load_dotenv()
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 GUILD_ID = 695637918626218044
+MY_USER_ID = 166066635214422016
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="?", intents=intents)
@@ -24,6 +25,17 @@ bot = commands.Bot(command_prefix="?", intents=intents)
 async def on_ready():
     print(f">> [ABYSS] Intelligence Bot Online: {bot.user}")
     await bot.change_presence(activity=discord.Game(name="with Reality Data | ?help"))
+    
+    # ユーザーテーマ変更 (銀狼 Lv.999)
+    guild = bot.get_guild(GUILD_ID)
+    if guild:
+        member = guild.get_member(MY_USER_ID) or await guild.fetch_member(MY_USER_ID)
+        if member:
+            try:
+                await member.edit(nick="Silver Wolf | Lv.999")
+                print(f">> [GRL] User theme elevated to Silver Wolf Lv.999.")
+            except Exception as e:
+                print(f"Nickname update failed: {e}")
 
 @bot.command()
 async def intel(ctx):
@@ -41,6 +53,15 @@ async def scan(ctx, member: discord.Member = None):
     member = member or ctx.author
     msg = await ctx.send(f">> Scanning neural link of {member.display_name}...")
     await asyncio.sleep(1.5)
+    
+    # 銀狼（あなた）専用の特別スキャン結果
+    if member.id == MY_USER_ID:
+        embed = discord.Embed(title=f"// IDENTITY VERIFIED: SILVER WOLF", color=0xC199FF)
+        embed.add_field(name="Access Level", value="`ADMIN / SOVEREIGN`", inline=True)
+        embed.add_field(name="Sync Rate", value="`999% (OVERFLOW)`", inline=True)
+        embed.add_field(name="Active Protocol", value="`Aether Editing / Reality Glitch`", inline=False)
+        embed.set_footer(text="Game Master detected. All security bypassed.")
+        return await msg.edit(content=None, embed=embed)
     
     corruption = random.randint(0, 100)
     status = "STABLE" if corruption < 30 else "VULNERABLE" if corruption < 70 else "CRITICAL"
