@@ -1,11 +1,13 @@
+import asyncio
+import io
+import os
+import random
+import sys
+
 import discord
 from discord.ext import commands
-import asyncio
-import random
-import os
-import sys
-import io
 from dotenv import load_dotenv
+
 
 # 出力のエンコーディングをUTF-8に強制設定 (Windowsのcp932対策)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
