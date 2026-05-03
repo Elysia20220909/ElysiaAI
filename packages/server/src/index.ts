@@ -25,6 +25,7 @@ import { databaseRoutes } from "./routes/database-routes";
 import { fileRoutes } from "./routes/file-routes";
 import { sessionRoutes } from "./routes/session-routes";
 import { systemRoutes } from "./routes/system-routes";
+import { vtuberRoutes } from "./routes/vtuber-routes";
 
 const app = new Elysia();
 const requestStartedAt = new WeakMap<Request, number>();
@@ -44,6 +45,7 @@ app
 					{ name: "auth", description: "Identity management" },
 					{ name: "ai", description: "AI & LLM Services" },
 					{ name: "system", description: "Infra & Monitoring" },
+					{ name: "vtuber", description: "Open-LLM-VTuber bridge" },
 				],
 			},
 		}),
@@ -158,6 +160,7 @@ app
 	.use(customizationRoutes)
 	.use(fileRoutes)
 	.use(databaseRoutes)
+	.use(vtuberRoutes)
 	.get("/health", async () => {
 		return await performHealthCheck();
 	})

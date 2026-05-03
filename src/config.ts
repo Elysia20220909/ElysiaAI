@@ -64,6 +64,13 @@ export const config = {
 	voicevoxIntonation: Number(getEnv("VOICEVOX_INTONATION", "1.2")),
 	voicevoxVolume: Number(getEnv("VOICEVOX_VOLUME", "1.0")),
 
+	// Open-LLM-VTuber bridge
+	openLlmVtuberEnabled: getEnv("OPEN_LLM_VTUBER_ENABLED", "false") === "true",
+	openLlmVtuberBaseUrl: getEnv(
+		"OPEN_LLM_VTUBER_BASE_URL",
+		"http://127.0.0.1:12393",
+	),
+
 	// Auth
 	jwtSecret: getEnv("JWT_SECRET", "elysia-sovereign-secret"),
 	jwtRefreshSecret: getEnv("JWT_REFRESH_SECRET", "elysia-refresh-secret"),
