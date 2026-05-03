@@ -15,6 +15,24 @@ console.log(
 );
 console.log("");
 
+console.log("Briefing");
+for (const item of overview.briefing) {
+	console.log(`- ${item}`);
+}
+console.log("");
+
+console.log("Host");
+console.log(
+	`${overview.host.hostname} / ${overview.host.platform} / ${overview.host.arch}`,
+);
+console.log(
+	`CPU: ${overview.host.cpuCores} threads, memory ${overview.host.memory.usedPercent}% used`,
+);
+console.log(
+	`Runtime: Bun ${overview.host.runtime.bun}, ${overview.host.runtime.node}, PID ${overview.host.runtime.pid}`,
+);
+console.log("");
+
 for (const service of overview.services) {
 	const status = service.enabled ? service.status : "disabled";
 	const timing =
@@ -26,6 +44,12 @@ for (const service of overview.services) {
 	if (service.startCommand && status !== "up") {
 		console.log(`  start: ${service.startCommand}`);
 	}
+}
+
+console.log("");
+console.log("Recent logs");
+for (const log of overview.logs) {
+	console.log(`[${log.status}] ${log.label} - ${log.path}`);
 }
 
 console.log("");
