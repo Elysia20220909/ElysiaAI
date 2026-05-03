@@ -1,9 +1,9 @@
 /**
  * ElysiaAI // Confidential Core (Rust side)
  * [TOP SECRET / CLASSIFIED]
- * 
+ *
  * Orchestrates the lifecycle of the native Confidential Containers.
- * This module ensures that root secrets are only handled through 
+ * This module ensures that root secrets are only handled through
  * the hardware-protected Swift layer.
  */
 
@@ -14,7 +14,10 @@ pub struct ConfidentialController {
 
 impl ConfidentialController {
     pub fn new(instance_id: &str) -> Self {
-        println!("[RUST] Initializing Confidential Controller: {}", instance_id);
+        println!(
+            "[RUST] Initializing Confidential Controller: {}",
+            instance_id
+        );
         Self {
             id: instance_id.to_string(),
             integrity_verified: true,
@@ -29,7 +32,7 @@ impl ConfidentialController {
         println!("[RUST] Sending Root Secret to Secure Enclave for sealing...");
         // In a real implementation, this would call the Swift ResonanceBridge
         // to interact with the SovereignConfidentialContainer.
-        
+
         Ok(())
     }
 

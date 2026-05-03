@@ -102,7 +102,15 @@ class Settings(BaseSettings):
 
 
 _settings = Settings()
-IS_TEST_MODE = "pytest" in sys.modules or os.getenv("ELYSIA_TEST_MODE") == "1"
+
+
+def env_flag(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+IS_TEST_MODE = "pytest" in sys.modules or env_flag("ELYSIA_TEST_MODE")
+IS_LIGHTWEIGHT_MODE = IS_TEST_MODE or env_flag("ELYSIA_KERNEL_LITE") or env_flag("ELYSIA_FAST_START")
+STARTUP_MODE = "test" if IS_TEST_MODE else "lite" if IS_LIGHTWEIGHT_MODE else "full"
 
 
 def resolve_ollama_host(default_host: str = "http://127.0.0.1:11434") -> str:
@@ -165,8 +173,8 @@ if CONFIG["EMBEDDING_PROVIDER"] == "openai":
 
     openai_client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
     logger.info(f"✅ OpenAI Embedding Enabled: {CONFIG['OPENAI_EMBEDDING_MODEL']}")
-elif IS_TEST_MODE:
-    logger.info("🧪 Test mode detected: skipping SentenceTransformer preload.")
+elif IS_LIGHTWEIGHT_MODE:
+    logger.info(f"🧪 {STARTUP_MODE} mode detected: skipping SentenceTransformer preload.")
 else:
     try:
         from sentence_transformers import SentenceTransformer
@@ -178,8 +186,8 @@ else:
 
 # 2. Milvus Connection
 milvus_client = None
-if IS_TEST_MODE:
-    logger.info("🧪 Test mode detected: skipping Milvus connection.")
+if IS_LIGHTWEIGHT_MODE:
+    logger.info(f"🧪 {STARTUP_MODE} mode detected: skipping Milvus connection.")
 else:
     try:
         from pymilvus import DataType, MilvusClient
@@ -306,7 +314,7 @@ async def get_embedding(text: str) -> list[float]:
     if CONFIG["EMBEDDING_PROVIDER"] == "openai" and openai_client:
         res = await openai_client.embeddings.create(input=[text], model=CONFIG["OPENAI_EMBEDDING_MODEL"])
         return res.data[0].embedding
-    if model_local is None and not IS_TEST_MODE:
+    if model_local is None and not IS_LIGHTWEIGHT_MODE:
         try:
             from sentence_transformers import SentenceTransformer
 
@@ -336,10 +344,10 @@ async def init_db() -> None:
         logger.info("📜 Sovereign Ledger Manifest Synchronized.")
     except Exception as e:
         logger.warning(f"⚠️ Ledger Manifest Sync Failed: {e}")
-    if IS_TEST_MODE:
+    if IS_LIGHTWEIGHT_MODE:
         if not quotes_store:
             quotes_store = ELYSIA_QUOTES.copy()
-        logger.info("🧪 Test mode: skipping heavy startup routines.")
+        logger.info(f"🧪 {STARTUP_MODE} mode: skipping heavy startup routines.")
         return
     if milvus_client:
         try:
@@ -628,6 +636,8 @@ async def sovereign_recall(query: Query = Body(...)) -> dict[str, Any]:
 async def health() -> dict[str, Any]:
     return {
         "status": "healthy",
+        "mode": STARTUP_MODE,
+        "lightweight": IS_LIGHTWEIGHT_MODE,
         "embedding_provider": CONFIG.get("EMBEDDING_PROVIDER", "local"),
         "milvus_connected": milvus_client is not None,
         "quotes_loaded": len(quotes_store),

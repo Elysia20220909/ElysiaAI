@@ -3,16 +3,17 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Manager, State};
 
 mod aegis;
-mod native_bridge;
-mod confidential_core;
-mod sovereign_secrecy;
 mod aether_core;
 mod blackbox_core;
 mod chameleon_core;
+mod confidential_core;
 mod confidential_exchange;
-mod shared_resonance;
 mod error;
+mod native_bridge;
+mod native_lite;
+mod shared_resonance;
 mod sovereign_physics;
+mod sovereign_secrecy;
 
 use crate::error::{AppError, AppResult};
 use crate::sovereign_secrecy::{SecrecyClass, SovereignFile};
@@ -38,20 +39,29 @@ async fn perform_native_audit(key: String) -> AppResult<(String, f64)> {
 /// Requires NSA-grade clearance for Class 09 Abyss.
 #[tauri::command]
 async fn register_classified_file(
-    name: String, 
-    path: String, 
-    class: u8
+    app_handle: AppHandle,
+    name: String,
+    path: String,
+    class: u8,
 ) -> AppResult<String> {
     let secrecy = match class {
         1 => SecrecyClass::Class01Genesis,
         5 => SecrecyClass::Class05Sentinel,
         9 => {
-            if !sovereign_secrecy::validate_nsa_clearance().await.map_err(AppError::Security)? {
+            if !sovereign_secrecy::validate_nsa_clearance()
+                .await
+                .map_err(AppError::Security)?
+            {
                 return Err(AppError::Security("NSA-Grade Clearance Denied".into()));
             }
             SecrecyClass::Class09Abyss
-        },
-        _ => return Err(AppError::Classification(format!("Invalid Secrecy Class: {}", class))),
+        }
+        _ => {
+            return Err(AppError::Classification(format!(
+                "Invalid Secrecy Class: {}",
+                class
+            )))
+        }
     };
 
     let file = SovereignFile {
@@ -63,12 +73,22 @@ async fn register_classified_file(
     };
 
     sovereign_secrecy::register_important_file(file).map_err(AppError::Internal)?;
-    
+
     // Log to Immutable Ledger
     let watchdog = app_handle.state::<aegis::AegisWatchdog>();
-    watchdog.log_to_ledger("SECURITY", &format!("Class 09 Artifact Registered: {}", name));
+    watchdog.log_to_ledger(
+        "SECURITY",
+        &format!("Class 09 Artifact Registered: {}", name),
+    );
 
     Ok(format!("File registered with Class {:02}", class))
+}
+
+/// Returns a lightweight Rust/Swift/Bun budget snapshot for the desktop shell.
+#[tauri::command]
+fn native_lite_snapshot(app_handle: AppHandle) -> AppResult<native_lite::NativeLiteSnapshot> {
+    let project_root = get_project_root(&app_handle)?;
+    Ok(native_lite::collect_native_lite_snapshot(project_root))
 }
 
 /// Initiates an emergency system-wide purge.
@@ -81,8 +101,8 @@ fn emergency_purge() {
 /// Executes an influence action with a cryptographic signature.
 #[tauri::command]
 async fn execute_signed_influence(
-    action: String, 
-    node_name: String
+    action: String,
+    node_name: String,
 ) -> AppResult<serde_json::Value> {
     let signature_data = generate_influence_signature(&action, &node_name)?;
     relay_influence_to_kernel(signature_data).await
@@ -96,7 +116,7 @@ fn generate_influence_signature(action: &str, node_name: &str) -> AppResult<serd
 
     let hmac_key = std::env::var("RESONANCE_SECRET")
         .unwrap_or_else(|_| "ELYSIAN_DEFAULT_RESONANCE_KEY".to_string());
-    
+
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_err(|e| AppError::Internal(e.to_string()))?
@@ -119,7 +139,8 @@ fn generate_influence_signature(action: &str, node_name: &str) -> AppResult<serd
 /// Helper to relay signed actions to the Sovereign Node (Bun Bridge).
 async fn relay_influence_to_kernel(payload: serde_json::Value) -> AppResult<serde_json::Value> {
     let client = reqwest::Client::new();
-    let res = client.post("http://localhost:3000/api/kernel")
+    let res = client
+        .post("http://localhost:3000/api/kernel")
         .json(&serde_json::json!({
             "method": "influence",
             "params": payload
@@ -150,20 +171,25 @@ fn update_physics_resonance() -> sovereign_physics::WorldState {
 async fn save_secure_world_state() -> AppResult<String> {
     let state = sovereign_physics::update_simulation();
     let json = serde_json::to_vec(&state).map_err(|e| AppError::Internal(e.to_string()))?;
-    
+
     // Seal with NSA-grade hardware resonance
     let sealed = crate::sovereign_secrecy::seal_class09_data(&json)?;
-    
+
     let path = "secure_world_state.bin";
     std::fs::write(path, sealed).map_err(|e| AppError::Io(e))?;
-    
+
     crate::sovereign_secrecy::register_important_file(crate::sovereign_secrecy::SovereignFile {
         name: "World State Backup".to_string(),
         path: path.to_string(),
         secrecy: crate::sovereign_secrecy::SecrecyClass::Class09Abyss,
         owner: "Elysia".to_string(),
-        integrity_hash: hex::encode(reqwest::header::HeaderValue::from_str("dummy").unwrap().as_bytes()), // Dummy hash for now
-    }).map_err(|e| AppError::Security(e))?;
+        integrity_hash: hex::encode(
+            reqwest::header::HeaderValue::from_str("dummy")
+                .unwrap()
+                .as_bytes(),
+        ), // Dummy hash for now
+    })
+    .map_err(|e| AppError::Security(e))?;
 
     Ok(format!("World state sealed and stored at {}", path))
 }
@@ -182,7 +208,7 @@ fn set_wind_force_resonance(force: f32) {
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            get_aegis_resonance, 
+            get_aegis_resonance,
             execute_signed_influence,
             perform_native_audit,
             emergency_purge,
@@ -192,7 +218,8 @@ pub fn run() {
             update_physics_resonance,
             set_wind_force_resonance,
             set_basket_position_resonance,
-            save_secure_world_state
+            save_secure_world_state,
+            native_lite_snapshot
         ])
         .manage(aegis::AegisWatchdog::init())
         .run(tauri::generate_context!())
@@ -214,7 +241,7 @@ fn setup_kernel_process(app_handle: &AppHandle) -> AppResult<()> {
 
     let state = app_handle.state::<KernelState>();
     *state.0.lock().unwrap() = Some(child);
-    
+
     println!("[Elysia OS] Resonance Kernel Active.");
     Ok(())
 }
@@ -240,9 +267,12 @@ fn get_project_root(app_handle: &AppHandle) -> AppResult<std::path::PathBuf> {
         }
         Ok(path)
     }
-    
+
     #[cfg(not(debug_assertions))]
     {
-        app_handle.path().resource_dir().map_err(|e| AppError::Env(e.to_string()))
+        app_handle
+            .path()
+            .resource_dir()
+            .map_err(|e| AppError::Env(e.to_string()))
     }
 }

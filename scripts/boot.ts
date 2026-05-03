@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const rootDir = process.cwd();
+const args = new Set(Bun.argv.slice(2));
 
 // Force UTF-8 environment for child processes
 process.env.PYTHONUTF8 = "1";
@@ -37,7 +38,17 @@ async function loadDotEnv(path = join(rootDir, ".env")) {
 
 await loadDotEnv();
 
-import { getEnv } from "../src/config.ts";
+if (args.has("--ci")) {
+	process.env.ELYSIA_TEST_MODE ??= "1";
+	process.env.REDIS_ENABLED ??= "false";
+}
+
+if (args.has("--lite") || args.has("--fast")) {
+	process.env.ELYSIA_KERNEL_LITE ??= "1";
+	process.env.REDIS_ENABLED ??= "false";
+}
+
+const { getEnv } = await import("../src/config.ts");
 
 const bindHost = getEnv("BIND_HOST", getEnv("HOST", "127.0.0.1"));
 const healthHost = getEnv(
@@ -138,7 +149,12 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
 }
 
 async function main() {
-	console.log("🌸 Booting the local ElysiaAI stack...");
+	const mode = args.has("--ci")
+		? "ci"
+		: process.env.ELYSIA_KERNEL_LITE === "1"
+			? "lite"
+			: "full";
+	console.log(`🌸 Booting the local ElysiaAI stack (${mode} mode)...`);
 
 	const python = startProcess(
 		"FastAPI kernel",
@@ -152,7 +168,13 @@ async function main() {
 			"--port",
 			fastApiPort,
 		],
-		{ PYTHONUTF8: "1" },
+		{
+			PYTHONUTF8: "1",
+			...(mode === "lite" ? { ELYSIA_KERNEL_LITE: "1" } : {}),
+			...(mode === "ci"
+				? { ELYSIA_TEST_MODE: "1", REDIS_ENABLED: "false" }
+				: {}),
+		},
 	);
 
 	try {
