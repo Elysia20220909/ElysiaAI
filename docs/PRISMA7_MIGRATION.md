@@ -1,30 +1,35 @@
-# Prisma 7 + LibSQL 遘ｻ陦後ぎ繧､繝・
-## 讎りｦ・
-ElysiaAI縺ｯ Prisma 7 縺ｨ LibSQL 繧｢繝�繝励ち繧剃ｽｿ逕ｨ縺励※繝・・繧ｿ繝吶・繧ｹ謗･邯壹ｒ螳溽樟縺励※縺・∪縺吶�ゅ％縺ｮ繧ｬ繧､繝峨〒縺ｯ縲￣risma 7縺ｸ縺ｮ遘ｻ陦後・繝ｭ繧ｻ繧ｹ縺ｨ險ｭ螳壽婿豕輔ｒ隱ｬ譏弱＠縺ｾ縺吶�・
-## 荳ｻ縺ｪ螟画峩轤ｹ
+# Prisma 7 + LibSQL 移行ガイド
 
-### Prisma v6 縺九ｉ v7 縺ｸ縺ｮ螟画峩
+## 概要
 
-1. **`datasourceUrl` 繧ｪ繝励す繝ｧ繝ｳ縺ｮ蜑企勁**
-   - Prisma v7 縺ｧ縺ｯ縲√さ繝ｳ繧ｹ繝医Λ繧ｯ繧ｿ縺ｧ `datasourceUrl` 繧呈ｸ｡縺吶％縺ｨ縺後〒縺阪↑縺上↑繧翫∪縺励◆
-   - 莉｣繧上ｊ縺ｫ縲√い繝�繝励ち繝代ち繝ｼ繝ｳ繧剃ｽｿ逕ｨ縺励∪縺・
-2. **繧ｨ繝ｳ繧ｸ繝ｳ繧ｿ繧､繝励・螟画峩**
-   - Bun 繝ｩ繝ｳ繧ｿ繧､繝�縺ｧ縺ｯ繝・ヵ繧ｩ繝ｫ繝医〒 `"client"` 繧ｨ繝ｳ繧ｸ繝ｳ繧ｿ繧､繝励′菴ｿ逕ｨ縺輔ｌ縺ｾ縺・   - `accelerateUrl` 縺ｾ縺溘・繧｢繝�繝励ち縺悟ｿ・�医↓縺ｪ繧翫∪縺励◆
+ElysiaAIは Prisma 7 と LibSQL アダプタを使用してデータベース接続を実現しています。このガイドでは、Prisma 7への移行プロセスと設定方法を説明します。
 
-3. **繧｢繝�繝励ち繝代ち繝ｼ繝ｳ縺ｮ蟆主・**
-   - `@prisma/adapter-libsql` 縺ｨ `@libsql/client` 繧剃ｽｿ逕ｨ
-   - 譟碑ｻ溘↑繝・・繧ｿ繝吶・繧ｹ謗･邯壹′蜿ｯ閭ｽ
+## 主な変更点
 
-## 繧､繝ｳ繧ｹ繝医・繝ｫ
+### Prisma v6 から v7 への変更
+
+1. **`datasourceUrl` オプションの削除**
+   - Prisma v7 では、コンストラクタで `datasourceUrl` を渡すことができなくなりました
+   - 代わりに、アダプタパターンを使用します
+
+2. **エンジンタイプの変更**
+   - Bun ランタイムではデフォルトで `"client"` エンジンタイプが使用されます
+   - `accelerateUrl` またはアダプタが必須になりました
+
+3. **アダプタパターンの導入**
+   - `@prisma/adapter-libsql` と `@libsql/client` を使用
+   - 柔軟なデータベース接続が可能
+
+## インストール
 
 ```bash
-# Prisma 7 縺ｨ LibSQL 繧｢繝�繝励ち縺ｮ繧､繝ｳ繧ｹ繝医・繝ｫ
+# Prisma 7 と LibSQL アダプタのインストール
 bun add @prisma/client@latest
 bun add -d prisma@latest
 bun add @prisma/adapter-libsql @libsql/client
 ```
 
-## 險ｭ螳壹ヵ繧｡繧､繝ｫ
+## 設定ファイル
 
 ### 1. `.env`
 
@@ -60,7 +65,7 @@ model User {
   @@index([createdAt])
 }
 
-// 莉悶・繝｢繝・Ν螳夂ｾｩ...
+// 他のモデル定義...
 ```
 
 ### 3. `src/lib/database.ts`
@@ -72,37 +77,39 @@ import { createClient } from "@libsql/client";
 
 const databaseUrl = process.env.DATABASE_URL || "file:./dev.db";
 
-// LibSQL 繧ｯ繝ｩ繧､繧｢繝ｳ繝井ｽ懈・
+// LibSQL クライアント作成
 const libsql = createClient({
   url: databaseUrl,
 });
 
-// Prisma 繧｢繝�繝励ち險ｭ螳・const adapter = new PrismaLibSQL(libsql);
+// Prisma アダプタ設定
+const adapter = new PrismaLibSQL(libsql);
 
-// Prisma 繧ｯ繝ｩ繧､繧｢繝ｳ繝井ｽ懈・
+// Prisma クライアント作成
 export const prisma = new PrismaClient({ adapter });
 
-// 繧ｹ繧ｭ繝ｼ繝櫁・蜍穂ｽ懈・髢｢謨ｰ
+// スキーマ自動作成関数
 async function ensureSchema() {
-  // CREATE TABLE IF NOT EXISTS 繧ｹ繝・・繝医Γ繝ｳ繝・..
+  // CREATE TABLE IF NOT EXISTS ステートメント...
 }
 
-// 繝・・繧ｿ繝吶・繧ｹ謗･邯壹→繧ｹ繧ｭ繝ｼ繝樔ｽ懈・
+// データベース接続とスキーマ作成
 await ensureSchema();
-console.log("笨・Prisma database connected via LibSQL adapter");
+console.log("✅ Prisma database connected via LibSQL adapter");
 ```
 
-## 遘ｻ陦梧焔鬆・
-### 繧ｹ繝・ャ繝・1: 繝代ャ繧ｱ繝ｼ繧ｸ譖ｴ譁ｰ
+## 移行手順
+
+### ステップ 1: パッケージ更新
 
 ```bash
 bun add @prisma/client@latest -d prisma@latest
 bun add @prisma/adapter-libsql @libsql/client
 ```
 
-### 繧ｹ繝・ャ繝・2: 繧ｹ繧ｭ繝ｼ繝樊峩譁ｰ
+### ステップ 2: スキーマ更新
 
-`prisma/schema.prisma` 繧・SQLite 繝励Ο繝舌う繝�縺ｫ螟画峩:
+`prisma/schema.prisma` を SQLite プロバイダに変更:
 
 ```diff
 datasource db {
@@ -112,9 +119,9 @@ datasource db {
 }
 ```
 
-### 繧ｹ繝・ャ繝・3: database.ts 譖ｴ譁ｰ
+### ステップ 3: database.ts 更新
 
-LibSQL 繧｢繝�繝励ち繧剃ｽｿ逕ｨ縺吶ｋ繧医≧縺ｫ螟画峩:
+LibSQL アダプタを使用するように変更:
 
 ```typescript
 import { PrismaLibSQL } from "@prisma/adapter-libsql";
@@ -125,42 +132,47 @@ const adapter = new PrismaLibSQL(libsql);
 export const prisma = new PrismaClient({ adapter });
 ```
 
-### 繧ｹ繝・ャ繝・4: Prisma 繧ｯ繝ｩ繧､繧｢繝ｳ繝育函謌・
+### ステップ 4: Prisma クライアント生成
+
 ```bash
 bunx prisma generate
 ```
 
-### 繧ｹ繝・ャ繝・5: 繧ｵ繝ｼ繝舌・襍ｷ蜍・
+### ステップ 5: サーバー起動
+
 ```bash
 bun ./start-server.ts
 ```
 
-## 繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ
+## トラブルシューティング
 
-### 繧ｨ繝ｩ繝ｼ: "Invalid `prisma.xxx()` invocation"
+### エラー: "Invalid `prisma.xxx()` invocation"
 
-**蜴溷屏**: Prisma 繧ｯ繝ｩ繧､繧｢繝ｳ繝医′逕滓・縺輔ｌ縺ｦ縺・↑縺・�√∪縺溘・蜿､縺・ヰ繝ｼ繧ｸ繝ｧ繝ｳ縺御ｽｿ逕ｨ縺輔ｌ縺ｦ縺・ｋ
+**原因**: Prisma クライアントが生成されていない、または古いバージョンが使用されている
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 ```bash
 bunx prisma generate
 rm -rf node_modules/.prisma
 bun install
 ```
 
-### 繧ｨ繝ｩ繝ｼ: "PrismaClientValidationError: datasourceUrl"
+### エラー: "PrismaClientValidationError: datasourceUrl"
 
-**蜴溷屏**: Prisma v7 縺ｧ蜑企勁縺輔ｌ縺・`datasourceUrl` 繧ｪ繝励す繝ｧ繝ｳ繧剃ｽｿ逕ｨ縺励※縺・ｋ
+**原因**: Prisma v7 で削除された `datasourceUrl` オプションを使用している
 
-**隗｣豎ｺ遲・*: 繧｢繝�繝励ち繝代ち繝ｼ繝ｳ縺ｫ遘ｻ陦後＠縺ｦ縺上□縺輔＞・井ｸ願ｨ倥・繧ｹ繝・ャ繝・蜿ら・・・
-### 繧ｨ繝ｩ繝ｼ: "adapter or accelerateUrl is required"
+**解決策**: アダプタパターンに移行してください（上記のステップ3参照）
 
-**蜴溷屏**: Bun 繝ｩ繝ｳ繧ｿ繧､繝�縺ｧ client 繧ｨ繝ｳ繧ｸ繝ｳ繧ｿ繧､繝励ｒ菴ｿ逕ｨ縺吶ｋ縺ｫ縺ｯ繧｢繝�繝励ち縺悟ｿ・ｦ・
-**隗｣豎ｺ遲・*: LibSQL 繧｢繝�繝励ち繧偵う繝ｳ繧ｹ繝医・繝ｫ縺励※險ｭ螳壹＠縺ｦ縺上□縺輔＞
+### エラー: "adapter or accelerateUrl is required"
 
-## 譛ｬ逡ｪ迺ｰ蠅・∈縺ｮ螻暮幕
+**原因**: Bun ランタイムで client エンジンタイプを使用するにはアダプタが必要
 
-### PostgreSQL 繧剃ｽｿ逕ｨ縺吶ｋ蝣ｴ蜷・
+**解決策**: LibSQL アダプタをインストールして設定してください
+
+## 本番環境への展開
+
+### PostgreSQL を使用する場合
+
 ```typescript
 import { PrismaClient } from "@prisma/client";
 import { Pool, neonConfig } from "@neondatabase/serverless";
@@ -176,7 +188,8 @@ const adapter = new PrismaNeon(pool);
 export const prisma = new PrismaClient({ adapter });
 ```
 
-### Turso (LibSQL) 繧剃ｽｿ逕ｨ縺吶ｋ蝣ｴ蜷・
+### Turso (LibSQL) を使用する場合
+
 ```typescript
 import { createClient } from "@libsql/client";
 import { PrismaLibSQL } from "@prisma/adapter-libsql";
@@ -190,18 +203,22 @@ const adapter = new PrismaLibSQL(libsql);
 export const prisma = new PrismaClient({ adapter });
 ```
 
-## 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ譛�驕ｩ蛹・
-### 1. 繧ｳ繝阪け繧ｷ繝ｧ繝ｳ繝励・繝ｫ險ｭ螳・
+## パフォーマンス最適化
+
+### 1. コネクションプール設定
+
 ```typescript
 const libsql = createClient({
   url: databaseUrl,
-  // 譛ｬ逡ｪ迺ｰ蠅・〒縺ｯ繧ｳ繝阪け繧ｷ繝ｧ繝ｳ繝励・繝ｫ繧定ｨｭ螳・  syncUrl: process.env.TURSO_SYNC_URL,
+  // 本番環境ではコネクションプールを設定
+  syncUrl: process.env.TURSO_SYNC_URL,
 });
 ```
 
-### 2. 繧ｯ繧ｨ繝ｪ譛�驕ｩ蛹・
+### 2. クエリ最適化
+
 ```typescript
-// 繧､繝ｳ繝・ャ繧ｯ繧ｹ繧呈ｴｻ逕ｨ縺励◆繧ｯ繧ｨ繝ｪ
+// インデックスを活用したクエリ
 const users = await prisma.user.findMany({
   where: { username: { contains: "test" } },
   orderBy: { createdAt: "desc" },
@@ -209,18 +226,20 @@ const users = await prisma.user.findMany({
 });
 ```
 
-### 3. 繝舌ャ繝∝・逅・
+### 3. バッチ処理
+
 ```typescript
-// 隍・焚縺ｮ繧ｯ繧ｨ繝ｪ繧剃ｸｦ蛻怜ｮ溯｡・const [users, sessions, messages] = await Promise.all([
+// 複数のクエリを並列実行
+const [users, sessions, messages] = await Promise.all([
   prisma.user.findMany(),
   prisma.chatSession.findMany(),
   prisma.message.findMany(),
 ]);
 ```
 
-## 蜿り�・Μ繝ｳ繧ｯ
+## 参考リンク
 
-- [Prisma 7 繝ｪ繝ｪ繝ｼ繧ｹ繝弱・繝・(https://www.prisma.io/docs/orm/overview/releases#7.0.0)
+- [Prisma 7 リリースノート](https://www.prisma.io/docs/orm/overview/releases#7.0.0)
 - [Prisma Database Adapters](https://www.prisma.io/docs/orm/overview/databases/database-drivers)
 - [LibSQL Client](https://github.com/tursodatabase/libsql-client-ts)
 - [Turso Documentation](https://docs.turso.tech/)
