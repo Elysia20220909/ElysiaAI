@@ -45,7 +45,7 @@ jobs:
           path: coverage/
 
       - name: Bun Audit (Dependency Check)
-        run: bun pm audit
+        run: bun audit
 
       - name: Smoke Test (Server Startup)
         run: |

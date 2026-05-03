@@ -1,17 +1,57 @@
 // src/config.ts – Centralised environment handling
 // Lightweight helper to fetch env vars with optional defaults// Centralised environment handling
+const requiredProductionEnvKeys = new Set([
+	"SESSION_SECRET",
+	"DB_URL",
+	"DATABASE_URL",
+	"JWT_SECRET",
+	"JWT_REFRESH_SECRET",
+	"AUTH_PASSWORD",
+	"ENCRYPTION_SECRET",
+	"ENCRYPTION_SALT",
+]);
+
+const unsafeProductionEnvValues: Record<string, Set<string>> = {
+	AUTH_PASSWORD: new Set(["elysiatest-001", "your-strong-password-here"]),
+	ENCRYPTION_SECRET: new Set(["elysia-default-shadow-key-777"]),
+	ENCRYPTION_SALT: new Set(["abyssal-salt"]),
+	JWT_REFRESH_SECRET: new Set([
+		"elysia-refresh-secret",
+		"your-super-secret-refresh-key-change-this-immediately-or-security-risk",
+	]),
+	JWT_SECRET: new Set([
+		"elysia-sovereign-secret",
+		"your-super-secret-jwt-key-change-this-immediately-or-security-risk",
+	]),
+	SESSION_SECRET: new Set([
+		"dev_secret_only",
+		"your-session-secret-change-this",
+	]),
+};
+
 export function getEnv(key: string, defaultValue?: string): string {
 	const value = process.env[key];
-	if (value !== undefined && value !== null && value !== "") return value;
-	if (defaultValue !== undefined) return defaultValue;
-
-	// Enforce required variables in production
 	const isProd = process.env.NODE_ENV === "production";
-	if (isProd && ["SESSION_SECRET", "DB_URL"].includes(key)) {
+	if (
+		isProd &&
+		requiredProductionEnvKeys.has(key) &&
+		(value === undefined || value === null || value === "")
+	) {
 		throw new Error(
 			`CRITICAL: Missing required production environment variable: ${key}`,
 		);
 	}
+
+	if (value !== undefined && value !== null && value !== "") {
+		if (isProd && unsafeProductionEnvValues[key]?.has(value)) {
+			throw new Error(
+				`CRITICAL: Insecure production environment variable value: ${key}`,
+			);
+		}
+		return value;
+	}
+
+	if (defaultValue !== undefined) return defaultValue;
 
 	return "";
 }

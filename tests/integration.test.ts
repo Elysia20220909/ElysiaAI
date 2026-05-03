@@ -110,6 +110,22 @@ describe("Integration Tests - Full Stack", () => {
 		console.log("✅ Airi demo chat controls are present");
 	});
 
+	test("Health UI surfaces ElysiaAI core and companion status", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const healthUi = fs.readFileSync(
+			path.join(process.cwd(), "public", "health-ui.html"),
+			"utf-8",
+		);
+
+		expect(healthUi).toContain("ElysiaAI Core");
+		expect(healthUi).toContain("Open-LLM-VTuber");
+		expect(healthUi).toContain("data.companions?.openLlmVtuber");
+		expect(healthUi).toContain('fetch("/health"');
+		console.log("✅ Health UI includes core and companion status");
+	});
+
 	test("Environment template covers both server and kernel names", async () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");
