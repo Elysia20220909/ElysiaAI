@@ -1,10 +1,10 @@
+use hmac::{Hmac, Mac};
+use serde::{Deserialize, Serialize};
+use sha2::Sha256;
 use std::net::UdpSocket;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use serde::{Deserialize, Serialize};
-use hmac::{Hmac, Mac};
-use sha2::Sha256;
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -18,10 +18,10 @@ pub struct AegisStatus {
     pub kernel_verified: bool,
     pub verified_sig: String,
     pub ice_active: bool,
-    pub threat_level: u8, // 0 = Clear, 1 = Trace, 2 = Lockdown
+    pub threat_level: u8,           // 0 = Clear, 1 = Trace, 2 = Lockdown
     pub device_fingerprint: String, // Phase 39: Registered HWID
-    pub quantum_jitter: f32, // Phase 41: Observer Effect Jitter
-    pub sovereign_lock: bool, // Phase 43: Absolute Sovereignty (L11)
+    pub quantum_jitter: f32,        // Phase 41: Observer Effect Jitter
+    pub sovereign_lock: bool,       // Phase 43: Absolute Sovereignty (L11)
 }
 
 pub struct AegisWatchdog {
@@ -68,7 +68,7 @@ impl AegisWatchdog {
                     s.timestamp = Self::now();
                     s.resonance_index = 0.95 + (rand::random::<f32>() * 0.04);
                     s.quantum_jitter = rand::random::<f32>() * 0.1;
-                    
+
                     if count % 100 == 99 {
                         s.threat_level = 1;
                     } else {
@@ -92,8 +92,9 @@ impl AegisWatchdog {
         let time_window = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
-            .as_secs() / 10;
-        
+            .as_secs()
+            / 10;
+
         let payload = format!("{}_{}", self.hardware_id, time_window);
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         use std::hash::Hasher;
@@ -102,11 +103,17 @@ impl AegisWatchdog {
     }
 
     fn now() -> u64 {
-        SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
     }
 
     pub fn get_status(&self) -> AegisStatus {
-        self.status.lock().expect("Failed to lock Aegis status").clone()
+        self.status
+            .lock()
+            .expect("Failed to lock Aegis status")
+            .clone()
     }
 
     /// Appends a signed entry to the Sovereign Ledger.
@@ -114,7 +121,7 @@ impl AegisWatchdog {
         let timestamp = Self::now();
         let hmac_key = std::env::var("RESONANCE_SECRET")
             .unwrap_or_else(|_| "ELYSIAN_DEFAULT_RESONANCE_KEY".to_string());
-        
+
         let payload = format!("{}:{}:{}", timestamp, category, message);
         let mut mac = HmacSha256::new_from_slice(hmac_key.as_bytes()).unwrap();
         mac.update(payload.as_bytes());
@@ -137,19 +144,21 @@ impl AegisWatchdog {
 
     /// Generates a stable, hardware-bound identifier.
     fn generate_hwid() -> String {
-        use sysinfo::{System, CpuExt, DiskExt};
+        use sysinfo::{CpuExt, DiskExt, System};
         let mut s = System::new_all();
         s.refresh_all();
 
         let cpu_info = s.cpus().first().map(|c| c.brand()).unwrap_or("UnknownCPU");
         let total_mem = s.total_memory();
-        let disk_info: String = s.disks().iter()
+        let disk_info: String = s
+            .disks()
+            .iter()
             .map(|d| format!("{:?}", d.name()))
             .collect::<Vec<_>>()
             .join("|");
 
         let raw_id = format!("{}_{}_{}", cpu_info, total_mem, disk_info);
-        
+
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         use std::hash::Hasher;
         std::hash::Hash::hash(&raw_id, &mut hasher);
@@ -159,17 +168,20 @@ impl AegisWatchdog {
         #[cfg(windows)]
         {
             let output = std::process::Command::new("powershell")
-                .args(&["-Command", "(Get-CimInstance -ClassName Win32_ComputerSystemProduct).UUID"])
+                .args(&[
+                    "-Command",
+                    "(Get-CimInstance -ClassName Win32_ComputerSystemProduct).UUID",
+                ])
                 .output();
-            
+
             if let Ok(out) = output {
                 let uuid = String::from_utf8_lossy(&out.stdout).trim().to_string();
-                if !uuid.is_empty() { 
-                    return format!("{}-{}", uuid, hash_id); 
+                if !uuid.is_empty() {
+                    return format!("{}-{}", uuid, hash_id);
                 }
             }
         }
-        
+
         // Fallback for non-windows or failed powershell
         #[cfg(target_os = "macos")]
         {
@@ -179,7 +191,11 @@ impl AegisWatchdog {
             if let Ok(out) = output {
                 let s = String::from_utf8_lossy(&out.stdout);
                 if let Some(uuid) = s.split("IOPlatformUUID").nth(1) {
-                    return format!("{}-{}", uuid.trim_matches(|c| c == '"' || c == ' ' || c == '=' || c == '\n'), hash_id);
+                    return format!(
+                        "{}-{}",
+                        uuid.trim_matches(|c| c == '"' || c == ' ' || c == '=' || c == '\n'),
+                        hash_id
+                    );
                 }
             }
         }
@@ -187,5 +203,3 @@ impl AegisWatchdog {
         format!("ELYSIAN-RESONANCE-{}", hash_id)
     }
 }
-
-

@@ -1,0 +1,36 @@
+# Claude Token Optimizer: keep startup context lean.
+
+# Dependencies and build output
+node_modules/**
+.venv/**
+dist/**
+.tmp/**
+.mypy_cache/**
+.pytest_cache/**
+.ruff_cache/**
+
+# Local runtime data
+logs/**
+data/**
+uploads/**
+backups/**
+scratch/**
+var/**
+
+# Large/generated artifacts
+bun.lock
+*.log
+*.jsonl
+x_delete_results_*.jsonl
+x_delete_results_*.json
+seen_*_news.json
+
+# Historical Claude context
+.claude/completions/**
+.claude/sessions/**
+docs/archive/**
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example

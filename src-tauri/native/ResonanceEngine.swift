@@ -94,18 +94,13 @@ public func swift_unseal_classified_data(sealedPtr: UnsafePointer<UInt8>, sealed
     return sealedLen
 }
 
-// MARK: - Physics Resonance
+// MARK: - Native Lite Scoring
 
-@_cdecl("swift_calculate_gravity_resonance")
-public func swift_calculate_gravity_resonance(y: Float, velocityY: Float) -> Float {
-    // High-precision gravity calculation in native layer
-    let timeStep: Float = 1.0 / 60.0
-    return y + (velocityY * timeStep)
-}
-
-@_cdecl("swift_calculate_wind_resonance")
-public func swift_calculate_wind_resonance(x: Float, force: Float) -> Float {
-    // Native wind resonance interference
-    let timeStep: Float = 1.0 / 60.0
-    return x + (force * timeStep)
+@_cdecl("swift_native_lite_efficiency_score")
+public func swift_native_lite_efficiency_score(bytes: Double, files: UInt32) -> Float {
+    let mib = bytes / 1024.0 / 1024.0
+    let weightPenalty = min(45.0, floor(mib / 500.0))
+    let filePenalty = min(10.0, Double(files / 20_000))
+    let score = 92.0 - weightPenalty - filePenalty
+    return Float(max(25.0, min(100.0, score)))
 }

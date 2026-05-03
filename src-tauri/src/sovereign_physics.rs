@@ -1,18 +1,42 @@
+use lazy_static::lazy_static;
 /**
  * ElysiaAI // Sovereign Physics Engine
  * [LIGHTWEIGHT RESONANCE SIMULATION]
  */
-
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use lazy_static::lazy_static;
 
 const GRAVITY: f32 = 9.81;
 const TIME_STEP: f32 = 0.016; // ~60fps
 
+#[cfg(target_os = "macos")]
 extern "C" {
     fn swift_calculate_gravity_resonance(y: f32, velocity: f32) -> f32;
     fn swift_calculate_wind_resonance(x: f32, wind_force: f32) -> f32;
+}
+
+fn native_gravity_resonance(y: f32, velocity: f32) -> f32 {
+    #[cfg(target_os = "macos")]
+    unsafe {
+        return swift_calculate_gravity_resonance(y, velocity);
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        y + ((velocity - (GRAVITY * TIME_STEP)) * TIME_STEP)
+    }
+}
+
+fn native_wind_resonance(x: f32, wind_force: f32) -> f32 {
+    #[cfg(target_os = "macos")]
+    unsafe {
+        return swift_calculate_wind_resonance(x, wind_force);
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        x + (wind_force * TIME_STEP)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -79,13 +103,13 @@ pub fn initialize_simulation() {
     state.lives = 3;
     state.basket_x = 0.0;
     state.game_over = false;
-    
+
     // Add multiple apples
     for i in 0..6 {
         state.objects.push(PhysicalObject {
             id: i,
             name: format!("Apple_{}", i),
-            x: (i as f32 * 1.5) - 4.0, 
+            x: (i as f32 * 1.5) - 4.0,
             y: 12.0 + (i as f32 * 2.0), // Higher up for the game
             velocity_x: 0.0,
             velocity_y: 0.0,
@@ -110,35 +134,43 @@ pub fn update_simulation() -> WorldState {
     if state.game_over {
         return state.clone();
     }
-    
+
     state.collision_events.clear();
     let wind_force = state.wind_force;
     let basket_x = state.basket_x;
     let num_objs = state.objects.len();
-    
+
     // 1. Physics Update
     for obj in state.objects.iter_mut() {
         if obj.is_falling || obj.velocity_y.abs() > 0.1 {
-            unsafe {
-                obj.y = swift_calculate_gravity_resonance(obj.y, obj.velocity_y);
-                obj.velocity_y -= GRAVITY * TIME_STEP;
-                obj.x = swift_calculate_wind_resonance(obj.x, wind_force);
-                obj.velocity_x += wind_force * TIME_STEP;
-            }
-            
+            obj.y = native_gravity_resonance(obj.y, obj.velocity_y);
+            obj.velocity_y -= GRAVITY * TIME_STEP;
+            obj.x = native_wind_resonance(obj.x, wind_force);
+            obj.velocity_x += wind_force * TIME_STEP;
+
             // X-Bounds enforcement (Sovereign play area)
-            if obj.x < -10.0 { obj.x = -10.0; obj.velocity_x = -obj.velocity_x * 0.5; }
-            if obj.x > 10.0 { obj.x = 10.0; obj.velocity_x = -obj.velocity_x * 0.5; }
+            if obj.x < -10.0 {
+                obj.x = -10.0;
+                obj.velocity_x = -obj.velocity_x * 0.5;
+            }
+            if obj.x > 10.0 {
+                obj.x = 10.0;
+                obj.velocity_x = -obj.velocity_x * 0.5;
+            }
 
             // Ground collision
             if obj.y <= 0.0 {
                 obj.y = 0.0;
-                
+
                 // --- Game Rule: Catch Check ---
                 if (obj.x - basket_x).abs() < 1.2 {
                     state.score += 10;
-                    state.collision_events.push(CollisionEvent { x: obj.x, y: 0.0, intensity: 2.0 }); 
-                    
+                    state.collision_events.push(CollisionEvent {
+                        x: obj.x,
+                        y: 0.0,
+                        intensity: 2.0,
+                    });
+
                     obj.y = 12.0 + (rand::random::<f32>() * 5.0);
                     obj.x = (rand::random::<f32>() * 12.0) - 6.0;
                     obj.velocity_y = 0.0;
@@ -149,13 +181,21 @@ pub fn update_simulation() -> WorldState {
                     if obj.velocity_y.abs() > 8.0 && !obj.is_broken {
                         obj.is_broken = true;
                         state.lives = (state.lives - 1).max(0);
-                        state.collision_events.push(CollisionEvent { x: obj.x, y: 0.0, intensity: 1.0 });
-                        
+                        state.collision_events.push(CollisionEvent {
+                            x: obj.x,
+                            y: 0.0,
+                            intensity: 1.0,
+                        });
+
                         if state.lives <= 0 {
                             state.game_over = true;
                         }
                     } else if obj.velocity_y.abs() > 0.5 {
-                        state.collision_events.push(CollisionEvent { x: obj.x, y: 0.0, intensity: 0.3 });
+                        state.collision_events.push(CollisionEvent {
+                            x: obj.x,
+                            y: 0.0,
+                            intensity: 0.3,
+                        });
                     }
 
                     obj.velocity_y = -obj.velocity_y * obj.restitution;
@@ -180,14 +220,14 @@ pub fn update_simulation() -> WorldState {
 
             let dx = obj_b.x - obj_a.x;
             let dy = obj_b.y - obj_a.y;
-            let dist_sq = dx*dx + dy*dy;
+            let dist_sq = dx * dx + dy * dy;
             let min_dist = radius * 2.0;
 
             if dist_sq < min_dist * min_dist {
                 // Collision detected!
                 let dist = dist_sq.sqrt();
                 let overlap = min_dist - dist;
-                
+
                 // Separate objects
                 let nx = dx / dist;
                 let ny = dy / dist;
@@ -204,21 +244,21 @@ pub fn update_simulation() -> WorldState {
                 obj_b.velocity_x = temp_vx * 0.8;
                 obj_b.velocity_y = temp_vy * 0.8;
 
-                state.collision_events.push(CollisionEvent { 
-                    x: (obj_a.x + obj_b.x) / 2.0, 
-                    y: (obj_a.y + obj_b.y) / 2.0, 
-                    intensity: 0.5 
+                state.collision_events.push(CollisionEvent {
+                    x: (obj_a.x + obj_b.x) / 2.0,
+                    y: (obj_a.y + obj_b.y) / 2.0,
+                    intensity: 0.5,
                 });
             }
         }
     }
-    
+
     for obj in state.objects.iter_mut() {
         obj.x = (obj.x * 1000.0).round() / 1000.0;
         obj.y = (obj.y * 1000.0).round() / 1000.0;
         obj.velocity_x = (obj.velocity_x * 1000.0).round() / 1000.0;
         obj.velocity_y = (obj.velocity_y * 1000.0).round() / 1000.0;
     }
-    
+
     state.clone()
 }

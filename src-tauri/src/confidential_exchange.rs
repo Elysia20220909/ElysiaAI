@@ -1,7 +1,7 @@
 /**
  * ElysiaAI // Confidential Exchange (Rust side)
  * [ULTIMATE SECURITY CLASSIFICATION]
- * 
+ *
  * Manages the Rust-side of the encrypted shared memory buffer.
  * It coordinates with the Swift layer to ensure that root secrets
  * remain encrypted even while sitting in shared physical memory.

@@ -3,7 +3,7 @@ use std::alloc::{alloc, dealloc, Layout};
 /**
  * ElysiaAI // Shared Resonance Buffer (Rust side)
  * [HYBRID STAGE]
- * 
+ *
  * Manages the raw memory allocation that is shared with the Swift layer.
  * This is the ultimate level of performance for cross-language integration.
  */
@@ -18,9 +18,9 @@ impl SharedResonance {
     pub fn new(capacity: usize) -> Self {
         let layout = Layout::from_size_align(capacity, 8).unwrap();
         let ptr = unsafe { alloc(layout) };
-        
+
         println!("[HYBRID] Allocated Shared Resonance Space: {:p}", ptr);
-        
+
         Self {
             ptr,
             layout,
@@ -33,9 +33,7 @@ impl SharedResonance {
     }
 
     pub fn read_resonance(&self) -> Vec<u8> {
-        unsafe {
-            std::slice::from_raw_parts(self.ptr, self.capacity).to_vec()
-        }
+        unsafe { std::slice::from_raw_parts(self.ptr, self.capacity).to_vec() }
     }
 
     pub fn write_resonance(&self, data: &[u8]) {
