@@ -8,9 +8,11 @@ import { logger } from "./logger";
 interface EnvConfig {
 	name: string;
 	required: boolean;
+	productionOnly?: boolean;
 	default?: string;
 	description: string;
 	validator?: (value: string) => boolean;
+	disallowedValues?: string[];
 }
 
 const ENV_SCHEMA: EnvConfig[] = [
@@ -18,20 +20,35 @@ const ENV_SCHEMA: EnvConfig[] = [
 	{
 		name: "JWT_SECRET",
 		required: true,
+		productionOnly: true,
+		default: "elysia-sovereign-secret",
 		description: "JWT署名用シークレットキー (32文字以上推奨)",
 		validator: (v) => v.length >= 32,
+		disallowedValues: [
+			"elysia-sovereign-secret",
+			"your-super-secret-jwt-key-change-this-immediately-or-security-risk",
+		],
 	},
 	{
 		name: "JWT_REFRESH_SECRET",
 		required: true,
+		productionOnly: true,
+		default: "elysia-refresh-secret",
 		description: "リフレッシュトークン用シークレットキー (32文字以上推奨)",
 		validator: (v) => v.length >= 32,
+		disallowedValues: [
+			"elysia-refresh-secret",
+			"your-super-secret-refresh-key-change-this-immediately-or-security-risk",
+		],
 	},
 	{
 		name: "AUTH_PASSWORD",
 		required: true,
+		productionOnly: true,
+		default: "elysiatest-001",
 		description: "デフォルトユーザー(elysia)のパスワード",
 		validator: (v) => v !== "your-strong-password-here" && v.length >= 8,
+		disallowedValues: ["elysiatest-001", "your-strong-password-here"],
 	},
 
 	// Server Configuration
@@ -54,13 +71,34 @@ const ENV_SCHEMA: EnvConfig[] = [
 	{
 		name: "DATABASE_URL",
 		required: true,
+		productionOnly: true,
+		default: "file:./prisma/dev.db",
 		description: "Prisma データベース接続URL",
+	},
+	{
+		name: "ENCRYPTION_SECRET",
+		required: true,
+		productionOnly: true,
+		default: "elysia-default-shadow-key-777",
+		description: "保存データ暗号化用シークレット",
+		validator: (v) => v.length >= 32,
+		disallowedValues: ["elysia-default-shadow-key-777"],
+	},
+	{
+		name: "ENCRYPTION_SALT",
+		required: true,
+		productionOnly: true,
+		default: "abyssal-salt",
+		description: "保存データ暗号化用ソルト",
+		validator: (v) => v.length >= 16,
+		disallowedValues: ["abyssal-salt"],
 	},
 
 	// AI/LLM
 	{
 		name: "OPENAI_API_KEY",
 		required: false,
+		productionOnly: true,
 		description: "OpenAI API キー (sk-...)",
 		validator: (v) =>
 			v.startsWith("sk-") && v !== "sk-your-key-here" && v.length >= 20,
@@ -136,12 +174,15 @@ export function validateEnvironment(): ValidationResult {
 	const warnings: string[] = [];
 	const missing: string[] = [];
 	const invalid: string[] = [];
+	const isProduction = process.env.NODE_ENV === "production";
 
 	for (const config of ENV_SCHEMA) {
 		const value = process.env[config.name];
+		const isRequired =
+			config.required && (!config.productionOnly || isProduction);
 
 		// 必須チェック
-		if (config.required && !value) {
+		if (isRequired && !value) {
 			missing.push(config.name);
 			errors.push(
 				`❌ [必須] ${config.name}: ${config.description}${config.default ? ` (デフォルト: ${config.default})` : ""}`,
@@ -160,10 +201,23 @@ export function validateEnvironment(): ValidationResult {
 
 		// バリデーション
 		if (value && config.validator && !config.validator(value)) {
-			invalid.push(config.name);
-			errors.push(
-				`❌ [無効] ${config.name}: ${config.description} (現在の値: ${value.substring(0, 20)}...)`,
-			);
+			const message = `${config.name}: ${config.description} (現在の値: ${value.substring(0, 20)}...)`;
+			if (isProduction || !config.productionOnly) {
+				invalid.push(config.name);
+				errors.push(`❌ [無効] ${message}`);
+			} else {
+				warnings.push(`⚠️  ${message}`);
+			}
+		}
+
+		if (value && config.disallowedValues?.includes(value)) {
+			const message = `⚠️  ${config.name}: 開発用またはサンプル値が設定されています`;
+			if (isProduction) {
+				invalid.push(config.name);
+				errors.push(`❌ [無効] ${message}`);
+			} else {
+				warnings.push(message);
+			}
 		}
 	}
 
