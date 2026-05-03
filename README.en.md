@@ -3,7 +3,7 @@
 ### Next-Gen AI-Native OS where Sensitivity and Logic Resonate.
 
 [![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
-[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20210806/ElysiaAI)
+[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
 ---
@@ -19,17 +19,17 @@ The fastest way to experience ElysiaAI.
 ### 2. Setup
 ```bash
 # Clone the repository
-git clone git@github.com:Elysia20210806/ElysiaAI.git
+git clone git@github.com:Elysia20220909/ElysiaAI.git
 cd ElysiaAI
 
-# Configure environment and install dependencies
-cp .env.example .env
-make install
+# Setup through the unified management CLI
+bun scripts/manage.ts setup
+bun scripts/manage.ts setup-python
 ```
 
 ### 3. Launch
 ```bash
-make boot
+bun scripts/manage.ts dev
 ```
 > [!TIP]
 > Open `http://localhost:3000` in your browser to experience the Elysia Desktop environment.
@@ -77,6 +77,39 @@ graph LR
 
 ---
 
+## 🧪 Quality Gate
+
+Run these before opening a pull request:
+
+```bash
+bun run lint
+bun run test
+bun run typecheck
+bun run check:git-hygiene
+bun run check:encoding
+bun run security:glassworm -- --ci
+```
+
+`.env` and `.env.*` must never be tracked. Only `.env.example` belongs in Git.
+The encoding guard catches invalid UTF-8, replacement characters, and common
+Windows-1252/CP932 mojibake fragments.
+
+---
+
+## 🎙️ Open-LLM-VTuber Bridge
+
+Run Open-LLM-VTuber as an external companion service and let ElysiaAI discover
+and monitor it through the bridge API.
+
+```dotenv
+OPEN_LLM_VTUBER_ENABLED=true
+OPEN_LLM_VTUBER_BASE_URL=http://127.0.0.1:12393
+```
+
+See [Open-LLM-VTuber Bridge](./docs/OPEN_LLM_VTUBER_INTEGRATION.md) for details.
+
+---
+
 ## 🤝 Contributing
 
 ElysiaAI is open to all developers who believe in the harmony of technology and sensitivity.
@@ -87,4 +120,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
 
 ---
 
-© 2026 Elysia20210806 // ElysiaAI Main // Crafted with passion in a laundry factory.
+© 2026 Elysia20220909 // ElysiaAI Main // Crafted with passion in a laundry factory.

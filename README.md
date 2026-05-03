@@ -94,6 +94,22 @@ To run the full automated test suite and verify both the orchestrator and the ke
 bun scripts/manage.ts test
 ```
 
+Before opening a PR, run the local quality gate:
+
+```bash
+bun run lint
+bun run test
+bun run typecheck
+bun run check:git-hygiene
+bun run check:encoding
+bun run security:glassworm -- --ci
+```
+
+`bun scripts/manage.ts check` also runs the Git hygiene and encoding guards.
+The encoding guard fails on invalid UTF-8 and common mojibake markers such as
+broken Japanese or Windows-1252 fragments. The Git hygiene guard fails if local
+environment files such as `.env` or `.env.production` are accidentally tracked.
+
 ElysiaAIの心臓部は、論理（Python Kernel）と高速通信（Bun/Elysia.js）の共鳴によって動いています。
 
 ```mermaid
@@ -156,6 +172,25 @@ ElysiaAIは、独自のセキュリティ概念に基づき、あなたの主権
 | **Security** | AEGIS Ledger (Multi-layer ICE), JWT |
 
 ---
+
+## 🎙️ Open-LLM-VTuber Bridge
+
+ElysiaAI can discover and monitor an external
+[Open-LLM-VTuber](https://github.com/Open-LLM-VTuber/Open-LLM-VTuber) service
+without vendoring its source or Live2D assets.
+
+```dotenv
+OPEN_LLM_VTUBER_ENABLED=true
+OPEN_LLM_VTUBER_BASE_URL=http://127.0.0.1:12393
+```
+
+Bridge endpoints:
+
+- `GET /api/vtuber/manifest`
+- `GET /api/vtuber/status`
+
+See [Open-LLM-VTuber Bridge](./docs/OPEN_LLM_VTUBER_INTEGRATION.md) for setup,
+upstream endpoints, and license notes.
 
 ---
 

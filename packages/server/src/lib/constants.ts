@@ -13,6 +13,8 @@ export const CONFIG = {
 	JWT_REFRESH_SECRET: config.jwtRefreshSecret,
 	MODEL_NAME: config.ollamaModel,
 	OLLAMA_BASE_URL: config.ollamaBaseUrl,
+	OPEN_LLM_VTUBER_ENABLED: config.openLlmVtuberEnabled,
+	OPEN_LLM_VTUBER_BASE_URL: config.openLlmVtuberBaseUrl,
 	RAG_API_URL: `${config.ollamaBaseUrl}/api/generate`,
 	RAG_TIMEOUT: 60000,
 	AUTH_USERNAME: config.authUsername,
