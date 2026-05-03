@@ -31,7 +31,9 @@ export async function exportFeedbackToCSV(): Promise<string> {
 		f.reason ? `"${f.reason.replace(/"/g, '""')}"` : "",
 	]);
 
-	const csv = [headers.join(","), ...rows.map((r: any[]) => r.join(","))].join("\n");
+	const csv = [headers.join(","), ...rows.map((r: any[]) => r.join(","))].join(
+		"\n",
+	);
 
 	logger.info("Feedback exported to CSV", { count: feedbacks.length });
 	return csv;

@@ -190,7 +190,13 @@ async function runCommand(command: string) {
 		}
 		case "build":
 			console.log("🏗️ Building project...");
-			await run("bun", ["run", "build"]);
+			await run("bun", [
+				"build",
+				"packages/server/src/index.ts",
+				"--target=bun",
+				"--outdir",
+				"dist/server",
+			]);
 			break;
 		case "test": {
 			console.log("🧪 Running tests...");

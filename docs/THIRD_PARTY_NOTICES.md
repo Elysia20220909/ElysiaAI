@@ -40,7 +40,7 @@ pip-licenses --from=mixed --with-system --summary
 6. Attribution reminders
 
 - When redistributing binaries or packaged artifacts, include:
-  - This repository窶冱 `LICENSE`
+  - This repository's `LICENSE` / このリポジトリの `LICENSE`
   - `network_simulation/LICENSE` (unchanged)
   - Third-party license summaries generated above (optional but recommended)
 - If you bundle model files, include their license and Terms in your distribution.

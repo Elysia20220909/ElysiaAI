@@ -33,7 +33,7 @@ jobs:
           MARATHON_WEBHOOK_URL: ${{ secrets.MARATHON_WEBHOOK_URL }}
           ABYSSAL_WEBHOOK_URL: ${{ secrets.ABYSSAL_WEBHOOK_URL }}
         run: |
-          python scripts/marathon_hook_monitor.py --once
+          python scripts/marathon/marathon_hook_monitor.py --once
 
       - name: Commit State Changes
         run: |

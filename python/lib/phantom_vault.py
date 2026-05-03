@@ -1,12 +1,14 @@
-import os
 import json
-import uuid
-import time
 import logging
+import os
 import random
-from typing import List, Dict, Any
-from python.lib.vault_shroud import shroud
+import time
+import uuid
+from typing import Any
+
 from python.lib.abyssal_scatter import scatter_fragments
+from python.lib.vault_shroud import shroud
+
 
 logger = logging.getLogger("PhantomVault")
 
@@ -29,7 +31,7 @@ class PhantomVault:
         os.makedirs(self.vault_dir, exist_ok=True)
         self.registry_path = os.path.join(self.vault_dir, "registry.elysia")
 
-    def _get_registry(self) -> Dict[str, Any]:
+    def _get_registry(self) -> dict[str, Any]:
         if not os.path.exists(self.registry_path):
             return {}
         try:
@@ -40,7 +42,7 @@ class PhantomVault:
             logger.error(f"Failed to load registry: {e}")
             return {}
 
-    def _save_registry(self, registry: Dict[str, Any]):
+    def _save_registry(self, registry: dict[str, Any]):
         data = json.dumps(registry)
         shrouded = shroud.encrypt(data)
         with open(self.registry_path, "w", encoding="utf-8") as f:

@@ -62,7 +62,10 @@ describe("Integration Tests - Full Stack", () => {
 			"requirements.txt",
 		);
 		if (fs.existsSync(requirementsPath)) {
-			const content = fs.readFileSync(requirementsPath, "utf-8");
+			const pythonRequirements = fs.readFileSync(requirementsPath, "utf-8");
+			const content = pythonRequirements.includes("-r ../requirements.txt")
+				? fs.readFileSync(path.join(process.cwd(), "requirements.txt"), "utf-8")
+				: pythonRequirements;
 			expect(content).toContain("fastapi");
 			expect(content).toContain("uvicorn");
 			console.log("✅ Python requirements documented");

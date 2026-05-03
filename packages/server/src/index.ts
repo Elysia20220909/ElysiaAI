@@ -264,7 +264,7 @@ const handleShutdown = async (signal: string) => {
 	logger.info(`🛑 Received ${signal}, starting graceful shutdown...`);
 
 	const shutdownTimeout = setTimeout(() => {
-		logger.error("强制終了: Shutdown timed out, forcing exit.");
+		logger.error("強制終了: Shutdown timed out, forcing exit.");
 		process.exit(1);
 	}, 5000);
 
