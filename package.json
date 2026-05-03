@@ -30,7 +30,7 @@
     "prisma": "latest"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.4.14",
     "@playwright/test": "^1.56.1",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/cli": "^2.10.1",
