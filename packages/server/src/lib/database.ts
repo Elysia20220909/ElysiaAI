@@ -32,7 +32,10 @@ try {
 	logger.warn(
 		"⚠️ Database initialization failed, using in-memory mock fallback",
 	);
-	logger.error(error);
+	logger.error(
+		"Database initialization failed",
+		error instanceof Error ? error : undefined,
+	);
 	// Mock fallback for isolated testing
 	prisma = null as any;
 }
@@ -135,7 +138,7 @@ export const chatService = {
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
-		return messages.map((m) => ({
+		return messages.map((m: any) => ({
 			...m,
 			content: secureVault.decrypt(m.content),
 		}));
@@ -226,7 +229,7 @@ export const knowledgeService = {
 			orderBy: { updatedAt: "desc" },
 			take: 200,
 		});
-		return knowledge.map((k) => ({
+		return knowledge.map((k: any) => ({
 			...k,
 			answer: secureVault.decrypt(k.answer),
 		}));
@@ -264,7 +267,7 @@ export const voiceService = {
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
-		return logs.map((log) => ({
+		return logs.map((log: any) => ({
 			...log,
 			text: secureVault.decrypt(log.text),
 		}));
@@ -276,7 +279,7 @@ export const voiceService = {
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
-		return logs.map((log) => ({
+		return logs.map((log: any) => ({
 			...log,
 			text: secureVault.decrypt(log.text),
 		}));
@@ -307,7 +310,7 @@ export const actionLogService = {
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
-		return logs.map((log) => ({
+		return logs.map((log: any) => ({
 			...log,
 			action: secureVault.decrypt(log.action),
 		}));

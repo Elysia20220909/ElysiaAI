@@ -126,7 +126,7 @@ export async function getSessionMessages(
 			orderBy: { createdAt: "asc" },
 		});
 
-		return messages.map((msg) => ({
+		return messages.map((msg: any) => ({
 			role: msg.role as "user" | "assistant" | "system",
 			content: msg.content,
 		}));
