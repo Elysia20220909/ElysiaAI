@@ -92,7 +92,7 @@ async function main(): Promise<void> {
 		log("ERROR", `Initialization failed: ${String(error)}`);
 		process.exit(1);
 	} finally {
-		await prisma.$disconnect();
+		await (prisma as { $disconnect?: () => Promise<void> } | null)?.$disconnect?.();
 	}
 }
 

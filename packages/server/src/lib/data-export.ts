@@ -21,7 +21,7 @@ export async function exportFeedbackToCSV(): Promise<string> {
 		"評価",
 		"理由",
 	];
-	const rows = feedbacks.map((f) => [
+	const rows = feedbacks.map((f: any) => [
 		f.id,
 		new Date(f.createdAt).toLocaleString("ja-JP"),
 		f.userId || "匿名",
@@ -31,7 +31,7 @@ export async function exportFeedbackToCSV(): Promise<string> {
 		f.reason ? `"${f.reason.replace(/"/g, '""')}"` : "",
 	]);
 
-	const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+	const csv = [headers.join(","), ...rows.map((r: any[]) => r.join(","))].join("\n");
 
 	logger.info("Feedback exported to CSV", { count: feedbacks.length });
 	return csv;
@@ -46,7 +46,7 @@ export async function exportKnowledgeToJSON(): Promise<string> {
 	const data = {
 		exportDate: new Date().toISOString(),
 		totalEntries: knowledge.length,
-		knowledge: knowledge.map((k) => ({
+		knowledge: knowledge.map((k: any) => ({
 			id: k.id,
 			question: k.question,
 			answer: k.answer,

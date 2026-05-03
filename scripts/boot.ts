@@ -37,7 +37,7 @@ async function loadDotEnv(path = join(rootDir, ".env")) {
 
 await loadDotEnv();
 
-import { getEnv } from "../../src/config.ts";
+import { getEnv } from "../src/config.ts";
 
 const bindHost = getEnv("BIND_HOST", getEnv("HOST", "127.0.0.1"));
 const healthHost = getEnv(
