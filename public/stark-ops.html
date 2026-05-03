@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <title>ElysiaAI Local Ops</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101010" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Elysia Ops" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <style>
       :root {
         color-scheme: dark;
@@ -211,10 +215,16 @@
       }
 
       .briefing,
+      .clients,
       .diagnostics,
+      .future-stages,
+      .home-gates,
+      .home-probes,
       .improvements,
       .host-grid,
-      .logs {
+      .logs,
+      .mesh-guards,
+      .mesh-routes {
         display: grid;
         gap: 10px;
       }
@@ -228,10 +238,16 @@
       }
 
       .briefing-item,
+      .client,
       .diagnostic,
+      .future-stage,
+      .home-gate,
+      .home-probe,
       .improvement,
       .host-item,
-      .log-panel {
+      .log-panel,
+      .mesh-guard,
+      .mesh-route {
         min-width: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -241,6 +257,195 @@
 
       .diagnostic {
         display: grid;
+        gap: 8px;
+      }
+
+      .clients {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .client {
+        display: grid;
+        gap: 8px;
+        border-color: rgba(85, 217, 143, 0.28);
+      }
+
+      .client-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .client span {
+        color: var(--muted);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .mesh-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+
+      .mesh-summary strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .mesh-score {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        aspect-ratio: 1;
+        border: 1px solid var(--cyan);
+        border-radius: 50%;
+        font-weight: 900;
+      }
+
+      .mesh-routes {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin-bottom: 12px;
+      }
+
+      .mesh-guards {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .mesh-route,
+      .mesh-guard {
+        display: grid;
+        gap: 7px;
+        border-color: rgba(82, 215, 232, 0.3);
+      }
+
+      .mesh-route-head,
+      .mesh-guard-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .mesh-summary span,
+      .mesh-route span,
+      .mesh-guard span {
+        color: var(--muted);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .future-summary {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+
+      .future-summary strong {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .future-summary span,
+      .future-stage span {
+        color: var(--muted);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .future-stages {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .future-stage {
+        display: grid;
+        gap: 8px;
+        border-color: rgba(216, 173, 95, 0.42);
+      }
+
+      .future-stage.next {
+        background:
+          linear-gradient(180deg, rgba(82, 215, 232, 0.08), transparent 80px),
+          var(--panel);
+        border-color: var(--cyan);
+      }
+
+      .future-stage-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .home-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+      }
+
+      .home-summary strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .home-summary span,
+      .home-gate span,
+      .home-probe span {
+        color: var(--muted);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .home-score {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        aspect-ratio: 1;
+        border: 1px solid var(--gold);
+        border-radius: 50%;
+        color: var(--text);
+        font-weight: 900;
+      }
+
+      .home-gates {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .home-gate {
+        display: grid;
+        gap: 8px;
+      }
+
+      .home-probes {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .home-probe {
+        display: grid;
+        gap: 6px;
+        border-color: rgba(82, 215, 232, 0.28);
+      }
+
+      .home-gate-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
         gap: 8px;
       }
 
@@ -285,17 +490,29 @@
       }
 
       .diagnostic strong,
+      .client strong,
+      .future-stage strong,
+      .home-gate strong,
+      .home-probe strong,
       .improvement strong,
       .host-item strong,
-      .log-panel strong {
+      .log-panel strong,
+      .mesh-guard strong,
+      .mesh-route strong {
         display: block;
         margin-bottom: 6px;
       }
 
       .diagnostic span,
+      .client span,
+      .future-stage span,
+      .home-gate span,
+      .home-probe span,
       .improvement span,
       .host-item span,
-      .log-panel span {
+      .log-panel span,
+      .mesh-guard span,
+      .mesh-route span {
         color: var(--muted);
         font-size: 12px;
         overflow-wrap: anywhere;
@@ -395,6 +612,12 @@
 
       @media (max-width: 980px) {
         .grid,
+        .clients,
+        .future-stages,
+        .home-gates,
+        .home-probes,
+        .mesh-guards,
+        .mesh-routes,
         .services,
         .host-grid {
           grid-template-columns: 1fr;
@@ -472,6 +695,26 @@
         <div class="host-grid" id="host"></div>
       </section>
 
+      <section class="section" aria-labelledby="home-server-title">
+        <h2 id="home-server-title">Home Server Gates</h2>
+        <div id="home-server"></div>
+      </section>
+
+      <section class="section" aria-labelledby="future-title">
+        <h2 id="future-title">Future Build Path</h2>
+        <div id="future"></div>
+      </section>
+
+      <section class="section" aria-labelledby="secure-mesh-title">
+        <h2 id="secure-mesh-title">Secure Mesh Matrix</h2>
+        <div id="secure-mesh"></div>
+      </section>
+
+      <section class="section" aria-labelledby="clients-title">
+        <h2 id="clients-title">Client Surfaces</h2>
+        <div class="clients" id="clients"></div>
+      </section>
+
       <section class="section" aria-labelledby="diagnostics-title">
         <h2 id="diagnostics-title">Repair Diagnostics</h2>
         <div class="diagnostics" id="diagnostics"></div>
@@ -497,6 +740,10 @@
       const services = document.getElementById("services");
       const briefing = document.getElementById("briefing");
       const host = document.getElementById("host");
+      const homeServer = document.getElementById("home-server");
+      const future = document.getElementById("future");
+      const secureMesh = document.getElementById("secure-mesh");
+      const clients = document.getElementById("clients");
       const diagnostics = document.getElementById("diagnostics");
       const improvements = document.getElementById("improvements");
       const logs = document.getElementById("logs");
@@ -613,6 +860,151 @@
         `;
       }
 
+      function renderHomeGate(gate) {
+        const evidence = (gate.evidence || [])
+          .slice(0, 3)
+          .map((item) => `<span>${escapeHtml(item)}</span>`)
+          .join("");
+        return `
+          <article class="home-gate">
+            <div class="home-gate-head">
+              <strong>${escapeHtml(gate.label)}</strong>
+              <span class="badge ${statusClass(gate.status)}">${escapeHtml(gate.status)}</span>
+            </div>
+            <span>${escapeHtml(gate.signal)}</span>
+            <span>${escapeHtml(gate.nextAction)}</span>
+            ${evidence}
+          </article>
+        `;
+      }
+
+      function renderHomeProbe(probe) {
+        const evidence = (probe.evidence || [])
+          .slice(0, 3)
+          .map((item) => `<span>${escapeHtml(item)}</span>`)
+          .join("");
+        return `
+          <article class="home-probe">
+            <strong>${escapeHtml(probe.label)} <span class="badge ${statusClass(
+              probe.status,
+            )}">${escapeHtml(probe.status)}</span></strong>
+            <span>${escapeHtml(probe.detail)}</span>
+            ${evidence}
+          </article>
+        `;
+      }
+
+      function renderHomeServer(data) {
+        if (!data) return "";
+        const gates = (data.gates || []).map(renderHomeGate).join("");
+        const probes = (data.probes || []).map(renderHomeProbe).join("");
+        return `
+          <div class="home-summary">
+            <div>
+              <strong>${escapeHtml(data.summary)}</strong>
+              <span>${escapeHtml(data.status)} · ${escapeHtml((data.gates || []).length)} gates</span>
+            </div>
+            <div class="home-score">${escapeHtml(data.score)}</div>
+          </div>
+          ${probes ? `<div class="home-probes">${probes}</div>` : ""}
+          <div class="home-gates">${gates}</div>
+        `;
+      }
+
+      function renderFutureStage(stage) {
+        return `
+          <article class="future-stage ${escapeHtml(stage.status)}">
+            <div class="future-stage-head">
+              <strong>${escapeHtml(stage.title)}</strong>
+              <span class="badge ${statusClass(stage.status === "locked" ? "disabled" : stage.status === "next" ? "partial" : "ready")}">${escapeHtml(stage.status)}</span>
+            </div>
+            <span>${escapeHtml(stage.nextAction)}</span>
+            <span>${escapeHtml(stage.dependencies.join(" · "))}</span>
+            <span>+${escapeHtml(stage.readinessGain)}% · ${escapeHtml(stage.horizon)} · ${escapeHtml(stage.track)} · ${escapeHtml(stage.safety)}</span>
+          </article>
+        `;
+      }
+
+      function renderFuture(data) {
+        if (!data) return "";
+        const stages = (data.stages || []).map(renderFutureStage).join("");
+        return `
+          <div class="future-summary">
+            <strong>${escapeHtml(data.codename)}</strong>
+            <span>${escapeHtml(data.summary)}</span>
+          </div>
+          <div class="future-stages">${stages}</div>
+        `;
+      }
+
+      function renderMeshRoute(route) {
+        const guardrails = (route.guardrails || [])
+          .map((item) => `<span>${escapeHtml(item)}</span>`)
+          .join("");
+        return `
+          <article class="mesh-route">
+            <div class="mesh-route-head">
+              <strong>${escapeHtml(route.label)}</strong>
+              <span class="badge ${statusClass(route.status)}">${escapeHtml(route.status)}</span>
+            </div>
+            <span>${escapeHtml(route.access)}</span>
+            <span>${escapeHtml(route.entrypoint)}</span>
+            <span>${escapeHtml(route.signal)}</span>
+            <span>${escapeHtml(route.nextAction)}</span>
+            ${guardrails}
+          </article>
+        `;
+      }
+
+      function renderMeshGuard(guard) {
+        return `
+          <article class="mesh-guard">
+            <div class="mesh-guard-head">
+              <strong>${escapeHtml(guard.label)}</strong>
+              <span class="badge ${statusClass(guard.status)}">${escapeHtml(guard.status)}</span>
+            </div>
+            <span>${escapeHtml(guard.signal)}</span>
+            <span>${escapeHtml(guard.nextAction)}</span>
+          </article>
+        `;
+      }
+
+      function renderSecureMesh(data) {
+        if (!data) return "";
+        const routes = (data.routes || []).map(renderMeshRoute).join("");
+        const guards = (data.guards || []).map(renderMeshGuard).join("");
+        return `
+          <div class="mesh-summary">
+            <div>
+              <strong>${escapeHtml(data.codename)}</strong>
+              <span>${escapeHtml(data.summary)}</span>
+            </div>
+            <div class="mesh-score">${escapeHtml(data.score)}%</div>
+          </div>
+          <div class="mesh-routes">${routes}</div>
+          <div class="mesh-guards">${guards}</div>
+        `;
+      }
+
+      function renderClient(client) {
+        const constraints = (client.constraints || [])
+          .map((item) => `<span>${escapeHtml(item)}</span>`)
+          .join("");
+        return `
+          <article class="client">
+            <div class="client-head">
+              <strong>${escapeHtml(client.label)}</strong>
+              <span class="badge ${statusClass(client.status === "planned" ? "unknown" : client.status)}">${escapeHtml(client.status)}</span>
+            </div>
+            <span>${escapeHtml(client.surface)}</span>
+            <span>${escapeHtml(client.signal)}</span>
+            <span>${escapeHtml(client.entrypoint)}</span>
+            <span>${escapeHtml(client.nextAction)}</span>
+            ${constraints}
+          </article>
+        `;
+      }
+
       function renderImprovement(improvement) {
         const command = improvement.command
           ? `<code>${escapeHtml(improvement.command)}</code>`
@@ -651,6 +1043,10 @@
         briefing.innerHTML = (data.briefing || []).map(renderBriefing).join("");
         services.innerHTML = data.services.map(renderService).join("");
         host.innerHTML = renderHost(data.host);
+        homeServer.innerHTML = renderHomeServer(data.homeServer);
+        future.innerHTML = renderFuture(data.future);
+        secureMesh.innerHTML = renderSecureMesh(data.secureMesh);
+        clients.innerHTML = (data.clients || []).map(renderClient).join("");
         diagnostics.innerHTML = (data.diagnostics || [])
           .map(renderDiagnostic)
           .join("");
@@ -675,6 +1071,10 @@
           services.innerHTML = "";
           briefing.innerHTML = "";
           host.innerHTML = "";
+          homeServer.innerHTML = "";
+          future.innerHTML = "";
+          secureMesh.innerHTML = "";
+          clients.innerHTML = "";
           diagnostics.innerHTML = "";
           improvements.innerHTML = "";
           logs.innerHTML = "";
@@ -683,6 +1083,9 @@
       }
 
       refresh.addEventListener("click", loadOps);
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/service-worker.js").catch(() => {});
+      }
       loadOps();
     </script>
   </body>

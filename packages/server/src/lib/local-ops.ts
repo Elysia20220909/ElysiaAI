@@ -1,4 +1,10 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import {
+	existsSync,
+	readFileSync,
+	readdirSync,
+	statSync,
+	statfsSync,
+} from "node:fs";
 import {
 	arch,
 	cpus,
@@ -107,6 +113,121 @@ export interface LocalOpsImprovementSuggestion {
 	safety: "manual-only";
 }
 
+export interface LocalOpsHomeServerGate {
+	id:
+		| "blueprint"
+		| "backup"
+		| "storage"
+		| "secure-access"
+		| "models"
+		| "monitoring"
+		| "network-plan"
+		| "lab-isolation";
+	label: string;
+	status: "ready" | "attention" | "missing";
+	signal: string;
+	nextAction: string;
+	evidence: string[];
+}
+
+export interface LocalOpsHomeServerProbe {
+	id:
+		| "backup"
+		| "storage"
+		| "secure-access"
+		| "public-ports"
+		| "monitoring"
+		| "network-plan"
+		| "lab-isolation";
+	label: string;
+	status: "ready" | "attention" | "missing";
+	detail: string;
+	evidence: string[];
+	checkedAt: string;
+	command?: string;
+}
+
+export interface LocalOpsHomeServerReadiness {
+	status: "ready" | "partial" | "attention";
+	score: number;
+	summary: string;
+	gates: LocalOpsHomeServerGate[];
+	probes: LocalOpsHomeServerProbe[];
+}
+
+export interface LocalOpsFutureStage {
+	id:
+		| "foundation"
+		| "recovery"
+		| "secure-mesh"
+		| "observability"
+		| "local-intelligence"
+		| "ambient-home"
+		| "multi-user-support"
+		| "advanced-ci-cd"
+		| "abyss-rtos"
+		| "sovereign-mesh";
+	title: string;
+	status: "ready" | "next" | "locked";
+	horizon: "now" | "next" | "later";
+	track: "core" | "planned" | "experimental" | "frontier";
+	readinessGain: number;
+	dependencies: string[];
+	nextAction: string;
+	safety: "manual-only";
+}
+
+export interface LocalOpsFuturePlan {
+	codename: "ElysiaFuturePath";
+	summary: string;
+	nextStageId: LocalOpsFutureStage["id"];
+	stages: LocalOpsFutureStage[];
+}
+
+export interface LocalOpsClientSurface {
+	id: "windows" | "macos" | "linux" | "android" | "ios";
+	label: string;
+	status: "ready" | "attention" | "planned";
+	surface: string;
+	entrypoint: string;
+	signal: string;
+	nextAction: string;
+	constraints: string[];
+}
+
+export interface LocalOpsSecureMeshRoute {
+	id: LocalOpsClientSurface["id"];
+	label: string;
+	status: "ready" | "partial" | "attention";
+	access: "localhost" | "private-vpn" | "lan-pwa";
+	entrypoint: string;
+	signal: string;
+	nextAction: string;
+	guardrails: string[];
+}
+
+export interface LocalOpsSecureMeshGuard {
+	id:
+		| "private-vpn"
+		| "public-port-lock"
+		| "desktop-cockpit"
+		| "mobile-pwa"
+		| "manual-only";
+	label: string;
+	status: "ready" | "partial" | "attention";
+	signal: string;
+	nextAction: string;
+}
+
+export interface LocalOpsSecureMeshPlan {
+	codename: "ElysiaSecureMesh";
+	status: "ready" | "partial" | "attention";
+	score: number;
+	summary: string;
+	routes: LocalOpsSecureMeshRoute[];
+	guards: LocalOpsSecureMeshGuard[];
+}
+
 export interface LocalOpsOverview {
 	codename: "StarkHouseLocalOps";
 	generatedAt: string;
@@ -127,6 +248,10 @@ export interface LocalOpsOverview {
 	host: LocalOpsHostInventory;
 	logs: LocalOpsLogSummary[];
 	diagnostics: LocalOpsDiagnostic[];
+	homeServer: LocalOpsHomeServerReadiness;
+	future: LocalOpsFuturePlan;
+	clients: LocalOpsClientSurface[];
+	secureMesh: LocalOpsSecureMeshPlan;
 	improvements: LocalOpsImprovementSuggestion[];
 	briefing: string[];
 	safety: {
@@ -141,6 +266,8 @@ type BuildLocalOpsOptions = {
 	core?: ServiceHealth;
 	voicevox?: ServiceHealth;
 	ollamaModels?: LocalOpsDiagnostic;
+	homeServer?: LocalOpsHomeServerReadiness;
+	homeServerProbes?: LocalOpsHomeServerProbe[];
 	generatedAt?: string;
 	cwd?: string;
 };
@@ -181,6 +308,43 @@ function mb(bytes: number) {
 	return Math.round(bytes / 1024 / 1024);
 }
 
+function gib(bytes: number) {
+	return Math.round((bytes / 1024 / 1024 / 1024) * 10) / 10;
+}
+
+function textFromSpawnBuffer(value: unknown) {
+	if (!value) return "";
+	if (typeof value === "string") return value;
+	if (value instanceof Uint8Array) return new TextDecoder().decode(value);
+	if (value instanceof ArrayBuffer) return new TextDecoder().decode(value);
+	return String(value);
+}
+
+function runCli(command: string, args: string[] = []) {
+	try {
+		const result = Bun.spawnSync([command, ...args], {
+			stdout: "pipe",
+			stderr: "pipe",
+		});
+		return {
+			exitCode: result.exitCode,
+			stdout: textFromSpawnBuffer(result.stdout).trim(),
+			stderr: textFromSpawnBuffer(result.stderr).trim(),
+		};
+	} catch (error) {
+		return {
+			exitCode: 1,
+			stdout: "",
+			stderr: error instanceof Error ? error.message : String(error),
+		};
+	}
+}
+
+function commandExists(command: string) {
+	const executable = process.platform === "win32" ? "where" : "which";
+	return runCli(executable, [command]).exitCode === 0;
+}
+
 function buildHostInventory(cwd: string): LocalOpsHostInventory {
 	const cpu = cpus()[0]?.model ?? "unknown";
 	const totalMemory = totalmem();
@@ -208,6 +372,514 @@ function buildHostInventory(cwd: string): LocalOpsHostInventory {
 			cwd,
 		},
 	};
+}
+
+function hasAnyPath(cwd: string, relativePaths: string[]) {
+	return relativePaths.some((relativePath) =>
+		existsSync(join(cwd, relativePath)),
+	);
+}
+
+function existingPaths(cwd: string, relativePaths: string[]) {
+	return relativePaths.filter((relativePath) =>
+		existsSync(join(cwd, relativePath)),
+	);
+}
+
+function gateScore(status: LocalOpsHomeServerGate["status"]) {
+	if (status === "ready") return 1;
+	if (status === "attention") return 0.5;
+	return 0;
+}
+
+function safeStat(path: string) {
+	try {
+		return statSync(path);
+	} catch {
+		return undefined;
+	}
+}
+
+function safeReadText(path: string) {
+	try {
+		return readFileSync(path, "utf8");
+	} catch {
+		return "";
+	}
+}
+
+function formatAge(mtimeMs: number, nowMs = Date.now()) {
+	const ageHours = Math.max(0, Math.round((nowMs - mtimeMs) / 36e5));
+	if (ageHours < 48) return `${ageHours}h old`;
+	return `${Math.round(ageHours / 24)}d old`;
+}
+
+function latestBackupArtifact(cwd: string, roots: string[]) {
+	const artifacts: Array<{ relativePath: string; mtimeMs: number }> = [];
+	const visit = (absolutePath: string, relativePath: string, depth: number) => {
+		if (artifacts.length >= 160 || depth > 3) return;
+		const stats = safeStat(absolutePath);
+		if (!stats) return;
+		if (depth > 0) {
+			artifacts.push({ relativePath, mtimeMs: stats.mtimeMs });
+		}
+		if (!stats.isDirectory()) return;
+
+		for (const entry of readdirSync(absolutePath).slice(0, 80)) {
+			visit(join(absolutePath, entry), join(relativePath, entry), depth + 1);
+		}
+	};
+
+	for (const root of roots) {
+		const absolutePath = join(cwd, root);
+		if (existsSync(absolutePath)) visit(absolutePath, root, 0);
+	}
+
+	return artifacts.sort((left, right) => right.mtimeMs - left.mtimeMs)[0];
+}
+
+function collectBackupProbe(cwd: string): LocalOpsHomeServerProbe {
+	const checkedAt = new Date().toISOString();
+	const backupRoots = ["backups", "backup", ".backups", "snapshots"];
+	const runbookPaths = ["docs/BACKUP.md", "docs/RUNBOOK_BACKUP.md"];
+	const restoreMarkers = [
+		"docs/RESTORE_DRILL.md",
+		"docs/RUNBOOK_RESTORE.md",
+		"backups/RESTORE_DRILL.md",
+		"backups/restore-drill.md",
+		"backups/restore-drill.json",
+	];
+	const roots = existingPaths(cwd, backupRoots);
+	const runbooks = existingPaths(cwd, runbookPaths);
+	const restoreEvidence = existingPaths(cwd, restoreMarkers);
+	const latest = latestBackupArtifact(cwd, backupRoots);
+	const latestAgeDays = latest
+		? Math.floor((Date.now() - latest.mtimeMs) / 864e5)
+		: undefined;
+	const freshBackup = latestAgeDays !== undefined && latestAgeDays <= 7;
+	const status =
+		freshBackup && runbooks.length > 0 && restoreEvidence.length > 0
+			? "ready"
+			: roots.length > 0 || runbooks.length > 0 || restoreEvidence.length > 0
+				? "attention"
+				: "missing";
+
+	return {
+		id: "backup",
+		label: "Backup And Restore Evidence",
+		status,
+		detail: latest
+			? `Latest backup evidence is ${formatAge(latest.mtimeMs)}`
+			: roots.length > 0
+				? "Backup directory exists, but no dated artifact was found"
+				: "No local backup artifact or restore drill marker found",
+		evidence: [
+			...(latest ? [`latest: ${latest.relativePath}`] : []),
+			...(runbooks.length > 0
+				? runbooks.map((path) => `runbook: ${path}`)
+				: []),
+			...(restoreEvidence.length > 0
+				? restoreEvidence.map((path) => `restore: ${path}`)
+				: []),
+			...(roots.length > 0 ? roots.map((path) => `root: ${path}`) : []),
+		].slice(0, 6),
+		checkedAt,
+		command:
+			status === "ready"
+				? "bun run ops"
+				: "New-Item -ItemType File docs/RUNBOOK_BACKUP.md",
+	};
+}
+
+function collectStorageProbe(cwd: string): LocalOpsHomeServerProbe {
+	const checkedAt = new Date().toISOString();
+	try {
+		const stats = statfsSync(cwd);
+		const blockSize = Number(stats.bsize);
+		const totalBytes = Number(stats.blocks) * blockSize;
+		const freeBytes = Number(stats.bavail) * blockSize;
+		const usedBytes = totalBytes - freeBytes;
+		const usedPercent =
+			totalBytes > 0 ? Math.round((usedBytes / totalBytes) * 100) : 0;
+		const status = usedPercent >= 85 ? "attention" : "ready";
+
+		return {
+			id: "storage",
+			label: "Repo Volume Capacity",
+			status,
+			detail: `${usedPercent}% used on the repo volume`,
+			evidence: [
+				`cwd: ${cwd}`,
+				`free: ${gib(freeBytes)} GiB`,
+				`total: ${gib(totalBytes)} GiB`,
+			],
+			checkedAt,
+		};
+	} catch (error) {
+		return {
+			id: "storage",
+			label: "Repo Volume Capacity",
+			status: "missing",
+			detail:
+				error instanceof Error
+					? `Disk probe failed: ${error.message}`
+					: "Disk probe failed",
+			evidence: [cwd],
+			checkedAt,
+		};
+	}
+}
+
+function collectSecureAccessProbe(): LocalOpsHomeServerProbe {
+	const checkedAt = new Date().toISOString();
+	if (!commandExists("tailscale")) {
+		return {
+			id: "secure-access",
+			label: "Tailscale Status",
+			status: "missing",
+			detail: "Tailscale CLI is not installed or not on PATH",
+			evidence: ["tailscale status --json"],
+			checkedAt,
+			command: "tailscale status",
+		};
+	}
+
+	const result = runCli("tailscale", ["status", "--json"]);
+	if (result.exitCode !== 0) {
+		return {
+			id: "secure-access",
+			label: "Tailscale Status",
+			status: "attention",
+			detail: result.stderr || "Tailscale status command failed",
+			evidence: ["tailscale status --json"],
+			checkedAt,
+			command: "tailscale up",
+		};
+	}
+
+	try {
+		const data = JSON.parse(result.stdout) as {
+			BackendState?: string;
+			Self?: {
+				Online?: boolean;
+				DNSName?: string;
+				TailscaleIPs?: string[];
+			};
+		};
+		const online = data.Self?.Online === true;
+		const ips = data.Self?.TailscaleIPs ?? [];
+
+		return {
+			id: "secure-access",
+			label: "Tailscale Status",
+			status: online ? "ready" : "attention",
+			detail: online
+				? "Tailscale is online for private management access"
+				: `Tailscale backend state: ${data.BackendState ?? "unknown"}`,
+			evidence: [
+				`backend: ${data.BackendState ?? "unknown"}`,
+				`dns: ${data.Self?.DNSName ?? "unavailable"}`,
+				ips.length > 0 ? `ip: ${ips[0]}` : "ip: unavailable",
+			],
+			checkedAt,
+			command: online ? "tailscale status" : "tailscale up",
+		};
+	} catch (error) {
+		return {
+			id: "secure-access",
+			label: "Tailscale Status",
+			status: "attention",
+			detail:
+				error instanceof Error
+					? `Could not parse tailscale status: ${error.message}`
+					: "Could not parse tailscale status",
+			evidence: ["tailscale status --json"],
+			checkedAt,
+			command: "tailscale status",
+		};
+	}
+}
+
+function watchedManagementPorts() {
+	return [3000, 8000, 11434, 3001, 50021, 12393, 8080, 9090, 9093];
+}
+
+function isLoopbackAddress(address: string) {
+	const normalized = address.trim().toLowerCase();
+	return (
+		normalized === "127.0.0.1" ||
+		normalized === "::1" ||
+		normalized === "localhost"
+	);
+}
+
+function isWildcardAddress(address: string) {
+	const normalized = address.trim().toLowerCase();
+	return (
+		normalized === "0.0.0.0" ||
+		normalized === "::" ||
+		normalized === "[::]" ||
+		normalized === "*"
+	);
+}
+
+function parsePowerShellListeners(output: string) {
+	return output
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter(Boolean)
+		.map((line) => {
+			const [address, port] = line.split("|");
+			return {
+				address: address ?? "",
+				port: Number(port),
+			};
+		})
+		.filter((listener) => Number.isFinite(listener.port));
+}
+
+function parseSsListeners(output: string) {
+	return output
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter(Boolean)
+		.map((line) => {
+			const parts = line.split(/\s+/);
+			const local = parts.at(3) ?? "";
+			const match = local.match(/^(.*):(\d+)$/);
+			return {
+				address: match?.[1]?.replace(/^\[|\]$/g, "") ?? local,
+				port: Number(match?.[2]),
+			};
+		})
+		.filter((listener) => Number.isFinite(listener.port));
+}
+
+function collectPublicPortProbe(): LocalOpsHomeServerProbe {
+	const checkedAt = new Date().toISOString();
+	const ports = watchedManagementPorts();
+	let listeners: Array<{ address: string; port: number }> = [];
+	let command = "";
+
+	if (process.platform === "win32") {
+		command =
+			"Get-NetTCPConnection -State Listen | Where-Object { @(3000,8000,11434,3001,50021,12393,8080,9090,9093) -contains $_.LocalPort }";
+		const result = runCli("powershell", [
+			"-NoProfile",
+			"-Command",
+			`$ports=@(${ports.join(",")}); Get-NetTCPConnection -State Listen | Where-Object { $ports -contains $_.LocalPort } | ForEach-Object { "$($_.LocalAddress)|$($_.LocalPort)" }`,
+		]);
+		if (result.exitCode === 0) {
+			listeners = parsePowerShellListeners(result.stdout);
+		}
+	} else if (commandExists("ss")) {
+		command = "ss -ltnH";
+		const result = runCli("ss", ["-ltnH"]);
+		if (result.exitCode === 0) {
+			listeners = parseSsListeners(result.stdout).filter((listener) =>
+				ports.includes(listener.port),
+			);
+		}
+	} else if (commandExists("netstat")) {
+		command = "netstat -tuln";
+		const result = runCli("netstat", ["-tuln"]);
+		if (result.exitCode === 0) {
+			listeners = parseSsListeners(result.stdout).filter((listener) =>
+				ports.includes(listener.port),
+			);
+		}
+	}
+
+	const exposed = listeners.filter(
+		(listener) =>
+			isWildcardAddress(listener.address) ||
+			!isLoopbackAddress(listener.address),
+	);
+	const localOnly = listeners.filter((listener) =>
+		isLoopbackAddress(listener.address),
+	);
+	const evidence = [
+		...exposed.map(
+			(listener) => `review: ${listener.address}:${listener.port}`,
+		),
+		...localOnly.map(
+			(listener) => `loopback: ${listener.address}:${listener.port}`,
+		),
+	].slice(0, 6);
+
+	return {
+		id: "public-ports",
+		label: "Management Port Exposure",
+		status: exposed.length > 0 ? "attention" : "ready",
+		detail:
+			exposed.length > 0
+				? `${exposed.length} watched management listener(s) are not loopback-only`
+				: listeners.length > 0
+					? "Watched management listeners are loopback-only"
+					: "No watched management ports are listening",
+		evidence: evidence.length > 0 ? evidence : [`watched: ${ports.join(", ")}`],
+		checkedAt,
+		command: command || "ss -ltnH",
+	};
+}
+
+function collectNetworkPlanProbe(cwd: string): LocalOpsHomeServerProbe {
+	const checkedAt = new Date().toISOString();
+	const planPaths = [
+		"docs/ELYSIA_HOME_SERVER_BLUEPRINT.md",
+		"docs/VLAN.md",
+		"docs/NETWORK_SEGMENTATION.md",
+	];
+	const existing = existingPaths(cwd, planPaths);
+	const content = existing
+		.map((relativePath) => safeReadText(join(cwd, relativePath)))
+		.join("\n");
+	const hasVlanIntent = /VLAN(?:\d+)?|network segmentation/i.test(content);
+	const hasDenyRules =
+		/deny by default|Lab\s*\|\s*Main\s*\/\s*Servers\s*\|\s*Deny|no LAN access/i.test(
+			content,
+		);
+	const status =
+		hasVlanIntent && hasDenyRules
+			? "ready"
+			: existing.length > 0
+				? "attention"
+				: "missing";
+
+	return {
+		id: "network-plan",
+		label: "Network Segmentation Plan",
+		status,
+		detail:
+			status === "ready"
+				? "VLAN intent and deny-by-default rules are documented"
+				: existing.length > 0
+					? "Network notes exist, but VLAN intent or deny rules are incomplete"
+					: "No network segmentation plan found",
+		evidence:
+			existing.length > 0
+				? [
+						...existing,
+						hasVlanIntent ? "signal: VLAN intent" : "missing: VLAN intent",
+						hasDenyRules ? "signal: deny rules" : "missing: deny rules",
+					]
+				: planPaths,
+		checkedAt,
+		command: "bun run ops",
+	};
+}
+
+function collectLabIsolationProbe(cwd: string): LocalOpsHomeServerProbe {
+	const checkedAt = new Date().toISOString();
+	const checklistPaths = [
+		"docs/LAB_ISOLATION.md",
+		"docs/VLAN.md",
+		"docs/NETWORK_SEGMENTATION.md",
+	];
+	const fallbackPlan = "docs/ELYSIA_HOME_SERVER_BLUEPRINT.md";
+	const checklists = existingPaths(cwd, checklistPaths);
+	const fallbackExists = existsSync(join(cwd, fallbackPlan));
+	const content = [
+		...checklists.map((relativePath) => safeReadText(join(cwd, relativePath))),
+		fallbackExists ? safeReadText(join(cwd, fallbackPlan)) : "",
+	].join("\n");
+	const hasLabIntent = /VLAN50\s+Lab|Lab VLAN|lab-net|Lab sandbox/i.test(
+		content,
+	);
+	const hasIsolationRule =
+		/Lab\s*\|\s*Main\s*\/\s*Servers\s*\|\s*Deny|cannot reach Main|no path back/i.test(
+			content,
+		);
+	const status =
+		checklists.length > 0 && hasLabIntent && hasIsolationRule
+			? "ready"
+			: hasLabIntent || hasIsolationRule || fallbackExists
+				? "attention"
+				: "missing";
+
+	return {
+		id: "lab-isolation",
+		label: "Lab Isolation Checklist",
+		status,
+		detail:
+			status === "ready"
+				? "Lab isolation checklist is documented with deny rules"
+				: fallbackExists
+					? "Lab isolation intent exists; enforcement checklist is still missing"
+					: "No lab isolation plan found",
+		evidence:
+			checklists.length > 0
+				? checklists
+				: fallbackExists
+					? [
+							fallbackPlan,
+							hasLabIntent ? "signal: lab VLAN" : "missing: lab VLAN",
+							hasIsolationRule
+								? "signal: lab deny rule"
+								: "missing: lab deny rule",
+						]
+					: checklistPaths,
+		checkedAt,
+		command: "New-Item -ItemType File docs/LAB_ISOLATION.md",
+	};
+}
+
+async function checkUptimeKumaProbe(
+	baseUrl = "http://127.0.0.1:3001",
+	timeoutMs = 750,
+): Promise<LocalOpsHomeServerProbe> {
+	const checkedAt = new Date().toISOString();
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+	try {
+		const response = await fetch(baseUrl, {
+			headers: { accept: "text/html,application/json" },
+			signal: controller.signal,
+		});
+
+		return {
+			id: "monitoring",
+			label: "Uptime Kuma",
+			status: response.ok ? "ready" : "attention",
+			detail: response.ok
+				? "Uptime Kuma responded on the local monitoring port"
+				: `Uptime Kuma returned HTTP ${response.status}`,
+			evidence: [baseUrl, `http: ${response.status}`],
+			checkedAt,
+		};
+	} catch (error) {
+		const message =
+			error instanceof DOMException && error.name === "AbortError"
+				? `Timed out after ${timeoutMs}ms`
+				: error instanceof Error
+					? error.message
+					: "Connection failed";
+		return {
+			id: "monitoring",
+			label: "Uptime Kuma",
+			status: "missing",
+			detail: message,
+			evidence: [baseUrl],
+			checkedAt,
+			command: "docker compose up -d uptime-kuma",
+		};
+	} finally {
+		clearTimeout(timeout);
+	}
+}
+
+async function collectHomeServerProbes(cwd: string) {
+	const [monitoring] = await Promise.all([checkUptimeKumaProbe()]);
+	return [
+		collectBackupProbe(cwd),
+		collectStorageProbe(cwd),
+		collectSecureAccessProbe(),
+		collectPublicPortProbe(),
+		monitoring,
+		collectNetworkPlanProbe(cwd),
+		collectLabIsolationProbe(cwd),
+	];
 }
 
 function hasGeneratedPrismaClient(cwd: string) {
@@ -444,6 +1116,10 @@ function buildBriefing(
 	host: LocalOpsHostInventory,
 	logs: LocalOpsLogSummary[],
 	diagnostics: LocalOpsDiagnostic[],
+	homeServer: LocalOpsHomeServerReadiness,
+	future: LocalOpsFuturePlan,
+	clients: LocalOpsClientSurface[],
+	secureMesh: LocalOpsSecureMeshPlan,
 	improvements: LocalOpsImprovementSuggestion[],
 ) {
 	const briefing = [
@@ -478,12 +1154,689 @@ function buildBriefing(
 		);
 	}
 
+	const blockedHomeGates = homeServer.gates.filter(
+		(gate) => gate.status !== "ready",
+	);
+	if (blockedHomeGates.length > 0) {
+		briefing.push(
+			`Home server gates need setup: ${blockedHomeGates
+				.slice(0, 3)
+				.map((gate) => gate.label)
+				.join(", ")}`,
+		);
+	}
+
 	if (improvements.length > 0) {
 		briefing.push(`Next improvement: ${improvements[0].title}`);
 	}
 
+	briefing.push(`Future path: ${future.summary}`);
+	briefing.push(
+		`Client surfaces: ${clients.map((client) => client.label).join(", ")}`,
+	);
+	briefing.push(
+		`Secure mesh: ${secureMesh.status} (${secureMesh.score}%) - ${secureMesh.summary}`,
+	);
 	briefing.push("No device, game, or hidden background automation is armed");
 	return briefing;
+}
+
+function buildHomeServerReadiness(
+	cwd: string,
+	diagnostics: LocalOpsDiagnostic[],
+	logs: LocalOpsLogSummary[],
+	probes: LocalOpsHomeServerProbe[] = [],
+): LocalOpsHomeServerReadiness {
+	const blueprintPath = "docs/ELYSIA_HOME_SERVER_BLUEPRINT.md";
+	const blueprintReady = existsSync(join(cwd, blueprintPath));
+	const probeById = new Map(probes.map((probe) => [probe.id, probe]));
+	const backupProbe = probeById.get("backup");
+	const storageProbe = probeById.get("storage");
+	const secureAccessProbe = probeById.get("secure-access");
+	const publicPortsProbe = probeById.get("public-ports");
+	const monitoringProbe = probeById.get("monitoring");
+	const networkPlanProbe = probeById.get("network-plan");
+	const labIsolationProbe = probeById.get("lab-isolation");
+	const backupMarkers = [
+		"backups",
+		"backup",
+		".backups",
+		"snapshots",
+		"docs/BACKUP.md",
+		"docs/RUNBOOK_BACKUP.md",
+	];
+	const storageMarkers = [
+		"prisma/dev.db",
+		"uploads",
+		"data",
+		"storage",
+		"docs/NAS.md",
+	];
+	const secureAccessMarkers = [
+		"tailscale.json",
+		"docs/TAILSCALE.md",
+		"docs/VPN.md",
+		"docs/SECURE_ACCESS.md",
+	];
+	const monitoringMarkers = [
+		"docker-compose.yml",
+		"compose.yml",
+		"docs/MONITORING.md",
+		"docs/UPTIME_KUMA.md",
+	];
+	const labMarkers = [
+		"docs/LAB_ISOLATION.md",
+		"docs/VLAN.md",
+		"docs/NETWORK_SEGMENTATION.md",
+	];
+	const ollamaModels = diagnostics.find(
+		(diagnostic) => diagnostic.id === "ollama-models",
+	);
+	const liveLogs = logs.filter((log) => log.status !== "missing");
+	const storageMarkerExists = hasAnyPath(cwd, storageMarkers);
+	const secureAccessMarkerExists = hasAnyPath(cwd, secureAccessMarkers);
+	const monitoringMarkerExists = hasAnyPath(cwd, monitoringMarkers);
+	const backupMarkerExists = hasAnyPath(cwd, backupMarkers);
+	const backupStatus =
+		backupProbe?.status ?? (backupMarkerExists ? "attention" : "missing");
+	const storageStatus =
+		storageProbe?.status ?? (storageMarkerExists ? "attention" : "missing");
+	const secureAccessStatus =
+		publicPortsProbe?.status === "attention"
+			? "attention"
+			: secureAccessProbe?.status === "missing" && secureAccessMarkerExists
+				? "attention"
+				: (secureAccessProbe?.status ??
+					(secureAccessMarkerExists ? "attention" : "missing"));
+	const secureAccessSignal = [
+		secureAccessProbe?.detail,
+		publicPortsProbe?.detail,
+	]
+		.filter(Boolean)
+		.join(" / ");
+	const secureAccessEvidence = [
+		...(secureAccessProbe?.evidence ?? []),
+		...(publicPortsProbe?.evidence ?? []),
+	].slice(0, 6);
+	const monitoringStatus =
+		monitoringProbe?.status === "ready"
+			? "ready"
+			: monitoringMarkerExists || liveLogs.length > 0
+				? "attention"
+				: "missing";
+	const networkPlanStatus =
+		networkPlanProbe?.status ?? (blueprintReady ? "ready" : "missing");
+	const labIsolationStatus =
+		labIsolationProbe?.status ??
+		(hasAnyPath(cwd, labMarkers) || blueprintReady ? "attention" : "missing");
+
+	const gates: LocalOpsHomeServerGate[] = [
+		{
+			id: "blueprint",
+			label: "Architecture Blueprint",
+			status: blueprintReady ? "ready" : "missing",
+			signal: blueprintReady
+				? "Home server target architecture is documented"
+				: "No home server blueprint found",
+			nextAction: blueprintReady
+				? "Keep the blueprint aligned with implemented gates"
+				: "Create docs/ELYSIA_HOME_SERVER_BLUEPRINT.md",
+			evidence: [blueprintPath],
+		},
+		{
+			id: "backup",
+			label: "Backup And Restore",
+			status: backupStatus,
+			signal:
+				backupProbe?.detail ??
+				(backupMarkerExists
+					? "Backup marker exists, but latest backup and restore drill age are not wired yet"
+					: "No backup marker or restore runbook detected"),
+			nextAction:
+				backupStatus === "ready"
+					? "Keep latest backup and restore drill evidence fresh"
+					: "Record latest backup age and one restore drill marker",
+			evidence: backupProbe?.evidence ?? backupMarkers,
+		},
+		{
+			id: "storage",
+			label: "Storage Inventory",
+			status: storageStatus,
+			signal:
+				storageProbe?.detail ??
+				(storageMarkerExists
+					? "Local storage exists, NAS and snapshot telemetry are not wired yet"
+					: "No local storage marker found"),
+			nextAction:
+				storageStatus === "ready"
+					? "Add NAS reachability and snapshot-age telemetry next"
+					: "Expose disk usage, snapshot age, and NAS reachability in Local Ops",
+			evidence: storageProbe?.evidence ?? storageMarkers,
+		},
+		{
+			id: "secure-access",
+			label: "Secure Access",
+			status: secureAccessStatus,
+			signal:
+				secureAccessSignal ||
+				(secureAccessMarkerExists
+					? "Secure access notes exist, live VPN state is not wired yet"
+					: "No Tailscale or VPN readiness marker detected"),
+			nextAction:
+				secureAccessStatus === "ready"
+					? "Add exposed-port checks before any remote service publishing"
+					: "Add Tailscale or VPN status and bind management ports to loopback or private routes",
+			evidence:
+				secureAccessEvidence.length > 0
+					? secureAccessEvidence
+					: secureAccessMarkers,
+		},
+		{
+			id: "models",
+			label: "Model Inventory",
+			status: ollamaModels?.status ?? "missing",
+			signal: ollamaModels?.detail ?? "Ollama model inventory is not available",
+			nextAction:
+				ollamaModels?.nextAction ??
+				"Collect Ollama model tags before enabling local AI workflows",
+			evidence: ollamaModels?.items?.length
+				? ollamaModels.items
+				: [ollamaModels?.command ?? "ollama serve"],
+		},
+		{
+			id: "monitoring",
+			label: "Monitoring",
+			status: monitoringStatus,
+			signal:
+				monitoringProbe?.status === "ready"
+					? monitoringProbe.detail
+					: liveLogs.length > 0
+						? "Local logs are visible; external uptime monitoring is not wired yet"
+						: (monitoringProbe?.detail ?? "No monitoring marker detected"),
+			nextAction:
+				monitoringStatus === "ready"
+					? "Import Uptime Kuma monitor counts when credentials are configured"
+					: "Connect Uptime Kuma or Prometheus health state to the Local Ops API",
+			evidence:
+				monitoringProbe?.status === "ready"
+					? monitoringProbe.evidence
+					: liveLogs.length > 0
+						? liveLogs.map((log) => log.path)
+						: monitoringMarkers,
+		},
+		{
+			id: "network-plan",
+			label: "Network Segmentation",
+			status: networkPlanStatus,
+			signal:
+				networkPlanProbe?.detail ??
+				(blueprintReady
+					? "VLAN intent is documented in the home server blueprint"
+					: "No VLAN or network separation plan found"),
+			nextAction:
+				networkPlanStatus === "ready"
+					? "Keep VLAN intent aligned with firewall rules and client surfaces"
+					: "Turn VLAN intent into a machine-readable checklist before device integration",
+			evidence: networkPlanProbe?.evidence ?? [blueprintPath],
+		},
+		{
+			id: "lab-isolation",
+			label: "Lab Isolation",
+			status: labIsolationStatus,
+			signal:
+				labIsolationProbe?.detail ??
+				(blueprintReady
+					? "Lab VLAN intent exists, enforcement evidence is not wired yet"
+					: "No isolated lab plan found"),
+			nextAction:
+				labIsolationStatus === "ready"
+					? "Keep lab isolation evidence current before any experiment network expands"
+					: "Add a lab isolation checklist that proves Lab cannot reach Main, Servers, or NAS",
+			evidence:
+				labIsolationProbe?.evidence ??
+				(blueprintReady ? [blueprintPath] : labMarkers),
+		},
+	];
+	const score = Math.round(
+		(gates.reduce((sum, gate) => sum + gateScore(gate.status), 0) /
+			gates.length) *
+			100,
+	);
+
+	return {
+		status: score >= 85 ? "ready" : score >= 45 ? "partial" : "attention",
+		score,
+		summary:
+			score >= 85
+				? "Home server gates mostly ready"
+				: score >= 45
+					? "Home server gates are planned; instrumentation is next"
+					: "Home server safety gates need setup",
+		gates,
+		probes,
+	};
+}
+
+function buildFuturePlan(
+	homeServer: LocalOpsHomeServerReadiness,
+	services: LocalOpsService[],
+	diagnostics: LocalOpsDiagnostic[],
+): LocalOpsFuturePlan {
+	const gateById = new Map(homeServer.gates.map((gate) => [gate.id, gate]));
+	const serviceById = new Map(services.map((service) => [service.id, service]));
+	const diagnosticById = new Map(
+		diagnostics.map((diagnostic) => [diagnostic.id, diagnostic]),
+	);
+	const isReadyGate = (id: LocalOpsHomeServerGate["id"]) =>
+		gateById.get(id)?.status === "ready";
+	const isReadyService = (id: string) => serviceById.get(id)?.status === "up";
+	const modelReady =
+		isReadyService("ollama") &&
+		diagnosticById.get("ollama-models")?.status === "ready";
+	const rawStages: Array<
+		Omit<LocalOpsFutureStage, "status" | "horizon"> & {
+			ready: boolean;
+		}
+	> = [
+		{
+			id: "foundation",
+			title: "House Telemetry Foundation",
+			ready: isReadyGate("blueprint") && isReadyGate("storage"),
+			track: "core",
+			readinessGain: 8,
+			dependencies: ["Architecture blueprint", "Repo volume capacity"],
+			nextAction:
+				"Keep Local Ops as the single source of truth for server readiness",
+			safety: "manual-only",
+		},
+		{
+			id: "recovery",
+			title: "Recovery Memory Vault",
+			ready: isReadyGate("backup"),
+			track: "core",
+			readinessGain: 12,
+			dependencies: ["Backup marker", "Restore drill runbook"],
+			nextAction:
+				"Record latest backup age and one restore drill result in Local Ops",
+			safety: "manual-only",
+		},
+		{
+			id: "secure-mesh",
+			title: "Private Secure Mesh",
+			ready: isReadyGate("secure-access"),
+			track: "core",
+			readinessGain: 16,
+			dependencies: ["Tailscale or VPN online", "No public management UI"],
+			nextAction:
+				"Install or connect Tailscale, then expose only private management routes",
+			safety: "manual-only",
+		},
+		{
+			id: "observability",
+			title: "Predictive Monitoring Room",
+			ready: isReadyGate("monitoring"),
+			track: "core",
+			readinessGain: 14,
+			dependencies: ["Uptime Kuma or Prometheus", "Alert channel ready"],
+			nextAction:
+				"Start Uptime Kuma locally and import monitor counts into the API",
+			safety: "manual-only",
+		},
+		{
+			id: "local-intelligence",
+			title: "Local Intelligence Core",
+			ready: modelReady,
+			track: "core",
+			readinessGain: 18,
+			dependencies: ["Ollama online", "At least one local model visible"],
+			nextAction:
+				"Start Ollama and pull the configured model before RAG expansion",
+			safety: "manual-only",
+		},
+		{
+			id: "ambient-home",
+			title: "Ambient Home Interface",
+			ready:
+				isReadyGate("network-plan") &&
+				isReadyGate("lab-isolation") &&
+				isReadyGate("secure-access") &&
+				isReadyGate("monitoring") &&
+				modelReady,
+			track: "planned",
+			readinessGain: 20,
+			dependencies: [
+				"Network segmentation",
+				"Lab isolation",
+				"Secure access",
+				"Monitoring",
+				"Local model",
+				"Windows/macOS/Linux/Android/iOS client surfaces",
+			],
+			nextAction:
+				"Design cross-platform Home Assistant read-only status ingestion before any device control",
+			safety: "manual-only",
+		},
+		{
+			id: "multi-user-support",
+			title: "Multi-User Support",
+			ready: false,
+			track: "planned",
+			readinessGain: 10,
+			dependencies: [
+				"Operator profiles",
+				"UI-level account switching",
+				"Per-user local preferences",
+			],
+			nextAction:
+				"Design UI-level user switching and management without changing auth policy yet",
+			safety: "manual-only",
+		},
+		{
+			id: "advanced-ci-cd",
+			title: "Advanced CI/CD",
+			ready: false,
+			track: "experimental",
+			readinessGain: 12,
+			dependencies: [
+				"ZAP scan workflow",
+				"Automated integration test coverage",
+				"Coverage gate reporting",
+			],
+			nextAction:
+				"Add a non-blocking ZAP scan and integration coverage report before enforcing 100% gates",
+			safety: "manual-only",
+		},
+		{
+			id: "abyss-rtos",
+			title: "AbyssRTOS Integration",
+			ready: false,
+			track: "experimental",
+			readinessGain: 16,
+			dependencies: [
+				"Isolated execution profile",
+				"Filesystem and network deny rules",
+				"Manual escape hatch",
+			],
+			nextAction:
+				"Prototype a fully isolated execution sandbox with no default host or network reach",
+			safety: "manual-only",
+		},
+		{
+			id: "sovereign-mesh",
+			title: "Sovereign Mesh",
+			ready: false,
+			track: "frontier",
+			readinessGain: 20,
+			dependencies: [
+				"Secure mesh routes",
+				"Distributed node identity",
+				"Read-only federation protocol",
+			],
+			nextAction:
+				"Draft the distributed AI OS network protocol after private mesh and recovery are proven",
+			safety: "manual-only",
+		},
+	];
+	const firstBlocked = rawStages.findIndex((stage) => !stage.ready);
+	const nextIndex = firstBlocked === -1 ? rawStages.length - 1 : firstBlocked;
+	const stages = rawStages.map(({ ready, ...stage }, index) => ({
+		...stage,
+		status: ready ? "ready" : index === nextIndex ? "next" : "locked",
+		horizon: ready ? "now" : index === nextIndex ? "next" : "later",
+	})) satisfies LocalOpsFutureStage[];
+	const nextStage = stages[nextIndex] ?? stages[0];
+
+	return {
+		codename: "ElysiaFuturePath",
+		summary: `${nextStage.title} is the next futuristic build stage`,
+		nextStageId: nextStage.id,
+		stages,
+	};
+}
+
+function buildClientSurfaces(cwd: string): LocalOpsClientSurface[] {
+	const browserReady = existsSync(join(cwd, "public", "stark-ops.html"));
+	const tauriReady = existsSync(join(cwd, "src-tauri", "tauri.conf.json"));
+	const manifestReady = existsSync(join(cwd, "public", "manifest.webmanifest"));
+	const serviceWorkerReady = existsSync(
+		join(cwd, "public", "service-worker.js"),
+	);
+	const pwaReady = manifestReady && serviceWorkerReady;
+	const webSignal = browserReady
+		? "Local Ops web cockpit is present"
+		: "Local Ops web cockpit is missing";
+	const pwaSignal = pwaReady
+		? "PWA manifest and service worker are present"
+		: "PWA install metadata is incomplete";
+
+	return [
+		{
+			id: "windows",
+			label: "Windows Command Center",
+			status: browserReady ? "ready" : "planned",
+			surface: "Edge or Chrome web cockpit with optional Tauri desktop shell",
+			entrypoint: "http://127.0.0.1:3000/stark-ops.html",
+			signal: tauriReady
+				? "Tauri metadata and Local Ops web cockpit are present"
+				: webSignal,
+			nextAction: tauriReady
+				? "Add a signed Windows desktop build after ops stabilizes"
+				: "Use the web cockpit first, then package a Windows shell",
+			constraints: [
+				"Local network or private VPN only",
+				"No hidden device automation",
+			],
+		},
+		{
+			id: "macos",
+			label: "macOS Cockpit",
+			status: browserReady ? "ready" : "planned",
+			surface: "Safari or Chrome web cockpit with optional Tauri desktop shell",
+			entrypoint: tauriReady
+				? "bun run desktop"
+				: "http://127.0.0.1:3000/stark-ops.html",
+			signal: tauriReady
+				? "Tauri metadata and Local Ops web cockpit are present"
+				: webSignal,
+			nextAction: tauriReady
+				? "Add signed macOS builds after local ops stabilizes"
+				: "Use the web cockpit first, then package a macOS shell",
+			constraints: [
+				"Local network or private VPN only",
+				"No hidden device automation",
+			],
+		},
+		{
+			id: "linux",
+			label: "Linux Ops Node",
+			status: browserReady ? "ready" : "planned",
+			surface: "Firefox or Chrome web cockpit on a desktop or server console",
+			entrypoint: "http://127.0.0.1:3000/stark-ops.html",
+			signal: webSignal,
+			nextAction:
+				"Keep Linux as the service host and browser-first operations target",
+			constraints: [
+				"Local network or private VPN only",
+				"Prefer read-only status for remote dashboards",
+			],
+		},
+		{
+			id: "android",
+			label: "Android Field Panel",
+			status: pwaReady ? "ready" : "attention",
+			surface: "Chrome PWA over local network or VPN",
+			entrypoint: "/stark-ops.html",
+			signal: pwaSignal,
+			nextAction: pwaReady
+				? "Test Android install prompt after secure access is ready"
+				: "Add manifest.webmanifest and a minimal service worker",
+			constraints: [
+				"Use private routes before exposing server UI",
+				"Keep controls manual-only",
+			],
+		},
+		{
+			id: "ios",
+			label: "iOS Field Panel",
+			status: pwaReady ? "ready" : "attention",
+			surface: "Safari PWA over local network or VPN",
+			entrypoint: "/stark-ops.html",
+			signal: pwaSignal,
+			nextAction: pwaReady
+				? "Test Add to Home Screen on iOS after VPN is ready"
+				: "Add manifest.webmanifest and a minimal service worker",
+			constraints: [
+				"HTTPS or trusted local/VPN access for install-like behavior",
+				"Read-only status first",
+			],
+		},
+	];
+}
+
+function meshStatusScore(status: "ready" | "partial" | "attention") {
+	if (status === "ready") return 100;
+	if (status === "partial") return 60;
+	return 20;
+}
+
+function buildSecureMeshPlan(
+	homeServer: LocalOpsHomeServerReadiness,
+	clients: LocalOpsClientSurface[],
+): LocalOpsSecureMeshPlan {
+	const gateById = new Map(homeServer.gates.map((gate) => [gate.id, gate]));
+	const probeById = new Map(
+		homeServer.probes.map((probe) => [probe.id, probe]),
+	);
+	const secureAccessReady = gateById.get("secure-access")?.status === "ready";
+	const publicPortsReady = probeById.get("public-ports")?.status === "ready";
+	const desktopIds = new Set<LocalOpsClientSurface["id"]>([
+		"windows",
+		"macos",
+		"linux",
+	]);
+	const mobileIds = new Set<LocalOpsClientSurface["id"]>(["android", "ios"]);
+	const desktopReady = clients
+		.filter((client) => desktopIds.has(client.id))
+		.every((client) => client.status === "ready");
+	const mobileReady = clients
+		.filter((client) => mobileIds.has(client.id))
+		.every((client) => client.status === "ready");
+
+	const routes = clients.map((client) => {
+		const isMobile = mobileIds.has(client.id);
+		const status: LocalOpsSecureMeshRoute["status"] =
+			client.status !== "ready"
+				? "attention"
+				: secureAccessReady
+					? "ready"
+					: "partial";
+		const access: LocalOpsSecureMeshRoute["access"] = isMobile
+			? secureAccessReady
+				? "private-vpn"
+				: "lan-pwa"
+			: secureAccessReady
+				? "private-vpn"
+				: "localhost";
+		return {
+			id: client.id,
+			label: client.label,
+			status,
+			access,
+			entrypoint: client.entrypoint,
+			signal:
+				status === "ready"
+					? "Private mesh route can use the prepared client surface"
+					: client.status === "ready"
+						? "Client surface is ready; private mesh access is still pending"
+						: client.signal,
+			nextAction:
+				status === "ready"
+					? "Verify this route from the real device on the private mesh"
+					: secureAccessReady
+						? client.nextAction
+						: "Bring up Tailscale or an equivalent private VPN before remote use",
+			guardrails: [
+				"Use localhost, LAN, or private VPN only",
+				"Keep device control read-only until recovery is proven",
+				"Do not enable public tunnels without an explicit review",
+			],
+		} satisfies LocalOpsSecureMeshRoute;
+	});
+
+	const guards: LocalOpsSecureMeshGuard[] = [
+		{
+			id: "private-vpn",
+			label: "Private VPN",
+			status: secureAccessReady ? "ready" : "attention",
+			signal: secureAccessReady
+				? "Secure access gate is ready"
+				: "Secure access gate still needs Tailscale or equivalent VPN evidence",
+			nextAction: secureAccessReady
+				? "Test each client route over the private mesh"
+				: "Install and authenticate Tailscale before remote access",
+		},
+		{
+			id: "public-port-lock",
+			label: "Public Port Lock",
+			status: publicPortsReady ? "ready" : "attention",
+			signal: publicPortsReady
+				? "Watched management listeners are loopback-only"
+				: "Management listener exposure needs review",
+			nextAction: publicPortsReady
+				? "Keep management ports bound to localhost or VPN"
+				: "Review 3000/3001/8000/11434 listeners before remote use",
+		},
+		{
+			id: "desktop-cockpit",
+			label: "Desktop Cockpit",
+			status: desktopReady ? "ready" : "partial",
+			signal: desktopReady
+				? "Windows, macOS, and Linux cockpit surfaces are present"
+				: "One or more desktop cockpit surfaces still need packaging",
+			nextAction: desktopReady
+				? "Pin tested browser/Tauri entrypoints per desktop OS"
+				: "Use the web cockpit first, then package native shells",
+		},
+		{
+			id: "mobile-pwa",
+			label: "Mobile PWA",
+			status: mobileReady ? "ready" : "partial",
+			signal: mobileReady
+				? "Android and iOS PWA shells are present"
+				: "Mobile PWA install metadata needs completion",
+			nextAction: mobileReady
+				? "Test Add to Home Screen on Android and iOS"
+				: "Complete manifest and service worker before phone-first use",
+		},
+		{
+			id: "manual-only",
+			label: "Manual Only",
+			status: "ready",
+			signal: "No device, game, or hidden background automation is armed",
+			nextAction: "Keep future controls behind explicit operator action",
+		},
+	];
+	const score = Math.round(
+		guards.reduce((total, guard) => total + meshStatusScore(guard.status), 0) /
+			guards.length,
+	);
+	const status: LocalOpsSecureMeshPlan["status"] =
+		score >= 90 ? "ready" : score >= 55 ? "partial" : "attention";
+	const summary =
+		status === "ready"
+			? "Secure mesh is ready for cross-platform local operations"
+			: status === "partial"
+				? "Client shells exist; private mesh hardening is the next futuristic step"
+				: "Secure mesh needs private access, port lock, and client shell evidence";
+
+	return {
+		codename: "ElysiaSecureMesh",
+		status,
+		score,
+		summary,
+		routes,
+		guards,
+	};
 }
 
 function buildImprovementSuggestions(
@@ -491,6 +1844,8 @@ function buildImprovementSuggestions(
 	diagnostics: LocalOpsDiagnostic[],
 	logs: LocalOpsLogSummary[],
 	host: LocalOpsHostInventory,
+	homeServer: LocalOpsHomeServerReadiness,
+	future: LocalOpsFuturePlan,
 ): LocalOpsImprovementSuggestion[] {
 	const suggestions: LocalOpsImprovementSuggestion[] = [];
 	const serviceById = new Map(services.map((service) => [service.id, service]));
@@ -502,6 +1857,9 @@ function buildImprovementSuggestions(
 	const ollamaModels = diagnosticById.get("ollama-models");
 	const voicevox = serviceById.get("voicevox");
 	const fastapi = serviceById.get("fastapi-kernel");
+	const nextFutureStage = future.stages.find(
+		(stage) => stage.id === future.nextStageId,
+	);
 
 	if (prisma && prisma.status !== "ready") {
 		suggestions.push({
@@ -600,6 +1958,86 @@ function buildImprovementSuggestions(
 			nextAction:
 				"Stay on dev:lite or close optional companions before full stack startup",
 			command: "bun scripts/manage.ts dev:lite",
+			safety: "manual-only",
+		});
+	}
+
+	const backupGate = homeServer.gates.find((gate) => gate.id === "backup");
+	if (backupGate && backupGate.status !== "ready") {
+		suggestions.push({
+			id: "add-backup-restore-gate",
+			title: "Add backup and restore readiness before home automation",
+			priority: "P1",
+			impact: "high",
+			effort: "medium",
+			reason: backupGate.signal,
+			nextAction: backupGate.nextAction,
+			command: "New-Item -ItemType File docs/RUNBOOK_BACKUP.md",
+			safety: "manual-only",
+		});
+	}
+
+	const secureAccessGate = homeServer.gates.find(
+		(gate) => gate.id === "secure-access",
+	);
+	if (secureAccessGate && secureAccessGate.status !== "ready") {
+		suggestions.push({
+			id: "wire-secure-access-gate",
+			title: "Wire VPN and exposed-port readiness into Local Ops",
+			priority: "P2",
+			impact: "high",
+			effort: "medium",
+			reason: secureAccessGate.signal,
+			nextAction: secureAccessGate.nextAction,
+			command: "tailscale status",
+			safety: "manual-only",
+		});
+	}
+
+	const labIsolationGate = homeServer.gates.find(
+		(gate) => gate.id === "lab-isolation",
+	);
+	if (labIsolationGate && labIsolationGate.status !== "ready") {
+		suggestions.push({
+			id: "add-lab-isolation-checklist",
+			title: "Add lab isolation evidence before experiment networks expand",
+			priority: "P2",
+			impact: "high",
+			effort: "medium",
+			reason: labIsolationGate.signal,
+			nextAction: labIsolationGate.nextAction,
+			command: "New-Item -ItemType File docs/LAB_ISOLATION.md",
+			safety: "manual-only",
+		});
+	}
+
+	const networkGate = homeServer.gates.find(
+		(gate) => gate.id === "network-plan",
+	);
+	if (networkGate && networkGate.status !== "ready") {
+		suggestions.push({
+			id: "complete-network-segmentation-plan",
+			title: "Complete VLAN and deny-rule evidence",
+			priority: "P2",
+			impact: "high",
+			effort: "medium",
+			reason: networkGate.signal,
+			nextAction: networkGate.nextAction,
+			command: "bun run ops",
+			safety: "manual-only",
+		});
+	}
+
+	if (nextFutureStage && nextFutureStage.status === "next") {
+		suggestions.push({
+			id: `future-${nextFutureStage.id}`,
+			title: `Advance future stage: ${nextFutureStage.title}`,
+			priority: "P2",
+			impact: "medium",
+			effort: "medium",
+			reason: `Projected readiness gain: ${nextFutureStage.readinessGain}%`,
+			nextAction: nextFutureStage.nextAction,
+			command: "bun run ops",
 			safety: "manual-only",
 		});
 	}
@@ -946,11 +2384,19 @@ export function buildLocalOpsOverview(
 				command: "bun run ops",
 			} satisfies LocalOpsDiagnostic),
 	];
+	const homeServer =
+		options.homeServer ??
+		buildHomeServerReadiness(cwd, diagnostics, logs, options.homeServerProbes);
+	const future = buildFuturePlan(homeServer, services, diagnostics);
+	const clients = buildClientSurfaces(cwd);
+	const secureMesh = buildSecureMeshPlan(homeServer, clients);
 	const improvements = buildImprovementSuggestions(
 		services,
 		diagnostics,
 		logs,
 		host,
+		homeServer,
+		future,
 	);
 
 	return {
@@ -968,6 +2414,10 @@ export function buildLocalOpsOverview(
 		host,
 		logs,
 		diagnostics,
+		homeServer,
+		future,
+		clients,
+		secureMesh,
 		improvements,
 		briefing: buildBriefing(
 			readiness,
@@ -975,6 +2425,10 @@ export function buildLocalOpsOverview(
 			host,
 			logs,
 			diagnostics,
+			homeServer,
+			future,
+			clients,
+			secureMesh,
 			improvements,
 		),
 		commands: [
@@ -1044,15 +2498,24 @@ export function buildLocalOpsOverview(
 export async function collectLocalOpsOverview(
 	options: CollectLocalOpsOptions = {},
 ) {
+	const cwd = resolveRepoCwd();
 	const corePromise = options.assumeCoreUp
 		? Promise.resolve(upServiceHealth())
 		: checkElysiaCoreService();
-	const [health, core, voicevox] = await Promise.all([
+	const [health, core, voicevox, homeServerProbes] = await Promise.all([
 		performHealthCheck(),
 		corePromise,
 		checkVoicevoxService(),
+		collectHomeServerProbes(cwd),
 	]);
 	const ollamaModels = await checkOllamaModelDiagnostic();
 
-	return buildLocalOpsOverview({ health, core, voicevox, ollamaModels });
+	return buildLocalOpsOverview({
+		health,
+		core,
+		voicevox,
+		ollamaModels,
+		homeServerProbes,
+		cwd,
+	});
 }

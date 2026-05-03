@@ -169,13 +169,17 @@ Before any risky update:
 
 ## ElysiaAI Next Implementation
 
-The next code improvement should extend Local Ops and Native Lite with a `home-server-readiness` model:
+Local Ops now exposes a `homeServer` readiness model with live probes for backup evidence, repo volume capacity, Tailscale CLI state, watched management port exposure, Uptime Kuma HTTP reachability, VLAN plan evidence, and lab isolation checklist state. It also generates a manual-only `future` build path so the next futuristic stage is explicit before anything is automated. The next refinement is wiring deeper infrastructure evidence instead of coarse local markers:
 
-- `backup`: latest backup age, last restore drill, warning state.
-- `storage`: disk usage, snapshot age, NAS reachability.
-- `secureAccess`: Tailscale/VPN visibility and exposed ports.
+- `backup`: real VM/NAS backup export metadata and restore drill age.
+- `storage`: NAS reachability, snapshot age, and volume warning state.
+- `secureAccess`: Tailscale/VPN peer visibility and expected private routes.
 - `models`: Ollama model inventory and selected default.
-- `monitoring`: Uptime Kuma or future Prometheus readiness.
-- `networkPlan`: documented VLAN intent and lab isolation checklist.
+- `monitoring`: Uptime Kuma monitor counts, alert channel readiness, or future Prometheus readiness.
+- `networkPlan`: machine-readable VLAN checklist and firewall rule evidence.
+- `labIsolation`: proof that Lab cannot reach Main, Servers, or NAS.
+- `future`: staged path through telemetry foundation, recovery vault, secure mesh, observability, local intelligence, ambient home interface, Multi-User Support, Advanced CI/CD, AbyssRTOS Integration, and Sovereign Mesh.
+- `clients`: Windows, macOS, and Linux desktop/browser surfaces plus Android and iOS PWA surfaces for safe read-only operation over local network or VPN.
+- `secureMesh`: route matrix and guardrail score for desktop/mobile access over localhost, LAN, or private VPN without public tunnels.
 
 This keeps the system useful before it controls anything. The house can understand itself first; automation comes only after safety and recovery are boringly reliable.
