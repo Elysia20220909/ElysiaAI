@@ -1,4 +1,14 @@
-import { basename, dirname, resolve } from "node:path";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import {
+	arch,
+	cpus,
+	freemem,
+	hostname,
+	platform,
+	release,
+	totalmem,
+} from "node:os";
+import { basename, dirname, join, resolve } from "node:path";
 import { config } from "../../../../src/config.ts";
 import type { HealthStatus, ServiceHealth } from "./health";
 import { performHealthCheck } from "./health";
@@ -44,6 +54,37 @@ export interface LocalOpsCommand {
 	when: string;
 }
 
+export interface LocalOpsHostInventory {
+	hostname: string;
+	platform: string;
+	arch: string;
+	cpu: string;
+	cpuCores: number;
+	memory: {
+		totalMb: number;
+		freeMb: number;
+		usedPercent: number;
+	};
+	runtime: {
+		bun: string;
+		node: string;
+		pid: number;
+		uptimeSeconds: number;
+	};
+	repo: {
+		cwd: string;
+	};
+}
+
+export interface LocalOpsLogSummary {
+	id: string;
+	label: string;
+	path: string;
+	status: "quiet" | "attention" | "missing";
+	lines: string[];
+	updatedAt?: string;
+}
+
 export interface LocalOpsOverview {
 	codename: "StarkHouseLocalOps";
 	generatedAt: string;
@@ -61,6 +102,9 @@ export interface LocalOpsOverview {
 	};
 	services: LocalOpsService[];
 	commands: LocalOpsCommand[];
+	host: LocalOpsHostInventory;
+	logs: LocalOpsLogSummary[];
+	briefing: string[];
 	safety: {
 		manualStartOnly: true;
 		noDeviceAutomation: true;
@@ -106,6 +150,162 @@ function resolveRepoCwd(cwd = process.cwd()) {
 	}
 
 	return cwd;
+}
+
+function mb(bytes: number) {
+	return Math.round(bytes / 1024 / 1024);
+}
+
+function buildHostInventory(cwd: string): LocalOpsHostInventory {
+	const cpu = cpus()[0]?.model ?? "unknown";
+	const totalMemory = totalmem();
+	const freeMemory = freemem();
+	return {
+		hostname: hostname(),
+		platform: `${platform()} ${release()}`,
+		arch: arch(),
+		cpu,
+		cpuCores: cpus().length,
+		memory: {
+			totalMb: mb(totalMemory),
+			freeMb: mb(freeMemory),
+			usedPercent: Math.round(((totalMemory - freeMemory) / totalMemory) * 100),
+		},
+		runtime: {
+			bun:
+				(globalThis as { Bun?: { version?: string } }).Bun?.version ??
+				"unknown",
+			node: process.version,
+			pid: process.pid,
+			uptimeSeconds: Math.round(process.uptime()),
+		},
+		repo: {
+			cwd,
+		},
+	};
+}
+
+function redactLogLine(line: string) {
+	const ansiPattern = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
+	const redacted = line
+		.replace(ansiPattern, "")
+		.replace(
+			/([A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD)[A-Z0-9_]*=)[^\s]+/gi,
+			"$1[redacted]",
+		)
+		.replace(/Bearer\s+[A-Za-z0-9._~-]+/gi, "Bearer [redacted]")
+		.replace(/(api[_-]?key["']?\s*[:=]\s*["']?)[^"',\s]+/gi, "$1[redacted]");
+
+	return redacted.length > 260 ? `${redacted.slice(0, 257)}...` : redacted;
+}
+
+function readLogSummary(
+	cwd: string,
+	id: string,
+	label: string,
+	relativePath: string,
+): LocalOpsLogSummary {
+	const path = join(cwd, relativePath);
+	if (!existsSync(path)) {
+		return {
+			id,
+			label,
+			path: relativePath,
+			status: "missing",
+			lines: ["No local log file yet"],
+		};
+	}
+
+	const stats = statSync(path);
+	const text = readFileSync(path, "utf8");
+	const lines = text
+		.split(/\r?\n/)
+		.filter(Boolean)
+		.slice(-8)
+		.map(redactLogLine);
+	const hasAttention = lines.some((line) =>
+		/error|failed|warn|down/i.test(line),
+	);
+
+	return {
+		id,
+		label,
+		path: relativePath,
+		status: hasAttention ? "attention" : "quiet",
+		lines: lines.length > 0 ? lines : ["Log is empty"],
+		updatedAt: stats.mtime.toISOString(),
+	};
+}
+
+function collectLogSummaries(cwd: string): LocalOpsLogSummary[] {
+	const logs = [
+		readLogSummary(
+			cwd,
+			"lite-out",
+			"Lite Stack Output",
+			".tmp/elysia-stack-lite.out.log",
+		),
+		readLogSummary(
+			cwd,
+			"lite-err",
+			"Lite Stack Kernel",
+			".tmp/elysia-stack-lite.err.log",
+		),
+	];
+
+	const logDir = join(cwd, "logs");
+	if (existsSync(logDir)) {
+		const latestLog = readdirSync(logDir)
+			.map((entry) => join("logs", entry))
+			.filter((entry) => {
+				const fullPath = join(cwd, entry);
+				return existsSync(fullPath) && statSync(fullPath).isFile();
+			})
+			.sort(
+				(a, b) =>
+					statSync(join(cwd, b)).mtimeMs - statSync(join(cwd, a)).mtimeMs,
+			)
+			.at(0);
+
+		if (latestLog) {
+			logs.push(
+				readLogSummary(cwd, "runtime", "Latest Runtime Log", latestLog),
+			);
+		}
+	}
+
+	return logs;
+}
+
+function buildBriefing(
+	readiness: LocalOpsOverview["readiness"],
+	services: LocalOpsService[],
+	host: LocalOpsHostInventory,
+	logs: LocalOpsLogSummary[],
+) {
+	const briefing = [
+		readiness.summary,
+		`Memory load ${host.memory.usedPercent}% across ${host.cpuCores} CPU threads`,
+	];
+
+	const downServices = services
+		.filter((service) => service.enabled && service.status === "down")
+		.map((service) => service.name);
+	if (downServices.length > 0) {
+		briefing.push(`Manual startup pending: ${downServices.join(", ")}`);
+	}
+
+	const noisyLogs = logs.filter((log) => log.status === "attention");
+	if (noisyLogs.length > 0) {
+		briefing.push(
+			`Review logs: ${noisyLogs.map((log) => log.label).join(", ")}`,
+		);
+	} else {
+		briefing.push("Recent local logs are quiet");
+	}
+
+	briefing.push("No device, game, or hidden background automation is armed");
+	return briefing;
 }
 
 function serviceFromHealth(
@@ -408,12 +608,15 @@ export function buildLocalOpsOverview(
 			startCommand: "bun run desktop",
 		},
 	];
+	const readiness = summarizeOpsReadiness(services);
+	const host = buildHostInventory(cwd);
+	const logs = collectLogSummaries(cwd);
 
 	return {
 		codename: "StarkHouseLocalOps",
 		generatedAt,
 		mode: "manual-supervised",
-		readiness: summarizeOpsReadiness(services),
+		readiness,
 		endpoints: {
 			commandCenter: "/stark-ops.html",
 			health: "/health",
@@ -421,6 +624,9 @@ export function buildLocalOpsOverview(
 			api: "/api/local-ops",
 		},
 		services,
+		host,
+		logs,
+		briefing: buildBriefing(readiness, services, host, logs),
 		commands: [
 			{
 				label: "Setup",
