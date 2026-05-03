@@ -9,13 +9,22 @@ This script does not automate gameplay or client input; it only edits image file
 from __future__ import annotations
 
 import argparse
+import html
 import math
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from PIL import (
+    Image,
+    ImageChops,
+    ImageDraw,
+    ImageEnhance,
+    ImageFilter,
+    ImageFont,
+    ImageOps,
+)
 
 
 SUPPORTED_EXTENSIONS = {".bmp", ".jpg", ".jpeg", ".png", ".webp"}
@@ -129,6 +138,7 @@ def default_screenshot_dirs() -> list[Path]:
         / "My Games"
         / "FINAL FANTASY XIV - A Realm Reborn"
         / "screenshots",
+        Path("C:/Users/Public/Pictures"),
     ]
     return [path for path in candidates if path.exists()]
 
@@ -229,7 +239,8 @@ def tint_shadows(image: Image.Image, tint: tuple[int, int, int]) -> Image.Image:
     grayscale = ImageOps.grayscale(image)
     shadow_mask = grayscale.point(lambda value: max(0, 120 - value) * 2)
     overlay = Image.new("RGB", image.size, tint)
-    return Image.composite(overlay, image, shadow_mask).blend(image, 0.88)
+    tinted = Image.composite(overlay, image, shadow_mask)
+    return Image.blend(tinted, image, 0.88)
 
 
 def add_bloom(image: Image.Image, amount: float) -> Image.Image:
@@ -259,6 +270,52 @@ def add_vignette(image: Image.Image, strength: float) -> Image.Image:
 
     dark = Image.new("RGB", image.size, (0, 0, 0))
     return Image.composite(dark, image, mask)
+
+
+def add_depth_of_field(
+    image: Image.Image,
+    strength: float,
+    focus_y: float,
+) -> Image.Image:
+    if strength <= 0:
+        return image
+
+    width, height = image.size
+    blur_radius = max(1.0, min(width, height) * 0.012 * strength)
+    blurred = image.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+
+    mask_size = (max(64, width // 8), max(64, height // 8))
+    mask = Image.new("L", mask_size, 0)
+    pixels = mask.load()
+    center_x = mask_size[0] * 0.5
+    center_y = mask_size[1] * focus_y
+    radius_x = mask_size[0] * 0.34
+    radius_y = mask_size[1] * 0.30
+
+    for y in range(mask_size[1]):
+        for x in range(mask_size[0]):
+            dx = (x - center_x) / radius_x
+            dy = (y - center_y) / radius_y
+            distance = math.sqrt(dx**2 + dy**2)
+            fade = max(0.0, min(1.0, (distance - 0.62) / 0.58))
+            smooth = fade * fade * (3 - 2 * fade)
+            pixels[x, y] = int(255 * (1 - smooth))
+
+    mask = mask.filter(ImageFilter.GaussianBlur(radius=max(4, mask_size[0] // 45)))
+    mask = mask.resize(image.size, Image.Resampling.LANCZOS)
+    return Image.composite(image, blurred, mask)
+
+
+def add_film_grain(image: Image.Image, amount: float) -> Image.Image:
+    if amount <= 0:
+        return image
+
+    sigma = 12 + 18 * amount
+    noise = Image.effect_noise(image.size, sigma).convert("L")
+    noise = ImageOps.autocontrast(noise)
+    grain = Image.merge("RGB", (noise, noise, noise))
+    overlaid = ImageChops.overlay(image, grain)
+    return Image.blend(image, overlaid, min(0.22, amount * 0.18))
 
 
 def grade_image(image: Image.Image, profile: GradeProfile) -> Image.Image:
@@ -305,6 +362,10 @@ def process_image(
     crop: str,
     suffix: str,
     quality: int,
+    dof: float,
+    grain: float,
+    focus_y: float,
+    contact_sheet: bool,
 ) -> list[Path]:
     output_dir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
@@ -314,11 +375,130 @@ def process_image(
         for profile_name in profiles:
             profile = PROFILES[profile_name]
             edited = grade_image(base, profile)
+            edited = add_depth_of_field(edited, dof, focus_y)
+            edited = add_film_grain(edited, grain)
             output_path = build_output_path(source, output_dir, profile_name, crop, suffix)
             edited.save(output_path, "JPEG", quality=quality, optimize=True, progressive=True)
             written.append(output_path)
 
+        if contact_sheet and written:
+            written.append(
+                build_contact_sheet(
+                    source=source,
+                    base=base,
+                    edited_paths=written,
+                    output_dir=output_dir,
+                    crop=crop,
+                    suffix=suffix,
+                    quality=quality,
+                )
+            )
+
     return written
+
+
+def build_contact_sheet(
+    source: Path,
+    base: Image.Image,
+    edited_paths: list[Path],
+    output_dir: Path,
+    crop: str,
+    suffix: str,
+    quality: int,
+) -> Path:
+    tile_width = 420
+    tile_height = 260
+    label_height = 34
+    gap = 18
+    padding = 22
+    columns = 2 if len(edited_paths) < 4 else 3
+    items: list[tuple[str, Image.Image]] = [("original", base.copy())]
+
+    for path in edited_paths:
+        with Image.open(path) as edited:
+            items.append((path.stem.removeprefix(f"{source.stem}_"), edited.convert("RGB")))
+
+    rows = math.ceil(len(items) / columns)
+    sheet_width = padding * 2 + columns * tile_width + (columns - 1) * gap
+    sheet_height = padding * 2 + rows * (tile_height + label_height) + (rows - 1) * gap
+    sheet = Image.new("RGB", (sheet_width, sheet_height), (18, 18, 20))
+    draw = ImageDraw.Draw(sheet)
+    font = ImageFont.load_default()
+
+    for index, (label, image) in enumerate(items):
+        column = index % columns
+        row = index // columns
+        x = padding + column * (tile_width + gap)
+        y = padding + row * (tile_height + label_height + gap)
+        thumbnail = ImageOps.contain(image, (tile_width, tile_height))
+        frame = Image.new("RGB", (tile_width, tile_height), (31, 31, 34))
+        offset = ((tile_width - thumbnail.width) // 2, (tile_height - thumbnail.height) // 2)
+        frame.paste(thumbnail, offset)
+        sheet.paste(frame, (x, y))
+        draw.text((x, y + tile_height + 10), label[:48], fill=(232, 232, 224), font=font)
+
+    output_path = output_dir / f"{source.stem}_contact_{crop}{suffix}.jpg"
+    sheet.save(output_path, "JPEG", quality=quality, optimize=True, progressive=True)
+    return output_path
+
+
+def write_gallery(output_dir: Path) -> Path:
+    image_paths = sorted(
+        output_dir.glob("*.jpg"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    cards = "\n".join(
+        (
+            '      <figure class="card">'
+            f'<img src="{html.escape(path.name)}" alt="{html.escape(path.stem)}">'
+            f"<figcaption>{html.escape(path.stem)}</figcaption></figure>"
+        )
+        for path in image_paths
+    )
+    document = f"""<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FF14 Photo Studio Gallery</title>
+  <style>
+    :root {{
+      color-scheme: dark;
+      font-family: Segoe UI, sans-serif;
+      background: #121316;
+      color: #f1eee6;
+    }}
+    body {{ margin: 0; padding: 28px; }}
+    header {{ max-width: 1100px; margin: 0 auto 22px; }}
+    h1 {{ font-size: 24px; font-weight: 650; margin: 0 0 8px; }}
+    p {{ margin: 0; color: #bdb8aa; }}
+    main {{
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }}
+    .card {{ margin: 0; background: #1d1f24; border: 1px solid #30343d; }}
+    img {{ display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }}
+    figcaption {{ padding: 10px 12px 12px; color: #d9d4c8; font-size: 13px; }}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FF14 Photo Studio Gallery</h1>
+    <p>{len(image_paths)} edited image(s)</p>
+  </header>
+  <main>
+{cards}
+  </main>
+</body>
+</html>
+"""
+    output_path = output_dir / "index.html"
+    output_path.write_text(document, encoding="utf-8")
+    return output_path
 
 
 def is_stable_file(path: Path, stable_seconds: float) -> bool:
@@ -340,12 +520,20 @@ def watch_screenshots(
     crop: str,
     suffix: str,
     quality: int,
+    dof: float,
+    grain: float,
+    focus_y: float,
+    contact_sheet: bool,
+    gallery: bool,
     interval: float,
     stable_seconds: float,
+    process_existing: bool,
 ) -> None:
     print(f"Watching: {folder.resolve()}")
     print("Take screenshots manually in GPose. New files will be edited automatically.")
-    processed: set[Path] = set()
+    processed: set[Path] = set() if process_existing else set(find_images(folder))
+    if processed:
+        print(f"Skipping {len(processed)} existing screenshot(s); waiting for new files.")
 
     while True:
         for source in reversed(find_images(folder)):
@@ -366,9 +554,15 @@ def watch_screenshots(
                     crop=crop,
                     suffix=suffix,
                     quality=quality,
+                    dof=dof,
+                    grain=grain,
+                    focus_y=focus_y,
+                    contact_sheet=contact_sheet,
                 )
                 for path in written:
                     print(f"Saved: {path}")
+                if gallery:
+                    print(f"Gallery: {write_gallery(output_dir)}")
                 processed.add(source)
             except OSError as exc:
                 print(f"warning: could not process {source}: {exc}")
@@ -387,7 +581,7 @@ FF14 photographer checklist
 4. Background: rotate until bright UI-like objects are away from the head.
 5. Pose: leave a little breathing room in the direction the character is looking.
 6. Depth: foreground object + character + distant light makes the shot feel expensive.
-7. Export: run this script with --watch while taking screenshots manually.
+7. Export: run this script with --watch --dof 0.8 --grain 0.25 while taking screenshots manually.
 """.strip()
     )
 
@@ -443,6 +637,39 @@ def parse_args() -> argparse.Namespace:
         help="Watch the screenshot folder and auto-edit new screenshots.",
     )
     parser.add_argument(
+        "--watch-existing",
+        action="store_true",
+        help="When using --watch, also process screenshots already in the folder.",
+    )
+    parser.add_argument(
+        "--dof",
+        type=float,
+        default=0.0,
+        help="Fake depth-of-field strength from 0 to 2. Default: 0",
+    )
+    parser.add_argument(
+        "--focus-y",
+        type=float,
+        default=0.47,
+        help="Vertical focus point for --dof from 0 top to 1 bottom. Default: 0.47",
+    )
+    parser.add_argument(
+        "--grain",
+        type=float,
+        default=0.0,
+        help="Film grain strength from 0 to 1. Default: 0",
+    )
+    parser.add_argument(
+        "--contact-sheet",
+        action="store_true",
+        help="Save a comparison sheet with original and edited variants.",
+    )
+    parser.add_argument(
+        "--gallery",
+        action="store_true",
+        help="Write an index.html gallery in the output folder.",
+    )
+    parser.add_argument(
         "--interval",
         type=float,
         default=1.0,
@@ -483,6 +710,9 @@ def main() -> int:
     latest = args.latest or not args.all
     output_dir = Path(args.output).expanduser()
     quality = max(1, min(95, args.quality))
+    dof = max(0.0, min(2.0, args.dof))
+    grain = max(0.0, min(1.0, args.grain))
+    focus_y = max(0.15, min(0.85, args.focus_y))
 
     if args.watch:
         folder = (
@@ -499,8 +729,14 @@ def main() -> int:
             crop=args.crop,
             suffix=args.suffix,
             quality=quality,
+            dof=dof,
+            grain=grain,
+            focus_y=focus_y,
+            contact_sheet=args.contact_sheet,
+            gallery=args.gallery,
             interval=max(0.2, args.interval),
             stable_seconds=max(0.0, args.stable_seconds),
+            process_existing=args.watch_existing,
         )
         return 0
 
@@ -509,6 +745,8 @@ def main() -> int:
     print(f"Processing {len(sources)} screenshot(s)")
     print(f"Profiles: {', '.join(profiles)}")
     print(f"Crop: {args.crop}")
+    print(f"Depth of field: {dof}")
+    print(f"Film grain: {grain}")
     print(f"Output: {output_dir.resolve()}")
 
     written: list[Path] = []
@@ -521,11 +759,18 @@ def main() -> int:
                 crop=args.crop,
                 suffix=args.suffix,
                 quality=quality,
+                dof=dof,
+                grain=grain,
+                focus_y=focus_y,
+                contact_sheet=args.contact_sheet,
             )
         )
 
     for path in written:
         print(f"Saved: {path}")
+
+    if args.gallery:
+        print(f"Gallery: {write_gallery(output_dir)}")
 
     return 0
 
