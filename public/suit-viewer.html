@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mark LXXXV 3D Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #080808;
+        --text: #f7f1e8;
+        --muted: #b4aaa0;
+        --line: #47382e;
+        --gold: #d8aa58;
+        --cyan: #49d7f0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      #scene {
+        position: fixed;
+        inset: 0;
+      }
+
+      .overlay {
+        position: fixed;
+        left: 20px;
+        top: 20px;
+        width: min(360px, calc(100vw - 40px));
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(13, 13, 13, 0.78);
+        padding: 14px;
+        backdrop-filter: blur(10px);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 18px;
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .links {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+
+      a {
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text);
+        padding: 0 12px;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 13px;
+      }
+
+      a:hover {
+        border-color: var(--gold);
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+    <div class="overlay">
+      <h1>Mark LXXXV 3D Viewer</h1>
+      <p>AEGIS-FRIDAY simulated armor shell. Local render only.</p>
+      <div class="links">
+        <a href="/suit-hud.html">HUD</a>
+        <a href="/stark-ops.html">Local Ops</a>
+      </div>
+    </div>
+
+    <script type="module">
+      import * as THREE from "/vendor/three.module.js";
+
+      const canvas = document.getElementById("scene");
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        preserveDrawingBuffer: true,
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x080808, 1);
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0x080808, 5, 18);
+
+      const camera = new THREE.PerspectiveCamera(
+        42,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        100,
+      );
+      camera.position.set(0, 1.2, 7);
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      const red = new THREE.MeshStandardMaterial({
+        color: 0x9e2929,
+        metalness: 0.82,
+        roughness: 0.28,
+      });
+      const gold = new THREE.MeshStandardMaterial({
+        color: 0xd8aa58,
+        metalness: 0.88,
+        roughness: 0.24,
+      });
+      const dark = new THREE.MeshStandardMaterial({
+        color: 0x151515,
+        metalness: 0.7,
+        roughness: 0.35,
+      });
+      const glow = new THREE.MeshStandardMaterial({
+        color: 0x58dff4,
+        emissive: 0x32c8ee,
+        emissiveIntensity: 1.8,
+        metalness: 0.1,
+        roughness: 0.2,
+      });
+
+      function capsule(name, radius, height, material, x, y, z, sx = 1, sy = 1, sz = 1) {
+        const mesh = new THREE.Mesh(
+          new THREE.CapsuleGeometry(radius, height, 16, 28),
+          material,
+        );
+        mesh.name = name;
+        mesh.position.set(x, y, z);
+        mesh.scale.set(sx, sy, sz);
+        group.add(mesh);
+        return mesh;
+      }
+
+      capsule("torso", 0.72, 1.25, red, 0, 0.5, 0, 1.05, 1, 0.58);
+      capsule("head", 0.34, 0.32, gold, 0, 1.65, 0, 0.92, 1, 0.9);
+      capsule("left-arm", 0.18, 1.0, red, -0.95, 0.65, 0, 0.78, 1, 0.78).rotation.z = 0.2;
+      capsule("right-arm", 0.18, 1.0, red, 0.95, 0.65, 0, 0.78, 1, 0.78).rotation.z = -0.2;
+      capsule("left-forearm", 0.2, 0.72, gold, -1.18, -0.1, 0, 0.82, 1, 0.82).rotation.z = -0.18;
+      capsule("right-forearm", 0.2, 0.72, gold, 1.18, -0.1, 0, 0.82, 1, 0.82).rotation.z = 0.18;
+      capsule("left-leg", 0.25, 1.2, red, -0.36, -1.0, 0, 0.88, 1, 0.88);
+      capsule("right-leg", 0.25, 1.2, red, 0.36, -1.0, 0, 0.88, 1, 0.88);
+      capsule("left-boot", 0.24, 0.44, gold, -0.36, -1.84, 0.06, 0.9, 1, 1.05);
+      capsule("right-boot", 0.24, 0.44, gold, 0.36, -1.84, 0.06, 0.9, 1, 1.05);
+
+      const reactor = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.05, 64), glow);
+      reactor.rotation.x = Math.PI / 2;
+      reactor.position.set(0, 0.78, 0.42);
+      group.add(reactor);
+
+      const eyeGeo = new THREE.BoxGeometry(0.18, 0.035, 0.025);
+      const leftEye = new THREE.Mesh(eyeGeo, glow);
+      leftEye.position.set(-0.11, 1.72, 0.31);
+      group.add(leftEye);
+      const rightEye = leftEye.clone();
+      rightEye.position.x = 0.11;
+      group.add(rightEye);
+
+      const floor = new THREE.Mesh(
+        new THREE.RingGeometry(1.8, 2.1, 96),
+        new THREE.MeshBasicMaterial({ color: 0x49d7f0, transparent: true, opacity: 0.28 }),
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -2.12;
+      scene.add(floor);
+
+      const key = new THREE.DirectionalLight(0xffd18a, 2.6);
+      key.position.set(3, 5, 5);
+      scene.add(key);
+      const rim = new THREE.DirectionalLight(0x49d7f0, 2.1);
+      rim.position.set(-4, 2, -3);
+      scene.add(rim);
+      scene.add(new THREE.AmbientLight(0x404040, 1.2));
+
+      function resize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+
+      window.addEventListener("resize", resize);
+
+      function animate(time) {
+        group.rotation.y = time * 0.00035;
+        reactor.scale.setScalar(1 + Math.sin(time * 0.004) * 0.05);
+        floor.rotation.z = time * 0.00045;
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      requestAnimationFrame(animate);
+    </script>
+  </body>
+</html>

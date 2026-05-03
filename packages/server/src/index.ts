@@ -171,6 +171,32 @@ app
 		set.headers["content-type"] = "text/plain; version=0.0.4; charset=utf-8";
 		return metricsCollector.toPrometheusFormat();
 	})
+	.get("/vendor/three.module.js", ({ set }) => {
+		const candidates = [
+			"node_modules/three/build/three.module.js",
+			"../../node_modules/three/build/three.module.js",
+		];
+		const assetPath = candidates.find((candidate) => existsSync(candidate));
+		if (!assetPath) {
+			set.status = 404;
+			return "Three.js module not found";
+		}
+		set.headers["content-type"] = "text/javascript; charset=utf-8";
+		return (globalThis as any).Bun.file(assetPath);
+	})
+	.get("/vendor/three.core.js", ({ set }) => {
+		const candidates = [
+			"node_modules/three/build/three.core.js",
+			"../../node_modules/three/build/three.core.js",
+		];
+		const assetPath = candidates.find((candidate) => existsSync(candidate));
+		if (!assetPath) {
+			set.status = 404;
+			return "Three.js core module not found";
+		}
+		set.headers["content-type"] = "text/javascript; charset=utf-8";
+		return (globalThis as any).Bun.file(assetPath);
+	})
 	.get("/api/health", async () => {
 		const kernelHealth = await proxyToFastAPI("/health", "GET");
 		if (kernelHealth instanceof Response) {

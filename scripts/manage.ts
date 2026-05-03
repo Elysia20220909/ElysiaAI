@@ -19,7 +19,11 @@ Usage: bun scripts/manage.ts <command> [options]
 
 Commands:
   dev           Start the full local stack
+  dev:lite      Start the local stack with fast lightweight kernel startup
   dev:ci        Start the server in lightweight CI mode (mocked AI)
+  native-lite   Show Rust/Swift/Bun lightweighting snapshot
+  ops           Show local house server readiness
+  suit          Show fictional suit status
   setup         Run initial environment setup (Bun & env file)
   setup-python  Run Python environment setup (.venv)
   build         Build the project for production
@@ -158,11 +162,26 @@ async function runCommand(command: string) {
 			console.log("🚀 Starting ElysiaAI local stack...");
 			await run("bun", ["run", "boot"]);
 			break;
+		case "dev:lite":
+			console.log("⚡ Starting ElysiaAI local stack in lite mode...");
+			process.env.ELYSIA_KERNEL_LITE = "1";
+			process.env.REDIS_ENABLED = "false";
+			await run("bun", ["scripts/boot.ts", "--lite"]);
+			break;
 		case "dev:ci":
 			console.log("🧪 Starting ElysiaAI in CI (Mocked) mode...");
 			process.env.ELYSIA_TEST_MODE = "1";
 			process.env.REDIS_ENABLED = "false";
-			await run("bun", ["run", "boot"]);
+			await run("bun", ["scripts/boot.ts", "--ci"]);
+			break;
+		case "native-lite":
+			await run("bun", ["run", "native:lite"]);
+			break;
+		case "ops":
+			await run("bun", ["run", "ops"]);
+			break;
+		case "suit":
+			await run("bun", ["run", "suit"]);
 			break;
 		case "setup":
 			console.log("⚙️ Setting up environment...");
