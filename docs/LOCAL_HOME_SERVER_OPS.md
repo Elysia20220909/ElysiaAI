@@ -15,7 +15,7 @@ ElysiaAIを、トニー・スタークの家にある司令室のようなロー
 | JSON terminal snapshot | `bun run ops -- --json` |
 | Native Lite Lab | `http://127.0.0.1:3000/native-lite.html` |
 
-The command center now shows service health, manual launch commands, host inventory, repair diagnostics, an automatic improvement queue, redacted recent log tails, and a short operator briefing.
+The command center now shows service health, manual launch commands, host inventory, home server gates, client surfaces, repair diagnostics, an automatic improvement queue, redacted recent log tails, and a short operator briefing.
 
 ## Manual Startup
 
@@ -49,6 +49,12 @@ VOICEVOX and Open-LLM-VTuber should be started manually from their own applicati
 - Redis: optional cache and queue layer.
 - Tauri Desktop: local cockpit shell.
 - Host Inventory: OS, CPU, memory, runtime, PID, uptime, and repo root.
+- Home Server Gates: blueprint, backup, storage, secure access, model, monitoring, network, and lab isolation readiness.
+- Live Home Probes: backup evidence, repo volume capacity, Tailscale CLI state, watched management port exposure, Uptime Kuma local HTTP reachability, VLAN plan evidence, and lab isolation checklist state.
+- Future Build Path: staged manual-only roadmap from telemetry foundation to ambient home interface.
+- Future Tracks: planned Multi-User Support, experimental Advanced CI/CD, experimental AbyssRTOS isolation, and frontier Sovereign Mesh.
+- Client Surfaces: Windows, macOS, Linux, Android, and iOS readiness.
+- Secure Mesh Matrix: cross-platform route and guardrail readiness for localhost, LAN, and private VPN access.
 - Repair Diagnostics: Prisma client readiness and Ollama model visibility.
 - Auto Improvement Queue: ranked next steps generated from health, diagnostics, host pressure, and log summaries.
 - Recent Local Logs: redacted tails from lite stack and runtime logs.
@@ -81,7 +87,7 @@ For ElysiaAI, the next useful implementation step is not direct home automation.
 
 ## Next Build Steps
 
-- Add disk, GPU, model, backup, VPN, and network inventory cards.
+- Add NAS reachability, snapshot age, GPU inventory, and selected default model evidence.
 - Add local-only wake word UI state without automatic microphone activation.
 - Add a desktop tray indicator for Elysia Core readiness.
 - Add a model switcher that writes configuration only after explicit confirmation.
