@@ -19,7 +19,8 @@
     "check:deps": "bun scripts/tests/check-dependency-alignment.ts",
     "check:encoding": "python scripts/tests/check-encoding.py",
     "check:git-hygiene": "bun scripts/tests/check-git-hygiene.ts",
-    "security:glassworm": "bun scripts/security/scan_glassworm.ts"
+    "security:glassworm": "bun scripts/security/scan_glassworm.ts",
+    "security:audit": "python scripts/security/audit_dependencies.py"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
@@ -32,8 +33,8 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@playwright/test": "^1.56.1",
-    "@tauri-apps/api": "^2.10.1",
-    "@tauri-apps/cli": "^2.10.1",
+    "@tauri-apps/api": "^2.11.0",
+    "@tauri-apps/cli": "^2.11.0",
     "bun-types": "latest",
     "typescript": "^5.9.3"
   }

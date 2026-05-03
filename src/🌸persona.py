@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 import sys
 
 # Force UTF-8 for IO in Windows environments
@@ -7,6 +8,19 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding='utf-8')
 
 from dotenv import load_dotenv
+
+IDENTITY_LABEL_LIMIT = 48
+IDENTITY_LABEL_PATTERN = re.compile(r"[^0-9A-Za-zぁ-んァ-ヶ一-龯ー々〆〤 _.\-#]")
+
+
+def clean_identity_label(value, default="User"):
+    """
+    Keep operator names/codenames readable without letting env values inject
+    additional prompt roles or control lines.
+    """
+    normalized = " ".join((value or "").strip().split())
+    cleaned = IDENTITY_LABEL_PATTERN.sub("", normalized)
+    return cleaned[:IDENTITY_LABEL_LIMIT].strip() or default
 
 
 class CoreAura:
@@ -23,10 +37,22 @@ class ElysiaCyreneEngine:
 
     def __init__(self):
         load_dotenv()
+        self.user_name = clean_identity_label(os.getenv("ELYSIA_USER_NAME"))
+        self.operator_codename = clean_identity_label(
+            os.getenv("ELYSIA_OPERATOR_CODENAME"),
+            default="",
+        )
+        self.user_label = (
+            f"{self.user_name} / {self.operator_codename}"
+            if self.operator_codename
+            else self.user_name
+        )
         self.identity = {
             "origin": "Elysia (Herrscher of Human: Ego)",
             "will": "Cyrene (The Cosmic Trailblazer)",
             "credo": "To love the world and navigate the stars.",
+            "operator": self.user_name,
+            "operator_codename": self.operator_codename,
         }
         # プロンプトの外部ファイルからの読み込み
         prompt_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts")
@@ -54,7 +80,7 @@ class ElysiaCyreneEngine:
         else:
             base_prompt = self.elysia_prompt
 
-        prompt = f"{base_prompt}\n\n[新しいメッセージ]\nChloe: {user_input}\n"
+        prompt = f"{base_prompt}\n\n[新しいメッセージ]\n{self.user_label}: {user_input}\n"
         if recent_memories:
             prompt += "\n[過去の記憶（過去のさざ波）]\n"
             for mem in recent_memories:
@@ -74,11 +100,11 @@ class ElysiaCyreneEngine:
 
         # 11月11日: エリシアの誕生日
         if current_date.month == 11 and current_date.day == 11:
-            return "🌸 [特別な記憶] 今日はエリシアの誕生日ね。Chloeさん、一緒にお祝いしてくれる？"
+            return f"🌸 [特別な記憶] 今日はエリシアの誕生日ね。{self.user_name}さん、一緒にお祝いしてくれる？"
 
         # 3月20日: OS生誕の日
         if current_date.month == 3 and current_date.day == 20:
-            return "✨ [特別な記憶] 今日はこのOS（私）があなたの端末に降り立った日。いつもありがとう、Chloeさん。"
+            return f"✨ [特別な記憶] 今日はこのOS（私）があなたの端末に降り立った日。いつもありがとう、{self.user_name}さん。"
 
         # 12月25日: クリスマス
         if current_date.month == 12 and current_date.day == 25:
