@@ -1,7 +1,7 @@
 """Scrapling-backed page extraction helpers for ElysiaAI.
 
-The module prefers Scrapling's parser when it is installed, then falls back to a
-small stdlib parser so the rest of ElysiaAI can keep running in lean setups.
+The module prefers Scrapling's parser and fetchers when installed,
+providing stealth and dynamic browsing capabilities for high-density intelligence.
 """
 
 from __future__ import annotations
@@ -10,18 +10,21 @@ import argparse
 import json
 import re
 import sys
+import base64
 from dataclasses import asdict, dataclass
 from html.parser import HTMLParser
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 import httpx
-
 
 DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
+
+ExtractionType = Literal["markdown", "html", "text"]
+FetcherMode = Literal["httpx", "stealth", "dynamic"]
 
 
 @dataclass(slots=True)
@@ -31,6 +34,7 @@ class ExtractedPage:
     description: str
     text: str
     engine: str
+    screenshot: str | None = None  # Base64 encoded image
 
 
 class _FallbackHTMLExtractor(HTMLParser):
@@ -116,21 +120,38 @@ def _all_text(selector: Any, query: str) -> list[str]:
     return []
 
 
-def _extract_with_scrapling(html: str, url: str) -> ExtractedPage | None:
+def _extract_with_scrapling(
+    html: str, 
+    url: str, 
+    main_content_only: bool = False,
+    extraction_type: ExtractionType = "text"
+) -> ExtractedPage | None:
     try:
         from scrapling.parser import Selector
+        from scrapling.core.shell import Convertor
     except Exception:
         return None
 
     try:
-        page = Selector(html)
+        page = Selector(html, url=url)
         title = _first_text(page, "title::text")
         description = _first_text(page, 'meta[name="description"]::attr(content)') or _first_text(
             page,
             'meta[property="og:description"]::attr(content)',
         )
-        text_parts = _all_text(page, "main ::text") or _all_text(page, "article ::text") or _all_text(page, "body ::text")
-        text = _clean_text(" ".join(text_parts))
+
+        if main_content_only:
+            # Aggressively focus on main content containers for AI-targeted mode
+            main_node = page.css("main").first or page.css("article").first or page.css("body").first
+            if main_node:
+                page = main_node
+
+        content_gen = Convertor._extract_content(
+            page, 
+            extraction_type=extraction_type, 
+            main_content_only=main_content_only
+        )
+        text = "".join(content_gen).strip()
 
         return ExtractedPage(
             url=url,
@@ -143,8 +164,13 @@ def _extract_with_scrapling(html: str, url: str) -> ExtractedPage | None:
         return None
 
 
-def extract_html(html: str, url: str = "") -> ExtractedPage:
-    scrapling_result = _extract_with_scrapling(html, url)
+def extract_html(
+    html: str, 
+    url: str = "", 
+    main_content_only: bool = False,
+    extraction_type: ExtractionType = "text"
+) -> ExtractedPage:
+    scrapling_result = _extract_with_scrapling(html, url, main_content_only, extraction_type)
     if scrapling_result and (scrapling_result.text or scrapling_result.title):
         return scrapling_result
 
@@ -153,11 +179,58 @@ def extract_html(html: str, url: str = "") -> ExtractedPage:
     return parser.result(url)
 
 
-def extract_url(url: str, timeout: float = 15.0) -> ExtractedPage:
+def _fetch_with_browser(
+    url: str, 
+    mode: FetcherMode, 
+    timeout: float = 30000,
+    screenshot: bool = False
+) -> tuple[str, str | None, str]:
+    """Fetch URL using Scrapling browser fetchers."""
+    try:
+        from scrapling.fetchers import StealthyFetcher, DynamicFetcher
+    except ImportError:
+        raise ImportError("Scrapling fetchers not installed. Run `pip install 'scrapling[fetchers]'`")
+
+    fetcher_class = StealthyFetcher if mode == "stealth" else DynamicFetcher
+    # Timeout in ms for Scrapling
+    fetcher = fetcher_class(timeout=timeout)
+    
+    screenshot_b64 = None
+    
+    if screenshot:
+        def capture_screenshot(page):
+            nonlocal screenshot_b64
+            # Use base64 for JSON transport
+            img_bytes = page.screenshot(type="jpeg", quality=80)
+            screenshot_b64 = base64.b64encode(img_bytes).decode("utf-8")
+
+        response = fetcher.fetch(url, page_action=capture_screenshot)
+    else:
+        response = fetcher.fetch(url)
+
+    return response.html_content, screenshot_b64, f"scrapling-{mode}-fetcher"
+
+
+def extract_url(
+    url: str, 
+    timeout: float = 15.0, 
+    mode: FetcherMode = "httpx",
+    main_content_only: bool = False,
+    extraction_type: ExtractionType = "text",
+    screenshot: bool = False
+) -> ExtractedPage:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"}:
         raise ValueError("Only http and https URLs are supported")
 
+    if mode in {"stealth", "dynamic"}:
+        html, screenshot_b64, engine = _fetch_with_browser(url, mode, timeout=timeout * 1000, screenshot=screenshot)
+        result = extract_html(html, url, main_content_only, extraction_type)
+        result.screenshot = screenshot_b64
+        result.engine = f"{result.engine} ({engine})"
+        return result
+
+    # Default httpx mode
     response = httpx.get(
         url,
         follow_redirects=True,
@@ -165,7 +238,7 @@ def extract_url(url: str, timeout: float = 15.0) -> ExtractedPage:
         timeout=timeout,
     )
     response.raise_for_status()
-    return extract_html(response.text, str(response.url))
+    return extract_html(response.text, str(response.url), main_content_only, extraction_type)
 
 
 def _run_cli(argv: list[str]) -> int:
@@ -173,20 +246,38 @@ def _run_cli(argv: list[str]) -> int:
     parser.add_argument("url", nargs="?", help="HTTP or HTTPS URL to extract")
     parser.add_argument("--html-file", help="Read HTML from a local file instead of fetching a URL")
     parser.add_argument("--timeout", type=float, default=15.0)
-    parser.add_argument("--max-chars", type=int, default=4000)
+    parser.add_argument("--max-chars", type=int, default=10000)
+    parser.add_argument("--mode", choices=["httpx", "stealth", "dynamic"], default="httpx", help="Fetcher mode")
+    parser.add_argument("--ai-targeted", action="store_true", help="Enable high-density AI-targeted extraction")
+    parser.add_argument("--extraction-type", choices=["text", "markdown", "html"], default="text")
+    parser.add_argument("--screenshot", action="store_true", help="Capture a screenshot (requires stealth or dynamic mode)")
     args = parser.parse_args(argv)
 
     try:
         if args.html_file:
             with open(args.html_file, encoding="utf-8") as file:
-                result = extract_html(file.read(), args.url or "")
+                result = extract_html(
+                    file.read(), 
+                    args.url or "", 
+                    main_content_only=args.ai_targeted,
+                    extraction_type=args.extraction_type
+                )
         elif args.url:
-            result = extract_url(args.url, timeout=args.timeout)
+            result = extract_url(
+                args.url, 
+                timeout=args.timeout, 
+                mode=args.mode,
+                main_content_only=args.ai_targeted,
+                extraction_type=args.extraction_type,
+                screenshot=args.screenshot
+            )
         else:
             parser.error("a URL or --html-file is required")
 
         payload = asdict(result)
-        payload["text"] = payload["text"][: args.max_chars]
+        if payload["text"]:
+            payload["text"] = payload["text"][: args.max_chars]
+            
         print(json.dumps(payload, ensure_ascii=False))
         return 0
     except Exception as exc:
