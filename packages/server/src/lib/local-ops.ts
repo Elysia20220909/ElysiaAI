@@ -85,6 +85,28 @@ export interface LocalOpsLogSummary {
 	updatedAt?: string;
 }
 
+export interface LocalOpsDiagnostic {
+	id: string;
+	label: string;
+	status: "ready" | "attention" | "missing";
+	detail: string;
+	nextAction: string;
+	command?: string;
+	items?: string[];
+}
+
+export interface LocalOpsImprovementSuggestion {
+	id: string;
+	title: string;
+	priority: "P0" | "P1" | "P2" | "P3";
+	impact: "high" | "medium" | "low";
+	effort: "small" | "medium" | "large";
+	reason: string;
+	nextAction: string;
+	command?: string;
+	safety: "manual-only";
+}
+
 export interface LocalOpsOverview {
 	codename: "StarkHouseLocalOps";
 	generatedAt: string;
@@ -104,6 +126,8 @@ export interface LocalOpsOverview {
 	commands: LocalOpsCommand[];
 	host: LocalOpsHostInventory;
 	logs: LocalOpsLogSummary[];
+	diagnostics: LocalOpsDiagnostic[];
+	improvements: LocalOpsImprovementSuggestion[];
 	briefing: string[];
 	safety: {
 		manualStartOnly: true;
@@ -116,6 +140,7 @@ type BuildLocalOpsOptions = {
 	health: HealthStatus;
 	core?: ServiceHealth;
 	voicevox?: ServiceHealth;
+	ollamaModels?: LocalOpsDiagnostic;
 	generatedAt?: string;
 	cwd?: string;
 };
@@ -183,6 +208,142 @@ function buildHostInventory(cwd: string): LocalOpsHostInventory {
 			cwd,
 		},
 	};
+}
+
+function hasGeneratedPrismaClient(cwd: string) {
+	const directCandidates = [
+		join(cwd, "node_modules", ".prisma", "client", "default.js"),
+		join(cwd, "node_modules", ".prisma", "client", "index.js"),
+	];
+	if (directCandidates.some((candidate) => existsSync(candidate))) {
+		return true;
+	}
+
+	const bunModulesDir = join(cwd, "node_modules", ".bun");
+	if (!existsSync(bunModulesDir)) return false;
+
+	return readdirSync(bunModulesDir)
+		.filter((entry) => entry.startsWith("@prisma+client@"))
+		.some((entry) =>
+			existsSync(
+				join(
+					bunModulesDir,
+					entry,
+					"node_modules",
+					".prisma",
+					"client",
+					"default.js",
+				),
+			),
+		);
+}
+
+function buildPrismaDiagnostic(cwd: string): LocalOpsDiagnostic {
+	const schemaPath = join(cwd, "prisma", "schema.prisma");
+	const dbPath = join(cwd, "prisma", "dev.db");
+	const migrationPath = join(cwd, "prisma", "migrations");
+	const generatedClient = hasGeneratedPrismaClient(cwd);
+	const schemaExists = existsSync(schemaPath);
+	const dbExists = existsSync(dbPath);
+	const migrationsExist = existsSync(migrationPath);
+	const missing = [
+		!schemaExists ? "schema.prisma" : "",
+		!generatedClient ? "generated Prisma client" : "",
+		!dbExists ? "dev.db" : "",
+		!migrationsExist ? "migrations" : "",
+	].filter(Boolean);
+
+	return {
+		id: "prisma",
+		label: "Prisma Local Database",
+		status: missing.length === 0 ? "ready" : "attention",
+		detail:
+			missing.length === 0
+				? "Schema, generated client, local database, and migrations are present"
+				: `Needs attention: ${missing.join(", ")}`,
+		nextAction:
+			missing.length === 0
+				? "No repair needed"
+				: "Regenerate the client, then restart the local stack",
+		command: "bun scripts/manage.ts setup-db",
+		items: [
+			`schema: ${schemaExists ? "present" : "missing"}`,
+			`client: ${generatedClient ? "generated" : "missing"}`,
+			`database: ${dbExists ? "present" : "missing"}`,
+			`migrations: ${migrationsExist ? "present" : "missing"}`,
+		],
+	};
+}
+
+async function checkOllamaModelDiagnostic(
+	baseUrl = config.ollamaBaseUrl,
+	timeoutMs = 750,
+): Promise<LocalOpsDiagnostic> {
+	const url = normalizeLocalOpsUrl(baseUrl, "http://127.0.0.1:11434");
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+	try {
+		const response = await fetch(`${url}/api/tags`, {
+			headers: { accept: "application/json" },
+			signal: controller.signal,
+		});
+
+		if (!response.ok) {
+			return {
+				id: "ollama-models",
+				label: "Ollama Models",
+				status: "attention",
+				detail: `Ollama responded with HTTP ${response.status}`,
+				nextAction: "Check Ollama server logs",
+				command: "ollama serve",
+			};
+		}
+
+		const data = (await response.json()) as {
+			models?: Array<{ name?: string; model?: string }>;
+		};
+		const models = (data.models ?? [])
+			.map((model) => model.name ?? model.model ?? "")
+			.filter(Boolean)
+			.slice(0, 8);
+
+		return {
+			id: "ollama-models",
+			label: "Ollama Models",
+			status: models.length > 0 ? "ready" : "attention",
+			detail:
+				models.length > 0
+					? `${models.length} local model(s) visible`
+					: "Ollama is running but no local models were reported",
+			nextAction:
+				models.length > 0
+					? "Pick a configured local model"
+					: `Pull the configured model: ${config.ollamaModel}`,
+			command:
+				models.length > 0
+					? `set OLLAMA_MODEL=${models[0]}`
+					: `ollama pull ${config.ollamaModel}`,
+			items: models,
+		};
+	} catch (error) {
+		const message =
+			error instanceof DOMException && error.name === "AbortError"
+				? `Timed out after ${timeoutMs}ms`
+				: error instanceof Error
+					? error.message
+					: "Connection failed";
+		return {
+			id: "ollama-models",
+			label: "Ollama Models",
+			status: "missing",
+			detail: message,
+			nextAction: "Start Ollama manually, then refresh Local Ops",
+			command: "ollama serve",
+		};
+	} finally {
+		clearTimeout(timeout);
+	}
 }
 
 function redactLogLine(line: string) {
@@ -282,6 +443,8 @@ function buildBriefing(
 	services: LocalOpsService[],
 	host: LocalOpsHostInventory,
 	logs: LocalOpsLogSummary[],
+	diagnostics: LocalOpsDiagnostic[],
+	improvements: LocalOpsImprovementSuggestion[],
 ) {
 	const briefing = [
 		readiness.summary,
@@ -304,8 +467,168 @@ function buildBriefing(
 		briefing.push("Recent local logs are quiet");
 	}
 
+	const pendingDiagnostics = diagnostics.filter(
+		(diagnostic) => diagnostic.status !== "ready",
+	);
+	if (pendingDiagnostics.length > 0) {
+		briefing.push(
+			`Diagnostics pending: ${pendingDiagnostics
+				.map((diagnostic) => diagnostic.label)
+				.join(", ")}`,
+		);
+	}
+
+	if (improvements.length > 0) {
+		briefing.push(`Next improvement: ${improvements[0].title}`);
+	}
+
 	briefing.push("No device, game, or hidden background automation is armed");
 	return briefing;
+}
+
+function buildImprovementSuggestions(
+	services: LocalOpsService[],
+	diagnostics: LocalOpsDiagnostic[],
+	logs: LocalOpsLogSummary[],
+	host: LocalOpsHostInventory,
+): LocalOpsImprovementSuggestion[] {
+	const suggestions: LocalOpsImprovementSuggestion[] = [];
+	const serviceById = new Map(services.map((service) => [service.id, service]));
+	const diagnosticById = new Map(
+		diagnostics.map((diagnostic) => [diagnostic.id, diagnostic]),
+	);
+	const prisma = diagnosticById.get("prisma");
+	const ollama = serviceById.get("ollama");
+	const ollamaModels = diagnosticById.get("ollama-models");
+	const voicevox = serviceById.get("voicevox");
+	const fastapi = serviceById.get("fastapi-kernel");
+
+	if (prisma && prisma.status !== "ready") {
+		suggestions.push({
+			id: "repair-prisma-client",
+			title: "Regenerate Prisma client before the next server restart",
+			priority: "P0",
+			impact: "high",
+			effort: "small",
+			reason: prisma.detail,
+			nextAction: prisma.nextAction,
+			command: prisma.command,
+			safety: "manual-only",
+		});
+	}
+
+	if (ollama?.status === "down" || ollamaModels?.status === "missing") {
+		suggestions.push({
+			id: "start-ollama",
+			title: "Bring Ollama online for local model responses",
+			priority: "P1",
+			impact: "high",
+			effort: "small",
+			reason: ollama?.detail ?? ollamaModels?.detail ?? "Ollama is offline",
+			nextAction: "Start Ollama, then refresh Local Ops",
+			command: "ollama serve",
+			safety: "manual-only",
+		});
+	} else if (ollamaModels?.status === "attention") {
+		suggestions.push({
+			id: "pull-ollama-model",
+			title: "Install the configured Ollama model",
+			priority: "P1",
+			impact: "high",
+			effort: "medium",
+			reason: ollamaModels.detail,
+			nextAction: ollamaModels.nextAction,
+			command: ollamaModels.command,
+			safety: "manual-only",
+		});
+	}
+
+	if (fastapi && fastapi.status === "degraded") {
+		suggestions.push({
+			id: "inspect-fastapi-latency",
+			title: "Inspect FastAPI latency in lite mode",
+			priority: "P2",
+			impact: "medium",
+			effort: "small",
+			reason: `FastAPI responded in ${Math.round(fastapi.responseTime ?? 0)}ms`,
+			nextAction:
+				"Check whether heavy imports or cold starts are still occurring",
+			command: "bun scripts/manage.ts dev:lite",
+			safety: "manual-only",
+		});
+	}
+
+	if (voicevox?.status === "down") {
+		suggestions.push({
+			id: "optional-voicevox",
+			title: "Start VOICEVOX only when voice output is needed",
+			priority: "P3",
+			impact: "low",
+			effort: "small",
+			reason: voicevox.detail ?? "VOICEVOX is offline",
+			nextAction:
+				"Keep it off for lighter server operation, or start it manually for speech",
+			command: voicevox.startCommand,
+			safety: "manual-only",
+		});
+	}
+
+	const noisyLogs = logs.filter((log) => log.status === "attention");
+	if (noisyLogs.length > 0) {
+		suggestions.push({
+			id: "classify-runtime-logs",
+			title: "Classify noisy runtime logs into test, config, and real errors",
+			priority: "P2",
+			impact: "medium",
+			effort: "medium",
+			reason: `Attention logs found: ${noisyLogs.map((log) => log.label).join(", ")}`,
+			nextAction:
+				"Add log categories so old test failures stop polluting operator briefings",
+			command: "bun run ops",
+			safety: "manual-only",
+		});
+	}
+
+	if (host.memory.usedPercent >= 75) {
+		suggestions.push({
+			id: "reduce-memory-pressure",
+			title: "Reduce local memory pressure before enabling full RAG",
+			priority: "P1",
+			impact: "medium",
+			effort: "small",
+			reason: `Host memory load is ${host.memory.usedPercent}%`,
+			nextAction:
+				"Stay on dev:lite or close optional companions before full stack startup",
+			command: "bun scripts/manage.ts dev:lite",
+			safety: "manual-only",
+		});
+	}
+
+	if (suggestions.length === 0) {
+		suggestions.push({
+			id: "add-model-inventory",
+			title: "Add disk, GPU, model, backup, and VPN inventory cards",
+			priority: "P2",
+			impact: "medium",
+			effort: "medium",
+			reason:
+				"Core diagnostics are healthy; the next value is deeper home-server readiness visibility",
+			nextAction:
+				"Extend Native Lite and Local Ops with storage, model, backup, and secure-access inventory",
+			command: "bun run native:lite",
+			safety: "manual-only",
+		});
+	}
+
+	const priorityRank = { P0: 0, P1: 1, P2: 2, P3: 3 };
+	const impactRank = { high: 0, medium: 1, low: 2 };
+	return suggestions
+		.sort(
+			(a, b) =>
+				priorityRank[a.priority] - priorityRank[b.priority] ||
+				impactRank[a.impact] - impactRank[b.impact],
+		)
+		.slice(0, 5);
 }
 
 function serviceFromHealth(
@@ -611,6 +934,24 @@ export function buildLocalOpsOverview(
 	const readiness = summarizeOpsReadiness(services);
 	const host = buildHostInventory(cwd);
 	const logs = collectLogSummaries(cwd);
+	const diagnostics = [
+		buildPrismaDiagnostic(cwd),
+		options.ollamaModels ??
+			({
+				id: "ollama-models",
+				label: "Ollama Models",
+				status: "missing",
+				detail: "Ollama model diagnostics were not collected",
+				nextAction: "Refresh Local Ops",
+				command: "bun run ops",
+			} satisfies LocalOpsDiagnostic),
+	];
+	const improvements = buildImprovementSuggestions(
+		services,
+		diagnostics,
+		logs,
+		host,
+	);
 
 	return {
 		codename: "StarkHouseLocalOps",
@@ -626,7 +967,16 @@ export function buildLocalOpsOverview(
 		services,
 		host,
 		logs,
-		briefing: buildBriefing(readiness, services, host, logs),
+		diagnostics,
+		improvements,
+		briefing: buildBriefing(
+			readiness,
+			services,
+			host,
+			logs,
+			diagnostics,
+			improvements,
+		),
 		commands: [
 			{
 				label: "Setup",
@@ -639,6 +989,12 @@ export function buildLocalOpsOverview(
 				command: "bun scripts/manage.ts setup-python",
 				cwd,
 				when: "First run or Python dependency refresh",
+			},
+			{
+				label: "Database Repair",
+				command: "bun scripts/manage.ts setup-db",
+				cwd,
+				when: "Regenerate Prisma client after install or schema changes",
 			},
 			{
 				label: "Local Stack",
@@ -696,6 +1052,7 @@ export async function collectLocalOpsOverview(
 		corePromise,
 		checkVoicevoxService(),
 	]);
+	const ollamaModels = await checkOllamaModelDiagnostic();
 
-	return buildLocalOpsOverview({ health, core, voicevox });
+	return buildLocalOpsOverview({ health, core, voicevox, ollamaModels });
 }

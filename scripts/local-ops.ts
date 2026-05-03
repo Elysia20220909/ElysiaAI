@@ -33,6 +33,31 @@ console.log(
 );
 console.log("");
 
+console.log("Diagnostics");
+for (const diagnostic of overview.diagnostics) {
+	console.log(
+		`[${diagnostic.status}] ${diagnostic.label} - ${diagnostic.detail}`,
+	);
+	console.log(`  next: ${diagnostic.nextAction}`);
+	if (diagnostic.command) console.log(`  command: ${diagnostic.command}`);
+	if (diagnostic.items?.length) {
+		for (const item of diagnostic.items) console.log(`  - ${item}`);
+	}
+}
+console.log("");
+
+console.log("Auto improvement queue");
+for (const improvement of overview.improvements) {
+	console.log(
+		`[${improvement.priority}/${improvement.impact}/${improvement.effort}] ${improvement.title}`,
+	);
+	console.log(`  reason: ${improvement.reason}`);
+	console.log(`  next: ${improvement.nextAction}`);
+	if (improvement.command) console.log(`  command: ${improvement.command}`);
+	console.log(`  safety: ${improvement.safety}`);
+}
+console.log("");
+
 for (const service of overview.services) {
 	const status = service.enabled ? service.status : "disabled";
 	const timing =

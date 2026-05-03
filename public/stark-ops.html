@@ -76,6 +76,13 @@
         font-size: 13px;
       }
 
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+
       button,
       a.button {
         display: inline-flex;
@@ -105,6 +112,7 @@
       }
 
       .section {
+        min-width: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: rgba(31, 31, 31, 0.92);
@@ -203,6 +211,8 @@
       }
 
       .briefing,
+      .diagnostics,
+      .improvements,
       .host-grid,
       .logs {
         display: grid;
@@ -213,25 +223,77 @@
         margin-bottom: 16px;
       }
 
+      .briefing-item {
+        overflow-wrap: anywhere;
+      }
+
       .briefing-item,
+      .diagnostic,
+      .improvement,
       .host-item,
       .log-panel {
+        min-width: 0;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
         padding: 12px;
       }
 
+      .diagnostic {
+        display: grid;
+        gap: 8px;
+      }
+
+      .improvement {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px 12px;
+      }
+
+      .improvement strong {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .improvement span,
+      .improvement code {
+        color: var(--muted);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .improvement code {
+        display: block;
+        color: var(--cyan);
+        font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      }
+
+      .improvement-detail {
+        display: grid;
+        gap: 5px;
+      }
+
+      .improvement-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: flex-end;
+      }
+
       .host-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
+      .diagnostic strong,
+      .improvement strong,
       .host-item strong,
       .log-panel strong {
         display: block;
         margin-bottom: 6px;
       }
 
+      .diagnostic span,
+      .improvement span,
       .host-item span,
       .log-panel span {
         color: var(--muted);
@@ -248,9 +310,19 @@
         font-size: 11px;
         line-height: 1.45;
         white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .diagnostic ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--muted);
+        font-size: 12px;
       }
 
       .service {
+        min-width: 0;
         min-height: 152px;
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -262,6 +334,7 @@
 
       .service-head {
         display: flex;
+        flex-wrap: wrap;
         align-items: start;
         justify-content: space-between;
         gap: 12px;
@@ -326,6 +399,14 @@
         .host-grid {
           grid-template-columns: 1fr;
         }
+
+        .improvement {
+          grid-template-columns: 1fr;
+        }
+
+        .improvement-meta {
+          justify-content: flex-start;
+        }
       }
 
       @media (max-width: 680px) {
@@ -335,6 +416,7 @@
 
         header .actions {
           grid-column: 1 / -1;
+          justify-content: flex-start;
         }
 
         h1 {
@@ -390,6 +472,16 @@
         <div class="host-grid" id="host"></div>
       </section>
 
+      <section class="section" aria-labelledby="diagnostics-title">
+        <h2 id="diagnostics-title">Repair Diagnostics</h2>
+        <div class="diagnostics" id="diagnostics"></div>
+      </section>
+
+      <section class="section" aria-labelledby="improvements-title">
+        <h2 id="improvements-title">Auto Improvement Queue</h2>
+        <div class="improvements" id="improvements"></div>
+      </section>
+
       <section class="section" aria-labelledby="logs-title">
         <h2 id="logs-title">Recent Local Logs</h2>
         <div class="logs" id="logs"></div>
@@ -405,6 +497,8 @@
       const services = document.getElementById("services");
       const briefing = document.getElementById("briefing");
       const host = document.getElementById("host");
+      const diagnostics = document.getElementById("diagnostics");
+      const improvements = document.getElementById("improvements");
       const logs = document.getElementById("logs");
       const refresh = document.getElementById("refresh");
 
@@ -502,6 +596,45 @@
         `;
       }
 
+      function renderDiagnostic(diagnostic) {
+        const items = (diagnostic.items || [])
+          .map((item) => `<li>${escapeHtml(item)}</li>`)
+          .join("");
+        return `
+          <article class="diagnostic">
+            <strong>${escapeHtml(diagnostic.label)} <span class="badge ${statusClass(
+              diagnostic.status,
+            )}">${escapeHtml(diagnostic.status)}</span></strong>
+            <span>${escapeHtml(diagnostic.detail)}</span>
+            <span>${escapeHtml(diagnostic.nextAction)}</span>
+            ${diagnostic.command ? `<code>${escapeHtml(diagnostic.command)}</code>` : ""}
+            ${items ? `<ul>${items}</ul>` : ""}
+          </article>
+        `;
+      }
+
+      function renderImprovement(improvement) {
+        const command = improvement.command
+          ? `<code>${escapeHtml(improvement.command)}</code>`
+          : "";
+        return `
+          <article class="improvement">
+            <div class="improvement-detail">
+              <strong>${escapeHtml(improvement.title)}</strong>
+              <span>${escapeHtml(improvement.reason)}</span>
+              <span>${escapeHtml(improvement.nextAction)}</span>
+              ${command}
+            </div>
+            <div class="improvement-meta">
+              <span class="badge ${statusClass(improvement.priority === "P0" ? "attention" : "partial")}">${escapeHtml(improvement.priority)}</span>
+              <span class="badge ready">${escapeHtml(improvement.impact)}</span>
+              <span class="badge unknown">${escapeHtml(improvement.effort)}</span>
+              <span class="badge ready">${escapeHtml(improvement.safety)}</span>
+            </div>
+          </article>
+        `;
+      }
+
       function render(data) {
         summary.textContent = `${data.readiness.summary} · ${new Date(
           data.generatedAt,
@@ -518,6 +651,12 @@
         briefing.innerHTML = (data.briefing || []).map(renderBriefing).join("");
         services.innerHTML = data.services.map(renderService).join("");
         host.innerHTML = renderHost(data.host);
+        diagnostics.innerHTML = (data.diagnostics || [])
+          .map(renderDiagnostic)
+          .join("");
+        improvements.innerHTML = (data.improvements || [])
+          .map(renderImprovement)
+          .join("");
         logs.innerHTML = (data.logs || []).map(renderLog).join("");
         commands.innerHTML = data.commands.map(renderCommand).join("");
       }
@@ -536,6 +675,8 @@
           services.innerHTML = "";
           briefing.innerHTML = "";
           host.innerHTML = "";
+          diagnostics.innerHTML = "";
+          improvements.innerHTML = "";
           logs.innerHTML = "";
           commands.innerHTML = "";
         }

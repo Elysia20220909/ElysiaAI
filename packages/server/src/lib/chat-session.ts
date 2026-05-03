@@ -37,7 +37,7 @@ export interface ChatMessage {
 export interface ChatSessionWithMessages {
 	id: string;
 	userId: string | null;
-	mode: string;
+	mode: string | null;
 	createdAt: Date;
 	updatedAt: Date;
 	messages: {
