@@ -385,7 +385,7 @@ API_VERSION=1.0.0
 describe("i18n", () => {
 it("should translate to Japanese", () => {
 const text = i18n.t("common.hello", "ja");
-expect(text).toBe("縺薙ｓ縺ｫ縺｡縺ｯ");
+expect(text).toBe("こんにちは");
 });
 
     it("should detect locale from header", () => {
