@@ -33,6 +33,65 @@ console.log(
 );
 console.log("");
 
+console.log("Home server gates");
+console.log(
+	`${overview.homeServer.status} (${overview.homeServer.score}%) - ${overview.homeServer.summary}`,
+);
+for (const gate of overview.homeServer.gates) {
+	console.log(`[${gate.status}] ${gate.label} - ${gate.signal}`);
+	console.log(`  next: ${gate.nextAction}`);
+	if (gate.evidence.length > 0) {
+		console.log(`  evidence: ${gate.evidence.slice(0, 3).join(", ")}`);
+	}
+}
+if (overview.homeServer.probes.length > 0) {
+	console.log("Live probes");
+	for (const probe of overview.homeServer.probes) {
+		console.log(`[${probe.status}] ${probe.label} - ${probe.detail}`);
+		if (probe.evidence.length > 0) {
+			console.log(`  evidence: ${probe.evidence.slice(0, 3).join(", ")}`);
+		}
+		if (probe.command) console.log(`  command: ${probe.command}`);
+	}
+}
+console.log("");
+
+console.log("Future build path");
+console.log(`${overview.future.codename}: ${overview.future.summary}`);
+for (const stage of overview.future.stages) {
+	console.log(
+		`[${stage.status}/${stage.horizon}/+${stage.readinessGain}%] ${stage.title}`,
+	);
+	console.log(`  next: ${stage.nextAction}`);
+	console.log(`  depends: ${stage.dependencies.join(", ")}`);
+	console.log(`  track: ${stage.track}`);
+	console.log(`  safety: ${stage.safety}`);
+}
+console.log("");
+
+console.log("Secure mesh matrix");
+console.log(
+	`${overview.secureMesh.status} (${overview.secureMesh.score}%) - ${overview.secureMesh.summary}`,
+);
+for (const route of overview.secureMesh.routes) {
+	console.log(`[${route.status}/${route.access}] ${route.label}`);
+	console.log(`  entry: ${route.entrypoint}`);
+	console.log(`  next: ${route.nextAction}`);
+}
+for (const guard of overview.secureMesh.guards) {
+	console.log(`[${guard.status}] ${guard.label} - ${guard.signal}`);
+}
+console.log("");
+
+console.log("Client surfaces");
+for (const client of overview.clients) {
+	console.log(`[${client.status}] ${client.label} - ${client.surface}`);
+	console.log(`  entry: ${client.entrypoint}`);
+	console.log(`  next: ${client.nextAction}`);
+	console.log(`  constraints: ${client.constraints.join(", ")}`);
+}
+console.log("");
+
 console.log("Diagnostics");
 for (const diagnostic of overview.diagnostics) {
 	console.log(
