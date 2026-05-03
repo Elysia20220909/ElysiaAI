@@ -13,6 +13,7 @@ import { config, isProd } from "../../../src/config.ts";
 import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
 import { jsonError, proxyToFastAPI } from "./lib/constants";
 import { defenseManager } from "./lib/defense-manager";
+import { checkEnvironmentOrExit } from "./lib/env-validator";
 import { performHealthCheck } from "./lib/health";
 import { logger } from "./lib/logger";
 import { metricsCollector } from "./lib/metrics";
@@ -29,6 +30,8 @@ import { vtuberRoutes } from "./routes/vtuber-routes";
 
 const app = new Elysia();
 const requestStartedAt = new WeakMap<Request, number>();
+
+checkEnvironmentOrExit();
 
 app
 	.use(helmet())

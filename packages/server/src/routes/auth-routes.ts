@@ -1,8 +1,23 @@
 import { Elysia, t } from "elysia";
-import jwt from "jsonwebtoken";
-import { CONFIG, jsonError } from "../lib/constants";
+import {
+	InMemoryRefreshTokenStore,
+	type RefreshTokenStore,
+	issueTokenPair,
+	revokeRefreshToken,
+	rotateRefreshToken,
+} from "../lib/auth-tokens";
+import { jsonError } from "../lib/constants";
+import { tokenService } from "../lib/database";
 import { logger } from "../lib/logger";
 import { authenticateUser, createUser } from "../lib/security";
+
+const testRefreshTokenStore = new InMemoryRefreshTokenStore();
+
+function getRefreshTokenStore(): RefreshTokenStore {
+	return process.env.ELYSIA_TEST_MODE === "1"
+		? testRefreshTokenStore
+		: tokenService;
+}
 
 export const authRoutes = new Elysia({ prefix: "/auth" })
 	// Auth: token issuance
@@ -26,22 +41,16 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			}
 
 			try {
-				const accessToken = jwt.sign(
-					{ userId: user.id, username: user.username, role: user.role },
-					CONFIG.JWT_SECRET,
-					{ expiresIn: "15m" },
-				);
-				const refreshToken = jwt.sign(
-					{ userId: user.id, username: user.username, role: user.role },
-					CONFIG.JWT_REFRESH_SECRET,
-					{ expiresIn: "7d" },
+				const tokens = await issueTokenPair(
+					{ id: user.id, username: user.username, role: user.role },
+					getRefreshTokenStore(),
 				);
 
 				return new Response(
 					JSON.stringify({
-						accessToken,
-						refreshToken,
-						expiresIn: 900,
+						accessToken: tokens.accessToken,
+						refreshToken: tokens.refreshToken,
+						expiresIn: tokens.expiresIn,
 					}),
 					{
 						headers: { "content-type": "application/json" },
@@ -85,39 +94,16 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 		async ({ body }: { body: { refreshToken: string } }) => {
 			const { refreshToken } = body;
 			try {
-				const payload = jwt.verify(
+				const tokens = await rotateRefreshToken(
 					refreshToken,
-					CONFIG.JWT_REFRESH_SECRET,
-				) as jwt.JwtPayload;
-
-				if (!payload?.userId || !payload.username || !payload.role) {
-					return jsonError(401, "Invalid or expired refresh token");
-				}
-
-				const newAccessToken = jwt.sign(
-					{
-						userId: payload.userId,
-						username: payload.username,
-						role: payload.role,
-					},
-					CONFIG.JWT_SECRET,
-					{ expiresIn: "15m" },
-				);
-				const newRefreshToken = jwt.sign(
-					{
-						userId: payload.userId,
-						username: payload.username,
-						role: payload.role,
-					},
-					CONFIG.JWT_REFRESH_SECRET,
-					{ expiresIn: "7d" },
+					getRefreshTokenStore(),
 				);
 
 				return new Response(
 					JSON.stringify({
-						accessToken: newAccessToken,
-						refreshToken: newRefreshToken,
-						expiresIn: 900,
+						accessToken: tokens.accessToken,
+						refreshToken: tokens.refreshToken,
+						expiresIn: tokens.expiresIn,
 					}),
 					{
 						headers: { "content-type": "application/json" },
@@ -138,15 +124,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 		async ({ body }: { body: { refreshToken: string } }) => {
 			const { refreshToken } = body;
 			try {
-				const payload = jwt.verify(
-					refreshToken,
-					CONFIG.JWT_REFRESH_SECRET,
-				) as jwt.JwtPayload;
-				if (payload?.userId) {
-					logger.info(
-						`User ${payload.userId} logged out (refresh token revoked conceptually)`,
-					);
-				}
+				await revokeRefreshToken(refreshToken, getRefreshTokenStore());
 				return new Response(
 					JSON.stringify({ message: "Logged out successfully" }),
 					{

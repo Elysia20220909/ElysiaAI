@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { CacheManager } from "../packages/server/src/lib/cache";
 import {
 	disabledServiceHealth,
+	mapOpenLlmVtuberStatusToServiceHealth,
 	summarizeHealthStatus,
 } from "../packages/server/src/lib/health";
 import { logger } from "../packages/server/src/lib/logger";
@@ -95,6 +96,40 @@ describe("Health Status", () => {
 		]);
 
 		expect(status).toBe("unhealthy");
+	});
+
+	it("should map disabled Open-LLM-VTuber status as optional companion", () => {
+		const health = mapOpenLlmVtuberStatusToServiceHealth({
+			status: "disabled",
+			manifest: {} as never,
+		});
+
+		expect(health.status).toBe("disabled");
+	});
+
+	it("should map online Open-LLM-VTuber status as up", () => {
+		const health = mapOpenLlmVtuberStatusToServiceHealth(
+			{
+				status: "online",
+				live2d: { models: [] },
+				manifest: {} as never,
+			},
+			12,
+		);
+
+		expect(health.status).toBe("up");
+		expect(health.responseTime).toBe(12);
+	});
+
+	it("should map offline Open-LLM-VTuber status as down", () => {
+		const health = mapOpenLlmVtuberStatusToServiceHealth({
+			status: "offline",
+			error: "connection refused",
+			manifest: {} as never,
+		});
+
+		expect(health.status).toBe("down");
+		expect(health.error).toBe("connection refused");
 	});
 });
 

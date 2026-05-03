@@ -4,9 +4,58 @@ import * as chatSessionService from "../lib/chat-session";
 import { CONFIG, jsonError } from "../lib/constants";
 
 type ChatMode = "normal" | "sweet" | "professional";
+type SessionTokenPayload = jwt.JwtPayload & {
+	role?: string;
+	userId?: string;
+};
 
 function normalizeChatMode(mode: string | undefined): ChatMode {
 	return mode === "sweet" || mode === "professional" ? mode : "normal";
+}
+
+function requireSessionToken(request: Request): SessionTokenPayload | Response {
+	const auth = request.headers.get("authorization") || "";
+	if (!auth.startsWith("Bearer ")) {
+		return jsonError(401, "Missing Bearer token");
+	}
+
+	try {
+		const payload = jwt.verify(
+			auth.substring(7),
+			CONFIG.JWT_SECRET,
+		) as SessionTokenPayload;
+		if (
+			!payload.userId &&
+			payload.role !== "admin" &&
+			payload.role !== "owner"
+		) {
+			return jsonError(401, "Invalid token");
+		}
+		return payload;
+	} catch {
+		return jsonError(401, "Invalid token");
+	}
+}
+
+function canAccessSession(
+	session: chatSessionService.ChatSessionWithMessages,
+	payload: SessionTokenPayload,
+): boolean {
+	if (payload.role === "admin" || payload.role === "owner") return true;
+	return Boolean(session.userId && payload.userId === session.userId);
+}
+
+async function getAuthorizedSession(sessionId: string, request: Request) {
+	const payload = requireSessionToken(request);
+	if (payload instanceof Response) return { response: payload };
+
+	const session = await chatSessionService.getSession(sessionId);
+	if (!session) return { response: jsonError(404, "Session not found") };
+	if (!canAccessSession(session, payload)) {
+		return { response: jsonError(403, "Forbidden") };
+	}
+
+	return { payload, session };
 }
 
 export const sessionRoutes = new Elysia({ prefix: "/sessions" })
@@ -42,51 +91,44 @@ export const sessionRoutes = new Elysia({ prefix: "/sessions" })
 			body: t.Object({ mode: t.Optional(t.String()) }),
 		},
 	)
-	.get("/:id", async ({ params }) => {
-		const session = await chatSessionService.getSession(params.id);
-		if (!session) return jsonError(404, "Session not found");
-		return session;
+	.get("/:id", async ({ params, request }) => {
+		const result = await getAuthorizedSession(params.id, request);
+		if (result.response) return result.response;
+		return result.session;
 	})
 	.get("/", async ({ request, query }) => {
-		const auth = request.headers.get("authorization") || "";
-		if (!auth.startsWith("Bearer "))
-			return jsonError(401, "Missing Bearer token");
-		try {
-			const payload = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as {
-				userId?: string;
-			};
-			const userId = payload.userId;
-			if (!userId) return jsonError(401, "Invalid token");
-			const limit = Number(query?.limit ?? 20) || 20;
-			return await chatSessionService.getUserSessions(userId, limit);
-		} catch {
-			return jsonError(401, "Invalid token");
-		}
+		const payload = requireSessionToken(request);
+		if (payload instanceof Response) return payload;
+
+		const userId = payload.userId;
+		if (!userId) return jsonError(401, "Invalid token");
+		const limit = Math.min(Number(query?.limit ?? 20) || 20, 100);
+		return await chatSessionService.getUserSessions(userId, limit);
 	})
 	.delete("/:id", async ({ params, request }) => {
-		const auth = request.headers.get("authorization") || "";
-		if (!auth.startsWith("Bearer "))
-			return jsonError(401, "Missing Bearer token");
-		try {
-			jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
-			const success = await chatSessionService.deleteSession(params.id);
-			if (!success) return jsonError(404, "Session not found");
-			return { success: true };
-		} catch {
-			return jsonError(401, "Invalid token");
-		}
+		const result = await getAuthorizedSession(params.id, request);
+		if (result.response) return result.response;
+
+		const success = await chatSessionService.deleteSession(params.id);
+		if (!success) return jsonError(404, "Session not found");
+		return { success: true };
 	})
 	.get(
 		"/:id/export",
 		async ({
 			params,
 			query,
+			request,
 		}: {
 			params: { id: string };
 			query: { format?: string };
+			request: Request;
 		}) => {
 			const format = query.format || "json";
 			const sessionId = params.id;
+			const result = await getAuthorizedSession(sessionId, request);
+			if (result.response) return result.response;
+
 			if (format === "json") {
 				const data = await chatSessionService.exportSessionAsJSON(sessionId);
 				if (!data) return jsonError(404, "Session not found");
@@ -111,7 +153,10 @@ export const sessionRoutes = new Elysia({ prefix: "/sessions" })
 			return jsonError(400, "Invalid format");
 		},
 	)
-	.get("/:id/stats", async ({ params }) => {
+	.get("/:id/stats", async ({ params, request }) => {
+		const result = await getAuthorizedSession(params.id, request);
+		if (result.response) return result.response;
+
 		const stats = await chatSessionService.getSessionStats(params.id);
 		if (!stats) return jsonError(404, "Session not found");
 		return stats;
