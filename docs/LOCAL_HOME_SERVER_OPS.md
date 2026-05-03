@@ -15,6 +15,8 @@ ElysiaAIを、トニー・スタークの家にある司令室のようなロー
 | JSON terminal snapshot | `bun run ops -- --json` |
 | Native Lite Lab | `http://127.0.0.1:3000/native-lite.html` |
 
+The command center now shows service health, manual launch commands, host inventory, redacted recent log tails, and a short operator briefing.
+
 ## Manual Startup
 
 ```powershell
@@ -45,6 +47,8 @@ VOICEVOX and Open-LLM-VTuber should be started manually from their own applicati
 - Open-LLM-VTuber: optional avatar bridge.
 - Redis: optional cache and queue layer.
 - Tauri Desktop: local cockpit shell.
+- Host Inventory: OS, CPU, memory, runtime, PID, uptime, and repo root.
+- Recent Local Logs: redacted tails from lite stack and runtime logs.
 
 ## Safety Rules
 
@@ -57,7 +61,6 @@ VOICEVOX and Open-LLM-VTuber should be started manually from their own applicati
 
 ## Next Build Steps
 
-- Add service log summaries with redaction.
 - Add disk, GPU, and model inventory cards.
 - Add local-only wake word UI state without automatic microphone activation.
 - Add a desktop tray indicator for Elysia Core readiness.

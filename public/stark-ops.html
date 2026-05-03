@@ -202,6 +202,54 @@
         gap: 12px;
       }
 
+      .briefing,
+      .host-grid,
+      .logs {
+        display: grid;
+        gap: 10px;
+      }
+
+      .briefing {
+        margin-bottom: 16px;
+      }
+
+      .briefing-item,
+      .host-item,
+      .log-panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+      }
+
+      .host-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .host-item strong,
+      .log-panel strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .host-item span,
+      .log-panel span {
+        color: var(--muted);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .log-panel pre {
+        max-height: 180px;
+        overflow: auto;
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+        font-size: 11px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+      }
+
       .service {
         min-height: 152px;
         border: 1px solid var(--line);
@@ -274,7 +322,8 @@
 
       @media (max-width: 980px) {
         .grid,
-        .services {
+        .services,
+        .host-grid {
           grid-template-columns: 1fr;
         }
       }
@@ -331,9 +380,20 @@
 
         <section class="section" aria-labelledby="services-title">
           <h2 id="services-title">House Systems</h2>
+          <div class="briefing" id="briefing"></div>
           <div class="services" id="services"></div>
         </section>
       </div>
+
+      <section class="section" aria-labelledby="host-title">
+        <h2 id="host-title">Host Inventory</h2>
+        <div class="host-grid" id="host"></div>
+      </section>
+
+      <section class="section" aria-labelledby="logs-title">
+        <h2 id="logs-title">Recent Local Logs</h2>
+        <div class="logs" id="logs"></div>
+      </section>
     </main>
 
     <script>
@@ -343,6 +403,9 @@
       const safety = document.getElementById("safety");
       const commands = document.getElementById("commands");
       const services = document.getElementById("services");
+      const briefing = document.getElementById("briefing");
+      const host = document.getElementById("host");
+      const logs = document.getElementById("logs");
       const refresh = document.getElementById("refresh");
 
       function escapeHtml(value) {
@@ -398,6 +461,47 @@
         `;
       }
 
+      function renderBriefing(item) {
+        return `<div class="briefing-item">${escapeHtml(item)}</div>`;
+      }
+
+      function renderHost(data) {
+        const items = [
+          ["Machine", `${data.hostname} · ${data.platform} · ${data.arch}`],
+          ["CPU", `${data.cpu} · ${data.cpuCores} threads`],
+          [
+            "Memory",
+            `${data.memory.usedPercent}% used · ${data.memory.freeMb} MB free / ${data.memory.totalMb} MB`,
+          ],
+          ["Runtime", `Bun ${data.runtime.bun} · ${data.runtime.node}`],
+          ["Process", `PID ${data.runtime.pid} · ${data.runtime.uptimeSeconds}s uptime`],
+          ["Repo", data.repo.cwd],
+        ];
+
+        return items
+          .map(
+            ([label, value]) => `
+              <div class="host-item">
+                <strong>${escapeHtml(label)}</strong>
+                <span>${escapeHtml(value)}</span>
+              </div>
+            `,
+          )
+          .join("");
+      }
+
+      function renderLog(log) {
+        return `
+          <article class="log-panel">
+            <strong>${escapeHtml(log.label)} <span class="badge ${statusClass(
+              log.status,
+            )}">${escapeHtml(log.status)}</span></strong>
+            <span>${escapeHtml(log.path)}${log.updatedAt ? ` · ${escapeHtml(new Date(log.updatedAt).toLocaleString())}` : ""}</span>
+            <pre>${escapeHtml((log.lines || []).join("\n"))}</pre>
+          </article>
+        `;
+      }
+
       function render(data) {
         summary.textContent = `${data.readiness.summary} · ${new Date(
           data.generatedAt,
@@ -411,7 +515,10 @@
           <span class="pill ready">local</span>
           <span class="pill ready">no automation</span>
         `;
+        briefing.innerHTML = (data.briefing || []).map(renderBriefing).join("");
         services.innerHTML = data.services.map(renderService).join("");
+        host.innerHTML = renderHost(data.host);
+        logs.innerHTML = (data.logs || []).map(renderLog).join("");
         commands.innerHTML = data.commands.map(renderCommand).join("");
       }
 
@@ -427,6 +534,9 @@
           const message = error instanceof Error ? error.message : String(error);
           summary.innerHTML = `<span class="error">${escapeHtml(message)}</span>`;
           services.innerHTML = "";
+          briefing.innerHTML = "";
+          host.innerHTML = "";
+          logs.innerHTML = "";
           commands.innerHTML = "";
         }
       }
