@@ -27,6 +27,8 @@ ElysiaAI の動作をカスタマイズするための環境変数の一覧で�
 | `OLLAMA_URL` | `http://localhost:11434` | ローカルの Ollama サーバーの URL。 |
 | `MILVUS_URL` | `data/milvus.db` | Milvus Lite のデータベースファイルパス。 |
 | `VOICEVOX_URL` | `http://localhost:50021` | VOICEVOX エンジンの URL。 |
+| `ELYSIA_USER_NAME` | `User` | Python ペルソナエンジンがプロンプト内で使う表示名。 |
+| `ELYSIA_OPERATOR_CODENAME` | (空) | 表示名に添える任意のコードネーム。プロンプト注入を避けるため制御文字は除去されます。 |
 
 ---
 > [!TIP]
