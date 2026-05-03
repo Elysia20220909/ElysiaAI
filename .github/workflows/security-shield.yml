@@ -25,21 +25,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          python-version: '3.11'
+          bun-version: latest
       - name: Run GlassWorm Scanner
-        run: python scripts/glassworm_lint.py
+        run: bun run security:glassworm -- --ci
 
   parametric-guard:
-    name: Parametric Guard (Prompt Safety)
+    name: Project Consistency Guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          python-version: '3.11'
-      - name: Run Prompt Verifier
-        run: python scripts/verify_prompts.py
+          bun-version: latest
+      - name: Run Project Audit
+        run: bun scripts/manage.ts check

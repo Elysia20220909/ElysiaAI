@@ -1,12 +1,17 @@
 import { describe, expect, test } from "bun:test";
-import axios from "axios";
 
 const BASE_URL = "http://localhost:3001";
 const LIVE_TESTS = process.env.RUN_LIVE_TESTS === "true";
 const describeLive = LIVE_TESTS ? describe : describe.skip;
 
+async function getAxios() {
+	const { default: axios } = await import("axios");
+	return axios;
+}
+
 describeLive("Elysia Network Game API", () => {
 	test("ゲーム初期化APIが正常に動作する", async () => {
+		const axios = await getAxios();
 		const res = await axios.post(`${BASE_URL}/game/start`, {
 			nodes: [
 				{ id: "A", connected: ["B"] },
@@ -25,6 +30,7 @@ describeLive("Elysia Network Game API", () => {
 	});
 
 	test("エージェント移動でターン・履歴・スコアが更新される", async () => {
+		const axios = await getAxios();
 		await axios.post(`${BASE_URL}/game/start`, {
 			nodes: [
 				{ id: "A", connected: ["B"] },
@@ -48,6 +54,7 @@ describeLive("Elysia Network Game API", () => {
 	});
 
 	test("スコア10点で勝者が決定する", async () => {
+		const axios = await getAxios();
 		await axios.post(`${BASE_URL}/game/start`, {
 			nodes: [
 				{ id: "A", connected: ["B"] },
