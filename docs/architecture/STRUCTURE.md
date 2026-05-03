@@ -9,12 +9,14 @@ elysia-ai/
 ├── CHANGELOG.md           # Version history
 ├── package.json           # Dependencies and scripts
 ├── start-server.ts        # Production server entry point
-━E├── src/                   # Main application source code
+│
+├── src/                   # Main application source code
 ├── public/                # Static web assets
 ├── tests/                 # Test suites
 ├── scripts/               # Automation scripts
 ├── docs/                  # User documentation
-━E├── prisma/                # Database schema
+│
+├── prisma/                # Database schema
 ├── data/                  # Application data
 ├── logs/                  # Application logs
 ├── uploads/               # User uploaded files
@@ -28,24 +30,27 @@ elysia-ai/
 ```
 config/
 ├── internal/              # Build and development configs
-━E  ├── tsconfig.json      # TypeScript configuration
-━E  ├── webpack.config.js  # Build configuration
-━E  ├── biome.json         # Linter/formatter config
-━E  ├── playwright.config.ts # E2E test config
-━E  └── prisma.config.ts   # Prisma configuration
-━E├── docker/                # Docker configurations
-━E  ├── Dockerfile         # Development Dockerfile
-━E  ├── Dockerfile.production # Production optimized
-━E  ├── docker-compose.yml # Service orchestration
-━E  ├── compose.yaml       # Alternative compose
-━E  ├── compose.debug.yaml # Debug compose
-━E  └── .dockerignore      # Docker ignore rules
-━E├── deployment/            # Deployment guides
-━E  ├── DEPLOYMENT.md      # General deployment
-━E  ├── PRODUCTION_DEPLOY_CHECKLIST.md
-━E  ├── ENTERPRISE_CHECKLIST.md
-━E  └── DOCKER_SETUP_GUIDE.md
-━E└── .env.example           # Environment variables template
+│   ├── tsconfig.json      # TypeScript configuration
+│   ├── webpack.config.js  # Build configuration
+│   ├── biome.json         # Linter/formatter config
+│   ├── playwright.config.ts # E2E test config
+│   └── prisma.config.ts   # Prisma configuration
+│
+├── docker/                # Docker configurations
+│   ├── Dockerfile         # Development Dockerfile
+│   ├── Dockerfile.production # Production optimized
+│   ├── docker-compose.yml # Service orchestration
+│   ├── compose.yaml       # Alternative compose
+│   ├── compose.debug.yaml # Debug compose
+│   └── .dockerignore      # Docker ignore rules
+│
+├── deployment/            # Deployment guides
+│   ├── DEPLOYMENT.md      # General deployment
+│   ├── PRODUCTION_DEPLOY_CHECKLIST.md
+│   ├── ENTERPRISE_CHECKLIST.md
+│   └── DOCKER_SETUP_GUIDE.md
+│
+└── .env.example           # Environment variables template
 ```
 
 ### 🔧 dev/ - Development Tools (Hidden from production)
@@ -81,13 +86,13 @@ native/                   # Native Node.js bindings
 python/                   # FastAPI RAG service
 ```
 
-### ☁E��ECloud Deployment
+### ☁️ Cloud Deployment
 
 ```
 cloud/
 ├── aws/                  # AWS CloudFormation
-━E  ├── cloudformation.yaml
-━E  └── deploy.sh
+│   ├── cloudformation.yaml
+│   └── deploy.sh
 └── gcp/                  # Google Cloud Platform
     ├── app.yaml
     ├── cloudbuild.yaml
@@ -96,7 +101,7 @@ cloud/
 
 ## Why This Structure?
 
-### ✁EBenefits
+### ✅ Benefits
 
 1. **Clean Root**: Only essential files visible at first glance
 2. **Security**: Sensitive configs hidden in subdirectories
@@ -149,5 +154,5 @@ docs/internal/          # Internal reports
 
 ---
 
-**Last Updated**: 2025-12-04  
+**Last Updated**: 2025-12-04
 **Version**: 1.0.51

@@ -1,54 +1,59 @@
-# Elysia AI 繝・・繝ｭ繧､繝｡繝ｳ繝医ぎ繧､繝・
-## 逶ｮ谺｡
+# Elysia AI デプロイメントガイド
 
-1. [繧ｷ繧ｹ繝・Β隕∽ｻｶ](#繧ｷ繧ｹ繝・Β隕∽ｻｶ)
-2. [迺ｰ蠅・､画焚險ｭ螳咯(#迺ｰ蠅・､画焚險ｭ螳・
-3. [繝・・繧ｿ繝吶・繧ｹ繧ｻ繝・ヨ繧｢繝・・](#繝・・繧ｿ繝吶・繧ｹ繧ｻ繝・ヨ繧｢繝・・)
-4. [Redis繧ｻ繝・ヨ繧｢繝・・](#redis繧ｻ繝・ヨ繧｢繝・・)
-5. [繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繝・・繝ｭ繧､](#繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繝・・繝ｭ繧､)
-6. [Docker繝・・繝ｭ繧､](#docker繝・・繝ｭ繧､)
-7. [逶｣隕悶→驕狗畑](#逶｣隕悶→驕狗畑)
-8. [繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ](#繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ)
+## 目次
+
+1. [システム要件](#システム要件)
+2. [環境変数設定](#環境変数設定)
+3. [データベースセットアップ](#データベースセットアップ)
+4. [Redisセットアップ](#redisセットアップ)
+5. [アプリケーションデプロイ](#アプリケーションデプロイ)
+6. [Dockerデプロイ](#dockerデプロイ)
+7. [監視と運用](#監視と運用)
+8. [トラブルシューティング](#トラブルシューティング)
 
 ---
 
-## 繧ｷ繧ｹ繝・Β隕∽ｻｶ
+## システム要件
 
-### 譛�蟆剰ｦ∽ｻｶ
+### 最小要件
 
-- **CPU**: 2繧ｳ繧｢
+- **CPU**: 2コア
 - **RAM**: 4GB
-- **繧ｹ繝医Ξ繝ｼ繧ｸ**: 20GB
+- **ストレージ**: 20GB
 - **OS**: Ubuntu 20.04+ / Windows Server 2019+ / macOS 11+
 
-### 謗ｨ螂ｨ隕∽ｻｶ
+### 推奨要件
 
-- **CPU**: 4繧ｳ繧｢莉･荳・- **RAM**: 8GB莉･荳・- **繧ｹ繝医Ξ繝ｼ繧ｸ**: 50GB SSD
+- **CPU**: 4コア以上
+- **RAM**: 8GB以上
+- **ストレージ**: 50GB SSD
 - **OS**: Ubuntu 22.04 LTS
 
-### 萓晏ｭ倥た繝輔ヨ繧ｦ繧ｧ繧｢
+### 依存ソフトウェア
 
-- **Bun**: 1.0.0+ (繝ｩ繝ｳ繧ｿ繧､繝�)
-- **PostgreSQL**: 14+ (繝・・繧ｿ繝吶・繧ｹ)
-- **Redis**: 7.0+ (繧ｭ繝｣繝・す繝･/繧ｻ繝・す繝ｧ繝ｳ)
-- **Node.js**: 18+ (繧ｪ繝励す繝ｧ繝ｳ - 髢狗匱迺ｰ蠅・
-- **Docker**: 24.0+ (繧ｳ繝ｳ繝・リ蛻ｩ逕ｨ譎・
-- **Nginx**: 1.20+ (繝ｪ繝舌・繧ｹ繝励Ο繧ｭ繧ｷ)
+- **Bun**: 1.0.0+ (ランタイム)
+- **PostgreSQL**: 14+ (データベース)
+- **Redis**: 7.0+ (キャッシュ/セッション)
+- **Node.js**: 18+ (オプション - 開発環境)
+- **Docker**: 24.0+ (コンテナ利用時)
+- **Nginx**: 1.20+ (リバースプロキシ)
 
 ---
 
-## 迺ｰ蠅・､画焚險ｭ螳・
-### 蠢・�育腸蠅・､画焚
+## 環境変数設定
+
+### 必須環境変数
 
 ```bash
-# 繧ｵ繝ｼ繝舌・險ｭ螳・PORT=3000
+# サーバー設定
+PORT=3000
 NODE_ENV=production
 
-# JWT隱崎ｨｼ
+# JWT認証
 JWT_SECRET=your-production-jwt-secret-minimum-32-characters
 JWT_REFRESH_SECRET=your-production-refresh-secret-minimum-32-characters
 
-# 繝・・繧ｿ繝吶・繧ｹ
+# データベース
 DATABASE_URL=postgresql://user:password@localhost:5432/elysia_ai
 DB_HOST=localhost
 DB_PORT=5432
@@ -67,17 +72,18 @@ MODEL_NAME=llama3.2
 # CORS
 ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 
-# 繝ｬ繝ｼ繝亥宛髯・RATE_LIMIT_RPM=60
+# レート制限
+RATE_LIMIT_RPM=60
 
-# 隱崎ｨｼ諠・�ｱ
+# 認証情報
 AUTH_USERNAME=admin
 AUTH_PASSWORD=secure_admin_password
 ```
 
-### 繧ｪ繝励す繝ｧ繝ｳ迺ｰ蠅・､画焚
+### オプション環境変数
 
 ```bash
-# 繝｡繝ｼ繝ｫ騾夂衍
+# メール通知
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
@@ -87,52 +93,57 @@ SMTP_FROM=noreply@yourdomain.com
 # Webhook
 WEBHOOK_SECRET=webhook-secret-key
 
-# 繝輔ぃ繧､繝ｫ繧｢繝・・繝ｭ繝ｼ繝・MAX_FILE_SIZE=10485760  # 10MB
+# ファイルアップロード
+MAX_FILE_SIZE=10485760  # 10MB
 UPLOAD_DIR=./uploads
 
-# 繝ｭ繧ｰ險ｭ螳・LOG_LEVEL=info
+# ログ設定
+LOG_LEVEL=info
 LOG_DIR=./logs
 
-# 繝舌ャ繧ｯ繧｢繝・・
+# バックアップ
 BACKUP_DIR=./backups
 BACKUP_RETENTION_DAYS=30
 
-# 逶｣隕・HEALTH_CHECK_INTERVAL=60000  # 60遘・```
-
-### .env 繝輔ぃ繧､繝ｫ菴懈・
-
-```bash
-# 譛ｬ逡ｪ迺ｰ蠅・畑 .env 繝輔ぃ繧､繝ｫ
-cp .env.example .env
-nano .env  # 縺ｾ縺溘・ vim .env
+# 監視
+HEALTH_CHECK_INTERVAL=60000  # 60秒
 ```
 
-### 迺ｰ蠅・､画焚讀懆ｨｼ
+### .env ファイル作成
 
 ```bash
-# 襍ｷ蜍募燕縺ｫ迺ｰ蠅・､画焚繧呈､懆ｨｼ
+# 本番環境用 .env ファイル
+cp .env.example .env
+nano .env  # または vim .env
+```
+
+### 環境変数検証
+
+```bash
+# 起動前に環境変数を検証
 bun run src/lib/env-validator.ts
 ```
 
 ---
 
-## 繝・・繧ｿ繝吶・繧ｹ繧ｻ繝・ヨ繧｢繝・・
+## データベースセットアップ
 
-### PostgreSQL 繧､繝ｳ繧ｹ繝医・繝ｫ (Ubuntu)
+### PostgreSQL インストール (Ubuntu)
 
 ```bash
-# PostgreSQL 14 繧､繝ｳ繧ｹ繝医・繝ｫ
+# PostgreSQL 14 インストール
 sudo apt update
 sudo apt install postgresql-14 postgresql-contrib
 
-# 繧ｵ繝ｼ繝薙せ髢句ｧ・sudo systemctl start postgresql
+# サービス開始
+sudo systemctl start postgresql
 sudo systemctl enable postgresql
 ```
 
-### 繝・・繧ｿ繝吶・繧ｹ菴懈・
+### データベース作成
 
 ```bash
-# PostgreSQL 繝ｦ繝ｼ繧ｶ繝ｼ菴懈・
+# PostgreSQL ユーザー作成
 sudo -u postgres psql
 postgres=# CREATE USER elysia_user WITH PASSWORD 'secure_password_here';
 postgres=# CREATE DATABASE elysia_ai OWNER elysia_user;
@@ -140,16 +151,17 @@ postgres=# GRANT ALL PRIVILEGES ON DATABASE elysia_ai TO elysia_user;
 postgres=# \q
 ```
 
-### 繧ｹ繧ｭ繝ｼ繝槫・譛溷喧
+### スキーマ初期化
 
 ```bash
-# 繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ螳溯｡・psql -U elysia_user -d elysia_ai -f sql/schema.sql
+# マイグレーション実行
+psql -U elysia_user -d elysia_ai -f sql/schema.sql
 ```
 
-### 繝・・繝悶Ν荳�隕ｧ
+### テーブル一覧
 
 ```sql
--- 繝輔ぅ繝ｼ繝峨ヰ繝・け
+-- フィードバック
 CREATE TABLE feedback (
     id SERIAL PRIMARY KEY,
     user_id TEXT,
@@ -159,7 +171,7 @@ CREATE TABLE feedback (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 繝翫Ξ繝・ず繝吶・繧ｹ
+-- ナレッジベース
 CREATE TABLE knowledge (
     id SERIAL PRIMARY KEY,
     user_id TEXT,
@@ -168,7 +180,7 @@ CREATE TABLE knowledge (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 繝ｦ繝ｼ繧ｶ繝ｼ
+-- ユーザー
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
@@ -177,7 +189,7 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 繧ｻ繝・す繝ｧ繝ｳ
+-- セッション
 CREATE TABLE sessions (
     id TEXT PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -185,7 +197,7 @@ CREATE TABLE sessions (
     data JSONB
 );
 
--- API繧ｭ繝ｼ
+-- APIキー
 CREATE TABLE api_keys (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -195,7 +207,7 @@ CREATE TABLE api_keys (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 逶｣譟ｻ繝ｭ繧ｰ
+-- 監査ログ
 CREATE TABLE audit_logs (
     id SERIAL PRIMARY KEY,
     timestamp TIMESTAMP DEFAULT NOW(),
@@ -210,14 +222,14 @@ CREATE TABLE audit_logs (
 );
 ```
 
-### 繧､繝ｳ繝・ャ繧ｯ繧ｹ菴懈・
+### インデックス作成
 
 ```bash
-# 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ譛�驕ｩ蛹悶・縺溘ａ繧､繝ｳ繝・ャ繧ｯ繧ｹ繧剃ｽ懈・
+# パフォーマンス最適化のためインデックスを作成
 bun run scripts/create-indexes.ts
 ```
 
-縺ｾ縺溘・謇句虚縺ｧ:
+または手動で:
 
 ```sql
 -- Feedback indexes
@@ -238,9 +250,10 @@ CREATE INDEX idx_audit_timestamp ON audit_logs(timestamp DESC);
 CREATE INDEX idx_audit_composite ON audit_logs(user_id, action, timestamp DESC);
 ```
 
-### 繝舌ャ繧ｯ繧｢繝・・險ｭ螳・
+### バックアップ設定
+
 ```bash
-# 譌･谺｡繝舌ャ繧ｯ繧｢繝・・繧ｹ繧ｯ繝ｪ繝励ヨ
+# 日次バックアップスクリプト
 #!/bin/bash
 BACKUP_DIR=/var/backups/elysia
 DATE=$(date +%Y%m%d_%H%M%S)
@@ -248,123 +261,139 @@ DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p $BACKUP_DIR
 pg_dump -U elysia_user elysia_ai | gzip > $BACKUP_DIR/elysia_ai_$DATE.sql.gz
 
-# 30譌･莉･荳雁燕縺ｮ繝舌ャ繧ｯ繧｢繝・・繧貞炎髯､
+# 30日以上前のバックアップを削除
 find $BACKUP_DIR -name "*.sql.gz" -mtime +30 -delete
 ```
 
-cron險ｭ螳・
+cron設定:
 
 ```bash
 crontab -e
-# 豈取律蜊亥燕3譎ゅ↓繝舌ャ繧ｯ繧｢繝・・
+# 毎日午前3時にバックアップ
 0 3 * * * /path/to/backup-script.sh
 ```
 
 ---
 
-## Redis繧ｻ繝・ヨ繧｢繝・・
+## Redisセットアップ
 
-### Redis 繧､繝ｳ繧ｹ繝医・繝ｫ (Ubuntu)
+### Redis インストール (Ubuntu)
 
 ```bash
-# Redis 7.0 繧､繝ｳ繧ｹ繝医・繝ｫ
+# Redis 7.0 インストール
 sudo apt install redis-server
 
-# 險ｭ螳壹ヵ繧｡繧､繝ｫ邱ｨ髮・sudo nano /etc/redis/redis.conf
+# 設定ファイル編集
+sudo nano /etc/redis/redis.conf
 ```
 
-### Redis險ｭ螳・
+### Redis設定
+
 ```conf
 # /etc/redis/redis.conf
 
-# 繝代せ繝ｯ繝ｼ繝芽ｨｭ螳・requirepass your_redis_password_here
+# パスワード設定
+requirepass your_redis_password_here
 
-# 豌ｸ邯壼喧險ｭ螳・appendonly yes
+# 永続化設定
+appendonly yes
 appendfsync everysec
 
-# 繝｡繝｢繝ｪ蛻ｶ髯・maxmemory 2gb
+# メモリ制限
+maxmemory 2gb
 maxmemory-policy allkeys-lru
 
-# 繝阪ャ繝医Ρ繝ｼ繧ｯ
+# ネットワーク
 bind 127.0.0.1
 port 6379
 
-# 繧ｻ繧ｭ繝･繝ｪ繝・ぅ
+# セキュリティ
 protected-mode yes
 ```
 
-### Redis襍ｷ蜍・
+### Redis起動
+
 ```bash
 sudo systemctl restart redis-server
 sudo systemctl enable redis-server
 
-# 謗･邯壹ユ繧ｹ繝・redis-cli -a your_redis_password_here ping
+# 接続テスト
+redis-cli -a your_redis_password_here ping
 # => PONG
 ```
 
-### Redis繧ｯ繝ｩ繧ｹ繧ｿ (繧ｪ繝励す繝ｧ繝ｳ)
+### Redisクラスタ (オプション)
 
-譛ｬ逡ｪ迺ｰ蠅・〒縺ｯ鬮伜庄逕ｨ諤ｧ縺ｮ縺溘ａRedis繧ｯ繝ｩ繧ｹ繧ｿ繧呈耳螂ｨ:
+本番環境では高可用性のためRedisクラスタを推奨:
 
 ```bash
-# Redis Sentinel 縺ｾ縺溘・ Redis Cluster
-# 隧ｳ邏ｰ縺ｯ Redis 蜈ｬ蠑上ラ繧ｭ繝･繝｡繝ｳ繝亥盾辣ｧ
+# Redis Sentinel または Redis Cluster
+# 詳細は Redis 公式ドキュメント参照
 ```
 
 ---
 
-## 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繝・・繝ｭ繧､
+## アプリケーションデプロイ
 
-### 1. 繧ｽ繝ｼ繧ｹ繧ｳ繝ｼ繝牙叙蠕・
+### 1. ソースコード取得
+
 ```bash
 git clone https://github.com/yourusername/elysia-ai.git
 cd elysia-ai
 ```
 
-### 2. 萓晏ｭ倬未菫ゅう繝ｳ繧ｹ繝医・繝ｫ
+### 2. 依存関係インストール
 
 ```bash
-# Bun 繧､繝ｳ繧ｹ繝医・繝ｫ
+# Bun インストール
 curl -fsSL https://bun.sh/install | bash
 
-# 繝代ャ繧ｱ繝ｼ繧ｸ繧､繝ｳ繧ｹ繝医・繝ｫ
+# パッケージインストール
 bun install
 ```
 
-### 3. 繝薙Ν繝・
-```bash
-# 譛ｬ逡ｪ逕ｨ繝薙Ν繝・bun run build
+### 3. ビルド
 
-# 蜃ｺ蜉帷｢ｺ隱・ls -la dist/
+```bash
+# 本番用ビルド
+bun run build
+
+# 出力確認
+ls -la dist/
 ```
 
-### 4. 迺ｰ蠅・､画焚險ｭ螳・
+### 4. 環境変数設定
+
 ```bash
 cp .env.example .env.production
 nano .env.production
-# 荳願ｨ倥・迺ｰ蠅・､画焚繧定ｨｭ螳・```
+# 上記の環境変数を設定
+```
 
-### 5. 繝・・繧ｿ繝吶・繧ｹ蛻晄悄蛹・
+### 5. データベース初期化
+
 ```bash
-# 繧ｹ繧ｭ繝ｼ繝樔ｽ懈・
+# スキーマ作成
 psql -U elysia_user -d elysia_ai -f sql/schema.sql
 
-# 繧､繝ｳ繝・ャ繧ｯ繧ｹ菴懈・
+# インデックス作成
 bun run scripts/create-indexes.ts
 ```
 
-### 6. 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ襍ｷ蜍・
-```bash
-# 繝輔か繧｢繧ｰ繝ｩ繧ｦ繝ｳ繝牙ｮ溯｡・NODE_ENV=production bun run src/index.ts
+### 6. アプリケーション起動
 
-# 繝舌ャ繧ｯ繧ｰ繝ｩ繧ｦ繝ｳ繝牙ｮ溯｡・(PM2菴ｿ逕ｨ)
+```bash
+# フォアグラウンド実行
+NODE_ENV=production bun run src/index.ts
+
+# バックグラウンド実行 (PM2使用)
 npm install -g pm2
 pm2 start src/index.ts --interpreter bun --name elysia-ai
 pm2 save
 pm2 startup
 ```
 
-### PM2 險ｭ螳壹ヵ繧｡繧､繝ｫ
+### PM2 設定ファイル
 
 ```javascript
 // ecosystem.config.js
@@ -389,7 +418,7 @@ module.exports = {
 };
 ```
 
-襍ｷ蜍・
+起動:
 
 ```bash
 pm2 start ecosystem.config.js
@@ -397,7 +426,7 @@ pm2 start ecosystem.config.js
 
 ---
 
-## Docker繝・・繝ｭ繧､
+## Dockerデプロイ
 
 ### 1. Docker Compose
 
@@ -452,43 +481,58 @@ services:
 
 ---
 
-## 女・・Tauri 繝・せ繧ｯ繝医ャ繝励い繝励Μ縺ｮ繝薙Ν繝・
-ElysiaAI 縺ｮ繝・せ繧ｯ繝医ャ繝励け繝ｩ繧､繧｢繝ｳ繝医ｒ繝薙Ν繝峨☆繧区焔鬆・〒縺吶�・
-### 1. 貅門ｙ
-- **Rust**: [蜈ｬ蠑上・ Rust 繧､繝ｳ繧ｹ繝医・繝ｫ謇矩�・(https://www.rust-lang.org/tools/install)縺ｫ蠕薙▲縺ｦ縺上□縺輔＞縲・- **WebView2**: Windows 縺ｮ蝣ｴ蜷医・ WebView2 繝ｩ繝ｳ繧ｿ繧､繝�縺悟ｿ・ｦ√〒縺吶�・
-### 2. 繝薙Ν繝牙ｮ溯｡・```bash
-# 繧ｯ繝ｩ繧､繧｢繝ｳ繝医・繝薙Ν繝・(src-tauri 荳九〒螳溯｡・
+## 🏗️ Tauri デスクトップアプリのビルド
+
+ElysiaAI のデスクトップクライアントをビルドする手順です。
+
+### 1. 準備
+- **Rust**: [公式の Rust インストール手順](https://www.rust-lang.org/tools/install)に従ってください。
+- **WebView2**: Windows の場合は WebView2 ランタイムが必要です。
+
+### 2. ビルド実行
+```bash
+# クライアントのビルド (src-tauri 下で実行)
 cd src-tauri
 cargo build --release
 
-# 縺ｾ縺溘・ Bun 繧剃ｽｿ逕ｨ
+# または Bun を使用
 bun run build:desktop
 ```
-繝薙Ν繝峨＆繧後◆繝舌う繝翫Μ縺ｯ `src-tauri/target/release/` 縺ｫ逕滓・縺輔ｌ縺ｾ縺吶�・
+ビルドされたバイナリは `src-tauri/target/release/` に生成されます。
+
 ---
 
-## 正 Docker Compose 縺ｫ繧医ｋ荳�諡ｬ襍ｷ蜍・
-Docker Compose 繧剃ｽｿ逕ｨ縺励※縲√☆縺ｹ縺ｦ縺ｮ萓晏ｭ倥ヤ繝ｼ繝ｫ・・ilvus, VOICEVOX遲会ｼ峨ｒ蜷ｫ繧�繧ｹ繧ｿ繝・け繧剃ｸ�諡ｬ縺ｧ襍ｷ蜍輔☆繧区婿豕輔〒縺吶�・
+## 🐳 Docker Compose による一括起動
+
+Docker Compose を使用して、すべての依存ツール（Milvus, VOICEVOX等）を含むスタックを一括で起動する方法です。
+
 ```bash
-# 繝励Ο繧ｸ繧ｧ繧ｯ繝医Ν繝ｼ繝医〒螳溯｡・docker-compose up -d
+# プロジェクトルートで実行
+docker-compose up -d
 ```
 
-`docker-compose.yml` 縺ｫ縺ｯ莉･荳九・繧ｵ繝ｼ繝薙せ縺悟性縺ｾ繧後※縺・∪縺呻ｼ・- **Elysia Server**: Bun/ElysiaJS 繝舌ャ繧ｯ繧ｨ繝ｳ繝・- **AI Kernel**: FastAPI/Python 繧ｫ繝ｼ繝阪Ν
-- **Milvus**: 繝吶け繝医Ν繝・・繧ｿ繝吶・繧ｹ
-- **Redis**: 繝ｬ繝ｼ繝亥宛髯舌・繧ｭ繝｣繝・す繝･
-- **VOICEVOX**: 髻ｳ螢ｰ蜷域・繧ｨ繝ｳ繧ｸ繝ｳ・医が繝励す繝ｧ繝ｳ・・
+`docker-compose.yml` には以下のサービスが含まれています：
+- **Elysia Server**: Bun/ElysiaJS バックエンド
+- **AI Kernel**: FastAPI/Python カーネル
+- **Milvus**: ベクトルデータベース
+- **Redis**: レート制限・キャッシュ
+- **VOICEVOX**: 音声合成エンジン（オプション）
+
 ---
 
-## ｦ� Rust (Shield Agent) 縺ｮ繧ｳ繝ｳ繝代う繝ｫ
+## 🦀 Rust (Shield Agent) のコンパイル
 
-繧ｻ繧ｭ繝･繝ｪ繝・ぅ髦ｲ螢√→縺励※讖溯・縺吶ｋ Shield Agent 縺ｮ繝薙Ν繝画焔鬆・〒縺吶�・
+セキュリティ防壁として機能する Shield Agent のビルド手順です。
+
 ```bash
 cd packages/shield
 cargo build --release
 ```
-逕滓・縺輔ｌ縺溘ヰ繧､繝翫Μ繧・`bin/` 繝・ぅ繝ｬ繧ｯ繝医Μ縺ｫ驟咲ｽｮ縺吶ｋ縺薙→縺ｧ縲＾S縺瑚ｵｷ蜍墓凾縺ｫ閾ｪ蜍慕噪縺ｫ繝ｭ繝ｼ繝峨＠縺ｾ縺吶�・```
+生成されたバイナリを `bin/` ディレクトリに配置することで、OSが起動時に自動的にロードします。
+```
 
-### 2. Nginx險ｭ螳・
+### 2. Nginx設定
+
 ```nginx
 # nginx.conf
 upstream elysia_backend {
@@ -539,43 +583,51 @@ server {
 }
 ```
 
-### 3. 繝・・繝ｭ繧､螳溯｡・
+### 3. デプロイ実行
+
 ```bash
-# 繝薙Ν繝・襍ｷ蜍・docker-compose up -d
+# ビルド&起動
+docker-compose up -d
 
-# 繝ｭ繧ｰ遒ｺ隱・docker-compose logs -f app
+# ログ確認
+docker-compose logs -f app
 
-# 蛛懈ｭ｢
+# 停止
 docker-compose down
 
-# 蜀崎ｵｷ蜍・docker-compose restart app
+# 再起動
+docker-compose restart app
 ```
 
 ---
 
-## 逶｣隕悶→驕狗畑
+## 監視と運用
 
-### 繝倥Ν繧ｹ繝√ぉ繝・け
+### ヘルスチェック
 
 ```bash
-# 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繝倥Ν繧ｹ繝√ぉ繝・け
+# アプリケーションヘルスチェック
 curl http://localhost:3000/health
 
-# 繝・・繧ｿ繝吶・繧ｹ謗･邯夂｢ｺ隱・curl http://localhost:3000/health/db
+# データベース接続確認
+curl http://localhost:3000/health/db
 
-# Redis謗･邯夂｢ｺ隱・curl http://localhost:3000/health/redis
+# Redis接続確認
+curl http://localhost:3000/health/redis
 ```
 
-### 繝｡繝医Μ繧ｯ繧ｹ蜿朱寔
+### メトリクス収集
 
 ```bash
-# Prometheus繝｡繝医Μ繧ｯ繧ｹ
+# Prometheusメトリクス
 curl http://localhost:3000/metrics
 ```
 
-### 繝ｭ繧ｰ邂｡逅・
+### ログ管理
+
 ```bash
-# 繝ｭ繧ｰ繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ險ｭ螳・# /etc/logrotate.d/elysia-ai
+# ログローテーション設定
+# /etc/logrotate.d/elysia-ai
 /var/log/elysia-ai/*.log {
     daily
     rotate 30
@@ -590,80 +642,119 @@ curl http://localhost:3000/metrics
 }
 ```
 
-### 逶｣隕悶ヤ繝ｼ繝ｫ謗ｨ螂ｨ
+### 監視ツール推奨
 
-- **PM2**: 繝励Ο繧ｻ繧ｹ逶｣隕・- **Prometheus + Grafana**: 繝｡繝医Μ繧ｯ繧ｹ蜿ｯ隕門喧
-- **ELK Stack**: 繝ｭ繧ｰ髮・ｴ・・蛻・梵
-- **Uptime Kuma**: 繧｢繝・・繧ｿ繧､繝�逶｣隕・
+- **PM2**: プロセス監視
+- **Prometheus + Grafana**: メトリクス可視化
+- **ELK Stack**: ログ集約・分析
+- **Uptime Kuma**: アップタイム監視
+
 ---
 
-## 繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ
+## トラブルシューティング
 
-### 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ縺瑚ｵｷ蜍輔＠縺ｪ縺・
-```bash
-# 繝ｭ繧ｰ遒ｺ隱・pm2 logs elysia-ai
-
-# 迺ｰ蠅・､画焚遒ｺ隱・pm2 env 0
-
-# 繝昴・繝井ｽｿ逕ｨ迥ｶ豕∫｢ｺ隱・sudo netstat -tulpn | grep 3000
-```
-
-### 繝・・繧ｿ繝吶・繧ｹ謗･邯壹お繝ｩ繝ｼ
+### アプリケーションが起動しない
 
 ```bash
-# PostgreSQL襍ｷ蜍慕｢ｺ隱・sudo systemctl status postgresql
+# ログ確認
+pm2 logs elysia-ai
 
-# 謗･邯壹ユ繧ｹ繝・psql -U elysia_user -d elysia_ai -h localhost
+# 環境変数確認
+pm2 env 0
 
-# 隱崎ｨｼ險ｭ螳夂｢ｺ隱・sudo nano /etc/postgresql/14/main/pg_hba.conf
+# ポート使用状況確認
+sudo netstat -tulpn | grep 3000
 ```
 
-### Redis謗･邯壹お繝ｩ繝ｼ
+### データベース接続エラー
 
 ```bash
-# Redis襍ｷ蜍慕｢ｺ隱・sudo systemctl status redis-server
+# PostgreSQL起動確認
+sudo systemctl status postgresql
 
-# 謗･邯壹ユ繧ｹ繝・redis-cli -a your_password ping
+# 接続テスト
+psql -U elysia_user -d elysia_ai -h localhost
 
-# 繝ｭ繧ｰ遒ｺ隱・sudo tail -f /var/log/redis/redis-server.log
+# 認証設定確認
+sudo nano /etc/postgresql/14/main/pg_hba.conf
 ```
 
-### WebSocket謗･邯壼､ｱ謨・
-1. Nginx險ｭ螳壹ｒ遒ｺ隱・2. 繝輔ぃ繧､繧｢繧ｦ繧ｩ繝ｼ繝ｫ險ｭ螳壹ｒ遒ｺ隱・3. 繝励Ο繧ｭ繧ｷ繧ｿ繧､繝�繧｢繧ｦ繝郁ｨｭ螳壹ｒ遒ｺ隱・
-### 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ蝠城｡・
+### Redis接続エラー
+
 ```bash
-# 繧ｯ繧ｨ繝ｪ邨ｱ險育｢ｺ隱・curl http://localhost:3000/admin/query-stats
+# Redis起動確認
+sudo systemctl status redis-server
 
-# 驕・＞繧ｯ繧ｨ繝ｪ遒ｺ隱・curl http://localhost:3000/admin/slow-queries
+# 接続テスト
+redis-cli -a your_password ping
 
-# Redis邨ｱ險育｢ｺ隱・redis-cli INFO stats
+# ログ確認
+sudo tail -f /var/log/redis/redis-server.log
+```
+
+### WebSocket接続失敗
+
+1. Nginx設定を確認
+2. ファイアウォール設定を確認
+3. プロキシタイムアウト設定を確認
+
+### パフォーマンス問題
+
+```bash
+# クエリ統計確認
+curl http://localhost:3000/admin/query-stats
+
+# 遅いクエリ確認
+curl http://localhost:3000/admin/slow-queries
+
+# Redis統計確認
+redis-cli INFO stats
 ```
 
 ---
 
-## 繧ｻ繧ｭ繝･繝ｪ繝・ぅ繝√ぉ繝・け繝ｪ繧ｹ繝・
-- [ ] JWT_SECRET 繧貞ｼｷ蜉帙↑繧ゅ・縺ｫ螟画峩
-- [ ] 繝・・繧ｿ繝吶・繧ｹ繝代せ繝ｯ繝ｼ繝峨ｒ蠑ｷ蜉帙↑繧ゅ・縺ｫ螟画峩
-- [ ] Redis繝代せ繝ｯ繝ｼ繝峨ｒ險ｭ螳・- [ ] HTTPS 繧呈怏蜉ｹ蛹・(Let's Encrypt謗ｨ螂ｨ)
-- [ ] 繝輔ぃ繧､繧｢繧ｦ繧ｩ繝ｼ繝ｫ繧定ｨｭ螳・(UFW, iptables)
-- [ ] SSH骰ｵ隱崎ｨｼ繧剃ｽｿ逕ｨ
-- [ ] 荳崎ｦ√↑繝昴・繝医ｒ髢峨§繧・- [ ] 繧ｻ繧ｭ繝･繝ｪ繝・ぅ繧｢繝・・繝・・繝医ｒ螳壽悄逧・↓螳溯｡・- [ ] 逶｣譟ｻ繝ｭ繧ｰ繧貞ｮ壽悄逧・↓繝ｬ繝薙Η繝ｼ
-- [ ] 繝舌ャ繧ｯ繧｢繝・・繧貞ｮ壽悄逧・↓繝・せ繝・
----
+## セキュリティチェックリスト
 
-## 譛ｬ逡ｪ迺ｰ蠅・メ繧ｧ繝・け繝ｪ繧ｹ繝・
-- [ ] 迺ｰ蠅・､画焚繧偵☆縺ｹ縺ｦ險ｭ螳・- [ ] 繝・・繧ｿ繝吶・繧ｹ繧貞・譛溷喧
-- [ ] Redis繧定ｨｭ螳・- [ ] 繧､繝ｳ繝・ャ繧ｯ繧ｹ繧剃ｽ懈・
-- [ ] Nginx/繝ｪ繝舌・繧ｹ繝励Ο繧ｭ繧ｷ繧定ｨｭ螳・- [ ] SSL險ｼ譏取嶌繧偵う繝ｳ繧ｹ繝医・繝ｫ
-- [ ] 繝輔ぃ繧､繧｢繧ｦ繧ｩ繝ｼ繝ｫ繧定ｨｭ螳・- [ ] PM2/Docker縺ｧ襍ｷ蜍・- [ ] 繝倥Ν繧ｹ繝√ぉ繝・け繧堤｢ｺ隱・- [ ] 繝ｭ繧ｰ繝ｭ繝ｼ繝・・繧ｷ繝ｧ繝ｳ繧定ｨｭ螳・- [ ] 繝舌ャ繧ｯ繧｢繝・・繧定ｨｭ螳・- [ ] 逶｣隕悶ヤ繝ｼ繝ｫ繧定ｨｭ螳・- [ ] 繝峨く繝･繝｡繝ｳ繝医ｒ譖ｴ譁ｰ
+- [ ] JWT_SECRET を強力なものに変更
+- [ ] データベースパスワードを強力なものに変更
+- [ ] Redisパスワードを設定
+- [ ] HTTPS を有効化 (Let's Encrypt推奨)
+- [ ] ファイアウォールを設定 (UFW, iptables)
+- [ ] SSH鍵認証を使用
+- [ ] 不要なポートを閉じる
+- [ ] セキュリティアップデートを定期的に実行
+- [ ] 監査ログを定期的にレビュー
+- [ ] バックアップを定期的にテスト
 
 ---
 
-## 繧ｵ繝昴・繝・
-蝠城｡後′逋ｺ逕溘＠縺溷�ｴ蜷・
+## 本番環境チェックリスト
 
-1. 繝ｭ繧ｰ繧堤｢ｺ隱・(`/logs` 縺ｾ縺溘・ `pm2 logs`)
-2. 繝倥Ν繧ｹ繝√ぉ繝・け繧貞ｮ溯｡・3. GitHub Issues縺ｧ蝣ｱ蜻・4. Discord繧ｳ繝溘Η繝九ユ繧｣縺ｧ雉ｪ蝠・
+- [ ] 環境変数をすべて設定
+- [ ] データベースを初期化
+- [ ] Redisを設定
+- [ ] インデックスを作成
+- [ ] Nginx/リバースプロキシを設定
+- [ ] SSL証明書をインストール
+- [ ] ファイアウォールを設定
+- [ ] PM2/Dockerで起動
+- [ ] ヘルスチェックを確認
+- [ ] ログローテーションを設定
+- [ ] バックアップを設定
+- [ ] 監視ツールを設定
+- [ ] ドキュメントを更新
+
 ---
 
-**繝・・繝ｭ繧､繝｡繝ｳ繝亥ｮ御ｺ・** 脂
+## サポート
+
+問題が発生した場合:
+
+1. ログを確認 (`/logs` または `pm2 logs`)
+2. ヘルスチェックを実行
+3. GitHub Issuesで報告
+4. Discordコミュニティで質問
+
+---
+
+**デプロイメント完了!** 🎉

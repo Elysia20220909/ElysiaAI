@@ -270,15 +270,15 @@ https://status.yourdomain.com
 
 ```
 Primary Region (US-East)
-笏懌楳笏� Load Balancer
-笏懌楳笏� API Server (3 instances)
-笏懌楳笏� Redis Cluster (3 nodes)
-笏披楳笏� Storage (Replicated)
+├── Load Balancer
+├── API Server (3 instances)
+├── Redis Cluster (3 nodes)
+└── Storage (Replicated)
 
 Backup Region (US-West)
-笏懌楳笏� Standby Load Balancer
-笏懌楳笏� API Server (2 instances)
-笏披楳笏� Synced Storage
+├── Standby Load Balancer
+├── API Server (2 instances)
+└── Synced Storage
 ```
 
 ### Failover Triggers
