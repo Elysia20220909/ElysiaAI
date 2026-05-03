@@ -1,6 +1,7 @@
-import json
 import unittest
+
 from python.lib.scrapling_bridge import extract_html
+
 
 class TestScraplingAdvanced(unittest.TestCase):
     def test_ai_targeted_extraction(self):
@@ -23,14 +24,14 @@ class TestScraplingAdvanced(unittest.TestCase):
         # Test standard extraction (currently extracts the whole body if main_content_only=False)
         result_std = extract_html(html, "http://example.com", main_content_only=False)
         self.assertIn("Core Content", result_std.text)
-        self.assertIn("Footer noise", result_std.text) 
+        self.assertIn("Footer noise", result_std.text)
 
         # Test AI-targeted extraction
         result_ai = extract_html(html, "http://example.com", main_content_only=True)
         self.assertIn("Core Content", result_ai.text)
         self.assertIn("This is the important part.", result_ai.text)
         self.assertNotIn("console.log", result_ai.text)
-        self.assertNotIn("Sidebar noise", result_ai.text) # Convertor cleans these up in AI-targeted mode
+        self.assertNotIn("Sidebar noise", result_ai.text)
         self.assertNotIn("Footer noise", result_ai.text)
         self.assertEqual(result_ai.engine, "scrapling-selector")
 
@@ -40,6 +41,7 @@ class TestScraplingAdvanced(unittest.TestCase):
         # Support both ATX (# Title) and Setext (Title\n====) styles
         self.assertTrue("# Title" in result.text or "Title\n=====" in result.text)
         self.assertIn("Paragraph", result.text)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 
 from pymilvus import DataType, MilvusClient
+
 from python.lib.vault_shroud import shroud
 
 
