@@ -15,12 +15,13 @@ ElysiaAIを、トニー・スタークの家にある司令室のようなロー
 | JSON terminal snapshot | `bun run ops -- --json` |
 | Native Lite Lab | `http://127.0.0.1:3000/native-lite.html` |
 
-The command center now shows service health, manual launch commands, host inventory, redacted recent log tails, and a short operator briefing.
+The command center now shows service health, manual launch commands, host inventory, repair diagnostics, an automatic improvement queue, redacted recent log tails, and a short operator briefing.
 
 ## Manual Startup
 
 ```powershell
 bun scripts/manage.ts setup
+bun scripts/manage.ts setup-db
 bun scripts/manage.ts setup-python
 bun scripts/manage.ts dev:lite
 bun scripts/manage.ts native-lite
@@ -48,7 +49,25 @@ VOICEVOX and Open-LLM-VTuber should be started manually from their own applicati
 - Redis: optional cache and queue layer.
 - Tauri Desktop: local cockpit shell.
 - Host Inventory: OS, CPU, memory, runtime, PID, uptime, and repo root.
+- Repair Diagnostics: Prisma client readiness and Ollama model visibility.
+- Auto Improvement Queue: ranked next steps generated from health, diagnostics, host pressure, and log summaries.
 - Recent Local Logs: redacted tails from lite stack and runtime logs.
+
+## Home Server Roadmap
+
+See [E.L.I.S.I.A. Core Home Server Blueprint](./ELYSIA_HOME_SERVER_BLUEPRINT.md) for the implementation-oriented version of the Proxmox, Home Assistant, Ollama/Open WebUI, NAS, monitoring, VPN, and VLAN plan.
+
+The linked local-server plan maps cleanly to a staged ElysiaAI home lab:
+
+- Virtualization mothership: Proxmox VE or an equivalent VM host for separating services.
+- Home nervous system: Home Assistant OS for local devices, sensors, and notifications.
+- AI workbench: Ollama plus Open WebUI or an OpenAI-compatible local UI.
+- Memory and recovery: NAS, ZFS snapshots, VM backups, and restore drills.
+- Monitoring room: Uptime Kuma first, then Grafana, Prometheus, and Loki when the stack grows.
+- Defense layer: Tailscale for management access, VLAN separation for IoT, guest, server, and lab networks.
+- Lab sandbox: isolated security and experiment networks with no path back to daily devices or NAS.
+
+For ElysiaAI, the next useful implementation step is not direct home automation. It is a local readiness surface that can report backup, VPN, disk, model, and network-segmentation state before any integration is allowed to control something.
 
 ## Safety Rules
 
@@ -56,12 +75,13 @@ VOICEVOX and Open-LLM-VTuber should be started manually from their own applicati
 - No hidden background scheduler.
 - No device or game input automation.
 - No automatic companion launch.
+- Automatic improvement suggestions are recommendations only; commands are displayed for manual execution.
 - Local-first secrets and logs.
 - Status endpoints report state; they do not perform remote control.
 
 ## Next Build Steps
 
-- Add disk, GPU, and model inventory cards.
+- Add disk, GPU, model, backup, VPN, and network inventory cards.
 - Add local-only wake word UI state without automatic microphone activation.
 - Add a desktop tray indicator for Elysia Core readiness.
 - Add a model switcher that writes configuration only after explicit confirmation.
