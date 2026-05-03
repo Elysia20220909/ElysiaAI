@@ -98,6 +98,8 @@ export const config = {
 	logCompressionEnabled: getEnv("LOG_COMPRESSION_ENABLED", "false") === "true",
 	logLevel: getEnv("LOG_LEVEL", "info"),
 	debugSql: getEnv("DEBUG_SQL", "false") === "true",
+	sqlitePath: getEnv("ELYSIA_SQLITE_PATH", ""),
+	pythonCommand: getEnv("ELYSIA_PYTHON", getEnv("PYTHON", "python")),
 
 	// Backup and scheduled jobs
 	autoBackupEnabled: getEnv("AUTO_BACKUP_ENABLED", "false") === "true",

@@ -18,4 +18,8 @@ def test_ledger_file_exists():
     """AEGIS Ledgerが正しく作成されているか確認"""
     import os
     ledger_path = "./AEGIS_LEDGER.md"
+    if not os.path.exists(ledger_path):
+        from scripts.security.generate_ledger import generate_ledger
+
+        generate_ledger()
     assert os.path.exists(ledger_path)

@@ -5,12 +5,92 @@
 
 import { Database } from "bun:sqlite";
 import { randomUUID } from "node:crypto";
-import { join } from "node:path";
+import { mkdirSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import bcryptjs from "bcryptjs";
+import { config } from "../../../../src/config.ts";
 
 // SQLite データベース接続 (Sovereign Local Mode)
-const dbPath = join(import.meta.dir, "../../prisma/dev.db");
+const dbPath = resolve(
+	config.sqlitePath || resolve(import.meta.dir, "../../../../prisma/dev.db"),
+);
+mkdirSync(dirname(dbPath), { recursive: true });
 const db = new Database(dbPath);
+db.exec("PRAGMA foreign_keys = ON");
+
+function ensureSchema(): void {
+	db.exec(`
+CREATE TABLE IF NOT EXISTS users (
+	id TEXT NOT NULL PRIMARY KEY,
+	username TEXT NOT NULL UNIQUE,
+	passwordHash TEXT NOT NULL,
+	role TEXT NOT NULL DEFAULT 'user',
+	createdAt TEXT NOT NULL,
+	updatedAt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+	id TEXT NOT NULL PRIMARY KEY,
+	token TEXT NOT NULL UNIQUE,
+	userId TEXT NOT NULL,
+	expiresAt TEXT NOT NULL,
+	createdAt TEXT NOT NULL,
+	revoked INTEGER NOT NULL DEFAULT 0,
+	FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS chat_sessions (
+	id TEXT NOT NULL PRIMARY KEY,
+	userId TEXT,
+	mode TEXT NOT NULL DEFAULT 'normal',
+	createdAt TEXT NOT NULL,
+	updatedAt TEXT NOT NULL,
+	FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+	id TEXT NOT NULL PRIMARY KEY,
+	sessionId TEXT NOT NULL,
+	role TEXT NOT NULL,
+	content TEXT NOT NULL,
+	createdAt TEXT NOT NULL,
+	FOREIGN KEY (sessionId) REFERENCES chat_sessions(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS feedbacks (
+	id TEXT NOT NULL PRIMARY KEY,
+	userId TEXT,
+	query TEXT NOT NULL,
+	answer TEXT NOT NULL,
+	rating TEXT NOT NULL,
+	reason TEXT,
+	createdAt TEXT NOT NULL,
+	FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_base (
+	id TEXT NOT NULL PRIMARY KEY,
+	userId TEXT,
+	content TEXT NOT NULL,
+	topic TEXT,
+	verified INTEGER NOT NULL DEFAULT 0,
+	createdAt TEXT NOT NULL,
+	updatedAt TEXT NOT NULL,
+	FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS voice_logs (
+	id TEXT NOT NULL PRIMARY KEY,
+	username TEXT,
+	voiceText TEXT NOT NULL,
+	language TEXT NOT NULL,
+	synthesisType TEXT,
+	createdAt TEXT NOT NULL
+);
+`);
+}
+
+ensureSchema();
 
 // ============ ユーザー操作 ============
 

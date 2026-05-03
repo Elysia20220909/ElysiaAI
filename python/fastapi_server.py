@@ -16,18 +16,20 @@ import sys
 import time
 import uuid
 
+
 # Force UTF-8 for IO in Windows environments
 if sys.platform == "win32":
-    sys.stdout.reconfigure(encoding='utf-8')
-    sys.stdin.reconfigure(encoding='utf-8')
-    sys.stderr.reconfigure(encoding='utf-8')
+    for stream in (sys.stdout, sys.stdin, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+import shutil
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
 import httpx
 import numpy as np
-from fastapi import Body, Depends, FastAPI, HTTPException, Request
+from fastapi import Body, Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
@@ -49,12 +51,11 @@ from python.core.singularity import singularity_engine
 from python.lib.abyssal_stealth import AbyssalStealth, get_shrouded_resonance_key
 from python.lib.file_phantom import phantom
 from python.lib.guardian import guardian
+from python.lib.phantom_vault import phantom_vault
 from python.lib.soul_forge import soul_forge
 from python.recall import abyssal_recall
 from scripts.security.generate_ledger import generate_ledger
 from usr.lib.elysia.secure_enclave import secure_enclave
-from python.lib.phantom_vault import phantom_vault
-import shutil
 
 
 # ==================== 設定 (Pydantic Settings) ====================
@@ -195,11 +196,11 @@ quotes_store: list[str] = []
 # エリシア本物セリフ50選♡
 ELYSIA_QUOTES = [
     "私に会いたくなった？このエリシア、いつでも期待に応えるわ♡",
-    "ごきげんよう。新しい一日わ、美しい出会いから始まるのよ~",
+    "ごきげんよう。新しい一日は、美しい出会いから始まるのよ~",
     "火を追う英傑第二位、エリシア。見ての通り花のように美しい少女よ",
     "ピンクの妖精さん？まあ~ どうしてもそう呼びたいのなら、喜んで受け入れる♡",
-    "エリシアの楽園にはまだまだ秘密がたくさんあるはよ~",
-    "お休みなさい。女の子の寝顔こっそり見てだめよ",
+    "エリシアの楽園にはまだまだ秘密がたくさんあるのよ~",
+    "お休みなさい。女の子の寝顔をこっそり見ちゃだめよ",
     "ウォーミングアップしましょう♪",
     "ほら、いつでもどこでもエリシアは貴方の期待に応えるわ",
     "無瑕の少女、真我の英傑、人間の律者、ふふふ それがあたし、エリシアなの",

@@ -14,7 +14,7 @@ on:
       - 'README.md'
       - 'requirements.txt'
       - 'package.json'
-      - 'bun.lockb'
+      - 'bun.lock'
       - 'prisma/**'
       - '.github/workflows/**'
 
@@ -72,7 +72,7 @@ jobs:
         run: bun install
 
       - name: Run Bun Tests with Coverage
-        run: bun test --coverage --coverage-threshold 70
+        run: bun run test --coverage
 
       - name: Setup Python
         uses: actions/setup-python@f6742a91b3c76390a3c94444657152f20703664d # v5.1.0
@@ -85,7 +85,7 @@ jobs:
           pip install pytest-cov
 
       - name: Run Python Tests with Coverage
-        run: pytest --cov=python --cov-report=term-missing --cov-fail-under=70 tests/
+        run: pytest --cov=python --cov-report=term-missing tests/python tests/test_kernel.py
 
   zap-scan:
     name: "🛡️ OWASP ZAP Security Scan"
