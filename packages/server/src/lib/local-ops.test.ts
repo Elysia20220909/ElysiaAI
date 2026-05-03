@@ -65,6 +65,73 @@ describe("local ops overview", () => {
 			"ollama-models",
 		]);
 		expect(overview.briefing.length).toBeGreaterThan(0);
+		expect(overview.homeServer.status).toBe("attention");
+		expect(overview.homeServer.score).toBeGreaterThanOrEqual(0);
+		expect(overview.homeServer.score).toBeLessThanOrEqual(100);
+		expect(overview.homeServer.gates.map((entry) => entry.id)).toEqual([
+			"blueprint",
+			"backup",
+			"storage",
+			"secure-access",
+			"models",
+			"monitoring",
+			"network-plan",
+			"lab-isolation",
+		]);
+		expect(overview.homeServer.probes).toEqual([]);
+		expect(overview.future.codename).toBe("ElysiaFuturePath");
+		expect(overview.future.stages.map((entry) => entry.id)).toEqual([
+			"foundation",
+			"recovery",
+			"secure-mesh",
+			"observability",
+			"local-intelligence",
+			"ambient-home",
+			"multi-user-support",
+			"advanced-ci-cd",
+			"abyss-rtos",
+			"sovereign-mesh",
+		]);
+		expect(
+			overview.future.stages.find((entry) => entry.id === "multi-user-support")
+				?.track,
+		).toBe("planned");
+		expect(
+			overview.future.stages.find((entry) => entry.id === "advanced-ci-cd")
+				?.track,
+		).toBe("experimental");
+		expect(
+			overview.future.stages.find((entry) => entry.id === "abyss-rtos")?.track,
+		).toBe("experimental");
+		expect(
+			overview.future.stages.find((entry) => entry.id === "sovereign-mesh")
+				?.track,
+		).toBe("frontier");
+		expect(
+			overview.future.stages.filter((entry) => entry.status === "next"),
+		).toHaveLength(1);
+		expect(overview.clients.map((entry) => entry.id)).toEqual([
+			"windows",
+			"macos",
+			"linux",
+			"android",
+			"ios",
+		]);
+		expect(overview.secureMesh.codename).toBe("ElysiaSecureMesh");
+		expect(overview.secureMesh.routes.map((entry) => entry.id)).toEqual([
+			"windows",
+			"macos",
+			"linux",
+			"android",
+			"ios",
+		]);
+		expect(overview.secureMesh.guards.map((entry) => entry.id)).toEqual([
+			"private-vpn",
+			"public-port-lock",
+			"desktop-cockpit",
+			"mobile-pwa",
+			"manual-only",
+		]);
 		expect(overview.improvements.length).toBeGreaterThan(0);
 		expect(
 			overview.improvements.every((entry) => entry.safety === "manual-only"),
@@ -78,6 +145,100 @@ describe("local ops overview", () => {
 				(entry) => entry.command === "bun scripts/manage.ts dev:lite",
 			),
 		).toBe(true);
+	});
+
+	test("uses live home server probes when provided", () => {
+		const overview = buildLocalOpsOverview({
+			health: healthySnapshot,
+			generatedAt: now,
+			cwd: "C:\\repo\\ElysiaAI",
+			homeServerProbes: [
+				{
+					id: "backup",
+					label: "Backup And Restore Evidence",
+					status: "ready",
+					detail: "Latest backup evidence is 2d old",
+					evidence: [
+						"latest: backups/vm-101.tar.zst",
+						"runbook: docs/RUNBOOK_BACKUP.md",
+						"restore: backups/restore-drill.md",
+					],
+					checkedAt: now,
+				},
+				{
+					id: "storage",
+					label: "Repo Volume Capacity",
+					status: "ready",
+					detail: "40% used on the repo volume",
+					evidence: ["free: 500 GiB"],
+					checkedAt: now,
+				},
+				{
+					id: "secure-access",
+					label: "Tailscale Status",
+					status: "ready",
+					detail: "Tailscale is online for private management access",
+					evidence: ["backend: Running"],
+					checkedAt: now,
+				},
+				{
+					id: "public-ports",
+					label: "Management Port Exposure",
+					status: "ready",
+					detail: "Watched management listeners are loopback-only",
+					evidence: ["loopback: 127.0.0.1:3000"],
+					checkedAt: now,
+				},
+				{
+					id: "monitoring",
+					label: "Uptime Kuma",
+					status: "ready",
+					detail: "Uptime Kuma responded on the local monitoring port",
+					evidence: ["http://127.0.0.1:3001"],
+					checkedAt: now,
+				},
+				{
+					id: "network-plan",
+					label: "Network Segmentation Plan",
+					status: "ready",
+					detail: "VLAN intent and deny-by-default rules are documented",
+					evidence: [
+						"docs/ELYSIA_HOME_SERVER_BLUEPRINT.md",
+						"signal: VLAN intent",
+					],
+					checkedAt: now,
+				},
+				{
+					id: "lab-isolation",
+					label: "Lab Isolation Checklist",
+					status: "ready",
+					detail: "Lab isolation checklist is documented with deny rules",
+					evidence: ["docs/LAB_ISOLATION.md"],
+					checkedAt: now,
+				},
+			],
+		});
+		const gateById = new Map(
+			overview.homeServer.gates.map((gate) => [gate.id, gate]),
+		);
+		const meshGuardById = new Map(
+			overview.secureMesh.guards.map((guard) => [guard.id, guard]),
+		);
+
+		expect(overview.homeServer.probes).toHaveLength(7);
+		expect(gateById.get("backup")?.status).toBe("ready");
+		expect(gateById.get("storage")?.status).toBe("ready");
+		expect(gateById.get("secure-access")?.status).toBe("ready");
+		expect(gateById.get("monitoring")?.status).toBe("ready");
+		expect(gateById.get("network-plan")?.status).toBe("ready");
+		expect(gateById.get("lab-isolation")?.status).toBe("ready");
+		expect(overview.future.nextStageId).toBe("foundation");
+		expect(
+			overview.future.stages.find((stage) => stage.id === "secure-mesh")
+				?.status,
+		).toBe("ready");
+		expect(meshGuardById.get("private-vpn")?.status).toBe("ready");
+		expect(meshGuardById.get("public-port-lock")?.status).toBe("ready");
 	});
 
 	test("marks the stack ready when required services are online", () => {
