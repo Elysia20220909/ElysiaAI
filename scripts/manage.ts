@@ -27,6 +27,10 @@ Commands:
   lint          Run linting checks
   clean         Cleanup temporary files and artifacts
   check         Audit project for shortcomings and fragmentation
+  check-encoding
+                Verify UTF-8 text and mojibake markers
+  check-git-hygiene
+                Verify local secrets are not tracked
   stars         Witness the resonance of stars in the terminal ✨
 
 Options:
@@ -215,6 +219,12 @@ async function runCommand(command: string) {
 			console.log("🧹 Linting...");
 			await run("bun", ["run", "lint"]);
 			break;
+		case "check-encoding":
+			await run("bun", ["run", "check:encoding"]);
+			break;
+		case "check-git-hygiene":
+			await run("bun", ["run", "check:git-hygiene"]);
+			break;
 		case "clean": {
 			console.log("🧹 Cleaning up...");
 			const targets = ["dist", "build", ".next", "out", "coverage", ".turbo"];
@@ -229,6 +239,9 @@ async function runCommand(command: string) {
 		}
 		case "check": {
 			console.log("🔍 Auditing project for shortcomings...");
+			await run("bun", ["run", "check:git-hygiene"]);
+			await run("bun", ["run", "check:encoding"]);
+
 			const configCandidateFiles = walkFiles(
 				join("packages", "server", "src", "lib"),
 			)

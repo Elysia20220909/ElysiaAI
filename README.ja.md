@@ -23,14 +23,14 @@ ElysiaAIを最も速く体験する方法です。
 git clone git@github.com:Elysia20220909/ElysiaAI.git
 cd ElysiaAI
 
-# 環境設定と依存関係のインストール
-cp .env.example .env
-make install
+# 統合管理CLIによるセットアップ
+bun scripts/manage.ts setup
+bun scripts/manage.ts setup-python
 ```
 
 ### 3. 起動
 ```bash
-make boot
+bun scripts/manage.ts dev
 ```
 > [!TIP]
 > ブラウザで `http://localhost:3000` を開くと、Elysia Desktop環境が展開されます。
@@ -111,6 +111,37 @@ ElysiaAIは、以下の独自概念でユーザーの主権を保護します。
 | **AI Kernel** | Python 3.11, FastAPI, LangChain |
 | **Memory** | Milvus Lite, Sentence-Transformers |
 | **Security** | AEGIS Ledger (Multi-layer ICE), JWT |
+
+---
+
+## 🧪 品質ゲート
+
+Pull Request前に以下を実行してください。
+
+```bash
+bun run lint
+bun run test
+bun run typecheck
+bun run check:git-hygiene
+bun run check:encoding
+bun run security:glassworm -- --ci
+```
+
+`.env` や `.env.*` は追跡禁止です。追跡するのは `.env.example` のみです。
+文字化け検出は UTF-8 不正、置換文字、Windows-1252/CP932 系の典型的な崩れを検出します。
+
+---
+
+## 🎙️ Open-LLM-VTuber Bridge
+
+Open-LLM-VTuber は外部サービスとして起動し、ElysiaAI から Bridge API で検出・監視します。
+
+```dotenv
+OPEN_LLM_VTUBER_ENABLED=true
+OPEN_LLM_VTUBER_BASE_URL=http://127.0.0.1:12393
+```
+
+詳細は [Open-LLM-VTuber Bridge](./docs/OPEN_LLM_VTUBER_INTEGRATION.md) を参照してください。
 
 ---
 
