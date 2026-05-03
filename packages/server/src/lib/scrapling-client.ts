@@ -8,17 +8,34 @@ const SCRAPLING_BRIDGE = resolve(
 	"../../../../python/lib/scrapling_bridge.py",
 );
 
+export interface ScraplingOptions {
+	maxChars?: number;
+	timeoutMs?: number;
+	mode?: "httpx" | "stealth" | "dynamic";
+	aiTargeted?: boolean;
+	extractionType?: "text" | "markdown" | "html";
+	screenshot?: boolean;
+}
+
 export interface ScraplingExtractedPage {
 	url: string;
 	title: string;
 	description: string;
 	text: string;
 	engine: string;
+	screenshot?: string; // Base64 encoded JPEG
 }
 
+/**
+ * Extracts page content using the Scrapling bridge.
+ * 
+ * @param url The URL to extract.
+ * @param options Extraction options including mode (stealth/dynamic) and AI-targeted cleansing.
+ * @returns The extracted page content or null on failure.
+ */
 export async function extractPageWithScrapling(
 	url: string,
-	options: { maxChars?: number; timeoutMs?: number } = {},
+	options: ScraplingOptions = {},
 ): Promise<ScraplingExtractedPage | null> {
 	let parsed: URL;
 	try {
@@ -32,26 +49,38 @@ export async function extractPageWithScrapling(
 	}
 
 	const python = process.env.ELYSIA_PYTHON || process.env.PYTHON || "python";
-	const timeoutMs = options.timeoutMs ?? 15000;
-	const maxChars = options.maxChars ?? 4000;
+	const timeoutMs = options.timeoutMs ?? 30000;
+	const maxChars = options.maxChars ?? 10000;
+	const mode = options.mode ?? "httpx";
+	const extractionType = options.extractionType ?? "text";
+
+	const args = [
+		SCRAPLING_BRIDGE,
+		parsed.toString(),
+		"--timeout",
+		String(Math.ceil(timeoutMs / 1000)),
+		"--max-chars",
+		String(maxChars),
+		"--mode",
+		mode,
+		"--extraction-type",
+		extractionType,
+	];
+
+	if (options.aiTargeted) {
+		args.push("--ai-targeted");
+	}
+
+	if (options.screenshot && (mode === "stealth" || mode === "dynamic")) {
+		args.push("--screenshot");
+	}
 
 	try {
-		const { stdout } = await execFileAsync(
-			python,
-			[
-				SCRAPLING_BRIDGE,
-				parsed.toString(),
-				"--timeout",
-				String(Math.ceil(timeoutMs / 1000)),
-				"--max-chars",
-				String(maxChars),
-			],
-			{
-				timeout: timeoutMs + 2000,
-				maxBuffer: Math.max(maxChars * 4, 32_768),
-				windowsHide: true,
-			},
-		);
+		const { stdout } = await execFileAsync(python, args, {
+			timeout: timeoutMs + 5000,
+			maxBuffer: Math.max(maxChars * 10, 1024 * 1024), // Buffer for potential screenshots
+			windowsHide: true,
+		});
 
 		const payload = JSON.parse(stdout) as Partial<ScraplingExtractedPage>;
 		if (!payload.text && !payload.title && !payload.description) {
@@ -64,8 +93,10 @@ export async function extractPageWithScrapling(
 			description: payload.description || "",
 			text: payload.text || "",
 			engine: payload.engine || "scrapling",
+			screenshot: payload.screenshot,
 		};
-	} catch {
+	} catch (error) {
+		console.error("Scrapling extraction failed:", error);
 		return null;
 	}
 }
