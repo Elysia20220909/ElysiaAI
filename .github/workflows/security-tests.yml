@@ -35,7 +35,7 @@ jobs:
         run: bun run security:glassworm -- --ci
 
       - name: Setup Python
-        uses: actions/setup-python@f6742a91b3c76390a3c94444657152f20703664d # v5.1.0
+        uses: actions/setup-python@c8813ba1bc76ebf779b911ad8ffccbf2e449cb48 # v5.1.0
         with:
           python-version: "3.11"
 
@@ -75,7 +75,7 @@ jobs:
         run: bun run test --coverage
 
       - name: Setup Python
-        uses: actions/setup-python@f6742a91b3c76390a3c94444657152f20703664d # v5.1.0
+        uses: actions/setup-python@c8813ba1bc76ebf779b911ad8ffccbf2e449cb48 # v5.1.0
         with:
           python-version: "3.11"
 
