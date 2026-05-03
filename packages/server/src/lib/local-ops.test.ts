@@ -58,6 +58,9 @@ describe("local ops overview", () => {
 		expect(overview.mode).toBe("manual-supervised");
 		expect(overview.safety.manualStartOnly).toBe(true);
 		expect(overview.endpoints.commandCenter).toBe("/stark-ops.html");
+		expect(overview.host.repo.cwd).toBe("C:\\repo\\ElysiaAI");
+		expect(overview.logs.map((entry) => entry.id)).toContain("lite-out");
+		expect(overview.briefing.length).toBeGreaterThan(0);
 		expect(overview.services.map((entry) => entry.id)).toContain("ollama");
 		expect(
 			overview.commands.some((entry) => entry.command === "bun run ops"),
