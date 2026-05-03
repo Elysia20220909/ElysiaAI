@@ -30,6 +30,22 @@ describe("Configuration Utility", () => {
 		);
 	});
 
+	it("should not fall back to defaults for required production variables", () => {
+		process.env.NODE_ENV = "production";
+		process.env.DATABASE_URL = undefined;
+		expect(() => getEnv("DATABASE_URL", "file:./prisma/dev.db")).toThrow(
+			/CRITICAL: Missing required production environment variable/,
+		);
+	});
+
+	it("should reject known insecure production values", () => {
+		process.env.NODE_ENV = "production";
+		process.env.JWT_SECRET = "elysia-sovereign-secret";
+		expect(() => getEnv("JWT_SECRET")).toThrow(
+			/CRITICAL: Insecure production environment variable value/,
+		);
+	});
+
 	it("should return an empty string if missing and no default is provided in non-production", () => {
 		process.env.NODE_ENV = "development";
 		process.env.NON_EXISTENT = undefined;
