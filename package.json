@@ -13,7 +13,8 @@
     "dev:ci": "bun scripts/boot.ts --ci",
     "desktop": "bun tauri dev",
     "test": "bun test",
-    "lint": "bunx biome check ."
+    "lint": "bunx biome check .",
+    "security:glassworm": "bun scripts/security/scan_glassworm.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",

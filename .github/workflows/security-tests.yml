@@ -31,6 +31,9 @@ jobs:
       - name: Bun Audit (JS/TS)
         run: bun pm audit
 
+      - name: GlassWorm Supply Chain Scan
+        run: bun run security:glassworm -- --ci
+
       - name: Setup Python
         uses: actions/setup-python@f6742a91b3c76390a3c94444657152f20703664d # v5.1.0
         with:
