@@ -12,15 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
       - name: Install Dependencies
         run: bun install
       - name: Lint & Format Check (Biome)
-        run: bunx biome check .
+        run: bun run lint
       - name: Run Bun Tests
-        run: bun test
+        run: bun run test
 
   kernel-integrity:
     name: AI Kernel (Python)
@@ -28,15 +28,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install Dependencies
         run: pip install -r requirements.txt
       - name: Lint Check (Ruff)
-        run: ruff check kernel/
+        run: ruff check python tests/python tests/test_kernel.py
       - name: Type Check
-        run: ruff check --select F kernel/
+        run: ruff check --select F python tests/python tests/test_kernel.py
       - name: Run Python Tests
-        run: pytest tests/
+        run: pytest tests/python tests/test_kernel.py
  # 基本的な整合性チェック

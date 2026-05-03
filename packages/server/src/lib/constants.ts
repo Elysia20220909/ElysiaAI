@@ -35,7 +35,11 @@ export const proxyToFastAPI = async (
 	if (process.env.ELYSIA_TEST_MODE === "1") {
 		logger.info(`[TEST MODE] Mocking FastAPI request to: ${path}`);
 		if (path === "/health") {
-			return { status: "ok", milvus_connected: true, embedding_provider: "mock" };
+			return {
+				status: "ok",
+				milvus_connected: true,
+				embedding_provider: "mock",
+			};
 		}
 		if (path === "/chat") {
 			return {

@@ -19,7 +19,7 @@ jobs:
       # 1. Bun & TypeScript (ElysiaJS)
       # ==============================
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -30,7 +30,7 @@ jobs:
         run: bun run lint
 
       - name: Run Bun Tests
-        run: bun test
+        run: bun run test
 
       - name: Generate Bun Coverage
         run: bun run test --coverage
@@ -112,4 +112,4 @@ jobs:
       # 4. Security Governance
       # ==============================
       - name: Secret Scan (Lightweight)
-        run: bash scripts/scan-secrets.sh
+        run: bun run security:glassworm -- --ci

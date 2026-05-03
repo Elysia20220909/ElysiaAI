@@ -70,7 +70,9 @@ function normalizeRole(role: string | undefined): ChatRole {
 		: "user";
 }
 
-function validateAndSanitizeMessages(messages: IncomingChatMessage[]): ChatMessage[] {
+function validateAndSanitizeMessages(
+	messages: IncomingChatMessage[],
+): ChatMessage[] {
 	if (!Array.isArray(messages) || messages.length === 0) {
 		throw new Error("Messages are required");
 	}

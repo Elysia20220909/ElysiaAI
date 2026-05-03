@@ -27,6 +27,7 @@ out/
 .DS_Store
 *.pem
 DEBUG_REPORT.md
+AEGIS_LEDGER.md
 
 # debug
 npm-debug.log*
@@ -88,12 +89,15 @@ package-lock.json
 /python/**/*.db
 /outputs/
 /scratch/
+/var/
 kernel/config/abyss/RESONANCE_INIT.bin
 
 # Temporary and log files
 *.log
 *.tmp
 *.cache
+logs/
+**/logs/
 *-debug.log
 auth-debug.log
 server-swagger.log
@@ -112,6 +116,7 @@ bun.log
 
 # Database files
 *.db
+*.db.lock
 *.db-journal
 *.db-shm
 *.db-wal
@@ -166,6 +171,9 @@ src-tauri/target/
 /data/*
 !/data/marathon_hook_state.json
 !/data/seen_marathon_news.json
+python/data/*.mp4
+python/data/vault/
+scripts/wordlists/
 *.sys
 *.exe
 *.dll

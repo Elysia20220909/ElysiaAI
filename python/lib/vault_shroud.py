@@ -1,9 +1,10 @@
 import hashlib
 import logging
 import os
-import base64
+
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from dotenv import load_dotenv
+
 
 # Load environment variables from root .env
 load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
@@ -37,14 +38,15 @@ class AbyssalShroud:
             dklen=32
         )
 
-    def encrypt(self, data: str, aad: str = "ELYSIOS") -> str:
+    def encrypt(self, data: str | bytes, aad: str = "ELYSIOS") -> str:
         """
         Encrypts data and returns a colon-separated string: iv:authTag:ciphertext (hex)
         Matches Node.js implementation in cryptography.ts
         """
         nonce = os.urandom(12)
+        payload = data if isinstance(data, bytes) else data.encode()
         # cryptography library's AESGCM.encrypt returns ciphertext + 16-byte tag
-        ciphertext_with_tag = self.cipher.encrypt(nonce, data.encode(), aad.encode())
+        ciphertext_with_tag = self.cipher.encrypt(nonce, payload, aad.encode())
         
         iv_hex = nonce.hex()
         # The tag is the last 16 bytes
@@ -80,7 +82,7 @@ class AbyssalShroud:
         """Encrypts a file in place (Text only for unified mode)."""
         if not os.path.exists(path):
             return
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = f.read()
         encrypted = self.encrypt(data)
         with open(path, "w", encoding="utf-8") as f:
@@ -90,7 +92,7 @@ class AbyssalShroud:
         """Reads and decrypts a shrouded file."""
         if not os.path.exists(path):
             raise FileNotFoundError(f"Void Error: {path} not found.")
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             enc_data = f.read()
         return self.decrypt(enc_data)
 

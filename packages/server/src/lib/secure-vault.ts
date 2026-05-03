@@ -27,13 +27,18 @@ export const secureVault = {
 	 */
 	decrypt(encryptedText: string): string {
 		try {
-			const [ivHex, authTagHex, encrypted] = encryptedText.split(":");
-			if (!ivHex || !authTagHex || !encrypted) return encryptedText; // Fallback for old data or non-encrypted
+			const parts = encryptedText.split(":");
+			if (parts.length !== 3) return encryptedText; // Fallback for old data or non-encrypted
+
+			const [ivHex, authTagHex, encrypted] = parts;
+			if (!ivHex || !authTagHex) return encryptedText;
 			const iv = Buffer.from(ivHex, "hex");
 			const authTag = Buffer.from(authTagHex, "hex");
 			const decipher = createDecipheriv(ALGORITHM, KEY, iv);
 			decipher.setAuthTag(authTag);
-			let decrypted = decipher.update(encrypted, "hex", "utf8");
+			let decrypted = encrypted
+				? decipher.update(encrypted, "hex", "utf8")
+				: "";
 			decrypted += decipher.final("utf8");
 			return decrypted;
 		} catch (e) {

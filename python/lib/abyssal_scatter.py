@@ -1,7 +1,8 @@
+import logging
 import os
 import random
 import shutil
-import logging
+
 
 logger = logging.getLogger("AbyssalScatter")
 
