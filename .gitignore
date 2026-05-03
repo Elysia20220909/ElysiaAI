@@ -39,6 +39,8 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.x_bulk_delete_tokens.json
+x_delete_results*.jsonl
 
 # Protected configuration directory (legacy)
 /config/private/
