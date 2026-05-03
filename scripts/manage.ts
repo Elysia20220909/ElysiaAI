@@ -25,6 +25,7 @@ Commands:
   ops           Show local house server readiness
   suit          Show fictional suit status
   setup         Run initial environment setup (Bun & env file)
+  setup-db      Validate Prisma schema and regenerate Prisma client
   setup-python  Run Python environment setup (.venv)
   build         Build the project for production
   test          Run Bun tests
@@ -48,6 +49,7 @@ async function run(command: string, args: string[] = []) {
 		stdout: "inherit",
 		stderr: "inherit",
 		stdin: "inherit",
+		env: process.env,
 	});
 
 	const exitCode = await proc.exited;
@@ -187,7 +189,17 @@ async function runCommand(command: string) {
 			console.log("⚙️ Setting up environment...");
 			await run("bun", ["install"]);
 			await copyEnvExampleIfMissing();
+			process.env.DATABASE_URL ??= "file:./prisma/dev.db";
+			await run("bun", ["run", "db:validate"]);
+			await run("bun", ["run", "db:generate"]);
 			console.log("✅ Setup complete.");
+			break;
+		case "setup-db":
+			console.log("🗄️ Repairing local Prisma client...");
+			process.env.DATABASE_URL ??= "file:./prisma/dev.db";
+			await run("bun", ["run", "db:validate"]);
+			await run("bun", ["run", "db:generate"]);
+			console.log("✅ Local Prisma client ready.");
 			break;
 		case "setup-python": {
 			console.log("🐍 Setting up Python environment...");

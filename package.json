@@ -13,6 +13,8 @@
     "dev": "bun run --cwd packages/server dev",
     "dev:lite": "bun scripts/boot.ts --lite",
     "start": "bun run --cwd packages/server start",
+    "db:generate": "bunx prisma generate --schema prisma/schema.prisma",
+    "db:validate": "bunx prisma validate --schema prisma/schema.prisma",
     "native:lite": "bun scripts/native-lite.ts",
     "ops": "bun scripts/local-ops.ts",
     "suit": "bun scripts/suit.ts",

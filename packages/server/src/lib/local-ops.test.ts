@@ -60,7 +60,15 @@ describe("local ops overview", () => {
 		expect(overview.endpoints.commandCenter).toBe("/stark-ops.html");
 		expect(overview.host.repo.cwd).toBe("C:\\repo\\ElysiaAI");
 		expect(overview.logs.map((entry) => entry.id)).toContain("lite-out");
+		expect(overview.diagnostics.map((entry) => entry.id)).toEqual([
+			"prisma",
+			"ollama-models",
+		]);
 		expect(overview.briefing.length).toBeGreaterThan(0);
+		expect(overview.improvements.length).toBeGreaterThan(0);
+		expect(
+			overview.improvements.every((entry) => entry.safety === "manual-only"),
+		).toBe(true);
 		expect(overview.services.map((entry) => entry.id)).toContain("ollama");
 		expect(
 			overview.commands.some((entry) => entry.command === "bun run ops"),
