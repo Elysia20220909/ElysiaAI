@@ -19,6 +19,22 @@ export type OpenLlmVtuberManifest = {
 	};
 };
 
+type FetchLike = (
+	input: string | URL | Request,
+	init?: RequestInit,
+) => Promise<Response>;
+
+type ManifestOptions = {
+	baseUrl?: string;
+	enabled?: boolean;
+};
+
+type StatusOptions = {
+	fetcher?: FetchLike;
+	manifest?: OpenLlmVtuberManifest;
+	timeoutMs?: number;
+};
+
 function trimTrailingSlash(value: string) {
 	return value.replace(/\/+$/, "");
 }
@@ -40,12 +56,16 @@ export function websocketUrl(baseUrl: string, path: string) {
 	return url.toString();
 }
 
-export function buildOpenLlmVtuberManifest(): OpenLlmVtuberManifest {
-	const baseUrl = normalizeOpenLlmVtuberBaseUrl();
+export function buildOpenLlmVtuberManifest(
+	options: ManifestOptions = {},
+): OpenLlmVtuberManifest {
+	const baseUrl = normalizeOpenLlmVtuberBaseUrl(
+		options.baseUrl ?? CONFIG.OPEN_LLM_VTUBER_BASE_URL,
+	);
 	const httpUrl = (path: string) => new URL(path, `${baseUrl}/`).toString();
 
 	return {
-		enabled: CONFIG.OPEN_LLM_VTUBER_ENABLED,
+		enabled: options.enabled ?? CONFIG.OPEN_LLM_VTUBER_ENABLED,
 		baseUrl,
 		urls: {
 			frontend: httpUrl("/"),
@@ -71,8 +91,8 @@ export function buildOpenLlmVtuberManifest(): OpenLlmVtuberManifest {
 	};
 }
 
-export async function checkOpenLlmVtuberStatus() {
-	const manifest = buildOpenLlmVtuberManifest();
+export async function checkOpenLlmVtuberStatus(options: StatusOptions = {}) {
+	const manifest = options.manifest ?? buildOpenLlmVtuberManifest();
 
 	if (!manifest.enabled) {
 		return {
@@ -81,9 +101,15 @@ export async function checkOpenLlmVtuberStatus() {
 		};
 	}
 
+	const timeoutMs = options.timeoutMs ?? 3000;
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), timeoutMs);
+	const fetcher = options.fetcher ?? fetch;
+
 	try {
-		const response = await fetch(manifest.urls.live2dModels, {
+		const response = await fetcher(manifest.urls.live2dModels, {
 			headers: { accept: "application/json" },
+			signal: controller.signal,
 		});
 
 		if (!response.ok) {
@@ -101,10 +127,16 @@ export async function checkOpenLlmVtuberStatus() {
 			manifest,
 		};
 	} catch (error) {
+		const message = error instanceof Error ? error.message : "Unknown error";
 		return {
 			status: "offline",
-			error: error instanceof Error ? error.message : "Unknown error",
+			error:
+				error instanceof DOMException && error.name === "AbortError"
+					? `Timed out after ${timeoutMs}ms`
+					: message,
 			manifest,
 		};
+	} finally {
+		clearTimeout(timeout);
 	}
 }

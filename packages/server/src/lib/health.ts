@@ -1,6 +1,7 @@
 import axios from "axios";
 import Redis from "ioredis";
 import { config } from "../../../../src/config.ts";
+import { checkOpenLlmVtuberStatus } from "./open-llm-vtuber";
 
 export interface HealthStatus {
 	status: "healthy" | "degraded" | "unhealthy";
@@ -10,6 +11,9 @@ export interface HealthStatus {
 		redis: ServiceHealth;
 		fastapi: ServiceHealth;
 		ollama: ServiceHealth;
+	};
+	companions: {
+		openLlmVtuber: ServiceHealth;
 	};
 	system: {
 		memory: {
@@ -50,6 +54,41 @@ export function summarizeHealthStatus(
 	const anyDown = activeServices.some((service) => service.status === "down");
 
 	return allUp ? "healthy" : anyDown ? "unhealthy" : "degraded";
+}
+
+export function mapOpenLlmVtuberStatusToServiceHealth(
+	status: Awaited<ReturnType<typeof checkOpenLlmVtuberStatus>>,
+	responseTime?: number,
+): ServiceHealth {
+	const lastCheck = new Date().toISOString();
+
+	if (status.status === "disabled") {
+		return disabledServiceHealth("Open-LLM-VTuber bridge is disabled");
+	}
+
+	if (status.status === "online") {
+		return {
+			status: "up",
+			responseTime,
+			lastCheck,
+		};
+	}
+
+	if (status.status === "degraded") {
+		return {
+			status: "degraded",
+			responseTime,
+			error: `HTTP ${status.statusCode}`,
+			lastCheck,
+		};
+	}
+
+	return {
+		status: "down",
+		responseTime,
+		error: status.error,
+		lastCheck,
+	};
 }
 
 // Redis Health Check
@@ -149,6 +188,16 @@ export async function checkOllama(ollamaUrl: string): Promise<ServiceHealth> {
 	}
 }
 
+export async function checkOpenLlmVtuberService(
+	timeoutMs = 750,
+): Promise<ServiceHealth> {
+	const startTime = Date.now();
+	const status = await checkOpenLlmVtuberStatus({ timeoutMs });
+	const responseTime = Date.now() - startTime;
+
+	return mapOpenLlmVtuberStatusToServiceHealth(status, responseTime);
+}
+
 // System Metrics
 export function getSystemMetrics() {
 	const memory = process.memoryUsage();
@@ -169,12 +218,13 @@ export function getSystemMetrics() {
 
 // Comprehensive Health Check
 export async function performHealthCheck(): Promise<HealthStatus> {
-	const [redis, fastapi, ollama] = await Promise.all([
+	const [redis, fastapi, ollama, openLlmVtuber] = await Promise.all([
 		config.redisEnabled
 			? checkRedis(config.redisUrl)
 			: Promise.resolve(disabledServiceHealth("Redis is disabled")),
 		checkFastAPI(config.fastApiBaseUrl),
 		checkOllama(config.ollamaBaseUrl),
+		checkOpenLlmVtuberService(),
 	]);
 
 	const system = getSystemMetrics();
@@ -186,6 +236,7 @@ export async function performHealthCheck(): Promise<HealthStatus> {
 		timestamp: new Date().toISOString(),
 		uptime: process.uptime(),
 		services: { redis, fastapi, ollama },
+		companions: { openLlmVtuber },
 		system,
 	};
 }

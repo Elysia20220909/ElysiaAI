@@ -28,7 +28,7 @@ jobs:
       - name: Secret Scan
         run: bun run security:glassworm -- --ci
       - name: Bun Audit
-        run: bun pm audit
+        run: bun audit
 
   build-and-test:
     needs: security
