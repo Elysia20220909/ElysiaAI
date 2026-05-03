@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ElysiaAI Native Lite Lab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f1113;
+        --band: #171b1f;
+        --panel: #202326;
+        --line: #3a4147;
+        --text: #f4f0e8;
+        --muted: #aeb8bc;
+        --rust: #d97941;
+        --swift: #e8573f;
+        --bun: #58c4dd;
+        --green: #55d98f;
+        --gold: #d9b15f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      main {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 24px 0 36px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        min-height: 78px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 18px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 26px;
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      .subline {
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      button,
+      a.button {
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 0 12px;
+        background: #1d2024;
+        color: var(--text);
+        font: inherit;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      button:hover,
+      a.button:hover {
+        border-color: var(--bun);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+        gap: 18px;
+        align-items: stretch;
+        margin-bottom: 18px;
+      }
+
+      .score {
+        display: grid;
+        align-content: center;
+        min-height: 230px;
+        border-bottom: 1px solid var(--line);
+        background: var(--band);
+        padding: 22px;
+      }
+
+      .score-number {
+        font-size: 58px;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .score-label {
+        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      canvas {
+        width: 100%;
+        height: 230px;
+        display: block;
+        background: #121619;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .lane,
+      .budget,
+      .section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+      }
+
+      .lane h2,
+      .section h2 {
+        font-size: 15px;
+        letter-spacing: 0;
+        margin-bottom: 8px;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        border-radius: 999px;
+        padding: 0 8px;
+        margin-bottom: 10px;
+        color: #071014;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .ready {
+        background: var(--green);
+      }
+
+      .fallback {
+        background: var(--gold);
+      }
+
+      .unavailable {
+        background: #bd6670;
+      }
+
+      .budget-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .budget {
+        min-height: 112px;
+      }
+
+      .budget strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .bar {
+        height: 8px;
+        border-radius: 999px;
+        background: #101417;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .bar span {
+        display: block;
+        height: 100%;
+        width: var(--w);
+        background: linear-gradient(90deg, var(--rust), var(--bun));
+      }
+
+      code {
+        color: #d7edf2;
+        overflow-wrap: anywhere;
+      }
+
+      @media (max-width: 780px) {
+        header,
+        .hero,
+        .grid,
+        .budget-grid {
+          grid-template-columns: 1fr;
+        }
+
+        nav {
+          justify-content: flex-start;
+        }
+
+        .score-number {
+          font-size: 44px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Native Lite Lab</h1>
+          <p class="subline" id="summary">Loading native lanes...</p>
+        </div>
+        <nav>
+          <a class="button" href="/stark-ops.html">Ops</a>
+          <a class="button" href="/suit-hud.html">HUD</a>
+          <button id="refresh" type="button">Refresh</button>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <div class="score">
+          <div class="score-number" id="score">--%</div>
+          <p class="score-label" id="score-label">Rust, Swift, and Bun lanes are being sampled.</p>
+        </div>
+        <canvas id="chart" width="760" height="260" aria-label="Native weight chart"></canvas>
+      </section>
+
+      <section class="grid" id="lanes"></section>
+
+      <section class="section">
+        <h2>Weight Budget</h2>
+        <div class="budget-grid" id="budgets"></div>
+      </section>
+    </main>
+
+    <script>
+      const summary = document.getElementById("summary");
+      const score = document.getElementById("score");
+      const scoreLabel = document.getElementById("score-label");
+      const lanes = document.getElementById("lanes");
+      const budgets = document.getElementById("budgets");
+      const refresh = document.getElementById("refresh");
+      const chart = document.getElementById("chart");
+      const ctx = chart.getContext("2d");
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function mib(bytes) {
+        return Math.round((bytes / 1024 / 1024) * 10) / 10;
+      }
+
+      function renderLane(lane) {
+        return `
+          <article class="lane">
+            <span class="pill ${escapeHtml(lane.status)}">${escapeHtml(lane.status)}</span>
+            <h2>${escapeHtml(lane.name)}</h2>
+            <p class="meta">${escapeHtml(lane.role)}</p>
+            <p class="meta">${escapeHtml(lane.detail)}</p>
+          </article>
+        `;
+      }
+
+      function renderBudget(budget, maxBytes) {
+        const percent = maxBytes > 0 ? Math.max(3, Math.round((budget.bytes / maxBytes) * 100)) : 3;
+        const sampled = budget.truncated ? "sampled" : "exact";
+        return `
+          <article class="budget">
+            <strong>${escapeHtml(budget.label)}</strong>
+            <div class="meta"><code>${escapeHtml(budget.path)}</code></div>
+            <div class="bar" aria-hidden="true"><span style="--w: ${percent}%"></span></div>
+            <p class="meta">${mib(budget.bytes)} MiB, ${budget.files} files, ${sampled}</p>
+            <p class="meta">${escapeHtml(budget.action)}</p>
+          </article>
+        `;
+      }
+
+      function drawChart(items) {
+        ctx.clearRect(0, 0, chart.width, chart.height);
+        ctx.fillStyle = "#121619";
+        ctx.fillRect(0, 0, chart.width, chart.height);
+        const max = Math.max(...items.map((item) => item.bytes), 1);
+        const gap = 16;
+        const width = (chart.width - gap * (items.length + 1)) / items.length;
+        items.forEach((item, index) => {
+          const height = Math.max(8, (item.bytes / max) * 170);
+          const x = gap + index * (width + gap);
+          const y = chart.height - height - 44;
+          const gradient = ctx.createLinearGradient(0, y, 0, chart.height);
+          gradient.addColorStop(0, "#58c4dd");
+          gradient.addColorStop(1, "#d97941");
+          ctx.fillStyle = gradient;
+          ctx.fillRect(x, y, width, height);
+          ctx.fillStyle = "#f4f0e8";
+          ctx.font = "12px system-ui";
+          ctx.fillText(item.label.slice(0, 10), x, chart.height - 22);
+          ctx.fillStyle = "#aeb8bc";
+          ctx.fillText(`${mib(item.bytes)} MiB`, x, chart.height - 7);
+        });
+      }
+
+      function render(data) {
+        summary.textContent = `${data.summary} - ${new Date(data.generatedAt).toLocaleString()}`;
+        score.textContent = `${data.score}%`;
+        scoreLabel.textContent = data.mode;
+        lanes.innerHTML = data.lanes.map(renderLane).join("");
+        const sorted = data.budgets.slice().sort((a, b) => b.bytes - a.bytes);
+        const maxBytes = Math.max(...sorted.map((item) => item.bytes), 1);
+        budgets.innerHTML = sorted.map((budget) => renderBudget(budget, maxBytes)).join("");
+        drawChart(sorted.slice(0, 8));
+      }
+
+      async function load() {
+        try {
+          const response = await fetch("/api/native-lite", {
+            headers: { accept: "application/json" },
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          render(await response.json());
+        } catch (error) {
+          summary.textContent = error instanceof Error ? error.message : String(error);
+          lanes.innerHTML = "";
+          budgets.innerHTML = "";
+        }
+      }
+
+      refresh.addEventListener("click", load);
+      load();
+    </script>
+  </body>
+</html>

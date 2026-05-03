@@ -1,12 +1,11 @@
+use lazy_static::lazy_static;
 /**
  * ElysiaAI // Sovereign Secrecy Module
  * [NSA-GRADE CLASSIFIED PROTOCOL]
  */
-
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Mutex;
-use lazy_static::lazy_static;
 
 #[cfg(windows)]
 use winapi::um::memoryapi::{VirtualLock, VirtualUnlock};
@@ -93,15 +92,20 @@ lazy_static! {
 
 /// Registers a file into the secure registry.
 pub fn register_important_file(file: SovereignFile) -> Result<(), String> {
-    let mut registry = SECRET_REGISTRY.lock()
+    let mut registry = SECRET_REGISTRY
+        .lock()
         .map_err(|_| "Failed to acquire registry lock".to_string())?;
-    
-    log::info!("[SOVEREIGN] Registering artifact: {} (Class: {:?})", file.name, file.secrecy);
-    
+
+    log::info!(
+        "[SOVEREIGN] Registering artifact: {} (Class: {:?})",
+        file.name,
+        file.secrecy
+    );
+
     if file.secrecy >= SecrecyClass::Class09Abyss {
         log::warn!("[SOVEREIGN] Class 09 artifact detected. Verification mandatory.");
     }
-    
+
     registry.insert(file.path.clone(), file);
     Ok(())
 }
@@ -114,59 +118,58 @@ pub fn get_file_classification(path: &str) -> Option<SecrecyClass> {
 /// Performs a high-integrity clearance audit via the native Swift layer.
 pub async fn validate_nsa_clearance() -> Result<bool, String> {
     use crate::native_bridge;
-    
+
     log::info!("[SOVEREIGN] Initiating hardware-bound resonance audit for NSA clearance...");
-    
+
     let (msg, score) = native_bridge::trigger_native_audit("NSA_CLEARANCE_AUTH_v1")
         .await
         .map_err(|e| format!("Audit failed: {}", e))?;
-    
+
     if score >= 0.99 {
         log::info!("[SOVEREIGN] Clearance granted: {}", msg);
         Ok(true)
     } else {
-        log::error!("[SOVEREIGN] Clearance rejected. Integrity score {} too low.", score);
+        log::error!(
+            "[SOVEREIGN] Clearance rejected. Integrity score {} too low.",
+            score
+        );
         Ok(false)
     }
 }
 
 pub fn seal_class09_data(data: &[u8]) -> crate::error::AppResult<Vec<u8>> {
     let mut output = vec![0u8; data.len()];
-    
+
     // Lock both input and output buffers in physical memory
-    if !lock_memory(data.as_ptr() as *mut u8, data.len()) || !lock_memory(output.as_mut_ptr(), output.len()) {
-        return Err(crate::error::AppError::Security("Memory locking failed for Class 09 artifact".into()));
+    if !lock_memory(data.as_ptr() as *mut u8, data.len())
+        || !lock_memory(output.as_mut_ptr(), output.len())
+    {
+        return Err(crate::error::AppError::Security(
+            "Memory locking failed for Class 09 artifact".into(),
+        ));
     }
 
-    unsafe {
-        crate::native_bridge::swift_seal_classified_data(
-            data.as_ptr(),
-            data.len(),
-            output.as_mut_ptr()
-        );
-    }
-    
+    crate::native_bridge::seal_classified_data(data, &mut output);
+
     unlock_memory(data.as_ptr() as *mut u8, data.len());
     unlock_memory(output.as_mut_ptr(), output.len());
-    
+
     log::info!("[SOVEREIGN] Data sealed with Class 09 (Abyss) protection.");
     Ok(output)
 }
 
 pub fn unseal_class09_data(sealed_data: &[u8]) -> crate::error::AppResult<Vec<u8>> {
     let mut output = vec![0u8; sealed_data.len()];
-    
-    if !lock_memory(sealed_data.as_ptr() as *mut u8, sealed_data.len()) || !lock_memory(output.as_mut_ptr(), output.len()) {
-        return Err(crate::error::AppError::Security("Memory locking failed for Class 09 artifact retrieval".into()));
+
+    if !lock_memory(sealed_data.as_ptr() as *mut u8, sealed_data.len())
+        || !lock_memory(output.as_mut_ptr(), output.len())
+    {
+        return Err(crate::error::AppError::Security(
+            "Memory locking failed for Class 09 artifact retrieval".into(),
+        ));
     }
 
-    unsafe {
-        crate::native_bridge::swift_unseal_classified_data(
-            sealed_data.as_ptr(),
-            sealed_data.len(),
-            output.as_mut_ptr()
-        );
-    }
+    crate::native_bridge::unseal_classified_data(sealed_data, &mut output);
 
     unlock_memory(sealed_data.as_ptr() as *mut u8, sealed_data.len());
     unlock_memory(output.as_mut_ptr(), output.len());
