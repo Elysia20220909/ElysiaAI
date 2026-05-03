@@ -29,6 +29,9 @@ jobs:
       - name: Git Hygiene Guard
         run: bun run check:git-hygiene
 
+      - name: Dependency Alignment Guard
+        run: bun run check:deps
+
       - name: Run Biome (Format & Lint Check)
         run: bun run lint
 
