@@ -1,59 +1,75 @@
-# ファイル構�E整琁E��画
+# ファイル構成整理計画
 
-## 🗂�E�E実施する整琁E
-### 1. 重複READMEの統吁E
+## 🗂️ 実施する整理
+
+### 1. 重複READMEの統合
+
 - `README.md` (メイン) - 保持
-- `README.ja.md` (日本誁E - 保持
-- `README.en.md` (英誁E - 保持
-- ❁E`README.old.md` - 削除�E�古ぁE��ージョン�E�E- ❁E`README.new.md` - 削除�E�一時ファイル�E�E
-### 2. ドキュメント�E整琁E�E統吁E
-#### 削除対象�E�重褁E�E古ぁE��報�E�E
-- ❁E`CLEANUP_REPORT.md` - 一時レポ�EチE- ❁E`DEPLOYMENT_READY_REPORT.md` - 一時レポ�EチE- ❁E`docs/DEEP_STRUCTURE_UPDATE.md` - 古ぁE��造惁E��
-- ❁E`docs/STRUCTURE_UPDATE.md` - 古ぁE��造惁E��
-- ❁E`docs/OPTIMIZATION_REPORT.md` - 一時レポ�EチE- ❁E`docs/UPGRADE_REPORT.md` - 一時レポ�EチE
+- `README.ja.md` (日本語) - 保持
+- `README.en.md` (英語) - 保持
+- ❌ `README.old.md` - 削除（古いバージョン）
+- ❌ `README.new.md` - 削除（一時ファイル）
+
+### 2. ドキュメントの整理・統合
+
+#### 削除対象（重複・古い情報）
+
+- ❌ `CLEANUP_REPORT.md` - 一時レポート
+- ❌ `DEPLOYMENT_READY_REPORT.md` - 一時レポート
+- ❌ `docs/DEEP_STRUCTURE_UPDATE.md` - 古い構造情報
+- ❌ `docs/STRUCTURE_UPDATE.md` - 古い構造情報
+- ❌ `docs/OPTIMIZATION_REPORT.md` - 一時レポート
+- ❌ `docs/UPGRADE_REPORT.md` - 一時レポート
+
 #### 統合対象
 
-- `docs/DEPLOYMENT_GUIDE.md` + `DEPLOYMENT.md` ↁE`docs/DEPLOYMENT_GUIDE.md`
-- `docs/SECURITY_ARCHITECTURE.md` + `docs/SECURITY_HARDENING.md` + `SECURITY.md` ↁE`docs/SECURITY.md`
-- `docs/PHASE5_API_SPEC.md` + `docs/PHASE5_PLUS_SUMMARY.md` ↁE`docs/PHASE5_COMPLETE.md`
+- `docs/DEPLOYMENT_GUIDE.md` + `DEPLOYMENT.md` → `docs/DEPLOYMENT_GUIDE.md`
+- `docs/SECURITY_ARCHITECTURE.md` + `docs/SECURITY_HARDENING.md` + `SECURITY.md` → `docs/SECURITY.md`
+- `docs/PHASE5_API_SPEC.md` + `docs/PHASE5_PLUS_SUMMARY.md` → `docs/PHASE5_COMPLETE.md`
 
-### 3. 整琁E���E構造
+### 3. 整理後の構造
 
 ```
 elysia-ai/
 ├── README.md (メイン)
-├── README.ja.md (日本誁E
-├── README.en.md (英誁E
+├── README.ja.md (日本語)
+├── README.en.md (英語)
 ├── LICENSE
-├── SECURITY.md ↁEdocs/SECURITY.md (統合版)
+├── SECURITY.md → docs/SECURITY.md (統合版)
 ├── CONTRIBUTING.md
 ├── CODE_OF_CONDUCT.md
 ├── CHANGELOG.md
 ├── docs/
-━E  ├── GETTING_STARTED.md (新要E- 簡潔なスタートガイチE
-━E  ├── DEPLOYMENT_GUIDE.md (統合版)
-━E  ├── SECURITY.md (統合版)
-━E  ├── ARCHITECTURE.md
-━E  ├── API.md
-━E  ├── PHASE5_COMPLETE.md (統合版)
-━E  ├── ADVANCED_FEATURES.md
-━E  ├── PERSONAL_DEV_FEATURES.md
-━E  ├── PROJECT_STRUCTURE.md
-━E  ├── BENCHMARKS.md
-━E  ├── DISASTER_RECOVERY.md
-━E  ├── I18N_GUIDE.md
-━E  ├── INTEGRATION_GUIDE.md
-━E  ├── TELEMETRY_GUIDE.md
-━E  ├── VOICE_GUIDE.md
-━E  ├── VOICEVOX_SETUP.md
-━E  └── LINUX_SETUP.md
+│   ├── GETTING_STARTED.md (新規 - 簡潔なスタートガイド)
+│   ├── DEPLOYMENT_GUIDE.md (統合版)
+│   ├── SECURITY.md (統合版)
+│   ├── ARCHITECTURE.md
+│   ├── API.md
+│   ├── PHASE5_COMPLETE.md (統合版)
+│   ├── ADVANCED_FEATURES.md
+│   ├── PERSONAL_DEV_FEATURES.md
+│   ├── PROJECT_STRUCTURE.md
+│   ├── BENCHMARKS.md
+│   ├── DISASTER_RECOVERY.md
+│   ├── I18N_GUIDE.md
+│   ├── INTEGRATION_GUIDE.md
+│   ├── TELEMETRY_GUIDE.md
+│   ├── VOICE_GUIDE.md
+│   ├── VOICEVOX_SETUP.md
+│   └── LINUX_SETUP.md
 ```
 
-## 📋 実施手頁E
+## 📋 実施手順
+
 1. 古いREADMEを削除
-2. レポ�Eトファイルを削除
-3. ドキュメントを統吁E4. 新しいGETTING_STARTEDを作�E
+2. レポートファイルを削除
+3. ドキュメントを統合
+4. 新しいGETTING_STARTEDを作成
 5. リンクを更新
 
-## ✁E削減効极E
-- READMEファイル: 5倁EↁE3倁E- ルートディレクトリのドキュメンチE 削渁E- docsフォルダ: 22倁EↁE15倁E- 合計削渁E 紁E4ファイル
+## ✅ 削減効果
+
+- READMEファイル: 5個 → 3個
+- ルートディレクトリのドキュメント: 削減
+- docsフォルダ: 22個 → 15個
+- 合計削減: 約14ファイル

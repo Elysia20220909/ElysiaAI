@@ -1,126 +1,145 @@
-# 繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝・ぅ繝ｳ繧ｰ繧ｬ繧､繝・- Elysia AI
+# トラブルシューティングガイド - Elysia AI
 
-## 繧ｵ繝ｼ繝舌・襍ｷ蜍輔お繝ｩ繝ｼ
+## サーバー起動エラー
 
-### 繝昴・繝・3000 縺梧里縺ｫ菴ｿ逕ｨ荳ｭ
+### ポート 3000 が既に使用中
 
 ```
 EADDRINUSE: Failed to start server. Is port 3000 in use?
 ```
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
 #### Windows PowerShell
 
 ```powershell
-# Bun 繝励Ο繧ｻ繧ｹ蛛懈ｭ｢
+# Bun プロセス停止
 Get-Process bun | Stop-Process -Force
 
-# 繝昴・繝井ｽｿ逕ｨ迥ｶ豕∫｢ｺ隱・netstat -ano | findstr ":3000"
+# ポート使用状況確認
+netstat -ano | findstr ":3000"
 
-# 繝励Ο繧ｻ繧ｹ ID 縺九ｉ蠑ｷ蛻ｶ邨ゆｺ・Stop-Process -Id <PID> -Force
+# プロセス ID から強制終了
+Stop-Process -Id <PID> -Force
 ```
 
 #### Linux/macOS
 
 ```bash
-# 繝昴・繝井ｽｿ逕ｨ迥ｶ豕∫｢ｺ隱・lsof -i :3000
+# ポート使用状況確認
+lsof -i :3000
 
-# 繝励Ο繧ｻ繧ｹ邨ゆｺ・kill -9 <PID>
+# プロセス終了
+kill -9 <PID>
 ```
 
 ---
 
-### 繝・・繧ｿ繝吶・繧ｹ謗･邯壹お繝ｩ繝ｼ
+### データベース接続エラー
 
 ```
-笞�・・Prisma database not configured, using in-memory fallback
+⚠️ Prisma database not configured, using in-memory fallback
 ```
 
-**蜴溷屏**: Prisma 險ｭ螳壻ｸ崎ｶｳ縺ｾ縺溘・繝・・繧ｿ繝吶・繧ｹ繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ譛ｪ螳溯｡・
-**隗｣豎ｺ遲・*:
+**原因**: Prisma 設定不足またはデータベースマイグレーション未実行
 
-1. `.env` 縺ｫ `DATABASE_URL` 繧定ｨｭ螳夲ｼ・
+**解決策**:
+
+1. `.env` に `DATABASE_URL` を設定：
+
 ```env
 DATABASE_URL="file:./prisma/dev.db"
 ```
 
-2. Prisma 繧ｯ繝ｩ繧､繧｢繝ｳ繝育函謌撰ｼ・
+2. Prisma クライアント生成：
+
 ```bash
 bunx prisma generate
 ```
 
-3. 繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ螳溯｡鯉ｼ・
+3. マイグレーション実行：
+
 ```bash
 bunx prisma migrate dev --name init
 ```
 
 ---
 
-### Health Check 繧ｨ繝ｩ繝ｼ
+### Health Check エラー
 
 ```
 Health check failed: database { failures: 1, error: "Check returned false" }
 Health check failed: disk_space { failures: 1, error: "Check returned false" }
 ```
 
-**蜴溷屏**: 繝・・繧ｿ繝吶・繧ｹ譛ｪ蛻晄悄蛹悶∪縺溘・繝・ぅ繧ｹ繧ｯ螳ｹ驥丈ｸ崎ｶｳ
+**原因**: データベース未初期化またはディスク容量不足
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
-- 繝・・繧ｿ繝吶・繧ｹ繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ螳溯｡・- 繝・ぅ繧ｹ繧ｯ螳ｹ驥冗｢ｺ隱・- 繝ｭ繝ｼ繝峨＠縺吶℃縺溘Ο繧ｰ繝輔ぃ繧､繝ｫ繧貞炎髯､・啻rm logs/*.log`
+- データベースマイグレーション実行
+- ディスク容量確認
+- ロードしすぎたログファイルを削除：`rm logs/*.log`
 
 ---
 
-## FastAPI 謗･邯壹お繝ｩ繝ｼ
+## FastAPI 接続エラー
 
-### FastAPI 繧ｵ繝ｼ繝舌・縺悟ｿ懃ｭ斐＠縺ｪ縺・
+### FastAPI サーバーが応答しない
+
 ```
 Error: connect ECONNREFUSED 127.0.0.1:8000
 ```
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
-1. FastAPI 縺瑚ｵｷ蜍輔＠縺ｦ縺・ｋ縺狗｢ｺ隱搾ｼ・
+1. FastAPI が起動しているか確認：
+
 ```powershell
 Get-Process python -ErrorAction SilentlyContinue
 
-# 襍ｷ蜍輔＆繧後※縺・↑縺・�ｴ蜷・python python/fastapi_server.py
+# 起動されていない場合
+python python/fastapi_server.py
 ```
 
-2. Python 萓晏ｭ倬未菫ら｢ｺ隱搾ｼ・
+2. Python 依存関係確認：
+
 ```bash
 python -m pip install -r python/requirements.txt
 ```
 
-3. FastAPI 繝倥Ν繧ｹ繝√ぉ繝・け・・
+3. FastAPI ヘルスチェック：
+
 ```bash
 Invoke-WebRequest -Uri "http://localhost:8000/health"
 ```
 
 ---
 
-## Ollama 謗･邯壹お繝ｩ繝ｼ
+## Ollama 接続エラー
 
-### Ollama 繧ｵ繝ｼ繝舌・縺悟ｿ懃ｭ斐＠縺ｪ縺・
+### Ollama サーバーが応答しない
+
 ```
 Error: Failed to connect to Ollama at http://localhost:11434
 ```
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
-1. Ollama 縺瑚ｵｷ蜍輔＠縺ｦ縺・ｋ縺狗｢ｺ隱搾ｼ・
+1. Ollama が起動しているか確認：
+
 ```bash
 ollama list
 ollama serve
 ```
 
-2. 繝｢繝・Ν遒ｺ隱搾ｼ・
+2. モデル確認：
+
 ```bash
 curl http://localhost:11434/api/tags
 ```
 
-3. 繝・せ繝亥ｮ溯｡鯉ｼ・
+3. テスト実行：
+
 ```bash
 curl -X POST http://localhost:11434/api/chat \
   -H "Content-Type: application/json" \
@@ -129,44 +148,49 @@ curl -X POST http://localhost:11434/api/chat \
 
 ---
 
-## Redis 謗･邯壹お繝ｩ繝ｼ
+## Redis 接続エラー
 
-### Redis 縺ｫ謗･邯壹〒縺阪↑縺・
+### Redis に接続できない
+
 ```
 Error: connect ECONNREFUSED 127.0.0.1:6379
 ```
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
-#### Docker 縺ｧ Redis 襍ｷ蜍・
+#### Docker で Redis 起動
+
 ```bash
 docker run -d --name redis -p 6379:6379 redis:alpine
 
-# 遒ｺ隱・docker ps | findstr redis
+# 確認
+docker ps | findstr redis
 
-# 蛛懈ｭ｢
+# 停止
 docker stop redis
 docker rm redis
 ```
 
-#### Redis 辟｡蜉ｹ蛹厄ｼ医Ξ繝ｼ繝亥宛髯舌′荳崎ｦ√↑蝣ｴ蜷茨ｼ・
+#### Redis 無効化（レート制限が不要な場合）
+
 ```env
 REDIS_ENABLED=false
 ```
 
 ---
 
-## TypeScript 繧ｳ繝ｳ繝代う繝ｫ繧ｨ繝ｩ繝ｼ
+## TypeScript コンパイルエラー
 
-### `tsconfig.json` 繧ｨ繝ｩ繝ｼ
+### `tsconfig.json` エラー
 
 ```
 TS18002: The 'files' list in config file 'tsconfig.json' is empty.
 ```
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
-1. `tsconfig.json` 縺ｫ `include` 繝輔ぅ繝ｼ繝ｫ繝峨′縺ゅｋ縺薙→繧堤｢ｺ隱搾ｼ・
+1. `tsconfig.json` に `include` フィールドがあることを確認：
+
 ```json
 {
   "include": ["src/**/*", "tests/**/*"],
@@ -174,7 +198,8 @@ TS18002: The 'files' list in config file 'tsconfig.json' is empty.
 }
 ```
 
-2. Webpack 險ｭ螳壹〒繧ｳ繝ｳ繝輔ぅ繧ｰ繝輔ぃ繧､繝ｫ繧呈欠螳夲ｼ・
+2. Webpack 設定でコンフィグファイルを指定：
+
 ```javascript
 options: {
   configFile: path.resolve(__dirname, "tsconfig.json"),
@@ -184,62 +209,72 @@ options: {
 
 ---
 
-### 蝙九メ繧ｧ繝・け繧ｨ繝ｩ繝ｼ
+### 型チェックエラー
 
 ```
 error TS2322: Type 'X' is not assignable to type 'Y'
 ```
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
-1. 蜴ｳ蟇・Δ繝ｼ繝峨ｒ遒ｺ隱搾ｼ・
+1. 厳密モードを確認：
+
 ```bash
 bun run lint
 ```
 
-2. 蝙句ｮ夂ｾｩ繧偵メ繧ｧ繝・け・・
+2. 型定義をチェック：
+
 ```bash
 bun run build
 ```
 
-3. 蠢・ｦ√↓蠢懊§縺ｦ `// @ts-ignore` 繧ｳ繝｡繝ｳ繝医ｒ菴ｿ逕ｨ・井ｸ�譎ら噪・・
+3. 必要に応じて `// @ts-ignore` コメントを使用（一時的）
+
 ---
 
-## 繝・せ繝亥ｮ溯｡後お繝ｩ繝ｼ
+## テスト実行エラー
 
-### 繝・せ繝亥､ｱ謨・
+### テスト失敗
+
 ```
-笶・All tests failed
+❌ All tests failed
 ```
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
 ```bash
-# 縺吶∋縺ｦ縺ｮ繝・せ繝亥ｮ溯｡・bun test
+# すべてのテスト実行
+bun test
 
-# 迚ｹ螳壹・繝・せ繝亥ｮ溯｡・bun test src/lib/__tests__/database.test.ts
+# 特定のテスト実行
+bun test src/lib/__tests__/database.test.ts
 
-# 繧ｦ繧ｩ繝・メ繝｢繝ｼ繝・bun test --watch
+# ウォッチモード
+bun test --watch
 ```
 
 ---
 
-## 繝薙Ν繝峨お繝ｩ繝ｼ
+## ビルドエラー
 
-### Webpack 繧ｳ繝ｳ繝代う繝ｫ螟ｱ謨・
+### Webpack コンパイル失敗
+
 ```
 ERROR in main
 Module not found: Error: Can't resolve
 ```
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
-1. 繧ｨ繝ｳ繝医Μ繝ｼ繝昴う繝ｳ繝育｢ｺ隱搾ｼ・
+1. エントリーポイント確認：
+
 ```javascript
 entry: path.resolve(__dirname, "../../src", "index.ts");
 ```
 
-2. 繧ｭ繝｣繝・す繝･繧ｯ繝ｪ繧｢・・
+2. キャッシュクリア：
+
 ```bash
 bun run clean
 bun install
@@ -248,50 +283,60 @@ bun run build
 
 ---
 
-## 繝代ヵ繧ｩ繝ｼ繝槭Φ繧ｹ蝠城｡・
-### 繝｡繝｢繝ｪ菴ｿ逕ｨ驥上′螟壹＞
+## パフォーマンス問題
 
-**隗｣豎ｺ遲・*:
+### メモリ使用量が多い
 
-1. 繝ｭ繧ｰ繝ｬ繝吶Ν隱ｿ謨ｴ・・
+**解決策**:
+
+1. ログレベル調整：
+
 ```env
 LOG_LEVEL=info
 ```
 
-2. 繝偵・繝励し繧､繧ｺ險ｭ螳夲ｼ・
+2. ヒープサイズ設定：
+
 ```bash
 bun --max-old-space-size=2048 run src/index.ts
 ```
 
-3. 繧ｭ繝｣繝・す繝･繧ｯ繝ｪ繧｢・・
+3. キャッシュクリア：
+
 ```bash
 bun run clean
 ```
 
 ---
 
-### 繝ｬ繧ｹ繝昴Φ繧ｹ譎る俣縺碁≦縺・
-**隗｣豎ｺ遲・*:
+### レスポンス時間が遅い
 
-1. Redis 繧ｭ繝｣繝・す繝･譛牙柑蛹・2. 荳崎ｦ√↑繝倥Ν繧ｹ繝√ぉ繝・け辟｡蜉ｹ蛹・3. 繝ｭ繧ｰ繝ｬ繝吶Ν菴惹ｸ具ｼ啻LOG_LEVEL=warn`
+**解決策**:
+
+1. Redis キャッシュ有効化
+2. 不要なヘルスチェック無効化
+3. ログレベル低下：`LOG_LEVEL=warn`
 
 ---
 
-## 繝阪ャ繝医Ρ繝ｼ繧ｯ蝠城｡・
-### CORS 繧ｨ繝ｩ繝ｼ
+## ネットワーク問題
+
+### CORS エラー
 
 ```
 Access to XMLHttpRequest blocked by CORS policy
 ```
 
-**隗｣豎ｺ遲・*:
+**解決策**:
 
-`.env` 縺ｧ險ｱ蜿ｯ繧ｪ繝ｪ繧ｸ繝ｳ險ｭ螳夲ｼ・
+`.env` で許可オリジン設定：
+
 ```env
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
 ```
 
-縺ｾ縺溘・ `src/index.ts` 縺ｧ險ｭ螳夲ｼ・
+または `src/index.ts` で設定：
+
 ```typescript
 cors({
   origin: process.env.ALLOWED_ORIGINS?.split(","),
@@ -300,32 +345,36 @@ cors({
 
 ---
 
-## 繝ｭ繧ｰ遒ｺ隱・
-### 繝ｭ繧ｰ繝輔ぃ繧､繝ｫ縺ｮ蝣ｴ謇�
+## ログ確認
+
+### ログファイルの場所
 
 ```
 logs/
-笏懌楳笏� app.log          # 繧｢繝励Μ繧ｱ繝ｼ繧ｷ繝ｧ繝ｳ繝ｭ繧ｰ
-笏懌楳笏� error.log        # 繧ｨ繝ｩ繝ｼ繝ｭ繧ｰ
-笏披楳笏� audit/           # 逶｣譟ｻ繝ｭ繧ｰ
+├── app.log          # アプリケーションログ
+├── error.log        # エラーログ
+└── audit/           # 監査ログ
 ```
 
-### 繝ｭ繧ｰ遒ｺ隱・
+### ログ確認
+
 ```powershell
-# 譛�譁ｰ縺ｮ繧ｨ繝ｩ繝ｼ繝ｭ繧ｰ
+# 最新のエラーログ
 Get-Content logs/error.log | Select-Object -Last 50
 
-# 繝ｪ繧｢繝ｫ繧ｿ繧､繝�繝ｭ繧ｰ
+# リアルタイムログ
 Get-Content logs/app.log -Wait
 
-# 迚ｹ螳壹・繝代ち繝ｼ繝ｳ縺ｧ讀懃ｴ｢
+# 特定のパターンで検索
 Get-Content logs/app.log | Select-String "ERROR"
 ```
 
 ---
 
-## 繝・ヰ繝・げ繝｢繝ｼ繝・
-### 繝・ヰ繝・げ繝ｭ繧ｰ譛牙柑蛹・
+## デバッグモード
+
+### デバッグログ有効化
+
 ```env
 DEBUG=true
 LOG_LEVEL=debug
@@ -333,23 +382,25 @@ NODE_ENV=development
 SOURCE_MAPS=true
 ```
 
-### 繝・ヰ繝・ぎ繝ｼ謗･邯・
+### デバッガー接続
+
 ```bash
 bun run --inspect src/index.ts
 ```
 
 ---
 
-## 繧ｵ繝昴・繝・
-蝠城｡後′隗｣豎ｺ縺励↑縺・�ｴ蜷・
+## サポート
 
-1. 繝ｭ繧ｰ繧堤｢ｺ隱・ `logs/error.log`
-2. GitHub Issues 縺ｧ讀懃ｴ｢: https://github.com/Elysia20220909/ElysiaAI/issues
-3. 迺ｰ蠅・ュ蝣ｱ繧定ｨ倬鹸:
-   - Bun 繝舌・繧ｸ繝ｧ繝ｳ: `bun --version`
-   - Node.js 繝舌・繧ｸ繝ｧ繝ｳ: `node --version`
+問題が解決しない場合:
+
+1. ログを確認: `logs/error.log`
+2. GitHub Issues で検索: https://github.com/chloeamethyst/ElysiaJS/issues
+3. 環境情報を記録:
+   - Bun バージョン: `bun --version`
+   - Node.js バージョン: `node --version`
    - OS: `$PSVersionTable.OS`
 
 ---
 
-**譛�邨よ峩譁ｰ**: 2025蟷ｴ12譛・譌･
+**最終更新**: 2025年12月4日
