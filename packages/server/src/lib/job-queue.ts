@@ -164,10 +164,10 @@ class JobQueueManager {
 			period: { start: data.startDate, end: data.endDate },
 			statistics: {
 				totalFeedbacks: feedbacks.length,
-				positiveFeedbacks: feedbacks.filter((f) => f.rating === "up").length,
-				negativeFeedbacks: feedbacks.filter((f) => f.rating === "down").length,
+				positiveFeedbacks: feedbacks.filter((f: any) => f.rating === "up").length,
+				negativeFeedbacks: feedbacks.filter((f: any) => f.rating === "down").length,
 				totalKnowledge: knowledge.length,
-				verifiedKnowledge: knowledge.filter((k) => k.verified).length,
+				verifiedKnowledge: knowledge.filter((k: any) => k.verified).length,
 			},
 			generatedAt: new Date(),
 		};

@@ -49,10 +49,7 @@ class HealthMonitor {
 			check: async () => {
 				try {
 					const { PrismaClient } = await import("@prisma/client");
-					const { PrismaLibSql } = await import("@prisma/adapter-libsql");
-					const url = config.dbUrl;
-					const adapter = new PrismaLibSql({ url });
-					const prisma = new PrismaClient({ adapter });
+					const prisma = new PrismaClient();
 					await prisma.$queryRaw`SELECT 1`;
 					await prisma.$disconnect();
 					return true;
