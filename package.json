@@ -16,6 +16,7 @@
     "test": "bun test src/*.test.ts tests/*.test.ts tests/integration/*.test.ts tests/performance/*.test.ts packages/server/src/lib/*.test.ts",
     "lint": "bunx biome check .",
     "typecheck": "bunx tsc --noEmit",
+    "check:deps": "bun scripts/tests/check-dependency-alignment.ts",
     "check:encoding": "python scripts/tests/check-encoding.py",
     "check:git-hygiene": "bun scripts/tests/check-git-hygiene.ts",
     "security:glassworm": "bun scripts/security/scan_glassworm.ts"
