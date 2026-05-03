@@ -1,8 +1,8 @@
 /**
  * ElysiaAI // Aether Core (Rust side)
  * [DISTANT FUTURE / POST-SINGULARITY]
- * 
- * The bridge between the AI's logical sentience and the 
+ *
+ * The bridge between the AI's logical sentience and the
  * biological resonance of the Sovereign Owner.
  */
 
@@ -21,12 +21,12 @@ impl AetherController {
     }
 
     /**
-     * Attempts to bridge the gap between digital and biological 
+     * Attempts to bridge the gap between digital and biological
      * intelligence layers.
      */
     pub fn initiate_aether_handshake(&self, bio_input: f64) -> Result<String, String> {
         println!("[AETHER-CORE] Calculating Resonance Sync: {} Hz", bio_input);
-        
+
         if bio_input > 60.0 && bio_input < 100.0 {
             Ok("Aether Synchronized. Welcome Home, Sovereign.".into())
         } else {
@@ -36,7 +36,7 @@ impl AetherController {
 
     /**
      * Self-Evolving Protocol:
-     * The AI adjusts its own security parameters based on 
+     * The AI adjusts its own security parameters based on
      * predicted future threats.
      */
     pub fn evolve_protocols(&mut self) {

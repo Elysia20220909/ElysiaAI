@@ -1,7 +1,14 @@
 import { Elysia, t } from "elysia";
 import jwt from "jsonwebtoken";
 import { CONFIG, proxyToFastAPI } from "../lib/constants";
+import { collectLocalOpsOverview } from "../lib/local-ops";
 import { logger } from "../lib/logger";
+import { collectNativeLiteSnapshot } from "../lib/native-lite";
+import {
+	buildSuitStatus,
+	getAegisFridayPersonaPrompt,
+	getCinematicPresets,
+} from "../lib/suit-system";
 
 // 1. 公開ルート用インスタンス
 const publicRoutes = new Elysia()
@@ -100,7 +107,20 @@ const publicRoutes = new Elysia()
 				countermeasures: "ACTIVE",
 			},
 		};
-	});
+	})
+	.get("/api/local-ops", async () => {
+		return await collectLocalOpsOverview({ assumeCoreUp: true });
+	})
+	.get("/api/native-lite", () => collectNativeLiteSnapshot())
+	.get("/api/suit/status", () => buildSuitStatus())
+	.get("/api/suit/cinematic-presets", () => ({
+		presets: getCinematicPresets(),
+		safety: "composition presets only; no game input automation",
+	}))
+	.get("/api/suit/persona", () => ({
+		name: "AEGIS-FRIDAY",
+		prompt: getAegisFridayPersonaPrompt(),
+	}));
 
 // 2. 保護ルート用インスタンス (JWT認証必須)
 const guardedRoutes = new Elysia({ prefix: "/api/system" }).guard(

@@ -1,7 +1,7 @@
 /**
  * ElysiaAI // BlackBox Core (Rust side)
  * [NSA-LEVEL CLASSIFICATION / TOP SECRET]
- * 
+ *
  * The command center for the Sovereign BlackBox.
  * It enforces a "Zero Trust" policy even within the system process.
  */
@@ -21,7 +21,7 @@ impl BlackBoxCommander {
     }
 
     /**
-     * Executes an NSA-level operation by coordinating with the 
+     * Executes an NSA-level operation by coordinating with the
      * native Swift BlackBox.
      */
     pub fn execute_top_secret_op(&self, op_code: u32) -> Result<(), String> {
@@ -29,7 +29,10 @@ impl BlackBoxCommander {
             return Err("Core De-hardened. Operation Aborted.".into());
         }
 
-        println!("[BLACKBOX-CORE] Relaying OpCode {} to Hardware-Bound Sentinel...", op_code);
+        println!(
+            "[BLACKBOX-CORE] Relaying OpCode {} to Hardware-Bound Sentinel...",
+            op_code
+        );
         // Calls the Swift SovereignBlackBox via the secure bridge
         Ok(())
     }
