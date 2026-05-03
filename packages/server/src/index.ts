@@ -52,7 +52,6 @@ app
 		staticPlugin({
 			assets: existsSync("public") ? "public" : "../../public",
 			prefix: "",
-			alwaysUpdate: true,
 		}),
 	)
 	.use(html())
@@ -111,7 +110,7 @@ app
 			return error(429, rateLimit.reason || "Too Many Requests");
 		}
 	})
-	.error(({ code, error: rawError, set, request }: any) => {
+	.onError(({ code, error: rawError, set, request }: any) => {
 		const message = isProd
 			? "ごめんなさい、ちょっと考えがまとまらなくて……"
 			: rawError?.message || "Internal Error";

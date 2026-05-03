@@ -3,6 +3,12 @@ import jwt from "jsonwebtoken";
 import * as chatSessionService from "../lib/chat-session";
 import { CONFIG, jsonError } from "../lib/constants";
 
+type ChatMode = "normal" | "sweet" | "professional";
+
+function normalizeChatMode(mode: string | undefined): ChatMode {
+	return mode === "sweet" || mode === "professional" ? mode : "normal";
+}
+
 export const sessionRoutes = new Elysia({ prefix: "/sessions" })
 	.post(
 		"/",
@@ -25,10 +31,10 @@ export const sessionRoutes = new Elysia({ prefix: "/sessions" })
 				}
 			} catch {}
 
-			const mode = (body as { mode?: string }).mode || "normal";
+			const mode = normalizeChatMode((body as { mode?: string }).mode);
 			const sessionId = await chatSessionService.createChatSession(
 				userId,
-				mode as string,
+				mode,
 			);
 			return { sessionId };
 		},
