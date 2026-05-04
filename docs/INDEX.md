@@ -9,6 +9,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Project overview | `README.md` |
 | Getting started | `docs/GETTING_STARTED.md` |
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |
+| Stark home local server build | `docs/STARK_HOME_LOCAL_SERVER_BUILD.md` |
 | Fictional suit system | `docs/fictional/MARK85_FANTASY_SUIT_SYSTEM.md` |
 | Architecture | `docs/ARCHITECTURE.md` |
 | Project structure | `docs/PROJECT_STRUCTURE.md` |
