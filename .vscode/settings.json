@@ -32,6 +32,39 @@
         "node_modules": false,
         "**/.git": false
     },
+    "files.watcherExclude": {
+        "**/.venv/**": true,
+        "**/node_modules/**": true,
+        "**/src-tauri/target/**": true,
+        "**/packages/server/scripts/infra/tools/**": true,
+        "**/.tmp/**": true,
+        "**/.ruff_cache/**": true,
+        "**/.mypy_cache/**": true
+    },
+    "search.exclude": {
+        "**/.venv": true,
+        "**/node_modules": true,
+        "**/src-tauri/target": true,
+        "**/packages/server/scripts/infra/tools": true,
+        "**/.tmp": true,
+        "**/.ruff_cache": true,
+        "**/.mypy_cache": true
+    },
+    "rust-analyzer.cargo.targetDir": true,
+    "rust-analyzer.checkOnSave": false,
+    "rust-analyzer.cargo.buildScripts.enable": false,
+    "rust-analyzer.procMacro.enable": false,
+    "rust-analyzer.linkedProjects": [
+        "src-tauri/Cargo.toml",
+        "packages/shield-agent/Cargo.toml"
+    ],
+    "rust-analyzer.files.exclude": [
+        ".venv",
+        "node_modules",
+        ".tmp",
+        "src-tauri/target",
+        "packages/server/scripts/infra/tools"
+    ],
     "files.encoding": "utf8",
     "files.eol": "\n",
     "files.autoGuessEncoding": true,

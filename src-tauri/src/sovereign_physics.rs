@@ -139,6 +139,10 @@ pub fn update_simulation() -> WorldState {
     let wind_force = state.wind_force;
     let basket_x = state.basket_x;
     let num_objs = state.objects.len();
+    let mut score_delta = 0;
+    let mut lives = state.lives;
+    let mut should_end_game = false;
+    let mut pending_events = Vec::new();
 
     // 1. Physics Update
     for obj in state.objects.iter_mut() {
@@ -164,8 +168,8 @@ pub fn update_simulation() -> WorldState {
 
                 // --- Game Rule: Catch Check ---
                 if (obj.x - basket_x).abs() < 1.2 {
-                    state.score += 10;
-                    state.collision_events.push(CollisionEvent {
+                    score_delta += 10;
+                    pending_events.push(CollisionEvent {
                         x: obj.x,
                         y: 0.0,
                         intensity: 2.0,
@@ -180,18 +184,18 @@ pub fn update_simulation() -> WorldState {
                 } else {
                     if obj.velocity_y.abs() > 8.0 && !obj.is_broken {
                         obj.is_broken = true;
-                        state.lives = (state.lives - 1).max(0);
-                        state.collision_events.push(CollisionEvent {
+                        lives = (lives - 1).max(0);
+                        pending_events.push(CollisionEvent {
                             x: obj.x,
                             y: 0.0,
                             intensity: 1.0,
                         });
 
-                        if state.lives <= 0 {
-                            state.game_over = true;
+                        if lives <= 0 {
+                            should_end_game = true;
                         }
                     } else if obj.velocity_y.abs() > 0.5 {
-                        state.collision_events.push(CollisionEvent {
+                        pending_events.push(CollisionEvent {
                             x: obj.x,
                             y: 0.0,
                             intensity: 0.3,
@@ -208,47 +212,63 @@ pub fn update_simulation() -> WorldState {
             }
         }
     }
+    state.score += score_delta;
+    state.lives = lives;
+    if should_end_game {
+        state.game_over = true;
+    }
+    state.collision_events.extend(pending_events);
 
     // 2. Inter-object Collision (Simple Sphere-Sphere)
     let radius = 0.4; // Normalized radius
     for i in 0..num_objs {
         for j in (i + 1)..num_objs {
-            let (obj_a, obj_b) = {
+            let collision_event = {
                 let (left, right) = state.objects.split_at_mut(j);
-                (&mut left[i], &mut right[0])
+                let obj_a = &mut left[i];
+                let obj_b = &mut right[0];
+
+                let dx = obj_b.x - obj_a.x;
+                let dy = obj_b.y - obj_a.y;
+                let dist_sq = dx * dx + dy * dy;
+                let min_dist = radius * 2.0;
+
+                if dist_sq < min_dist * min_dist {
+                    // Collision detected!
+                    let dist = dist_sq.sqrt();
+                    let overlap = min_dist - dist;
+                    let (nx, ny) = if dist > f32::EPSILON {
+                        (dx / dist, dy / dist)
+                    } else {
+                        (1.0, 0.0)
+                    };
+
+                    // Separate objects
+                    obj_a.x -= nx * overlap * 0.5;
+                    obj_a.y -= ny * overlap * 0.5;
+                    obj_b.x += nx * overlap * 0.5;
+                    obj_b.y += ny * overlap * 0.5;
+
+                    // Simple elastic collision (exchange velocities)
+                    let temp_vx = obj_a.velocity_x;
+                    let temp_vy = obj_a.velocity_y;
+                    obj_a.velocity_x = obj_b.velocity_x * 0.8;
+                    obj_a.velocity_y = obj_b.velocity_y * 0.8;
+                    obj_b.velocity_x = temp_vx * 0.8;
+                    obj_b.velocity_y = temp_vy * 0.8;
+
+                    Some(CollisionEvent {
+                        x: (obj_a.x + obj_b.x) / 2.0,
+                        y: (obj_a.y + obj_b.y) / 2.0,
+                        intensity: 0.5,
+                    })
+                } else {
+                    None
+                }
             };
 
-            let dx = obj_b.x - obj_a.x;
-            let dy = obj_b.y - obj_a.y;
-            let dist_sq = dx * dx + dy * dy;
-            let min_dist = radius * 2.0;
-
-            if dist_sq < min_dist * min_dist {
-                // Collision detected!
-                let dist = dist_sq.sqrt();
-                let overlap = min_dist - dist;
-
-                // Separate objects
-                let nx = dx / dist;
-                let ny = dy / dist;
-                obj_a.x -= nx * overlap * 0.5;
-                obj_a.y -= ny * overlap * 0.5;
-                obj_b.x += nx * overlap * 0.5;
-                obj_b.y += ny * overlap * 0.5;
-
-                // Simple elastic collision (exchange velocities)
-                let temp_vx = obj_a.velocity_x;
-                let temp_vy = obj_a.velocity_y;
-                obj_a.velocity_x = obj_b.velocity_x * 0.8;
-                obj_a.velocity_y = obj_b.velocity_y * 0.8;
-                obj_b.velocity_x = temp_vx * 0.8;
-                obj_b.velocity_y = temp_vy * 0.8;
-
-                state.collision_events.push(CollisionEvent {
-                    x: (obj_a.x + obj_b.x) / 2.0,
-                    y: (obj_a.y + obj_b.y) / 2.0,
-                    intensity: 0.5,
-                });
+            if let Some(event) = collision_event {
+                state.collision_events.push(event);
             }
         }
     }
