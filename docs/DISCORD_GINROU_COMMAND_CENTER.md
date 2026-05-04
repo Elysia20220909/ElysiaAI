@@ -24,11 +24,12 @@ Use `.env` for real values. Do not commit secrets.
 DISCORD_WEBHOOK_URL=
 DISCORD_COMMIT_NOTIFY_ENABLED=true
 DISCORD_COMMIT_NOTIFY_WEBHOOK_URL=
+DISCORD_COMMIT_NOTIFY_CHANNEL_ID=
 DISCORD_COMMIT_NOTIFY_USERNAME=Silver Wolf | Lv.999
 DISCORD_COMMIT_NOTIFY_AVATAR_URL=
 ```
 
-The post-commit hook sends both Slack and Discord notifications when configured.
+The post-commit hook sends both Slack and Discord notifications when configured. Discord uses `DISCORD_COMMIT_NOTIFY_WEBHOOK_URL` first, then falls back to `DISCORD_BOT_TOKEN` plus `DISCORD_COMMIT_NOTIFY_CHANNEL_ID`.
 
 ```powershell
 bun scripts/discord-commit-notify.ts --dry-run
