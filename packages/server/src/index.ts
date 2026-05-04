@@ -18,6 +18,7 @@ import { performHealthCheck } from "./lib/health";
 import { logger } from "./lib/logger";
 import { metricsCollector } from "./lib/metrics";
 import { applySecurityHeaders } from "./lib/security-utils";
+import { slackSocketModeBridge } from "./lib/slack-socket-mode";
 import { adminRoutes } from "./routes/admin-routes";
 import { aiRoutes, handleElysiaLove, handleFeedback } from "./routes/ai-routes";
 import { authRoutes } from "./routes/auth-routes";
@@ -25,6 +26,7 @@ import { customizationRoutes } from "./routes/customization-routes";
 import { databaseRoutes } from "./routes/database-routes";
 import { fileRoutes } from "./routes/file-routes";
 import { sessionRoutes } from "./routes/session-routes";
+import { slackRoutes } from "./routes/slack-routes";
 import { systemRoutes } from "./routes/system-routes";
 import { vtuberRoutes } from "./routes/vtuber-routes";
 
@@ -157,6 +159,7 @@ app
 	})
 	.use(authRoutes)
 	.use(aiRoutes)
+	.use(slackRoutes)
 	.use(systemRoutes)
 	.use(adminRoutes)
 	.use(sessionRoutes)
@@ -291,6 +294,12 @@ logger.info(
 	`🌸 ElysiaAI Sovereign Server started on port ${config.port} (Modular Mode)`,
 );
 
+void slackSocketModeBridge.start().catch((error) => {
+	logger.warn("Slack Socket Mode startup skipped", {
+		error: error instanceof Error ? error.message : "unknown",
+	});
+});
+
 // Graceful Shutdown Logic
 const handleShutdown = async (signal: string) => {
 	logger.info(`🛑 Received ${signal}, starting graceful shutdown...`);
@@ -303,6 +312,7 @@ const handleShutdown = async (signal: string) => {
 	try {
 		await app.stop();
 		logger.info("Server stopped.");
+		slackSocketModeBridge.stop();
 
 		const { healthMonitor } = await import("./lib/health-monitor");
 		const { logCleanupManager } = await import("./lib/log-cleanup");
