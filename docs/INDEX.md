@@ -34,6 +34,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | General integrations | `docs/INTEGRATION_GUIDE.md` |
 | OpenAI | `docs/OPENAI_INTEGRATION.md` |
 | Open-LLM-VTuber | `docs/OPEN_LLM_VTUBER_INTEGRATION.md` |
+| Discord command center | `docs/DISCORD_GINROU_COMMAND_CENTER.md` |
 | Web search | `docs/WEB_SEARCH_INTEGRATION.md` |
 | Voice | `docs/VOICE_GUIDE.md`, `docs/VOICEVOX_SETUP.md` |
 | Scrapling | `docs/SCRAPLING_INTEGRATION.md` |
