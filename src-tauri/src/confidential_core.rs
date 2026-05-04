@@ -24,7 +24,7 @@ impl ConfidentialController {
         }
     }
 
-    pub fn seal_root_secret(&self, secret: &str) -> Result<(), String> {
+    pub fn seal_root_secret(&self, _secret: &str) -> Result<(), String> {
         if !self.integrity_verified {
             return Err("System Integrity compromised. Sealing denied.".into());
         }
