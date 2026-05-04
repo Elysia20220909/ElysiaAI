@@ -19,8 +19,8 @@ import tweepy
 
 load_dotenv()
 
-# Webhook provided by user
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1499033171394822244/gtYg2KquP_RJD1iV_BVVCcjmvXogoYO8mlKoMTIhg_JOQT1nHApfex7p5lptk9LdZZqd"
+# Optional report webhook. Keep the real URL in .env only.
+DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")
 
 # X (Twitter) Credentials
 API_KEY = os.getenv("X_API_KEY")
