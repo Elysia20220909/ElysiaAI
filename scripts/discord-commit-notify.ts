@@ -97,6 +97,30 @@ function webhookUrl() {
 	);
 }
 
+function botToken() {
+	return process.env.DISCORD_BOT_TOKEN || "";
+}
+
+function botChannelId() {
+	if (process.env.DISCORD_COMMIT_NOTIFY_CHANNEL_ID) {
+		return process.env.DISCORD_COMMIT_NOTIFY_CHANNEL_ID;
+	}
+	if (process.env.DISCORD_CHANNEL_ID) return process.env.DISCORD_CHANNEL_ID;
+	if (process.env.RSS_NEWS_CHANNEL_ID) return process.env.RSS_NEWS_CHANNEL_ID;
+
+	const configPath = join("config", "discord_rss_news.json");
+	if (!existsSync(configPath)) return "";
+
+	try {
+		const config = JSON.parse(readFileSync(configPath, "utf8")) as {
+			channel_id?: string;
+		};
+		return config.channel_id || "";
+	} catch {
+		return "";
+	}
+}
+
 function personaName() {
 	return process.env.DISCORD_COMMIT_NOTIFY_USERNAME || "Silver Wolf | Lv.999";
 }
@@ -170,6 +194,32 @@ async function sendDiscordWebhook(url: string, payload: unknown) {
 	}
 }
 
+async function sendDiscordBotMessage(
+	token: string,
+	channel: string,
+	payload: ReturnType<typeof buildCommitDiscordPayload>,
+) {
+	const response = await fetch(
+		`https://discord.com/api/v10/channels/${channel}/messages`,
+		{
+			method: "POST",
+			headers: {
+				Authorization: `Bot ${token}`,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				content: payload.content,
+				embeds: payload.embeds,
+				allowed_mentions: payload.allowed_mentions,
+			}),
+		},
+	);
+	if (!response.ok) {
+		const detail = await response.text().catch(() => "");
+		throw new Error(`Discord bot post failed: ${response.status} ${detail}`);
+	}
+}
+
 export async function main() {
 	const scriptRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 	loadDotEnvFile(".env");
@@ -186,6 +236,8 @@ export async function main() {
 	const info = collectCommitInfo();
 	const payload = buildCommitDiscordPayload(info);
 	const url = webhookUrl();
+	const token = botToken();
+	const channel = botChannelId();
 
 	if (args.dryRun) {
 		console.log(
@@ -193,7 +245,14 @@ export async function main() {
 				{
 					ok: true,
 					dryRun: true,
-					transport: url ? "webhook" : "missing",
+					transport: url
+						? token && channel
+							? "webhook+bot-fallback"
+							: "webhook"
+						: token && channel
+							? "bot"
+							: "missing",
+					channel: channel || undefined,
 					payload,
 				},
 				null,
@@ -204,7 +263,17 @@ export async function main() {
 	}
 
 	if (url) {
-		await sendDiscordWebhook(url, payload);
+		try {
+			await sendDiscordWebhook(url, payload);
+			if (!args.hook) console.log("Discord commit notification sent.");
+			return;
+		} catch (error) {
+			if (!token || !channel) throw error;
+		}
+	}
+
+	if (token && channel) {
+		await sendDiscordBotMessage(token, channel, payload);
 		if (!args.hook) console.log("Discord commit notification sent.");
 		return;
 	}
