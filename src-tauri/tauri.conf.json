@@ -37,8 +37,6 @@
     ],
     "resources": [
         "../data/**/*",
-        "../main.py",
-        "../modules.py",
         "../requirements.txt",
         "../public/**/*"
     ]
