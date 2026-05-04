@@ -2,20 +2,26 @@
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
 hook_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)" || exit 0
-script_path="$repo_root/scripts/slack-commit-notify.ts"
 
-if [ ! -f "$script_path" ]; then
-	script_path="$hook_dir/../scripts/slack-commit-notify.ts"
-fi
+run_notify() {
+	script_path="$repo_root/$1"
 
-[ -f "$script_path" ] || exit 0
+	if [ ! -f "$script_path" ]; then
+		script_path="$hook_dir/../$1"
+	fi
 
-if command -v bun >/dev/null 2>&1; then
-	(cd "$repo_root" && bun "$script_path" --hook) >/dev/null 2>&1 || true
-elif command -v bun.exe >/dev/null 2>&1; then
-	(cd "$repo_root" && bun.exe "$script_path" --hook) >/dev/null 2>&1 || true
-elif command -v powershell.exe >/dev/null 2>&1; then
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Set-Location -LiteralPath \"$repo_root\"; bun \"$script_path\" --hook" >/dev/null 2>&1 || true
-elif command -v pwsh >/dev/null 2>&1; then
-	pwsh -NoProfile -Command "Set-Location -LiteralPath \"$repo_root\"; bun \"$script_path\" --hook" >/dev/null 2>&1 || true
-fi
+	[ -f "$script_path" ] || return 0
+
+	if command -v bun >/dev/null 2>&1; then
+		(cd "$repo_root" && bun "$script_path" --hook) >/dev/null 2>&1 || true
+	elif command -v bun.exe >/dev/null 2>&1; then
+		(cd "$repo_root" && bun.exe "$script_path" --hook) >/dev/null 2>&1 || true
+	elif command -v powershell.exe >/dev/null 2>&1; then
+		powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Set-Location -LiteralPath \"$repo_root\"; bun \"$script_path\" --hook" >/dev/null 2>&1 || true
+	elif command -v pwsh >/dev/null 2>&1; then
+		pwsh -NoProfile -Command "Set-Location -LiteralPath \"$repo_root\"; bun \"$script_path\" --hook" >/dev/null 2>&1 || true
+	fi
+}
+
+run_notify "scripts/slack-commit-notify.ts"
+run_notify "scripts/discord-commit-notify.ts"
