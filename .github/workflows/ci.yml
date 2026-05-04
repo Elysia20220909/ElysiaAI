@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # ==============================
       # 1. Bun & TypeScript (ElysiaJS)
@@ -42,7 +42,7 @@ jobs:
         run: bun run test --coverage
 
       - name: Upload Bun Coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bun-coverage
           path: coverage/
@@ -66,7 +66,7 @@ jobs:
       # 2. Python (FastAPI & OS)
       # ==============================
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: "pip"
@@ -99,7 +99,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pytest-results
           path: pytest-report.xml
