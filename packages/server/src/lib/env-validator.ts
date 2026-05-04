@@ -156,6 +156,91 @@ const ENV_SCHEMA: EnvConfig[] = [
 			}
 		},
 	},
+	{
+		name: "SLACK_WEBHOOK_URL",
+		required: false,
+		description: "Slack Incoming Webhook URL",
+		validator: (v) => v.startsWith("https://hooks.slack.com/services/"),
+	},
+	{
+		name: "SLACK_SIGNING_SECRET",
+		required: false,
+		description: "Slack Slash Command 署名検証用シークレット",
+		validator: (v) => v.length >= 16,
+	},
+	{
+		name: "SLACK_BOT_TOKEN",
+		required: false,
+		description: "Slack Bot User OAuth Token (xoxb-...)",
+		validator: (v) => v.startsWith("xoxb-"),
+	},
+	{
+		name: "SLACK_APP_TOKEN",
+		required: false,
+		description: "Slack Socket Mode App-Level Token (xapp-...)",
+		validator: (v) => v.startsWith("xapp-"),
+	},
+	{
+		name: "SLACK_SOCKET_MODE_ENABLED",
+		required: false,
+		default: "false",
+		description: "Slack Socket Mode を有効化",
+		validator: (v) => ["true", "false"].includes(v),
+	},
+	{
+		name: "SLACK_COMMAND_NAME",
+		required: false,
+		default: "/ginrou",
+		description: "Slack Slash Command 名",
+		validator: (v) => v.startsWith("/") && v.length > 1,
+	},
+	{
+		name: "GINROU_OWNER_USER_ID",
+		required: false,
+		description: "GINROU Shadow Gate Owner Slack User ID",
+		validator: (v) => /^[UW][A-Z0-9]+$/.test(v),
+	},
+	{
+		name: "GINROU_AUDIT_CHANNEL_ID",
+		required: false,
+		description: "GINROU Shadow Gate audit channel ID",
+		validator: (v) => /^[CGD][A-Z0-9]+$/.test(v),
+	},
+	{
+		name: "GINROU_ALLOWED_CHANNEL_IDS",
+		required: false,
+		description:
+			"GINROU Shadow Gate allowed Slack channel IDs (comma separated)",
+		validator: (v) =>
+			v
+				.split(",")
+				.map((channel) => channel.trim())
+				.filter(Boolean)
+				.every((channel) => /^[CGD][A-Z0-9]+$/.test(channel)),
+	},
+	{
+		name: "GINROU_GATE_DEFAULT_LOCKED",
+		required: false,
+		default: "false",
+		description: "GINROU Shadow Gate starts locked",
+		validator: (v) => ["true", "false"].includes(v),
+	},
+	{
+		name: "GINROU_DEFAULT_REPO",
+		required: false,
+		default: "Elysia20220909/ElysiaAI",
+		description: "GINROU default GitHub repository",
+		validator: (v) => /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(v),
+	},
+	{
+		name: "GITHUB_TOKEN",
+		required: false,
+		description: "GitHub token for private repo read access",
+		validator: (v) =>
+			v.startsWith("ghp_") ||
+			v.startsWith("github_pat_") ||
+			v.startsWith("ghs_"),
+	},
 ];
 
 export interface ValidationResult {
