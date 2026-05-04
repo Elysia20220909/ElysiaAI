@@ -1,103 +1,110 @@
 import hashlib
 import logging
 import os
-import platform
-import uuid
 
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from dotenv import load_dotenv
+
+
+# Load environment variables from root .env
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 logger = logging.getLogger("VaultShroud")
 
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
-
 class AbyssalShroud:
     """
-    Handles hardware-bound key derivation and AES-256-GCM encryption.
-    Ensures data remains 'submerged' and unreadable outside the local host.
+    Handles unified AES-256-GCM encryption compatible with the Node.js stack.
+    Ensures data integrity and confidentiality across the entire resonance loop.
     """
 
-    def __init__(self, salt: bytes = b"ABYSSAL_SINGULARITY_SALT_2026"):
-        self.key = self._derive_machine_key(salt)
+    def __init__(self):
+        self.secret = os.getenv("ENCRYPTION_SECRET", "elysia-default-shadow-key-777")
+        self.salt = os.getenv("ENCRYPTION_SALT", "abyssal-salt")
+        self.key = self._derive_key()
         self.cipher = AESGCM(self.key)
+        logger.info("🔐 Abyssal Shroud Initialized (Unified AES-256-GCM)")
 
-    def _derive_machine_key(self, salt: bytes) -> bytes:
-        """Derives a machine-unique 256-bit key."""
-        # Hardware identifiers
-        mac = str(uuid.getnode())
-        node = platform.node()
-        machine = platform.machine()
+    def _derive_key(self) -> bytes:
+        """
+        Derives a 256-bit key using scrypt, matching Node.js scryptSync defaults.
+        N=16384, r=8, p=1
+        """
+        return hashlib.scrypt(
+            self.secret.encode(),
+            salt=self.salt.encode(),
+            n=16384,
+            r=8,
+            p=1,
+            dklen=32
+        )
 
-        # Combine into a unique seed
-        seed = f"{mac}:{node}:{machine}:ELYSIAN_WILL".encode()
-
-        # PBKDF2-like derivation via SHA256
-        # Iterating for "Deep Sea" depth
-        k = seed
-        for _ in range(1000):
-            k = hashlib.sha256(k + salt).digest()
-
-        return k
-
-    def encrypt(self, data: bytes) -> bytes:
-        """Encrypts data using AES-GCM (Authenticated Encryption)."""
+    def encrypt(self, data: str | bytes, aad: str = "ELYSIOS") -> str:
+        """
+        Encrypts data and returns a colon-separated string: iv:authTag:ciphertext (hex)
+        Matches Node.js implementation in cryptography.ts
+        """
         nonce = os.urandom(12)
-        # Auth data can be empty or used for versioning
-        ciphertext = self.cipher.encrypt(nonce, data, None)
-        # Result is [nonce (12b)] + [ciphertext + tag]
-        return nonce + ciphertext
+        payload = data if isinstance(data, bytes) else data.encode()
+        # cryptography library's AESGCM.encrypt returns ciphertext + 16-byte tag
+        ciphertext_with_tag = self.cipher.encrypt(nonce, payload, aad.encode())
+        
+        iv_hex = nonce.hex()
+        # The tag is the last 16 bytes
+        ciphertext = ciphertext_with_tag[:-16].hex()
+        auth_tag = ciphertext_with_tag[-16:].hex()
+        
+        return f"{iv_hex}:{auth_tag}:{ciphertext}"
 
-    def generate_decoy_shard(self, length: int) -> bytes:
-        """Generates plausible-looking hallucinated data (Ghost Shard)."""
-        # Mix of random bytes and valid-looking JSON structures
-        decoy = b'{"status": "RESTRICTED", "shard_id": "' + os.urandom(8).hex().encode() + b'", "data": "'
-        decoy += os.urandom(length - len(decoy) - 2) + b'"}'
-        return decoy
-
-    def decrypt(self, shrouded_data: bytes) -> bytes:
-        """Decrypts AES-GCM shrouded data. L13: Returns Ghost Shards on certain failures."""
-        if len(shrouded_data) < 13:
-            raise ValueError("Abyssal Integrity Failure: Data too short.")
-
-        nonce = shrouded_data[:12]
-        ciphertext = shrouded_data[12:]
-
+    def decrypt(self, shrouded_data: str, aad: str = "ELYSIOS") -> str:
+        """
+        Decrypts data formatted as iv:authTag:ciphertext (hex).
+        Verifies integrity via GCM auth tag.
+        """
         try:
-            return self.cipher.decrypt(nonce, ciphertext, None)
-        except Exception:
-            # L13: Instead of just failing, if we are in 'Sovereign Mode', return a decoy
-            # to waste the attacker's compute resources.
-            logger.warning("🛡️ Vault Shroud: Decryption failure. Deploying Ghost Shard decoy.")
-            return self.generate_decoy_shard(len(shrouded_data))
+            parts = shrouded_data.split(":")
+            if len(parts) != 3:
+                raise ValueError("Malformed shrouded data format.")
+            
+            iv = bytes.fromhex(parts[0])
+            auth_tag = bytes.fromhex(parts[1])
+            ciphertext = bytes.fromhex(parts[2])
+            
+            # Reconstruct the combined format expected by cryptography library
+            payload = ciphertext + auth_tag
+            
+            decrypted_bytes = self.cipher.decrypt(iv, payload, aad.encode())
+            return decrypted_bytes.decode("utf-8")
+        except Exception as e:
+            logger.error(f"🛑 Cryptographic Integrity Violation! {e}")
+            raise RuntimeError("INTEGRITY_FAILURE: Data may have been tampered with.")
 
     def shroud_file(self, path: str):
-        """Encrypts a file in place."""
+        """Encrypts a file in place (Text only for unified mode)."""
         if not os.path.exists(path):
             return
-        with open(path, "rb") as f:
+        with open(path, encoding="utf-8") as f:
             data = f.read()
         encrypted = self.encrypt(data)
-        with open(path, "wb") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(encrypted)
 
-    def unshroud_file(self, path: str) -> bytes:
+    def unshroud_file(self, path: str) -> str:
         """Reads and decrypts a shrouded file."""
         if not os.path.exists(path):
             raise FileNotFoundError(f"Void Error: {path} not found.")
-        with open(path, "rb") as f:
+        with open(path, encoding="utf-8") as f:
             enc_data = f.read()
         return self.decrypt(enc_data)
-
 
 # Global Instance
 shroud = AbyssalShroud()
 
 if __name__ == "__main__":
-    # Test
-    test_msg = b"Elysia is an angel."
+    # Test compatibility
+    test_msg = "Resonance is standard."
     enc = shroud.encrypt(test_msg)
+    print(f"Encrypted: {enc}")
     dec = shroud.decrypt(enc)
-    print(f"Original: {test_msg}")
-    print(f"Encrypted (Hex): {enc.hex()[:32]}...")
     print(f"Decrypted: {dec}")
     assert test_msg == dec
-    print("✅ Abyssal Shroud test passed.")
+    print("✅ Abyssal Shroud (Unified) test passed.")

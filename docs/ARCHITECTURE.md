@@ -1,13 +1,14 @@
-# Elysia OS: Sovereign Resonance Architecture (v3.0.0)
+# 🏗️ Elysia OS: Sovereign Resonance Architecture (v3.0.0)
 
 このドキュメントでは、Elysia OS: SOVEREIGN の核心となる設計思想と、Rust、Python、JS が織りなす「共鳴型」システム構造について詳述します。
 
 ## 1. デザインフィロソフィー (The Sovereign Philosophy)
 
-Elysia OS は単なるアプリケーションではなく、**「自律する知性の受肉」**を目指しています。
+Elysia OS は単なるアプリケーションではなく、**「自律する知性の受皿」**を目指しています。
+
 1.  **Independence (独立性)**: 外部サーバーやブラウザに依存せず、ローカルマシンの主権として完結する。
-2.  **Perception (知覚性)**: 音声（The Ear）、視覚（The Sight）、ネットワーク（The Eye）を備えた多角的な入力。
-3.  **Persistence (継続性)**: 単なる履歴ではなく、ユーザーの「魂」の傾向を記憶し続ける。
+2.  **Perception (知覚性)**: 音声 (The Ear)、視覚 (The Sight)、ネットワーク (The Eye) を備えた多角的な入力。
+3.  **Persistence (継続性)**: 単なる履歴ではなく、ユーザーの「魂」の傾向を記録し続ける。
 
 ## 2. システムオーバービュー (System Overview)
 
@@ -48,41 +49,76 @@ graph LR
 - **役割**: システムの物理的な支配。
 - **機能**:
     - **サービス管理**: Python カーネルの起動時スポーンおよび終了時のクリーンアップ。
-    - **リソースマッピング**: パッケージングされた internal ファイル（`usr/`, `etc/` 等）への安全なアクセス。
+    - **リソースマッピング**: パッケージングされた internal ファイル (`usr/`, `etc/` 等) への安全なアクセス。
     - **システムブリッジ**: OS ネイティブ機能（通知、トレイ、グローバルキーなど）への将来的な拡張基盤。
 
 ### 3.2 Cognitive Kernel (Python)
 - **役割**: 解析、思考、および知覚の統合。
 - **機能**:
-    - **Multi-Agent Engine**: 専門家エージェントの再帰的召喚（delegate スキル）。
+    - **Multi-Agent Engine**: 専門家エージェントの再帰的委譲 (Delegate スキル)。
     - **The Sight**: 画面キャプチャによるコンテキスト理解。
     - **The Ear**: `faster-whisper` による完全ローカル STT。
     - **The Eye**: Web 検索と URL スクレイピング。
     - **System Doctor**: 自身の健康診断と環境パッチ。
 
 ### 3.3 Sovereign Desktop (Alpine.js + Tailwind)
-- **役割**: ユーザーとの情動的なインターフェース。
+- **役割**: ユーザーとの情緒的なインターフェース。
 - **機能**:
-    - **Dynamic Dock**: インストールされたアプリを自動検知し展開。
-    - **Toast Notification**: AI からの能動的な気遣いをリアルタイムに通知。
+    - **Dynamic Dock**: インストールされたアプリを自動検出し展開。
+    - **Toast Notification**: AI からの能動的な気配りをリアルタイムに通知。
     - **Micro-Animations**: 感情に呼応するスムーズな UI 遷移。
 
 ## 4. データフロープロトコル
 
 ### 4.1 自己拡張 (OS Growth Flow)
-1.  ユーザーが「〜のアプリを作って」と依頼。
-2.  Kernel がコードを作成し、`install_app` スキルを起動。
-3.  `install_app` が `usr/share/elysia/apps/` にコンポーネントを書き込み、`apps.json` を更新。
+1.  ユーザーが「〜なアプリを作って」と依頼。
+2.  Kernel がコードを作成し `install_app` スキルを起動。
+3.  `install_app` が `usr/share/elysia/apps/` にコンポーネントを書き込み `apps.json` を更新。
 4.  UI が `/system/apps/list` を再取得し、ドックに新しいアイコンが出現。
 
-### 4.2 知覚・思考サイクル (Resonance Cycle)
+### 4.2 知覚と思考のサイクル (Resonance Cycle)
 1.  Sense (入力): テキスト、音声、または画面キャプチャ。
 2.  Retrieve (検索): RAG によるドキュメント検索 ＋ Soul Vault による感情検索。
 3.  Compute (推論): Ollama を介した高度な言語生成。
-4.  Act (行動): スキル実行（Web検索、ファイル操作、通知の送信）。
+4.  Act (行動): スキル実行（Web検索、ファイル操作、通知の送信等）。
 
 ## 5. セキュリティと主権 (Security by Sovereignty)
 
-- **Local-First**: すべての推論（Ollama）および記憶（Milvus Lite）はローカルで実行され、秘密が外部に漏れることはありません。
+- **Local-First**: すべての推論 (Ollama) および記憶 (Milvus Lite) はローカルで実行され、機密が外部に漏れることはありません。
+- **Unified Encryption Standard**: Node.js と Python の両スタックで共通の **AES-256-GCM** および **scrypt KDF** を採用。Milvus の記憶領域や機密設定ファイルは透過的に暗号化されます。
+- **Multi-User RBAC**: データベース層での役割ベースの権限管理 (User, Admin, Owner) を統合。`auth/register` および `auth/token` による安全な認証フロー。
 - **Encrypted Vault**: 認証情報は隔離された設定ファイルで管理。
 - **Integrity Check**: 起動時の `system_doctor` による整合性検査。
+
+## 6. Advanced Security: The ICE Protocol
+
+Elysia OS は、独自の ICE (Intrusion Countermeasure Electronics) 層によって、システムの整合性とユーザーの主権を保護します。
+
+### 6.1 White ICE (表層防壁)
+- **役割**: システムへの正当なアクセスを検証し、トラフィックを制御する。
+- **機能**: APIキー検証、レート制限、基本パケットフィルタリング。
+
+### 6.2 Black ICE (深層防壁)
+- **役割**: 悪意ある入力を能動的に検知し、攻撃を無力化する。
+- **機能**: プロンプトインジェクションの検知、サンドボックス外への脱獄阻止、攻撃元 IP の自動ブラックリスト化。
+
+### 6.3 AbyssRTOS (深淵の実行環境)
+- **役割**: 知性のプロセスを物理的・論理的に完全に隔離する。
+- **機能**: プロセス隠蔽、メモリ暗号化、外部ネットワークからの完全な切断状態での推論実行。
+
+---
+
+## ⚓ 実装ディレクトリ対応表 (Implementation Mapping)
+
+| レイヤー | 主要コンポーネント | 実ファイル / ディレクトリ |
+| :--- | :--- | :--- |
+| **Experience Layer** | Web UI (Bun) | `packages/server/src/routes/` |
+| **Cognitive Layer** | AI Kernel (Python) | `python/kernel/`, `python/main.py` |
+| **Native Layer** | Security Bridge (Rust) | `packages/shield-agent/src/` |
+| **Memory Layer** | RAG / Vector DB | `python/recall.py`, `data/milvus/` |
+| **Governance** | Auth / RBAC / DB | `packages/server/src/lib/`, `prisma/` |
+| **Operations** | Management CLI | `scripts/manage.ts` |
+| **Automation** | CI/CD Workflows | `.github/workflows/` |
+
+---
+© 2026 Elysia20220909 // ElysiaAI Main

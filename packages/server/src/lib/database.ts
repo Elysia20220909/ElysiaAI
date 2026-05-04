@@ -5,6 +5,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
+import { config } from "../../../../src/config.ts";
 import { logger } from "./logger";
 import { secureVault } from "./secure-vault";
 
@@ -12,7 +13,7 @@ import { secureVault } from "./secure-vault";
 dotenv.config();
 
 // Prisma client singleton
-const dbUrl = process.env.DATABASE_URL;
+const dbUrl = config.dbUrl;
 
 let prisma: PrismaClient;
 
@@ -23,9 +24,7 @@ try {
 
 	prisma = new PrismaClient({
 		log:
-			process.env.NODE_ENV === "development"
-				? ["query", "error", "warn"]
-				: ["error"],
+			config.nodeEnv === "development" ? ["query", "error", "warn"] : ["error"],
 	});
 
 	logger.info("✅ Sovereign Database: Prisma Client Initialized (PostgreSQL)");
@@ -33,7 +32,10 @@ try {
 	logger.warn(
 		"⚠️ Database initialization failed, using in-memory mock fallback",
 	);
-	logger.error(error);
+	logger.error(
+		"Database initialization failed",
+		error instanceof Error ? error : undefined,
+	);
 	// Mock fallback for isolated testing
 	prisma = null as any;
 }
@@ -136,7 +138,7 @@ export const chatService = {
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
-		return messages.map((m) => ({
+		return messages.map((m: any) => ({
 			...m,
 			content: secureVault.decrypt(m.content),
 		}));
@@ -227,7 +229,7 @@ export const knowledgeService = {
 			orderBy: { updatedAt: "desc" },
 			take: 200,
 		});
-		return knowledge.map((k) => ({
+		return knowledge.map((k: any) => ({
 			...k,
 			answer: secureVault.decrypt(k.answer),
 		}));
@@ -253,22 +255,34 @@ export const voiceService = {
 		emotion: string;
 		audioUrl?: string;
 	}) {
-		return prisma.voiceLog.create({ data });
+		const encryptedData = {
+			...data,
+			text: secureVault.encrypt(data.text),
+		};
+		return prisma.voiceLog.create({ data: encryptedData });
 	},
 
 	async getRecent(limit = 100) {
-		return prisma.voiceLog.findMany({
+		const logs = await prisma.voiceLog.findMany({
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
+		return logs.map((log: any) => ({
+			...log,
+			text: secureVault.decrypt(log.text),
+		}));
 	},
 
 	async getByUser(username: string, limit = 50) {
-		return prisma.voiceLog.findMany({
+		const logs = await prisma.voiceLog.findMany({
 			where: { username },
 			orderBy: { createdAt: "desc" },
 			take: limit,
 		});
+		return logs.map((log: any) => ({
+			...log,
+			text: secureVault.decrypt(log.text),
+		}));
 	},
 
 	async deleteOldLogs(daysOld = 30) {
@@ -278,5 +292,27 @@ export const voiceService = {
 		return prisma.voiceLog.deleteMany({
 			where: { createdAt: { lt: cutoffDate } },
 		});
+	},
+};
+
+// ==================== アクションログ ====================
+export const actionLogService = {
+	async create(data: { action: string; status: string; hash: string }) {
+		const encryptedData = {
+			...data,
+			action: secureVault.encrypt(data.action),
+		};
+		return prisma.actionLog.create({ data: encryptedData });
+	},
+
+	async getAll(limit = 100) {
+		const logs = await prisma.actionLog.findMany({
+			orderBy: { createdAt: "desc" },
+			take: limit,
+		});
+		return logs.map((log: any) => ({
+			...log,
+			action: secureVault.decrypt(log.action),
+		}));
 	},
 };

@@ -1,0 +1,1 @@
+"""Architecture compatibility namespace."""

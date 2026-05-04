@@ -15,9 +15,13 @@ export const adminRoutes = new Elysia({ prefix: "/admin" }).guard(
 			const auth = request.headers.get("authorization") || "";
 			if (!auth.startsWith("Bearer ")) throw new Error("Missing Bearer token");
 			try {
-				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
-			} catch {
-				throw new Error("Invalid or expired token");
+				const decoded = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as any;
+				// Enforce RBAC: Only admin or owner can access /admin routes
+				if (decoded.role !== "admin" && decoded.role !== "owner") {
+					throw new Error("Insufficient privileges: Admin access required");
+				}
+			} catch (e: any) {
+				throw new Error(e.message || "Invalid or expired token");
 			}
 		},
 	},

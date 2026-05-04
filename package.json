@@ -1,16 +1,24 @@
 {
   "name": "elysia-ai",
-  "version": "0.1.0",
+  "version": "1.3.0",
+  "author": "Elysia20220909",
+  "license": "MIT OR Apache-2.0",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
     "boot": "bun scripts/boot.ts",
-    "dev": "bun --cwd packages/server run dev",
-    "start": "bun --cwd packages/server run start",
+    "build": "bun build packages/server/src/index.ts --target=bun --outdir dist/server",
+    "dev": "bun run --cwd packages/server dev",
+    "start": "bun run --cwd packages/server start",
+    "dev:ci": "bun scripts/boot.ts --ci",
     "desktop": "bun tauri dev",
-    "test": "bun test",
-    "lint": "bunx biome check ."
+    "test": "bun test src/*.test.ts tests/*.test.ts tests/integration/*.test.ts tests/performance/*.test.ts packages/server/src/lib/*.test.ts",
+    "lint": "bunx biome check .",
+    "typecheck": "bunx tsc --noEmit",
+    "check:encoding": "python scripts/tests/check-encoding.py",
+    "check:git-hygiene": "bun scripts/tests/check-git-hygiene.ts",
+    "security:glassworm": "bun scripts/security/scan_glassworm.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
@@ -22,8 +30,11 @@
     "prisma": "latest"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.14",
+    "@playwright/test": "^1.56.1",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/cli": "^2.10.1",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "typescript": "^6.0.3"
   }
 }

@@ -117,8 +117,7 @@ test.describe("Application E2E", () => {
 - **Unit Tests**: 73 passing
 - **Skipped Tests**: 57 (live + E2E tests)
 - **Failing Tests**: 0
-- **Exit Code**: 0 ✅
-
+- **Exit Code**: 0 笨・
 ## Recommended Workflow
 
 1. **Local Development**:

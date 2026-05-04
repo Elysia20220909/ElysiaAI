@@ -16,7 +16,7 @@ sequenceDiagram
 
     User->>Boot: 入力 (例: "あの時の約束、覚えてる？")
     Boot->>Memory: 保存 (User Input)
-    
+
     rect rgb(30, 30, 60)
     Note over Boot,VectorDB: Semantic Search (RAG)
     Boot->>LLM: 入力をベクトル化 (Embedding)
@@ -24,13 +24,13 @@ sequenceDiagram
     Boot->>VectorDB: 類似記憶の検索 (Top-K)
     VectorDB-->>Boot: 関連する過去の会話チャンク
     end
-    
+
     Boot->>Persona: 取得した記憶+直近履歴をPromptに統合
     Persona-->>Boot: RAG Prompt生成
-    
+
     Boot->>LLM: Prompt送信 (Gemini 1.5)
     LLM-->>Boot: 生成テキスト
-    
+
     Boot->>Memory: 保存 (ElysiaAI Response)
     Boot->>VectorDB: 会話をベクトル化して非同期保存
     Boot-->>User: 応答を表示

@@ -14,7 +14,10 @@ import {
 import { feedbackService, knowledgeService } from "../lib/database";
 import { defenseManager } from "../lib/defense-manager";
 import { logger } from "../lib/logger";
-import { streamChatWithOpenAI } from "../lib/openai-integration";
+import {
+	type OpenAIChatMessage,
+	streamChatWithOpenAI,
+} from "../lib/openai-integration";
 import { secureVault } from "../lib/secure-vault";
 
 const casualChat = { generateCasualResponse, getRandomTopic };
@@ -26,9 +29,11 @@ const validationErrors = new Set([
 	"Messages must be 400 characters or fewer",
 ]);
 
-type ChatMessage = { role: string; content: string };
+type ChatRole = "system" | "user" | "assistant";
+type ChatMessage = { role: ChatRole; content: string };
+type IncomingChatMessage = { role?: string; content?: string };
 type ElysiaLoveBody = {
-	messages: ChatMessage[];
+	messages: IncomingChatMessage[];
 	mode?: string;
 	sessionId?: string;
 };
@@ -59,7 +64,15 @@ export function requireBearerToken(request: Request) {
 	}
 }
 
-function validateAndSanitizeMessages(messages: ChatMessage[]) {
+function normalizeRole(role: string | undefined): ChatRole {
+	return role === "system" || role === "assistant" || role === "user"
+		? role
+		: "user";
+}
+
+function validateAndSanitizeMessages(
+	messages: IncomingChatMessage[],
+): ChatMessage[] {
 	if (!Array.isArray(messages) || messages.length === 0) {
 		throw new Error("Messages are required");
 	}
@@ -87,7 +100,7 @@ function validateAndSanitizeMessages(messages: ChatMessage[]) {
 		}
 
 		return {
-			role: message.role,
+			role: normalizeRole(message.role),
 			content,
 		};
 	});
@@ -130,7 +143,7 @@ async function buildChatContext(body: ElysiaLoveBody) {
 		messagesWithSystem: [
 			{ role: "system", content: enhancedSystemPrompt },
 			...sanitizedMessages,
-		],
+		] satisfies OpenAIChatMessage[],
 	};
 }
 
@@ -210,7 +223,9 @@ export async function handleElysiaLove(body: ElysiaLoveBody, request: Request) {
 		return new Response(upstream.data, {
 			status: upstream.status,
 			headers: {
-				"Content-Type": upstream.headers["content-type"] || "text/event-stream",
+				"Content-Type": String(
+					upstream.headers["content-type"] || "text/event-stream",
+				),
 				"x-elysia-mode": mode,
 			},
 		});

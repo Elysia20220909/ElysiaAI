@@ -1,1 +1,1 @@
-# Elysia AI OS Library Package
+"""Compatibility namespace for legacy usr.lib imports."""

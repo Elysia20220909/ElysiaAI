@@ -12,6 +12,7 @@
 - **天気情報**: Open-Meteo API経由で日本の主要10都市の天気を取得
 - **ニュース**: NHKニュースのRSSフィードから最新ニュースを取得
 - **Web検索**: DuckDuckGo APIで一般的な検索
+- **本文抽出**: Scrapling 統合で検索結果ページの本文を抽出
 - **統合検索**: 質問内容に応じて適切な検索を自動選択
 
 **対応都市 (天気):**
@@ -140,6 +141,14 @@ bun run test-web-search.ts
 - **Open-Meteo API**: https://api.open-meteo.com (無料、登録不要)
 - **NHKニュースRSS**: https://www.nhk.or.jp/rss/
 - **DuckDuckGo API**: https://api.duckduckgo.com
+
+### Scrapling 統合
+
+DuckDuckGo の結果に URL が含まれる場合、ElysiaAI は Scrapling ブリッジでページ本文を抽出し、検索 snippet より密度の高い文脈として利用します。
+
+- 日本語ガイド: [SCRAPLING_INTEGRATION.md](./SCRAPLING_INTEGRATION.md)
+- English guide: [SCRAPLING_INTEGRATION.en.md](./SCRAPLING_INTEGRATION.en.md)
+- 本家: [D4Vinci/Scrapling](https://github.com/D4Vinci/Scrapling)
 
 ### タイムアウト設定
 

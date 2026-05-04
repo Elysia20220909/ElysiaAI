@@ -64,6 +64,18 @@ export async function authenticateUser(
 }
 
 /**
+ * 役割ベースの権限チェック (RBAC)
+ */
+export function checkRole(userRole: string, requiredRole: string): boolean {
+	const roles = ["guest", "user", "admin", "owner"];
+	const userIndex = roles.indexOf(userRole);
+	const requiredIndex = roles.indexOf(requiredRole);
+
+	if (userIndex === -1 || requiredIndex === -1) return false;
+	return userIndex >= requiredIndex;
+}
+
+/**
  * パスワード変更
  */
 export async function changePassword(

@@ -13,6 +13,8 @@ export const CONFIG = {
 	JWT_REFRESH_SECRET: config.jwtRefreshSecret,
 	MODEL_NAME: config.ollamaModel,
 	OLLAMA_BASE_URL: config.ollamaBaseUrl,
+	OPEN_LLM_VTUBER_ENABLED: config.openLlmVtuberEnabled,
+	OPEN_LLM_VTUBER_BASE_URL: config.openLlmVtuberBaseUrl,
 	RAG_API_URL: `${config.ollamaBaseUrl}/api/generate`,
 	RAG_TIMEOUT: 60000,
 	AUTH_USERNAME: config.authUsername,
@@ -23,7 +25,7 @@ export const CONFIG = {
 export const jsonError = (status: number, message: string) => {
 	return new Response(JSON.stringify({ error: message }), {
 		status,
-		headers: { "Content-Type": "application/json" },
+		headers: { "Content-Type": "application/json; charset=utf-8" },
 	});
 };
 
@@ -32,6 +34,25 @@ export const proxyToFastAPI = async (
 	method: string,
 	body?: unknown,
 ) => {
+	if (process.env.ELYSIA_TEST_MODE === "1") {
+		logger.info(`[TEST MODE] Mocking FastAPI request to: ${path}`);
+		if (path === "/health") {
+			return {
+				status: "ok",
+				milvus_connected: true,
+				embedding_provider: "mock",
+			};
+		}
+		if (path === "/chat") {
+			return {
+				response: "I am Elysia, in test mode. How can I help you? ♡",
+				quotes: ["Self-reflection is the first step to wisdom."],
+				context: "Testing Environment",
+			};
+		}
+		return { status: "ok", message: "Mocked response" };
+	}
+
 	try {
 		const response = await axios({
 			method,
@@ -39,7 +60,7 @@ export const proxyToFastAPI = async (
 			data: body,
 			headers: {
 				"X-API-Key": CONFIG.FASTAPI_API_KEY,
-				"Content-Type": "application/json",
+				"Content-Type": "application/json; charset=utf-8",
 			},
 		});
 		return response.data;

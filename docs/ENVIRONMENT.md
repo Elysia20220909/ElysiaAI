@@ -1,34 +1,35 @@
-# 🌍 ElysiaAI 環境変数ガイド
+# ⚙️ ElysiaAI: 環境変数ガイド (Environment Variables)
 
-ElysiaAI の動作をカスタマイズするための環境変数の一覧です。
-これらの変数は、プロジェクトルートの `.env` ファイルに記述するか、実行環境のシステム変数として設定してください。
+ElysiaAI の動作をカスタマイズするための環境変数の一覧です。これらの変数は、プロジェクトルートの `.env` ファイルに記述するか、実行環境のシステム変数として設定してください。
 
-## 🔑 必須・重要 (Core Settings)
+## 核心設定 (Core Settings)
+
 | 変数名 | デフォルト値 | 説明 |
-|--------|--------------|------|
-| `PORT` | `3000` | ElysiaAI サーバーの待受ポート。 |
+| :--- | :--- | :--- |
+| `PORT` | `3000` | ElysiaAI サーバーの待ち受けポート。 |
 | `NODE_ENV` | `development` | `development` または `production`。本番環境では必ず `production` を指定してください。 |
-| `DB_URL` | (必須/本番) | データベースへの接続文字列。 |
-| `SESSION_SECRET` | `dev_secret_only` | セッション暗号化用の秘密鍵。本番環境では必ずユニークな文字列を設定してください。 |
+| `DB_URL` | (必須) | データベースへの接続文字列 (SQLite/PostgreSQL)。 |
+| `SESSION_SECRET` | `dev_secret` | セッション暗号化用の秘密鍵。本番環境では必ずユニークな文字列を設定してください。 |
 
-## 🛡️ セキュリティ (Security Hardening)
+## セキュリティ (Security Hardening)
+
 | 変数名 | デフォルト値 | 説明 |
-|--------|--------------|------|
-| `FORCE_HTTPS` | `false` | `true` に設定すると、常に HSTS (Strict-Transport-Security) ヘッダーを送信します。 |
-| `CSP_ENABLED` | `true` | コンテンツセキュリティポリシー (CSP) ヘッダーを有効にします。 |
-| `ERROR_ALERTS_ENABLED` | `false` | エラー発生時の Webhook 通知を有効にします。 |
+| :--- | :--- | :--- |
+| `ELYSIA_TEST_MODE` | `0` | `1` に設定すると、AI Kernelをモックし、テスト用のアカウントバイパスを有効にします。 |
+| `FORCE_HTTPS` | `false` | `true` に設定すると、常に HSTS ヘッダーを送信します。 |
+| `CSP_ENABLED` | `true` | コンテンツセキュリティポリシー (CSP) を有効にします。 |
+| `REDIS_ENABLED` | `true` | レート制限とセッション管理に Redis を使用するかどうか。 |
 
-## 📢 通知 (Notifications)
-| 変数名 | 説明 |
-|--------|------|
-| `DISCORD_WEBHOOK_URL` | エラー通知を送信する Discord Webhook の URL。 |
-| `SLACK_WEBHOOK_URL` | エラー通知を送信する Slack Webhook の URL。 |
+## AI & 外部連携 (AI & Integrations)
 
-## ⚙️ 開発・デバッグ (Development)
 | 変数名 | デフォルト値 | 説明 |
-|--------|--------------|------|
-| `DEBUG` | `false` | 詳細なログ出力を有効にします。 |
+| :--- | :--- | :--- |
+| `OLLAMA_URL` | `http://localhost:11434` | ローカルの Ollama サーバーの URL。 |
+| `MILVUS_URL` | `data/milvus.db` | Milvus Lite のデータベースファイルパス。 |
+| `VOICEVOX_URL` | `http://localhost:50021` | VOICEVOX エンジンの URL。 |
 
 ---
 > [!TIP]
 > 開発環境では `.env.example` をコピーして `.env` を作成し、必要な値を編集することをお勧めします。
+
+© 2026 Elysia20220909 // ElysiaAI

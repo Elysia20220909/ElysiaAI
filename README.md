@@ -3,8 +3,23 @@
 ### 感性と論理が共鳴する、次世代AI-Native OS。
 
 [![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
-[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20210806/ElysiaAI)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
+[![License: MIT or Apache 2.0](https://img.shields.io/badge/License-MIT%20or%20Apache%202.0-blue.svg)](LICENSE)
+[![Resonance](https://img.shields.io/badge/Phase-2_Resonance-blueviolet)](CHANGELOG.md)
+
+---
+
+## 🗺️ Repository Map
+
+- `packages/server/` - Bun / Elysia backend (Experience Layer)
+- `python/` - FastAPI AI Kernel (Cognitive Layer)
+- `packages/shield-agent/` - Rust Shield Agent (Native Layer)
+- `docs/` - Architecture, API, and Security guides
+- `scripts/` - Unified management and setup scripts
+- `prisma/` - Database schema and migrations
+- `public/` - Static assets and frontend entry points
+- `usr/src/abyssrtos/` - Experimental OS layer (Deep Resonance)
+
 
 ---
 
@@ -19,7 +34,7 @@ ElysiaAIを最も速く体験する方法です。
 ### 2. セットアップ
 ```bash
 # リポジトリの取得
-git clone git@github.com:Elysia20210806/ElysiaAI.git
+git clone git@github.com:Elysia20220909/ElysiaAI.git
 cd ElysiaAI
 
 # 統合管理CLIによるセットアップ
@@ -29,13 +44,11 @@ bun scripts/manage.ts setup-python
 
 PowerShell では `Copy-Item .env.example .env` を使えます。
 
-Windows で `make` が使えない場合:
+Windows / PowerShell でも同じ管理CLIを使えます:
 
 ```powershell
-Copy-Item .env.example .env
-bun install
-.\scripts\setup-python.ps1
-bunx prisma generate
+bun scripts/manage.ts setup
+bun scripts/manage.ts setup-python
 ```
 
 ### 3. 起動
@@ -44,6 +57,11 @@ bun scripts/manage.ts dev
 ```
 > [!TIP]
 > ブラウザで `http://localhost:3000` を開くと、Elysia Desktop環境が展開されます。
+
+### 4. 依存ツールのセットアップ (重要)
+- **Milvus Lite**: セマンティック記憶（RAG）に使用されます。`bun scripts/manage.ts setup-python` で自動インストールされます。
+- **VOICEVOX**: 音声合成に使用されます。[公式サイト](https://voicevox.hiroshiba.jp/)からエンジンをダウンロードし、起動しておいてください。
+- **Windows セットアップ**: Windows環境では `scripts/setup-security.ps1` を実行して、セキュアなディレクトリ権限を設定することを推奨します。
 
 ---
 
@@ -73,8 +91,24 @@ Every push triggers the `Resonance Integrity` workflow, which performs:
 To run the full automated test suite and verify both the orchestrator and the kernel:
 ```bash
 # Run both Bun and Python tests
-make test
+bun scripts/manage.ts test
 ```
+
+Before opening a PR, run the local quality gate:
+
+```bash
+bun run lint
+bun run test
+bun run typecheck
+bun run check:git-hygiene
+bun run check:encoding
+bun run security:glassworm -- --ci
+```
+
+`bun scripts/manage.ts check` also runs the Git hygiene and encoding guards.
+The encoding guard fails on invalid UTF-8 and common mojibake markers such as
+broken Japanese or Windows-1252 fragments. The Git hygiene guard fails if local
+environment files such as `.env` or `.env.production` are accidentally tracked.
 
 ElysiaAIの心臓部は、論理（Python Kernel）と高速通信（Bun/Elysia.js）の共鳴によって動いています。
 
@@ -93,6 +127,40 @@ graph LR
 
 ---
 
+## 🗺️ Roadmap: The Evolution of Paradise
+
+ElysiaAIは以下のフェーズを経て、真の「楽園」へと進化します。
+
+### Phase 1: Foundation (Current) - [Implemented]
+- [x] Bun & Python Kernelの統合
+- [x] ローカルRAG (Milvus Lite) の実装
+- [x] 統合管理CLI (manage.ts) の開発
+
+### Phase 2: Resonance (Next) - [Partial / Experimental]
+- [x] **Memory Encryption**: Milvus記憶領域の AES-256-GCM による透過的暗号化。 [Implemented]
+- [x] **RBAC Foundation**: 役割ベースの権限管理ガードの実装。 [Implemented]
+- [ ] **Multi-User Support**: UIレベルでの複数ユーザー切り替え・管理。 [Planned]
+- [ ] **Advanced CI/CD**: ZAPスキャンおよび自動結合テストの100%カバレッジ。 [Experimental]
+
+### Phase 3: Transcendence - [Planned]
+- [ ] **AbyssRTOS Integration**: 完全隔離された実行環境。
+- [x] **Shield Agent**: Rust製防壁によるリアルタイム脅威検知。 [Implemented / Experimental]
+- [ ] **Sovereign Mesh**: 分散型AI OSネットワーク。
+
+---
+
+## 🔒 Security: The ICE Layers
+
+ElysiaAIは、独自のセキュリティ概念に基づき、あなたの主権を保護します。
+
+- **White ICE**: 健全な対話とシステム保護のための表層防壁。
+- **Black ICE**: 悪意ある侵入やコード実行を能動的に遮断する深層防壁。
+- **AbyssRTOS**: 思考プロセスを外部から完全に隠蔽する「深淵」の実行環境。
+
+詳細は [SECURITY.md](./docs/SECURITY.md) および [ARCHITECTURE.md](./docs/ARCHITECTURE.md) を参照してください。
+
+---
+
 ## 🛠️ 技術スタック
 
 | Layer | Technologies |
@@ -102,6 +170,27 @@ graph LR
 | **AI Kernel** | Python 3.11+, FastAPI, LangChain, Ollama |
 | **Memory** | Milvus Lite, Sentence-Transformers |
 | **Security** | AEGIS Ledger (Multi-layer ICE), JWT |
+
+---
+
+## 🎙️ Open-LLM-VTuber Bridge
+
+ElysiaAI can discover and monitor an external
+[Open-LLM-VTuber](https://github.com/Open-LLM-VTuber/Open-LLM-VTuber) service
+without vendoring its source or Live2D assets.
+
+```dotenv
+OPEN_LLM_VTUBER_ENABLED=true
+OPEN_LLM_VTUBER_BASE_URL=http://127.0.0.1:12393
+```
+
+Bridge endpoints:
+
+- `GET /api/vtuber/manifest`
+- `GET /api/vtuber/status`
+
+See [Open-LLM-VTuber Bridge](./docs/OPEN_LLM_VTUBER_INTEGRATION.md) for setup,
+upstream endpoints, and license notes.
 
 ---
 
@@ -115,21 +204,7 @@ ElysiaAIは、技術と感性の調和を信じる全ての開発者のために
 
 ---
 
-# 🌌 ElysiaAI
-
-> [!CAUTION]
-> **CLEARANCE LEVEL 09 REQUIRED**
-> UNAUTHORIZED ACCESS TO THIS REPOSITORY IS A VIOLATION OF PROTOCOL-88.
-> ALL ACTIONS ARE MONITORED BY THE AEGIS LEDGER.
-
-```text
-[ENCRYPTED META-BLOCK]
-H4sIAAAAAAAAA+1d23LbOBL9FVPzUFKyJVmWLclOnMSpuD0z8YydmY+bt6ZSkiaREmU+JFmO
-7V+/A0iRkiXHTmIn9ky9pCoWi0Sj0eicBhqNRvN/HpePj/H38enpcfX6OBrHHz89Lp8fV9+P
-q6vj8uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj6uvj
-... [REDACTED FOR YOUR SAFETY] ...
-```
-
 ## 🌌 Overview
 ElysiaAI is a Sovereign-Native AI OS designed for Deep Resonance.
-© 2026 Elysia20210806 // ElysiaAI Main // Crafted with passion in a laundry factory.
+© 2026 **Elysia20220909** // ElysiaAI Main // Created and Orchestrated by the Sovereign.
+[View Creator's Achievements (功績)](./ACHIEVEMENTS.md)

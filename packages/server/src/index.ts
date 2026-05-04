@@ -25,6 +25,7 @@ import { databaseRoutes } from "./routes/database-routes";
 import { fileRoutes } from "./routes/file-routes";
 import { sessionRoutes } from "./routes/session-routes";
 import { systemRoutes } from "./routes/system-routes";
+import { vtuberRoutes } from "./routes/vtuber-routes";
 
 const app = new Elysia();
 const requestStartedAt = new WeakMap<Request, number>();
@@ -44,6 +45,7 @@ app
 					{ name: "auth", description: "Identity management" },
 					{ name: "ai", description: "AI & LLM Services" },
 					{ name: "system", description: "Infra & Monitoring" },
+					{ name: "vtuber", description: "Open-LLM-VTuber bridge" },
 				],
 			},
 		}),
@@ -52,7 +54,6 @@ app
 		staticPlugin({
 			assets: existsSync("public") ? "public" : "../../public",
 			prefix: "",
-			alwaysUpdate: true,
 		}),
 	)
 	.use(html())
@@ -111,7 +112,7 @@ app
 			return error(429, rateLimit.reason || "Too Many Requests");
 		}
 	})
-	.error(({ code, error: rawError, set, request }: any) => {
+	.onError(({ code, error: rawError, set, request }: any) => {
 		const message = isProd
 			? "ごめんなさい、ちょっと考えがまとまらなくて……"
 			: rawError?.message || "Internal Error";
@@ -159,6 +160,7 @@ app
 	.use(customizationRoutes)
 	.use(fileRoutes)
 	.use(databaseRoutes)
+	.use(vtuberRoutes)
 	.get("/health", async () => {
 		return await performHealthCheck();
 	})
@@ -265,7 +267,7 @@ const handleShutdown = async (signal: string) => {
 	logger.info(`🛑 Received ${signal}, starting graceful shutdown...`);
 
 	const shutdownTimeout = setTimeout(() => {
-		logger.error("强制終了: Shutdown timed out, forcing exit.");
+		logger.error("強制終了: Shutdown timed out, forcing exit.");
 		process.exit(1);
 	}, 5000);
 

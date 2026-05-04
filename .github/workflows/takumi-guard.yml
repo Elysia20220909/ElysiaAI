@@ -12,11 +12,11 @@ jobs:
     permissions:
       id-token: write # Required for OIDC
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
       - uses: flatt-security/setup-takumi-guard-npm@v1
         with:
           bot-id: "BT01KN1NG36R7NTZHP9WV2YJ8W5A" # elysia20220909
-      - run: npm install
-      - run: npm test
+      - run: bun install
+      - run: bun run test

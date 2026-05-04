@@ -97,6 +97,27 @@ const ENV_SCHEMA: EnvConfig[] = [
 		default: "http://localhost:50021",
 		description: "VOICEVOX エンジンURL",
 	},
+	{
+		name: "OPEN_LLM_VTUBER_ENABLED",
+		required: false,
+		default: "false",
+		description: "Open-LLM-VTuber Bridge を有効化",
+		validator: (v) => ["true", "false"].includes(v),
+	},
+	{
+		name: "OPEN_LLM_VTUBER_BASE_URL",
+		required: false,
+		default: "http://127.0.0.1:12393",
+		description: "Open-LLM-VTuber サーバーURL",
+		validator: (v) => {
+			try {
+				new URL(v);
+				return true;
+			} catch {
+				return false;
+			}
+		},
+	},
 ];
 
 export interface ValidationResult {

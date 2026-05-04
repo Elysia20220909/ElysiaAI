@@ -59,7 +59,7 @@ class SoulForge:
             if not os.path.exists(self.soul_path):
                 return self._get_default_soul()
             data = shroud.unshroud_file(self.soul_path)
-            soul = json.loads(data.decode("utf-8"))
+            soul = json.loads(data)
             # Structural sanity check
             if "traits" not in soul:
                 return self._get_default_soul()
@@ -79,9 +79,10 @@ class SoulForge:
 
     def save_soul(self, soul_data: dict):
         """Encrypts and persists the soul state."""
-        data = json.dumps(soul_data).encode("utf-8")
+        data = json.dumps(soul_data)
         encrypted = shroud.encrypt(data)
-        with open(self.soul_path, "wb") as f:
+        os.makedirs(os.path.dirname(self.soul_path), exist_ok=True)
+        with open(self.soul_path, "w", encoding="utf-8") as f:
             f.write(encrypted)
 
     def digest_memory(self, phantom_id: str) -> dict:

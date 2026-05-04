@@ -4,6 +4,7 @@
  */
 
 import axios from "axios";
+import { extractPageWithScrapling } from "./scrapling-client";
 
 // ==================== インターフェース ====================
 
@@ -328,7 +329,15 @@ export async function searchRelevantInfo(query: string): Promise<string> {
 	const webResults = await searchWeb(query);
 	if (webResults.length > 0) {
 		const result = webResults[0];
-		return `${result.title}:\n${result.snippet}\n詳細: ${result.url}`;
+		const extracted = result.url
+			? await extractPageWithScrapling(result.url, {
+					maxChars: 900,
+					timeoutMs: 12000,
+				})
+			: null;
+		const title = extracted?.title || result.title;
+		const snippet = extracted?.text || extracted?.description || result.snippet;
+		return `${title}:\n${snippet}\n詳細: ${extracted?.url || result.url}`;
 	}
 
 	return "インターネットで情報を見つけられませんでした。別の質問をしてみてください。";

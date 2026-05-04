@@ -15,13 +15,21 @@ import os
 import sys
 import time
 import uuid
+
+
+# Force UTF-8 for IO in Windows environments
+if sys.platform == "win32":
+    for stream in (sys.stdout, sys.stdin, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8")
+import shutil
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
 import httpx
 import numpy as np
-from fastapi import Body, Depends, FastAPI, HTTPException, Request
+from fastapi import Body, Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel, Field
@@ -43,9 +51,11 @@ from python.core.singularity import singularity_engine
 from python.lib.abyssal_stealth import AbyssalStealth, get_shrouded_resonance_key
 from python.lib.file_phantom import phantom
 from python.lib.guardian import guardian
+from python.lib.phantom_vault import phantom_vault
 from python.lib.soul_forge import soul_forge
 from python.recall import abyssal_recall
 from scripts.security.generate_ledger import generate_ledger
+from usr.lib.elysia.secure_enclave import secure_enclave
 
 
 # ==================== 設定 (Pydantic Settings) ====================
@@ -186,11 +196,11 @@ quotes_store: list[str] = []
 # エリシア本物セリフ50選♡
 ELYSIA_QUOTES = [
     "私に会いたくなった？このエリシア、いつでも期待に応えるわ♡",
-    "ごきげんよう。新しい一日わ、美しい出会いから始まるのよ~",
+    "ごきげんよう。新しい一日は、美しい出会いから始まるのよ~",
     "火を追う英傑第二位、エリシア。見ての通り花のように美しい少女よ",
     "ピンクの妖精さん？まあ~ どうしてもそう呼びたいのなら、喜んで受け入れる♡",
-    "エリシアの楽園にはまだまだ秘密がたくさんあるはよ~",
-    "お休みなさい。女の子の寝顔こっそり見てだめよ",
+    "エリシアの楽園にはまだまだ秘密がたくさんあるのよ~",
+    "お休みなさい。女の子の寝顔をこっそり見ちゃだめよ",
     "ウォーミングアップしましょう♪",
     "ほら、いつでもどこでもエリシアは貴方の期待に応えるわ",
     "無瑕の少女、真我の英傑、人間の律者、ふふふ それがあたし、エリシアなの",
@@ -511,10 +521,11 @@ async def add_memory(req: MemoryAddRequest) -> dict[str, Any]:
 
     try:
         emb = await get_embedding(req.content)
+        encrypted_content = secure_enclave.encrypt(req.content)
         data = {
             "session_id": req.session_id,
             "role": req.role,
-            "content": req.content,
+            "content": encrypted_content,
             "emotion": req.emotion,
             "timestamp": time.time(),
             "embedding": emb,
@@ -579,8 +590,9 @@ async def rag_search(query: Query = Body(...)) -> dict[str, Any]:
             for hits in search_res:
                 for hit in hits:
                     entity = hit["entity"]
+                    decrypted_content = secure_enclave.decrypt(entity["content"])
                     memories.append(
-                        f"[{entity['role'].upper()}] (feeling {entity.get('emotion', 'neutral')}): {entity['content']}"
+                        f"[{entity['role'].upper()}] (feeling {entity.get('emotion', 'neutral')}): {decrypted_content}"
                     )
 
         context_parts = []
@@ -1192,6 +1204,65 @@ async def perform_ascension():
     """オメガ・プロトコルの最終段階「昇華」を実行します。"""
     return singularity_engine.trigger_ascension()
 
+
+# ==================== AETHER Shroud: Stealth Vault ====================
+class RevealRequest(BaseModel):
+    phantom_id: str
+    output_name: str | None = None
+
+@app.post("/api/aether/shroud", dependencies=peripheral_white_ice)
+async def aether_shroud(
+    file: UploadFile = File(...),
+    chunk_size: int = Body(10),
+    camo_type: str = Body("dll")
+):
+    """
+    Shatters and camouflages an uploaded video file.
+    """
+    temp_path = f"python/data/temp_{uuid.uuid4()}.tmp"
+    os.makedirs("python/data", exist_ok=True)
+    
+    try:
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        phantom_id = phantom_vault.shroud_video(temp_path, chunk_size_mb=chunk_size, camo_type=camo_type)
+        return {"status": "success", "phantom_id": phantom_id, "message": "Target has been shrouded in the Abyss."}
+    except Exception as e:
+        logger.error(f"❌ AETHER Shroud Failure: {e}")
+        raise HTTPException(500, str(e))
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+@app.post("/api/aether/reveal", dependencies=peripheral_white_ice)
+async def aether_reveal(req: RevealRequest):
+    """
+    Reconstructs a shrouded video from the Abyss.
+    """
+    try:
+        output_path = phantom_vault.reveal_video(req.phantom_id)
+        return {"status": "success", "path": output_path, "message": "Target has materialized from the Abyss."}
+    except Exception as e:
+        logger.error(f"❌ AETHER Reveal Failure: {e}")
+        raise HTTPException(500, str(e))
+
+@app.get("/api/aether/list", dependencies=peripheral_white_ice)
+async def aether_list():
+    """
+    Lists all shrouded entities in the vault.
+    """
+    registry = phantom_vault._get_registry()
+    return {"entities": registry}
+
+
+@app.get("/aether", dependencies=peripheral_white_ice)
+async def aether_dashboard():
+    """
+    Serves the AETHER Vault dashboard HTML.
+    """
+    from fastapi.responses import FileResponse
+    return FileResponse("dashboard/aether.html")
 
 # ==================== VOICEVOX TTS Extension ====================
 @app.post("/tts")

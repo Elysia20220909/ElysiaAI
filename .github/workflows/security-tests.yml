@@ -5,27 +5,37 @@ on:
     - cron: '0 0 * * *'  # 毎日深夜に実行
   workflow_dispatch:      # 手動実行
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "master", "main", "dev" ]
     paths:
       - 'packages/**'
+      - 'python/**'
       - 'scripts/**'
-      - '.github/workflows/security-tests.yml'
+      - 'docs/**'
+      - 'README.md'
+      - 'requirements.txt'
+      - 'package.json'
+      - 'bun.lock'
+      - 'prisma/**'
+      - '.github/workflows/**'
 
 jobs:
   security-audit:
     name: "🔍 セキュリティ監査 (Audit)"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@28935578f7e7191638217316717a61f364003d15 # v2.0.1
 
       - name: Bun Audit (JS/TS)
         run: bun pm audit
 
+      - name: GlassWorm Supply Chain Scan
+        run: bun run security:glassworm -- --ci
+
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@c8813ba1bc76ebf779b911ad8ffccbf2e449cb48 # v5.1.0
         with:
           python-version: "3.11"
 
@@ -37,31 +47,77 @@ jobs:
           uv pip install safety
           uv run safety check
 
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          output-file: elysia-sbom.spdx.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom
+          path: elysia-sbom.spdx.json
+
   unit-tests:
     name: "🧪 統合テスト (Tests)"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@28935578f7e7191638217316717a61f364003d15 # v2.0.1
 
       - name: Install JS Dependencies
         run: bun install
 
-      - name: Run Bun Tests
-        run: bun test
+      - name: Run Bun Tests with Coverage
+        run: bun run test --coverage
+
+      - name: Setup Python
+        uses: actions/setup-python@c8813ba1bc76ebf779b911ad8ffccbf2e449cb48 # v5.1.0
+        with:
+          python-version: "3.11"
+
+      - name: Install Python Dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest-cov
+
+      - name: Run Python Tests with Coverage
+        run: pytest --cov=python --cov-report=term-missing tests/python tests/test_kernel.py
 
   zap-scan:
     name: "🛡️ OWASP ZAP Security Scan"
     runs-on: ubuntu-latest
-    # 本番環境またはテスト環境のURLに対して実行
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@28935578f7e7191638217316717a61f364003d15 # v2.0.1
+
+      - name: Install Dependencies & Setup Env
+        run: |
+          bun install
+          cp .env.example .env
+          # Use a mock secret for testing if needed
+          sed -i 's/JWT_SECRET=.*/JWT_SECRET=zap-scan-secret-key/' .env
+
+      - name: Start Server in Background
+        run: |
+          bun scripts/manage.ts dev:ci &
+          # Wait for server to be ready (Base health)
+          timeout 60s bash -c 'until curl -s http://localhost:3000/health; do sleep 2; done'
+          # Verify Auth path (Should return 400 or 401, but not 404/500)
+          curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/auth/token | grep -qE "400|401"
+          # Verify AI path
+          curl -f http://localhost:3000/api/health || exit 1
+
       - name: ZAP Scan
-        uses: zaproxy/action-baseline@v0.15.0
+        uses: zaproxy/action-baseline@903697920364e8333538c642823a17082f66a24 # v0.15.0
         with:
-          target: 'https://elysia.io' # 実際のURLまたはテストURLに変更
+          target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
 
@@ -69,11 +125,14 @@ jobs:
     name: "📡 Meteor Status Report"
     runs-on: ubuntu-latest
     if: always()
-    needs: [security-audit, unit-tests]
+    needs: [security-audit, unit-tests, zap-scan]
     steps:
       - name: Notify Meteor#6267
         run: |
-          # Webhookを使用して実行結果を通知 (Meteor#6267名義)
+          if [ -z "${{ secrets.DISCORD_WEBHOOK_URL }}" ]; then
+            echo "Skipping notification: DISCORD_WEBHOOK_URL not set."
+            exit 0
+          fi
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"username\": \"Meteor#6267\", \"content\": \"🛡️ **Security Audit Complete**\nAudit: ${{ needs.security-audit.result }}\nTests: ${{ needs.unit-tests.result }}\nTimestamp: $(date)\"}" \
+          -d "{\"username\": \"Meteor#6267\", \"content\": \"🛡️ **Security Audit Complete**\nAudit: ${{ needs.security-audit.result }}\nTests: ${{ needs.unit-tests.result }}\nZAP: ${{ needs.zap-scan.result }}\nTimestamp: $(date)\"}" \
           ${{ secrets.DISCORD_WEBHOOK_URL }}

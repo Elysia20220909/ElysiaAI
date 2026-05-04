@@ -1,21 +1,45 @@
 [project]
 name = "elysia-ai-kernel"
-version = "0.1.0"
+version = "1.3.0"
 description = "AI Core for ElysiaAI"
+authors = [{name = "Elysia20220909"}]
 dependencies = [
-    "fastapi",
-    "uvicorn",
-    "httpx",
-    "langchain",
-    "langchain-community",
-    "ollama",
-    "pydantic-settings",
-    "pymilvus[model]",
-    "pytest",
-    "ruff",
-    "python-dotenv",
-    "pydantic"
+    "aiohttp>=3.9.0",
+    "beautifulsoup4>=4.12.3",
+    "cryptography>=42.0.5",
+    "deep-translator>=1.11.4",
+    "defusedxml>=0.7.1",
+    "discord.py>=2.7.1",
+    "duckduckgo-search>=4.3.0",
+    "fastapi>=0.110.0",
+    "feedparser>=6.0.11",
+    "httpx>=0.27.0",
+    "inputimeout>=1.0.4",
+    "markdownify>=1.2.0",
+    "matplotlib>=3.8.2",
+    "milvus-lite>=2.4.0",
+    "networkx>=3.2.1",
+    "numpy>=1.26.0,<2.0.0",
+    "ollama>=0.6.1",
+    "Pillow>=10.2.0",
+    "psutil>=5.9.8",
+    "pyautogui>=0.9.54",
+    "pydantic>=2.6.1",
+    "pydantic-settings>=2.2.1",
+    "pymilvus[model]>=2.6.11",
+    "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.24",
+    "rich>=13.7.0",
+    "scrapling>=0.4.7,<0.5.0",
+    "sentence-transformers>=2.3.1",
+    "uvicorn[standard]>=0.27.1"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "ruff>=0.8.0"
 ]
 
 [tool.setuptools]
-packages = ["kernel"]
+packages = ["kernel", "usr"]

@@ -1,0 +1,30 @@
+name: 🚀 Release & Artifacts
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: "📦 Create GitHub Release"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate Changelog
+        run: |
+          # Simple changelog generation from git logs since last tag
+          echo "## What's Changed" > release_notes.md
+          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --oneline --pretty=format:"* %s" >> release_notes.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        with:
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

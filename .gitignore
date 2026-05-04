@@ -27,21 +27,31 @@ out/
 .DS_Store
 *.pem
 DEBUG_REPORT.md
+AEGIS_LEDGER.md
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+bot_logs.txt
+*_logs.txt
 
 # local env files
 .env
+.env.*
+!.env.example
+!.env.*.example
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.x_bulk_delete_tokens.json
+x_delete_results*.jsonl
 
 # Protected configuration directory (legacy)
 /config/private/
+/config/defense/rules.json
+/packages/server/config/
 
 # Secure internal configurations (legacy)
 /src/config/internal/
@@ -84,12 +94,15 @@ package-lock.json
 /python/**/*.db
 /outputs/
 /scratch/
+/var/
 kernel/config/abyss/RESONANCE_INIT.bin
 
 # Temporary and log files
 *.log
 *.tmp
 *.cache
+logs/
+**/logs/
 *-debug.log
 auth-debug.log
 server-swagger.log
@@ -108,6 +121,7 @@ bun.log
 
 # Database files
 *.db
+*.db.lock
 *.db-journal
 *.db-shm
 *.db-wal
@@ -159,7 +173,12 @@ mksSandbox.log
 src-tauri/target/
 
 # Abyssal Data & Monetization
-/data/
+/data/*
+!/data/marathon_hook_state.json
+!/data/seen_marathon_news.json
+python/data/*.mp4
+python/data/vault/
+scripts/wordlists/
 *.sys
 *.exe
 *.dll

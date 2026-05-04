@@ -1,63 +1,89 @@
-# 🌸 ElysiaAI - Contribution Guide
+# ElysiaAI Contribution Guide
 
-Thank you for considering contributing to ElysiaAI! We are building a paradisical AI OS and your help is invaluable.
+Thank you for helping improve ElysiaAI. This repository mixes Bun/Elysia,
+FastAPI/Python, local AI tooling, and security-sensitive configuration, so the
+main rule is simple: keep changes small, reviewable, and easy to verify.
 
-## 🚀 Getting Started
+## Setup
 
-### 📦 Prerequisites
+Prerequisites:
 
-- **Bun**: v1.1.0+
-- **Python**: v3.11+
-- **Rust**: v1.75+ (For Shield Agent)
-- **Docker**: For running the Sovereign stack.
+- Bun 1.1+
+- Python 3.11+
+- Docker, only when testing the container stack
+- Ollama, when testing local inference flows
 
-### 🛠️ Development Setup
+```bash
+bun scripts/manage.ts setup
+bun scripts/manage.ts setup-python
+```
 
-1. Fork the repository and clone it locally.
-2. Install JS dependencies: `bun install`.
-3. Launch the environment: `bun run docker:up`.
-4. Copy `.env.example` to `.env` and configure your keys.
+On Windows PowerShell:
 
----
+```powershell
+Copy-Item .env.example .env
+bun scripts/manage.ts setup
+bun scripts/manage.ts setup-python
+```
 
-## 🎨 Coding Standards
+## Local Quality Gate
 
-### TypeScript / JavaScript / ElysiaJS
+Run these before opening a pull request:
 
-- We use **Biome** for linting and formatting. Run `bun run fix` before committing.
-- Ensure all API routes have **TypeBox validation** and **Swagger tags**.
+```bash
+bun run lint
+bun run test
+bun run typecheck
+bun run check:git-hygiene
+bun run check:encoding
+bun run security:glassworm -- --ci
+```
 
-### Rust (Shield Agent)
+`bun scripts/manage.ts check` runs the Git hygiene and encoding guards plus a
+small project-structure audit.
 
-- Follow standard Rust idiomatic patterns.
-- Run `cargo fmt` and `cargo clippy`.
+## Git Hygiene
 
-### Python (Cognitive Kernel)
+Never commit local secrets, runtime databases, generated logs, or personal
+workspace files. In particular, `.env` and `.env.*` are ignored; only
+`.env.example` should be tracked.
 
-- We use **Ruff** for linting.
-- Ensure all new features have corresponding tests in `tests/python/`.
+If a local environment file is already tracked, remove it from Git without
+deleting your local copy:
 
----
+```bash
+git rm --cached .env
+```
 
-## 🧪 Testing
+The `check:git-hygiene` script fails CI if forbidden environment files are
+tracked.
 
-We value stability. No PR will be merged without passing automated tests.
+## Encoding And Language
 
-- **Global JS/TS**: `bun test`
-- **Rust Agent**: `cargo test` in `packages/shield-agent`
-- **Security Sandbox**: Use `scripts/verify-security.sh` from within the sandbox.
+All tracked text files must be UTF-8. If Japanese or English text becomes
+mojibake, fix the text itself instead of suppressing the check. The
+`check:encoding` script scans tracked source and documentation for invalid
+UTF-8, replacement characters, and common Windows-1252/CP932 mojibake markers.
 
----
+## Dependency Policy
 
-## 📬 Pull Request Process
+- Use `bun install` for JavaScript/TypeScript dependencies.
+- Keep Python dependencies aligned through the root `requirements.txt`.
+- Do not vendor third-party projects directly unless the license and update
+  policy are documented.
+- Open-LLM-VTuber should be integrated as an external service through the bridge
+  documented in `docs/OPEN_LLM_VTUBER_INTEGRATION.md`.
 
-1. Create a new branch for your feature or bugfix.
-2. Write clear, concise commit messages.
-3. Update documentation if you are adding or changing features.
-4. Ensure CI passes on your PR.
+## Pull Requests
 
-## 🤝 Code of Conduct
+- Use Conventional Commits, such as `feat:`, `fix:`, `docs:`, or `chore:`.
+- Include tests or a clear verification note for behavior changes.
+- Update README or docs when setup, commands, environment variables, or public
+  routes change.
+- Keep unrelated formatting churn out of feature PRs when possible.
 
-We are committed to making participation in our community a harassment-free experience for everyone. Please read and follow our [Code of Conduct](.github/CODE_OF_CONDUCT.md).
+## Code Style
 
-Be kind, be respectful, and let's create something beautiful together. ฅ(՞៸៸> ᗜ <៸៸՞)ฅ
+- TypeScript and JavaScript use Biome: `bun run lint`.
+- Python uses Ruff: `python -m ruff check python tests/python tests/test_kernel.py`.
+- Prefer existing helpers and route patterns over new framework choices.
