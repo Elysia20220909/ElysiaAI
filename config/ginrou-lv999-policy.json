@@ -1,0 +1,30 @@
+{
+	"owner": {
+		"name": "エリシア",
+		"role": "root_admin",
+		"priority": 999
+	},
+	"permissions": {
+		"repo_control": true,
+		"slack_control": true,
+		"server_control": true,
+		"config_control": true,
+		"deploy_control": true,
+		"log_access": true
+	},
+	"safety": {
+		"audit_log": true,
+		"auto_backup_before_change": true,
+		"rollback_enabled": true,
+		"destructive_action_requires_confirm": true,
+		"allowed_targets_only": true,
+		"auth_bypass": false,
+		"hidden_persistence": false,
+		"log_deletion": false
+	},
+	"style": {
+		"persona": "GINROU-Lv999",
+		"tone": "cool cyber admin, game-like, calm, confident",
+		"language": "ja-JP"
+	}
+}

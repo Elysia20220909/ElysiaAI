@@ -6,13 +6,15 @@
   "workspaces": [
     "packages/*"
   ],
-  "scripts": {
-    "boot": "bun scripts/boot.ts",
-    "boot:lite": "bun scripts/boot.ts --lite",
-    "build": "bun build packages/server/src/index.ts --target=bun --outdir dist/server",
-    "dev": "bun run --cwd packages/server dev",
-    "dev:lite": "bun scripts/boot.ts --lite",
-    "start": "bun run --cwd packages/server start",
+	"scripts": {
+		"boot": "bun scripts/boot.ts",
+		"boot:lite": "bun scripts/boot.ts --lite",
+		"build": "bun build packages/server/src/index.ts --target=bun --outdir dist/server",
+		"dev": "bun run --cwd packages/server dev",
+		"dev:lite": "bun scripts/boot.ts --lite",
+		"hooks:install": "git config core.hooksPath .githooks",
+		"notify:commit": "bun scripts/slack-commit-notify.ts --dry-run",
+		"start": "bun run --cwd packages/server start",
     "db:generate": "bunx prisma generate --schema prisma/schema.prisma",
     "db:validate": "bunx prisma validate --schema prisma/schema.prisma",
     "native:lite": "bun scripts/native-lite.ts",

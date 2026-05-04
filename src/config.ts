@@ -121,6 +121,19 @@ export const config = {
 	errorAlertsEnabled: getEnv("ERROR_ALERTS_ENABLED", "false") === "true",
 	discordWebhookUrl: getEnv("DISCORD_WEBHOOK_URL", ""),
 	slackWebhookUrl: getEnv("SLACK_WEBHOOK_URL", ""),
+	slackSigningSecret: getEnv("SLACK_SIGNING_SECRET", ""),
+	slackBotToken: getEnv("SLACK_BOT_TOKEN", ""),
+	slackAppToken: getEnv("SLACK_APP_TOKEN", ""),
+	slackCommandName: getEnv("SLACK_COMMAND_NAME", "/ginrou"),
+	slackSocketModeEnabled:
+		getEnv("SLACK_SOCKET_MODE_ENABLED", "false") === "true",
+	ginrouOwnerUserId: getEnv("GINROU_OWNER_USER_ID", ""),
+	ginrouAuditChannelId: getEnv("GINROU_AUDIT_CHANNEL_ID", ""),
+	ginrouAllowedChannelIds: getEnv("GINROU_ALLOWED_CHANNEL_IDS", ""),
+	ginrouGateDefaultLocked:
+		getEnv("GINROU_GATE_DEFAULT_LOCKED", "false") === "true",
+	ginrouDefaultRepo: getEnv("GINROU_DEFAULT_REPO", "Elysia20220909/ElysiaAI"),
+	githubToken: getEnv("GITHUB_TOKEN", ""),
 	customWebhookUrl: getEnv("CUSTOM_WEBHOOK_URL", ""),
 	customWebhookSecret: getEnv("CUSTOM_WEBHOOK_SECRET", ""),
 	emailNotificationsEnabled:
