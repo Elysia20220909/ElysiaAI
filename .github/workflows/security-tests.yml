@@ -23,7 +23,7 @@ jobs:
     name: "🔍 セキュリティ監査 (Audit)"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       
       - name: Setup Bun
         uses: oven-sh/setup-bun@28935578f7e7191638217316717a61f364003d15 # v2.0.1
@@ -35,7 +35,7 @@ jobs:
         run: bun run security:glassworm -- --ci
 
       - name: Setup Python
-        uses: actions/setup-python@f6742a91b3c76390a3c94444657152f20703664d # v5.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.11"
 
@@ -54,7 +54,7 @@ jobs:
           output-file: elysia-sbom.spdx.json
 
       - name: Upload SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: elysia-sbom.spdx.json
@@ -63,7 +63,7 @@ jobs:
     name: "🧪 統合テスト (Tests)"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@28935578f7e7191638217316717a61f364003d15 # v2.0.1
@@ -75,7 +75,7 @@ jobs:
         run: bun run test --coverage
 
       - name: Setup Python
-        uses: actions/setup-python@f6742a91b3c76390a3c94444657152f20703664d # v5.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.11"
 
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@28935578f7e7191638217316717a61f364003d15 # v2.0.1
