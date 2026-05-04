@@ -31,5 +31,5 @@ lazy_static = "1.4"
 thiserror = "2.0"
 rand = "0.8"
 winapi = { version = "0.3", features = ["memoryapi", "winbase", "winnt"] }
-sysinfo = "0.30"
+sysinfo = "0.38"
 libc = "0.2"
