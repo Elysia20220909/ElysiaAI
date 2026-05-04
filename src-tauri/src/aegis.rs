@@ -1,7 +1,6 @@
 use hmac::{Hmac, Mac};
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
-use std::net::UdpSocket;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -58,7 +57,7 @@ impl AegisWatchdog {
         let watchdog_status = Arc::clone(&status);
         thread::spawn(move || {
             let mut count = 0;
-            let hmac_key = std::env::var("RESONANCE_SECRET")
+            let _hmac_key = std::env::var("RESONANCE_SECRET")
                 .unwrap_or_else(|_| "ELYSIAN_DEFAULT_RESONANCE_KEY".to_string());
 
             loop {
@@ -144,14 +143,14 @@ impl AegisWatchdog {
 
     /// Generates a stable, hardware-bound identifier.
     fn generate_hwid() -> String {
-        use sysinfo::{CpuExt, DiskExt, System};
+        use sysinfo::{Disks, System};
         let mut s = System::new_all();
         s.refresh_all();
 
         let cpu_info = s.cpus().first().map(|c| c.brand()).unwrap_or("UnknownCPU");
         let total_mem = s.total_memory();
-        let disk_info: String = s
-            .disks()
+        let disks = Disks::new_with_refreshed_list();
+        let disk_info: String = disks
             .iter()
             .map(|d| format!("{:?}", d.name()))
             .collect::<Vec<_>>()

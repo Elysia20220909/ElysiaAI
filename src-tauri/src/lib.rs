@@ -65,7 +65,7 @@ async fn register_classified_file(
     };
 
     let file = SovereignFile {
-        name,
+        name: name.clone(),
         path,
         secrecy,
         owner: "SYSTEM_ROOT".into(),
@@ -254,10 +254,10 @@ fn shutdown_kernel(state: State<'_, KernelState>) {
     }
 }
 
-fn get_project_root(app_handle: &AppHandle) -> AppResult<std::path::PathBuf> {
+fn get_project_root(_app_handle: &AppHandle) -> AppResult<std::path::PathBuf> {
     #[cfg(debug_assertions)]
     {
-        let mut path = std::env::current_dir().map_err(AppError::Io)?;
+        let path = std::env::current_dir().map_err(AppError::Io)?;
         if !path.join("usr").exists() {
             if let Some(parent) = path.parent() {
                 if parent.join("usr").exists() {
@@ -270,7 +270,7 @@ fn get_project_root(app_handle: &AppHandle) -> AppResult<std::path::PathBuf> {
 
     #[cfg(not(debug_assertions))]
     {
-        app_handle
+        _app_handle
             .path()
             .resource_dir()
             .map_err(|e| AppError::Env(e.to_string()))
