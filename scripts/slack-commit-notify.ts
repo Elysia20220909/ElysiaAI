@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { basename } from "node:path";
+import { basename, dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 type CommitInfo = {
 	sha: string;
@@ -216,8 +217,11 @@ async function sendSlackBotMessage(
 }
 
 export async function main() {
+	const scriptRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 	loadDotEnvFile(".env");
 	loadDotEnvFile(".env.local");
+	loadDotEnvFile(join(scriptRoot, ".env"));
+	loadDotEnvFile(join(scriptRoot, ".env.local"));
 
 	const args = parseArgs();
 	if (!isEnabled()) {
