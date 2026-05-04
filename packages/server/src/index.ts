@@ -25,6 +25,7 @@ import { authRoutes } from "./routes/auth-routes";
 import { customizationRoutes } from "./routes/customization-routes";
 import { databaseRoutes } from "./routes/database-routes";
 import { fileRoutes } from "./routes/file-routes";
+import { learningRoutes } from "./routes/learning-routes";
 import { sessionRoutes } from "./routes/session-routes";
 import { slackRoutes } from "./routes/slack-routes";
 import { systemRoutes } from "./routes/system-routes";
@@ -163,6 +164,7 @@ app
 	.use(systemRoutes)
 	.use(adminRoutes)
 	.use(sessionRoutes)
+	.use(learningRoutes)
 	.use(customizationRoutes)
 	.use(fileRoutes)
 	.use(databaseRoutes)
