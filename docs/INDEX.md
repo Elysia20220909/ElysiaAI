@@ -11,6 +11,8 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |
 | Stark home local server build | `docs/STARK_HOME_LOCAL_SERVER_BUILD.md` |
 | Stark home Proxmox / OPNsense checklist | `docs/STARK_HOME_PROXMOX_OPNSENSE_CHECKLIST.md` |
+| Cliffside AI lab residence 3D prompts | `docs/fictional/STARK_ESTATE_3D_PROMPTS.md` |
+| Cliffside AI lab residence engine spec | `docs/fictional/STARK_ESTATE_ENGINE_SPEC.md` |
 | Fictional suit system | `docs/fictional/MARK85_FANTASY_SUIT_SYSTEM.md` |
 | Architecture | `docs/ARCHITECTURE.md` |
 | Project structure | `docs/PROJECT_STRUCTURE.md` |
@@ -36,6 +38,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | OpenAI | `docs/OPENAI_INTEGRATION.md` |
 | Open-LLM-VTuber | `docs/OPEN_LLM_VTUBER_INTEGRATION.md` |
 | Discord command center | `docs/DISCORD_GINROU_COMMAND_CENTER.md` |
+| Discord server 1086031216433713163 spec | `docs/DISCORD_SERVER_1086031216433713163_SPEC.md` |
 | Web search | `docs/WEB_SEARCH_INTEGRATION.md` |
 | Voice | `docs/VOICE_GUIDE.md`, `docs/VOICEVOX_SETUP.md` |
 | Scrapling | `docs/SCRAPLING_INTEGRATION.md` |
