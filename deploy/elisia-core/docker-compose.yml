@@ -1,0 +1,3 @@
+# Compatibility shim. Canonical file is compose.yaml.
+include:
+  - compose.yaml
