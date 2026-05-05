@@ -2,15 +2,42 @@
 
 Docker Core VM用の配置ファイル。
 
-Copy to the VM:
+## Auto setup
+
+Copy to the Docker Core VM:
 
 ```bash
-sudo mkdir -p /opt/elisia-core
-sudo chown -R "$USER:$USER" /opt/elisia-core
+ssh elisia@10.10.20.30 'sudo mkdir -p /opt/elisia-core && sudo chown -R "$USER:$USER" /opt/elisia-core'
 rsync -av ./deploy/elisia-core/ elisia@10.10.20.30:/opt/elisia-core/
 ```
 
-Create secrets:
+Run the setup on the VM:
+
+```bash
+cd /opt/elisia-core
+chmod +x setup.sh backup-volumes.sh
+sudo ./setup.sh --install-docker --bind-ip 10.10.20.30 --pull-model llama3.2
+```
+
+The script installs Docker on Debian/Ubuntu if needed, creates `.env`, generates bootstrap secrets, creates the Mosquitto password file, validates Compose, starts the stack, and optionally pulls an Ollama model.
+
+Generated plaintext bootstrap passwords are written to `/opt/elisia-core/setup-secrets.txt`. Move them to a password manager, then delete the file.
+
+Prepare without starting:
+
+```bash
+./setup.sh --no-start --bind-ip 10.10.20.30
+```
+
+Validate only:
+
+```bash
+./setup.sh --validate-only
+```
+
+## Manual setup
+
+Create secrets manually:
 
 ```bash
 cd /opt/elisia-core
@@ -30,7 +57,7 @@ docker compose -f compose.yaml up -d
 docker compose -f compose.yaml ps
 ```
 
-Create MQTT password file:
+Create MQTT password file manually:
 
 ```bash
 docker run --rm -it \

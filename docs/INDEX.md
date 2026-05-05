@@ -10,6 +10,8 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Getting started | `docs/GETTING_STARTED.md` |
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |
 | Stark home local server build | `docs/STARK_HOME_LOCAL_SERVER_BUILD.md` |
+| Stark home automated setup | `docs/STARK_HOME_AUTOMATED_SETUP.md` |
+| Stark home local server build, Japanese / English | `docs/STARK_HOME_LOCAL_SERVER_BUILD_JA_EN.md` |
 | Stark home Proxmox / OPNsense checklist | `docs/STARK_HOME_PROXMOX_OPNSENSE_CHECKLIST.md` |
 | Cliffside AI lab residence 3D prompts | `docs/fictional/STARK_ESTATE_3D_PROMPTS.md` |
 | Cliffside AI lab residence engine spec | `docs/fictional/STARK_ESTATE_ENGINE_SPEC.md` |
