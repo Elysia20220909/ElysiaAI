@@ -1,0 +1,35 @@
+- AI:
+    - Open WebUI:
+        href: https://ai.home.arpa
+        description: Local AI console
+        icon: open-webui.png
+
+- Home:
+    - Home Assistant:
+        href: https://ha.home.arpa
+        description: Smart home control
+        icon: home-assistant.png
+
+- Ops:
+    - Uptime Kuma:
+        href: https://status.home.arpa
+        description: Service monitoring
+        icon: uptime-kuma.png
+    - Grafana:
+        href: https://grafana.home.arpa
+        description: Metrics dashboard
+        icon: grafana.png
+    - Prometheus:
+        href: https://prometheus.home.arpa
+        description: Metrics database
+        icon: prometheus.png
+
+- Dev:
+    - Gitea:
+        href: https://git.home.arpa
+        description: Local Git forge
+        icon: gitea.png
+    - n8n:
+        href: https://n8n.home.arpa
+        description: Automation workflows
+        icon: n8n.png

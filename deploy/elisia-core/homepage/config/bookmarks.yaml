@@ -1,0 +1,7 @@
+- Admin:
+    - Proxmox:
+        - abbr: PVE
+          href: https://proxmox.home.arpa:8006
+    - NAS:
+        - abbr: NAS
+          href: https://nas.home.arpa
