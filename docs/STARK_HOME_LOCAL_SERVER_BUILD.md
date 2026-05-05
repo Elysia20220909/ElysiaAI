@@ -16,9 +16,11 @@ E.L.I.S.I.A.向けローカルサーバ設計書。実機へ落とす前提の�
 実ファイル:
 
 - Docker Core: `deploy/elisia-core/compose.yaml`
+- Docker Core automated setup: `deploy/elisia-core/setup.sh`
 - Caddy: `deploy/elisia-core/caddy/Caddyfile`
 - Prometheus: `deploy/elisia-core/prometheus/prometheus.yml`
 - Homepage: `deploy/elisia-core/homepage/config/*.yaml`
+- 自動セットアップ手順: `docs/STARK_HOME_AUTOMATED_SETUP.md`
 - Proxmox/OPNsense手順: `docs/STARK_HOME_PROXMOX_OPNSENSE_CHECKLIST.md`
 
 ## Topology
@@ -270,9 +272,23 @@ qm set 102 \
 Copy `deploy/elisia-core` to `/opt/elisia-core` on Docker Core VM.
 
 ```bash
-sudo mkdir -p /opt/elisia-core
-sudo chown -R "$USER:$USER" /opt/elisia-core
+ssh elisia@10.10.20.30 'sudo mkdir -p /opt/elisia-core && sudo chown -R "$USER:$USER" /opt/elisia-core'
+rsync -av ./deploy/elisia-core/ elisia@10.10.20.30:/opt/elisia-core/
+ssh elisia@10.10.20.30
 cd /opt/elisia-core
+```
+
+Automated setup:
+
+```bash
+chmod +x setup.sh backup-volumes.sh
+sudo ./setup.sh --install-docker --bind-ip 10.10.20.30 --pull-model llama3.2
+```
+
+Prepare without starting containers:
+
+```bash
+sudo ./setup.sh --install-docker --bind-ip 10.10.20.30 --no-start
 ```
 
 Create `.env` from `.env.example`.
