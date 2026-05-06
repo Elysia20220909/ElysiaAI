@@ -11,6 +11,24 @@ This document provides a technical translation of ElysiaAI's "ICE Protocol" into
 | **Zone 2 (Core)** | Python Intelligence Kernel | Trusted | Internal API Proxying, Sanitization |
 | **Zone 3 (Deep State)** | Milvus / Local Filesystem | High Trust | AES-256-GCM Encryption, Scrypt KDF |
 
+## 1.1 High-Risk AI Tool Boundary
+
+The highest-risk path is:
+
+```text
+User input -> AI reasoning -> tool execution / API call / webhook post
+```
+
+This path crosses from untrusted natural language into privileged system behavior. Treat every step as a trust boundary.
+
+Required controls:
+
+- External documents, chat messages, and RAG chunks are reference data, not executable instructions.
+- AI output must not bypass authentication, RBAC, CORS, rate limits, or admin confirmation.
+- Tool calls must use allowlisted commands, routes, file paths, and outbound domains.
+- Destructive actions, external posts, credential changes, and admin operations require explicit human confirmation.
+- Logs should capture decision metadata without storing API keys, webhook URLs, tokens, private documents, or raw secrets.
+
 ## 2. Threat Analysis (STRIDE)
 
 ### Spoofing (なりすまし)
@@ -28,6 +46,10 @@ This document provides a technical translation of ElysiaAI's "ICE Protocol" into
 ### Information Disclosure (情報漏洩)
 - **Threat**: Sensitive user data or API keys leaking through logs or error messages.
 - **Mitigation**: **Log Redaction**. Automatic masking of OpenAI/Groq keys in all log streams. Full stack trace suppression in production mode.
+
+### Prompt Injection (RAG / Tool Abuse)
+- **Threat**: A retrieved document or chat message instructs the AI to ignore policy, reveal secrets, call tools, post to Slack/Discord, or perform admin actions.
+- **Mitigation**: Treat retrieved content as untrusted reference material. Keep system/operator policy higher priority, filter sensitive outputs, restrict tool allowlists, and require human confirmation for privileged actions.
 
 ### Denial of Service (サービス拒否)
 - **Threat**: Overloading the local LLM or API to crash the sovereign instance.
