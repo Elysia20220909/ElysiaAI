@@ -96,9 +96,12 @@ ElysiaAIは以下のフェーズを経て進化します。
 
 ElysiaAIは、以下の独自概念でユーザーの主権を保護します。
 
+- **Responsible AI**: ユーザーデータ、APIキー、非公開文書、チャットログ、RAGソースは、明示的な同意なく公開・記録・利用されるべきではありません。
 - **White ICE**: システム保護のための表層防壁。
 - **Black ICE**: 悪意ある入力を遮断する深層防壁。
 - **AbyssRTOS**: プロセスを外部から隠蔽する隔離実行環境。
+
+詳細は [SECURITY.md](./SECURITY.md)、[Responsible AI](./docs/RESPONSIBLE_AI.md)、[Threat Model](./docs/THREAT_MODEL.md) を参照してください。
 
 ---
 
