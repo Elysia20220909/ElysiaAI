@@ -11,6 +11,7 @@ mod confidential_exchange;
 mod error;
 mod native_bridge;
 mod native_lite;
+mod native_resonance;
 mod shared_resonance;
 mod sovereign_physics;
 mod sovereign_secrecy;
@@ -89,6 +90,12 @@ async fn register_classified_file(
 fn native_lite_snapshot(app_handle: AppHandle) -> AppResult<native_lite::NativeLiteSnapshot> {
     let project_root = get_project_root(&app_handle)?;
     Ok(native_lite::collect_native_lite_snapshot(project_root))
+}
+
+/// Builds a local Swift/Rust native resonance report for operator planning.
+#[tauri::command]
+fn native_resonance_report(context: String) -> AppResult<native_resonance::NativeResonanceReport> {
+    Ok(native_resonance::build_native_resonance_report(context))
 }
 
 /// Initiates an emergency system-wide purge.
@@ -219,7 +226,8 @@ pub fn run() {
             set_wind_force_resonance,
             set_basket_position_resonance,
             save_secure_world_state,
-            native_lite_snapshot
+            native_lite_snapshot,
+            native_resonance_report
         ])
         .manage(aegis::AegisWatchdog::init())
         .run(tauri::generate_context!())
