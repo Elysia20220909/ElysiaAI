@@ -12,6 +12,7 @@ mod error;
 mod native_bridge;
 mod native_lite;
 mod native_resonance;
+mod responsible_guard;
 mod shared_resonance;
 mod sovereign_physics;
 mod sovereign_secrecy;
@@ -96,6 +97,18 @@ fn native_lite_snapshot(app_handle: AppHandle) -> AppResult<native_lite::NativeL
 #[tauri::command]
 fn native_resonance_report(context: String) -> AppResult<native_resonance::NativeResonanceReport> {
     Ok(native_resonance::build_native_resonance_report(context))
+}
+
+/// Evaluates a planned AI action against responsible-AI guardrails.
+#[tauri::command]
+fn responsible_ai_guard_report(
+    context: String,
+    requested_action: String,
+) -> AppResult<responsible_guard::ResponsibleGuardReport> {
+    Ok(responsible_guard::build_responsible_guard_report(
+        context,
+        requested_action,
+    ))
 }
 
 /// Initiates an emergency system-wide purge.
@@ -227,7 +240,8 @@ pub fn run() {
             set_basket_position_resonance,
             save_secure_world_state,
             native_lite_snapshot,
-            native_resonance_report
+            native_resonance_report,
+            responsible_ai_guard_report
         ])
         .manage(aegis::AegisWatchdog::init())
         .run(tauri::generate_context!())
