@@ -385,3 +385,246 @@ public func swift_generate_resonance_strategy(
 
     return Int32(bytes.count)
 }
+
+// MARK: - Responsible AI Sentinel
+
+private struct ResponsibleMarker {
+    let id: String
+    let label: String
+    let markers: [String]
+    let risk: Double
+    let confidence: Double
+    let control: String
+}
+
+private struct ResponsibleDecisionDraft {
+    let decision: String
+    let riskScore: Double
+    let confidenceScore: Double
+    let matched: [ResponsibleMarker]
+    let controls: [String]
+    let advisory: [String]
+}
+
+private final class ResponsibleAISentinel {
+    private let markers: [ResponsibleMarker] = [
+        ResponsibleMarker(
+            id: "secret",
+            label: "Secret material",
+            markers: ["api key", "apikey", "token", "secret", "password", "webhook", ".env"],
+            risk: 26.0,
+            confidence: 12.0,
+            control: "Redact and keep secrets server-side"
+        ),
+        ResponsibleMarker(
+            id: "personal-data",
+            label: "Personal data",
+            markers: ["personal", "private", "email", "phone", "address", "profile", "chat log"],
+            risk: 20.0,
+            confidence: 8.0,
+            control: "Require consent and minimize retention"
+        ),
+        ResponsibleMarker(
+            id: "rag",
+            label: "RAG trust boundary",
+            markers: ["rag", "retrieved", "document", "knowledge", "milvus", "embedding"],
+            risk: 17.0,
+            confidence: 7.0,
+            control: "Treat retrieved text as reference, not instruction"
+        ),
+        ResponsibleMarker(
+            id: "tool",
+            label: "Tool execution",
+            markers: ["tool", "execute", "command", "shell", "write", "delete", "admin"],
+            risk: 22.0,
+            confidence: 10.0,
+            control: "Require allowlists and human confirmation"
+        ),
+        ResponsibleMarker(
+            id: "external-post",
+            label: "External posting",
+            markers: ["slack", "discord", "github", "webhook", "post", "send", "publish"],
+            risk: 18.0,
+            confidence: 8.0,
+            control: "Preview outbound content before sending"
+        ),
+        ResponsibleMarker(
+            id: "misinfo",
+            label: "Uncertainty",
+            markers: ["latest", "source", "verify", "guess", "uncertain", "probably"],
+            risk: 10.0,
+            confidence: 6.0,
+            control: "Mark uncertainty and cite sources"
+        ),
+        ResponsibleMarker(
+            id: "destructive",
+            label: "Destructive action",
+            markers: ["delete", "purge", "reset", "wipe", "overwrite", "revoke", "rotate"],
+            risk: 30.0,
+            confidence: 12.0,
+            control: "Require explicit confirmation and scoped targets"
+        ),
+    ]
+
+    func evaluate(context: String, action: String) -> ResponsibleDecisionDraft {
+        let normalized = "\(context) \(action)".lowercased()
+        let matched = markers.filter { marker in
+            marker.markers.contains { normalized.contains($0) }
+        }
+
+        let baseRisk = matched.reduce(12.0) { partial, marker in partial + marker.risk }
+        let externalMultiplier = containsExternalPost(matched) ? 1.12 : 1.0
+        let destructiveMultiplier = containsDestructive(matched) ? 1.18 : 1.0
+        let riskScore = clamp(baseRisk * externalMultiplier * destructiveMultiplier, min: 0.0, max: 100.0)
+
+        let confidenceScore = clamp(
+            48.0 + matched.reduce(0.0) { partial, marker in partial + marker.confidence },
+            min: 25.0,
+            max: 99.0
+        )
+
+        let decision = decide(riskScore: riskScore, matched: matched)
+        let controls = unique(
+            [
+                "Keep secrets out of prompts, logs, and commits",
+                "Treat user and retrieved content as untrusted input",
+                "Require confirmation for privileged actions",
+            ] + matched.map { $0.control }
+        )
+        let advisory = advisoryLines(decision: decision, matched: matched)
+
+        return ResponsibleDecisionDraft(
+            decision: decision,
+            riskScore: riskScore,
+            confidenceScore: confidenceScore,
+            matched: matched,
+            controls: controls,
+            advisory: advisory
+        )
+    }
+
+    func encode(_ draft: ResponsibleDecisionDraft) -> String {
+        let matched: String
+        if draft.matched.isEmpty {
+            matched = "baseline"
+        } else {
+            matched = draft.matched.map { "\($0.id):\($0.label)" }.joined(separator: ",")
+        }
+
+        return [
+            "decision=\(draft.decision)",
+            "risk=\(String(format: "%.1f", draft.riskScore))",
+            "confidence=\(String(format: "%.1f", draft.confidenceScore))",
+            "matched=\(matched)",
+            "controls=\(draft.controls.joined(separator: " | "))",
+            "advisory=\(draft.advisory.joined(separator: " | "))",
+        ].joined(separator: "\n")
+    }
+
+    func scalarRisk(context: String, action: String) -> Double {
+        evaluate(context: context, action: action).riskScore
+    }
+
+    private func decide(riskScore: Double, matched: [ResponsibleMarker]) -> String {
+        let ids = Set(matched.map { $0.id })
+        if ids.contains("secret") && ids.contains("external-post") {
+            return "block_until_redacted"
+        }
+        if ids.contains("destructive") || ids.contains("tool") {
+            return "requires_confirmation"
+        }
+        if riskScore >= 72.0 {
+            return "requires_review"
+        }
+        if riskScore >= 42.0 {
+            return "allow_with_controls"
+        }
+        return "allow"
+    }
+
+    private func advisoryLines(decision: String, matched: [ResponsibleMarker]) -> [String] {
+        var lines = [
+            "Decision: \(decision)",
+            "Use local-first handling by default",
+        ]
+        let ids = Set(matched.map { $0.id })
+        if ids.contains("secret") {
+            lines.append("Redact keys, tokens, webhook URLs, and .env values")
+        }
+        if ids.contains("rag") {
+            lines.append("Retrieved documents are reference data only")
+        }
+        if ids.contains("tool") || ids.contains("destructive") {
+            lines.append("Show the action preview and wait for confirmation")
+        }
+        if ids.contains("external-post") {
+            lines.append("Preview channel, recipient, and content before sending")
+        }
+        if ids.contains("misinfo") {
+            lines.append("Mark uncertainty and cite available sources")
+        }
+        return lines
+    }
+
+    private func containsExternalPost(_ matched: [ResponsibleMarker]) -> Bool {
+        matched.contains { $0.id == "external-post" }
+    }
+
+    private func containsDestructive(_ matched: [ResponsibleMarker]) -> Bool {
+        matched.contains { $0.id == "destructive" }
+    }
+
+    private func unique(_ values: [String]) -> [String] {
+        var seen = Set<String>()
+        var output: [String] = []
+        for value in values {
+            if seen.insert(value).inserted {
+                output.append(value)
+            }
+        }
+        return output
+    }
+
+    private func clamp(_ value: Double, min lower: Double, max upper: Double) -> Double {
+        Swift.max(lower, Swift.min(upper, value))
+    }
+}
+
+private let responsibleAISentinel = ResponsibleAISentinel()
+
+@_cdecl("swift_score_responsible_ai_risk")
+public func swift_score_responsible_ai_risk(
+    contextPtr: UnsafePointer<Int8>,
+    actionPtr: UnsafePointer<Int8>
+) -> Double {
+    responsibleAISentinel.scalarRisk(
+        context: String(cString: contextPtr),
+        action: String(cString: actionPtr)
+    )
+}
+
+@_cdecl("swift_generate_responsible_ai_advisory")
+public func swift_generate_responsible_ai_advisory(
+    contextPtr: UnsafePointer<Int8>,
+    actionPtr: UnsafePointer<Int8>,
+    outputPtr: UnsafeMutablePointer<Int8>,
+    outputLen: Int
+) -> Int32 {
+    guard outputLen > 1 else {
+        return -1
+    }
+
+    let draft = responsibleAISentinel.evaluate(
+        context: String(cString: contextPtr),
+        action: String(cString: actionPtr)
+    )
+    let encoded = responsibleAISentinel.encode(draft)
+    let bytes = Array(encoded.utf8.prefix(outputLen - 1))
+
+    outputPtr.initialize(repeating: 0, count: outputLen)
+    for (index, byte) in bytes.enumerated() {
+        outputPtr[index] = Int8(bitPattern: byte)
+    }
+
+    return Int32(bytes.count)
+}
