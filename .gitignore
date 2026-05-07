@@ -25,6 +25,7 @@ out/
 
 # misc
 .DS_Store
+.vs/
 *.pem
 DEBUG_REPORT.md
 AEGIS_LEDGER.md
