@@ -117,10 +117,15 @@ async function stopChildren() {
 async function waitFor(
 	url: string,
 	label: string,
-	attempts = 45,
+	attempts = Number.parseInt(
+		process.env.ELYSIA_BOOT_WAIT_ATTEMPTS ?? "120",
+		10,
+	),
 	delayMs = 1000,
 ) {
-	for (let attempt = 1; attempt <= attempts; attempt++) {
+	const maxAttempts =
+		Number.isFinite(attempts) && attempts > 0 ? attempts : 120;
+	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 		try {
 			const response = await fetch(url);
 			if (response.ok) {
