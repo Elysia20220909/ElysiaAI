@@ -6,20 +6,70 @@ import {
 	revokeRefreshToken,
 	rotateRefreshToken,
 } from "../lib/auth-tokens";
-import { jsonError } from "../lib/constants";
+import { CONFIG, jsonError } from "../lib/constants";
 import { tokenService } from "../lib/database";
 import { logger } from "../lib/logger";
+import {
+	createNeuralSignature,
+	recordNeuralAuthEvent,
+} from "../lib/neural-auth-system";
 import { authenticateUser, createUser } from "../lib/security";
 
 const testRefreshTokenStore = new InMemoryRefreshTokenStore();
 
 function getRefreshTokenStore(): RefreshTokenStore {
-	return process.env.ELYSIA_TEST_MODE === "1"
+	return process.env.ELYSIA_TEST_MODE === "1" || isDevAutoLoginEnabled()
 		? testRefreshTokenStore
 		: tokenService;
 }
 
+function isDevAutoLoginEnabled(): boolean {
+	return (
+		process.env.NODE_ENV !== "production" &&
+		(process.env.ELYSIA_TEST_MODE === "1" ||
+			process.env.ELYSIA_KERNEL_LITE === "1" ||
+			process.env.ELYSIA_DEV_AUTO_LOGIN === "1")
+	);
+}
+
 export const authRoutes = new Elysia({ prefix: "/auth" })
+	.post("/dev-login", async () => {
+		if (!isDevAutoLoginEnabled()) {
+			return jsonError(404, "Dev auto-login is not enabled");
+		}
+
+		try {
+			const username = CONFIG.AUTH_USERNAME || "admin";
+			const neuralSignature = createNeuralSignature(username);
+			const tokens = await issueTokenPair(
+				{ id: `dev-${username}`, username, role: "admin" },
+				getRefreshTokenStore(),
+			);
+			recordNeuralAuthEvent({
+				type: "dev.login",
+				identity: username,
+				neuralSignature,
+				threatLevel: "quiet",
+				detail: "Development neural link issued",
+			});
+
+			return new Response(
+				JSON.stringify({
+					accessToken: tokens.accessToken,
+					refreshToken: tokens.refreshToken,
+					expiresIn: tokens.expiresIn,
+					username,
+					neuralSignature,
+				}),
+				{
+					headers: { "content-type": "application/json" },
+				},
+			);
+		} catch (error) {
+			logger.error("Dev auto-login failed:", error as Error);
+			return jsonError(500, "Failed to generate dev token");
+		}
+	})
 	// Auth: token issuance
 	.post(
 		"/token",
@@ -45,12 +95,22 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 					{ id: user.id, username: user.username, role: user.role },
 					getRefreshTokenStore(),
 				);
+				const neuralSignature = createNeuralSignature(user.username);
+				recordNeuralAuthEvent({
+					type: "token.verify",
+					identity: user.username,
+					neuralSignature,
+					threatLevel: "quiet",
+					detail: "Credential exchange completed",
+					payload: { role: user.role },
+				});
 
 				return new Response(
 					JSON.stringify({
 						accessToken: tokens.accessToken,
 						refreshToken: tokens.refreshToken,
 						expiresIn: tokens.expiresIn,
+						neuralSignature,
 					}),
 					{
 						headers: { "content-type": "application/json" },

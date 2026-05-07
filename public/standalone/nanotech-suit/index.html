@@ -34,6 +34,10 @@
                 <div class="vital-label">INTERNAL_TEMP</div>
                 <div class="vital-value text-warning" id="temp">36.5°C</div>
             </div>
+            <div class="vital-row">
+                <div class="vital-label">SHIELD_INTEGRITY</div>
+                <div class="vital-value" id="shield-integrity">97.5%</div>
+            </div>
         </section>
 
         <!-- Central Reticle -->
@@ -53,7 +57,7 @@
                 <div class="nanite-wave" id="nano-wave"></div>
             </div>
             <div style="margin-top: 15px; font-size: 0.65rem; color: rgba(255,255,255,0.4); letter-spacing: 1px;">
-                STATUS: ASSEMBLING REINFORCED PLATING (ARC-12)
+                STATUS: <span id="nanite-formation">GUARDIAN LATTICE</span>
             </div>
         </section>
 
@@ -74,6 +78,14 @@
             <div class="weapon-status">
                 <span>SHIELD_GEN</span>
                 <div class="status-indicator active"></div>
+            </div>
+            <div class="command-grid" aria-label="Suit Commands">
+                <button data-command="scan">SCAN</button>
+                <button data-command="repair">REPAIR</button>
+                <button data-command="shield">SHIELD</button>
+                <button data-command="cloak">VEIL</button>
+                <button data-command="calibrate">SYNC</button>
+                <button data-command="standby">STANDBY</button>
             </div>
         </section>
 
@@ -101,9 +113,9 @@
 
         <!-- Bottom Status Line -->
         <footer class="bottom-status">
-            <span>GHOST_PROTOCOL: CONNECTED</span>
+            <span id="auth-status">GHOST_PROTOCOL: CHECKING</span>
             <span>KERNEL_VERSION: 1.2.0-ULTRA</span>
-            <span>AEGIS_INTEGRITY: 100%</span>
+            <span id="energy-level">AEGIS_ENERGY: 99.2%</span>
             <span id="real-time-clock">00:00:00</span>
         </footer>
     </div>
