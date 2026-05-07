@@ -1,6 +1,4 @@
 import { defenseManager } from "./defense-manager";
-import { logger } from "./logger";
-import { sovereignSentinel } from "./sovereign-sentinel";
 
 /**
  * 📊 Sentient Monitoring Dashboard (Phase 151)
@@ -44,9 +42,9 @@ class SentinelDashboard {
 
 		const blocked = defenseManager.getBlockedIps();
 		if (blocked.length > 0) {
-			blocked
-				.slice(-5)
-				.forEach((ip) => console.log(`  - BLOCKED: ${ip} (L3 Black ICE)`));
+			blocked.slice(-5).forEach((ip) => {
+				console.log(`  - BLOCKED: ${ip} (L3 Black ICE)`);
+			});
 		} else {
 			console.log("  - No active threats detected in local sector.");
 		}

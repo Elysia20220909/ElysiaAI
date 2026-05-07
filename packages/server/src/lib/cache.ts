@@ -1,5 +1,6 @@
 // Redis Cache Layer with TTL Management
 import Redis from "ioredis";
+import { config } from "../../../../src/config.ts";
 
 export interface CacheOptions {
 	ttl?: number; // seconds
@@ -7,16 +8,27 @@ export interface CacheOptions {
 }
 
 export class CacheManager {
-	private redis: Redis;
+	private redis: Redis | null;
 	private defaultTTL: number;
 	private namespace: string;
+	private readonly memory = new Map<
+		string,
+		{ value: string; expiresAt: number }
+	>();
+	private readonly useMemoryFallback: boolean;
 
 	constructor(redisUrl: string, defaultTTL = 3600, namespace = "elysia") {
-		this.redis = new Redis(redisUrl);
+		this.useMemoryFallback = !config.redisEnabled;
+		this.redis = this.useMemoryFallback
+			? null
+			: new Redis(redisUrl, {
+					enableOfflineQueue: false,
+					maxRetriesPerRequest: 1,
+				});
 		this.defaultTTL = defaultTTL;
 		this.namespace = namespace;
 
-		this.redis.on("error", (error) => {
+		this.redis?.on("error", (error) => {
 			console.error("[Cache] Redis error:", error);
 		});
 	}
@@ -25,13 +37,29 @@ export class CacheManager {
 		return `${namespace || this.namespace}:${key}`;
 	}
 
+	private isExpired(entry: { expiresAt: number }): boolean {
+		return entry.expiresAt > 0 && Date.now() > entry.expiresAt;
+	}
+
+	private getMemoryValue(fullKey: string): string | null {
+		const entry = this.memory.get(fullKey);
+		if (!entry) return null;
+		if (this.isExpired(entry)) {
+			this.memory.delete(fullKey);
+			return null;
+		}
+		return entry.value;
+	}
+
 	/**
 	 * Get value from cache
 	 */
 	async get<T>(key: string, options?: CacheOptions): Promise<T | null> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
-			const value = await this.redis.get(fullKey);
+			const value = this.redis
+				? await this.redis.get(fullKey)
+				: this.getMemoryValue(fullKey);
 			return value ? JSON.parse(value) : null;
 		} catch (error) {
 			console.error("[Cache] Get error:", error);
@@ -52,7 +80,12 @@ export class CacheManager {
 			const ttl = options?.ttl || this.defaultTTL;
 			const serialized = JSON.stringify(value);
 
-			if (ttl > 0) {
+			if (!this.redis) {
+				this.memory.set(fullKey, {
+					value: serialized,
+					expiresAt: ttl > 0 ? Date.now() + ttl * 1000 : 0,
+				});
+			} else if (ttl > 0) {
 				await this.redis.setex(fullKey, ttl, serialized);
 			} else {
 				await this.redis.set(fullKey, serialized);
@@ -70,7 +103,11 @@ export class CacheManager {
 	async del(key: string, options?: CacheOptions): Promise<boolean> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
-			await this.redis.del(fullKey);
+			if (this.redis) {
+				await this.redis.del(fullKey);
+			} else {
+				this.memory.delete(fullKey);
+			}
 			return true;
 		} catch (error) {
 			console.error("[Cache] Delete error:", error);
@@ -84,7 +121,11 @@ export class CacheManager {
 	async exists(key: string, options?: CacheOptions): Promise<boolean> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
-			const result = await this.redis.exists(fullKey);
+			const result = this.redis
+				? await this.redis.exists(fullKey)
+				: this.getMemoryValue(fullKey) === null
+					? 0
+					: 1;
 			return result === 1;
 		} catch (error) {
 			console.error("[Cache] Exists error:", error);
@@ -98,7 +139,16 @@ export class CacheManager {
 	async ttl(key: string, options?: CacheOptions): Promise<number> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
-			return await this.redis.ttl(fullKey);
+			if (this.redis) return await this.redis.ttl(fullKey);
+
+			const entry = this.memory.get(fullKey);
+			if (!entry) return -2;
+			if (this.isExpired(entry)) {
+				this.memory.delete(fullKey);
+				return -2;
+			}
+			if (entry.expiresAt === 0) return -1;
+			return Math.ceil((entry.expiresAt - Date.now()) / 1000);
 		} catch (error) {
 			console.error("[Cache] TTL error:", error);
 			return -1;
@@ -111,10 +161,17 @@ export class CacheManager {
 	async incr(key: string, options?: CacheOptions): Promise<number> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
-			const value = await this.redis.incr(fullKey);
+			const value = this.redis
+				? await this.redis.incr(fullKey)
+				: Number(this.getMemoryValue(fullKey) ?? 0) + 1;
 
 			// Set TTL if specified
-			if (options?.ttl) {
+			if (!this.redis) {
+				this.memory.set(fullKey, {
+					value: String(value),
+					expiresAt: options?.ttl ? Date.now() + options.ttl * 1000 : 0,
+				});
+			} else if (options?.ttl) {
 				await this.redis.expire(fullKey, options.ttl);
 			}
 
@@ -157,11 +214,19 @@ export class CacheManager {
 	): Promise<number> {
 		try {
 			const fullPattern = this.getKey(pattern, options?.namespace);
-			const keys = await this.redis.keys(fullPattern);
+			const keys = this.redis
+				? await this.redis.keys(fullPattern)
+				: Array.from(this.memory.keys()).filter((key) =>
+						key.startsWith(fullPattern.replace("*", "")),
+					);
 
 			if (keys.length === 0) return 0;
 
-			await this.redis.del(...keys);
+			if (this.redis) {
+				await this.redis.del(...keys);
+			} else {
+				for (const key of keys) this.memory.delete(key);
+			}
 			return keys.length;
 		} catch (error) {
 			console.error("[Cache] Invalidate pattern error:", error);
@@ -179,6 +244,7 @@ export class CacheManager {
 	): Promise<string | null> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
+			if (!this.redis) return null;
 			return await this.redis.hget(fullKey, field);
 		} catch (error) {
 			console.error("[Cache] HGet error:", error);
@@ -194,6 +260,7 @@ export class CacheManager {
 	): Promise<boolean> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
+			if (!this.redis) return false;
 			await this.redis.hset(fullKey, field, value);
 
 			if (options?.ttl) {
@@ -213,6 +280,7 @@ export class CacheManager {
 	): Promise<Record<string, string>> {
 		try {
 			const fullKey = this.getKey(key, options?.namespace);
+			if (!this.redis) return {};
 			return await this.redis.hgetall(fullKey);
 		} catch (error) {
 			console.error("[Cache] HGetAll error:", error);
@@ -226,6 +294,7 @@ export class CacheManager {
 	async lpush(key: string, ...values: string[]): Promise<number> {
 		try {
 			const fullKey = this.getKey(key);
+			if (!this.redis) return 0;
 			return await this.redis.lpush(fullKey, ...values);
 		} catch (error) {
 			console.error("[Cache] LPush error:", error);
@@ -236,6 +305,7 @@ export class CacheManager {
 	async lrange(key: string, start: number, stop: number): Promise<string[]> {
 		try {
 			const fullKey = this.getKey(key);
+			if (!this.redis) return [];
 			return await this.redis.lrange(fullKey, start, stop);
 		} catch (error) {
 			console.error("[Cache] LRange error:", error);
@@ -247,7 +317,8 @@ export class CacheManager {
 	 * Close connection
 	 */
 	async close(): Promise<void> {
-		await this.redis.quit();
+		this.memory.clear();
+		await this.redis?.quit();
 	}
 
 	/**

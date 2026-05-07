@@ -41,7 +41,7 @@ export const secureVault = {
 				: "";
 			decrypted += decipher.final("utf8");
 			return decrypted;
-		} catch (e) {
+		} catch (_e) {
 			// If it's old CBC data (iv:encrypted), try to return it as is or handle it
 			if (encryptedText.split(":").length === 2) {
 				return "[ ENCRYPTION DEPRECATED: CBC NO LONGER SUPPORTED ]";
