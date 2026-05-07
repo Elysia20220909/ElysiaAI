@@ -1,9 +1,9 @@
 import { getEnv } from "../../../../src/config.ts";
 import { logger } from "./logger";
 import {
+	handleGinrouSlashCommand,
 	type SlackCommandResponse,
 	type SlackSlashCommandPayload,
-	handleGinrouSlashCommand,
 } from "./slack-bridge";
 
 const SLACK_SOCKET_MODE_ENDPOINT =

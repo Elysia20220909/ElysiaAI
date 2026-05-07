@@ -1,9 +1,9 @@
 import {
 	existsSync,
-	readFileSync,
 	readdirSync,
-	statSync,
+	readFileSync,
 	statfsSync,
+	statSync,
 } from "node:fs";
 import {
 	arch,
