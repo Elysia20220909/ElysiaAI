@@ -29,6 +29,7 @@ interface ReportJob {
 class JobQueueManager {
 	private queue: Queue | null = null;
 	private worker: Worker | null = null;
+	private fallbackJobs = 0;
 	private readonly REDIS_URL: string;
 
 	constructor() {
@@ -40,6 +41,11 @@ class JobQueueManager {
 	 */
 	async initialize() {
 		try {
+			if (!config.redisEnabled) {
+				logger.info("Job queue using in-memory fallback");
+				return;
+			}
+
 			// Redis接続設定（TLS対応）
 			const redisHost = config.redisHost || new URL(this.REDIS_URL).hostname;
 			const redisPort =
@@ -228,10 +234,18 @@ class JobQueueManager {
 		if (!this.queue) {
 			logger.warn("Queue not available, executing job immediately");
 			const fallbackId = `job-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-			await this.processJob({
-				id: fallbackId,
-				data: { type, payload },
-			} as Job<JobData>);
+			this.fallbackJobs += 1;
+			if (
+				type === "send-email" ||
+				type === "generate-report" ||
+				type === "cleanup-old-data" ||
+				type === "send-webhook"
+			) {
+				await this.processJob({
+					id: fallbackId,
+					data: { type, payload },
+				} as Job<JobData>);
+			}
 			return fallbackId;
 		}
 
@@ -274,7 +288,13 @@ class JobQueueManager {
 	 */
 	async getStats() {
 		if (!this.queue) {
-			return { available: false };
+			return {
+				available: false,
+				waiting: 0,
+				active: 0,
+				completed: this.fallbackJobs,
+				failed: 0,
+			};
 		}
 
 		const [waiting, active, completed, failed] = await Promise.all([
@@ -303,6 +323,7 @@ class JobQueueManager {
 		if (this.queue) {
 			await this.queue.close();
 		}
+		this.fallbackJobs = 0;
 		logger.info("Job queue closed");
 	}
 }

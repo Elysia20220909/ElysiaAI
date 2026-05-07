@@ -4,13 +4,13 @@
  */
 
 import {
-	type NewsArticle,
-	type WebSearchResult,
 	getLatestNews,
 	getWeather,
+	type NewsArticle,
 	searchRelevantInfo,
 	searchWeb,
 	searchWikipedia,
+	type WebSearchResult,
 } from "../../src/lib/web-search.ts";
 
 async function testWebSearch() {

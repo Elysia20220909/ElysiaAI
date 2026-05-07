@@ -1,8 +1,6 @@
 import axios from "axios";
-import { t } from "elysia";
-import { logger } from "./logger";
-
 import { config } from "../../../../src/config.ts";
+import { logger } from "./logger";
 
 export const CONFIG = {
 	PORT: config.port,

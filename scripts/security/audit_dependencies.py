@@ -18,6 +18,10 @@ import time
 from pathlib import Path
 from urllib import request
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TAURI_DIR = REPO_ROOT / "src-tauri"
@@ -29,6 +33,10 @@ RUST_ADVISORY_ALLOWLIST = {
     "RUSTSEC-2025-0081": "Tauri 2.11.0 -> tauri-utils 2.9.0 -> urlpattern 0.3.0 -> unic-*",
     "RUSTSEC-2025-0098": "Tauri 2.11.0 -> tauri-utils 2.9.0 -> urlpattern 0.3.0 -> unic-*",
     "RUSTSEC-2025-0100": "Tauri 2.11.0 -> tauri-utils 2.9.0 -> urlpattern 0.3.0 -> unic-*",
+}
+
+PYTHON_ADVISORY_ALLOWLIST = {
+    "PYSEC-2022-252": "deep-translator 1.11.4 is the latest release; Marathon translator is optional/manual.",
 }
 
 
@@ -66,8 +74,15 @@ def pip_audit_command() -> list[str]:
 
 
 def audit_python() -> bool:
-    result = run_command(pip_audit_command())
+    command = pip_audit_command()
+    for vuln_id in PYTHON_ADVISORY_ALLOWLIST:
+        command.extend(["--ignore-vuln", vuln_id])
+    result = run_command(command)
     print_output(result)
+    if PYTHON_ADVISORY_ALLOWLIST:
+        print("Allowed Python advisories:")
+        for vuln_id, reason in PYTHON_ADVISORY_ALLOWLIST.items():
+            print(f"  - {vuln_id}: {reason}")
     return result.returncode == 0
 
 
