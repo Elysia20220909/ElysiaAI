@@ -1,6 +1,5 @@
-import { beforeAll, describe, expect, it } from "bun:test";
-import { actionLogService, voiceService } from "./database";
-import { prisma } from "./database";
+import { describe, expect, it } from "bun:test";
+import { actionLogService, prisma, voiceService } from "./database";
 
 describe("Database Encryption Integration", () => {
 	// Note: These tests assume a test database or mock is used.

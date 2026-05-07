@@ -1,7 +1,6 @@
 import { spawn } from "node:child_process";
-import { appendFileSync, existsSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { defenseManager } from "./defense-manager";
 import { logger } from "./logger";
 
 /**
@@ -14,7 +13,6 @@ import { logger } from "./logger";
 class SovereignSentinel {
 	private interval: Timer | null = null;
 	private threatLevel = 0;
-	private lastPulse = Date.now();
 	private lastLedgerLog = Date.now(); // Initialize to current time
 	private lastEntryHash =
 		"0000000000000000000000000000000000000000000000000000000000000000"; // Genesis Hash
@@ -69,8 +67,6 @@ class SovereignSentinel {
 			if (this.threatLevel > 50) {
 				await this.executeAbyssalScript("abyssal-deception.ps1");
 			}
-
-			this.lastPulse = Date.now();
 
 			// Only log to ledger if significant time has passed or something is wrong
 			const oneHour = 3600000;
