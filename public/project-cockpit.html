@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Elysia Project Cockpit</title>
+  <script src="/assets/js/tailwind.min.js"></script>
+  <script defer src="/assets/js/alpine.min.js"></script>
+</head>
+<body class="min-h-screen bg-zinc-950 text-zinc-100" x-data="projectCockpit()" x-init="init()">
+  <main class="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-5 py-6">
+    <header class="flex flex-col gap-4 border-b border-white/10 pb-5 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <p class="font-mono text-xs uppercase tracking-[0.25em] text-cyan-300">ElysiaAI Local-First Mission Control</p>
+        <h1 class="mt-2 text-3xl font-semibold text-white sm:text-5xl">Project Cockpit</h1>
+      </div>
+      <div class="grid grid-cols-3 gap-3 font-mono text-xs">
+        <div class="border border-white/10 bg-white/[0.03] p-3">
+          <p class="text-zinc-500">READINESS</p>
+          <p class="mt-1 text-lg text-emerald-300" x-text="status?.readiness || 'booting'"></p>
+        </div>
+        <div class="border border-white/10 bg-white/[0.03] p-3">
+          <p class="text-zinc-500">SCORE</p>
+          <p class="mt-1 text-lg text-white" x-text="status ? status.score + '%' : '--'"></p>
+        </div>
+        <div class="border border-white/10 bg-white/[0.03] p-3">
+          <p class="text-zinc-500">PROTO</p>
+          <p class="mt-1 text-lg text-cyan-200" x-text="status?.protocol?.version || 'ECP/1.0'"></p>
+        </div>
+      </div>
+    </header>
+
+    <section class="grid gap-4 lg:grid-cols-[1.5fr_0.8fr]">
+      <div class="border border-white/10 bg-black/30">
+        <div class="flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <h2 class="text-sm font-semibold uppercase text-zinc-300">Subsystems</h2>
+          <button class="border border-cyan-400/40 px-3 py-1.5 text-xs text-cyan-100 hover:bg-cyan-400/10" @click="refresh()">Refresh</button>
+        </div>
+        <div class="divide-y divide-white/10">
+          <template x-if="loading">
+            <div class="px-4 py-8 text-sm text-zinc-400">同期中...</div>
+          </template>
+          <template x-for="subsystem in status?.subsystems || []" :key="subsystem.id">
+            <article class="grid gap-3 px-4 py-4 sm:grid-cols-[0.7fr_1fr_0.8fr]">
+              <div>
+                <p class="text-sm font-semibold text-white" x-text="subsystem.name"></p>
+                <p class="mt-1 font-mono text-xs uppercase" :class="statusClass(subsystem.status)" x-text="subsystem.status"></p>
+              </div>
+              <p class="text-sm leading-6 text-zinc-300" x-text="subsystem.summary"></p>
+              <div class="text-sm text-zinc-400">
+                <p class="font-mono text-xs text-zinc-500" x-text="subsystem.signal"></p>
+                <p class="mt-1" x-text="subsystem.nextAction"></p>
+              </div>
+            </article>
+          </template>
+        </div>
+      </div>
+
+      <aside class="flex flex-col gap-4">
+        <section class="border border-white/10 bg-white/[0.03] p-4">
+          <h2 class="text-sm font-semibold uppercase text-zinc-300">Operator</h2>
+          <dl class="mt-4 space-y-3 text-sm">
+            <div>
+              <dt class="font-mono text-xs text-zinc-500">USER</dt>
+              <dd class="text-white" x-text="status?.operator?.username || 'pending'"></dd>
+            </div>
+            <div>
+              <dt class="font-mono text-xs text-zinc-500">ROLE</dt>
+              <dd class="text-white" x-text="status?.operator?.role || 'pending'"></dd>
+            </div>
+            <div>
+              <dt class="font-mono text-xs text-zinc-500">SIGNATURE</dt>
+              <dd class="break-all text-cyan-200" x-text="status?.operator?.neuralSignature || 'pending'"></dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="border border-white/10 bg-white/[0.03] p-4">
+          <h2 class="text-sm font-semibold uppercase text-zinc-300">Next Actions</h2>
+          <ul class="mt-4 space-y-3 text-sm text-zinc-300">
+            <template x-for="action in status?.nextActions || []" :key="action">
+              <li class="border-l border-cyan-400/40 pl-3" x-text="action"></li>
+            </template>
+          </ul>
+        </section>
+
+        <section class="border border-white/10 bg-white/[0.03] p-4">
+          <h2 class="text-sm font-semibold uppercase text-zinc-300">Entrypoints</h2>
+          <nav class="mt-4 grid gap-2 text-sm">
+            <template x-for="link in status?.links || []" :key="link.href">
+              <a class="border border-white/10 px-3 py-2 text-zinc-200 hover:border-cyan-400/50 hover:text-cyan-100" :href="link.href" x-text="link.label"></a>
+            </template>
+          </nav>
+        </section>
+      </aside>
+    </section>
+
+    <p class="font-mono text-xs text-zinc-500" x-text="error || (status ? 'updated ' + status.generatedAt : '')"></p>
+  </main>
+
+  <script>
+    function projectCockpit() {
+      return {
+        status: null,
+        loading: false,
+        error: "",
+        async init() {
+          await this.refresh();
+        },
+        async ensureAuth() {
+          let token = localStorage.getItem("elysia_access_token");
+          if (token) return token;
+          const response = await fetch("/auth/dev-login", { method: "POST" });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Neural Auth required");
+          localStorage.setItem("elysia_access_token", data.accessToken);
+          localStorage.setItem("elysia_refresh_token", data.refreshToken);
+          return data.accessToken;
+        },
+        async refresh() {
+          this.loading = true;
+          this.error = "";
+          try {
+            const token = await this.ensureAuth();
+            const response = await fetch("/api/project/status", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || "Project status failed");
+            this.status = data;
+          } catch (error) {
+            this.error = "PROJECT LINK: " + (error?.message || error);
+          } finally {
+            this.loading = false;
+          }
+        },
+        statusClass(status) {
+          if (status === "online" || status === "ready") return "text-emerald-300";
+          if (status === "degraded") return "text-amber-300";
+          return "text-rose-300";
+        },
+      };
+    }
+  </script>
+</body>
+</html>
