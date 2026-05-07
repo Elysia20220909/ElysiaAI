@@ -24,8 +24,11 @@ import { aiRoutes, handleElysiaLove, handleFeedback } from "./routes/ai-routes";
 import { authRoutes } from "./routes/auth-routes";
 import { customizationRoutes } from "./routes/customization-routes";
 import { databaseRoutes } from "./routes/database-routes";
+import { elysiaCoreRoutes } from "./routes/elysia-core-routes";
 import { fileRoutes } from "./routes/file-routes";
 import { learningRoutes } from "./routes/learning-routes";
+import { neuralSystemRoutes } from "./routes/neural-system-routes";
+import { projectRoutes } from "./routes/project-routes";
 import { sessionRoutes } from "./routes/session-routes";
 import { slackRoutes } from "./routes/slack-routes";
 import { systemRoutes } from "./routes/system-routes";
@@ -159,12 +162,15 @@ app
 		requestStartedAt.delete(request);
 	})
 	.use(authRoutes)
+	.use(projectRoutes)
+	.use(elysiaCoreRoutes)
 	.use(aiRoutes)
 	.use(slackRoutes)
 	.use(systemRoutes)
 	.use(adminRoutes)
 	.use(sessionRoutes)
 	.use(learningRoutes)
+	.use(neuralSystemRoutes)
 	.use(customizationRoutes)
 	.use(fileRoutes)
 	.use(databaseRoutes)
