@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test";
 import jwt from "jsonwebtoken";
 import {
 	InMemoryRefreshTokenStore,
-	RefreshTokenValidationError,
 	issueTokenPair,
+	RefreshTokenValidationError,
 	revokeRefreshToken,
 	rotateRefreshToken,
 } from "./auth-tokens";

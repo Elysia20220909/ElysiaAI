@@ -187,7 +187,7 @@ async function runCommand(command: string) {
 			break;
 		case "setup":
 			console.log("⚙️ Setting up environment...");
-			await run("bun", ["install"]);
+			await run("bun", ["install", "--backend=copyfile", "--ignore-scripts"]);
 			await copyEnvExampleIfMissing();
 			process.env.DATABASE_URL ??= "file:./prisma/dev.db";
 			await run("bun", ["run", "db:validate"]);

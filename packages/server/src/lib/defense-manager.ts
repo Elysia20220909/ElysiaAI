@@ -29,13 +29,8 @@ class DefenseManager {
 	private sipActive = true; // System Integrity Protection (SIP)
 	private ssvVerified = true; // Signed System Volume (SSV)
 	private pacEnabled = true; // Pointer Authentication Codes (PAC)
-	private personaLevel = 1.0; // Phase 49: Sentient Persona (L50)
-	private universalSyncStatus = "BONDED"; // Cross-device sync
 	private performanceMode: "ABYSS" | "AETHER" | "VOID" = "VOID"; // L52: Void Sublimation
 	private meshSyncNodes: string[] = ["192.168.1.100", "10.0.0.5"]; // Mock nodes
-	private nsaHardeningActive = true; // NSA-level Hardening Protocol
-	private ciaIntelligenceLink = "ENCRYPTED"; // Intelligence Integration
-	private zeroTrustAttestation = "VERIFIED"; // Zero Trust Architecture
 
 	constructor() {
 		this.loadRules();
@@ -171,7 +166,7 @@ class DefenseManager {
 				logger.info("🛡️ Gatekeeper Verified: Silicon Root of Trust active.");
 			}
 			return this.isGatekeeperVerified;
-		} catch (e) {
+		} catch (_e) {
 			this.isGatekeeperVerified = false;
 			return false;
 		}
@@ -180,7 +175,7 @@ class DefenseManager {
 	/**
 	 * Neural Sandbox: リクエストのサニタイズと隔離
 	 */
-	public enforceSandbox(req: any): void {
+	public enforceSandbox(_req: any): void {
 		if (!this.isGatekeeperVerified && !this.verifyGatekeeper()) {
 			throw new Error(
 				"GATEKEEPER_REJECTED: Unauthorized hardware environment.",
@@ -330,7 +325,7 @@ class DefenseManager {
 		const hasTPM = true;
 
 		if (hasSecureEnclave && hasTPM) {
-			this.zeroTrustAttestation = "VERIFIED_HARDWARE_ROOT";
+			logger.info("Zero Trust attestation: VERIFIED_HARDWARE_ROOT");
 			return true;
 		}
 		return false;
