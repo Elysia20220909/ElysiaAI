@@ -54,6 +54,7 @@ The practical recommendation is **Sovereign AI Studio**: a small but serious com
 ## Related Documents / 関連文書
 
 - [E.L.I.S.I.A. Core Home Server Blueprint](./ELYSIA_HOME_SERVER_BLUEPRINT.md)
+- [E.L.I.S.I.A. Local Server Automated Setup](./ELISIA_LOCAL_SERVER_AUTOMATED_SETUP.md)
 - [Stark Home Local Server Build](./STARK_HOME_LOCAL_SERVER_BUILD.md)
 - [Local Home Server Ops](./LOCAL_HOME_SERVER_OPS.md)
 - [Stark Home Proxmox / OPNsense Checklist](./STARK_HOME_PROXMOX_OPNSENSE_CHECKLIST.md)
