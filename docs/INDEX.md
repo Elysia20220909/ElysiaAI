@@ -9,6 +9,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Project overview | `README.md` |
 | Getting started | `docs/GETTING_STARTED.md` |
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |
+| E.L.I.S.I.A. local server hardware design and costs | `docs/ELISIA_LOCAL_SERVER_HARDWARE_DESIGN.md` |
 | Stark home local server build | `docs/STARK_HOME_LOCAL_SERVER_BUILD.md` |
 | Stark home automated setup | `docs/STARK_HOME_AUTOMATED_SETUP.md` |
 | Stark home local server build, Japanese / English | `docs/STARK_HOME_LOCAL_SERVER_BUILD_JA_EN.md` |
