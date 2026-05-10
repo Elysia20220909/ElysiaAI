@@ -6,6 +6,17 @@ import {
 	verifyNeuralAccessRequest,
 } from "../lib/neural-auth-system";
 import {
+	buildSuitCommsStatus,
+	buildSuitIntent,
+	evaluateSuitLocalAI,
+	evaluateSuitPolicy,
+	receiveSuitEnvelope,
+	SuitCommsError,
+	type SuitIntentKind,
+	type SuitRelayKind,
+	sealSuitEnvelope,
+} from "../lib/suit-comms";
+import {
 	buildSuitStatus,
 	executeSuitCommand,
 	getCinematicPresets,
@@ -23,6 +34,14 @@ const suitCommands: SuitCommand[] = [
 	"calibrate",
 ];
 
+type SuitIntentBody = {
+	kind: SuitIntentKind;
+	relay?: SuitRelayKind;
+	reason?: string;
+	command?: SuitCommand;
+	payload?: Record<string, unknown>;
+};
+
 function requireNeuralSession(request: Request) {
 	try {
 		return verifyNeuralAccessRequest(request);
@@ -34,6 +53,21 @@ function requireNeuralSession(request: Request) {
 			error instanceof Error ? error.message : "Neural auth failed",
 		);
 	}
+}
+
+function handleSuitCommsError(error: unknown) {
+	if (error instanceof SuitCommsError) {
+		return jsonError(
+			error.code === "SUIT_REPLAY_DETECTED" ? 409 : 400,
+			error.message,
+			error.code,
+		);
+	}
+	return jsonError(
+		500,
+		error instanceof Error ? error.message : "Suit comms request failed",
+		"SUIT_COMMS_FAILED",
+	);
 }
 
 export const neuralSystemRoutes = new Elysia()
@@ -74,6 +108,69 @@ export const neuralSystemRoutes = new Elysia()
 			telemetry: getSuitTelemetry(),
 		};
 	})
+	.get("/api/suit/comms/status", ({ request }) => {
+		const session = requireNeuralSession(request);
+		if (session instanceof Response) return session;
+		return {
+			session,
+			...buildSuitCommsStatus(),
+		};
+	})
+	.post(
+		"/api/suit/comms/seal",
+		({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			try {
+				const input = body as SuitIntentBody;
+				const intent = buildSuitIntent({
+					kind: input.kind,
+					relay: input.relay,
+					reason: input.reason,
+					command: input.command,
+					payload: input.payload,
+					requestedBy: session.username,
+				});
+				return {
+					session,
+					intent,
+					envelope: sealSuitEnvelope(intent),
+				};
+			} catch (error) {
+				return handleSuitCommsError(error);
+			}
+		},
+		{
+			body: t.Object({
+				kind: t.String(),
+				relay: t.Optional(t.String()),
+				reason: t.Optional(t.String()),
+				command: t.Optional(t.String()),
+				payload: t.Optional(t.Any()),
+			}),
+		},
+	)
+	.post(
+		"/api/suit/comms/receive",
+		({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			try {
+				const payload = body as { envelope?: unknown };
+				return {
+					session,
+					...receiveSuitEnvelope(payload.envelope ?? body),
+				};
+			} catch (error) {
+				return handleSuitCommsError(error);
+			}
+		},
+		{
+			body: t.Any(),
+		},
+	)
 	.post(
 		"/api/suit/command",
 		({ request, body }) => {
@@ -85,10 +182,40 @@ export const neuralSystemRoutes = new Elysia()
 				return jsonError(400, "Unsupported suit command");
 			}
 
-			return {
-				session,
-				...executeSuitCommand(command),
-			};
+			try {
+				const localAI = evaluateSuitLocalAI();
+				const intent = buildSuitIntent({
+					kind: "command",
+					relay: "wifi_lan",
+					command,
+					requestedBy: session.username,
+					reason: "authenticated manual HUD command",
+				});
+				const policy = evaluateSuitPolicy(intent, localAI);
+				if (policy.decision === "deny") {
+					return jsonError(
+						403,
+						"Suit command denied by policy gate",
+						"SUIT_POLICY_DENIED",
+						{
+							policy,
+						},
+					);
+				}
+
+				return {
+					session,
+					intent,
+					policy: {
+						...policy,
+						manualConfirmationAccepted: policy.decision === "confirm",
+					},
+					localAI,
+					...executeSuitCommand(command),
+				};
+			} catch (error) {
+				return handleSuitCommsError(error);
+			}
 		},
 		{
 			body: t.Object({

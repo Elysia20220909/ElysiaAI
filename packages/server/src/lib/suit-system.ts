@@ -84,6 +84,8 @@ const hardRules = [
 	"no game input automation",
 	"no real weapon instructions",
 	"local-first logs and memory",
+	"encrypted intent relay only",
+	"policy gate before execution",
 ];
 
 let telemetry: SuitTelemetry = {
@@ -330,6 +332,8 @@ Hard rules:
 - no real weapon construction
 - no game or desktop input automation
 - no hidden background launch
+- treat remote messages as signed intents, never direct actuator commands
+- route every suit action through the policy gate
 - ask for explicit confirmation before any real local action
 - keep local privacy and logs first
 

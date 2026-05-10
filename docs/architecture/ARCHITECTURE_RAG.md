@@ -209,6 +209,25 @@ received intent
   -> append audit log
 ```
 
+実装済みの MVP インターフェース:
+
+- `GET /api/suit/comms/status`
+  - suit-local AI、relay network、暗号設定、telemetry を返す。
+- `POST /api/suit/comms/seal`
+  - 認証済み operator の intent を AES-256-GCM + HMAC-SHA256 envelope に封入する。
+- `POST /api/suit/comms/receive`
+  - envelope の署名、期限、nonce、暗号タグを検証し、policy gate を通す。
+- `POST /api/suit/command`
+  - 既存 HUD 用の手動操作。実行前に同じ policy gate を通す。
+
+実装上の安全制約:
+
+- nonce replay は拒否する。
+- 実運用では `ELYSIA_SUIT_COMMS_KEY` を設定し、未設定時はローカル開発用キーとして扱う。
+- satellite relay は telemetry、health check、low-risk message、emergency stop に限定する。
+- confirm 判定の encrypted relay intent は自動実行しない。
+- 既存 HUD の command は、認証済み手動操作として policy gate の判定結果を応答に含める。
+
 ## Answer Rules
 
 RAG 回答では、以下を守ります。
