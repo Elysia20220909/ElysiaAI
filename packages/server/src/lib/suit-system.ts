@@ -47,6 +47,7 @@ export interface SuitStatus {
 	links: {
 		hud: string;
 		viewer3d: string;
+		os: string;
 		spec: string;
 	};
 	hardRules: string[];
@@ -245,6 +246,7 @@ export function buildSuitStatus(
 		links: {
 			hud: "/suit-hud.html",
 			viewer3d: "/suit-viewer.html",
+			os: "/api/suit/os/status",
 			spec: "/docs/fictional/MARK85_FANTASY_SUIT_SYSTEM.md",
 		},
 		hardRules,

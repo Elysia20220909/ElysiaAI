@@ -17,6 +17,11 @@ import {
 	sealSuitEnvelope,
 } from "../lib/suit-comms";
 import {
+	buildSuitDistributedOsSnapshot,
+	planSuitDistributedOsRequest,
+	SuitDistributedOsError,
+} from "../lib/suit-distributed-os";
+import {
 	buildSuitEdgeRuntimeSnapshot,
 	normalizeSuitEdgeHeartbeatBody,
 	planSuitEdgeCommand,
@@ -71,6 +76,11 @@ type SuitEdgePlanBody = {
 	command?: SuitEdgeCommandKind;
 	reason?: string;
 	payload?: Record<string, unknown>;
+};
+
+type SuitOsPlanBody = {
+	request?: string;
+	relay?: SuitRelayKind;
 };
 
 type Mark85PlanBody = {
@@ -130,6 +140,19 @@ function handleSuitHardwareError(error: unknown) {
 		500,
 		error instanceof Error ? error.message : "Suit hardware request failed",
 		"SUIT_HARDWARE_FAILED",
+	);
+}
+
+function handleSuitDistributedOsError(error: unknown) {
+	if (error instanceof SuitDistributedOsError) {
+		return jsonError(400, error.message, error.code);
+	}
+	if (error instanceof SuitCommsError) return handleSuitCommsError(error);
+	if (error instanceof SuitEdgeRuntimeError) return handleSuitEdgeError(error);
+	return jsonError(
+		500,
+		error instanceof Error ? error.message : "Suit OS request failed",
+		"SUIT_OS_FAILED",
 	);
 }
 
@@ -195,6 +218,42 @@ export const neuralSystemRoutes = new Elysia()
 			...buildSuitCommsStatus(),
 		};
 	})
+	.get("/api/suit/os/status", ({ request }) => {
+		const session = requireNeuralSession(request);
+		if (session instanceof Response) return session;
+		return {
+			session,
+			os: buildSuitDistributedOsSnapshot(),
+		};
+	})
+	.post(
+		"/api/suit/os/plan",
+		({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			try {
+				const input = body as SuitOsPlanBody;
+				return {
+					session,
+					plan: planSuitDistributedOsRequest({
+						request: input.request ?? "",
+						relay: input.relay,
+						requestedBy: session.username,
+					}),
+					os: buildSuitDistributedOsSnapshot(),
+				};
+			} catch (error) {
+				return handleSuitDistributedOsError(error);
+			}
+		},
+		{
+			body: t.Object({
+				request: t.String(),
+				relay: t.Optional(t.String()),
+			}),
+		},
+	)
 	.get("/api/suit/edge/status", ({ request }) => {
 		const session = requireNeuralSession(request);
 		if (session instanceof Response) return session;
