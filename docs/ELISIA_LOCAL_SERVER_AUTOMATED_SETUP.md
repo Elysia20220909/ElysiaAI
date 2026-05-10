@@ -26,6 +26,7 @@ The E.L.I.S.I.A. automated setup should light the Docker Core hearth, not rewire
 
 - [E.L.I.S.I.A. local server hardware design](./ELISIA_LOCAL_SERVER_HARDWARE_DESIGN.md)
 - [E.L.I.S.I.A. Windows / macOS admin client setup](./ELISIA_LOCAL_SERVER_CLIENT_SETUP.md)
+- [E.L.I.S.I.A. Windows / macOS host server design](./ELISIA_WINDOWS_MACOS_HOST_SERVER.md)
 - [Stark Home Automated Setup](./STARK_HOME_AUTOMATED_SETUP.md)
 - [Stark Home Proxmox / OPNsense Checklist](./STARK_HOME_PROXMOX_OPNSENSE_CHECKLIST.md)
 - [deploy/elisia-core README](../deploy/elisia-core/README.md)
