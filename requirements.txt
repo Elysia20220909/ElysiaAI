@@ -30,7 +30,7 @@ pyautogui==0.9.54
 
 # AbyssGrid Network Simulation
 networkx==3.6.1
-matplotlib==3.8.2
+matplotlib==3.10.9
 inputimeout==1.0.4
 
 # Discord Interface (Meteor#6267)
