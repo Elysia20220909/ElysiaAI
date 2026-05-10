@@ -4,6 +4,8 @@ This document describes how to bring an E.L.I.S.I.A. local server from beautiful
 
 It bridges the hardware and cost plan in [E.L.I.S.I.A. Local Server Hardware Design](./ELISIA_LOCAL_SERVER_HARDWARE_DESIGN.md) with the practical network checklist in [Stark Home Proxmox / OPNsense Checklist](./STARK_HOME_PROXMOX_OPNSENSE_CHECKLIST.md).
 
+For Windows or macOS preparation, file transfer, and local certificate trust, set up the admin workstation with [E.L.I.S.I.A. Windows / macOS Admin Client Setup](./ELISIA_LOCAL_SERVER_CLIENT_SETUP.md).
+
 ## Summary
 
 The automated setup should light the Docker Core hearth. It should not silently rewire the house.
@@ -11,6 +13,7 @@ The automated setup should light the Docker Core hearth. It should not silently 
 - Recommended build tier: **Sovereign AI Studio**.
 - Automation target: **Docker Core VM / Debian 12 / Ubuntu Server 24.04 LTS**.
 - Main script: `deploy/elisia-core/setup.sh`.
+- Windows/macOS launchers: `scripts/local-server/Invoke-ElisiaLocalServerSetup.ps1` and `scripts/local-server/setup-elisia-local-server.sh`.
 - VLANs, OPNsense, Proxmox bridges, switch ports, and NAS pools stay manual checklist work.
 - Recheck hardware sources in the hardware design document before purchase.
 

@@ -24,6 +24,8 @@
     "db:validate": "bun node_modules/prisma/build/index.js validate --schema prisma/schema.prisma",
     "native:lite": "bun scripts/native-lite.ts",
     "ops": "bun scripts/local-ops.ts",
+    "local-server:setup:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-server/Invoke-ElisiaLocalServerSetup.ps1",
+    "local-server:setup:unix": "bash scripts/local-server/setup-elisia-local-server.sh",
     "suit": "bun scripts/suit.ts",
     "dev:ci": "bun scripts/boot.ts --ci",
     "desktop": "bun tauri dev",

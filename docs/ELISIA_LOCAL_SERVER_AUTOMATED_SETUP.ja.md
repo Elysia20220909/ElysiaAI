@@ -4,6 +4,8 @@ E.L.I.S.I.A.を、美しい機材構成のまま、できるだけ少ない手�
 
 この文書は、機材選定と費用を扱う [E.L.I.S.I.A. Local Server Hardware Design](./ELISIA_LOCAL_SERVER_HARDWARE_DESIGN.md) と、実作業チェックリストである [Stark Home Proxmox / OPNsense Checklist](./STARK_HOME_PROXMOX_OPNSENSE_CHECKLIST.md) の間をつなぎます。
 
+Windows / macOSから準備・転送・証明書信頼を行う場合は、[E.L.I.S.I.A. Windows / macOS Admin Client Setup](./ELISIA_LOCAL_SERVER_CLIENT_SETUP.md) を先に整えます。
+
 ## 要約
 
 自動化の役目は、Docker Core VMにE.L.I.S.I.A.の炉心を灯すことです。家全体の配線や境界線を勝手に変えることではありません。
@@ -11,6 +13,7 @@ E.L.I.S.I.A.を、美しい機材構成のまま、できるだけ少ない手�
 - 推奨構成は **Sovereign AI Studio**。
 - 自動セットアップ対象は **Docker Core VM / Debian 12 / Ubuntu Server 24.04 LTS**。
 - 実行スクリプトは `deploy/elisia-core/setup.sh`。
+- Windows/macOSからの起動入口は `scripts/local-server/Invoke-ElisiaLocalServerSetup.ps1` と `scripts/local-server/setup-elisia-local-server.sh`。
 - VLAN、OPNsense、Proxmox bridge、スイッチport、NAS poolは手動チェックリストで進めます。
 - 価格・機材の最新確認は、購入前に必ず機材設計書のソースリンクで行います。
 
