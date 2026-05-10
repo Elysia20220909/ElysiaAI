@@ -17,6 +17,25 @@ import {
 	sealSuitEnvelope,
 } from "../lib/suit-comms";
 import {
+	buildSuitEdgeRuntimeSnapshot,
+	normalizeSuitEdgeHeartbeatBody,
+	planSuitEdgeCommand,
+	recordSuitEdgeHeartbeat,
+	type SuitEdgeCommandKind,
+	SuitEdgeRuntimeError,
+} from "../lib/suit-edge-runtime";
+import {
+	buildSuitHardwareStatus,
+	dispatchSuitHardwareOperation,
+	normalizeSuitHardwareBody,
+	planSuitHardwareOperation,
+	SuitHardwareAdapterError,
+} from "../lib/suit-hardware-adapter";
+import {
+	buildHoloLensReferenceProfile,
+	planHoloLensVoiceCommand,
+} from "../lib/suit-hololens-profile";
+import {
 	buildSuitStatus,
 	executeSuitCommand,
 	getCinematicPresets,
@@ -39,6 +58,13 @@ type SuitIntentBody = {
 	relay?: SuitRelayKind;
 	reason?: string;
 	command?: SuitCommand;
+	payload?: Record<string, unknown>;
+};
+
+type SuitEdgePlanBody = {
+	targetNodeId?: string;
+	command?: SuitEdgeCommandKind;
+	reason?: string;
 	payload?: Record<string, unknown>;
 };
 
@@ -67,6 +93,32 @@ function handleSuitCommsError(error: unknown) {
 		500,
 		error instanceof Error ? error.message : "Suit comms request failed",
 		"SUIT_COMMS_FAILED",
+	);
+}
+
+function handleSuitEdgeError(error: unknown) {
+	if (error instanceof SuitEdgeRuntimeError) {
+		return jsonError(
+			error.code === "SUIT_EDGE_NOT_FOUND" ? 404 : 400,
+			error.message,
+			error.code,
+		);
+	}
+	return jsonError(
+		500,
+		error instanceof Error ? error.message : "Suit edge request failed",
+		"SUIT_EDGE_FAILED",
+	);
+}
+
+function handleSuitHardwareError(error: unknown) {
+	if (error instanceof SuitHardwareAdapterError) {
+		return jsonError(400, error.message, error.code);
+	}
+	return jsonError(
+		500,
+		error instanceof Error ? error.message : "Suit hardware request failed",
+		"SUIT_HARDWARE_FAILED",
 	);
 }
 
@@ -116,6 +168,169 @@ export const neuralSystemRoutes = new Elysia()
 			...buildSuitCommsStatus(),
 		};
 	})
+	.get("/api/suit/edge/status", ({ request }) => {
+		const session = requireNeuralSession(request);
+		if (session instanceof Response) return session;
+		return {
+			session,
+			edge: buildSuitEdgeRuntimeSnapshot(),
+		};
+	})
+	.get("/api/suit/hardware/status", ({ request }) => {
+		const session = requireNeuralSession(request);
+		if (session instanceof Response) return session;
+		return {
+			session,
+			hardware: buildSuitHardwareStatus(),
+		};
+	})
+	.get("/api/suit/hololens/profile", ({ request }) => {
+		const session = requireNeuralSession(request);
+		if (session instanceof Response) return session;
+		return {
+			session,
+			profile: buildHoloLensReferenceProfile(),
+		};
+	})
+	.post(
+		"/api/suit/hololens/command",
+		({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			const phrase =
+				body && typeof (body as { phrase?: unknown }).phrase === "string"
+					? (body as { phrase: string }).phrase
+					: "";
+			if (!phrase.trim()) {
+				return jsonError(
+					400,
+					"phrase is required",
+					"SUIT_HOLOLENS_PHRASE_REQUIRED",
+				);
+			}
+
+			return {
+				session,
+				plan: planHoloLensVoiceCommand(phrase, session.username),
+			};
+		},
+		{
+			body: t.Object({
+				phrase: t.String(),
+			}),
+		},
+	)
+	.post(
+		"/api/suit/hardware/plan",
+		({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			try {
+				return {
+					session,
+					plan: planSuitHardwareOperation(
+						normalizeSuitHardwareBody(body, session.username),
+					),
+					hardware: buildSuitHardwareStatus(),
+				};
+			} catch (error) {
+				return handleSuitHardwareError(error);
+			}
+		},
+		{
+			body: t.Any(),
+		},
+	)
+	.post(
+		"/api/suit/hardware/dispatch",
+		async ({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			try {
+				return {
+					session,
+					...(await dispatchSuitHardwareOperation(
+						normalizeSuitHardwareBody(body, session.username),
+					)),
+					hardware: buildSuitHardwareStatus(),
+				};
+			} catch (error) {
+				return handleSuitHardwareError(error);
+			}
+		},
+		{
+			body: t.Any(),
+		},
+	)
+	.post(
+		"/api/suit/edge/heartbeat",
+		({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			try {
+				return {
+					session,
+					node: recordSuitEdgeHeartbeat(normalizeSuitEdgeHeartbeatBody(body)),
+					edge: buildSuitEdgeRuntimeSnapshot(),
+				};
+			} catch (error) {
+				return handleSuitEdgeError(error);
+			}
+		},
+		{
+			body: t.Object({
+				nodeId: t.String(),
+				status: t.Optional(t.String()),
+				cpuLoad: t.Optional(t.Number()),
+				cpuTempC: t.Optional(t.Number()),
+				voltage: t.Optional(t.Number()),
+				signalQuality: t.Optional(t.Number()),
+			}),
+		},
+	)
+	.post(
+		"/api/suit/edge/plan",
+		({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			try {
+				const input = body as SuitEdgePlanBody;
+				if (!input.targetNodeId || !input.command) {
+					return jsonError(
+						400,
+						"targetNodeId and command are required",
+						"SUIT_EDGE_PLAN_REQUIRED",
+					);
+				}
+				return {
+					session,
+					plan: planSuitEdgeCommand({
+						targetNodeId: input.targetNodeId,
+						command: input.command,
+						reason: input.reason,
+						payload: input.payload,
+						requestedBy: session.username,
+					}),
+					edge: buildSuitEdgeRuntimeSnapshot(),
+				};
+			} catch (error) {
+				return handleSuitEdgeError(error);
+			}
+		},
+		{
+			body: t.Object({
+				targetNodeId: t.String(),
+				command: t.String(),
+				reason: t.Optional(t.String()),
+				payload: t.Optional(t.Any()),
+			}),
+		},
+	)
 	.post(
 		"/api/suit/comms/seal",
 		({ request, body }) => {

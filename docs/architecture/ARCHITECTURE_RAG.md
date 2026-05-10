@@ -219,6 +219,36 @@ received intent
   - envelope の署名、期限、nonce、暗号タグを検証し、policy gate を通す。
 - `POST /api/suit/command`
   - 既存 HUD 用の手動操作。実行前に同じ policy gate を通す。
+- `GET /api/suit/edge/status`
+  - Raspberry Pi / Jetson 風の edge brain、RTOS MCU、安全リレー、bus 状態を返す。
+- `POST /api/suit/edge/heartbeat`
+  - edge node の heartbeat と健康状態を受け取り、runtime snapshot に反映する。
+- `POST /api/suit/edge/plan`
+  - GPIO/CAN へ直接書かず、edge command の安全な dispatch plan だけを作る。
+- `GET /api/suit/hardware/status`
+  - real GPIO/CAN adapter の mode、platform、tool、allowlist 状態を返す。
+- `POST /api/suit/hardware/plan`
+  - libgpiod / SocketCAN コマンドを組み立てるが、実行はしない。
+- `POST /api/suit/hardware/dispatch`
+  - `ELYSIA_SUIT_HARDWARE_MODE=enabled`、allowlist、manual confirm、arm token が揃った場合だけ実GPIO/CANへ dispatch する。
+- `GET /api/suit/hololens/profile`
+  - HoloLens IronMan 参考実装から抽出した voice command、HUD、gaze/scan の安全プロファイルを返す。
+- `POST /api/suit/hololens/command`
+  - `Jarvis Scan` などの音声 phrase を、policy gate、edge runtime、hardware adapter の dispatch plan に変換する。
+
+HoloLens IronMan 参考実装から採用するもの:
+
+- keyword voice command で HUD event を起動する。
+- gaze-following reticle を HUD visualization として扱う。
+- scan は camera permission と明示確認がある時だけ実行する。
+- physical helmet bridge は GPIO/CAN 境界の外側に置き、confirm-only にする。
+
+採用しないもの:
+
+- hardcoded cloud API key。
+- cloud face / emotion API への自動送信。
+- target reticle から weapon-like control へつなぐ動線。
+- voice command から actuator へ直接到達する設計。
 
 実装上の安全制約:
 
@@ -227,6 +257,12 @@ received intent
 - satellite relay は telemetry、health check、low-risk message、emergency stop に限定する。
 - confirm 判定の encrypted relay intent は自動実行しない。
 - 既存 HUD の command は、認証済み手動操作として policy gate の判定結果を応答に含める。
+- edge runtime は simulation-only bus とし、raw GPIO/CAN write は API から実行しない。
+- motion MCU は既定で locked。actuation は software-safe boundary の外側として deny する。
+- real GPIO/CAN adapter は `locked` が既定。`dry_run` では command plan だけ作り、`enabled` でも Linux + allowlist + arm token を必須にする。
+- GPIO は `gpioget/gpioset`、CAN は SocketCAN `cansend` を shell なしの引数配列で呼ぶ。
+- HoloLens 由来の face scan は local-only。外部クラウド送信や API key 取り込みはしない。
+- HoloLens 由来の target reticle は visualization-only。武装、照準、発射、追尾制御には接続しない。
 
 ## Answer Rules
 

@@ -1,4 +1,10 @@
 import { buildSuitCommsStatus } from "../packages/server/src/lib/suit-comms";
+import { buildSuitEdgeRuntimeSnapshot } from "../packages/server/src/lib/suit-edge-runtime";
+import { buildSuitHardwareStatus } from "../packages/server/src/lib/suit-hardware-adapter";
+import {
+	buildHoloLensReferenceProfile,
+	planHoloLensVoiceCommand,
+} from "../packages/server/src/lib/suit-hololens-profile";
 import {
 	buildSuitStatus,
 	getAegisFridayPersonaPrompt,
@@ -7,6 +13,14 @@ import {
 
 const command = Bun.argv[2] ?? "status";
 const asJson = Bun.argv.includes("--json");
+const phraseIndex = Bun.argv.indexOf("--phrase");
+const phrase =
+	phraseIndex >= 0
+		? Bun.argv
+				.slice(phraseIndex + 1)
+				.filter((arg) => arg !== "--json")
+				.join(" ")
+		: "";
 
 if (command === "status") {
 	const status = buildSuitStatus();
@@ -47,10 +61,64 @@ if (command === "status") {
 			);
 		}
 	}
+} else if (command === "edge") {
+	const edge = buildSuitEdgeRuntimeSnapshot();
+	if (asJson) {
+		console.log(JSON.stringify(edge, null, 2));
+	} else {
+		console.log(`Suit edge runtime: ${edge.posture}`);
+		console.log(`Local AI: ${edge.localAI.mode} / ${edge.localAI.risk}`);
+		for (const node of edge.nodes) {
+			console.log(
+				`- ${node.id}: ${node.status}, ${node.runtime}, ${node.bus}, ${node.zone}`,
+			);
+		}
+	}
+} else if (command === "hardware") {
+	const hardware = buildSuitHardwareStatus();
+	if (asJson) {
+		console.log(JSON.stringify(hardware, null, 2));
+	} else {
+		console.log(`Suit hardware adapter: ${hardware.mode}`);
+		console.log(`Platform: ${hardware.platform}`);
+		console.log(
+			`GPIO tool: ${hardware.tools.gpioRead} / ${hardware.tools.gpioWrite}`,
+		);
+		console.log(`CAN tool: ${hardware.tools.canSend}`);
+		console.log(`GPIO allowlist: ${hardware.allowlist.gpio.length}`);
+		console.log(`CAN allowlist: ${hardware.allowlist.can.length}`);
+	}
+} else if (command === "hololens") {
+	if (phrase) {
+		const plan = planHoloLensVoiceCommand(phrase, "local-cli");
+		if (asJson) {
+			console.log(JSON.stringify(plan, null, 2));
+		} else {
+			console.log(`HoloLens voice phrase: ${plan.phrase}`);
+			console.log(`Decision: ${plan.decision}`);
+			console.log(`Matched: ${plan.matched?.id ?? "none"}`);
+			for (const reason of plan.reasons) {
+				console.log(`- ${reason}`);
+			}
+		}
+	} else {
+		const profile = buildHoloLensReferenceProfile();
+		if (asJson) {
+			console.log(JSON.stringify(profile, null, 2));
+		} else {
+			console.log(`HoloLens reference: ${profile.source.repository}`);
+			console.log(`License: ${profile.source.license}`);
+			for (const voiceCommand of profile.voiceCommands) {
+				console.log(
+					`- ${voiceCommand.phrase}: ${voiceCommand.decision}, ${voiceCommand.category}`,
+				);
+			}
+		}
+	}
 } else {
 	console.error(`Unknown suit command: ${command}`);
 	console.error(
-		"Usage: bun run suit -- [status|presets|persona|comms] [--json]",
+		'Usage: bun run suit -- [status|presets|persona|comms|edge|hardware|hololens] [--json] [--phrase "Jarvis Scan"]',
 	);
 	process.exit(1);
 }
