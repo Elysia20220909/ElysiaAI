@@ -6,6 +6,10 @@ import {
 	planHoloLensVoiceCommand,
 } from "../packages/server/src/lib/suit-hololens-profile";
 import {
+	buildMark85ReferenceProfile,
+	planMark85OperationalMode,
+} from "../packages/server/src/lib/suit-mark85-profile";
+import {
 	buildSuitStatus,
 	getAegisFridayPersonaPrompt,
 	getCinematicPresets,
@@ -13,14 +17,20 @@ import {
 
 const command = Bun.argv[2] ?? "status";
 const asJson = Bun.argv.includes("--json");
-const phraseIndex = Bun.argv.indexOf("--phrase");
-const phrase =
-	phraseIndex >= 0
-		? Bun.argv
-				.slice(phraseIndex + 1)
-				.filter((arg) => arg !== "--json")
-				.join(" ")
-		: "";
+
+function readFlagValue(flag: string): string {
+	const index = Bun.argv.indexOf(flag);
+	if (index < 0) return "";
+	const values: string[] = [];
+	for (const arg of Bun.argv.slice(index + 1)) {
+		if (arg.startsWith("--")) break;
+		values.push(arg);
+	}
+	return values.join(" ");
+}
+
+const phrase = readFlagValue("--phrase");
+const mode = readFlagValue("--mode");
 
 if (command === "status") {
 	const status = buildSuitStatus();
@@ -115,10 +125,36 @@ if (command === "status") {
 			}
 		}
 	}
+} else if (command === "mark85") {
+	if (mode) {
+		const plan = planMark85OperationalMode(mode, "local-cli");
+		if (asJson) {
+			console.log(JSON.stringify(plan, null, 2));
+		} else {
+			console.log(`Mark85 mode: ${plan.mode.label}`);
+			console.log(`Decision: ${plan.decision}`);
+			console.log(`Safe translation: ${plan.mode.safeTranslation}`);
+			for (const reason of plan.reasons) {
+				console.log(`- ${reason}`);
+			}
+		}
+	} else {
+		const profile = buildMark85ReferenceProfile();
+		if (asJson) {
+			console.log(JSON.stringify(profile, null, 2));
+		} else {
+			console.log(`${profile.model} / ${profile.version}`);
+			for (const modeProfile of profile.operationalModes) {
+				console.log(
+					`- ${modeProfile.id}: ${modeProfile.decision}, ${modeProfile.safeTranslation}`,
+				);
+			}
+		}
+	}
 } else {
 	console.error(`Unknown suit command: ${command}`);
 	console.error(
-		'Usage: bun run suit -- [status|presets|persona|comms|edge|hardware|hololens] [--json] [--phrase "Jarvis Scan"]',
+		'Usage: bun run suit -- [status|presets|persona|comms|edge|hardware|hololens|mark85] [--json] [--phrase "Jarvis Scan"] [--mode guardian]',
 	);
 	process.exit(1);
 }

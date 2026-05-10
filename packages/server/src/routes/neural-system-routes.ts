@@ -36,6 +36,11 @@ import {
 	planHoloLensVoiceCommand,
 } from "../lib/suit-hololens-profile";
 import {
+	buildMark85ReferenceProfile,
+	Mark85ProfileError,
+	planMark85OperationalMode,
+} from "../lib/suit-mark85-profile";
+import {
 	buildSuitStatus,
 	executeSuitCommand,
 	getCinematicPresets,
@@ -66,6 +71,12 @@ type SuitEdgePlanBody = {
 	command?: SuitEdgeCommandKind;
 	reason?: string;
 	payload?: Record<string, unknown>;
+};
+
+type Mark85PlanBody = {
+	modeId?: string;
+	request?: string;
+	relay?: SuitRelayKind;
 };
 
 function requireNeuralSession(request: Request) {
@@ -119,6 +130,22 @@ function handleSuitHardwareError(error: unknown) {
 		500,
 		error instanceof Error ? error.message : "Suit hardware request failed",
 		"SUIT_HARDWARE_FAILED",
+	);
+}
+
+function handleMark85ProfileError(error: unknown) {
+	if (error instanceof Mark85ProfileError) {
+		return jsonError(
+			error.code === "MARK85_MODE_NOT_FOUND" ? 404 : 400,
+			error.message,
+			error.code,
+		);
+	}
+	if (error instanceof SuitCommsError) return handleSuitCommsError(error);
+	return jsonError(
+		500,
+		error instanceof Error ? error.message : "Mark85 profile request failed",
+		"MARK85_PROFILE_FAILED",
 	);
 }
 
@@ -192,6 +219,50 @@ export const neuralSystemRoutes = new Elysia()
 			profile: buildHoloLensReferenceProfile(),
 		};
 	})
+	.get("/api/suit/mark85/profile", ({ request }) => {
+		const session = requireNeuralSession(request);
+		if (session instanceof Response) return session;
+		return {
+			session,
+			profile: buildMark85ReferenceProfile(),
+		};
+	})
+	.post(
+		"/api/suit/mark85/plan",
+		({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			try {
+				const input = body as Mark85PlanBody;
+				const modeIdOrRequest = input.modeId ?? input.request ?? "";
+				if (!modeIdOrRequest.trim()) {
+					return jsonError(
+						400,
+						"modeId or request is required",
+						"MARK85_MODE_REQUIRED",
+					);
+				}
+				return {
+					session,
+					plan: planMark85OperationalMode(
+						modeIdOrRequest,
+						session.username,
+						input.relay,
+					),
+				};
+			} catch (error) {
+				return handleMark85ProfileError(error);
+			}
+		},
+		{
+			body: t.Object({
+				modeId: t.Optional(t.String()),
+				request: t.Optional(t.String()),
+				relay: t.Optional(t.String()),
+			}),
+		},
+	)
 	.post(
 		"/api/suit/hololens/command",
 		({ request, body }) => {

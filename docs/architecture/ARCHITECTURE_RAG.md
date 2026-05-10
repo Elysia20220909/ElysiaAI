@@ -235,6 +235,10 @@ received intent
   - HoloLens IronMan 参考実装から抽出した voice command、HUD、gaze/scan の安全プロファイルを返す。
 - `POST /api/suit/hololens/command`
   - `Jarvis Scan` などの音声 phrase を、policy gate、edge runtime、hardware adapter の dispatch plan に変換する。
+- `GET /api/suit/mark85/profile`
+  - Mark LXXXV の非公式仕様再構成を、非武装・安全境界付きの運用プロファイルとして返す。
+- `POST /api/suit/mark85/plan`
+  - `guardian`、`flight_visualization`、`infinity emergency` などの mode request を policy gate と edge runtime の plan に変換する。
 
 HoloLens IronMan 参考実装から採用するもの:
 
@@ -250,6 +254,20 @@ HoloLens IronMan 参考実装から採用するもの:
 - target reticle から weapon-like control へつなぐ動線。
 - voice command から actuator へ直接到達する設計。
 
+Mark LXXXV 仕様から採用するもの:
+
+- segmented armor という発想を、armor-state telemetry と simulated repair posture に翻訳する。
+- instant reconfiguration は、HUD、diagnostics、guardian posture の mode plan に限定する。
+- cyber defense は、encrypted envelope、replay protection、relay limit、audit trail として扱う。
+- pilot sovereignty を最重要ルールにし、自律制御は助言と安全停止へ閉じる。
+
+Mark LXXXV 仕様から採用しないもの:
+
+- repulsor、unibeam、blade、cannon などの weapon-like capability。
+- flight propulsion や high-power motion。
+- arc reactor、energy weapon、nano-swarm material の現実実装手順。
+- Infinity Emergency の現実運用。これは story-only かつ always deny とする。
+
 実装上の安全制約:
 
 - nonce replay は拒否する。
@@ -263,6 +281,10 @@ HoloLens IronMan 参考実装から採用するもの:
 - GPIO は `gpioget/gpioset`、CAN は SocketCAN `cansend` を shell なしの引数配列で呼ぶ。
 - HoloLens 由来の face scan は local-only。外部クラウド送信や API key 取り込みはしない。
 - HoloLens 由来の target reticle は visualization-only。武装、照準、発射、追尾制御には接続しない。
+- Mark85 profile は設計知識であり、実 actuator command ではない。
+- Mark85 の `guardian` と `nano_repair` は confirm-required simulation とする。
+- Mark85 の `flight_visualization` は HUD 表示のみで、推進・姿勢制御・GPIO/CAN には接続しない。
+- Mark85 の combat、overdrive、infinity emergency は lockout-only とし、policy gate で deny する。
 
 ## Answer Rules
 
