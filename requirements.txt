@@ -16,7 +16,7 @@ sentence-transformers>=5.4.1,<6.0.0
 transformers==5.0.0rc3
 
 # Monitoring & Diagnostics
-rich==13.7.0
+rich==15.0.0
 
 # Web Search & Content (The Eye)
 duckduckgo-search==4.3.0
