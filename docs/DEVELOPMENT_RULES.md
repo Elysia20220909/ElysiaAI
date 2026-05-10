@@ -41,6 +41,14 @@ This document is the working agreement for ElysiaAI implementation work. It keep
 - Avoid dependencies unless they remove real risk or significant complexity.
 - Run dependency and security checks after dependency changes.
 
+## Git Branch Hygiene
+
+- Start implementation work with `bun run branch:auto -- <short-name>` when you are on `master`, `main`, `dev`, or `develop`.
+- The command creates a `codex/<short-name>` branch and switches to it without pushing.
+- If no name is provided, it creates a dated `codex/work-<timestamp>-<sha>` branch.
+- After `bun run hooks:install`, the tracked `pre-commit` hook runs the same guard before commits so protected branches do not quietly collect local work.
+- Use `--dry-run` to preview the branch name and `--no-switch` when you only want to create the branch.
+
 ## Documentation Rules
 
 - Prefer short sections and bullet lists over long prose.
