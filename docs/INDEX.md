@@ -20,6 +20,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Cliffside AI lab residence 3D prompts | `docs/fictional/STARK_ESTATE_3D_PROMPTS.md` |
 | Cliffside AI lab residence engine spec | `docs/fictional/STARK_ESTATE_ENGINE_SPEC.md` |
 | Fictional suit system | `docs/fictional/MARK85_FANTASY_SUIT_SYSTEM.md` |
+| Mark LXXXV distributed wearable computing spec | `docs/fictional/MARK85_DISTRIBUTED_WEARABLE_COMPUTING_SPEC.md` |
 | Architecture | `docs/ARCHITECTURE.md` |
 | Project structure | `docs/PROJECT_STRUCTURE.md` |
 | API | `docs/API.md`, `docs/API_REFERENCE.md` |
