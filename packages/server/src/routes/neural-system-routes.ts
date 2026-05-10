@@ -1,9 +1,9 @@
 import { Elysia, t } from "elysia";
 import { jsonError } from "../lib/constants";
 import {
-	buildNeuralAuthStatus,
+	buildNeuralAuthStatusFromRequest,
 	getNeuralAuthEvents,
-	verifyNeuralAccessToken,
+	verifyNeuralAccessRequest,
 } from "../lib/neural-auth-system";
 import {
 	buildSuitStatus,
@@ -25,10 +25,12 @@ const suitCommands: SuitCommand[] = [
 
 function requireNeuralSession(request: Request) {
 	try {
-		return verifyNeuralAccessToken(request.headers.get("authorization"));
+		return verifyNeuralAccessRequest(request);
 	} catch (error) {
 		return jsonError(
-			401,
+			error instanceof Error && error.message === "CSRF token mismatch"
+				? 403
+				: 401,
 			error instanceof Error ? error.message : "Neural auth failed",
 		);
 	}
@@ -37,10 +39,12 @@ function requireNeuralSession(request: Request) {
 export const neuralSystemRoutes = new Elysia()
 	.get("/api/neural-auth/status", ({ request }) => {
 		try {
-			return buildNeuralAuthStatus(request.headers.get("authorization"));
+			return buildNeuralAuthStatusFromRequest(request);
 		} catch (error) {
 			return jsonError(
-				401,
+				error instanceof Error && error.message === "CSRF token mismatch"
+					? 403
+					: 401,
 				error instanceof Error ? error.message : "Neural auth failed",
 			);
 		}
