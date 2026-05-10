@@ -16,16 +16,14 @@ import {
 	type ElysiaCoreFrame,
 	normalizeProtocolRequest,
 } from "../lib/elysia-core-protocol";
-import { verifyNeuralAccessToken } from "../lib/neural-auth-system";
+import { authErrorResponse } from "../lib/auth-cookies";
+import { verifyNeuralAccessRequest } from "../lib/neural-auth-system";
 
 function requireCoreSession(request: Request) {
 	try {
-		return verifyNeuralAccessToken(request.headers.get("authorization"));
+		return verifyNeuralAccessRequest(request);
 	} catch (error) {
-		return jsonError(
-			401,
-			error instanceof Error ? error.message : "Neural auth failed",
-		);
+		return authErrorResponse(error, "Neural auth failed");
 	}
 }
 
