@@ -1,16 +1,13 @@
 import { Elysia } from "elysia";
-import { jsonError } from "../lib/constants";
-import { verifyNeuralAccessToken } from "../lib/neural-auth-system";
+import { authErrorResponse } from "../lib/auth-cookies";
+import { verifyNeuralAccessRequest } from "../lib/neural-auth-system";
 import { buildProjectMissionControl } from "../lib/project-orchestrator";
 
 function requireProjectOperator(request: Request) {
 	try {
-		return verifyNeuralAccessToken(request.headers.get("authorization"));
+		return verifyNeuralAccessRequest(request);
 	} catch (error) {
-		return jsonError(
-			401,
-			error instanceof Error ? error.message : "Project auth failed",
-		);
+		return authErrorResponse(error, "Project auth failed");
 	}
 }
 
