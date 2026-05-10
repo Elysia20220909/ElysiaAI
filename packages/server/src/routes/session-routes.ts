@@ -1,39 +1,34 @@
 import { Elysia, t } from "elysia";
-import jwt from "jsonwebtoken";
+import type jwt from "jsonwebtoken";
+import {
+	type AccessTokenPayload,
+	authErrorResponse,
+	getOptionalAccessToken,
+	requireAccessToken,
+} from "../lib/auth-cookies";
 import * as chatSessionService from "../lib/chat-session";
-import { CONFIG, jsonError } from "../lib/constants";
+import { jsonError } from "../lib/constants";
 
 type ChatMode = "normal" | "sweet" | "professional";
-type SessionTokenPayload = jwt.JwtPayload & {
-	role?: string;
-	userId?: string;
-};
+type SessionTokenPayload = jwt.JwtPayload & AccessTokenPayload;
 
 function normalizeChatMode(mode: string | undefined): ChatMode {
 	return mode === "sweet" || mode === "professional" ? mode : "normal";
 }
 
 function requireSessionToken(request: Request): SessionTokenPayload | Response {
-	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) {
-		return jsonError(401, "Missing Bearer token");
-	}
-
 	try {
-		const payload = jwt.verify(
-			auth.substring(7),
-			CONFIG.JWT_SECRET,
-		) as SessionTokenPayload;
+		const payload = requireAccessToken(request) as SessionTokenPayload;
 		if (
 			!payload.userId &&
 			payload.role !== "admin" &&
 			payload.role !== "owner"
 		) {
-			return jsonError(401, "Invalid token");
+			return jsonError(401, "Invalid token", "AUTH_TOKEN_INVALID");
 		}
 		return payload;
-	} catch {
-		return jsonError(401, "Invalid token");
+	} catch (error) {
+		return authErrorResponse(error, "Invalid token");
 	}
 }
 
@@ -68,17 +63,12 @@ export const sessionRoutes = new Elysia({ prefix: "/sessions" })
 			body: { mode?: string };
 			request: Request;
 		}) => {
-			const auth = request.headers.get("authorization") || "";
 			let userId: string | undefined;
 			try {
-				if (auth.startsWith("Bearer ")) {
-					const payload = jwt.verify(
-						auth.substring(7),
-						CONFIG.JWT_SECRET,
-					) as jwt.JwtPayload;
-					userId = (payload as { userId?: string }).userId;
-				}
-			} catch {}
+				userId = getOptionalAccessToken(request)?.userId;
+			} catch (error) {
+				return authErrorResponse(error, "Invalid token");
+			}
 
 			const mode = normalizeChatMode((body as { mode?: string }).mode);
 			const sessionId = await chatSessionService.createChatSession(

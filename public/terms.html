@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ja">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ElysiaAI 利用規約</title>
+		<style>
+			:root {
+				color-scheme: light;
+				--ink: #18212f;
+				--muted: #5c6878;
+				--line: #d8dee8;
+				--panel: #ffffff;
+				--wash: #f4f7fb;
+				--accent: #216a8f;
+				--warm: #8a5a26;
+				--danger: #9b2f35;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				font-family:
+					"Segoe UI",
+					system-ui,
+					-apple-system,
+					sans-serif;
+				background: var(--wash);
+				color: var(--ink);
+				line-height: 1.7;
+			}
+
+			header {
+				border-bottom: 1px solid var(--line);
+				background: #eef4f8;
+			}
+
+			.nav,
+			main {
+				width: min(980px, calc(100% - 32px));
+				margin: 0 auto;
+			}
+
+			.nav {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 16px;
+				padding: 18px 0;
+			}
+
+			.brand {
+				font-weight: 700;
+				letter-spacing: 0.02em;
+			}
+
+			.nav a,
+			.actions a {
+				color: var(--accent);
+				text-decoration: none;
+				font-weight: 600;
+			}
+
+			main {
+				padding: 56px 0 72px;
+			}
+
+			.hero {
+				margin-bottom: 34px;
+			}
+
+			h1 {
+				margin: 0 0 12px;
+				font-size: clamp(2rem, 5vw, 3.8rem);
+				line-height: 1.08;
+				letter-spacing: 0;
+			}
+
+			.lead {
+				max-width: 760px;
+				margin: 0;
+				color: var(--muted);
+				font-size: 1.05rem;
+			}
+
+			.notice,
+			section {
+				background: var(--panel);
+				border: 1px solid var(--line);
+				border-radius: 8px;
+			}
+
+			.notice {
+				margin: 0 0 20px;
+				padding: 16px 18px;
+				border-left: 4px solid var(--warm);
+			}
+
+			section {
+				margin-top: 18px;
+				padding: 24px;
+			}
+
+			h2 {
+				margin: 0 0 12px;
+				font-size: 1.18rem;
+			}
+
+			ul {
+				margin: 0;
+				padding-left: 1.2rem;
+			}
+
+			li + li {
+				margin-top: 8px;
+			}
+
+			.meta {
+				color: var(--muted);
+				font-size: 0.94rem;
+			}
+
+			.danger {
+				color: var(--danger);
+				font-weight: 700;
+			}
+
+			.actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 16px;
+				margin-top: 28px;
+			}
+
+			@media (max-width: 640px) {
+				.nav {
+					align-items: flex-start;
+					flex-direction: column;
+				}
+
+				section {
+					padding: 20px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<nav class="nav" aria-label="規約ナビゲーション">
+				<div class="brand">ElysiaAI</div>
+				<div class="actions">
+					<a href="/privacy.html">プライバシーポリシー</a>
+					<a href="/rules.html">ルール管理</a>
+					<a href="/">ホーム</a>
+				</div>
+			</nav>
+		</header>
+
+		<main>
+			<div class="hero">
+				<p class="meta">最終更新日: 2026-05-10</p>
+				<h1>利用規約</h1>
+				<p class="lead">
+					ElysiaAI は、ローカルファーストの思想を大切にした実験的な AI-native OS
+					プロジェクトです。静かな机に道具を並べるように、使う人の主権と安全を中心に置きます。
+				</p>
+			</div>
+
+			<div class="notice">
+				この文書はプロジェクト用の実装雛形です。公開サービスとして運用する前に、対象地域と提供形態に合わせて法務確認を行ってください。
+			</div>
+
+			<section>
+				<h2>1. 適用</h2>
+				<ul>
+					<li>本規約は、ElysiaAI のローカルアプリ、サーバー、管理画面、関連する実験機能に適用されます。</li>
+					<li>個別のライセンス、OSS 通知、または連携サービスの規約がある場合、それらも併せて適用されます。</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>2. 利用者の責任</h2>
+				<ul>
+					<li>利用者は、法令、契約、所属組織の規程に反しない範囲で本プロジェクトを利用してください。</li>
+					<li>認証情報、API キー、秘密鍵、個人情報を安全に管理してください。</li>
+					<li>AI の出力は誤りを含む場合があります。重要な判断では、人間による確認を行ってください。</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>3. 禁止事項</h2>
+				<ul>
+					<li>不正アクセス、権限昇格、秘密情報の窃取を目的とした利用。</li>
+					<li>第三者の権利、プライバシー、業務を侵害する利用。</li>
+					<li>明示的な許可なしに、デスクトップ操作やゲーム入力の自動化を実行すること。</li>
+					<li>ログ、アップロード、環境変数などのローカル機微情報を不用意に共有または公開すること。</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>4. AI 機能</h2>
+				<ul>
+					<li>ElysiaAI は、ローカル LLM、FastAPI kernel、設定済み連携サービスを通じて応答を生成する場合があります。</li>
+					<li>医療、法律、金融、安全保障など高リスク領域では、専門家の確認なしに出力へ依存しないでください。</li>
+					<li>外部 API やクラウド連携は、利用者が明示的に設定した場合のみ利用される前提です。</li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>5. 免責</h2>
+				<ul>
+					<li>本プロジェクトは実験的なソフトウェアであり、完全性、正確性、継続稼働を保証しません。</li>
+					<li>利用者の環境、設定、外部サービス、モデル出力に起因する損害について、開発者は法律上許される範囲で責任を負いません。</li>
+					<li><span class="danger">本番運用では、バックアップ、監査、アクセス制御、障害対応手順を必ず整備してください。</span></li>
+				</ul>
+			</section>
+
+			<section>
+				<h2>6. 変更</h2>
+				<ul>
+					<li>本規約は、機能変更、セキュリティ要件、運用方針に応じて更新される場合があります。</li>
+					<li>重要な変更は、リリースノートまたはプロジェクト文書で確認できる形にします。</li>
+				</ul>
+			</section>
+		</main>
+	</body>
+</html>

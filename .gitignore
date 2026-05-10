@@ -83,6 +83,11 @@ x_delete_results*.jsonl
 # vercel
 .vercel
 
+# wrangler files
+.wrangler/
+.dev.vars*
+!.dev.vars.example
+
 **/*.trace
 **/*.zip
 **/*.tar.gz

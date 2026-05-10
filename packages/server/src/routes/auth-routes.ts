@@ -1,5 +1,13 @@
 import { Elysia, t } from "elysia";
 import {
+	assertCsrfForCookieAuth,
+	authErrorResponse,
+	getOptionalAccessToken,
+	jsonWithAuthCookies,
+	jsonWithClearedAuthCookies,
+	resolveRefreshTokenFromRequest,
+} from "../lib/auth-cookies";
+import {
 	InMemoryRefreshTokenStore,
 	issueTokenPair,
 	type RefreshTokenStore,
@@ -14,6 +22,21 @@ import {
 	recordNeuralAuthEvent,
 } from "../lib/neural-auth-system";
 import { authenticateUser, createUser } from "../lib/security";
+
+type LoginBody = {
+	username: string;
+	password: string;
+};
+
+type RefreshBody = {
+	refreshToken?: string;
+};
+
+type LoginUser = {
+	id: string;
+	username: string;
+	role: string;
+};
 
 const testRefreshTokenStore = new InMemoryRefreshTokenStore();
 
@@ -32,51 +55,115 @@ function isDevAutoLoginEnabled(): boolean {
 	);
 }
 
+function normalizeLoginUser(user: unknown): LoginUser {
+	const candidate = user as Partial<LoginUser> | undefined;
+	if (!candidate?.id || !candidate.username) {
+		throw new Error("Authenticated user payload is incomplete");
+	}
+
+	return {
+		id: String(candidate.id),
+		username: String(candidate.username),
+		role: String(candidate.role || "user"),
+	};
+}
+
+function getRefreshTokenFromBody(body: unknown): string | undefined {
+	if (!body || typeof body !== "object") return undefined;
+	const refreshToken = (body as Partial<RefreshBody>).refreshToken;
+	return typeof refreshToken === "string" ? refreshToken : undefined;
+}
+
+async function issueCookieSession(
+	request: Request,
+	user: LoginUser,
+	body: Record<string, unknown> = {},
+): Promise<Response> {
+	const tokens = await issueTokenPair(user, getRefreshTokenStore());
+	const neuralSignature = createNeuralSignature(user.username);
+	recordNeuralAuthEvent({
+		type: "token.verify",
+		identity: user.username,
+		neuralSignature,
+		threatLevel: "quiet",
+		detail: "Credential exchange completed",
+		payload: { role: user.role, transport: "httpOnly-cookie" },
+	});
+
+	return jsonWithAuthCookies(request, tokens, {
+		authenticated: true,
+		tokenType: "Bearer",
+		transport: "httpOnly-cookie",
+		expiresIn: tokens.expiresIn,
+		username: user.username,
+		role: user.role,
+		neuralSignature,
+		...body,
+	});
+}
+
 export const authRoutes = new Elysia({ prefix: "/auth" })
-	.post("/dev-login", async () => {
+	.post("/dev-login", async ({ request }) => {
 		if (!isDevAutoLoginEnabled()) {
-			return jsonError(404, "Dev auto-login is not enabled");
+			return jsonError(
+				404,
+				"Dev auto-login is not enabled",
+				"AUTH_DEV_DISABLED",
+			);
 		}
 
 		try {
 			const username = CONFIG.AUTH_USERNAME || "admin";
-			const neuralSignature = createNeuralSignature(username);
-			const tokens = await issueTokenPair(
-				{ id: `dev-${username}`, username, role: "admin" },
-				getRefreshTokenStore(),
-			);
+			const user = { id: `dev-${username}`, username, role: "admin" };
+			const response = await issueCookieSession(request, user);
 			recordNeuralAuthEvent({
 				type: "dev.login",
 				identity: username,
-				neuralSignature,
+				neuralSignature: createNeuralSignature(username),
 				threatLevel: "quiet",
 				detail: "Development neural link issued",
 			});
 
-			return new Response(
-				JSON.stringify({
-					accessToken: tokens.accessToken,
-					refreshToken: tokens.refreshToken,
-					expiresIn: tokens.expiresIn,
-					username,
-					neuralSignature,
-				}),
-				{
-					headers: { "content-type": "application/json" },
-				},
-			);
+			return response;
 		} catch (error) {
 			logger.error("Dev auto-login failed:", error as Error);
-			return jsonError(500, "Failed to generate dev token");
+			return jsonError(500, "Failed to generate dev token", "AUTH_DEV_FAILED");
 		}
 	})
-	// Auth: token issuance
+	// Auth: current browser session
+	.get("/session", ({ request }) => {
+		try {
+			const payload = getOptionalAccessToken(request);
+			if (!payload) {
+				return {
+					authenticated: false,
+					transport: "httpOnly-cookie",
+				};
+			}
+
+			return {
+				authenticated: true,
+				transport: "httpOnly-cookie",
+				user: {
+					id: String(payload.userId || ""),
+					username: String(payload.username || payload.userId || "operator"),
+					role: String(payload.role || "user"),
+				},
+				expiresAt: payload.exp
+					? new Date(payload.exp * 1000).toISOString()
+					: null,
+			};
+		} catch (error) {
+			return authErrorResponse(error);
+		}
+	})
+	// Auth: token issuance via HttpOnly cookies
 	.post(
 		"/token",
-		async ({ body }: { body: { username: string; password: string } }) => {
+		async ({ body, request }: { body: LoginBody; request: Request }) => {
 			const { username, password } = body;
 
-			let user: any;
+			let user: LoginUser;
 
 			if (process.env.ELYSIA_TEST_MODE === "1" && username === "elysia-test") {
 				logger.info("[TEST MODE] Bypassing auth for elysia-test");
@@ -85,40 +172,20 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 				const authResult = await authenticateUser(username, password);
 
 				if (!authResult.success || !authResult.user) {
-					return jsonError(401, authResult.error || "Invalid credentials");
+					return jsonError(
+						401,
+						authResult.error || "Invalid credentials",
+						"AUTH_INVALID_CREDENTIALS",
+					);
 				}
-				user = authResult.user;
+				user = normalizeLoginUser(authResult.user);
 			}
 
 			try {
-				const tokens = await issueTokenPair(
-					{ id: user.id, username: user.username, role: user.role },
-					getRefreshTokenStore(),
-				);
-				const neuralSignature = createNeuralSignature(user.username);
-				recordNeuralAuthEvent({
-					type: "token.verify",
-					identity: user.username,
-					neuralSignature,
-					threatLevel: "quiet",
-					detail: "Credential exchange completed",
-					payload: { role: user.role },
-				});
-
-				return new Response(
-					JSON.stringify({
-						accessToken: tokens.accessToken,
-						refreshToken: tokens.refreshToken,
-						expiresIn: tokens.expiresIn,
-						neuralSignature,
-					}),
-					{
-						headers: { "content-type": "application/json" },
-					},
-				);
+				return await issueCookieSession(request, user);
 			} catch (error) {
 				logger.error("Token generation failed:", error as Error);
-				return jsonError(500, "Failed to generate token");
+				return jsonError(500, "Failed to generate token", "AUTH_TOKEN_FAILED");
 			}
 		},
 		{
@@ -131,14 +198,29 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 	// Auth: register new user
 	.post(
 		"/register",
-		async ({ body }: { body: { username: string; password: string } }) => {
+		async ({ body }: { body: LoginBody }) => {
 			const { username, password } = body;
 			try {
 				const newUser = await createUser(username, password);
-				return { message: "User registered successfully", userId: newUser.id };
+				return new Response(
+					JSON.stringify({
+						message: "User registered successfully",
+						userId: newUser.id,
+					}),
+					{
+						status: 201,
+						headers: {
+							"content-type": "application/json; charset=utf-8",
+						},
+					},
+				);
 			} catch (error) {
 				logger.error("User registration failed:", error as Error);
-				return jsonError(400, "User already exists or registration failed");
+				return jsonError(
+					400,
+					"User already exists or registration failed",
+					"AUTH_REGISTER_FAILED",
+				);
 			}
 		},
 		{
@@ -148,55 +230,52 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			}),
 		},
 	)
-	// Auth: refresh access token
-	.post(
-		"/refresh",
-		async ({ body }: { body: { refreshToken: string } }) => {
-			const { refreshToken } = body;
-			try {
-				const tokens = await rotateRefreshToken(
-					refreshToken,
-					getRefreshTokenStore(),
-				);
+	// Auth: refresh access token and rotate refresh cookie
+	.post("/refresh", async ({ body, request }) => {
+		const resolved = resolveRefreshTokenFromRequest(
+			request,
+			getRefreshTokenFromBody(body),
+		);
+		if (!resolved) {
+			return jsonError(401, "Missing refresh token", "AUTH_REFRESH_REQUIRED");
+		}
 
-				return new Response(
-					JSON.stringify({
-						accessToken: tokens.accessToken,
-						refreshToken: tokens.refreshToken,
-						expiresIn: tokens.expiresIn,
-					}),
-					{
-						headers: { "content-type": "application/json" },
-					},
-				);
-			} catch (error) {
-				logger.error("Token refresh failed:", error as Error);
-				return jsonError(401, "Token refresh failed");
+		try {
+			assertCsrfForCookieAuth(request, resolved.source);
+			const tokens = await rotateRefreshToken(
+				resolved.token,
+				getRefreshTokenStore(),
+			);
+
+			return jsonWithAuthCookies(request, tokens, {
+				authenticated: true,
+				tokenType: "Bearer",
+				transport: "httpOnly-cookie",
+				expiresIn: tokens.expiresIn,
+			});
+		} catch (error) {
+			logger.error("Token refresh failed:", error as Error);
+			return authErrorResponse(error, "Token refresh failed");
+		}
+	})
+	// Auth: logout and revoke refresh token when present
+	.post("/logout", async ({ body, request }) => {
+		const resolved = resolveRefreshTokenFromRequest(
+			request,
+			getRefreshTokenFromBody(body),
+		);
+
+		try {
+			if (resolved) {
+				assertCsrfForCookieAuth(request, resolved.source);
+				await revokeRefreshToken(resolved.token, getRefreshTokenStore());
 			}
-		},
-		{
-			body: t.Object({ refreshToken: t.String({ minLength: 20 }) }),
-		},
-	)
-	// Auth: logout revoke refresh
-	.post(
-		"/logout",
-		async ({ body }: { body: { refreshToken: string } }) => {
-			const { refreshToken } = body;
-			try {
-				await revokeRefreshToken(refreshToken, getRefreshTokenStore());
-				return new Response(
-					JSON.stringify({ message: "Logged out successfully" }),
-					{
-						headers: { "content-type": "application/json" },
-					},
-				);
-			} catch (error) {
-				logger.error("Logout failed:", error as Error);
-				return jsonError(400, "Logout failed");
-			}
-		},
-		{
-			body: t.Object({ refreshToken: t.String({ minLength: 20 }) }),
-		},
-	);
+
+			return jsonWithClearedAuthCookies(request, {
+				message: "Logged out successfully",
+			});
+		} catch (error) {
+			logger.error("Logout failed:", error as Error);
+			return authErrorResponse(error, "Logout failed");
+		}
+	});

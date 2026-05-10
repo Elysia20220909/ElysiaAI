@@ -20,11 +20,25 @@ export const CONFIG = {
 	GROQ_API_KEY: config.groqApiKey,
 };
 
-export const jsonError = (status: number, message: string) => {
-	return new Response(JSON.stringify({ error: message }), {
-		status,
-		headers: { "Content-Type": "application/json; charset=utf-8" },
-	});
+export const jsonError = (
+	status: number,
+	message: string,
+	code = `ERROR_${status}`,
+	details?: Record<string, unknown>,
+) => {
+	return new Response(
+		JSON.stringify({
+			error: message,
+			code,
+			status,
+			timestamp: new Date().toISOString(),
+			...(details ? { details } : {}),
+		}),
+		{
+			status,
+			headers: { "Content-Type": "application/json; charset=utf-8" },
+		},
+	);
 };
 
 export const proxyToFastAPI = async (
