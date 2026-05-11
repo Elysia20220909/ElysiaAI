@@ -1,4 +1,10 @@
 import { Elysia, t } from "elysia";
+import {
+	AgentWorkbenchError,
+	type AgentWorkbenchMode,
+	buildAgentWorkbenchProfile,
+	planAgentWorkbenchTask,
+} from "../lib/agent-workbench";
 import { jsonError } from "../lib/constants";
 import {
 	buildNeuralAuthStatusFromRequest,
@@ -89,6 +95,11 @@ type Mark85PlanBody = {
 	relay?: SuitRelayKind;
 };
 
+type AgentWorkbenchPlanBody = {
+	request?: string;
+	mode?: AgentWorkbenchMode;
+};
+
 function requireNeuralSession(request: Request) {
 	try {
 		return verifyNeuralAccessRequest(request);
@@ -169,6 +180,17 @@ function handleMark85ProfileError(error: unknown) {
 		500,
 		error instanceof Error ? error.message : "Mark85 profile request failed",
 		"MARK85_PROFILE_FAILED",
+	);
+}
+
+function handleAgentWorkbenchError(error: unknown) {
+	if (error instanceof AgentWorkbenchError) {
+		return jsonError(400, error.message, error.code);
+	}
+	return jsonError(
+		500,
+		error instanceof Error ? error.message : "Agent workbench request failed",
+		"AGENT_WORKBENCH_FAILED",
 	);
 }
 
@@ -286,6 +308,42 @@ export const neuralSystemRoutes = new Elysia()
 			profile: buildMark85ReferenceProfile(),
 		};
 	})
+	.get("/api/agents/workbench/status", ({ request }) => {
+		const session = requireNeuralSession(request);
+		if (session instanceof Response) return session;
+		return {
+			session,
+			workbench: buildAgentWorkbenchProfile(),
+		};
+	})
+	.post(
+		"/api/agents/workbench/plan",
+		({ request, body }) => {
+			const session = requireNeuralSession(request);
+			if (session instanceof Response) return session;
+
+			try {
+				const input = body as AgentWorkbenchPlanBody;
+				return {
+					session,
+					plan: planAgentWorkbenchTask({
+						request: input.request ?? "",
+						mode: input.mode,
+						requestedBy: session.username,
+					}),
+					workbench: buildAgentWorkbenchProfile(),
+				};
+			} catch (error) {
+				return handleAgentWorkbenchError(error);
+			}
+		},
+		{
+			body: t.Object({
+				request: t.String(),
+				mode: t.Optional(t.String()),
+			}),
+		},
+	)
 	.post(
 		"/api/suit/mark85/plan",
 		({ request, body }) => {
