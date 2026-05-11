@@ -29,6 +29,7 @@
     "local-server:setup:unix": "bash scripts/local-server/setup-elisia-local-server.sh",
     "local-server:host": "bun scripts/local-server/host-server-setup.ts",
     "local-server:host:start": "bun scripts/local-server/host-server-setup.ts --start",
+    "agents": "bun scripts/agent-workbench.ts",
     "suit": "bun scripts/suit.ts",
     "dev:ci": "bun scripts/boot.ts --ci",
     "desktop": "bun tauri dev",
