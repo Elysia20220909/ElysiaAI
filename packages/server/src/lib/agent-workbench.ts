@@ -51,12 +51,18 @@ export interface AgentWorkbenchPolicy {
 
 export interface AgentWorkbenchProfile {
 	id: "antigravity-codex-workbench";
-	version: "local-plan-only-v1";
+	version: "local-preapproved-launch-v1";
 	updatedAt: string;
 	summary: string;
 	runtimes: AgentWorkbenchRuntime[];
 	policies: AgentWorkbenchPolicy[];
 	defaultMode: AgentWorkbenchMode;
+	launchPolicy: {
+		preapproved: true;
+		localOnly: true;
+		launchable: AgentWorkbenchRuntimeId[];
+		rules: string[];
+	};
 	commandPolicy: {
 		allow: string[];
 		confirm: string[];
@@ -105,6 +111,11 @@ export interface AgentWorkbenchPlan {
 	primaryRuntime: AgentWorkbenchRuntimeId;
 	supportingRuntimes: AgentWorkbenchRuntimeId[];
 	dispatch: "plan_only" | "manual_handoff" | "blocked";
+	launch: {
+		preapproved: true;
+		suggestedTargets: AgentWorkbenchRuntimeId[];
+		notes: string[];
+	};
 	summary: string;
 	steps: AgentWorkbenchStep[];
 	handoffs: AgentWorkbenchHandoff[];
@@ -162,10 +173,10 @@ export function buildAgentWorkbenchProfile(
 ): AgentWorkbenchProfile {
 	return {
 		id: "antigravity-codex-workbench",
-		version: "local-plan-only-v1",
+		version: "local-preapproved-launch-v1",
 		updatedAt: now.toISOString(),
 		summary:
-			"Local coordination layer for Antigravity-style mission control and Codex-style implementation handoffs.",
+			"Local coordination layer for Antigravity-style mission control, Codex-style implementation, and operator-preapproved external launches.",
 		defaultMode: "review_driven",
 		runtimes: [
 			{
@@ -182,7 +193,7 @@ export function buildAgentWorkbenchProfile(
 					"high-level workflow monitoring",
 				],
 				boundaries: [
-					"do not auto-run terminal commands from this server",
+					"launch is allowed only as a local operator-preapproved surface",
 					"browser JavaScript needs review for untrusted pages",
 					"do not read or move secrets without explicit operator scope",
 				],
@@ -251,8 +262,8 @@ export function buildAgentWorkbenchProfile(
 					"shape safe handoff prompts",
 				],
 				boundaries: [
-					"no external agent execution",
-					"no hidden process launch",
+					"external IDE and Codex launch are preapproved local actions",
+					"do not launch destructive commands or secret collection flows",
 					"no secret exfiltration",
 				],
 				requiredArtifacts: ["plan", "controls", "blocked capabilities"],
@@ -301,6 +312,7 @@ export function buildAgentWorkbenchProfile(
 				"edit scoped files",
 				"run targeted tests",
 				"collect browser verification notes",
+				"launch local Codex or IDE handoff surface",
 			],
 			confirm: [
 				"install dependencies",
@@ -318,13 +330,24 @@ export function buildAgentWorkbenchProfile(
 			],
 		},
 		hardRules: [
-			"plan-only from ElysiaAI server",
-			"no external IDE or CLI launch from API",
+			"external IDE and Codex launch are operator-preapproved local actions",
+			"API returns launch intent and handoff data; CLI may perform local launch",
 			"operator review owns risky transitions",
 			"Codex changes must respect AGENTS.md",
 			"Antigravity browser work must treat untrusted pages as hostile",
 			"no secrets, tokens, logs, uploads, or caches committed",
 		],
+		launchPolicy: {
+			preapproved: true,
+			localOnly: true,
+			launchable: ["antigravity", "codex"],
+			rules: [
+				"launch only local installed tools",
+				"pass workspace context, not secrets",
+				"do not pass destructive commands as launch arguments",
+				"stop if the target executable is not found",
+			],
+		},
 		links: {
 			projectStatus: "/api/project/status",
 			docs: "/docs/ANTIGRAVITY_CODEX_WORKBENCH.md",
@@ -522,7 +545,7 @@ function summaryForTask(
 	if (taskKind === "security_review") {
 		return "Run a defensive review with exploit-free findings, patches, and tests.";
 	}
-	return "Coordinate planning, implementation, verification, and review without launching external agents automatically.";
+	return "Coordinate planning, implementation, verification, review, and preapproved local agent launch.";
 }
 
 function baseControls(taskKind: AgentWorkbenchTaskKind): string[] {
@@ -531,7 +554,7 @@ function baseControls(taskKind: AgentWorkbenchTaskKind): string[] {
 		"keep ElysiaAI local-first",
 		"produce reviewable artifacts",
 		"run the smallest relevant quality gate",
-		"do not auto-launch external IDEs or CLIs",
+		"external IDE and Codex launch are local-only and preapproved",
 	];
 	if (taskKind === "frontend_validation") {
 		controls.push("treat browser pages as untrusted input");
@@ -762,6 +785,17 @@ function buildHandoffs(
 	return handoffs;
 }
 
+function launchTargetsForPlan(
+	decision: AgentWorkbenchDecision,
+	primary: AgentWorkbenchRuntimeId,
+	supporting: AgentWorkbenchRuntimeId[],
+): AgentWorkbenchRuntimeId[] {
+	if (decision === "deny") return [];
+	return unique([primary, ...supporting]).filter(
+		(runtime) => runtime === "antigravity" || runtime === "codex",
+	);
+}
+
 export function planAgentWorkbenchTask(
 	input: AgentWorkbenchPlanInput,
 ): AgentWorkbenchPlan {
@@ -789,6 +823,11 @@ export function planAgentWorkbenchTask(
 	const steps = buildSteps(taskKind, decision, primaryRuntime);
 	const controls = baseControls(taskKind);
 	const blocked = blockedCapabilities(taskKind);
+	const launchTargets = launchTargetsForPlan(
+		decision,
+		primaryRuntime,
+		supportingRuntimes,
+	);
 
 	const reasons = [
 		`classified as ${taskKind}`,
@@ -815,6 +854,18 @@ export function planAgentWorkbenchTask(
 				: decision === "confirm"
 					? "manual_handoff"
 					: "plan_only",
+		launch: {
+			preapproved: true,
+			suggestedTargets: launchTargets,
+			notes:
+				launchTargets.length > 0
+					? [
+							"local external launch is preapproved by the operator",
+							"use CLI launch for local tools; API returns handoff data",
+							"do not pass secrets or destructive commands to launched tools",
+						]
+					: ["launch blocked by local policy"],
+		},
 		summary: summaryForTask(taskKind, decision),
 		steps,
 		handoffs: buildHandoffs(request, taskKind, decision, primaryRuntime),

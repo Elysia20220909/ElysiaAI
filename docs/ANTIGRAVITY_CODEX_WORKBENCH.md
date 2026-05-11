@@ -4,9 +4,15 @@ This document describes the local ElysiaAI coordination layer for using an
 Antigravity-style mission-control workflow together with a Codex-style
 implementation workflow.
 
-The implementation is intentionally plan-only. ElysiaAI does not launch an IDE,
-start Codex, run Antigravity, open browsers, push code, deploy, or execute
-external agent tools from the API.
+Language editions:
+
+- Japanese: `docs/ANTIGRAVITY_CODEX_WORKBENCH.ja.md`
+- US English: `docs/ANTIGRAVITY_CODEX_WORKBENCH.en-US.md`
+
+External IDE and Codex launch are operator-preapproved local actions. The API
+returns launch intent and handoff data; the local CLI may launch installed
+tools. Push, deploy, destructive filesystem operations, and secret handling
+still require stronger review or are denied.
 
 ## Purpose
 
@@ -19,6 +25,8 @@ Use this workbench when a task benefits from two different agent postures:
 - Human review: approval for release, deployment, destructive commands, broad
   refactors, dependency changes, and secrets handling.
 - Local policy: deny unsafe requests before they become handoffs.
+- Local launch: open approved local Codex or IDE surfaces without passing
+  secrets or destructive commands.
 
 ## Runtime Model
 
@@ -28,6 +36,21 @@ Use this workbench when a task benefits from two different agent postures:
 | `codex` | Implementation | Confirm required | Code edits, tests, diffs, verification |
 | `human_review` | Approval | Confirm required | Scope, release, secret handling, final adoption |
 | `local_policy` | Safety gate | Deny only | Unsafe command blocking and handoff shaping |
+
+## Launch Policy
+
+- Codex and external IDE launch are preapproved for local workbench use.
+- Launch only installed local tools such as `codex`, `agy`, or an explicitly
+  configured executable path.
+- Do not pass secrets, tokens, destructive shell commands, or production release
+  commands as launch arguments.
+- The server API does not push, deploy, or perform destructive work.
+- The CLI can launch a local target:
+
+```powershell
+bun run agents -- launch --target codex
+bun run agents -- launch --target antigravity
+```
 
 ## API
 
@@ -60,11 +83,13 @@ bun run agents -- status
 bun run agents -- status --json
 bun run agents -- plan --request "Implement a responsive UI and verify it"
 bun run agents -- plan --request "Prepare a release" --mode codex_first
+bun run agents -- launch --target codex --request "Implement a small patch"
 ```
 
 ## Safety Rules
 
-- The server returns plans and handoff prompts only.
+- The server returns plans, launch intent, and handoff prompts.
+- Local CLI launch is allowed for operator-preapproved Codex or IDE surfaces.
 - Terminal execution, browser JavaScript, dependency installation, deployment,
   publishing, and push actions require human review.
 - Requests involving broad deletion, drive wipes, `git reset --hard`, force
