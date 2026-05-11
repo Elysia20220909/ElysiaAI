@@ -1,3 +1,4 @@
+import { buildAgentWorkbenchProfile } from "./agent-workbench";
 import { CONFIG } from "./constants";
 import { getCoreStatus } from "./elysia-core";
 import { ELYSIA_CORE_PROTOCOL } from "./elysia-core-protocol";
@@ -16,6 +17,7 @@ export interface ProjectSubsystem {
 		| "elysia-core"
 		| "neural-auth"
 		| "core-protocol"
+		| "agent-workbench"
 		| "nanotech-suit"
 		| "native-lite"
 		| "local-ops";
@@ -101,6 +103,7 @@ export async function buildProjectMissionControl(operator: {
 		collectLocalOpsOverview({ assumeCoreUp: true }),
 	]);
 	const core = getCoreStatus();
+	const workbench = buildAgentWorkbenchProfile();
 	const suit = buildSuitStatus();
 	const nativeLite = collectNativeLiteSnapshot({ detectToolchains: false });
 	const authEvents = getNeuralAuthEvents();
@@ -152,6 +155,16 @@ export async function buildProjectMissionControl(operator: {
 			signal: ELYSIA_CORE_PROTOCOL.version,
 			nextAction:
 				"Use signed protocolFrame from API clients that can keep secrets server-side",
+		},
+		{
+			id: "agent-workbench",
+			name: "Antigravity / Codex Workbench",
+			status: "ready",
+			summary:
+				"Local plan-only coordination layer for agent-first planning and Codex implementation handoffs",
+			signal: `${workbench.runtimes.length} runtime(s), mode=${workbench.defaultMode}`,
+			nextAction:
+				"Use /api/agents/workbench/plan before delegating broad agent work",
 		},
 		{
 			id: "nanotech-suit",
@@ -208,6 +221,7 @@ export async function buildProjectMissionControl(operator: {
 		links: [
 			{ label: "Chat", href: "/index.html#chat" },
 			{ label: "Project Cockpit", href: "/project-cockpit.html" },
+			{ label: "Agent Workbench", href: "/api/agents/workbench/status" },
 			{ label: "Neural Auth", href: "/standalone/login/index.html" },
 			{ label: "Nanotech Suit", href: "/standalone/nanotech-suit/index.html" },
 			{ label: "Health", href: "/health" },

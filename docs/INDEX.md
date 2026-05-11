@@ -44,6 +44,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Need | File |
 | --- | --- |
 | General integrations | `docs/INTEGRATION_GUIDE.md` |
+| Antigravity / Codex workbench | `docs/ANTIGRAVITY_CODEX_WORKBENCH.md` |
 | OpenAI | `docs/OPENAI_INTEGRATION.md` |
 | Open-LLM-VTuber | `docs/OPEN_LLM_VTUBER_INTEGRATION.md` |
 | Discord command center | `docs/DISCORD_GINROU_COMMAND_CENTER.md` |
