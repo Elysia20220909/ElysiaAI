@@ -37,10 +37,10 @@
     "lint": "bun node_modules/@biomejs/biome/bin/biome check .",
     "typecheck": "bun node_modules/typescript/bin/tsc --noEmit",
     "check:deps": "bun scripts/tests/check-dependency-alignment.ts",
-    "check:encoding": ".venv/Scripts/python.exe scripts/tests/check-encoding.py",
+    "check:encoding": "bun scripts/run-python.ts scripts/tests/check-encoding.py",
     "check:git-hygiene": "bun scripts/tests/check-git-hygiene.ts",
     "security:glassworm": "bun scripts/security/scan_glassworm.ts",
-    "security:audit": ".venv/Scripts/python.exe scripts/security/audit_dependencies.py"
+    "security:audit": "bun scripts/run-python.ts scripts/security/audit_dependencies.py"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
