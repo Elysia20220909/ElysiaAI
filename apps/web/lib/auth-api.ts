@@ -44,7 +44,10 @@ export class ApiRequestError extends Error {
 	}
 }
 
-export async function login(username: string, password: string): Promise<LoginResult> {
+export async function login(
+	username: string,
+	password: string,
+): Promise<LoginResult> {
 	return apiJson<LoginResult>("/api/auth/token", {
 		method: "POST",
 		headers: { "content-type": "application/json" },
@@ -88,19 +91,30 @@ async function apiJson<T>(
 	const retryOnUnauthorized = options.retryOnUnauthorized ?? true;
 	const response = await fetchWithCsrf(path, init);
 
-	if (response.status === 401 && retryOnUnauthorized && path !== "/api/auth/refresh") {
+	if (
+		response.status === 401 &&
+		retryOnUnauthorized &&
+		path !== "/api/auth/refresh"
+	) {
 		await refreshSession();
 		return apiJson<T>(path, init, { retryOnUnauthorized: false });
 	}
 
 	const data = (await response.json().catch(() => ({}))) as T & ApiErrorBody;
 	if (!response.ok) {
-		throw new ApiRequestError(data.error || "Request failed", response.status, data.code);
+		throw new ApiRequestError(
+			data.error || "Request failed",
+			response.status,
+			data.code,
+		);
 	}
 	return data as T;
 }
 
-async function fetchWithCsrf(path: string, init: RequestInit): Promise<Response> {
+async function fetchWithCsrf(
+	path: string,
+	init: RequestInit,
+): Promise<Response> {
 	const method = (init.method ?? "GET").toUpperCase();
 	const headers = new Headers(init.headers);
 	if (unsafeMethods.has(method)) {
