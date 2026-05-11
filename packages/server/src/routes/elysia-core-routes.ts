@@ -1,4 +1,5 @@
 import { Elysia, t } from "elysia";
+import { authErrorResponse } from "../lib/auth-cookies";
 import { CONFIG, jsonError } from "../lib/constants";
 import {
 	buildLocalFallbackReply,
@@ -16,7 +17,6 @@ import {
 	type ElysiaCoreFrame,
 	normalizeProtocolRequest,
 } from "../lib/elysia-core-protocol";
-import { authErrorResponse } from "../lib/auth-cookies";
 import { verifyNeuralAccessRequest } from "../lib/neural-auth-system";
 
 function requireCoreSession(request: Request) {
