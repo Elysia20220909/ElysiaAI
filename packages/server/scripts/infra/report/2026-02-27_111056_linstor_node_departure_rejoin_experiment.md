@@ -327,8 +327,8 @@ ssh root@$CTRL_IP "linstor node delete $NODE"
 
 ```bash
 BMC_IP="10.10.10.25"
-ipmitool -I lanplus -H $BMC_IP -U claude -P Claude123 chassis power off
+ipmitool -I lanplus -H $BMC_IP -U claude -P <redacted-bmc-password> chassis power off
 # 30秒待機後に確認
-ipmitool -I lanplus -H $BMC_IP -U claude -P Claude123 chassis power on
+ipmitool -I lanplus -H $BMC_IP -U claude -P <redacted-bmc-password> chassis power on
 # SSH 復帰 + DRBD UpToDate/UpToDate を待機 (~2-3分)
 ```

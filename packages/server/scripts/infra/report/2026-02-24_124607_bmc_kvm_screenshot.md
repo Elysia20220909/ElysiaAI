@@ -84,7 +84,7 @@ BMC の既存 HTML5 KVM ビューア (noVNC + AST2100 JS デコーダ) を headl
 
 ```
 ./scripts/bmc-kvm-screenshot.py \
-    --bmc-ip 10.10.10.24 --bmc-user claude --bmc-pass Claude123 \
+    --bmc-ip 10.10.10.24 --bmc-user claude --bmc-pass <redacted-bmc-password> \
     --output tmp/<session-id>/screenshot.png [--timeout 30]
 ```
 

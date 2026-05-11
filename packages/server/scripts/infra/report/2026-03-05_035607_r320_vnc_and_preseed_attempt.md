@@ -97,7 +97,7 @@ W: Failed to fetch http://deb.debian.org/debian/dists/trixie/InRelease  Could no
 ssh idrac7 racadm set iDRAC.VNCServer.Enable 1
 
 # 2. VNC パスワードを設定（最大 8 文字）
-ssh idrac7 racadm set iDRAC.VNCServer.Password "Claude1"
+ssh idrac7 racadm set iDRAC.VNCServer.Password "<redacted-vnc-password>"
 
 # 3. VirtualConsole のアクセス権を Full Access に変更
 ssh idrac7 racadm set iDRAC.VirtualConsole.AccessPrivilege 2
@@ -108,7 +108,7 @@ ssh idrac7 racadm set iDRAC.VirtualConsole.AccessPrivilege 2
 | 設定 | 変更前 | 変更後 |
 |------|--------|--------|
 | `iDRAC.VNCServer.Enable` | Disabled | **Enabled** |
-| `iDRAC.VNCServer.Password` | (未設定) | **Claude1** |
+| `iDRAC.VNCServer.Password` | (未設定) | **<redacted-vnc-password>** |
 | `iDRAC.VNCServer.Port` | 5901 | 5901 (変更なし) |
 | `iDRAC.VNCServer.SSLEncryptionBitLength` | Disabled | Disabled (変更なし) |
 | `iDRAC.VNCServer.Timeout` | 300 | 300 (変更なし) |
@@ -123,7 +123,7 @@ sudo apt install -y tigervnc-viewer
 
 # 接続
 vncviewer 10.10.10.120:5901
-# パスワード: Claude1
+# パスワード: <redacted-vnc-password>
 ```
 
 他の VNC クライアント (Remmina, RealVNC 等) でも接続可能。接続先は `10.10.10.120:5901`。

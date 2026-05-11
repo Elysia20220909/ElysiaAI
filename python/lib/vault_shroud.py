@@ -11,6 +11,17 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 logger = logging.getLogger("VaultShroud")
 
+
+def _secret_from_env(name: str) -> str:
+    value = os.getenv(name)
+    if value:
+        return value
+    if os.getenv("NODE_ENV") == "production":
+        raise RuntimeError(f"Missing required production environment variable: {name}")
+    logger.warning("%s is not set; using an ephemeral development secret.", name)
+    return os.urandom(32).hex()
+
+
 class AbyssalShroud:
     """
     Handles unified AES-256-GCM encryption compatible with the Node.js stack.
@@ -18,8 +29,8 @@ class AbyssalShroud:
     """
 
     def __init__(self):
-        self.secret = os.getenv("ENCRYPTION_SECRET", "elysia-default-shadow-key-777")
-        self.salt = os.getenv("ENCRYPTION_SALT", "abyssal-salt")
+        self.secret = _secret_from_env("ENCRYPTION_SECRET")
+        self.salt = _secret_from_env("ENCRYPTION_SALT")
         self.key = self._derive_key()
         self.cipher = AESGCM(self.key)
         logger.info("🔐 Abyssal Shroud Initialized (Unified AES-256-GCM)")

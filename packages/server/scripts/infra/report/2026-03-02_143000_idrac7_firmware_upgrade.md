@@ -52,7 +52,7 @@ iDRAC7 は直接最新版へジャンプできないため、以下の 3 段階�
 **解決**: IPMI LAN が無効 (`cfgIpmiLanEnable=0`) だったため、SSH 経由で有効化してから ipmitool でコールドリセット:
 ```
 ssh idrac7 "racadm config -g cfgIpmiLan -o cfgIpmiLanEnable 1"
-ipmitool -I lanplus -H 10.10.10.120 -U claude -P Claude123 mc reset cold
+ipmitool -I lanplus -H 10.10.10.120 -U claude -P <redacted-bmc-password> mc reset cold
 ```
 
 ### 問題 2: TFTP "Remote host is not reachable"

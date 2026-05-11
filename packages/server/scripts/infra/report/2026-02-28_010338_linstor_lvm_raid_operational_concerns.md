@@ -117,7 +117,7 @@ RIP: 0010:raid10_sync_request+0x1299/0x2380 [raid10]
 
 ```sh
 # サーバを IPMI リセットで再起動
-ipmitool -I lanplus -H $BMC_IP -U claude -P Claude123 chassis power reset
+ipmitool -I lanplus -H $BMC_IP -U claude -P <redacted-bmc-password> chassis power reset
 
 # 再起動後、RAID リビルドが自動的に再開される
 # 進捗確認:

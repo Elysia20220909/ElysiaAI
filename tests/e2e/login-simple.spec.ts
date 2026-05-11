@@ -9,7 +9,7 @@ test("Login should work with correct credentials", async ({ page }) => {
 
 	// Fill in credentials
 	await page.fill("#username", "admin");
-	await page.fill("#password", "elysiatest-001");
+	await page.fill("#password", process.env.AUTH_PASSWORD ?? "");
 
 	// Submit the form
 	await page.click("#login-btn");

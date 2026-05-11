@@ -6,10 +6,14 @@ const { promisify } = require("node:util");
 const execAsync = promisify(exec);
 
 const redisUrl =
-	"redis://default:Hr7pQ66mbyxnu9M2QTPyy31fYC1l97wV@redis-10200.c54.ap-northeast-1-2.ec2.cloud.redislabs.com:10200";
+	process.env.REDIS_URL;
+
+if (!redisUrl) {
+	throw new Error("REDIS_URL is required for this live Redis integration test.");
+}
 
 console.log("🔍 redis-cli互換テストを実行...");
-console.log("URL:", redisUrl);
+console.log("URL:", new URL(redisUrl).origin);
 
 (async () => {
 	try {

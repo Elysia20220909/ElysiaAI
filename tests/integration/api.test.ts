@@ -65,7 +65,7 @@ describeLive("Authentication Endpoints", () => {
 
 	const creds = {
 		username: process.env.AUTH_USERNAME || "admin",
-		password: process.env.AUTH_PASSWORD || "elysiatest-001",
+		password: process.env.AUTH_PASSWORD || "",
 	};
 
 	it("POST /auth/token - should login and get tokens", async () => {

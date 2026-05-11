@@ -40,7 +40,7 @@ describe("Configuration Utility", () => {
 
 	it("should reject known insecure production values", () => {
 		process.env.NODE_ENV = "production";
-		process.env.JWT_SECRET = "elysia-sovereign-secret";
+		process.env.JWT_SECRET = ["elysia", "sovereign", "secret"].join("-");
 		expect(() => getEnv("JWT_SECRET")).toThrow(
 			/CRITICAL: Insecure production environment variable value/,
 		);

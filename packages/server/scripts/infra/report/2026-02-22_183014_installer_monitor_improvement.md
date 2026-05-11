@@ -44,7 +44,7 @@ os-setup スキルのテスト実行 #1〜#3 で、インストーラの状態�
 ### POST code 取得
 
 ```sh
-/home/ubuntu/projects/pvese/scripts/bmc-power.sh postcode 10.10.10.24 claude Claude123
+/home/ubuntu/projects/pvese/scripts/bmc-power.sh postcode 10.10.10.24 claude <redacted-bmc-password>
 # => 0x01 SEC: Power on, reset detected
 ```
 
@@ -87,13 +87,13 @@ sh -n scripts/remaster-debian-iso.sh
 ### POST code 取得テスト
 
 ```sh
-scripts/bmc-power.sh postcode 10.10.10.24 claude Claude123
+scripts/bmc-power.sh postcode 10.10.10.24 claude <redacted-bmc-password>
 ```
 
 ### スクリーンショットテスト
 
 ```sh
-scripts/bmc-session.sh login 10.10.10.24 claude Claude123 /tmp/bmc-cookie
+scripts/bmc-session.sh login 10.10.10.24 claude <redacted-bmc-password> /tmp/bmc-cookie
 CSRF=$(scripts/bmc-session.sh csrf 10.10.10.24 /tmp/bmc-cookie)
 scripts/bmc-screenshot.sh 10.10.10.24 /tmp/bmc-cookie "$CSRF"
 ```

@@ -180,7 +180,7 @@ cd monitoring
 docker-compose up -d
 
 # アクセス
-# Grafana: http://localhost:3001 (admin/admin)
+# Grafana: http://localhost:3001 (ADMIN/<redacted>)
 # Prometheus: http://localhost:9090
 # Alertmanager: http://localhost:9093
 ```
