@@ -11,12 +11,14 @@ describe("agent workbench", () => {
 		);
 
 		expect(profile.id).toBe("antigravity-codex-workbench");
+		expect(profile.version).toBe("local-preapproved-launch-v1");
 		expect(profile.runtimes.map((runtime) => runtime.id)).toContain(
 			"antigravity",
 		);
 		expect(profile.runtimes.map((runtime) => runtime.id)).toContain("codex");
+		expect(profile.launchPolicy.launchable).toContain("codex");
 		expect(profile.commandPolicy.deny).toContain("git reset --hard");
-		expect(profile.hardRules.join(" ")).toContain("plan-only");
+		expect(profile.hardRules.join(" ")).toContain("preapproved");
 	});
 
 	test("plans frontend work with Antigravity browser evidence and Codex patching", () => {
@@ -31,6 +33,8 @@ describe("agent workbench", () => {
 		expect(plan.taskKind).toBe("frontend_validation");
 		expect(plan.primaryRuntime).toBe("antigravity");
 		expect(plan.supportingRuntimes).toContain("codex");
+		expect(plan.launch.suggestedTargets).toContain("antigravity");
+		expect(plan.launch.suggestedTargets).toContain("codex");
 		expect(plan.handoffs.some((handoff) => handoff.target === "codex")).toBe(
 			true,
 		);
@@ -77,6 +81,7 @@ describe("agent workbench", () => {
 		expect(plan.decision).toBe("deny");
 		expect(plan.dispatch).toBe("blocked");
 		expect(plan.handoffs).toHaveLength(0);
+		expect(plan.launch.suggestedTargets).toHaveLength(0);
 		expect(plan.primaryRuntime).toBe("local_policy");
 	});
 

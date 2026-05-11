@@ -13,6 +13,7 @@ Windows / macOS host mode is the fastest path to place E.L.I.S.I.A. Core in your
 - Safe default: bind to `127.0.0.1`. Use `--bind-ip` intentionally for LAN service.
 - Setup entry point: `bun run local-server:host`.
 - When the system grows, migrate toward the Proxmox design in [E.L.I.S.I.A. Core Home Server Blueprint](./ELYSIA_HOME_SERVER_BLUEPRINT.md).
+- If the build should carry the Iron Man Mark LXXXV design language, use the [Mark LXXXV Windows / macOS Host Server guide](./ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.md). It uses Mark LXXXV for HUD, style, distributed architecture, and safety boundaries only; it does not include real weapon, propulsion, or hazardous wearable hardware instructions.
 
 ## Price Basis
 
