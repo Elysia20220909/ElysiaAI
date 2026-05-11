@@ -13,6 +13,7 @@ Windows / macOS本体サーバ化は、最速でE.L.I.S.I.A. Coreを生活空間
 - 安全な既定値: `127.0.0.1` bind。LAN公開は `--bind-ip` を明示したときだけ。
 - 自動セットアップ入口: `bun run local-server:host`。
 - 本格運用へ育ったら、[E.L.I.S.I.A. Core Home Server Blueprint](./ELYSIA_HOME_SERVER_BLUEPRINT.md) のProxmox構成へ移行します。
+- Iron Man Mark LXXXV の設計言語を必須にする場合は、[Mark LXXXV Windows / macOS Host Server](./ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.md) を使います。これはHUD、美観、分散構造、安全境界のための文書であり、実在する兵器、推進装置、危険な人体拡張装置の手順は含みません。
 
 ## 価格前提
 
