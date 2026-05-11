@@ -13,6 +13,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | E.L.I.S.I.A. local server automated setup | `docs/ELISIA_LOCAL_SERVER_AUTOMATED_SETUP.md` |
 | E.L.I.S.I.A. Windows / macOS admin client setup | `docs/ELISIA_LOCAL_SERVER_CLIENT_SETUP.md` |
 | E.L.I.S.I.A. Windows / macOS host server design | `docs/ELISIA_WINDOWS_MACOS_HOST_SERVER.md` |
+| E.L.I.S.I.A. Mark LXXXV Windows / macOS host server, style, and cost | `docs/ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.md` |
 | Stark home local server build | `docs/STARK_HOME_LOCAL_SERVER_BUILD.md` |
 | Stark home automated setup | `docs/STARK_HOME_AUTOMATED_SETUP.md` |
 | Stark home local server build, Japanese / English | `docs/STARK_HOME_LOCAL_SERVER_BUILD_JA_EN.md` |
@@ -44,7 +45,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Need | File |
 | --- | --- |
 | General integrations | `docs/INTEGRATION_GUIDE.md` |
-| Antigravity / Codex workbench | `docs/ANTIGRAVITY_CODEX_WORKBENCH.md` |
+| Antigravity / Codex workbench | `docs/ANTIGRAVITY_CODEX_WORKBENCH.md`, `docs/ANTIGRAVITY_CODEX_WORKBENCH.ja.md`, `docs/ANTIGRAVITY_CODEX_WORKBENCH.en-US.md` |
 | OpenAI | `docs/OPENAI_INTEGRATION.md` |
 | Open-LLM-VTuber | `docs/OPEN_LLM_VTUBER_INTEGRATION.md` |
 | Discord command center | `docs/DISCORD_GINROU_COMMAND_CENTER.md` |
