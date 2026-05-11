@@ -52,8 +52,8 @@
 ### 問題 15: `ipmitool raw 0x3c 0x40` が BMC をファクトリーリセットする
 
 - **症状**: BIOS リセットを意図して実行したが、BMC 全設定がリセットされた
-- **影響**: claude ユーザアカウント消失。ADMIN/ADMIN に戻った
-- **回復**: `ipmitool -U ADMIN -P ADMIN user set name 3 claude` 等で再作成済み
+- **影響**: claude ユーザアカウント消失。ADMIN/<redacted> に戻った
+- **回復**: `ipmitool -U ADMIN -P <redacted> user set name 3 claude` 等で再作成済み
 - **修正**: reference.md に警告を追記
 
 ## 修正ファイル一覧

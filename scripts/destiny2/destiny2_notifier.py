@@ -7,8 +7,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Webhook URL provided by user
-DESTINY2_WEBHOOK_URL = "https://discord.com/api/webhooks/1499028452542775377/7QexLJjPXCWBicgYipdebwcooooxtNNJjlyB8KiObT5BfsrUeFV5z4VMbQJA7CSIYBit"
+DESTINY2_WEBHOOK_URL = os.getenv("DESTINY2_WEBHOOK_URL", "")
 
 class Destiny2Notifier:
     """

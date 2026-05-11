@@ -152,7 +152,9 @@ HEADER_TEST
 
     # Test 6: Redis 接続テスト
     log_test "3B" "Redis クラウド接続テスト"
-    if redis-cli -u "redis://default:Hr7pQ66mbyxnu9M2QTPyy31fYC1l97wV@redis-10200.c54.ap-northeast-1-2.ec2.cloud.redislabs.com:10200" ping 2>/dev/null | grep -q "PONG"; then
+    if [ -z "${REDIS_URL:-}" ]; then
+        log_warn "REDIS_URL 未設定のため Redis 接続テストをスキップ"
+    elif redis-cli -u "$REDIS_URL" ping 2>/dev/null | grep -q "PONG"; then
         log_pass "Redis cloud PING"
     else
         log_warn "Redis 接続応答なし"
@@ -161,7 +163,10 @@ HEADER_TEST
 
     # Test 7: TLS/SSL 検証
     log_test "4A" "TLS/SSL 接続テスト (redis-cli)"
-    REDIS_RESPONSE=$(redis-cli -u "redis://default:Hr7pQ66mbyxnu9M2QTPyy31fYC1l97wV@redis-10200.c54.ap-northeast-1-2.ec2.cloud.redislabs.com:10200" --tls --cacert /etc/ssl/certs/ca-certificates.crt info server 2>/dev/null | head -1 || echo "")
+    REDIS_RESPONSE=""
+    if [ -n "${REDIS_URL:-}" ]; then
+        REDIS_RESPONSE=$(redis-cli -u "$REDIS_URL" --tls --cacert /etc/ssl/certs/ca-certificates.crt info server 2>/dev/null | head -1 || echo "")
+    fi
 
     if [ -n "$REDIS_RESPONSE" ]; then
         log_pass "Redis TLS 接続"

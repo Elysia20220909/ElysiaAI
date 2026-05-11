@@ -3,6 +3,7 @@
  * サーバー起動時に必須環境変数をチェック
  */
 
+import { createHash } from "node:crypto";
 import { logger } from "./logger";
 
 interface EnvConfig {
@@ -12,7 +13,11 @@ interface EnvConfig {
 	default?: string;
 	description: string;
 	validator?: (value: string) => boolean;
-	disallowedValues?: string[];
+	disallowedValueHashes?: string[];
+}
+
+function sha256(value: string): string {
+	return createHash("sha256").update(value).digest("hex");
 }
 
 const ENV_SCHEMA: EnvConfig[] = [
@@ -21,34 +26,34 @@ const ENV_SCHEMA: EnvConfig[] = [
 		name: "JWT_SECRET",
 		required: true,
 		productionOnly: true,
-		default: "elysia-sovereign-secret",
 		description: "JWT署名用シークレットキー (32文字以上推奨)",
 		validator: (v) => v.length >= 32,
-		disallowedValues: [
-			"elysia-sovereign-secret",
-			"your-super-secret-jwt-key-change-this-immediately-or-security-risk",
+		disallowedValueHashes: [
+			"f6d8299e8544bcca13ddd58927515f451dfdeee4680d742ceeb450cba4b29c21",
+			"43b5da88b9c9c9f840565cb8bb2ce2c865ee1538b0f37c46b90e9eee3821397f",
 		],
 	},
 	{
 		name: "JWT_REFRESH_SECRET",
 		required: true,
 		productionOnly: true,
-		default: "elysia-refresh-secret",
 		description: "リフレッシュトークン用シークレットキー (32文字以上推奨)",
 		validator: (v) => v.length >= 32,
-		disallowedValues: [
-			"elysia-refresh-secret",
-			"your-super-secret-refresh-key-change-this-immediately-or-security-risk",
+		disallowedValueHashes: [
+			"1311e0d5b8251cdd5e3bf49036ccb40c5e4a43fa70a2ebc8975de969c18d1a24",
+			"2eb78d80eedf46d7f1b74fb22e60605efcc8ad3beacc7de8b93fba2c18b4ebc1",
 		],
 	},
 	{
 		name: "AUTH_PASSWORD",
 		required: true,
 		productionOnly: true,
-		default: "elysiatest-001",
 		description: "デフォルトユーザー(elysia)のパスワード",
-		validator: (v) => v !== "your-strong-password-here" && v.length >= 8,
-		disallowedValues: ["elysiatest-001", "your-strong-password-here"],
+		validator: (v) => v.length >= 8,
+		disallowedValueHashes: [
+			"158a5014828bff808fc3211420b053ab541bd5a746a318727075e829ee96ddbe",
+			"68a07779e1269de644675d5bd67ba147c4238884f2319e01692d27cdc5c1ed78",
+		],
 	},
 
 	// Server Configuration
@@ -79,19 +84,21 @@ const ENV_SCHEMA: EnvConfig[] = [
 		name: "ENCRYPTION_SECRET",
 		required: true,
 		productionOnly: true,
-		default: "elysia-default-shadow-key-777",
 		description: "保存データ暗号化用シークレット",
 		validator: (v) => v.length >= 32,
-		disallowedValues: ["elysia-default-shadow-key-777"],
+		disallowedValueHashes: [
+			"d71e125d7e1bff24cd6eec8a73daa1bc551849643ff9cadfbbb19ac920d0a54c",
+		],
 	},
 	{
 		name: "ENCRYPTION_SALT",
 		required: true,
 		productionOnly: true,
-		default: "abyssal-salt",
 		description: "保存データ暗号化用ソルト",
 		validator: (v) => v.length >= 16,
-		disallowedValues: ["abyssal-salt"],
+		disallowedValueHashes: [
+			"809389a47869c5a458f8cf877e3307a12b5f02c4523e44ac4302160d55dd993c",
+		],
 	},
 
 	// AI/LLM
@@ -295,7 +302,7 @@ export function validateEnvironment(): ValidationResult {
 			}
 		}
 
-		if (value && config.disallowedValues?.includes(value)) {
+		if (value && config.disallowedValueHashes?.includes(sha256(value))) {
 			const message = `⚠️  ${config.name}: 開発用またはサンプル値が設定されています`;
 			if (isProduction) {
 				invalid.push(config.name);

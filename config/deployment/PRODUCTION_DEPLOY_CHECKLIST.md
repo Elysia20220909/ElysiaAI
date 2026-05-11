@@ -191,7 +191,7 @@ docker-compose --profile with-ollama --profile with-nginx up -d
 cd monitoring
 docker-compose up -d
 
-# Grafana: http://localhost:3001 (admin/admin)
+# Grafana: http://localhost:3001 (ADMIN/<redacted>)
 # Prometheus: http://localhost:9090
 # Alertmanager: http://localhost:9093
 ```
@@ -334,7 +334,7 @@ Get-Content logs/error.log -Tail 50 -Wait
 ### Prometheus + Grafana
 
 1. Grafanaにアクセス: http://localhost:3001
-2. 初回ログイン: admin / admin
+2. 初回ログイン: admin / <redacted>
 3. データソース追加:
    - Type: Prometheus
    - URL: http://prometheus:9090

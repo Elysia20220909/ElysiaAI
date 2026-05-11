@@ -35,7 +35,7 @@ sol-monitor.py の実地テストとして、os-setup Phase 1-8 の通しテス�
 ### 実行コマンド
 
 ```sh
-./scripts/sol-monitor.py --bmc-ip 10.10.10.24 --bmc-user claude --bmc-pass Claude123 \
+./scripts/sol-monitor.py --bmc-ip 10.10.10.24 --bmc-user claude --bmc-pass <redacted-bmc-password> \
     --log-file tmp/17cc085d/sol-install.log --timeout 2700
 ```
 

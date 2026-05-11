@@ -22,7 +22,7 @@ disk: /dev/nvme0n1
 bmc_type: supermicro
 bmc_ip: 10.10.10.24
 bmc_user: claude
-bmc_pass: Claude123
+bmc_pass: ""
 
 # SMB share for ISO hosting
 smb_host: 10.1.6.1
@@ -34,6 +34,6 @@ iso_download_dir: /var/samba/public
 serial_unit: 1
 
 # OS credentials (lab environment)
-root_password: password
+root_password: ""
 user_name: debian
-user_password: password
+user_password: ""
