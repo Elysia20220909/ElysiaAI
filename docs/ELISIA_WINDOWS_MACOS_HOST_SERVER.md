@@ -10,6 +10,8 @@ This is the bilingual entry point for turning a Windows PC or Mac into the E.L.I
 | --- | --- |
 | 日本語 | [ELISIA_WINDOWS_MACOS_HOST_SERVER.ja.md](./ELISIA_WINDOWS_MACOS_HOST_SERVER.ja.md) |
 | English | [ELISIA_WINDOWS_MACOS_HOST_SERVER.en.md](./ELISIA_WINDOWS_MACOS_HOST_SERVER.en.md) |
+| Mark LXXXV / 日本語 | [ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.ja.md](./ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.ja.md) |
+| Mark LXXXV / US English | [ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.en-US.md](./ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.en-US.md) |
 
 ## Summary / 要約
 
@@ -21,6 +23,8 @@ Windows / macOS本体サーバ化は、Proxmox VMを用意せず、手元のPC�
 - Setup script: `bun run local-server:host`.
 
 Windows / macOS host mode is beautiful and fast to start, but less isolated than the Proxmox design. Use it as a calm desk-side E.L.I.S.I.A. core, then graduate to Proxmox when the house grows.
+
+If the build should carry the Iron Man Mark LXXXV design language, use the dedicated [Mark LXXXV host server guide](./ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.md). It treats Mark LXXXV as safe UI, architecture, resilience, and visual language only; it does not include real weapon, propulsion, or hazardous hardware instructions.
 
 ## Source Links / 参考リンク
 
