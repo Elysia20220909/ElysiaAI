@@ -1,4 +1,5 @@
 process.env.DATABASE_URL = "file:./dev.db";
+
 import { describe, expect, it, mock } from "bun:test";
 import { actionLogService, prisma, voiceService } from "./database";
 
@@ -8,7 +9,14 @@ describe("Database Encryption Integration", () => {
 			return { ...data, id: "1" };
 		});
 		const mockFindMany = mock(async () => {
-			return [{ id: "1", username: "elysia_user", text: mockCreate.mock.calls[0][0].data.text, emotion: "calm" }];
+			return [
+				{
+					id: "1",
+					username: "elysia_user",
+					text: mockCreate.mock.calls[0][0].data.text,
+					emotion: "calm",
+				},
+			];
 		});
 
 		if (prisma) {
@@ -34,7 +42,14 @@ describe("Database Encryption Integration", () => {
 			return { ...data, id: "1" };
 		});
 		const mockFindMany = mock(async () => {
-			return [{ id: "1", action: mockCreate.mock.calls[0][0].data.action, status: "blocked", hash: "0xdeadbeef" }];
+			return [
+				{
+					id: "1",
+					action: mockCreate.mock.calls[0][0].data.action,
+					status: "blocked",
+					hash: "0xdeadbeef",
+				},
+			];
 		});
 
 		if (prisma) {
