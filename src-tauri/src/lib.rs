@@ -130,7 +130,7 @@ async fn execute_signed_influence(
 
 /// Helper to generate HMAC-SHA256 signature for influence actions.
 fn generate_influence_signature(action: &str, node_name: &str) -> AppResult<serde_json::Value> {
-    use hmac::{Hmac, Mac};
+    use hmac::{Hmac, KeyInit, Mac};
     use sha2::Sha256;
     type HmacSha256 = Hmac<Sha256>;
 
