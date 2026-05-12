@@ -47,6 +47,7 @@ export interface SuitStatus {
 	links: {
 		hud: string;
 		viewer3d: string;
+		os: string;
 		spec: string;
 	};
 	hardRules: string[];
@@ -84,6 +85,8 @@ const hardRules = [
 	"no game input automation",
 	"no real weapon instructions",
 	"local-first logs and memory",
+	"encrypted intent relay only",
+	"policy gate before execution",
 ];
 
 let telemetry: SuitTelemetry = {
@@ -243,6 +246,7 @@ export function buildSuitStatus(
 		links: {
 			hud: "/suit-hud.html",
 			viewer3d: "/suit-viewer.html",
+			os: "/api/suit/os/status",
 			spec: "/docs/fictional/MARK85_FANTASY_SUIT_SYSTEM.md",
 		},
 		hardRules,
@@ -330,6 +334,8 @@ Hard rules:
 - no real weapon construction
 - no game or desktop input automation
 - no hidden background launch
+- treat remote messages as signed intents, never direct actuator commands
+- route every suit action through the policy gate
 - ask for explicit confirmation before any real local action
 - keep local privacy and logs first
 

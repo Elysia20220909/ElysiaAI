@@ -1,4 +1,5 @@
 import { Elysia, t } from "elysia";
+import { authErrorResponse } from "../lib/auth-cookies";
 import { CONFIG, jsonError } from "../lib/constants";
 import {
 	buildLocalFallbackReply,
@@ -16,16 +17,13 @@ import {
 	type ElysiaCoreFrame,
 	normalizeProtocolRequest,
 } from "../lib/elysia-core-protocol";
-import { verifyNeuralAccessToken } from "../lib/neural-auth-system";
+import { verifyNeuralAccessRequest } from "../lib/neural-auth-system";
 
 function requireCoreSession(request: Request) {
 	try {
-		return verifyNeuralAccessToken(request.headers.get("authorization"));
+		return verifyNeuralAccessRequest(request);
 	} catch (error) {
-		return jsonError(
-			401,
-			error instanceof Error ? error.message : "Neural auth failed",
-		);
+		return authErrorResponse(error, "Neural auth failed");
 	}
 }
 
