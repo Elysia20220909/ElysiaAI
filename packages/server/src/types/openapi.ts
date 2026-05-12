@@ -131,19 +131,30 @@ export const AuthTokenRequestSchema = {
 export const AuthTokenResponseSchema = {
 	type: "object",
 	properties: {
-		accessToken: {
-			type: "string",
-			description: "JWT access token (15 minutes validity)",
-			example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+		authenticated: {
+			type: "boolean",
+			description: "True when credentials were accepted",
+			example: true,
 		},
-		refreshToken: {
+		tokenType: {
 			type: "string",
-			description: "JWT refresh token (7 days validity)",
+			description: "Token type stored in HttpOnly cookies",
+			example: "Bearer",
+		},
+		transport: {
+			type: "string",
+			description: "Token transport. Browser clients use HttpOnly cookies.",
+			example: "httpOnly-cookie",
 		},
 		expiresIn: {
 			type: "number",
-			description: "Token expiration time in seconds",
+			description: "Access token expiration time in seconds",
 			example: 900,
+		},
+		csrfToken: {
+			type: "string",
+			description:
+				"Double-submit CSRF token. Also sent as a readable csrf cookie.",
 		},
 	},
 } as const;
@@ -154,10 +165,10 @@ export const RefreshTokenRequestSchema = {
 		refreshToken: {
 			type: "string",
 			minLength: 20,
-			description: "Valid refresh token",
+			description:
+				"Optional legacy refresh token. Browser clients use the HttpOnly refresh cookie.",
 		},
 	},
-	required: ["refreshToken"],
 } as const;
 
 export const HealthResponseSchema = {
@@ -299,7 +310,22 @@ export const SecuritySchemes = {
 		type: "http",
 		scheme: "bearer",
 		bearerFormat: "JWT",
-		description: "JWT authentication token obtained from /auth/token endpoint",
+		description:
+			"Legacy JWT bearer authentication. Browser clients should rely on HttpOnly cookies.",
+	},
+	cookieAuth: {
+		type: "apiKey",
+		in: "cookie",
+		name: "elysia_access_token",
+		description:
+			"HttpOnly access token cookie issued by /auth/token and rotated by /auth/refresh.",
+	},
+	csrfHeader: {
+		type: "apiKey",
+		in: "header",
+		name: "x-csrf-token",
+		description:
+			"Required for POST/PUT/PATCH/DELETE when authentication comes from cookies.",
 	},
 } as const;
 

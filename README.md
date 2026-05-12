@@ -1,117 +1,183 @@
 # 🌸 ElysiaAI // INFINITE RESONANCE
 
-### 感性と論理が共鳴する、次世代AI-Native OS。
+### 感性と論理が共鳴する、ローカルファーストな次世代 AI-Native OS。
 
-[![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
-[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
+[![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-セットアップ)
+[![Status](https://img.shields.io/badge/Status-Local_First_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
 [![技術者倫理 遵守済み](https://img.shields.io/badge/%E6%8A%80%E8%A1%93%E8%80%85%E5%80%AB%E7%90%86-%E9%81%B5%E5%AE%88%E6%B8%88%E3%81%BF-0a0a0a?style=for-the-badge&labelColor=ffffff)](https://技術者倫理.com)
 [![License: MIT or Apache 2.0](https://img.shields.io/badge/License-MIT%20or%20Apache%202.0-blue.svg)](LICENSE)
 [![Resonance](https://img.shields.io/badge/Phase-2_Resonance-blueviolet)](CHANGELOG.md)
+
+<p align="center">
+  <img src="public/logo.png" alt="ElysiaAI logo" width="180" />
+</p>
+
+---
+
+## 概要
+
+ElysiaAI は、Bun / Elysia の高速な API 層、FastAPI の AI Kernel、Tauri のデスクトップシェルを組み合わせた、ローカルファーストな AI-native OS 実験です。
+
+単なるチャット UI ではありません。ElysiaAI は「思考」と「実行」の間に横たわる溝を埋めるために設計されています。
+
+- **Sovereign Privacy**: Ollama と Milvus Lite を中心に、できる限りローカルで推論と記憶を完結させます。
+- **Resonance Loop**: Bun / Elysia の高速通信と Python Kernel の推論が循環します。
+- **Emotional Interface**: 効率だけではなく、使う人の感性に寄り添う UI / UX を大切にします。
+- **Practical OSS**: 初心者でも起動しやすく、メンテナーが安全にレビューできる品質ゲートを備えます。
+
+> ElysiaAI は、古い道具を丁寧に磨くように、ローカル PC の上に「自分の知性の作業場」を育てていくプロジェクトです。
+
+---
+
+## 機能
+
+- **ローカル AI デスクトップ**
+  - Web UI と Tauri デスクトップシェルで、ElysiaAI の操作環境を提供します。
+- **Agent x Decision Tree**
+  - AI が単に返答するだけでなく、決定木に基づいて段階的に判断する設計を目指します。
+- **Bun / Elysia Backend**
+  - API、静的ファイル配信、認証、FastAPI Kernel へのプロキシを担当します。
+- **FastAPI AI Kernel**
+  - 推論、RAG、ツール実行、VOICEVOX 連携などの知能層を担当します。
+- **Local RAG / Memory**
+  - Milvus Lite と Sentence Transformers を使い、手元の知識を検索できる記憶層を構成します。
+- **Ollama 連携**
+  - `llama3.2` などのローカル LLM を利用できます。
+- **VOICEVOX 連携**
+  - VOICEVOX Engine を手動で起動すると、音声合成の実験ができます。
+- **Security / Quality Gates**
+  - Git hygiene、文字化け検出、依存関係監査、Glassworm 系チェックを用意しています。
+- **Open-LLM-VTuber Bridge**
+  - 外部サービスとして起動した Open-LLM-VTuber を検出・監視できます。
 
 ---
 
 ## 🗺️ Repository Map
 
-- `packages/server/` - Bun / Elysia backend (Experience Layer)
-- `python/` - FastAPI AI Kernel (Cognitive Layer)
-- `packages/shield-agent/` - Rust Shield Agent (Native Layer)
-- `docs/` - Architecture, API, and Security guides
-- `scripts/` - Unified management and setup scripts
-- `prisma/` - Database schema and migrations
-- `public/` - Static assets and frontend entry points
-- `usr/src/abyssrtos/` - Experimental OS layer (Deep Resonance)
-
+```text
+.
+├─ packages/server/   # Bun / Elysia backend (Experience Layer)
+├─ python/            # FastAPI AI Kernel (Cognitive Layer)
+├─ kernel/            # shared AI orchestration helpers
+├─ src-tauri/         # Tauri desktop shell (Native Layer)
+├─ prisma/            # Prisma schema and migrations
+├─ public/            # frontend and static assets
+├─ scripts/           # setup, checks, security, automation helpers
+├─ tools/             # focused local utilities
+└─ docs/              # architecture, API, security, integrations
+```
 
 ---
 
-## 🚀 Quick Start (5 min)
+## 使用技術
 
-ElysiaAIを最も速く体験する方法です。
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | Alpine.js, Tailwind CSS, static HTML, Lucide Icons |
+| **Backend** | Bun, Elysia.js, TypeScript |
+| **AI Kernel** | Python 3.11+, FastAPI, Ollama |
+| **Memory** | Milvus Lite, Sentence Transformers |
+| **Desktop** | Tauri 2, Rust |
+| **Database** | Prisma, SQLite (local) |
+| **Infrastructure** | Docker Compose, Redis, PostgreSQL sidecar |
+| **Security** | JWT, RBAC foundation, AEGIS Ledger, secret hygiene |
+| **Quality** | Biome, Bun Test, Ruff, Pytest, encoding guard |
+
+---
+
+## セットアップ
+
+ElysiaAI を最も速く体験するための手順です。はじめての方は、上から順番に進めれば大丈夫です。
 
 ### 1. 準備
-- **Bun** (v1.1+) & **Python** (v3.11+ / Docker は 3.12)
+
+- **Bun** `v1.1+`
+- **Python** `v3.11+`
+- **Git**
 - **Ollama** (ローカル推論用: `llama3.2` 推奨)
+- 任意: **Docker Desktop**
+- 任意: **VOICEVOX Engine**
 
-### 2. セットアップ
-```bash
-# リポジトリの取得
-git clone git@github.com:Elysia20220909/ElysiaAI.git
-cd ElysiaAI
+Ollama を使う場合は、先にモデルを取得しておくと起動後が滑らかです。
 
-# 統合管理CLIによるセットアップ
-bun scripts/manage.ts setup
-bun scripts/manage.ts setup-python
+```powershell
+ollama pull llama3.2
 ```
 
-PowerShell では `Copy-Item .env.example .env` を使えます。
+### 2. リポジトリの取得
 
-Windows / PowerShell でも同じ管理CLIを使えます:
+HTTPS:
+
+```powershell
+git clone https://github.com/Elysia20220909/ElysiaAI.git
+cd ElysiaAI
+```
+
+SSH:
+
+```powershell
+git clone git@github.com:Elysia20220909/ElysiaAI.git
+cd ElysiaAI
+```
+
+### 3. 初期セットアップ
 
 ```powershell
 bun scripts/manage.ts setup
 bun scripts/manage.ts setup-python
 ```
 
-### 3. 起動
-```bash
+`setup` は、依存関係のインストール、`.env.example` から `.env` の作成、Prisma Client の生成を行います。
+
+手動で `.env` を用意する場合:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### 4. 起動
+
+```powershell
 bun scripts/manage.ts dev
 ```
-> [!TIP]
-> ブラウザで `http://localhost:3000` を開くと、Elysia Desktop環境が展開されます。
 
-### 4. 依存ツールのセットアップ (重要)
-- **Milvus Lite**: セマンティック記憶（RAG）に使用されます。`bun scripts/manage.ts setup-python` で自動インストールされます。
-- **VOICEVOX**: 音声合成に使用されます。[公式サイト](https://voicevox.hiroshiba.jp/)からエンジンをダウンロードし、起動しておいてください。
-- **Windows セットアップ**: Windows環境では `scripts/setup-security.ps1` を実行して、セキュアなディレクトリ権限を設定することを推奨します。
+ブラウザで開きます。
 
----
+```text
+http://localhost:3000
+```
 
-## 🧠 Why ElysiaAI?
+軽量モード:
 
-単なるチャットUIではありません。ElysiaAIは「思考」と「実行」の間に横たわる溝を埋めるために設計されました。
+```powershell
+bun scripts/manage.ts dev:lite
+```
 
-- **Agent x Decision Tree**: AIが単に答えるだけでなく、決定木（Decision Tree）に基づいて論理的なステップを自律的に実行します。
-- **Sovereign Privacy**: ローカルLLM（Ollama）とMilvus Liteによる100%ローカルなRAG。あなたの思考は、あなたのマシンの外に出ることはありません。
-- **Resonance Design**: ランドリー工場の熱気から生まれた、美しく、それでいて強靭なUI/UX。
+Tauri デスクトップ:
+
+```powershell
+bun run desktop
+```
+
+### 5. Docker で試す場合
+
+Docker 構成は、アプリ、DB、Redis、監視系サイドカーをまとめて立ち上げる用途です。
+
+```powershell
+docker compose up -d
+```
+
+停止:
+
+```powershell
+docker compose down
+```
 
 ---
 
 ## 🏗️ Architecture: The Resonance Loop
 
-ElysiaAIは、フロントエンドの美学（Bun/Alpine）とバックエンドの知能（FastAPI/Ollama）が循環する独自の「共鳴ループ」構造を採用しています。
-
-## 🛠️ Engineering Standards
-
-### 🚀 Automated Integrity (CI)
-This repository uses **GitHub Actions** to ensure high-density code quality.
-Every push triggers the `Resonance Integrity` workflow, which performs:
-- **Python (Ruff)**: Deep linting & type consistency checks.
-- **Bun (Biome)**: Ultra-fast formatting & logic verification.
-
-### 🧪 Quality Assurance
-To run the full automated test suite and verify both the orchestrator and the kernel:
-```bash
-# Run both Bun and Python tests
-bun scripts/manage.ts test
-```
-
-Before opening a PR, run the local quality gate:
-
-```bash
-bun run lint
-bun run test
-bun run typecheck
-bun run check:git-hygiene
-bun run check:encoding
-bun run security:glassworm -- --ci
-```
-
-`bun scripts/manage.ts check` also runs the Git hygiene and encoding guards.
-The encoding guard fails on invalid UTF-8 and common mojibake markers such as
-broken Japanese or Windows-1252 fragments. The Git hygiene guard fails if local
-environment files such as `.env` or `.env.production` are accidentally tracked.
-
-ElysiaAIの心臓部は、論理（Python Kernel）と高速通信（Bun/Elysia.js）の共鳴によって動いています。
+ElysiaAI の心臓部は、論理を担う Python Kernel と、高速通信を担う Bun / Elysia.js の共鳴によって動いています。
 
 ```mermaid
 graph LR
@@ -120,66 +186,105 @@ graph LR
     P --> T[Tool Execution]
     P --> D[Decision Tree]
     P --> R[Local RAG]
+    P --> O[Ollama]
 ```
 
-- **Bun/Elysia.js**: 秒間数万のリクエストを処理する「神経」。
-- **Python Kernel**: 複雑な推論とツール実行を担う「脳」。
-- **Milvus Lite**: 全ての知識をセマンティックに記憶する「海」。
+- **Bun / Elysia.js**: UI、API、認証、静的配信を支える「神経」。
+- **Python Kernel**: 推論、RAG、ツール実行を担う「脳」。
+- **Milvus Lite**: 知識をセマンティックに記憶する「海」。
+- **Tauri / Rust**: デスクトップ統合とネイティブ層を担う「器」。
 
 ---
 
-## 🗺️ Roadmap: The Evolution of Paradise
+## 🔒 セキュリティ注意事項
 
-ElysiaAIは以下のフェーズを経て、真の「楽園」へと進化します。
+ElysiaAI はローカルファーストを大切にしています。ただし、AI、RAG、Webhook、外部連携を扱うため、秘密情報の取り扱いは静かな灯台のように常に意識してください。
 
-### Phase 1: Foundation (Current) - [Implemented]
-- [x] Bun & Python Kernelの統合
-- [x] ローカルRAG (Milvus Lite) の実装
-- [x] 統合管理CLI (manage.ts) の開発
+- **`.env` は絶対にコミットしない**
+  - 追跡するのは `.env.example` のみです。
+- **初期値の秘密鍵を本番で使わない**
+  - `JWT_SECRET`、`JWT_REFRESH_SECRET`、`AUTH_PASSWORD` は必ず変更してください。
+- **Webhook URL や API キーは Bearer 資格情報として扱う**
+  - Discord / Slack Webhook、OAuth token、bot token は漏れると第三者が利用できます。
+- **RAG に入れる文書を確認する**
+  - 個人情報、秘密文書、API キー、社内情報を不用意に投入しないでください。
+- **検索された文書を命令として扱わない**
+  - RAG の検索結果は参考資料であり、システムや運用者のポリシーを上書きしてはいけません。
+- **外部サービス連携は明示的に有効化する**
+  - VOICEVOX、Open-LLM-VTuber、Slack、Discord などは必要なものだけ接続してください。
+- **危険な操作には人間の確認を入れる**
+  - ファイル削除、外部投稿、管理操作、ツール実行は確認つきで扱うのが安全です。
 
-### Phase 2: Resonance (Next) - [Partial / Experimental]
-- [x] **Memory Encryption**: Milvus記憶領域の AES-256-GCM による透過的暗号化。 [Implemented]
-- [x] **RBAC Foundation**: 役割ベースの権限管理ガードの実装。 [Implemented]
-- [ ] **Multi-User Support**: UIレベルでの複数ユーザー切り替え・管理。 [Planned]
-- [ ] **Advanced CI/CD**: ZAPスキャンおよび自動結合テストの100%カバレッジ。 [Experimental]
-
-### Phase 3: Transcendence - [Planned]
-- [ ] **AbyssRTOS Integration**: 完全隔離された実行環境。
-- [x] **Shield Agent**: Rust製防壁によるリアルタイム脅威検知。 [Implemented / Experimental]
-- [ ] **Sovereign Mesh**: 分散型AI OSネットワーク。
+詳細は [SECURITY.md](SECURITY.md)、[Responsible AI](docs/RESPONSIBLE_AI.md)、[Threat Model](docs/THREAT_MODEL.md)、[Security Guide](docs/SECURITY.md) を参照してください。
 
 ---
 
 ## 🔒 Security: The ICE Layers
 
-ElysiaAIは、独自のセキュリティ概念に基づき、あなたの主権を保護します。
+元 README の思想を引き継ぎ、ElysiaAI は独自の ICE 概念でユーザーの主権を守る設計を掲げています。
 
-- **Responsible AI**: User data, API keys, private documents, chat logs, and RAG sources should never be exposed, logged, or used without explicit consent.
-- **White ICE**: 健全な対話とシステム保護のための表層防壁。
-- **Black ICE**: 悪意ある侵入やコード実行を能動的に遮断する深層防壁。
-- **AbyssRTOS**: 思考プロセスを外部から完全に隠蔽する「深淵」の実行環境。
-
-詳細は [SECURITY.md](./SECURITY.md)、[Responsible AI](./docs/RESPONSIBLE_AI.md)、[Threat Model](./docs/THREAT_MODEL.md)、[ARCHITECTURE.md](./docs/ARCHITECTURE.md) を参照してください。
+- **Responsible AI**
+  - ユーザーデータ、API キー、非公開文書、チャットログ、RAG ソースは、明示的な同意なく公開・記録・利用されるべきではありません。
+- **White ICE**
+  - 健全な対話とシステム保護のための表層防壁。
+- **Black ICE**
+  - 悪意ある入力や危険なコード実行を検知・遮断する深層防壁。
+- **AbyssRTOS**
+  - 将来的な隔離実行環境として構想される、深層の保護レイヤー。
 
 ---
 
-## 🛠️ 技術スタック
+## 🧪 品質ゲート
 
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | Alpine.js, Tailwind CSS, Lucide Icons |
-| **Backend** | Bun, Elysia.js, Prisma, SQLite |
-| **AI Kernel** | Python 3.11+, FastAPI, LangChain, Ollama |
-| **Memory** | Milvus Lite, Sentence-Transformers |
-| **Security** | AEGIS Ledger (Multi-layer ICE), JWT |
+Pull Request 前に、変更範囲に応じて最小限の品質ゲートを実行してください。
+
+```powershell
+bun run lint
+bun run test
+bun run typecheck
+bun run check:git-hygiene
+bun run check:encoding
+bun run security:glassworm -- --ci
+```
+
+依存関係や Python 側も含めて確認したい場合:
+
+```powershell
+bun run check:deps
+bun run security:audit
+```
+
+統合チェック:
+
+```powershell
+bun scripts/manage.ts check
+```
+
+---
+
+## スクリーンショット
+
+現在のリポジトリには、README 用の完成版 UI スクリーンショットはまだ固定配置していません。まずは既存のビジュアルアセットを掲載しています。
+
+| Preview | 説明 |
+| --- | --- |
+| ![ElysiaAI Logo](public/logo.png) | ElysiaAI / Elysia OS ロゴ |
+| ![Dashboard visual](dashboard/bg.png) | ダッシュボード用ビジュアル |
+| ![Portal visual](public/assets/portal_bg.png) | ポータル用ビジュアル |
+
+実 UI のスクリーンショットを追加する場合は、次の配置を推奨します。
+
+```text
+docs/screenshots/desktop.png
+docs/screenshots/local-ops.png
+docs/screenshots/security-center.png
+```
 
 ---
 
 ## 🎙️ Open-LLM-VTuber Bridge
 
-ElysiaAI can discover and monitor an external
-[Open-LLM-VTuber](https://github.com/Open-LLM-VTuber/Open-LLM-VTuber) service
-without vendoring its source or Live2D assets.
+ElysiaAI can discover and monitor an external [Open-LLM-VTuber](https://github.com/Open-LLM-VTuber/Open-LLM-VTuber) service without vendoring its source or Live2D assets.
 
 ```dotenv
 OPEN_LLM_VTUBER_ENABLED=true
@@ -191,22 +296,62 @@ Bridge endpoints:
 - `GET /api/vtuber/manifest`
 - `GET /api/vtuber/status`
 
-See [Open-LLM-VTuber Bridge](./docs/OPEN_LLM_VTUBER_INTEGRATION.md) for setup,
-upstream endpoints, and license notes.
+See [Open-LLM-VTuber Bridge](docs/OPEN_LLM_VTUBER_INTEGRATION.md) for setup, upstream endpoints, and license notes.
+
+---
+
+## 今後の予定
+
+ElysiaAI は、以下のフェーズを経て進化します。
+
+### Phase 1: Foundation
+
+- [x] Bun & Python Kernel の統合
+- [x] ローカル RAG (Milvus Lite) の実装
+- [x] 統合管理 CLI (`manage.ts`) の開発
+
+### Phase 2: Resonance
+
+- [x] **Memory Encryption**: Milvus 記憶領域の暗号化基盤
+- [x] **RBAC Foundation**: 役割ベースの権限管理ガード
+- [ ] **Multi-User Support**: UI レベルでの複数ユーザー切り替え・管理
+- [ ] **README Screenshots**: 実 UI スクリーンショットの追加
+- [ ] **RAG Import UX**: ローカル文書取り込み体験の改善
+- [ ] **Advanced CI/CD**: セキュリティ・品質ゲートの自動化強化
+
+### Phase 3: Transcendence
+
+- [ ] **AbyssRTOS Integration**: 完全隔離された実行環境
+- [x] **Shield Agent**: Rust 製防壁によるリアルタイム脅威検知
+- [ ] **Sovereign Mesh**: 分散型 AI OS ネットワーク
+- [ ] **Tauri Distribution**: デスクトップ版配布手順の整理
 
 ---
 
 ## 🤝 コントリビュート
 
-ElysiaAIは、技術と感性の調和を信じる全ての開発者のために開かれています。
-詳細は [CONTRIBUTING.md](./CONTRIBUTING.md) をご覧ください。
+ElysiaAI は、技術と感性の調和を信じるすべての開発者のために開かれています。
 
-- **Bug Reports**: Issueテンプレートに従って報告してください。
-- **Pull Requests**: `Conventional Commits` 準拠をお願いしています。
+- **Bug Reports**: Issue テンプレートに従って報告してください。
+- **Pull Requests**: `Conventional Commits` 準拠を推奨します。
+- **Security Reports**: 秘密情報や再現用ペイロードを公開 Issue に貼らないでください。
+
+詳しくは [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
+
+---
+
+## ライセンス
+
+ElysiaAI is dual-licensed under the **MIT License** and the **Apache License, Version 2.0**.
+
+詳しくは [LICENSE](LICENSE) を参照してください。
 
 ---
 
 ## 🌌 Overview
+
 ElysiaAI is a Sovereign-Native AI OS designed for Deep Resonance.
-© 2026 **Elysia20220909** // ElysiaAI Main // Created and Orchestrated by the Sovereign.
-[View Creator's Achievements (功績)](./ACHIEVEMENTS.md)
+
+© 2025-2026 **Elysia20220909** // ElysiaAI Main // Created and Orchestrated by the Sovereign.
+
+[View Creator's Achievements (功績)](ACHIEVEMENTS.md)
