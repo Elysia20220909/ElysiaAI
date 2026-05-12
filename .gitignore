@@ -29,6 +29,7 @@ out/
 *.pem
 DEBUG_REPORT.md
 AEGIS_LEDGER.md
+git-diagnostics-*.txt
 
 # debug
 npm-debug.log*
@@ -157,6 +158,7 @@ prisma.config.mjs.bak
 
 # External untracked dependencies
 /elysia/
+/embedded-app-sdk/
 
 # Python compiled files
 __pycache__/
