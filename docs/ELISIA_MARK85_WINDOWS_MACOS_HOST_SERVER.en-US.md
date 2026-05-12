@@ -47,6 +47,57 @@ It does provide:
 - monthly electricity formulas
 - safe local-first operations
 
+## Allowed Safe Implementation Scope
+
+The following Mark LXXXV-inspired work is explicitly allowed:
+
+| Area | Allowed Work | Required Conditions |
+| --- | --- | --- |
+| Software simulation | Learn and visualize robotics control algorithms inside a safe virtual environment | Do not connect to physical GPIO, CAN, USB control, motors, propulsion, or actuators |
+| SF HUD design | Build cinematic HUD-style web application screens for safe local dashboards and demos | Separate fictional presentation from real operational state, and avoid dangerous action controls |
+| Secure system administration | Build authenticated, encrypted, LAN-only dashboards | Follow `docs/CUSTOMIZATION_SECURITY_GUIDE.md` for input validation, rate limiting, and security headers |
+
+Implementation guidance:
+
+- Use Web UI, Canvas, Three.js, log replay, and virtual sensor values for simulation.
+- Base HUD surfaces on safe read-only status from Homepage, Grafana, Uptime Kuma, Open WebUI, and ElysiaAI APIs.
+- Keep admin surfaces on LAN, Tailscale, WireGuard, or another private route.
+- Sanitize user input with HTML escaping, path validation, and dangerous-character checks.
+- Add rate limits to high-frequency or action-oriented APIs.
+- Apply security headers such as `X-Content-Type-Options`, `X-Frame-Options`, and `Strict-Transport-Security`.
+
+## Safe Real-World Prop Alternatives
+
+The following are allowed as costume, display, or education props:
+
+| Alternative | Allowed Work | Conditions |
+| --- | --- | --- |
+| Cosplay / prop nanotech suit | Build front-opening chest, shoulder, or forearm panels with magnets, hinges, zippers, or low-power decorative opening motion | Lightweight, non-load-bearing, no sharp edges, pinch protection included |
+| Low-output electric prop | Use small servos or small DC motors so a forearm or front panel moves slightly | Low-voltage Arduino/ESP32-style control only; no lifting, no flight, no autonomous physical action |
+| Helmet-focused build | Build a front-opening visor, small display, LED accents, and fictional assistant voice lines | Prioritize visibility, breathing, heat, battery placement, and emergency removal |
+
+Required limits:
+
+- Use low voltage, short duty cycles, and an accessible power cutoff.
+- Do not create load-bearing, lifting, flying, propulsive, projectile, or heat-focused mechanisms.
+- Add pinch protection, soft edges, and manual release to moving panels.
+- For public demos, keep a handler nearby who can disable the prop.
+- Keep batteries, wiring, and LEDs removable and ventilated.
+
+Recommended build order:
+
+1. **Helmet-focused build**: visor motion, LEDs, small display, and voice lines.
+2. **Front-opening chest and shoulder prop**: high visual impact and easier safety management.
+3. **Low-output motorized forearm panel**: good small test module, but pinch protection is mandatory.
+4. **Full visual suit shell**: only after the single modules are comfortable and safe.
+
+How to choose the first part:
+
+- Choose chest and shoulders if visual presence matters most.
+- Choose a forearm panel if the goal is a small low-output motion study.
+- Choose the helmet if the goal is the strongest Mark LXXXV and E.L.I.S.I.A. HUD feeling.
+- If starting from 3D models, prefer files that clearly state licensing, modification rights, and wearable safety notes.
+
 ## Recommended Architecture
 
 ```text
