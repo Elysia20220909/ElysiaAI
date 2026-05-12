@@ -5,7 +5,10 @@
 
 import type { Context } from "elysia";
 import { auditLogger } from "./audit-logger";
-import { CONFIG } from "./constants";
+import {
+	resolveAccessTokenFromRequest,
+	verifyAccessToken,
+} from "./auth-cookies";
 
 interface AuditMiddlewareOptions {
 	excludePaths?: string[];
@@ -76,12 +79,11 @@ export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 			const statusCode = set.status || 200;
 
 			// ユーザー情報を取得（JWT認証があれば）
-			const auth = request.headers.get("authorization") || "";
 			let userId: string | undefined;
-			if (auth.startsWith("Bearer ")) {
+			const auth = resolveAccessTokenFromRequest(request);
+			if (auth) {
 				try {
-					const jwt = await import("jsonwebtoken");
-					const decoded = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as {
+					const decoded = verifyAccessToken(auth.token) as {
 						username?: string;
 					};
 					userId = decoded.username;
