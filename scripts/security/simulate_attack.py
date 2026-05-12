@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import os
 import socket
 import time
 import uuid
@@ -8,7 +9,13 @@ import uuid
 
 # --- Configurations ---
 GATEWAY_PORT = 5005
-SECRET = b"ELYSIAN_DEFAULT_RESONANCE_KEY"  # Reference default from gateway.py
+
+
+def get_resonance_secret() -> bytes:
+    secret = os.getenv("RESONANCE_SECRET", "").strip()
+    if not secret:
+        raise SystemExit("RESONANCE_SECRET is required for signed gateway diagnostics.")
+    return secret.encode()
 
 
 def send_udp(payload):
@@ -19,7 +26,7 @@ def send_udp(payload):
 def generate_signed_payload(data):
     nonce = str(uuid.uuid4())
     data_str = json.dumps(data, sort_keys=True)
-    sig = hmac.new(SECRET, f"{nonce}{data_str}".encode(), hashlib.sha256).hexdigest()
+    sig = hmac.new(get_resonance_secret(), f"{nonce}{data_str}".encode(), hashlib.sha256).hexdigest()
     return {"nonce": nonce, "signature": sig, "data": data}
 
 

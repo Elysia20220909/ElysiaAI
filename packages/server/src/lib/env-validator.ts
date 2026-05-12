@@ -20,6 +20,29 @@ function sha256(value: string): string {
 	return createHash("sha256").update(value).digest("hex");
 }
 
+function isSensitiveEnvName(name: string): boolean {
+	return /(SECRET|TOKEN|PASSWORD|API_KEY|DATABASE_URL|WEBHOOK_URL|PRIVATE)/i.test(
+		name,
+	);
+}
+
+function redactUrlPassword(name: string, value: string): string {
+	try {
+		const url = new URL(value);
+		if (url.password) url.password = "[redacted]";
+		if (url.username && isSensitiveEnvName(name)) url.username = "[redacted]";
+		return url.toString();
+	} catch {
+		return value;
+	}
+}
+
+function summarizeEnvValue(name: string, value: string): string {
+	const redacted = redactUrlPassword(name, value);
+	if (isSensitiveEnvName(name)) return "[redacted]";
+	return redacted.length > 20 ? `${redacted.substring(0, 20)}...` : redacted;
+}
+
 const ENV_SCHEMA: EnvConfig[] = [
 	// Security - 必須
 	{
@@ -70,6 +93,12 @@ const ENV_SCHEMA: EnvConfig[] = [
 		required: false,
 		default: "http://localhost:3000",
 		description: "CORS許可オリジン (カンマ区切り)",
+		validator: (v) =>
+			v
+				.split(",")
+				.map((origin) => origin.trim())
+				.filter(Boolean)
+				.every((origin) => origin !== "*" && /^https?:\/\//.test(origin)),
 	},
 
 	// Database
@@ -99,6 +128,13 @@ const ENV_SCHEMA: EnvConfig[] = [
 		disallowedValueHashes: [
 			"809389a47869c5a458f8cf877e3307a12b5f02c4523e44ac4302160d55dd993c",
 		],
+	},
+	{
+		name: "ELYSIA_SUIT_COMMS_KEY",
+		required: true,
+		productionOnly: true,
+		description: "Suit secure envelope signing/encryption key",
+		validator: (v) => v.length >= 32,
 	},
 
 	// AI/LLM
@@ -135,6 +171,13 @@ const ENV_SCHEMA: EnvConfig[] = [
 		required: false,
 		default: "http://localhost:8000",
 		description: "FastAPI RAGサービスURL",
+	},
+	{
+		name: "FASTAPI_API_KEY",
+		required: true,
+		productionOnly: true,
+		description: "FastAPI RAGサービスへのサーバー間APIキー",
+		validator: (v) => v.length >= 32,
 	},
 	{
 		name: "VOICEVOX_BASE_URL",
@@ -293,7 +336,7 @@ export function validateEnvironment(): ValidationResult {
 
 		// バリデーション
 		if (value && config.validator && !config.validator(value)) {
-			const message = `${config.name}: ${config.description} (現在の値: ${value.substring(0, 20)}...)`;
+			const message = `${config.name}: ${config.description} (現在の値: ${summarizeEnvValue(config.name, value)})`;
 			if (isProduction || !config.productionOnly) {
 				invalid.push(config.name);
 				errors.push(`❌ [無効] ${message}`);
@@ -362,7 +405,9 @@ export function checkEnvironmentOrExit() {
 export function printEnvironmentSummary() {
 	logger.info("\n📋 環境変数サマリー:");
 	logger.info(`  - ポート: ${process.env.PORT || 3000}`);
-	logger.info(`  - データベース: ${process.env.DATABASE_URL || "未設定"}`);
+	logger.info(
+		`  - データベース: ${process.env.DATABASE_URL ? summarizeEnvValue("DATABASE_URL", process.env.DATABASE_URL) : "未設定"}`,
+	);
 	logger.info(
 		`  - Redis: ${process.env.REDIS_ENABLED === "true" ? "有効" : "無効"}`,
 	);

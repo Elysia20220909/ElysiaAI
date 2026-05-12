@@ -134,8 +134,9 @@ fn generate_influence_signature(action: &str, node_name: &str) -> AppResult<serd
     use sha2::Sha256;
     type HmacSha256 = Hmac<Sha256>;
 
-    let hmac_key = std::env::var("RESONANCE_SECRET")
-        .unwrap_or_else(|_| "ELYSIAN_DEFAULT_RESONANCE_KEY".to_string());
+    let hmac_key = std::env::var("RESONANCE_SECRET").map_err(|_| {
+        AppError::Security("RESONANCE_SECRET is required for signed influence actions".into())
+    })?;
 
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

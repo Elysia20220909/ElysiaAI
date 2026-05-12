@@ -134,8 +134,8 @@ const GAUNTLET_CORE = (() => {
             console.table(EXPLOITS);
             
             // Generate encrypted signature
-            const secret = Scrambler.process("ELYSIA_SOVEREIGN_ROOT_ACCESS_GRANTED", SIG.GHOST_HANDSHAKE);
-            console.log(`%cSIGNATURE: ${secret}`, "color: #00ffff;");
+            const localSignature = Scrambler.process("LOCAL_GAUNTLET_DIAGNOSTIC", SIG.GHOST_HANDSHAKE);
+            console.log(`%cSIGNATURE: ${localSignature}`, "color: #00ffff;");
         });
     }
 

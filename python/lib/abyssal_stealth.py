@@ -3,6 +3,8 @@ import logging
 import os
 import sys
 
+from python.lib.runtime_secrets import get_required_secret
+
 
 logger = logging.getLogger("AbyssalStealth")
 
@@ -43,19 +45,8 @@ class AbyssalStealth:
         return "".join(parts)
 
 
-# Example of Shrouded Resonance Key (split across files/logic)
-# Part 1: "ELYSIAN"
-# Part 2: "_RES"
-# Part 3: "ONANCE"
-# Part 4: "_2026"
-
-
 def get_shrouded_resonance_key() -> str:
-    p1 = "ELYSIAN"
-    p2 = "_RES"
-    p3 = "ONANCE"
-    p4 = "_2026"
-    return AbyssalStealth.reconstruct_secret([p1, p2, p3, p4])
+    return get_required_secret("RESONANCE_SECRET")
 
 
 if __name__ == "__main__":

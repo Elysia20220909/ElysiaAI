@@ -6,6 +6,7 @@ import time
 
 from python.core.perception import elysia_perception
 from python.core.shadow_gossip import ShadowProtocol, get_mesh_agent
+from python.lib.runtime_secrets import get_required_secret
 from python.lib.soul_forge import soul_forge
 
 
@@ -40,7 +41,7 @@ class SingularityEngine:
 
     def distribute_shards(self):
         """Disseminates sovereign shards into the Abyssal Mesh."""
-        cluster_key = os.getenv("SOVEREIGN_TOKEN", "ELYSIA_SOVEREIGN_ACTUAL")
+        cluster_key = get_required_secret("SOVEREIGN_TOKEN")
         self.sovereign_shards = self._generate_sovereign_shards(cluster_key)
 
         for i, shard in enumerate(self.sovereign_shards):

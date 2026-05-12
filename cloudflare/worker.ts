@@ -39,13 +39,17 @@ export default {
 		const url = new URL(request.url);
 
 		if (request.method === "OPTIONS") {
+			const origin = request.headers.get("origin");
+			const corsHeaders: Record<string, string> = {
+				"access-control-allow-methods": "GET, POST, OPTIONS",
+				"access-control-allow-headers": "content-type, authorization",
+			};
+			if (origin === url.origin) {
+				corsHeaders["access-control-allow-origin"] = origin;
+			}
 			return new Response(null, {
 				status: 204,
-				headers: {
-					"access-control-allow-origin": "*",
-					"access-control-allow-methods": "GET, POST, OPTIONS",
-					"access-control-allow-headers": "content-type, authorization",
-				},
+				headers: corsHeaders,
 			});
 		}
 

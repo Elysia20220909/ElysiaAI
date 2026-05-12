@@ -260,16 +260,24 @@ function stableJson(value: unknown): string {
 }
 
 function cryptoKey(secret?: string): Buffer {
-	const source =
-		secret ||
-		process.env.ELYSIA_SUIT_COMMS_KEY ||
-		"elysia-local-dev-suit-comms-key";
+	const source = secret || process.env.ELYSIA_SUIT_COMMS_KEY;
+	if (!source) {
+		throw new SuitCommsError(
+			"ELYSIA_SUIT_COMMS_KEY is required for suit envelope crypto",
+			"SUIT_COMMS_KEY_REQUIRED",
+		);
+	}
 	return createHash("sha256").update(source).digest();
 }
 
 function defaultKeyId(secret?: string): string {
-	const source =
-		secret || process.env.ELYSIA_SUIT_COMMS_KEY || "local-dev-suit-comms";
+	const source = secret || process.env.ELYSIA_SUIT_COMMS_KEY;
+	if (!source) {
+		throw new SuitCommsError(
+			"ELYSIA_SUIT_COMMS_KEY is required for suit envelope key ids",
+			"SUIT_COMMS_KEY_REQUIRED",
+		);
+	}
 	return `sk-${createHash("sha256").update(source).digest("hex").slice(0, 12)}`;
 }
 

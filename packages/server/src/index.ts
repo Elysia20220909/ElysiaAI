@@ -12,6 +12,7 @@ import { helmet } from "elysia-helmet";
 import { config, isProd } from "../../../src/config.ts";
 import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
 import { jsonError, proxyToFastAPI } from "./lib/constants";
+import { buildCorsConfig } from "./lib/cors-config";
 import { defenseManager } from "./lib/defense-manager";
 import { checkEnvironmentOrExit } from "./lib/env-validator";
 import { performHealthCheck } from "./lib/health";
@@ -43,7 +44,7 @@ checkEnvironmentOrExit();
 
 app
 	.use(helmet())
-	.use(cors())
+	.use(cors(buildCorsConfig()))
 	.use(
 		swagger({
 			documentation: {
