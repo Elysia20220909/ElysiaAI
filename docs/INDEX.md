@@ -11,6 +11,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |
 | E.L.I.S.I.A. local server hardware design and costs | `docs/ELISIA_LOCAL_SERVER_HARDWARE_DESIGN.md` |
 | E.L.I.S.I.A. local server automated setup | `docs/ELISIA_LOCAL_SERVER_AUTOMATED_SETUP.md` |
+| Auto delivery protocol | `docs/AUTO_DELIVERY_PROTOCOL.md` |
 | E.L.I.S.I.A. Windows / macOS admin client setup | `docs/ELISIA_LOCAL_SERVER_CLIENT_SETUP.md` |
 | E.L.I.S.I.A. Windows / macOS host server design | `docs/ELISIA_WINDOWS_MACOS_HOST_SERVER.md` |
 | E.L.I.S.I.A. Mark LXXXV Windows / macOS host server, style, and cost | `docs/ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.md` |
