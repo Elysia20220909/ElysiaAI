@@ -1,9 +1,9 @@
 import { Elysia, t } from "elysia";
-import jwt from "jsonwebtoken";
 import { abTestManager } from "../lib/ab-testing";
 import { apiKeyManager } from "../lib/api-key-manager";
+import { authErrorResponse, requireAccessToken } from "../lib/auth-cookies";
 import { backupScheduler } from "../lib/backup-scheduler";
-import { CONFIG, jsonError } from "../lib/constants";
+import { jsonError } from "../lib/constants";
 import { healthMonitor } from "../lib/health-monitor";
 import { jobQueue } from "../lib/job-queue";
 import { logCleanupManager } from "../lib/log-cleanup";
@@ -12,16 +12,18 @@ import { webhookManager } from "../lib/webhook-events";
 export const adminRoutes = new Elysia({ prefix: "/admin" }).guard(
 	{
 		beforeHandle: ({ request }: any) => {
-			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) throw new Error("Missing Bearer token");
 			try {
-				const decoded = jwt.verify(auth.substring(7), CONFIG.JWT_SECRET) as any;
+				const decoded = requireAccessToken(request);
 				// Enforce RBAC: Only admin or owner can access /admin routes
 				if (decoded.role !== "admin" && decoded.role !== "owner") {
-					throw new Error("Insufficient privileges: Admin access required");
+					return jsonError(
+						403,
+						"Insufficient privileges: Admin access required",
+						"AUTH_FORBIDDEN",
+					);
 				}
 			} catch (e: any) {
-				throw new Error(e.message || "Invalid or expired token");
+				return authErrorResponse(e, "Invalid or expired token");
 			}
 		},
 	},
