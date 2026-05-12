@@ -33,6 +33,7 @@ import { ruleRoutes } from "./routes/rule-routes";
 import { sessionRoutes } from "./routes/session-routes";
 import { slackRoutes } from "./routes/slack-routes";
 import { systemRoutes } from "./routes/system-routes";
+import { takumiRoutes } from "./routes/takumi-routes";
 import { vtuberRoutes } from "./routes/vtuber-routes";
 
 const app = new Elysia();
@@ -169,6 +170,7 @@ app
 	.use(aiRoutes)
 	.use(slackRoutes)
 	.use(systemRoutes)
+	.use(takumiRoutes)
 	.use(adminRoutes)
 	.use(sessionRoutes)
 	.use(learningRoutes)

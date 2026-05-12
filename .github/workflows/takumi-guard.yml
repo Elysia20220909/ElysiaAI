@@ -1,6 +1,7 @@
 name: Takumi Guard Check
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main", "dev" ]
   pull_request:
@@ -11,12 +12,38 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write # Required for OIDC
+      contents: read
     steps:
       - uses: actions/checkout@v6
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
       - uses: flatt-security/setup-takumi-guard-npm@v1
         with:
-          bot-id: "BT01KN1NG36R7NTZHP9WV2YJ8W5A" # elysia20220909
-      - run: bun install
+          bot-id: "BT01KRE9NS68JGFQ28QS1F4BVRA0" # Elysia20220909
+      - run: bun install --frozen-lockfile
+      - uses: flatt-security/setup-takumi-guard-pypi@v1
+        with:
+          bot-id: "BT01KRE9NS68JGFQ28QS1F4BVRA0" # Elysia20220909
+      - run: pip install -r requirements.txt
+      - name: Run Python tests
+        env:
+          ELYSIA_TEST_MODE: "1"
+        run: python -m pytest
+      - uses: flatt-security/setup-takumi-guard-rubygems@v1
+        with:
+          bot-id: "BT01KRE9NS68JGFQ28QS1F4BVRA0" # Elysia20220909
+      - if: hashFiles('Gemfile') != ''
+        run: bundle install
+      - if: hashFiles('Gemfile') != '' && hashFiles('spec/**/*.rb') != ''
+        run: bundle exec rspec
       - run: bun run test

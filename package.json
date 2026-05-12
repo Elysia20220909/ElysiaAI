@@ -40,6 +40,8 @@
     "check:encoding": "bun scripts/run-python.ts scripts/tests/check-encoding.py",
     "check:git-hygiene": "bun scripts/tests/check-git-hygiene.ts",
     "security:glassworm": "bun scripts/security/scan_glassworm.ts",
+    "security:takumi:setup": "bun scripts/security/setup-takumi-guard.ts",
+    "security:takumi:verify": "bun scripts/security/setup-takumi-guard.ts --verify-block",
     "security:audit": "bun scripts/run-python.ts scripts/security/audit_dependencies.py"
   },
   "dependencies": {
