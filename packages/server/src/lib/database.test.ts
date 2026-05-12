@@ -1,14 +1,27 @@
-import { describe, expect, it } from "bun:test";
+process.env.DATABASE_URL = "file:./dev.db";
+
+import { describe, expect, it, mock } from "bun:test";
 import { actionLogService, prisma, voiceService } from "./database";
 
 describe("Database Encryption Integration", () => {
-	// Note: These tests assume a test database or mock is used.
-	// In this environment, prisma might be null as per database.ts fallback.
-
 	it("should encrypt and decrypt VoiceLog text", async () => {
-		if (!prisma) {
-			console.log("Skipping DB test: Prisma not initialized");
-			return;
+		const mockCreate = mock(async ({ data }: any) => {
+			return { ...data, id: "1" };
+		});
+		const mockFindMany = mock(async () => {
+			return [
+				{
+					id: "1",
+					username: "elysia_user",
+					text: mockCreate.mock.calls[0][0].data.text,
+					emotion: "calm",
+				},
+			];
+		});
+
+		if (prisma) {
+			prisma.voiceLog.create = mockCreate as any;
+			prisma.voiceLog.findMany = mockFindMany as any;
 		}
 
 		const logData = {
@@ -25,7 +38,24 @@ describe("Database Encryption Integration", () => {
 	});
 
 	it("should encrypt and decrypt ActionLog action", async () => {
-		if (!prisma) return;
+		const mockCreate = mock(async ({ data }: any) => {
+			return { ...data, id: "1" };
+		});
+		const mockFindMany = mock(async () => {
+			return [
+				{
+					id: "1",
+					action: mockCreate.mock.calls[0][0].data.action,
+					status: "blocked",
+					hash: "0xdeadbeef",
+				},
+			];
+		});
+
+		if (prisma) {
+			prisma.actionLog.create = mockCreate as any;
+			prisma.actionLog.findMany = mockFindMany as any;
+		}
 
 		const actionData = {
 			action: "System Override Attempt",
