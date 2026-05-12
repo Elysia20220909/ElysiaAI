@@ -75,3 +75,39 @@ At USD 0.18/kWh ~= USD 7.78/month
 - No secrets in Git.
 - No automated destructive setup.
 - Mark LXXXV references are used for UI, architecture, resilience, and visual style only.
+
+## Allowed Safe Scope / 許可する安全範囲
+
+These Mark LXXXV-inspired features are allowed and encouraged:
+
+- Software simulation: robotics and control-algorithm learning inside a safe virtual environment with no physical device actuation.
+- SF HUD design: cinematic, advanced HUD-style web application screens for local dashboards and demos.
+- Secure system administration: authenticated, encrypted, LAN-only dashboards that follow `docs/CUSTOMIZATION_SECURITY_GUIDE.md`.
+
+許可する範囲:
+
+- ソフトウェアシミュレーション: 物理デバイスを動かさない仮想環境で、ロボティクス制御アルゴリズムを学習・可視化する。
+- SF的なUIデザイン: 映画的なHUD風Webアプリケーション画面を、安全なローカルUIとして作る。
+- セキュアなシステム管理: `docs/CUSTOMIZATION_SECURITY_GUIDE.md` に従い、認証、暗号化、入力検証、レート制限、セキュリティヘッダーを備えたLAN内完結のダッシュボードを構築する。
+
+## Safe Physical Prop Alternatives / 安全な現実プロップ代替
+
+These are allowed when they remain costume, display, or education props:
+
+- Cosplay / prop nanotech suit: front-opening chest, shoulder, or forearm panels using magnets, hinges, zippers, or low-power decorative motion.
+- Low-output electric prop: small servo or DC motor motion for light panels only, controlled by Arduino or ESP32, with no lifting, no load-bearing, and no flight.
+- Helmet-focused build: front-opening visor, small internal display, LED accents, and local voice lines inspired by a fictional assistant.
+
+Required limits:
+
+- Low voltage only, with accessible power cutoff.
+- No sharp edges, pinch hazards, heat buildup, or body-load-bearing structure.
+- No weapons, projectiles, propulsion, high-power output, or autonomous physical action.
+- Public demonstrations should have a manual disable switch and a handler nearby.
+
+Recommended first build:
+
+1. Helmet visor + HUD audio.
+2. Front-opening chest and shoulder display prop.
+3. Low-output forearm panel motion.
+4. Full visual suit shell after the single modules are comfortable and safe.
