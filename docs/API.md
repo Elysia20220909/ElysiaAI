@@ -6,9 +6,20 @@ ElysiaAI provides a modular REST API for interacting with the sovereign intellig
 
 ## 🛡️ Authentication
 
-All API requests (except `/auth/*` and `/health`) require a JWT token in the `Authorization` header.
+Browser clients authenticate with HttpOnly cookies issued by `/auth/token`.
+Legacy service clients may still send an access token with `Authorization`.
 
-**Header Format:**
+**Cookie Format:**
+```http
+Cookie: elysia_access_token=<jwt>; elysia_refresh_token=<jwt>; elysia_csrf_token=<csrf>
+```
+
+**CSRF Header for unsafe cookie requests:**
+```http
+x-csrf-token: <value from elysia_csrf_token cookie or auth response>
+```
+
+**Legacy Header Format:**
 ```http
 Authorization: Bearer <your_jwt_token>
 ```
@@ -33,25 +44,60 @@ Register a new user.
   ```
 
 ### POST `/auth/token`
-Obtain access and refresh tokens.
+Create a session. Access and refresh JWTs are stored as HttpOnly cookies.
 - **Body**: `{ "username": "...", "password": "..." }`
 - **Returns (200 OK)**:
   ```json
-  { "accessToken": "...", "refreshToken": "...", "expiresIn": 900 }
+  {
+    "authenticated": true,
+    "tokenType": "Bearer",
+    "transport": "httpOnly-cookie",
+    "expiresIn": 900,
+    "username": "elysia",
+    "role": "admin",
+    "csrfToken": "csrf-token"
+  }
   ```
 - **Example**:
   ```bash
-  curl -X POST http://localhost:3000/auth/token \
+  curl -i -c cookies.txt -X POST http://localhost:3000/auth/token \
     -H "Content-Type: application/json" \
     -d '{"username":"elysia","password":"strong-password"}'
   ```
 
 ### POST `/auth/refresh`
-Refresh an expired access token using a refresh token.
-- **Body**: `{ "refreshToken": "..." }`
+Rotate the refresh token and issue a fresh access cookie.
+- **Body**: optional `{ "refreshToken": "..." }` for legacy clients.
+- **Cookie clients**: send `elysia_refresh_token` and `x-csrf-token`.
 - **Response (200 OK)**:
   ```json
-  { "accessToken": "...", "refreshToken": "...", "expiresIn": 900 }
+  {
+    "authenticated": true,
+    "tokenType": "Bearer",
+    "transport": "httpOnly-cookie",
+    "expiresIn": 900,
+    "csrfToken": "new-csrf-token"
+  }
+  ```
+
+### POST `/auth/logout`
+Revoke the refresh token when present and clear auth cookies.
+- **Cookie clients**: send `x-csrf-token`.
+- **Response (200 OK)**:
+  ```json
+  { "message": "Logged out successfully" }
+  ```
+
+### GET `/auth/session`
+Return the current cookie or bearer session without exposing JWTs.
+- **Response (200 OK)**:
+  ```json
+  {
+    "authenticated": true,
+    "transport": "httpOnly-cookie",
+    "user": { "id": "user-id", "username": "elysia", "role": "admin" },
+    "expiresAt": "2026-05-10T12:34:56.000Z"
+  }
   ```
 
 ---
@@ -133,11 +179,22 @@ Prometheus-formatted system metrics for monitoring and alerting.
 
 ## ❌ Error Codes
 
+Errors use a stable JSON envelope:
+
+```json
+{
+  "error": "CSRF token mismatch",
+  "code": "CSRF_TOKEN_INVALID",
+  "status": 403,
+  "timestamp": "2026-05-10T12:34:56.000Z"
+}
+```
+
 | Code | Description |
 | :--- | :--- |
 | **400 Bad Request** | Invalid request parameters or malformed JSON. |
 | **401 Unauthorized** | Missing or invalid authentication token. |
-| **403 Forbidden** | Insufficient permissions (requires Admin/Owner role). |
+| **403 Forbidden** | Insufficient permissions or invalid CSRF token. |
 | **404 Not Found** | The requested resource or endpoint does not exist. |
 | **429 Too Many Requests** | Rate limit exceeded. |
 | **500 Internal Error** | An unexpected error occurred within the AI Kernel or Server. |
