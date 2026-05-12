@@ -17,6 +17,7 @@
   },
   "include": [
     "packages/**/*",
+    "public/standalone/**/*.ts",
     "scripts/**/*.ts",
     "scripts/**/*.tsx"
   ]

@@ -1,16 +1,13 @@
 import { Elysia } from "elysia";
-import { jsonError } from "../lib/constants";
-import { verifyNeuralAccessToken } from "../lib/neural-auth-system";
+import { authErrorResponse } from "../lib/auth-cookies";
+import { verifyNeuralAccessRequest } from "../lib/neural-auth-system";
 import { buildProjectMissionControl } from "../lib/project-orchestrator";
 
 function requireProjectOperator(request: Request) {
 	try {
-		return verifyNeuralAccessToken(request.headers.get("authorization"));
+		return verifyNeuralAccessRequest(request);
 	} catch (error) {
-		return jsonError(
-			401,
-			error instanceof Error ? error.message : "Project auth failed",
-		);
+		return authErrorResponse(error, "Project auth failed");
 	}
 }
 
@@ -42,11 +39,14 @@ export const projectRoutes = new Elysia({ prefix: "/api/project" })
 				"Neural Auth protects operator surfaces",
 				"ECP/1.0 signs Core protocol frames",
 				"FastAPI kernel remains local",
+				"Antigravity / Codex workbench returns plan-only handoffs",
 				"Nanotech Suit commands are fictional and manual-only",
 				"Project status aggregates readiness without exposing secrets",
 			],
 			entrypoints: [
 				"/api/project/status",
+				"/api/agents/workbench/status",
+				"/api/agents/workbench/plan",
 				"/api/elysia-core/protocol",
 				"/api/elysia-core/chat",
 				"/api/neural-auth/status",

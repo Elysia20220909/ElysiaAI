@@ -1,144 +1,107 @@
-# elysia-ai Project Structure
+# ElysiaAI Project Structure
 
-## 🏗️ Directory Overview
+This is the current working map for the repository. Keep it practical: new code
+should land where future maintainers will naturally look first.
 
-````text
-elysia-ai/
-├── config/                         # Configuration files
-│   └── private/                    # 🔒 Private configuration (not in git)
-│       ├── .env                    # Environment variables
-│       ├── .env.example            # Environment template
-│       └── README.md               # Configuration guide
-│
-├── src/                            # Source code
-│   ├── config/                     # Application configuration
-│   │   └── internal/               # 🔒 Internal settings
-│   │       └── llm-config.ts       # LLM model configuration
-│   │
-│   ├── core/                       # Core functionality
-│   │   └── security/               # 🔒 Security modules
-│   │       ├── index.ts            # Security exports
-│   │       ├── jwt.ts              # JWT authentication
-│   │       └── redis.ts            # Rate limiting & caching
-│   │
-│   ├── database/                   # Database layer
-│   │   └── config/                 # 🔒 Database configuration
-│   │       └── index.ts            # DB connection settings
-│   │
-│   ├── index.ts                    # Main server entry
-│   ├── index-fixed.ts              # Alternative entry
-│   └── server.ts                   # Server configuration
-│
-├── public/                         # Static assets
-│   ├── index.html                  # Main web interface
-│   ├── index-new.html              # Updated interface
-│   └── index-old.html              # Legacy interface
-│
-├── docs/                           # Documentation
-│   ├── SECURITY.md                 # Integrated security guide
-│   ├── STRUCTURE_UPDATE.md         # Structure change log
-│   ├── LINUX_SETUP.md              # Linux setup guide
-│   ├── VOICE_GUIDE.md              # Voice feature guide
-│   └── VOICEVOX_SETUP.md           # VOICEVOX integration
-│
-├── scripts/                        # Utility scripts
-│   ├── dev.ps1                     # Windows development script
-│   ├── dev.sh                      # Unix development script
-│   ├── setup-*.ps1/sh              # Setup scripts
-│   └── start-*.ps1/sh              # Startup scripts
-│
-├── tests/                          # Test files
-│   ├── docker.test.ts              # Docker tests
-│   ├── integration.test.ts         # Integration tests
-│   └── server.test.ts              # Server tests
-│
-├── cloud/                          # Cloud deployment
-│   ├── aws/                        # AWS CloudFormation
-│   └── gcp/                        # Google Cloud Platform
-│
-├── deploy/                         # Deployment configs
-│   └── nginx.conf.example          # Nginx configuration
-│
-├── python/                         # Python backend
-│   ├── ai_backend.py               # AI processing
-│   ├── fastapi_server.py           # FastAPI server
-│   └── requirements.txt            # Python dependencies
-│
-├── mobile/                         # React Native mobile app
-├── desktop/                        # Electron desktop app
-├── native/                         # Native C++ modules
-├── cuda/                           # CUDA acceleration
-└── swift/                          # Swift iOS integration
+## Top-Level Map
 
-## 📦 Main Modules
+```text
+ElysiaAI/
+├── .Codex/                 # Small startup context for Codex agents
+├── .github/                # CI workflows and GitHub metadata
+├── config/                 # Checked-in configuration templates and defaults
+├── dashboard/              # Standalone experimental dashboard assets
+├── data/                   # Small tracked state files only
+├── deploy/                 # Deployment examples and platform config
+├── docs/                   # Architecture, security, API, and operations docs
+├── kernel/                 # Kernel-side support files and experiments
+├── locales/                # i18n locale resources
+├── packages/
+│   ├── server/             # Bun / Elysia API server
+│   ├── shared/             # Shared TypeScript types and browser-safe clients
+│   └── shield-agent/       # Rust security / native sentinel component
+├── prisma/                 # Prisma schema and migrations
+├── prompts/                # Prompt templates and persona material
+├── public/                 # Web UI static assets and standalone pages
+├── python/                 # FastAPI AI kernel, RAG, and Python tests
+├── scripts/                # Setup, local ops, CI helpers, and automation
+├── src/                    # Root TypeScript config plus experimental forge code
+├── src-tauri/              # Tauri desktop shell
+├── tests/                  # Cross-package Bun integration and system tests
+├── tools/                  # Operator-facing local utility scripts
+├── usr/                    # Packaged local runtime resources
+└── var/                    # Local runtime state placeholder
+```
 
-### Core Application
-- `src/index.ts` - Main Elysia server with JWT auth, Redis rate limiting
-- `src/config/internal/llm-config.ts` - LLM personality modes (sweet/normal/professional)
-- `src/core/security/` - Authentication and security layer
+## Primary Ownership
 
-### Database & Storage
-- `src/database/config/` - Database connection settings (Milvus, Redis)
-- RAG integration via FastAPI backend
+| Area | Owns | Put new files here when |
+| --- | --- | --- |
+| `packages/server/src/lib/` | Server-side domain logic | The code is used by routes, jobs, auth, telemetry, or server-only integrations. |
+| `packages/server/src/routes/` | HTTP route composition | The change adds or reshapes an Elysia endpoint. |
+| `packages/shared/src/` | Shared TypeScript contracts | Browser, Tauri, tests, and server can all import the same type or client. |
+| `python/` | Cognitive kernel | The change belongs to FastAPI, RAG, local AI tools, or Python tests. |
+| `src-tauri/` | Desktop shell | The change needs Tauri commands, native windows, tray, or packaged desktop behavior. |
+| `prisma/` | Database model | The change updates schema, migrations, or generated client boundaries. |
+| `scripts/` | Project automation | The command is part of setup, CI, repo checks, or repeatable maintenance. |
+| `tools/` | Operator utilities | The script is manually run by an operator and may touch local OS/game/system state. |
+| `docs/` | Durable project knowledge | The content explains architecture, operations, security, or integration behavior. |
+| `.Codex/` | Agent startup memory | The content must be short enough to load at session start. |
 
-### Frontend
-- `public/index.html` - Web chat interface with HTMX
-- Alpine.js for reactive UI
-- Server-sent events (SSE) for streaming
+## Runtime And Generated State
 
-### Backend Services
-- `python/fastapi_server.py` - RAG (Retrieval-Augmented Generation) API
-- Ollama integration for LLM inference
-- Milvus Lite for vector search
+Do not commit local runtime state unless there is an explicit reason and a
+reviewable fixture format.
 
-## 🔒 Security-Sensitive Directories
+- Keep secrets in `.env` or local private config only; track `.env.example`.
+- Keep logs out of Git: `logs/`, `**/logs/`, `*.log`.
+- Keep uploads, backups, local caches, and generated deletion results out of Git.
+- Keep dependency and build output out of Git: `node_modules/`, `.venv/`, `dist/`, `build/`, `src-tauri/target/`.
+- Keep editor state out of Git: `.vs/` and other machine-local workspace files.
+- Commit small seed/state files only when they are deliberately part of the product or tests.
 
-**Never commit these directories:**
+## Placement Rules
 
-- `config/private/` - Environment variables and secrets
-- `src/config/internal/` - Internal configuration (optional, but recommended to exclude)
-- `src/core/security/` - Security implementation (consider excluding from public repos)
-- `src/database/config/` - Database credentials
+- Prefer existing layer boundaries before creating a new directory.
+- Put reusable TypeScript models in `packages/shared/src/types.ts` or a focused shared module.
+- Put server-only helpers in `packages/server/src/lib/`, not root `src/`.
+- Put new HTTP surfaces in `packages/server/src/routes/` and register them from `packages/server/src/index.ts`.
+- Put Python tests beside Python kernel code under `python/tests/`; put Bun/system tests under `tests/` or the package being tested.
+- Put long-lived documentation in `docs/`; keep root Markdown for entry points such as `README.md`, `CHANGELOG.md`, and `CONTRIBUTING.md`.
+- Put exploratory or fictional design notes under `docs/fictional/` when they are not implementation contracts.
+- Put operator scripts that can affect the local machine in `tools/` and make defaults read-only or confirmation-friendly.
 
-## 🚀 Quick Start
+## Root File Policy
 
-```bash
-# Install dependencies
-bun install
+Root files should stay boring and discoverable. Add a new root file only when a
+tool expects it there or it is a common project entry point.
 
-# Setup environment
-cp config/private/.env.example config/private/.env
-# Edit config/private/.env with your settings
+Acceptable root files include:
 
-# Start development server
-bun run dev
+- Project entry docs: `README.md`, `README.ja.md`, `README.en.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`.
+- Package and tool config: `package.json`, `bun.lock`, `tsconfig.json`, `pyproject.toml`, `biome.json`, `ruff.toml`.
+- Runtime launch shims kept for compatibility: `server.ts`, `AETHER_Vault.bat`, `AETHER_Vault_Launcher.py`.
 
-# Or start production build
-bun run build
-bun run start
-````
+If a file is mostly explanatory, prefer `docs/`. If it is mostly operational,
+prefer `scripts/` or `tools/`.
 
-## 📚 Additional Resources
+## Current Caution Zones
 
-- [README.md](../README.md) - Project overview
-- [README.ja.md](../README.ja.md) - 日本語版README
-- [DEPLOYMENT.md](../DEPLOYMENT.md) - Deployment guide
-- [SECURITY.md](./SECURITY.md) - Integrated security guide
+- `src/forge/` contains experimental cross-language prototypes. Move code out only after identifying importers and launch paths.
+- `dashboard/` and `public/standalone/` are standalone visual surfaces. Avoid merging them into server routes without a UI pass.
+- `python/data/` contains tracked vault/shard examples. Treat it as sensitive test-like state and review before adding more.
+- `usr/` and `var/` model local runtime layout. Keep generated state out of Git unless it is a deliberate packaged resource.
+- `.Codex/` should remain concise. Historical work belongs in `docs/archive/`, not startup context.
 
-## 🔍 Key Features
+## Quality Gates
 
-- **Multi-LLM Modes**: Sweet (Elysia), Normal, Professional
-- **RAG Integration**: Context-aware responses using Milvus
-- **JWT Authentication**: Secure token-based auth with refresh tokens
-- **Redis Rate Limiting**: Prevent abuse with sliding window algorithm
-- **Streaming Responses**: Real-time chat with SSE
-- **Cross-Platform**: Web, Mobile (React Native), Desktop (Electron)
-- **Cloud Ready**: AWS, GCP deployment configs included
+Run the smallest relevant gate after structural changes.
 
-## 📝 Notes
+```powershell
+bun run typecheck
+bun run lint
+bun run test
+```
 
-- Built with Bun + Elysia.js for high performance
-- TypeScript for type safety
-- Biome for linting and formatting
-- Docker support with multi-stage builds
-- Comprehensive test coverage
+For documentation-only changes, prefer a targeted spelling/format review and
+`git diff --check`.
