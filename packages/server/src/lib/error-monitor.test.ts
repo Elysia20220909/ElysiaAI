@@ -5,10 +5,10 @@ describe("ErrorMonitor", () => {
 	let monitor: ErrorMonitor;
 
 	beforeEach(() => {
-		monitor = new ErrorMonitor();
 		// Enable alerts for testing
 		process.env.ERROR_ALERTS_ENABLED = "true";
 		process.env.DISCORD_WEBHOOK_URL = "http://fake-webhook.com";
+		monitor = new ErrorMonitor();
 	});
 
 	it("should retry fetch on failure", async () => {

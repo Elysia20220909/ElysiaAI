@@ -1,9 +1,10 @@
 import { existsSync, mkdirSync } from "node:fs";
 import axios from "axios";
 import { Elysia, t } from "elysia";
-import jwt from "jsonwebtoken";
+import type jwt from "jsonwebtoken";
 import sanitizeHtml from "sanitize-html";
 import { getPersonaConfig } from "../lib/ai-personas";
+import { authErrorResponse, requireAccessToken } from "../lib/auth-cookies";
 import { generateCasualResponse, getRandomTopic } from "../lib/casual-chat";
 import {
 	CONFIG,
@@ -45,22 +46,15 @@ type FeedbackBody = {
 };
 
 export function requireBearerToken(request: Request) {
-	const auth = request.headers.get("authorization") || "";
-	if (!auth.startsWith("Bearer ")) {
-		logger.warn("❌ [AI] Rejected: Missing Bearer token");
-		throw new Error("Missing Bearer token");
-	}
-
 	try {
-		return jwt.verify(
-			auth.substring(7),
-			CONFIG.JWT_SECRET,
-		) as jwt.JwtPayload & {
+		return requireAccessToken(request) as jwt.JwtPayload & {
 			userId?: string;
 		};
-	} catch {
-		logger.warn("❌ [AI] Rejected: Invalid token");
-		throw new Error("Invalid or expired token");
+	} catch (error) {
+		logger.warn("❌ [AI] Rejected auth request", {
+			error: error instanceof Error ? error.message : "unknown",
+		});
+		throw error;
 	}
 }
 
@@ -154,10 +148,7 @@ export async function handleElysiaLove(body: ElysiaLoveBody, request: Request) {
 	try {
 		payload = requireBearerToken(request);
 	} catch (error) {
-		return jsonError(
-			401,
-			error instanceof Error ? error.message : "Unauthorized",
-		);
+		return authErrorResponse(error);
 	}
 
 	try {
@@ -276,10 +267,7 @@ export async function handleFeedback(body: FeedbackBody, request: Request) {
 	try {
 		payload = requireBearerToken(request);
 	} catch (error) {
-		return jsonError(
-			401,
-			error instanceof Error ? error.message : "Unauthorized",
-		);
+		return authErrorResponse(error);
 	}
 
 	const validationError = validateFeedback(body);
@@ -309,10 +297,7 @@ export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 			try {
 				requireBearerToken(request);
 			} catch (error) {
-				return jsonError(
-					401,
-					error instanceof Error ? error.message : "Unauthorized",
-				);
+				return authErrorResponse(error);
 			}
 		},
 	},
