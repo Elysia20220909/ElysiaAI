@@ -1,139 +1,185 @@
-/**
- * ELYSIA // NEURAL LINK AUTH
- * CALIBRATION & TOKEN ACQUISITION
- */
+(() => {
+    const cookieNames = {
+        csrf: "elysia_csrf_token",
+    };
 
-const loginForm = document.getElementById('login-form');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const btn = document.getElementById('login-btn');
-const errorMsg = document.getElementById('error-msg');
-const coreStatus = document.querySelector('.core-status');
-const tokenLattice = document.getElementById('token-lattice');
-const intrusionSentinel = document.getElementById('intrusion-sentinel');
-const signatureHash = document.getElementById('signature-hash');
+    const loginForm = requireElement("login-form", HTMLFormElement);
+    const usernameInput = requireElement("username", HTMLInputElement);
+    const passwordInput = requireElement("password", HTMLInputElement);
+    const button = requireElement("login-btn", HTMLButtonElement);
+    const errorMessage = requireElement("error-msg", HTMLDivElement);
+    const coreStatus = document.querySelector(".core-status");
+    const tokenLattice = requireElement("token-lattice", HTMLElement);
+    const intrusionSentinel = requireElement("intrusion-sentinel", HTMLElement);
+    const signatureHash = requireElement("signature-hash", HTMLElement);
+    const buttonText = button.querySelector(".btn-text");
 
-function storeTokens(data, username) {
-    localStorage.setItem('elysia_access_token', data.accessToken);
-    localStorage.setItem('elysia_refresh_token', data.refreshToken);
-    localStorage.setItem('elysia_chat_user', username);
-    if (data.neuralSignature) {
-        localStorage.setItem('elysia_neural_signature', data.neuralSignature);
+    let csrfToken = readCookie(cookieNames.csrf);
+
+    function requireElement(id, expectedType) {
+        const element = document.getElementById(id);
+        if (!(element instanceof expectedType)) {
+            throw new Error(`Missing element: ${id}`);
+        }
+        return element;
     }
-}
 
-function markLinkEstablished(username) {
-    coreStatus.textContent = `NEURAL_ID: ${username.toUpperCase()} VERIFIED`;
-    coreStatus.style.color = '#34d399';
-    btn.querySelector('.btn-text').textContent = 'LINK_ESTABLISHED';
-    btn.style.background = '#34d399';
-}
+    function readCookie(name) {
+        const cookie = document.cookie
+            .split(";")
+            .map((part) => part.trim())
+            .find((part) => part.startsWith(`${name}=`));
+        if (!cookie) return null;
+        return decodeURIComponent(cookie.slice(name.length + 1));
+    }
 
-async function refreshNeuralStatus() {
-    const accessToken = localStorage.getItem('elysia_access_token');
-    if (!accessToken) return;
+    function csrfHeaders() {
+        csrfToken = readCookie(cookieNames.csrf) || csrfToken;
+        return csrfToken ? { "x-csrf-token": csrfToken } : {};
+    }
 
-    const response = await fetch('/api/neural-auth/status', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!response.ok) return;
+    async function requestJson(url, init = {}) {
+        const method = init.method || "GET";
+        const headers = new Headers(init.headers || {});
+        if (!["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase())) {
+            for (const [key, value] of Object.entries(csrfHeaders())) {
+                headers.set(key, value);
+            }
+        }
 
-    const data = await response.json();
-    tokenLattice.textContent = data.status?.toUpperCase?.() || 'LINKED';
-    intrusionSentinel.textContent = data.intrusionDetection?.status?.toUpperCase?.() || 'WATCHING';
-    signatureHash.textContent = data.session?.neuralSignature || localStorage.getItem('elysia_neural_signature') || 'SEALED';
-}
-
-function redirectToDesktop(delay = 900) {
-    setTimeout(() => {
-        window.location.href = '/desktop.html';
-    }, delay);
-}
-
-async function runDevAutoLogin() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('autologin') !== 'test') return;
-
-    btn.disabled = true;
-    btn.querySelector('.btn-text').textContent = 'TEST_LINKING...';
-    errorMsg.classList.add('hidden');
-    coreStatus.textContent = 'NEURAL_ID: TEST_ENV_SCANNING...';
-
-    try {
-        const response = await fetch('/auth/dev-login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        const response = await fetch(url, {
+            ...init,
+            method,
+            credentials: "same-origin",
+            headers,
         });
-        const data = await response.json();
-
+        const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error(data.error || 'Dev auto-login unavailable');
+            throw new Error(data.error || "認証に失敗しました");
         }
-
-        const username = data.username || 'admin';
-        usernameInput.value = username;
-        storeTokens(data, username);
-        markLinkEstablished(username);
-        await refreshNeuralStatus();
-        redirectToDesktop();
-    } catch (err) {
-        btn.disabled = false;
-        btn.querySelector('.btn-text').textContent = 'RETRY_LINK';
-        errorMsg.textContent = `ERROR: ${err.message.toUpperCase()}`;
-        errorMsg.classList.remove('hidden');
-        coreStatus.textContent = 'NEURAL_ID: TEST_AUTOLOGIN_DENIED';
-        coreStatus.style.color = '#ff4d4d';
+        if (typeof data.csrfToken === "string") {
+            csrfToken = data.csrfToken;
+        }
+        return data;
     }
-}
 
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const username = usernameInput.value;
-    const password = passwordInput.value;
+    function setButtonLabel(label) {
+        if (buttonText) buttonText.textContent = label;
+    }
 
-    // Start Calibration Effect
-    btn.disabled = true;
-    btn.querySelector('.btn-text').textContent = 'CALIBRATING...';
-    errorMsg.classList.add('hidden');
-    coreStatus.textContent = 'NEURAL_ID: SCANNING...';
-    coreStatus.style.color = 'var(--core-magenta)';
+    function setStatus(text, linked = false) {
+        if (!coreStatus) return;
+        coreStatus.textContent = text;
+        coreStatus.classList.toggle("is-linked", linked);
+    }
 
-    try {
-        const response = await fetch('/auth/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-        });
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.hidden = false;
+        setStatus("接続できませんでした。入力を確かめてください。");
+    }
 
-        const data = await response.json();
+    function clearError() {
+        errorMessage.textContent = "";
+        errorMessage.hidden = true;
+    }
 
-        if (response.ok) {
-            // SUCCESS
-            coreStatus.textContent = 'NEURAL_ID: VERIFIED';
-            coreStatus.style.color = '#34d399';
-            btn.querySelector('.btn-text').textContent = 'LINK_ESTABLISHED';
-            btn.style.background = '#34d399';
+    function clearLegacyTokenStorage() {
+        localStorage.removeItem("elysia_access_token");
+        localStorage.removeItem("elysia_refresh_token");
+    }
 
-            // Store Tokens
-            storeTokens(data, username);
+    function markLinkEstablished(username) {
+        tokenLattice.textContent = "保護中";
+        intrusionSentinel.textContent = "静穏";
+        setButtonLabel("接続しました");
+        setStatus(`${username} として接続しました。`, true);
+        localStorage.setItem("elysia_chat_user", username);
+        clearLegacyTokenStorage();
+    }
+
+    async function refreshNeuralStatus() {
+        const session = await requestJson("/auth/session");
+        if (!session.authenticated) return;
+
+        const status = await requestJson("/api/neural-auth/status");
+        tokenLattice.textContent = status.status || "linked";
+        intrusionSentinel.textContent =
+            status.intrusionDetection?.status || "watching";
+        signatureHash.textContent =
+            status.session?.neuralSignature ||
+            localStorage.getItem("elysia_neural_signature") ||
+            "sealed";
+        if (typeof status.session?.username === "string") {
+            setStatus(`${status.session.username} として接続中です。`, true);
+        }
+    }
+
+    function redirectToDesktop(delay = 900) {
+        window.setTimeout(() => {
+            window.location.href = "/desktop.html";
+        }, delay);
+    }
+
+    async function runDevAutoLogin() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("autologin") !== "test") return;
+
+        button.disabled = true;
+        setButtonLabel("接続中");
+        clearError();
+        setStatus("開発用セッションを確認しています。");
+
+        try {
+            const data = await requestJson("/auth/dev-login", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+            });
+            const username = data.username || "admin";
+            usernameInput.value = username;
+            markLinkEstablished(username);
             await refreshNeuralStatus();
-
-            // Redirect after delay
-            redirectToDesktop(1500);
-        } else {
-            // FAILURE
-            throw new Error(data.error || 'Authentication Failed');
+            redirectToDesktop();
+        } catch (error) {
+            button.disabled = false;
+            setButtonLabel("再試行");
+            showError(error instanceof Error ? error.message : "接続できませんでした");
         }
-    } catch (err) {
-        btn.disabled = false;
-        btn.querySelector('.btn-text').textContent = 'RETRY_LINK';
-        errorMsg.textContent = `ERROR: ${err.message.toUpperCase()}`;
-        errorMsg.classList.remove('hidden');
-        coreStatus.textContent = 'NEURAL_ID: ACCESS_DENIED';
-        coreStatus.style.color = '#ff4d4d';
     }
-});
 
-refreshNeuralStatus();
-runDevAutoLogin();
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearError();
+
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+        if (!username || !password) {
+            showError("ユーザー名とパスワードを入力してください");
+            return;
+        }
+
+        button.disabled = true;
+        setButtonLabel("確認中");
+        setStatus("合鍵を照合しています。");
+
+        try {
+            const data = await requestJson("/auth/token", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            });
+            markLinkEstablished(data.username || username);
+            await refreshNeuralStatus();
+            redirectToDesktop();
+        } catch (error) {
+            button.disabled = false;
+            setButtonLabel("ログイン");
+            showError(error instanceof Error ? error.message : "認証に失敗しました");
+        }
+    });
+
+    refreshNeuralStatus().catch(() => {
+        tokenLattice.textContent = "待機中";
+    });
+    runDevAutoLogin();
+})();

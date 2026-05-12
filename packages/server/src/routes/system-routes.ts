@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
-import jwt from "jsonwebtoken";
-import { CONFIG, proxyToFastAPI } from "../lib/constants";
+import { authErrorResponse, requireAccessToken } from "../lib/auth-cookies";
+import { proxyToFastAPI } from "../lib/constants";
 import { collectLocalOpsOverview } from "../lib/local-ops";
 import { logger } from "../lib/logger";
 import { collectNativeLiteSnapshot } from "../lib/native-lite";
@@ -126,16 +126,13 @@ const publicRoutes = new Elysia()
 const guardedRoutes = new Elysia({ prefix: "/api/system" }).guard(
 	{
 		beforeHandle: ({ request }) => {
-			const auth = request.headers.get("authorization") || "";
-			if (!auth.startsWith("Bearer ")) {
-				logger.warn("❌ [System] Rejected: Missing Bearer token");
-				throw new Error("Missing Bearer token");
-			}
 			try {
-				jwt.verify(auth.substring(7), CONFIG.JWT_SECRET);
-			} catch {
-				logger.warn("❌ [System] Rejected: Invalid token");
-				throw new Error("Invalid or expired token");
+				requireAccessToken(request);
+			} catch (error) {
+				logger.warn("❌ [System] Rejected auth request", {
+					error: error instanceof Error ? error.message : "unknown",
+				});
+				return authErrorResponse(error);
 			}
 		},
 	},

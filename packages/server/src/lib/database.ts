@@ -22,6 +22,10 @@ try {
 		throw new Error("DATABASE_URL is not defined in environment");
 	}
 
+	if (!process.env.DATABASE_URL) {
+		process.env.DATABASE_URL = dbUrl;
+	}
+
 	prisma = new PrismaClient({
 		log:
 			config.nodeEnv === "development" ? ["query", "error", "warn"] : ["error"],
