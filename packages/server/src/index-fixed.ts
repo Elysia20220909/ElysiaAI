@@ -2,11 +2,12 @@
 
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
+import { buildCorsConfig } from "./lib/cors-config";
 
 const PORT = Number(process.env.PORT) || 3000;
 
 const app = new Elysia()
-	.use(cors())
+	.use(cors(buildCorsConfig()))
 	.get("/", () => Bun.file("public/index.html"))
 	.get("/ping", () => ({
 		ok: true,

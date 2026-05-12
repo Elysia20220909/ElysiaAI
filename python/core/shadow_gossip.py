@@ -6,6 +6,8 @@ import os
 import random
 import time
 
+from python.lib.runtime_secrets import get_required_secret
+
 
 logger = logging.getLogger("elysia.shadow_gossip")
 
@@ -21,8 +23,7 @@ class ShadowProtocol:
 
     @staticmethod
     def get_resonance_seed():
-        # ... (Existing implementation)
-        secret = os.getenv("ABYSS_SHADOW_SECRET", "SHADOW_RESONANCE_DEFAULT")
+        secret = get_required_secret("ABYSS_SHADOW_SECRET")
         window = int(time.time() / 10)
         return hashlib.sha256(f"{secret}_{window}".encode()).hexdigest()
 

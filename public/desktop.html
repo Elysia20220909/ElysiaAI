@@ -782,17 +782,9 @@
                 },
 
                 async unlockMaintenance() {
-                    const res = await fetch('http://localhost:8000/system/maintenance/unlock', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ secret: 'elysia-singularity-overdrive-2026' })
-                    });
-                    const data = await res.json();
-                    if (data.status === 'unlocked') {
-                        this.maintenanceMode = true;
-                        this.applyTheme('singularity');
-                        this.showToast("SIP_OVERRIDDEN. MAINTENANCE_ON.", "🔓");
-                    }
+                    this.maintenanceMode = true;
+                    this.applyTheme('singularity');
+                    this.showToast("MAINTENANCE_VIEW_LOCAL.", "🔓");
                 },
                 toggleVisionMode() {
                     this.visionMode = !this.visionMode;
