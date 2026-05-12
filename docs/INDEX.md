@@ -37,6 +37,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Threat model | `docs/THREAT_MODEL.md` |
 | Cookie auth and CSRF | `docs/security/AUTH_COOKIE_CSRF.md` |
 | Dependency audit | `docs/SECURITY_AUDIT.md` |
+| Takumi Guard setup | `docs/TAKUMI_GUARD_SETUP.md` |
 | Secret management | `docs/SECRET_MANAGEMENT.md` |
 | Customization security | `docs/CUSTOMIZATION_SECURITY_GUIDE.md` |
 
