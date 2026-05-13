@@ -60,6 +60,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Need | File |
 | --- | --- |
 | Agent integration patterns | `docs/learnings/agent-integrations.md` |
+| AI coding cost and context policy | `docs/AI_CODING_COST_POLICY.md` |
 | Testing and security gates | `docs/learnings/testing-and-security.md` |
 | Photo/game automation safety | `docs/learnings/photo-automation.md` |
 | GitHub repository file and folder list basics, Japanese | `docs/github-basics/README.ja.md` |
