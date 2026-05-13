@@ -12,6 +12,7 @@ node_modules/
 # testing
 /coverage
 /.tmp/
+*.tsbuildinfo
 
 # production
 build/
@@ -56,6 +57,10 @@ x_delete_results*.jsonl
 /config/private/
 /config/defense/rules.json
 /packages/server/config/
+
+# Generated installer/preseed artifacts
+/packages/server/scripts/infra/preseed/preseed-generated*.cfg
+/packages/server/scripts/infra/preseed/preseed.local*.cfg
 
 # Secure internal configurations (legacy)
 /src/config/internal/
@@ -126,6 +131,7 @@ bun.log
 **/dist/
 **/build/
 **/bun.lock
+!bun.lock
 /src/generated/prisma
 
 # Database files
