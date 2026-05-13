@@ -4,9 +4,11 @@
   "author": "Elysia20220909",
   "license": "MIT OR Apache-2.0",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "overrides": {
+    "postcss": "8.5.10",
     "thrift": "^0.23.0"
   },
 	"scripts": {
