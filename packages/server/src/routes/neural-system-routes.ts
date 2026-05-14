@@ -605,14 +605,21 @@ export const neuralSystemRoutes = new Elysia()
 						},
 					);
 				}
+				if (policy.decision === "confirm") {
+					return jsonError(
+						409,
+						"Suit command requires manual confirmation",
+						"SUIT_POLICY_CONFIRM_REQUIRED",
+						{
+							policy,
+						},
+					);
+				}
 
 				return {
 					session,
 					intent,
-					policy: {
-						...policy,
-						manualConfirmationAccepted: policy.decision === "confirm",
-					},
+					policy,
 					localAI,
 					...executeSuitCommand(command),
 				};
