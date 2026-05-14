@@ -38,7 +38,7 @@
     "suit": "bun scripts/suit.ts",
     "dev:ci": "bun scripts/boot.ts --ci",
     "desktop": "bun tauri dev",
-    "test": "bun test ./src/*.test.ts ./tests/*.test.ts ./tests/integration/*.test.ts ./tests/performance/*.test.ts ./packages/server/src/lib/*.test.ts",
+    "test": "bun scripts/tests/run-bun-tests.ts",
     "lint": "bun node_modules/@biomejs/biome/bin/biome check .",
     "typecheck": "bun node_modules/typescript/bin/tsc --noEmit",
     "check:deps": "bun scripts/tests/check-dependency-alignment.ts",
