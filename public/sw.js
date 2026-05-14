@@ -1,16 +1,19 @@
-const CACHE_NAME = "elysiaai-shell-v3";
+const CACHE_NAME = "elysiaai-shell-v6";
 const SHELL_URLS = [
   "/",
   "/stark-ops.html",
   "/native-lite.html",
   "/suit-hud.html",
   "/suit-viewer.html",
+  "/pwa-register.js",
+  "/assets/js/liquid-glass-webgl.js",
   "/pwa-shell.js",
   "/sw.js",
   "/service-worker.js",
   "/logo.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/manifest.json",
   "/manifest.webmanifest"
 ];
 
@@ -36,6 +39,25 @@ self.addEventListener("activate", (event) => {
       )
       .then(() => self.clients.claim())
   );
+});
+
+async function rehydrateShell() {
+  const cache = await caches.open(CACHE_NAME);
+  await Promise.all(
+    SHELL_URLS.map(async (url) => {
+      try {
+        const response = await fetch(new Request(url, { cache: "no-store" }));
+        if (response.ok) {
+          await cache.put(url, response.clone());
+        }
+      } catch {}
+    })
+  );
+}
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type !== "rehydrate") return;
+  event.waitUntil(rehydrateShell());
 });
 
 function isLocalCoreRequest(pathname) {
