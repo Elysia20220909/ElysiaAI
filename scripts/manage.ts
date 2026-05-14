@@ -21,7 +21,6 @@ Commands:
   dev           Start the full local stack
   dev:lite      Start the local stack with fast lightweight kernel startup
   dev:ci        Start the server in lightweight CI mode (mocked AI)
-  branch:auto   Create or switch to a safe codex work branch
   native-lite   Show Rust/Swift/Bun lightweighting snapshot
   ops           Show local house server readiness
   suit          Show fictional suit status
@@ -159,11 +158,8 @@ async function startAnimation() {
 	console.log("\n\n🌌 The resonance is complete. The stars guide your path.");
 }
 
-async function runCommand(command: string, args: string[] = []) {
+async function runCommand(command: string) {
 	switch (command) {
-		case "branch:auto":
-			await run("bun", ["run", "branch:auto", "--", ...args]);
-			break;
 		case "dev":
 			console.log("🚀 Starting ElysiaAI local stack...");
 			await run("bun", ["run", "boot"]);
@@ -323,17 +319,13 @@ async function runCommand(command: string, args: string[] = []) {
 }
 
 const command = positionals[0];
-const rawArgs = Bun.argv.slice(2);
-const commandIndex = command ? rawArgs.indexOf(command) : -1;
-const commandArgs =
-	commandIndex >= 0 ? rawArgs.slice(commandIndex + 1) : positionals.slice(1);
 
 try {
 	if (values.help || !command) {
 		showHelp();
 		seasonalGreeting();
 	} else {
-		await runCommand(command, commandArgs);
+		await runCommand(command);
 	}
 } catch (error) {
 	console.error(error instanceof Error ? error.message : error);

@@ -6,8 +6,6 @@
 class NaniteSystem {
     constructor() {
         this.token = localStorage.getItem('elysia_access_token');
-        this.csrfToken = this.readCookie('elysia_csrf_token');
-        this.neuralLinked = false;
         this.unitCount = 1400000000;
         this.energyLevel = 99.2;
         this.vitals = {
@@ -30,23 +28,11 @@ class NaniteSystem {
         this.initCommandButtons();
         this.syncAuthAndSuit();
         setInterval(() => this.syncTelemetry(), 2500);
-        setInterval(() => this.syncDistributedOs(), 5000);
     }
 
-    readCookie(name) {
-        const cookie = document.cookie
-            .split(';')
-            .map((part) => part.trim())
-            .find((part) => part.startsWith(`${name}=`));
-        return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : null;
-    }
-
-    headers(method = 'GET') {
-        this.csrfToken = this.readCookie('elysia_csrf_token') || this.csrfToken;
-        const unsafe = !['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase());
+    headers() {
         return {
             'Content-Type': 'application/json',
-            ...(unsafe && this.csrfToken ? { 'x-csrf-token': this.csrfToken } : {}),
             ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
         };
     }
@@ -62,124 +48,44 @@ class NaniteSystem {
     }
 
     async syncAuthAndSuit() {
+        if (!this.token) {
+            document.getElementById('auth-status').textContent = 'GHOST_PROTOCOL: AUTH_REQUIRED';
+            this.appendTerminal('[AUTH] Neural token missing. Open Neural Auth first.', 'danger');
+            return;
+        }
+
         try {
-            const authResponse = await fetch('/api/neural-auth/status', {
-                credentials: 'same-origin',
-                headers: this.headers(),
-            });
+            const authResponse = await fetch('/api/neural-auth/status', { headers: this.headers() });
             if (!authResponse.ok) throw new Error(`auth ${authResponse.status}`);
             const auth = await authResponse.json();
-            this.neuralLinked = true;
             document.getElementById('auth-status').textContent =
                 `GHOST_PROTOCOL: ${auth.session.username.toUpperCase()} LINKED`;
             this.appendTerminal(`[AUTH] ${auth.session.neuralSignature} verified.`, 'gold');
 
-            const suitResponse = await fetch('/api/suit/status', {
-                credentials: 'same-origin',
-                headers: this.headers(),
-            });
+            const suitResponse = await fetch('/api/suit/status', { headers: this.headers() });
             if (!suitResponse.ok) throw new Error(`suit ${suitResponse.status}`);
             const suit = await suitResponse.json();
-            const status = suit.status || suit;
-            this.applyTelemetry(status.telemetry);
-            this.appendTerminal(`[NSS-01] ${status.suggestedAction}`);
-            await this.syncDistributedOs(true);
+            this.applyTelemetry(suit.status.telemetry);
+            this.appendTerminal(`[NSS-01] ${suit.status.suggestedAction}`);
         } catch (error) {
-            this.neuralLinked = false;
             document.getElementById('auth-status').textContent = 'GHOST_PROTOCOL: LINK_FAILED';
             this.appendTerminal(`[LINK] ${error.message}. Use ?autologin=test on Neural Auth.`, 'danger');
         }
     }
 
     async syncTelemetry() {
-        if (!this.neuralLinked) {
+        if (!this.token) {
             this.localDrift();
             return;
         }
 
         try {
-            const response = await fetch('/api/suit/telemetry', {
-                credentials: 'same-origin',
-                headers: this.headers(),
-            });
+            const response = await fetch('/api/suit/telemetry', { headers: this.headers() });
             if (!response.ok) throw new Error(`telemetry ${response.status}`);
             const data = await response.json();
             this.applyTelemetry(data.telemetry);
         } catch {
             this.localDrift();
-        }
-    }
-
-    async syncDistributedOs(announce = false) {
-        if (!this.neuralLinked) {
-            if (announce) this.appendTerminal('[AUTH] OS sync requires Neural Auth.', 'danger');
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/suit/os/status', {
-                credentials: 'same-origin',
-                headers: this.headers(),
-            });
-            if (!response.ok) throw new Error(`os ${response.status}`);
-            const data = await response.json();
-            this.applyDistributedOs(data.os);
-            if (announce) this.appendTerminal(`[OS] ${data.os.summary}`, 'gold');
-        } catch (error) {
-            if (announce) this.appendTerminal(`[OS] ${error.message}`, 'danger');
-        }
-    }
-
-    applyDistributedOs(os) {
-        if (!os) return;
-
-        const rtosCount = os.domains.filter((domain) => domain.runtime === 'rtos_mcu').length;
-        const lockCount = os.domains.filter((domain) => domain.status === 'locked').length;
-        document.getElementById('os-posture').textContent = os.posture.toUpperCase();
-        document.getElementById('os-status-line').textContent = `OS_POSTURE: ${os.posture.toUpperCase()}`;
-        document.getElementById('os-domain-count').textContent = String(os.domains.length);
-        document.getElementById('os-bus-count').textContent = String(os.edge.buses.length);
-        document.getElementById('os-rtos-count').textContent = String(rtosCount);
-        document.getElementById('os-lock-count').textContent = String(lockCount);
-
-        const domainList = document.getElementById('os-domain-list');
-        domainList.innerHTML = os.domains
-            .slice(0, 4)
-            .map((domain) => `
-                <div class="domain-pill">
-                    <div>
-                        <strong>${this.escapeHtml(domain.label)}</strong>
-                        <span>${this.escapeHtml(domain.runtime)} / ${domain.updateBudgetMs}ms</span>
-                    </div>
-                    <div class="domain-status">${this.escapeHtml(domain.status)}</div>
-                </div>
-            `)
-            .join('');
-    }
-
-    async planDistributedOs(request) {
-        if (!this.neuralLinked) {
-            this.appendTerminal('[AUTH] OS plan rejected. Neural Auth required.', 'danger');
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/suit/os/plan', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: this.headers('POST'),
-                body: JSON.stringify({ request }),
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || `os-plan ${response.status}`);
-            const plan = data.plan;
-            this.appendTerminal(`[OS] ${plan.matchedRequest} -> ${plan.decision}`, plan.ok ? 'gold' : 'cyan');
-            for (const reason of plan.reasons.slice(0, 3)) {
-                this.appendTerminal(`[OS] ${reason}`);
-            }
-            this.applyDistributedOs(data.os);
-        } catch (error) {
-            this.appendTerminal(`[OS] ${error.message}`, 'danger');
         }
     }
 
@@ -208,7 +114,7 @@ class NaniteSystem {
 
     initTerminal() {
         const input = document.getElementById('terminal-input');
-        input.addEventListener('keydown', (event) => {
+        input.addEventListener('keypress', (event) => {
             if (event.key !== 'Enter') return;
             const command = input.value.trim().toLowerCase();
             input.value = '';
@@ -220,11 +126,6 @@ class NaniteSystem {
         for (const button of document.querySelectorAll('[data-command]')) {
             button.addEventListener('click', () => {
                 this.handleCommand(button.getAttribute('data-command'));
-            });
-        }
-        for (const button of document.querySelectorAll('[data-plan-request]')) {
-            button.addEventListener('click', () => {
-                this.planDistributedOs(button.getAttribute('data-plan-request'));
             });
         }
     }
@@ -239,49 +140,28 @@ class NaniteSystem {
                 document.getElementById('terminal-output').innerHTML = '';
                 return;
             }
-            this.appendTerminal('[SYSTEM] Commands: status, os, plan flight route, scan, repair, shield, cloak, calibrate, standby, clear', 'gold');
+            this.appendTerminal('[SYSTEM] Commands: status, scan, repair, shield, cloak, calibrate, standby, clear', 'gold');
             return;
         }
 
-        if (command === 'os') {
-            await this.syncDistributedOs(true);
-            return;
-        }
-
-        if (command.startsWith('plan ')) {
-            await this.planDistributedOs(command.slice(5));
-            return;
-        }
-
-        if (!this.neuralLinked) {
-            this.appendTerminal('[AUTH] Command rejected. Neural Auth required.', 'danger');
+        if (!this.token) {
+            this.appendTerminal('[AUTH] Command rejected. Neural Auth token required.', 'danger');
             return;
         }
 
         try {
             const response = await fetch('/api/suit/command', {
                 method: 'POST',
-                credentials: 'same-origin',
-                headers: this.headers('POST'),
+                headers: this.headers(),
                 body: JSON.stringify({ command }),
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || `command ${response.status}`);
             this.applyTelemetry(data.telemetry);
             this.appendTerminal(`[NSS-01] ${data.result}`, 'gold');
-            await this.syncDistributedOs();
         } catch (error) {
             this.appendTerminal(`[NSS-01] ${error.message}`, 'danger');
         }
-    }
-
-    escapeHtml(value) {
-        return String(value ?? '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
     }
 
     startClock() {

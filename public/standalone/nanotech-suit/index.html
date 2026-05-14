@@ -40,38 +40,6 @@
             </div>
         </section>
 
-        <!-- Distributed Suit OS -->
-        <section class="hud-panel os-panel" aria-label="Distributed Suit OS">
-            <div class="panel-title">
-                <span>DISTRIBUTED_OS</span>
-                <span id="os-posture">SYNCING</span>
-            </div>
-            <div class="os-grid">
-                <div>
-                    <span>DOMAINS</span>
-                    <strong id="os-domain-count">--</strong>
-                </div>
-                <div>
-                    <span>BUSES</span>
-                    <strong id="os-bus-count">--</strong>
-                </div>
-                <div>
-                    <span>RTOS</span>
-                    <strong id="os-rtos-count">--</strong>
-                </div>
-                <div>
-                    <span>LOCKS</span>
-                    <strong id="os-lock-count">--</strong>
-                </div>
-            </div>
-            <div class="domain-list" id="os-domain-list"></div>
-            <div class="os-actions" aria-label="Suit OS Plans">
-                <button data-plan-request="flight route" type="button">FLIGHT</button>
-                <button data-plan-request="shield guardian" type="button">GUARD</button>
-                <button data-plan-request="emergency stop" type="button">SAFE STOP</button>
-            </div>
-        </section>
-
         <!-- Central Reticle -->
         <div class="reticle-center">
             <div class="reticle-inner">
@@ -93,22 +61,22 @@
             </div>
         </section>
 
-        <!-- Guardian Controls -->
-        <section class="hud-panel combat-panel" aria-label="Guardian Systems">
+        <!-- Combat -->
+        <section class="hud-panel combat-panel" aria-label="Combat Systems">
             <div class="panel-title">
-                <span>GUARDIAN_SYSTEMS</span>
-                <span class="text-cyan">SAFE</span>
+                <span>COMBAT_SYSTEMS</span>
+                <span class="text-danger">ARMED</span>
             </div>
             <div class="weapon-status">
-                <span>FLIGHT_VISUAL</span>
+                <span>REPULSOR_ARRAY</span>
                 <div class="status-indicator active"></div>
             </div>
             <div class="weapon-status">
-                <span>MOTION_MCU_LOCK</span>
+                <span>MICRO_MISSILES</span>
                 <div class="status-indicator"></div>
             </div>
             <div class="weapon-status">
-                <span>SHIELD_SIM</span>
+                <span>SHIELD_GEN</span>
                 <div class="status-indicator active"></div>
             </div>
             <div class="command-grid" aria-label="Suit Commands">
@@ -147,7 +115,6 @@
         <footer class="bottom-status">
             <span id="auth-status">GHOST_PROTOCOL: CHECKING</span>
             <span>KERNEL_VERSION: 1.2.0-ULTRA</span>
-            <span id="os-status-line">OS_POSTURE: SYNCING</span>
             <span id="energy-level">AEGIS_ENERGY: 99.2%</span>
             <span id="real-time-clock">00:00:00</span>
         </footer>

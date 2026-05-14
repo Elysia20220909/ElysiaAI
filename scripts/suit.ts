@@ -1,8 +1,4 @@
 import { buildSuitCommsStatus } from "../packages/server/src/lib/suit-comms";
-import {
-	buildSuitDistributedOsSnapshot,
-	planSuitDistributedOsRequest,
-} from "../packages/server/src/lib/suit-distributed-os";
 import { buildSuitEdgeRuntimeSnapshot } from "../packages/server/src/lib/suit-edge-runtime";
 import { buildSuitHardwareStatus } from "../packages/server/src/lib/suit-hardware-adapter";
 import {
@@ -35,7 +31,6 @@ function readFlagValue(flag: string): string {
 
 const phrase = readFlagValue("--phrase");
 const mode = readFlagValue("--mode");
-const requestText = readFlagValue("--request");
 
 if (command === "status") {
 	const status = buildSuitStatus();
@@ -87,38 +82,6 @@ if (command === "status") {
 			console.log(
 				`- ${node.id}: ${node.status}, ${node.runtime}, ${node.bus}, ${node.zone}`,
 			);
-		}
-	}
-} else if (command === "os") {
-	if (requestText) {
-		const plan = planSuitDistributedOsRequest({
-			request: requestText,
-			requestedBy: "local-cli",
-		});
-		if (asJson) {
-			console.log(JSON.stringify(plan, null, 2));
-		} else {
-			console.log(`Suit distributed OS plan: ${plan.matchedRequest}`);
-			console.log(`Decision: ${plan.decision}`);
-			console.log(`Posture: ${plan.posture}`);
-			console.log(`Dispatch: ${plan.dispatch}`);
-			for (const reason of plan.reasons) {
-				console.log(`- ${reason}`);
-			}
-		}
-	} else {
-		const os = buildSuitDistributedOsSnapshot();
-		if (asJson) {
-			console.log(JSON.stringify(os, null, 2));
-		} else {
-			console.log(`${os.id} / ${os.version}`);
-			console.log(`Posture: ${os.posture}`);
-			console.log(os.summary);
-			for (const domain of os.domains) {
-				console.log(
-					`- ${domain.id}: ${domain.status}, ${domain.runtime}, ${domain.authority}`,
-				);
-			}
 		}
 	}
 } else if (command === "hardware") {
@@ -191,7 +154,7 @@ if (command === "status") {
 } else {
 	console.error(`Unknown suit command: ${command}`);
 	console.error(
-		'Usage: bun run suit -- [status|presets|persona|comms|edge|os|hardware|hololens|mark85] [--json] [--request "flight visualization"] [--phrase "Jarvis Scan"] [--mode guardian]',
+		'Usage: bun run suit -- [status|presets|persona|comms|edge|hardware|hololens|mark85] [--json] [--phrase "Jarvis Scan"] [--mode guardian]',
 	);
 	process.exit(1);
 }
