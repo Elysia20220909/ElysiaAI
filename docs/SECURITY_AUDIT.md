@@ -22,8 +22,20 @@ These advisories are tracked in `scripts/security/audit_dependencies.py` as an e
 ```bash
 bun run security:audit
 bun run security:glassworm -- --ci
+bun run security:ggshield:scan
 bun audit
 ```
+
+Set up GitGuardian ggshield locally with:
+
+```bash
+bun run security:ggshield:setup
+```
+
+The setup command installs `ggshield` when missing and then runs `ggshield auth login`.
+The scan command summarizes detector names and file locations without printing secret
+values. Use `bun run security:ggshield:history` only when a full git-history scan is
+needed; it can be slow on large histories.
 
 Python environment checks expect the local `.venv` to contain `pip-audit`. Install it with:
 

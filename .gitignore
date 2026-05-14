@@ -203,3 +203,6 @@ scripts/wordlists/
 *.dll
 *.so
 *.dylib
+
+# Added by ggshield
+.cache_ggshield
