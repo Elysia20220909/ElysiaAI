@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { abTestManager } from "../lib/ab-testing";
 import { apiKeyManager } from "../lib/api-key-manager";
 import { authErrorResponse, requireAccessToken } from "../lib/auth-cookies";
+import { autoDeliveryProtocol } from "../lib/auto-delivery-protocol";
 import { backupScheduler } from "../lib/backup-scheduler";
 import { jsonError } from "../lib/constants";
 import { healthMonitor } from "../lib/health-monitor";
@@ -33,6 +34,10 @@ export const adminRoutes = new Elysia({ prefix: "/admin" }).guard(
 				const { apiAnalytics } = await import("../lib/api-analytics");
 				return apiAnalytics.exportJSON();
 			})
+			.get(
+				"/delivery-protocol",
+				async () => await autoDeliveryProtocol.getStatus(),
+			)
 			.get("/webhooks", () => ({ webhooks: webhookManager.getSubscriptions() }))
 			.get("/api-keys", () => ({
 				keys: apiKeyManager.listKeys(),

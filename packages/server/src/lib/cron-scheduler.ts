@@ -20,6 +20,7 @@ interface ScheduledTask {
 
 class CronScheduler {
 	private tasks: Map<string, ScheduledTask>;
+	private initialized = false;
 
 	constructor() {
 		this.tasks = new Map();
@@ -29,6 +30,15 @@ class CronScheduler {
 	 * デフォルトタスクを初期化
 	 */
 	initializeDefaultTasks() {
+		if (this.initialized) {
+			logger.info("Cron scheduler already initialized", {
+				tasks: this.tasks.size,
+			});
+			return;
+		}
+
+		this.initialized = true;
+
 		// 日次レポート（毎日午前9時）
 		this.addTask(
 			"daily-report",
@@ -83,7 +93,7 @@ class CronScheduler {
 				logger.info("Running database backup task");
 				await backupScheduler.triggerManualBackup();
 			},
-			true,
+			config.autoBackupEnabled,
 		);
 
 		// ログクリーンアップ（毎日午前4時）
@@ -94,7 +104,7 @@ class CronScheduler {
 				logger.info("Running log cleanup task");
 				await logCleanupManager.triggerManualCleanup();
 			},
-			true,
+			config.logCleanupEnabled,
 		);
 
 		// 古いファイルクリーンアップ（毎週日曜日午前5時）
@@ -105,7 +115,7 @@ class CronScheduler {
 				logger.info("Running file cleanup task");
 				fileUploadManager.cleanupOldFiles(30);
 			},
-			true,
+			config.fileCleanupCronEnabled,
 		);
 
 		// ヘルスチェック（10分ごと）
