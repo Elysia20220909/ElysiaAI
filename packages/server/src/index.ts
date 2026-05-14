@@ -11,6 +11,7 @@ import { Elysia, t } from "elysia";
 import { helmet } from "elysia-helmet";
 import { config, isProd } from "../../../src/config.ts";
 import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
+import { autoDeliveryProtocol } from "./lib/auto-delivery-protocol";
 import { jsonError, proxyToFastAPI } from "./lib/constants";
 import { buildCorsConfig } from "./lib/cors-config";
 import { defenseManager } from "./lib/defense-manager";
@@ -313,6 +314,12 @@ void slackSocketModeBridge.start().catch((error) => {
 	});
 });
 
+void autoDeliveryProtocol.start().catch((error) => {
+	logger.warn("Auto delivery protocol startup skipped", {
+		error: error instanceof Error ? error.message : "unknown",
+	});
+});
+
 // Graceful Shutdown Logic
 const handleShutdown = async (signal: string) => {
 	logger.info(`🛑 Received ${signal}, starting graceful shutdown...`);
@@ -326,11 +333,7 @@ const handleShutdown = async (signal: string) => {
 		await app.stop();
 		logger.info("Server stopped.");
 		slackSocketModeBridge.stop();
-
-		const { healthMonitor } = await import("./lib/health-monitor");
-		const { logCleanupManager } = await import("./lib/log-cleanup");
-		healthMonitor.stop();
-		logCleanupManager.stop();
+		await autoDeliveryProtocol.stop();
 
 		clearTimeout(shutdownTimeout);
 		logger.info("✅ Graceful shutdown complete. See you again! ♡");

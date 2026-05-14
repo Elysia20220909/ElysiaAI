@@ -192,6 +192,8 @@ export const config = {
 	monthlyReportEnabled: getEnv("MONTHLY_REPORT_ENABLED", "false") === "true",
 	healthCheckCronEnabled:
 		getEnv("HEALTH_CHECK_CRON_ENABLED", "false") === "true",
+	fileCleanupCronEnabled:
+		getEnv("FILE_CLEANUP_CRON_ENABLED", "false") === "true",
 
 	// Localization
 	defaultLocale: getEnv("DEFAULT_LOCALE", "en"),
