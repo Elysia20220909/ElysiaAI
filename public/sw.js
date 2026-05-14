@@ -1,5 +1,4 @@
 const CACHE_NAME = "elysiaai-shell-v3";
-const API_CACHE_NAME = "elysiaai-api-v1";
 const SHELL_URLS = [
   "/",
   "/stark-ops.html",
@@ -31,7 +30,7 @@ self.addEventListener("activate", (event) => {
       .then((names) =>
         Promise.all(
           names
-            .filter((name) => name !== CACHE_NAME && name !== API_CACHE_NAME)
+            .filter((name) => name !== CACHE_NAME)
             .map((name) => caches.delete(name))
         )
       )
@@ -39,23 +38,13 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-async function staleWhileRevalidate(request) {
-  const cached = await caches.match(request);
-  const cache = await caches.open(API_CACHE_NAME);
-  const network = fetch(request).then((response) => {
-    if (response.ok) cache.put(request, response.clone());
-    return response;
-  });
-
+function isLocalCoreRequest(pathname) {
   return (
-    cached ||
-    network.catch(
-      () =>
-        new Response(JSON.stringify({ error: "offline", status: 503 }), {
-          status: 503,
-          headers: { "content-type": "application/json; charset=utf-8" }
-        })
-    )
+    pathname === "/health" ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/auth/") ||
+    pathname === "/elysia-love" ||
+    pathname === "/feedback"
   );
 }
 
@@ -65,8 +54,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname.startsWith("/api/")) {
-    event.respondWith(staleWhileRevalidate(event.request));
+  if (isLocalCoreRequest(url.pathname)) {
     return;
   }
 
