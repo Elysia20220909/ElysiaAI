@@ -88,6 +88,7 @@ bun run typecheck
 bun run check:git-hygiene
 bun run check:encoding
 bun run security:glassworm -- --ci
+bun run security:audit
 ```
 
 `.env` and `.env.*` must never be tracked. Only `.env.example` belongs in Git.

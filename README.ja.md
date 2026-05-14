@@ -72,6 +72,16 @@ graph LR
 
 ---
 
+## スクリーンショット
+
+| Preview | 説明 |
+| :--- | :--- |
+| ![Desktop UI](docs/screenshots/desktop.png) | ElysiaAI デスクトップ / チャット入口 |
+| ![Local Ops](docs/screenshots/local-ops.png) | Local Ops、Operator Profiles、RAG Import |
+| ![Security Center](docs/screenshots/security-center.png) | Sovereign Security Center |
+
+---
+
 ## 🗺️ ロードマップ
 
 ElysiaAIは以下のフェーズを経て進化します。
@@ -82,14 +92,18 @@ ElysiaAIは以下のフェーズを経て進化します。
 - [x] 統合管理CLI (manage.ts) の開発
 
 ### Phase 2: Resonance (次期)
-- [ ] **複数ユーザー対応**: マルチユーザー管理と権限制御 (RBAC)。
-- [ ] **メモリ暗号化**: Milvus記憶領域とログの AES-256-GCM 暗号化。
-- [ ] **高度なCI/CD**: 自動テストカバレッジの向上。
+- [x] **メモリ暗号化**: Milvus記憶領域とログの AES-256-GCM 暗号化基盤。
+- [x] **RBAC Foundation**: 役割ベースの権限管理ガード。
+- [x] **複数ユーザー対応**: UI レベルでの複数ユーザー切り替え・管理。
+- [x] **README Screenshots**: 実 UI スクリーンショットの追加。
+- [x] **RAG Import UX**: ローカル文書取り込み体験の改善。
+- [x] **高度なCI/CD**: セキュリティ・品質ゲートの自動化強化。
 
 ### Phase 3: Transcendence
 - [ ] **AbyssRTOS 統合**: 完全隔離された実行環境。
-- [ ] **Shield Agent**: Rustによるリアルタイム脅威検知。
+- [x] **Shield Agent**: Rustによるリアルタイム脅威検知。
 - [ ] **Sovereign Mesh**: 分散型AI OSネットワーク。
+- [x] **Tauri Distribution**: デスクトップ版配布手順の整理。
 
 ---
 
@@ -129,6 +143,7 @@ bun run typecheck
 bun run check:git-hygiene
 bun run check:encoding
 bun run security:glassworm -- --ci
+bun run security:audit
 ```
 
 `.env` や `.env.*` は追跡禁止です。追跡するのは `.env.example` のみです。

@@ -48,6 +48,10 @@
         box-sizing: border-box;
       }
 
+      html {
+        scroll-padding-top: calc(136px + var(--safe-top));
+      }
+
       body {
         min-height: 100vh;
         margin: 0;
@@ -253,7 +257,7 @@
 
       .section {
         min-width: 0;
-        scroll-margin-top: calc(96px + var(--safe-top));
+        scroll-margin-top: calc(136px + var(--safe-top));
         border: 1px solid var(--line);
         border-radius: 8px;
         background:
@@ -270,6 +274,7 @@
       }
 
       .section h2 {
+        scroll-margin-top: calc(136px + var(--safe-top));
         margin: 0 0 14px;
         font-size: 14px;
         color: var(--gold);
@@ -797,6 +802,165 @@
         font-size: 12px;
       }
 
+      .operator-summary,
+      .rag-import-panel {
+        display: grid;
+        gap: 12px;
+      }
+
+      .operator-summary {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+
+      .operator-summary strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .operator-summary span,
+      .profile-card span,
+      .drop-zone span,
+      .import-item span {
+        color: var(--muted);
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+
+      .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .profile-card {
+        display: grid;
+        gap: 9px;
+        min-width: 0;
+        min-height: 156px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 12px;
+      }
+
+      .profile-card.active {
+        border-color: var(--cyan);
+        background:
+          linear-gradient(180deg, rgba(82, 215, 232, 0.1), transparent 92px),
+          var(--panel);
+      }
+
+      .profile-card h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .profile-role {
+        width: fit-content;
+      }
+
+      .profile-actions,
+      .import-actions,
+      .profile-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: end;
+      }
+
+      .profile-actions {
+        align-self: end;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+        min-width: min(100%, 180px);
+      }
+
+      .field span {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      input,
+      select {
+        min-height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        padding: 0 12px;
+        font: inherit;
+      }
+
+      select option {
+        background: var(--band);
+        color: var(--text);
+      }
+
+      .drop-zone {
+        display: grid;
+        place-items: center;
+        min-height: 180px;
+        border: 1px dashed rgba(82, 215, 232, 0.56);
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(82, 215, 232, 0.08), transparent 56%),
+          var(--panel);
+        padding: 18px;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      .drop-zone.is-dragging {
+        border-color: var(--gold);
+        background:
+          linear-gradient(135deg, rgba(216, 173, 95, 0.14), transparent 56%),
+          var(--panel);
+      }
+
+      .drop-zone input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .drop-zone strong {
+        font-size: 18px;
+      }
+
+      .import-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .import-item {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 10px 12px;
+      }
+
+      .import-item strong {
+        overflow-wrap: anywhere;
+      }
+
       .error {
         color: var(--danger);
       }
@@ -939,12 +1103,15 @@
         .home-probes,
         .mesh-guards,
         .mesh-routes,
+        .profile-grid,
         .services,
         .host-grid {
           grid-template-columns: 1fr;
         }
 
-        .improvement {
+        .improvement,
+        .import-item,
+        .operator-summary {
           grid-template-columns: 1fr;
         }
 
@@ -1061,9 +1228,11 @@
               <a class="sidebar-item" href="#readiness-title" data-section-nav="readiness-title" aria-current="page">Readiness</a>
               <a class="sidebar-item" href="#services-title" data-section-nav="services-title">House Systems</a>
               <a class="sidebar-item" href="#host-title" data-section-nav="host-title">Host Inventory</a>
+              <a class="sidebar-item" href="#operator-profiles-title" data-section-nav="operator-profiles-title">Operators</a>
             </div>
             <div class="sidebar-group">
               <div class="sidebar-group-title">Planning</div>
+              <a class="sidebar-item" href="#rag-import-title" data-section-nav="rag-import-title">RAG Import</a>
               <a class="sidebar-item" href="#home-server-title" data-section-nav="home-server-title">Home Gates</a>
               <a class="sidebar-item" href="#future-title" data-section-nav="future-title">Future Path</a>
               <a class="sidebar-item" href="#secure-mesh-title" data-section-nav="secure-mesh-title">Secure Mesh</a>
@@ -1102,6 +1271,52 @@
       <section class="section" aria-labelledby="host-title">
         <h2 id="host-title">Host Inventory</h2>
         <div class="host-grid" id="host"></div>
+      </section>
+
+      <section class="section" aria-labelledby="operator-profiles-title">
+        <h2 id="operator-profiles-title">Operator Profiles</h2>
+        <div class="operator-summary">
+          <div>
+            <strong id="active-operator-name">Owner</strong>
+            <span id="active-operator-detail">owner · local preferences</span>
+          </div>
+          <span class="badge ready" id="auth-session-state">session check</span>
+        </div>
+        <div class="profile-grid" id="operator-profiles"></div>
+        <form class="profile-form" id="operator-profile-form">
+          <label class="field">
+            <span>Name</span>
+            <input id="operator-name-input" name="operator-name" autocomplete="name" maxlength="32" required />
+          </label>
+          <label class="field">
+            <span>Role</span>
+            <select id="operator-role-input" name="operator-role">
+              <option value="owner">Owner</option>
+              <option value="admin">Admin</option>
+              <option value="operator">Operator</option>
+              <option value="guest">Guest</option>
+            </select>
+          </label>
+          <button type="submit">Add Profile</button>
+        </form>
+      </section>
+
+      <section class="section" aria-labelledby="rag-import-title">
+        <h2 id="rag-import-title">RAG Import</h2>
+        <div class="rag-import-panel">
+          <label class="drop-zone" id="rag-drop-zone">
+            <input id="rag-file-input" type="file" multiple accept=".md,.txt,.json,.csv,.pdf,.docx,.html,.htm" />
+            <strong>Drop local documents</strong>
+            <span id="rag-import-summary">0 files selected · local review first</span>
+          </label>
+          <div class="import-list" id="rag-import-list"></div>
+          <div class="import-actions">
+            <button id="rag-stage-button" type="button">Stage Queue</button>
+            <button id="rag-upload-button" type="button">Upload Files</button>
+            <button id="rag-clear-button" type="button">Clear</button>
+            <span class="badge unknown" id="rag-import-state">idle</span>
+          </div>
+        </div>
       </section>
 
       <section class="section" aria-labelledby="home-server-title">
@@ -1157,6 +1372,326 @@
       const improvements = document.getElementById("improvements");
       const logs = document.getElementById("logs");
       const refresh = document.getElementById("refresh");
+      const sidebarNav = document.querySelector(".sidebar-nav");
+      const operatorProfiles = document.getElementById("operator-profiles");
+      const operatorProfileForm = document.getElementById("operator-profile-form");
+      const operatorNameInput = document.getElementById("operator-name-input");
+      const operatorRoleInput = document.getElementById("operator-role-input");
+      const activeOperatorName = document.getElementById("active-operator-name");
+      const activeOperatorDetail = document.getElementById("active-operator-detail");
+      const authSessionState = document.getElementById("auth-session-state");
+      const ragDropZone = document.getElementById("rag-drop-zone");
+      const ragFileInput = document.getElementById("rag-file-input");
+      const ragImportList = document.getElementById("rag-import-list");
+      const ragImportSummary = document.getElementById("rag-import-summary");
+      const ragImportState = document.getElementById("rag-import-state");
+      const ragStageButton = document.getElementById("rag-stage-button");
+      const ragUploadButton = document.getElementById("rag-upload-button");
+      const ragClearButton = document.getElementById("rag-clear-button");
+      const defaultOperatorProfiles = [
+        {
+          id: "owner",
+          name: "Owner",
+          role: "owner",
+          note: "Full local stewardship",
+          system: true,
+        },
+        {
+          id: "admin",
+          name: "Admin",
+          role: "admin",
+          note: "Maintenance and quality gates",
+          system: true,
+        },
+        {
+          id: "guest",
+          name: "Guest",
+          role: "guest",
+          note: "Read-only review",
+          system: true,
+        },
+      ];
+      let selectedRagFiles = [];
+
+      function safeJsonParse(value, fallback) {
+        try {
+          const parsed = JSON.parse(value || "");
+          return parsed ?? fallback;
+        } catch {
+          return fallback;
+        }
+      }
+
+      function profileKey(value) {
+        return String(value || "operator")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 40) || "operator";
+      }
+
+      function getStoredProfiles() {
+        const stored = safeJsonParse(
+          localStorage.getItem("elysia_operator_profiles"),
+          [],
+        );
+        const customProfiles = Array.isArray(stored) ? stored : [];
+        const byId = new Map();
+        [...defaultOperatorProfiles, ...customProfiles].forEach((profile) => {
+          if (!profile?.id || !profile?.name) return;
+          byId.set(profile.id, {
+            id: String(profile.id),
+            name: String(profile.name),
+            role: String(profile.role || "operator"),
+            note: String(profile.note || "Local operator profile"),
+            system: Boolean(profile.system),
+          });
+        });
+        return [...byId.values()];
+      }
+
+      function getActiveOperatorId() {
+        return localStorage.getItem("elysia_active_operator") || "owner";
+      }
+
+      function getActiveOperator() {
+        const profiles = getStoredProfiles();
+        return (
+          profiles.find((profile) => profile.id === getActiveOperatorId()) ||
+          profiles[0] ||
+          defaultOperatorProfiles[0]
+        );
+      }
+
+      function persistCustomProfiles(profiles) {
+        const customProfiles = profiles.filter((profile) => !profile.system);
+        localStorage.setItem(
+          "elysia_operator_profiles",
+          JSON.stringify(customProfiles),
+        );
+      }
+
+      function setActiveOperator(profileId) {
+        const profile = getStoredProfiles().find((item) => item.id === profileId);
+        if (!profile) return;
+        localStorage.setItem("elysia_active_operator", profile.id);
+        localStorage.setItem("elysia_chat_user", profile.name);
+        localStorage.setItem("elysia_core_session", `local_ops_${profile.id}`);
+        renderOperatorProfiles();
+        renderRagImport();
+      }
+
+      function renderOperatorProfiles() {
+        const profiles = getStoredProfiles();
+        const active = getActiveOperator();
+        activeOperatorName.textContent = active.name;
+        activeOperatorDetail.textContent = `${active.role} · ${active.note}`;
+        operatorProfiles.innerHTML = profiles
+          .map((profile) => {
+            const isActive = profile.id === active.id;
+            const removeButton = profile.system
+              ? ""
+              : `<button type="button" data-profile-remove="${escapeHtml(profile.id)}">Remove</button>`;
+            return `
+              <article class="profile-card ${isActive ? "active" : ""}">
+                <div>
+                  <h3>${escapeHtml(profile.name)}</h3>
+                  <span>${escapeHtml(profile.note)}</span>
+                </div>
+                <span class="badge ${statusClass(profile.role === "guest" ? "unknown" : profile.role === "owner" ? "ready" : "partial")} profile-role">${escapeHtml(profile.role)}</span>
+                <div class="profile-actions">
+                  <button type="button" data-profile-switch="${escapeHtml(profile.id)}">${isActive ? "Active" : "Use"}</button>
+                  ${removeButton}
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      function addOperatorProfile(event) {
+        event.preventDefault();
+        const name = operatorNameInput.value.trim();
+        if (!name) return;
+        const role = operatorRoleInput.value || "operator";
+        const profiles = getStoredProfiles();
+        const id = `${profileKey(name)}-${Date.now().toString(36)}`;
+        profiles.push({
+          id,
+          name,
+          role,
+          note: "Local preferences",
+          system: false,
+        });
+        persistCustomProfiles(profiles);
+        operatorNameInput.value = "";
+        setActiveOperator(id);
+      }
+
+      function removeOperatorProfile(profileId) {
+        const profiles = getStoredProfiles();
+        const target = profiles.find((profile) => profile.id === profileId);
+        if (!target || target.system) return;
+        persistCustomProfiles(profiles.filter((profile) => profile.id !== profileId));
+        if (getActiveOperatorId() === profileId) {
+          localStorage.setItem("elysia_active_operator", "owner");
+        }
+        renderOperatorProfiles();
+        renderRagImport();
+      }
+
+      function readCookie(name) {
+        const cookie = document.cookie
+          .split(";")
+          .map((part) => part.trim())
+          .find((part) => part.startsWith(`${name}=`));
+        return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : "";
+      }
+
+      function csrfHeaders() {
+        const csrfToken = readCookie("elysia_csrf_token");
+        return csrfToken ? { "X-CSRF-Token": csrfToken } : {};
+      }
+
+      async function updateAuthSessionState() {
+        try {
+          const response = await fetch("/auth/session", {
+            credentials: "same-origin",
+            headers: { accept: "application/json" },
+          });
+          const session = await response.json().catch(() => ({}));
+          if (session.authenticated) {
+            authSessionState.textContent = session.user?.username || "signed in";
+            authSessionState.className = "badge ready";
+            return;
+          }
+          authSessionState.textContent = "local only";
+          authSessionState.className = "badge unknown";
+        } catch {
+          authSessionState.textContent = "offline";
+          authSessionState.className = "badge attention";
+        }
+      }
+
+      function formatBytes(bytes) {
+        const value = Number(bytes) || 0;
+        if (value < 1024) return `${value} B`;
+        if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+        return `${(value / 1024 / 1024).toFixed(1)} MB`;
+      }
+
+      function setRagImportState(label, state = "unknown") {
+        ragImportState.textContent = label;
+        ragImportState.className = `badge ${state}`;
+      }
+
+      function renderRagImport() {
+        const totalBytes = selectedRagFiles.reduce(
+          (total, file) => total + file.size,
+          0,
+        );
+        const queued = safeJsonParse(
+          localStorage.getItem("elysia_rag_import_queue"),
+          [],
+        );
+        ragImportSummary.textContent = `${selectedRagFiles.length} files · ${formatBytes(totalBytes)} · ${queued.length || 0} queued`;
+        ragImportList.innerHTML = selectedRagFiles
+          .map(
+            (file) => `
+              <article class="import-item">
+                <div>
+                  <strong>${escapeHtml(file.name)}</strong>
+                  <span>${escapeHtml(file.type || "document")} · ${escapeHtml(formatBytes(file.size))}</span>
+                </div>
+                <span class="badge unknown">review</span>
+              </article>
+            `,
+          )
+          .join("");
+      }
+
+      function selectRagFiles(files) {
+        selectedRagFiles = [...selectedRagFiles, ...Array.from(files || [])]
+          .filter((file, index, all) => {
+            return (
+              all.findIndex(
+                (candidate) =>
+                  candidate.name === file.name &&
+                  candidate.size === file.size &&
+                  candidate.lastModified === file.lastModified,
+              ) === index
+            );
+          })
+          .slice(0, 12);
+        setRagImportState("selected", selectedRagFiles.length ? "partial" : "unknown");
+        renderRagImport();
+      }
+
+      function stageRagImportQueue() {
+        if (!selectedRagFiles.length) {
+          setRagImportState("no files", "attention");
+          return;
+        }
+        const active = getActiveOperator();
+        const existing = safeJsonParse(
+          localStorage.getItem("elysia_rag_import_queue"),
+          [],
+        );
+        const staged = selectedRagFiles.map((file, index) => ({
+          id: `rag-${Date.now().toString(36)}-${index}`,
+          name: file.name,
+          size: file.size,
+          type: file.type || "document",
+          operatorId: active.id,
+          operatorName: active.name,
+          queuedAt: new Date().toISOString(),
+          status: "review",
+        }));
+        localStorage.setItem(
+          "elysia_rag_import_queue",
+          JSON.stringify([...existing, ...staged].slice(-80)),
+        );
+        setRagImportState(`${staged.length} staged`, "ready");
+        renderRagImport();
+      }
+
+      async function uploadRagFiles() {
+        if (!selectedRagFiles.length) {
+          setRagImportState("no files", "attention");
+          return;
+        }
+        setRagImportState("uploading", "partial");
+        let uploaded = 0;
+        try {
+          for (const file of selectedRagFiles) {
+            const formData = new FormData();
+            formData.append("file", file);
+            const response = await fetch("/api/files/upload", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: csrfHeaders(),
+              body: formData,
+            });
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            uploaded += 1;
+          }
+          stageRagImportQueue();
+          setRagImportState(`${uploaded} uploaded`, "ready");
+          updateAuthSessionState();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          setRagImportState(message === "HTTP 401" ? "auth required" : message, "attention");
+        }
+      }
+
+      function clearRagImport() {
+        selectedRagFiles = [];
+        ragFileInput.value = "";
+        setRagImportState("idle", "unknown");
+        renderRagImport();
+      }
 
       function escapeHtml(value) {
         return String(value ?? "")
@@ -1169,6 +1704,18 @@
 
       function statusClass(value) {
         return value || "unknown";
+      }
+
+      function scrollToSectionId(sectionId, behavior = "smooth") {
+        const target = document.getElementById(sectionId);
+        if (!target) return false;
+        const header = document.querySelector("header.app-nav");
+        const offset = (header?.getBoundingClientRect().height || 112) + 24;
+        window.scrollTo({
+          top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset),
+          behavior,
+        });
+        return true;
       }
 
       function renderService(service) {
@@ -1492,7 +2039,55 @@
       }
 
       refresh.addEventListener("click", loadOps);
+      sidebarNav.addEventListener("click", (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        const link = target?.closest("a[data-section-nav]");
+        if (!link) return;
+        const sectionId = link.getAttribute("data-section-nav");
+        if (!sectionId || !scrollToSectionId(sectionId)) return;
+        event.preventDefault();
+        history.replaceState(null, "", `#${sectionId}`);
+      });
+      operatorProfileForm.addEventListener("submit", addOperatorProfile);
+      operatorProfiles.addEventListener("click", (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        const button = target?.closest("button");
+        if (!button) return;
+        const switchId = button.getAttribute("data-profile-switch");
+        const removeId = button.getAttribute("data-profile-remove");
+        if (switchId) setActiveOperator(switchId);
+        if (removeId) removeOperatorProfile(removeId);
+      });
+      ragFileInput.addEventListener("change", (event) => {
+        selectRagFiles(event.target.files);
+      });
+      ["dragenter", "dragover"].forEach((eventName) => {
+        ragDropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          ragDropZone.classList.add("is-dragging");
+        });
+      });
+      ["dragleave", "drop"].forEach((eventName) => {
+        ragDropZone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          ragDropZone.classList.remove("is-dragging");
+        });
+      });
+      ragDropZone.addEventListener("drop", (event) => {
+        selectRagFiles(event.dataTransfer?.files);
+      });
+      ragStageButton.addEventListener("click", stageRagImportQueue);
+      ragUploadButton.addEventListener("click", uploadRagFiles);
+      ragClearButton.addEventListener("click", clearRagImport);
+      renderOperatorProfiles();
+      renderRagImport();
+      updateAuthSessionState();
       loadOps();
+      if (location.hash) {
+        requestAnimationFrame(() =>
+          scrollToSectionId(location.hash.slice(1), "auto"),
+        );
+      }
     </script>
     <script src="/pwa-shell.js" defer></script>
   </body>
