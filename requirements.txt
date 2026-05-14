@@ -3,7 +3,7 @@
 setuptools>=78.1.1
 python-dotenv==1.2.2
 numpy>=1.26.0,<3.0.0
-psutil==5.9.8
+psutil==7.2.2
 cryptography>=42.0.5
 python-multipart>=0.0.24
 
@@ -44,9 +44,9 @@ defusedxml==0.7.1
 # API & Server
 fastapi==0.136.1
 uvicorn==0.46.0
-httpx>=0.27.0
-pydantic-settings>=2.2.1
-pytest>=8.2.0
+httpx>=0.28.1
+pydantic-settings>=2.14.0
+pytest>=9.0.3
 ruff>=0.8.0
 feedparser==6.0.12
 deep-translator==1.11.4
