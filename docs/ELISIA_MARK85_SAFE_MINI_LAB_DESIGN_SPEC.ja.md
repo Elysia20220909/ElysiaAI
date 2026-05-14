@@ -398,7 +398,7 @@ Safety Governor = 操作境界
 | フェーズ | 目標 | 成果物 |
 | --- | --- | --- |
 | Phase 0 | 設計を読む | この文書、画面案、安全境界 |
-| Phase 1 | 静的HUDを作る | 1画面のHTML/CSSまたは既存UI内ページ |
+| Phase 1 | Status Badgeを作る | `docs/ELISIA_MARK85_STAGE1_STATUS_BADGE_BUILD.ja.md` と `public/standalone/mark85-status-badge/index.html` |
 | Phase 2 | ローカル状態APIを作る | `status`, `events`, `start`, `stop` |
 | Phase 3 | 仮想センサーを動かす | 温度、距離、姿勢のシミュレーション |
 | Phase 4 | ログとセーフモードを入れる | JSONL/SQLiteログ、停止操作 |

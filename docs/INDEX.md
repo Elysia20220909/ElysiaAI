@@ -19,6 +19,11 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | AURELION personal cognitive OS spec | `docs/AURELION_PERSONAL_COGNITIVE_OS_SPEC.ja.md` |
 | AURELION Stage 1 Local Stark Desk implementation plan | `docs/AURELION_STAGE1_LOCAL_STARK_DESK_PLAN.ja.md` |
 | E.L.I.S.I.A. Mark LXXXV safe mini lab design/spec | `docs/ELISIA_MARK85_SAFE_MINI_LAB_DESIGN_SPEC.ja.md`, `docs/ELISIA_MARK85_SAFE_MINI_LAB_DESIGN_SPEC.en-US.md` |
+| E.L.I.S.I.A. Mark XLVII safe mini lab profile | `docs/ELISIA_MARK47_SAFE_MINI_LAB_PROFILE.ja.md`, `docs/ELISIA_MARK47_SAFE_MINI_LAB_PROFILE.en-US.md` |
+| E.L.I.S.I.A. Mark LXXXV Stage 1 status badge build | `docs/ELISIA_MARK85_STAGE1_STATUS_BADGE_BUILD.ja.md`, `docs/ELISIA_MARK85_STAGE1_STATUS_BADGE_BUILD.en-US.md` |
+| E.L.I.S.I.A. Stage 1.5 safe soldering starter | `docs/ELISIA_STAGE1_5_SAFE_SOLDERING_STARTER.ja.md`, `docs/ELISIA_STAGE1_5_SAFE_SOLDERING_STARTER.en-US.md` |
+| E.L.I.S.I.A. Mark XLVII Stage 2 remote link indicator | `docs/ELISIA_MARK47_STAGE2_REMOTE_LINK_INDICATOR.ja.md`, `docs/ELISIA_MARK47_STAGE2_REMOTE_LINK_INDICATOR.en-US.md` |
+| E.L.I.S.I.A. Mark XLVII remote link indicator style and cost | `docs/ELISIA_MARK47_REMOTE_LINK_INDICATOR_STYLE_COST_PLAN.ja.md`, `docs/ELISIA_MARK47_REMOTE_LINK_INDICATOR_STYLE_COST_PLAN.en-US.md` |
 | E.L.I.S.I.A. logic board parts and schematic reading | `docs/ELISIA_LOGIC_BOARD_PARTS_AND_SCHEMATIC_READING.ja.md`, `docs/ELISIA_LOGIC_BOARD_PARTS_AND_SCHEMATIC_READING.en-US.md` |
 | Stark home local server build | `docs/STARK_HOME_LOCAL_SERVER_BUILD.md` |
 | Stark home automated setup | `docs/STARK_HOME_AUTOMATED_SETUP.md` |

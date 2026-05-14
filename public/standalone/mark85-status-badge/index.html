@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E.L.I.S.I.A. Mark LXXXV Status Badge</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0d0f10;
+        --band: #15181b;
+        --panel: #1d2225;
+        --panel-2: #24292d;
+        --line: #3e464b;
+        --text: #f4efe7;
+        --muted: #aeb8b9;
+        --red: #c84d42;
+        --gold: #d7ad5b;
+        --cyan: #64d8e8;
+        --green: #67d18f;
+        --amber: #efbd66;
+        --off: #111517;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background:
+          linear-gradient(120deg, rgba(200, 77, 66, 0.22), transparent 34%),
+          linear-gradient(240deg, rgba(100, 216, 232, 0.14), transparent 38%),
+          var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      main {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 24px 0 32px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px;
+        align-items: center;
+        min-height: 72px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 16px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 26px;
+        line-height: 1.1;
+        letter-spacing: 0;
+      }
+
+      .subline {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status-strip {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .tag {
+        min-height: 28px;
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 0 10px;
+        background: var(--band);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .tag strong {
+        color: var(--cyan);
+        margin-left: 6px;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(280px, 420px) minmax(0, 1fr);
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .badge,
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(29, 34, 37, 0.94);
+      }
+
+      .badge {
+        min-height: 620px;
+        padding: 18px;
+        display: grid;
+        align-content: start;
+        gap: 16px;
+      }
+
+      .badge-top {
+        display: grid;
+        grid-template-columns: 72px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+      }
+
+      .arc {
+        width: 72px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        border: 2px solid var(--cyan);
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle, rgba(100, 216, 232, 0.34), transparent 42%),
+          #10181b;
+        box-shadow: 0 0 24px rgba(100, 216, 232, 0.26);
+      }
+
+      .arc span {
+        width: 34px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        border: 1px solid var(--gold);
+        background: rgba(215, 173, 91, 0.12);
+      }
+
+      .system-name {
+        display: grid;
+        gap: 6px;
+      }
+
+      .system-name strong {
+        font-size: 18px;
+        letter-spacing: 0;
+      }
+
+      .system-name span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .matrix-wrap {
+        display: grid;
+        place-items: center;
+        min-height: 300px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+          var(--band);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .matrix {
+        display: grid;
+        grid-template-columns: repeat(5, 40px);
+        grid-template-rows: repeat(5, 40px);
+        gap: 12px;
+      }
+
+      .pixel {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        border: 1px solid #263034;
+        background: var(--off);
+      }
+
+      .pixel.on {
+        border-color: rgba(100, 216, 232, 0.72);
+        background: var(--cyan);
+        box-shadow: 0 0 16px rgba(100, 216, 232, 0.55);
+      }
+
+      .pixel.warn {
+        border-color: rgba(239, 189, 102, 0.8);
+        background: var(--amber);
+        box-shadow: 0 0 16px rgba(239, 189, 102, 0.45);
+      }
+
+      .pixel.danger {
+        border-color: rgba(200, 77, 66, 0.86);
+        background: var(--red);
+        box-shadow: 0 0 16px rgba(200, 77, 66, 0.48);
+      }
+
+      .readout {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .readout div,
+      .metric {
+        min-height: 70px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel-2);
+        padding: 12px;
+      }
+
+      .readout div:last-child .value {
+        font-size: 17px;
+        overflow-wrap: normal;
+        white-space: nowrap;
+      }
+
+      .label {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+
+      .value {
+        display: block;
+        font-size: 22px;
+        font-weight: 850;
+        line-height: 1.1;
+        overflow-wrap: anywhere;
+      }
+
+      .panel-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .panel {
+        min-height: 196px;
+        padding: 14px;
+      }
+
+      .panel h2 {
+        font-size: 14px;
+        letter-spacing: 0;
+        margin-bottom: 12px;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .bar {
+        height: 8px;
+        border-radius: 999px;
+        background: #101416;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+
+      .bar span {
+        display: block;
+        width: var(--w);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--red), var(--gold), var(--cyan));
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      button {
+        min-height: 48px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #171b1e;
+        color: var(--text);
+        font: inherit;
+        font-weight: 850;
+        cursor: pointer;
+      }
+
+      button:hover,
+      button:focus-visible {
+        border-color: var(--cyan);
+        outline: none;
+      }
+
+      .events {
+        display: grid;
+        gap: 8px;
+        max-height: 196px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .event {
+        display: grid;
+        grid-template-columns: 74px minmax(0, 1fr);
+        gap: 8px;
+        min-height: 32px;
+        align-items: center;
+        border-bottom: 1px solid rgba(62, 70, 75, 0.7);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .event strong {
+        color: var(--text);
+      }
+
+      .safety-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .safety-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 32px;
+        border-bottom: 1px solid rgba(62, 70, 75, 0.7);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .safety-item strong {
+        color: var(--green);
+        white-space: nowrap;
+      }
+
+      @media (max-width: 900px) {
+        header,
+        .workspace,
+        .panel-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .status-strip {
+          justify-content: flex-start;
+        }
+
+        .badge {
+          min-height: auto;
+        }
+      }
+
+      @media (max-width: 560px) {
+        main {
+          width: min(100% - 20px, 1180px);
+          padding-top: 14px;
+        }
+
+        .matrix {
+          grid-template-columns: repeat(5, 30px);
+          grid-template-rows: repeat(5, 30px);
+          gap: 8px;
+        }
+
+        .pixel {
+          width: 30px;
+          height: 30px;
+          border-radius: 6px;
+        }
+
+        .readout,
+        .metrics,
+        .controls {
+          grid-template-columns: 1fr;
+        }
+
+        .readout div:last-child .value {
+          white-space: normal;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>E.L.I.S.I.A. Mark LXXXV Status Badge</h1>
+          <p class="subline">MARK 47 / LOCAL SIMULATION / NO PHYSICAL OUTPUT</p>
+        </div>
+        <div class="status-strip" aria-live="polite">
+          <span class="tag">MODE <strong id="mode-tag">OFFLINE</strong></span>
+          <span class="tag">NETWORK <strong>LOCAL</strong></span>
+          <span class="tag">OUTPUT <strong>DISABLED</strong></span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <section class="badge" aria-label="Status badge simulator">
+          <div class="badge-top">
+            <div class="arc" aria-hidden="true"><span></span></div>
+            <div class="system-name">
+              <strong id="badge-title">SAFE LAB STANDBY</strong>
+              <span id="badge-subtitle">Awaiting local operator input</span>
+            </div>
+          </div>
+
+          <div class="matrix-wrap">
+            <div class="matrix" id="matrix" aria-label="5 by 5 badge matrix"></div>
+          </div>
+
+          <div class="readout">
+            <div>
+              <span class="label">ARMOR STATUS</span>
+              <span class="value" id="armor-status">OFFLINE</span>
+            </div>
+            <div>
+              <span class="label">THREAT LEVEL</span>
+              <span class="value" id="threat-level">LOW</span>
+            </div>
+            <div>
+              <span class="label">MOTION</span>
+              <span class="value" id="motion-state">STABLE</span>
+            </div>
+            <div>
+              <span class="label">LAST EVENT</span>
+              <span class="value" id="last-event">NONE</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-grid">
+          <section class="panel">
+            <h2>Virtual Sensors</h2>
+            <div class="metrics">
+              <div class="metric">
+                <span class="label">TEMP</span>
+                <span class="value" id="temp">24.8 C</span>
+                <div class="bar"><span id="temp-bar" style="--w: 48%"></span></div>
+              </div>
+              <div class="metric">
+                <span class="label">DISTANCE</span>
+                <span class="value" id="distance">42 cm</span>
+                <div class="bar"><span id="distance-bar" style="--w: 42%"></span></div>
+              </div>
+              <div class="metric">
+                <span class="label">SIGNAL</span>
+                <span class="value" id="signal">LOCAL</span>
+                <div class="bar"><span style="--w: 100%"></span></div>
+              </div>
+              <div class="metric">
+                <span class="label">POWER</span>
+                <span class="value">USB SAFE</span>
+                <div class="bar"><span style="--w: 62%"></span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Controls</h2>
+            <div class="controls">
+              <button type="button" data-action="online">A ONLINE</button>
+              <button type="button" data-action="alert">B ALERT</button>
+              <button type="button" data-action="motion">MOTION</button>
+              <button type="button" data-action="safe">SAFE</button>
+              <button type="button" data-action="reset">RESET</button>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Safety Governor</h2>
+            <div class="safety-list">
+              <div class="safety-item"><span>Physical output</span><strong>OFF</strong></div>
+              <div class="safety-item"><span>WAN exposure</span><strong>BLOCKED</strong></div>
+              <div class="safety-item"><span>Secrets logging</span><strong>OFF</strong></div>
+              <div class="safety-item"><span>Mode boundary</span><strong>SIM</strong></div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <h2>Event Stream</h2>
+            <div class="events" id="events" aria-live="polite"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const patterns = {
+        offline: ["00000", "01010", "00000", "10001", "01110"],
+        online: ["00100", "01110", "11111", "01110", "10101"],
+        alert: ["00100", "01110", "01110", "00000", "00100"],
+        motion: ["10001", "01010", "00100", "01010", "10001"],
+        safe: ["01110", "10001", "10101", "10001", "01110"],
+      };
+
+      const matrix = document.getElementById("matrix");
+      const modeTag = document.getElementById("mode-tag");
+      const title = document.getElementById("badge-title");
+      const subtitle = document.getElementById("badge-subtitle");
+      const armorStatus = document.getElementById("armor-status");
+      const threatLevel = document.getElementById("threat-level");
+      const motionState = document.getElementById("motion-state");
+      const lastEvent = document.getElementById("last-event");
+      const temp = document.getElementById("temp");
+      const distance = document.getElementById("distance");
+      const tempBar = document.getElementById("temp-bar");
+      const distanceBar = document.getElementById("distance-bar");
+      const events = document.getElementById("events");
+
+      const state = {
+        mode: "OFFLINE",
+        pattern: "offline",
+        threat: "LOW",
+        motion: "STABLE",
+        lastEvent: "NONE",
+        temp: 24.8,
+        distance: 42,
+        log: [],
+      };
+
+      function timeStamp() {
+        return new Date().toLocaleTimeString("ja-JP", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      function pushEvent(event) {
+        state.lastEvent = event;
+        state.log.unshift({ time: timeStamp(), event });
+        state.log = state.log.slice(0, 8);
+      }
+
+      function drawMatrix(kind) {
+        matrix.replaceChildren();
+        const rows = patterns[kind] ?? patterns.offline;
+        rows.join("").split("").forEach((bit) => {
+          const cell = document.createElement("span");
+          cell.className = "pixel";
+          if (bit === "1") {
+            if (kind === "alert") cell.classList.add("danger");
+            else if (kind === "safe") cell.classList.add("warn");
+            else cell.classList.add("on");
+          }
+          matrix.appendChild(cell);
+        });
+      }
+
+      function renderEvents() {
+        events.replaceChildren();
+        state.log.forEach((entry) => {
+          const row = document.createElement("div");
+          row.className = "event";
+          row.innerHTML = `<span>${entry.time}</span><strong>${entry.event}</strong>`;
+          events.appendChild(row);
+        });
+      }
+
+      function render() {
+        modeTag.textContent = state.mode;
+        armorStatus.textContent = state.mode;
+        threatLevel.textContent = state.threat;
+        motionState.textContent = state.motion;
+        lastEvent.textContent = state.lastEvent;
+        temp.textContent = `${state.temp.toFixed(1)} C`;
+        distance.textContent = `${Math.round(state.distance)} cm`;
+        tempBar.style.setProperty("--w", `${Math.min(100, Math.max(0, state.temp * 2))}%`);
+        distanceBar.style.setProperty("--w", `${Math.min(100, Math.max(0, state.distance))}%`);
+        title.textContent =
+          state.mode === "ONLINE"
+            ? "LINK ONLINE"
+            : state.mode === "ALERT"
+              ? "RELAY ALERT"
+              : state.mode === "SAFE_MODE"
+                ? "LOCAL SAFE MODE"
+                : "REMOTE LINK STANDBY";
+        subtitle.textContent =
+          state.mode === "ONLINE"
+            ? "Relay channel active"
+            : state.mode === "ALERT"
+              ? "Awaiting acknowledgement"
+              : state.mode === "SAFE_MODE"
+                ? "Outputs locked to simulation"
+                : "Awaiting local operator link";
+        drawMatrix(state.pattern);
+        renderEvents();
+      }
+
+      function handleAction(action) {
+        if (action === "online") {
+          state.mode = state.mode === "ONLINE" ? "OFFLINE" : "ONLINE";
+          state.threat = "LOW";
+          state.pattern = state.mode === "ONLINE" ? "online" : "offline";
+          pushEvent(state.mode === "ONLINE" ? "BOOT_SEQUENCE_ACCEPTED" : "LOCAL_SHUTDOWN");
+        }
+        if (action === "alert") {
+          state.mode = "ALERT";
+          state.threat = "MEDIUM";
+          state.pattern = "alert";
+          pushEvent("SIMULATED_ALERT");
+        }
+        if (action === "motion") {
+          state.motion = state.motion === "STABLE" ? "MOVING" : "STABLE";
+          state.pattern = "motion";
+          pushEvent(`MOTION_${state.motion}`);
+        }
+        if (action === "safe") {
+          state.mode = "SAFE_MODE";
+          state.threat = "LOW";
+          state.pattern = "safe";
+          pushEvent("SAFE_MODE_ENGAGED");
+        }
+        if (action === "reset") {
+          state.mode = "OFFLINE";
+          state.threat = "LOW";
+          state.motion = "STABLE";
+          state.pattern = "offline";
+          pushEvent("RESET_TO_STANDBY");
+        }
+        render();
+      }
+
+      document.querySelectorAll("button[data-action]").forEach((button) => {
+        button.addEventListener("click", () => handleAction(button.dataset.action));
+      });
+
+      setInterval(() => {
+        if (state.mode === "ONLINE" || state.mode === "ALERT") {
+          state.temp = 24 + Math.sin(Date.now() / 1800) * 2.4;
+          state.distance = 44 + Math.cos(Date.now() / 1500) * 16;
+          render();
+        }
+      }, 900);
+
+      pushEvent("SIMULATOR_READY");
+      render();
+    </script>
+  </body>
+</html>

@@ -398,7 +398,7 @@ The first beginner board project is not making a board from scratch. It is choos
 | Phase | Goal | Deliverable |
 | --- | --- | --- |
 | Phase 0 | Read the design | This document, HUD sketch, safety boundary |
-| Phase 1 | Build static HUD | One HTML/CSS screen or existing UI page |
+| Phase 1 | Build the Status Badge | `docs/ELISIA_MARK85_STAGE1_STATUS_BADGE_BUILD.en-US.md` and `public/standalone/mark85-status-badge/index.html` |
 | Phase 2 | Add local state API | `status`, `events`, `start`, `stop` |
 | Phase 3 | Run virtual sensors | Temperature, distance, and posture simulation |
 | Phase 4 | Add logs and safe mode | JSONL/SQLite logs and stop action |
