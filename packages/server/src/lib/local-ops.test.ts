@@ -88,9 +88,13 @@ describe("local ops overview", () => {
 			"local-intelligence",
 			"ambient-home",
 			"multi-user-support",
+			"readme-screenshots",
+			"rag-import-ux",
 			"advanced-ci-cd",
 			"abyss-rtos",
+			"shield-agent",
 			"sovereign-mesh",
+			"tauri-distribution",
 		]);
 		expect(
 			overview.future.stages.find((entry) => entry.id === "multi-user-support")

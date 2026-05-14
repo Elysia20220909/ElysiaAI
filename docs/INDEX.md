@@ -14,6 +14,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | E.L.I.S.I.A. Windows / macOS admin client setup | `docs/ELISIA_LOCAL_SERVER_CLIENT_SETUP.md` |
 | E.L.I.S.I.A. Windows / macOS host server design | `docs/ELISIA_WINDOWS_MACOS_HOST_SERVER.md` |
 | E.L.I.S.I.A. Mark LXXXV Windows / macOS host server, style, and cost | `docs/ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.md` |
+| Tauri desktop distribution | `docs/TAURI_DISTRIBUTION.md` |
 | Stark home local server build | `docs/STARK_HOME_LOCAL_SERVER_BUILD.md` |
 | Stark home automated setup | `docs/STARK_HOME_AUTOMATED_SETUP.md` |
 | Stark home local server build, Japanese / English | `docs/STARK_HOME_LOCAL_SERVER_BUILD_JA_EN.md` |
