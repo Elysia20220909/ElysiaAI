@@ -128,13 +128,13 @@ Phase 6 のステップ 1「VirtualMedia アンマウント + Boot Override 解�
 # Phase 5: VirtualMedia ブートで preseed インストール
 ./scripts/idrac-virtualmedia.sh mount 10.10.10.120 "//10.1.6.1/public/debian-preseed.iso"
 ./scripts/idrac-virtualmedia.sh boot-once 10.10.10.120 VCD-DVD
-ipmitool -I lanplus -H 10.10.10.120 -U claude -P Claude123 chassis power on
+ipmitool -I lanplus -H 10.10.10.120 -U claude -P <redacted-bmc-password> chassis power on
 # ... preseed インストール完了 → 自動 power off ...
 
 # Phase 6: HDD ブート
 ./scripts/idrac-virtualmedia.sh umount 10.10.10.120
 ./scripts/idrac-virtualmedia.sh boot-reset 10.10.10.120
-ipmitool -I lanplus -H 10.10.10.120 -U claude -P Claude123 chassis power on
+ipmitool -I lanplus -H 10.10.10.120 -U claude -P <redacted-bmc-password> chassis power on
 # R320 POST は遅い（2-3 分）。OS ブート後 SSH 接続可能。
 ```
 

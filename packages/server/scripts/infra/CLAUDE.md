@@ -33,13 +33,13 @@ pvese (Proxmox VE Storage Evaluation) — Supermicro IPMI と Proxmox VE を操�
 | 6号機 | `10.10.10.26` | `10.10.10.206` | ayase-web-service-6 | `config/server6.yml` |
 | 7号機 | `10.10.10.120` (iDRAC) | `10.10.10.207` | ayase-web-service-7 | `config/server7.yml` |
 
-4-6号機共通: ユーザ名 `claude` / パスワード `Claude123` / マザーボード Supermicro X11DPU
-7号機: DELL PowerEdge R320 / iDRAC SSH 鍵認証 (`~/.ssh/idrac_rsa`) / Web/IPMI は `claude` / `Claude123` / IPMI LAN 有効化済み / FW 2.65.65.65
+4-6号機共通: ユーザ名 `claude` / パスワード `<redacted-bmc-password>` / マザーボード Supermicro X11DPU
+7号機: DELL PowerEdge R320 / iDRAC SSH 鍵認証 (`~/.ssh/idrac_rsa`) / Web/IPMI は `claude` / `<redacted-bmc-password>` / IPMI LAN 有効化済み / FW 2.65.65.65
 
 接続コマンド例:
 ```sh
 BMC_IP=$(./bin/yq '.bmc_ip' config/server4.yml)
-ipmitool -I lanplus -H "$BMC_IP" -U claude -P Claude123 chassis status
+ipmitool -I lanplus -H "$BMC_IP" -U claude -P <redacted-bmc-password> chassis status
 ```
 
 ## ルール
@@ -47,7 +47,7 @@ ipmitool -I lanplus -H "$BMC_IP" -U claude -P Claude123 chassis status
 - **全操作をログに記録する**: 状態変更操作は `./oplog.sh` で記録すること（ラボ環境のためユーザ確認は不要）。ログは `log/oplog.log` に蓄積される
 - **スクリプトは必ず `./` 付き相対パスで実行する**: 絶対パス (`/home/ubuntu/projects/pvese/scripts/xxx.sh`) や `./` なしのパス (`scripts/xxx.sh`) は許可リストにマッチしないため自動承認されない。必ず `./scripts/xxx.sh`, `./issue.sh`, `./oplog.sh` のように `./` を付けること
 - **一時ファイルは `tmp/<session-id>/` に書く。`/tmp/` は使用禁止**: `/tmp/` はプロジェクト外パスのため承認プロンプトが出る。cookie ファイル、一時スクリプト、ログ等すべて `tmp/<session-id>/` に書くこと
-- IPMI パスワードや API トークンはスクリプトにハードコードしてよい（ラボ環境）
+- IPMI パスワードや API トークンは環境変数または未追跡のローカル設定に置き、スクリプトやレポートには記録しない
 - `.env` ファイルを使う場合は `.gitignore` に含め、コミットしない
 - PVE API 呼び出し時は自己署名証明書に対応するため `curl -k` または `--cacert` を使用する
 - スクリプトは `#!/bin/sh` で始め、`set -eu` を冒頭に付ける。bash 固有機能 (`[[ ]]`, 配列, `pipefail` 等) は使用禁止。sh で実現困難な処理は Rust CLIツール (`tools/` ディレクトリ) として実装する

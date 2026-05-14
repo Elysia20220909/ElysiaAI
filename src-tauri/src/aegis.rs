@@ -57,8 +57,6 @@ impl AegisWatchdog {
         let watchdog_status = Arc::clone(&status);
         thread::spawn(move || {
             let mut count = 0;
-            let _hmac_key = std::env::var("RESONANCE_SECRET")
-                .unwrap_or_else(|_| "ELYSIAN_DEFAULT_RESONANCE_KEY".to_string());
 
             loop {
                 thread::sleep(Duration::from_millis(1500));
@@ -118,8 +116,9 @@ impl AegisWatchdog {
     /// Appends a signed entry to the Sovereign Ledger.
     pub fn log_to_ledger(&self, category: &str, message: &str) {
         let timestamp = Self::now();
-        let hmac_key = std::env::var("RESONANCE_SECRET")
-            .unwrap_or_else(|_| "ELYSIAN_DEFAULT_RESONANCE_KEY".to_string());
+        let Ok(hmac_key) = std::env::var("RESONANCE_SECRET") else {
+            return;
+        };
 
         let payload = format!("{}:{}:{}", timestamp, category, message);
         let mut mac = HmacSha256::new_from_slice(hmac_key.as_bytes()).unwrap();

@@ -237,7 +237,7 @@ ssh root@10.10.10.204 "drbdadm status"
 ssh root@10.10.10.204 "qm status 100"
 
 # 2. 5号機電源オフ
-ipmitool -I lanplus -H 10.10.10.25 -U claude -P Claude123 chassis power off
+ipmitool -I lanplus -H 10.10.10.25 -U claude -P <redacted-bmc-password> chassis power off
 
 # 3. 30秒後に確認
 ssh root@10.10.10.204 "drbdadm status"           # connection:Connecting
@@ -252,7 +252,7 @@ ssh root@10.10.10.204 "linstor node set-property ayase-web-service-5 DrbdOptions
 # (PVE ホスト経由) sshpass -p 'password' ssh debian@<VM_IP> 'md5sum -c checksums.txt'
 
 # 6. 復旧
-ipmitool -I lanplus -H 10.10.10.25 -U claude -P Claude123 chassis power on
+ipmitool -I lanplus -H 10.10.10.25 -U claude -P <redacted-bmc-password> chassis power on
 # SSH 復帰 + DRBD UpToDate/UpToDate を待機
 ```
 

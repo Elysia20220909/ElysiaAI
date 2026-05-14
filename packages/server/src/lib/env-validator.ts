@@ -3,6 +3,7 @@
  * サーバー起動時に必須環境変数をチェック
  */
 
+import { createHash } from "node:crypto";
 import { logger } from "./logger";
 
 interface EnvConfig {
@@ -12,7 +13,34 @@ interface EnvConfig {
 	default?: string;
 	description: string;
 	validator?: (value: string) => boolean;
-	disallowedValues?: string[];
+	disallowedValueHashes?: string[];
+}
+
+function sha256(value: string): string {
+	return createHash("sha256").update(value).digest("hex");
+}
+
+function isSensitiveEnvName(name: string): boolean {
+	return /(SECRET|TOKEN|PASSWORD|API_KEY|DATABASE_URL|WEBHOOK_URL|PRIVATE)/i.test(
+		name,
+	);
+}
+
+function redactUrlPassword(name: string, value: string): string {
+	try {
+		const url = new URL(value);
+		if (url.password) url.password = "[redacted]";
+		if (url.username && isSensitiveEnvName(name)) url.username = "[redacted]";
+		return url.toString();
+	} catch {
+		return value;
+	}
+}
+
+function summarizeEnvValue(name: string, value: string): string {
+	const redacted = redactUrlPassword(name, value);
+	if (isSensitiveEnvName(name)) return "[redacted]";
+	return redacted.length > 20 ? `${redacted.substring(0, 20)}...` : redacted;
 }
 
 const ENV_SCHEMA: EnvConfig[] = [
@@ -21,34 +49,34 @@ const ENV_SCHEMA: EnvConfig[] = [
 		name: "JWT_SECRET",
 		required: true,
 		productionOnly: true,
-		default: "elysia-sovereign-secret",
 		description: "JWT署名用シークレットキー (32文字以上推奨)",
 		validator: (v) => v.length >= 32,
-		disallowedValues: [
-			"elysia-sovereign-secret",
-			"your-super-secret-jwt-key-change-this-immediately-or-security-risk",
+		disallowedValueHashes: [
+			"f6d8299e8544bcca13ddd58927515f451dfdeee4680d742ceeb450cba4b29c21",
+			"43b5da88b9c9c9f840565cb8bb2ce2c865ee1538b0f37c46b90e9eee3821397f",
 		],
 	},
 	{
 		name: "JWT_REFRESH_SECRET",
 		required: true,
 		productionOnly: true,
-		default: "elysia-refresh-secret",
 		description: "リフレッシュトークン用シークレットキー (32文字以上推奨)",
 		validator: (v) => v.length >= 32,
-		disallowedValues: [
-			"elysia-refresh-secret",
-			"your-super-secret-refresh-key-change-this-immediately-or-security-risk",
+		disallowedValueHashes: [
+			"1311e0d5b8251cdd5e3bf49036ccb40c5e4a43fa70a2ebc8975de969c18d1a24",
+			"2eb78d80eedf46d7f1b74fb22e60605efcc8ad3beacc7de8b93fba2c18b4ebc1",
 		],
 	},
 	{
 		name: "AUTH_PASSWORD",
 		required: true,
 		productionOnly: true,
-		default: "elysiatest-001",
 		description: "デフォルトユーザー(elysia)のパスワード",
-		validator: (v) => v !== "your-strong-password-here" && v.length >= 8,
-		disallowedValues: ["elysiatest-001", "your-strong-password-here"],
+		validator: (v) => v.length >= 8,
+		disallowedValueHashes: [
+			"158a5014828bff808fc3211420b053ab541bd5a746a318727075e829ee96ddbe",
+			"68a07779e1269de644675d5bd67ba147c4238884f2319e01692d27cdc5c1ed78",
+		],
 	},
 
 	// Server Configuration
@@ -65,6 +93,12 @@ const ENV_SCHEMA: EnvConfig[] = [
 		required: false,
 		default: "http://localhost:3000",
 		description: "CORS許可オリジン (カンマ区切り)",
+		validator: (v) =>
+			v
+				.split(",")
+				.map((origin) => origin.trim())
+				.filter(Boolean)
+				.every((origin) => origin !== "*" && /^https?:\/\//.test(origin)),
 	},
 
 	// Database
@@ -79,19 +113,28 @@ const ENV_SCHEMA: EnvConfig[] = [
 		name: "ENCRYPTION_SECRET",
 		required: true,
 		productionOnly: true,
-		default: "elysia-default-shadow-key-777",
 		description: "保存データ暗号化用シークレット",
 		validator: (v) => v.length >= 32,
-		disallowedValues: ["elysia-default-shadow-key-777"],
+		disallowedValueHashes: [
+			"d71e125d7e1bff24cd6eec8a73daa1bc551849643ff9cadfbbb19ac920d0a54c",
+		],
 	},
 	{
 		name: "ENCRYPTION_SALT",
 		required: true,
 		productionOnly: true,
-		default: "abyssal-salt",
 		description: "保存データ暗号化用ソルト",
 		validator: (v) => v.length >= 16,
-		disallowedValues: ["abyssal-salt"],
+		disallowedValueHashes: [
+			"809389a47869c5a458f8cf877e3307a12b5f02c4523e44ac4302160d55dd993c",
+		],
+	},
+	{
+		name: "ELYSIA_SUIT_COMMS_KEY",
+		required: true,
+		productionOnly: true,
+		description: "Suit secure envelope signing/encryption key",
+		validator: (v) => v.length >= 32,
 	},
 
 	// AI/LLM
@@ -128,6 +171,13 @@ const ENV_SCHEMA: EnvConfig[] = [
 		required: false,
 		default: "http://localhost:8000",
 		description: "FastAPI RAGサービスURL",
+	},
+	{
+		name: "FASTAPI_API_KEY",
+		required: true,
+		productionOnly: true,
+		description: "FastAPI RAGサービスへのサーバー間APIキー",
+		validator: (v) => v.length >= 32,
 	},
 	{
 		name: "VOICEVOX_BASE_URL",
@@ -286,7 +336,7 @@ export function validateEnvironment(): ValidationResult {
 
 		// バリデーション
 		if (value && config.validator && !config.validator(value)) {
-			const message = `${config.name}: ${config.description} (現在の値: ${value.substring(0, 20)}...)`;
+			const message = `${config.name}: ${config.description} (現在の値: ${summarizeEnvValue(config.name, value)})`;
 			if (isProduction || !config.productionOnly) {
 				invalid.push(config.name);
 				errors.push(`❌ [無効] ${message}`);
@@ -295,7 +345,7 @@ export function validateEnvironment(): ValidationResult {
 			}
 		}
 
-		if (value && config.disallowedValues?.includes(value)) {
+		if (value && config.disallowedValueHashes?.includes(sha256(value))) {
 			const message = `⚠️  ${config.name}: 開発用またはサンプル値が設定されています`;
 			if (isProduction) {
 				invalid.push(config.name);
@@ -355,7 +405,9 @@ export function checkEnvironmentOrExit() {
 export function printEnvironmentSummary() {
 	logger.info("\n📋 環境変数サマリー:");
 	logger.info(`  - ポート: ${process.env.PORT || 3000}`);
-	logger.info(`  - データベース: ${process.env.DATABASE_URL || "未設定"}`);
+	logger.info(
+		`  - データベース: ${process.env.DATABASE_URL ? summarizeEnvValue("DATABASE_URL", process.env.DATABASE_URL) : "未設定"}`,
+	);
 	logger.info(
 		`  - Redis: ${process.env.REDIS_ENABLED === "true" ? "有効" : "無効"}`,
 	);

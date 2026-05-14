@@ -275,8 +275,8 @@ logCleanupManager.start(); // ログクリーンアップ
 
 ```env
 # Webhook通知
-DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
-SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+DISCORD_WEBHOOK_URL=<discord-webhook-url>
+SLACK_WEBHOOK_URL=<slack-webhook-url>
 CUSTOM_WEBHOOK_URL=https://your-webhook.com/endpoint
 CUSTOM_WEBHOOK_SECRET=your-secret-key
 

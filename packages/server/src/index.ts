@@ -12,6 +12,7 @@ import { helmet } from "elysia-helmet";
 import { config, isProd } from "../../../src/config.ts";
 import { advancedRateLimiter } from "./lib/advanced-rate-limiter";
 import { jsonError, proxyToFastAPI } from "./lib/constants";
+import { buildCorsConfig } from "./lib/cors-config";
 import { defenseManager } from "./lib/defense-manager";
 import { checkEnvironmentOrExit } from "./lib/env-validator";
 import { performHealthCheck } from "./lib/health";
@@ -33,6 +34,7 @@ import { ruleRoutes } from "./routes/rule-routes";
 import { sessionRoutes } from "./routes/session-routes";
 import { slackRoutes } from "./routes/slack-routes";
 import { systemRoutes } from "./routes/system-routes";
+import { takumiRoutes } from "./routes/takumi-routes";
 import { vtuberRoutes } from "./routes/vtuber-routes";
 
 const app = new Elysia();
@@ -42,7 +44,7 @@ checkEnvironmentOrExit();
 
 app
 	.use(helmet())
-	.use(cors())
+	.use(cors(buildCorsConfig()))
 	.use(
 		swagger({
 			documentation: {
@@ -169,6 +171,7 @@ app
 	.use(aiRoutes)
 	.use(slackRoutes)
 	.use(systemRoutes)
+	.use(takumiRoutes)
 	.use(adminRoutes)
 	.use(sessionRoutes)
 	.use(learningRoutes)

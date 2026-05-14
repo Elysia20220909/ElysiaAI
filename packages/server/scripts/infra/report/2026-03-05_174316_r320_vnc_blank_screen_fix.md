@@ -9,7 +9,7 @@
 
 - **背景**: 素の Debian 13.3 netinst ISO では ISOLINUX のグラフィカルメニュー (vesamenu.c32) は表示されるが、いずれのインストールオプションも `vga=788` を使用しており、iDRAC7 VNC ではインストーラ TUI が表示されない
 - **目的**: VNC 経由で d-i TUI が正常に表示される ISO リマスター方法を確立する
-- **前提条件**: iDRAC7 FW 2.65.65.65、VNC ポート 5901 (password: Claude1)
+- **前提条件**: iDRAC7 FW 2.65.65.65、VNC ポート 5901 (password: <redacted-vnc-password>)
 
 ## 環境情報
 
@@ -101,7 +101,7 @@ ssh idrac7 racadm serveraction powercycle
 
 ```bash
 .venv/bin/python tmp/17a03196/vnc-screenshot.py \
-  --host 10.10.10.120 --port 5901 --password Claude1 \
+  --host 10.10.10.120 --port 5901 --password <redacted-vnc-password> \
   --output tmp/17a03196/vnc-check.png --timeout 10
 ```
 

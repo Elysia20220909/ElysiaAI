@@ -150,7 +150,7 @@ Docker ログで "Option B succeeded" を確認。
 
 ```sh
 SCRIPTS=/home/ubuntu/projects/pvese/scripts
-BMC=10.10.10.24; USER=claude; PASS=Claude123
+BMC=10.10.10.24; USER=claude; PASS=<redacted-bmc-password>
 COOKIE=/tmp/bmc-cookie
 
 $SCRIPTS/bmc-session.sh login "$BMC" "$USER" "$PASS" "$COOKIE"
@@ -175,7 +175,7 @@ $SCRIPTS/bmc-power.sh on "$BMC" "$USER" "$PASS"
 
 ```python
 import pexpect
-child = pexpect.spawn("ipmitool -I lanplus -H 10.10.10.24 -U claude -P Claude123 sol activate",
+child = pexpect.spawn("ipmitool -I lanplus -H 10.10.10.24 -U claude -P <redacted-bmc-password> sol activate",
                       timeout=30, encoding='latin-1')
 child.expect("Automated Install", timeout=300)
 ```

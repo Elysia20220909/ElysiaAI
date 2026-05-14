@@ -48,6 +48,9 @@ Never commit local secrets, runtime databases, generated logs, or personal
 workspace files. In particular, `.env` and `.env.*` are ignored; only
 `.env.example` should be tracked.
 
+If Git history may have been overwritten or damaged, stop before pushing to
+`origin` and follow `docs/GIT_RECOVERY_RUNBOOK.md`.
+
 If a local environment file is already tracked, remove it from Git without
 deleting your local copy:
 

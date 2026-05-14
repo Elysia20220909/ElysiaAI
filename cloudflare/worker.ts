@@ -21,16 +21,16 @@ function jsonResponse(body: unknown, init?: ResponseInit) {
 	});
 }
 
-function unavailable(pathname: string) {
+function localCoreResponse(pathname: string) {
 	return jsonResponse(
 		{
 			ok: false,
-			status: "local-core-unavailable",
+			status: "local-core-not-exposed",
 			path: pathname,
 			message:
 				"This Cloudflare edge surface serves public assets only. Run the local Bun/FastAPI stack for private AI, database, and automation APIs.",
 		},
-		{ status: 503 },
+		{ status: 403 },
 	);
 }
 
@@ -39,13 +39,17 @@ export default {
 		const url = new URL(request.url);
 
 		if (request.method === "OPTIONS") {
+			const origin = request.headers.get("origin");
+			const corsHeaders: Record<string, string> = {
+				"access-control-allow-methods": "GET, POST, OPTIONS",
+				"access-control-allow-headers": "content-type, authorization",
+			};
+			if (origin === url.origin) {
+				corsHeaders["access-control-allow-origin"] = origin;
+			}
 			return new Response(null, {
 				status: 204,
-				headers: {
-					"access-control-allow-origin": "*",
-					"access-control-allow-methods": "GET, POST, OPTIONS",
-					"access-control-allow-headers": "content-type, authorization",
-				},
+				headers: corsHeaders,
 			});
 		}
 
@@ -65,7 +69,7 @@ export default {
 			url.pathname === "/elysia-love" ||
 			url.pathname === "/feedback"
 		) {
-			return unavailable(url.pathname);
+			return localCoreResponse(url.pathname);
 		}
 
 		return env.ASSETS.fetch(request);

@@ -77,7 +77,7 @@ describeLive("Authentication", () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				username: process.env.AUTH_USERNAME || "admin",
-				password: process.env.AUTH_PASSWORD || "elysiatest-001",
+				password: process.env.AUTH_PASSWORD || "",
 			}),
 		});
 
@@ -147,7 +147,7 @@ describeLive("Input Validation", () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				username: process.env.AUTH_USERNAME || "admin",
-				password: process.env.AUTH_PASSWORD || "elysiatest-001",
+				password: process.env.AUTH_PASSWORD || "",
 			}),
 		});
 		const data = await response.json();
@@ -198,7 +198,7 @@ describeLive("Rate Limiting", () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				username: process.env.AUTH_USERNAME || "admin",
-				password: process.env.AUTH_PASSWORD || "elysiatest-001",
+				password: process.env.AUTH_PASSWORD || "",
 			}),
 		});
 		const data = await response.json();
@@ -235,7 +235,7 @@ describeLive("Chat API", () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				username: process.env.AUTH_USERNAME || "admin",
-				password: process.env.AUTH_PASSWORD || "elysiatest-001",
+				password: process.env.AUTH_PASSWORD || "",
 			}),
 		});
 		const data = await response.json();

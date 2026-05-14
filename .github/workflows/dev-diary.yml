@@ -1,0 +1,61 @@
+name: Generate Dev Diary
+
+on:
+  workflow_dispatch:
+    inputs:
+      takeaway:
+        description: "Optional one or two sentence progress note."
+        required: false
+        type: string
+      screenshots:
+        description: "Optional comma-separated screenshot paths."
+        required: false
+        type: string
+      screenshot_limit:
+        default: "4"
+        description: "Maximum screenshots to include on the A4 page."
+        required: false
+        type: string
+  push:
+    paths:
+      - "docs/**"
+      - "screenshots/**"
+      - "scripts/generate-dev-diary.js"
+      - ".github/workflows/dev-diary.yml"
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Dev Diary PDF
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Install PDF renderer
+        run: npm install --prefix .dev-diary-node --no-audit --no-fund puppeteer
+
+      - name: Generate Dev Diary PDF
+        run: node scripts/generate-dev-diary.js docs/dev-diary.pdf
+        env:
+          DEV_TAKEAWAY: ${{ inputs.takeaway || vars.DEV_DIARY_TAKEAWAY || '' }}
+          NODE_PATH: ${{ github.workspace }}/.dev-diary-node/node_modules
+          SCREENSHOT_LIMIT: ${{ inputs.screenshot_limit || vars.DEV_DIARY_SCREENSHOT_LIMIT || '4' }}
+          SCREENSHOTS: ${{ inputs.screenshots || vars.DEV_DIARY_SCREENSHOTS || '' }}
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v7
+        with:
+          if-no-files-found: error
+          name: dev-diary
+          path: docs/dev-diary.pdf

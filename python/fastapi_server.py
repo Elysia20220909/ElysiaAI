@@ -48,11 +48,12 @@ from python.core.influence import elysia_influence
 from python.core.perception import elysia_perception
 from python.core.persona import elysia_persona
 from python.core.singularity import singularity_engine
-from python.lib.abyssal_stealth import AbyssalStealth, get_shrouded_resonance_key
+from python.lib.abyssal_stealth import AbyssalStealth
 from python.lib.auth_session import AuthError, AuthService, auth_exception_handler, create_auth_router
 from python.lib.file_phantom import phantom
 from python.lib.guardian import guardian
 from python.lib.phantom_vault import phantom_vault
+from python.lib.runtime_secrets import get_required_secret
 from python.lib.soul_forge import soul_forge
 from python.recall import abyssal_recall
 from scripts.security.generate_ledger import generate_ledger
@@ -61,13 +62,14 @@ from usr.lib.elysia.secure_enclave import secure_enclave
 
 # ==================== 設定 (Pydantic Settings) ====================
 class Settings(BaseSettings):
-    HOST: str = "0.0.0.0"
+    HOST: str = "127.0.0.1"
     PORT: int = 8000
     SEARCH_LIMIT: int = 3
     OLLAMA_HOST: str = "http://127.0.0.1:11434"
     OLLAMA_MODEL: str = "llama3.2"
     OLLAMA_TIMEOUT: float = 60.0
     API_KEY: str = ""
+    FASTAPI_API_KEY: str = ""
     RATE_LIMIT_BLOCK_TIME: int = 60
 
     # VOICEVOX Settings
@@ -121,8 +123,30 @@ def resolve_ollama_host(default_host: str = "http://127.0.0.1:11434") -> str:
 
 _settings.OLLAMA_HOST = resolve_ollama_host(_settings.OLLAMA_HOST)
 
+
+def resolve_fastapi_api_key(settings: Settings) -> str:
+    return (settings.API_KEY or settings.FASTAPI_API_KEY or "").strip()
+
+
+def ensure_fastapi_api_key(settings: Settings) -> str:
+    api_key = resolve_fastapi_api_key(settings)
+    if api_key:
+        return api_key
+    if IS_TEST_MODE:
+        return ""
+    raise RuntimeError("FastAPI API_KEY is required. Set API_KEY or FASTAPI_API_KEY in .env.")
+
+
+_resolved_api_key = ensure_fastapi_api_key(_settings)
+if _resolved_api_key:
+    os.environ["API_KEY"] = _resolved_api_key
+get_required_secret("RESONANCE_SECRET")
+get_required_secret("ABYSS_SHADOW_SECRET")
+get_required_secret("SOVEREIGN_TOKEN")
+
 # 既存コードとの互換性レイヤー (Dict based config)
 CONFIG = _settings.model_dump()
+CONFIG["API_KEY"] = _resolved_api_key
 CONFIG["EMBEDDING_PROVIDER"] = _settings.EMBEDDING_PROVIDER.lower()
 CONFIG["EMBEDDING_DIM"] = _settings.EMBEDDING_DIM
 CONFIG["COLLECTION_NAME"] = _settings.COLLECTION_NAME
@@ -130,9 +154,6 @@ CONFIG["COLLECTION_NAME"] = _settings.COLLECTION_NAME
 # OpenAI API Key injection for client fallback
 if _settings.OPENAI_API_KEY:
     os.environ["OPENAI_API_KEY"] = _settings.OPENAI_API_KEY
-
-# Phase 23: Shroud the Resonance Secret
-os.environ["RESONANCE_SECRET"] = get_shrouded_resonance_key()
 
 # ==================== ロギング設定 ====================
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -476,7 +497,7 @@ async def white_ice_handshake(request: Request, api_key: str = Depends(api_key_h
     if expected_api_key:
         should_reject = api_key != expected_api_key
     else:
-        should_reject = bool(api_key)
+        should_reject = not IS_TEST_MODE or bool(api_key)
 
     if should_reject:
         now = time.time()
@@ -1178,7 +1199,7 @@ async def execute_influence_action(
     if time.time() - timestamp > 30:
         raise HTTPException(403, "Aegis Token Expired")
 
-    hmac_key = os.getenv("RESONANCE_SECRET", "ELYSIAN_DEFAULT_RESONANCE_KEY")
+    hmac_key = get_required_secret("RESONANCE_SECRET")
     payload = f"{action}:{node_name}:{timestamp}"
     expected_sig = hmac.new(hmac_key.encode(), payload.encode(), hashlib.sha256).hexdigest()
 

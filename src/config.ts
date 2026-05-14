@@ -1,3 +1,5 @@
+import { createHash, randomBytes } from "node:crypto";
+
 // src/config.ts – Centralised environment handling
 // Lightweight helper to fetch env vars with optional defaults// Centralised environment handling
 const requiredProductionEnvKeys = new Set([
@@ -11,23 +13,31 @@ const requiredProductionEnvKeys = new Set([
 	"ENCRYPTION_SALT",
 ]);
 
-const unsafeProductionEnvValues: Record<string, Set<string>> = {
-	AUTH_PASSWORD: new Set(["elysiatest-001", "your-strong-password-here"]),
-	ENCRYPTION_SECRET: new Set(["elysia-default-shadow-key-777"]),
-	ENCRYPTION_SALT: new Set(["abyssal-salt"]),
+const unsafeProductionEnvValueHashes: Record<string, Set<string>> = {
+	AUTH_PASSWORD: new Set([
+		"158a5014828bff808fc3211420b053ab541bd5a746a318727075e829ee96ddbe",
+		"68a07779e1269de644675d5bd67ba147c4238884f2319e01692d27cdc5c1ed78",
+	]),
+	ENCRYPTION_SECRET: new Set([
+		"d71e125d7e1bff24cd6eec8a73daa1bc551849643ff9cadfbbb19ac920d0a54c",
+	]),
+	ENCRYPTION_SALT: new Set([
+		"809389a47869c5a458f8cf877e3307a12b5f02c4523e44ac4302160d55dd993c",
+	]),
 	JWT_REFRESH_SECRET: new Set([
-		"elysia-refresh-secret",
-		"your-super-secret-refresh-key-change-this-immediately-or-security-risk",
+		"1311e0d5b8251cdd5e3bf49036ccb40c5e4a43fa70a2ebc8975de969c18d1a24",
+		"2eb78d80eedf46d7f1b74fb22e60605efcc8ad3beacc7de8b93fba2c18b4ebc1",
 	]),
 	JWT_SECRET: new Set([
-		"elysia-sovereign-secret",
-		"your-super-secret-jwt-key-change-this-immediately-or-security-risk",
+		"f6d8299e8544bcca13ddd58927515f451dfdeee4680d742ceeb450cba4b29c21",
+		"43b5da88b9c9c9f840565cb8bb2ce2c865ee1538b0f37c46b90e9eee3821397f",
 	]),
 	SESSION_SECRET: new Set([
-		"dev_secret_only",
-		"your-session-secret-change-this",
+		"d3aa9cc9ace4300e2286f0265b2a7c5de578fc51bd2775eaf2a5ff5c10ee944b",
 	]),
 };
+
+const ephemeralDevelopmentSecrets = new Map<string, string>();
 
 export function getEnv(key: string, defaultValue?: string): string {
 	const value = process.env[key];
@@ -43,7 +53,8 @@ export function getEnv(key: string, defaultValue?: string): string {
 	}
 
 	if (value !== undefined && value !== null && value !== "") {
-		if (isProd && unsafeProductionEnvValues[key]?.has(value)) {
+		const valueHash = createHash("sha256").update(value).digest("hex");
+		if (isProd && unsafeProductionEnvValueHashes[key]?.has(valueHash)) {
 			throw new Error(
 				`CRITICAL: Insecure production environment variable value: ${key}`,
 			);
@@ -56,24 +67,34 @@ export function getEnv(key: string, defaultValue?: string): string {
 	return "";
 }
 
+function getSecretEnv(key: string): string {
+	const value = getEnv(key);
+	if (value) return value;
+	if (process.env.NODE_ENV === "production") return value;
+
+	let generated = ephemeralDevelopmentSecrets.get(key);
+	if (!generated) {
+		generated = randomBytes(32).toString("hex");
+		ephemeralDevelopmentSecrets.set(key, generated);
+	}
+	return generated;
+}
+
 export const isProd = process.env.NODE_ENV === "production";
 
 export const config = {
 	// Core
 	port: getEnv("PORT", "3000"),
 	nodeEnv: getEnv("NODE_ENV", "development"),
-	sessionSecret: getEnv("SESSION_SECRET", "dev_secret_only"),
+	sessionSecret: getSecretEnv("SESSION_SECRET"),
 	dbUrl: getEnv("DATABASE_URL", "file:./prisma/dev.db"),
 
 	// Security & Hardening
 	forceHttps: getEnv("FORCE_HTTPS", "false") === "true",
 	cspEnabled: getEnv("CSP_ENABLED", "true") === "true",
 	masterApiKey: getEnv("MASTER_API_KEY", ""),
-	encryptionSecret: getEnv(
-		"ENCRYPTION_SECRET",
-		"elysia-default-shadow-key-777",
-	),
-	encryptionSalt: getEnv("ENCRYPTION_SALT", "abyssal-salt"),
+	encryptionSecret: getSecretEnv("ENCRYPTION_SECRET"),
+	encryptionSalt: getSecretEnv("ENCRYPTION_SALT"),
 	defenseRulesFile: getEnv("DEFENSE_RULES_FILE", ""),
 
 	// Redis
@@ -112,10 +133,10 @@ export const config = {
 	),
 
 	// Auth
-	jwtSecret: getEnv("JWT_SECRET", "elysia-sovereign-secret"),
-	jwtRefreshSecret: getEnv("JWT_REFRESH_SECRET", "elysia-refresh-secret"),
+	jwtSecret: getSecretEnv("JWT_SECRET"),
+	jwtRefreshSecret: getSecretEnv("JWT_REFRESH_SECRET"),
 	authUsername: getEnv("AUTH_USERNAME", "admin"),
-	authPassword: getEnv("AUTH_PASSWORD", "elysiatest-001"),
+	authPassword: getEnv("AUTH_PASSWORD"),
 
 	// Notifications (Email & Webhooks)
 	errorAlertsEnabled: getEnv("ERROR_ALERTS_ENABLED", "false") === "true",

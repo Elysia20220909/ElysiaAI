@@ -64,7 +64,7 @@ SOL 監視パターンセクション末尾に sol-monitor.py の使用方法を
 ```sh
 python3 -c "import py_compile; py_compile.compile('scripts/sol-monitor.py', doraise=True)"
 ./scripts/sol-monitor.py --help
-timeout 60 ./scripts/sol-monitor.py --bmc-ip 127.0.0.1 --bmc-user test --bmc-pass test --timeout 10
+timeout 60 ./scripts/sol-monitor.py --bmc-ip 127.0.0.1 --bmc-user test --bmc-pass <redacted> --timeout 10
 ```
 
 ## 変更ファイル

@@ -4,15 +4,19 @@
   "author": "Elysia20220909",
   "license": "MIT OR Apache-2.0",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "overrides": {
+    "postcss": "8.5.10",
     "thrift": "^0.23.0"
   },
 	"scripts": {
 		"boot": "bun scripts/boot.ts",
 		"boot:lite": "bun scripts/boot.ts --lite",
 		"build": "bun build packages/server/src/index.ts --target=bun --outdir dist/server",
+		"build:cloudflare": "wrangler deploy --dry-run --config wrangler.jsonc",
+		"deploy:cloudflare": "wrangler deploy --config wrangler.jsonc",
 		"dev": "bun run --cwd packages/server dev",
 		"dev:lite": "bun scripts/boot.ts --lite",
 		"hooks:install": "git config core.hooksPath .githooks",
@@ -25,6 +29,7 @@
     "db:validate": "bun node_modules/prisma/build/index.js validate --schema prisma/schema.prisma",
     "native:lite": "bun scripts/native-lite.ts",
     "ops": "bun scripts/local-ops.ts",
+    "saizeriya": "bun scripts/saizeriya-cli.ts",
     "local-server:setup:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-server/Invoke-ElisiaLocalServerSetup.ps1",
     "local-server:setup:unix": "bash scripts/local-server/setup-elisia-local-server.sh",
     "local-server:host": "bun scripts/local-server/host-server-setup.ts",
@@ -33,13 +38,15 @@
     "suit": "bun scripts/suit.ts",
     "dev:ci": "bun scripts/boot.ts --ci",
     "desktop": "bun tauri dev",
-    "test": "bun test ./src/*.test.ts ./tests/*.test.ts ./tests/integration/*.test.ts ./tests/performance/*.test.ts ./packages/server/src/lib/*.test.ts",
+    "test": "bun scripts/tests/run-bun-tests.ts",
     "lint": "bun node_modules/@biomejs/biome/bin/biome check .",
     "typecheck": "bun node_modules/typescript/bin/tsc --noEmit",
     "check:deps": "bun scripts/tests/check-dependency-alignment.ts",
     "check:encoding": "bun scripts/run-python.ts scripts/tests/check-encoding.py",
     "check:git-hygiene": "bun scripts/tests/check-git-hygiene.ts",
     "security:glassworm": "bun scripts/security/scan_glassworm.ts",
+    "security:takumi:setup": "bun scripts/security/setup-takumi-guard.ts",
+    "security:takumi:verify": "bun scripts/security/setup-takumi-guard.ts --verify-block",
     "security:audit": "bun scripts/run-python.ts scripts/security/audit_dependencies.py"
   },
   "dependencies": {
@@ -57,6 +64,7 @@
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/cli": "^2.11.0",
     "bun-types": "latest",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "^4.90.1"
   }
 }

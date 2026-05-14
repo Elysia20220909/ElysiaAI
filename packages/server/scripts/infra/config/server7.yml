@@ -31,7 +31,7 @@ remoteimage_uri: "//10.1.6.1/public/debian-preseed-s7.iso"
 bmc_type: idrac
 bmc_ip: 10.10.10.120
 bmc_user: claude
-bmc_pass: Claude123
+bmc_pass: ""
 bmc_ssh_key: ~/.ssh/idrac_rsa
 idrac_fw_version: "2.65.65.65"
 idrac_fw_build: "15"
@@ -41,6 +41,6 @@ idrac_fw_updated: "2026-03-02"
 serial_unit: 0
 
 # OS credentials (lab environment)
-root_password: password
+root_password: ""
 user_name: debian
-user_password: password
+user_password: ""

@@ -12,6 +12,7 @@ node_modules/
 # testing
 /coverage
 /.tmp/
+*.tsbuildinfo
 
 # production
 build/
@@ -29,6 +30,8 @@ out/
 *.pem
 DEBUG_REPORT.md
 AEGIS_LEDGER.md
+git-diagnostics-*.txt
+git-triage-*.txt
 
 # debug
 npm-debug.log*
@@ -55,6 +58,10 @@ x_delete_results*.jsonl
 /config/private/
 /config/defense/rules.json
 /packages/server/config/
+
+# Generated installer/preseed artifacts
+/packages/server/scripts/infra/preseed/preseed-generated*.cfg
+/packages/server/scripts/infra/preseed/preseed.local*.cfg
 
 # Secure internal configurations (legacy)
 /src/config/internal/
@@ -125,6 +132,7 @@ bun.log
 **/dist/
 **/build/
 **/bun.lock
+!bun.lock
 /src/generated/prisma
 
 # Database files
@@ -146,6 +154,8 @@ prisma.config.mjs.bak
 # Backup files
 /backups/
 *.backup
+repo-backup-*.bundle
+repo-mirror-*/
 
 # Upload files
 /uploads/
@@ -157,6 +167,7 @@ prisma.config.mjs.bak
 
 # External untracked dependencies
 /elysia/
+/embedded-app-sdk/
 
 # Python compiled files
 __pycache__/

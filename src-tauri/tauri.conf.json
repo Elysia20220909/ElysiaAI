@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.elysia.ai",
   "build": {
-    "frontendDist": "../",
+    "frontendDist": "../public",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "bun run server.ts",
     "beforeBuildCommand": "echo"
@@ -12,17 +12,23 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Elysia AI // Sovereign Resonance",
         "width": 1280,
         "height": 800,
         "resizable": true,
         "fullscreen": false,
-        "transparent": true,
-        "decorations": true
+        "transparent": false,
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://raw.githubusercontent.com; connect-src 'self' http://localhost:3000 http://localhost:8000 ws://localhost:3000;"
+      "headers": {
+        "Service-Worker-Allowed": "/"
+      },
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://raw.githubusercontent.com; connect-src 'self' http://localhost:3000 http://localhost:8000 http://127.0.0.1:3000 http://127.0.0.1:8000 ws://localhost:3000 ws://127.0.0.1:3000; worker-src 'self'; manifest-src 'self';"
     }
   },
   "bundle": {
