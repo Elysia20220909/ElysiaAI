@@ -309,6 +309,8 @@
                 coreMode: "booting",
                 coreProtocol: "ECP/1.0",
                 coreSessionLabel: localStorage.getItem("elysia_core_session") || "new",
+                csrfToken: "",
+                edgeSurface: null,
 
                 init() {
                     this.refreshCoreStatus();
@@ -316,32 +318,101 @@
                 scrollTo(id) {
                     document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
                 },
+                readCookie(name) {
+                    const cookie = document.cookie
+                        .split(";")
+                        .map((part) => part.trim())
+                        .find((part) => part.startsWith(`${name}=`));
+                    if (!cookie) return "";
+                    return decodeURIComponent(cookie.slice(name.length + 1));
+                },
+                legacyAccessToken() {
+                    const token = localStorage.getItem("elysia_access_token");
+                    if (!token || token === "undefined" || token === "null") {
+                        localStorage.removeItem("elysia_access_token");
+                        localStorage.removeItem("elysia_refresh_token");
+                        return "";
+                    }
+                    return token;
+                },
+                csrfHeaders() {
+                    this.csrfToken = this.readCookie("elysia_csrf_token") || this.csrfToken;
+                    return this.csrfToken ? { "X-CSRF-Token": this.csrfToken } : {};
+                },
+                authHeaders(method = "GET") {
+                    const headers = {};
+                    const accessToken = this.legacyAccessToken();
+                    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+                    if (!["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase())) {
+                        Object.assign(headers, this.csrfHeaders());
+                    }
+                    return headers;
+                },
+                async isEdgeStaticSurface() {
+                    if (this.edgeSurface !== null) return this.edgeSurface;
+                    try {
+                        const response = await fetch("/health", {
+                            cache: "no-store",
+                            headers: { Accept: "application/json" },
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        this.edgeSurface =
+                            data.status === "edge" && data.localFirstCore === "not_exposed";
+                    } catch (error) {
+                        this.edgeSurface = false;
+                    }
+                    return this.edgeSurface;
+                },
                 async ensureCoreAuth() {
-                    let accessToken = localStorage.getItem("elysia_access_token");
+                    if (await this.isEdgeStaticSurface()) {
+                        throw new Error("Cloudflare edge serves public assets only. Start the local ElysiaAI core for private APIs.");
+                    }
+
+                    const accessToken = this.legacyAccessToken();
                     if (accessToken) return accessToken;
+
+                    const sessionResponse = await fetch("/auth/session", {
+                        credentials: "same-origin",
+                        headers: { Accept: "application/json" },
+                    });
+                    const session = await sessionResponse.json().catch(() => ({}));
+                    if (session.authenticated) {
+                        this.userName = session.user?.username || this.userName || "admin";
+                        this.csrfToken = this.readCookie("elysia_csrf_token") || this.csrfToken;
+                        return "";
+                    }
 
                     const response = await fetch("/auth/dev-login", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
+                        credentials: "same-origin",
                     });
                     const data = await response.json();
                     if (!response.ok) {
                         throw new Error(data.error || "Neural Auth required");
                     }
-                    localStorage.setItem("elysia_access_token", data.accessToken);
-                    localStorage.setItem("elysia_refresh_token", data.refreshToken);
+                    localStorage.removeItem("elysia_access_token");
+                    localStorage.removeItem("elysia_refresh_token");
                     localStorage.setItem("elysia_chat_user", data.username || "admin");
+                    if (data.csrfToken) this.csrfToken = data.csrfToken;
                     if (data.neuralSignature) {
                         localStorage.setItem("elysia_neural_signature", data.neuralSignature);
                     }
                     this.userName = data.username || this.userName || "admin";
-                    return data.accessToken;
+                    return "";
                 },
                 async refreshCoreStatus() {
                     try {
-                        const accessToken = await this.ensureCoreAuth();
+                        if (await this.isEdgeStaticSurface()) {
+                            this.coreMode = "edge_static";
+                            this.coreProtocol = "assets-only";
+                            this.errorMsg = "EDGE: Local core APIs are not exposed on Cloudflare.";
+                            return;
+                        }
+                        await this.ensureCoreAuth();
                         const response = await fetch("/api/elysia-core/status", {
-                            headers: { Authorization: `Bearer ${accessToken}` },
+                            credentials: "same-origin",
+                            headers: this.authHeaders("GET"),
                         });
                         if (!response.ok) return;
                         const data = await response.json();
@@ -375,7 +446,10 @@
                     this.saveHistory();
 
                     try {
-                        const accessToken = await this.ensureCoreAuth();
+                        if (await this.isEdgeStaticSurface()) {
+                            throw new Error("Local core APIs are not exposed on the Cloudflare edge surface.");
+                        }
+                        await this.ensureCoreAuth();
                         const sessionId = localStorage.getItem("elysia_core_session") || "portfolio_user_" + user;
                         localStorage.setItem("elysia_core_session", sessionId);
                         this.coreSessionLabel = sessionId.slice(0, 18);
@@ -392,8 +466,9 @@
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
-                                "Authorization": `Bearer ${accessToken}`,
+                                ...this.authHeaders("POST"),
                             },
+                            credentials: "same-origin",
                             body: JSON.stringify(requestBody),
                         });
 

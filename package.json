@@ -15,6 +15,8 @@
 		"boot": "bun scripts/boot.ts",
 		"boot:lite": "bun scripts/boot.ts --lite",
 		"build": "bun build packages/server/src/index.ts --target=bun --outdir dist/server",
+		"build:cloudflare": "wrangler deploy --dry-run --config wrangler.jsonc",
+		"deploy:cloudflare": "wrangler deploy --config wrangler.jsonc",
 		"dev": "bun run --cwd packages/server dev",
 		"dev:lite": "bun scripts/boot.ts --lite",
 		"hooks:install": "git config core.hooksPath .githooks",
@@ -62,6 +64,7 @@
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/cli": "^2.11.0",
     "bun-types": "latest",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "^4.90.1"
   }
 }

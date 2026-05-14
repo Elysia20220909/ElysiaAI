@@ -153,6 +153,8 @@ prisma.config.mjs.bak
 # Backup files
 /backups/
 *.backup
+repo-backup-*.bundle
+repo-mirror-*/
 
 # Upload files
 /uploads/

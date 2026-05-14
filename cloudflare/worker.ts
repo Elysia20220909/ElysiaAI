@@ -21,16 +21,16 @@ function jsonResponse(body: unknown, init?: ResponseInit) {
 	});
 }
 
-function unavailable(pathname: string) {
+function localCoreResponse(pathname: string) {
 	return jsonResponse(
 		{
 			ok: false,
-			status: "local-core-unavailable",
+			status: "local-core-not-exposed",
 			path: pathname,
 			message:
 				"This Cloudflare edge surface serves public assets only. Run the local Bun/FastAPI stack for private AI, database, and automation APIs.",
 		},
-		{ status: 503 },
+		{ status: 403 },
 	);
 }
 
@@ -69,7 +69,7 @@ export default {
 			url.pathname === "/elysia-love" ||
 			url.pathname === "/feedback"
 		) {
-			return unavailable(url.pathname);
+			return localCoreResponse(url.pathname);
 		}
 
 		return env.ASSETS.fetch(request);

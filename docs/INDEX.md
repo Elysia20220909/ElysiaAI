@@ -27,6 +27,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | API | `docs/API.md`, `docs/API_REFERENCE.md` |
 | Environment | `docs/ENVIRONMENT.md` |
 | Troubleshooting | `docs/TROUBLESHOOTING.md` |
+| Git history recovery | `docs/GIT_RECOVERY_RUNBOOK.md` |
 | Cloudflare Workers Builds | `docs/deployment/CLOUDFLARE_WORKERS_BUILDS.md` |
 
 ## Security
