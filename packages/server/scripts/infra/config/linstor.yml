@@ -93,7 +93,7 @@ benchmark:
   vm_mgmt_ip: 10.10.10.210
   vm_mgmt_prefix: 8
   vm_user: debian
-  vm_password: password
+  vm_password: ""
   cloud_image: /var/lib/vz/template/debian-cloud.qcow2
   fio_runtime: 60
   fio_size: 1G

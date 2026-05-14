@@ -2,8 +2,15 @@
 <html lang="ja" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Elysia OS // Resonance - Sovereign AI Portfolio</title>
+    <meta name="theme-color" content="#0b3b5a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Elysia">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="manifest" href="/manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -43,13 +50,64 @@
         }
     </script>
     <style>
+        :root {
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+        }
+        html {
+            height: 100%;
+        }
         body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            margin: 0;
+            padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+            box-sizing: border-box;
             background-color: #050510;
             background-image:
                 radial-gradient(circle at 15% 50%, rgba(255, 0, 127, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.15) 0%, transparent 50%);
             color: #e2e8f0;
             overflow-x: hidden;
+            isolation: isolate;
+        }
+        *, *::before, *::after {
+            box-sizing: inherit;
+        }
+        .min-h-screen {
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+        @supports (-webkit-touch-callout: none) {
+            html {
+                height: -webkit-fill-available;
+            }
+            body,
+            .min-h-screen {
+                min-height: -webkit-fill-available;
+            }
+        }
+        @supports (height: 100dvh) {
+            body,
+            .min-h-screen {
+                min-height: 100dvh;
+            }
+        }
+        body > nav.fixed {
+            top: var(--safe-top);
+            left: var(--safe-left);
+            right: var(--safe-right);
+            width: auto;
+        }
+        input,
+        textarea,
+        select {
+            font-size: 16px;
+        }
+        #chatContainer {
+            -webkit-overflow-scrolling: touch;
         }
         .glass-panel {
             background: rgba(15, 15, 25, 0.7);
@@ -81,20 +139,66 @@
         }
         .scanlines {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
             background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
             background-size: 100% 4px;
             pointer-events: none;
             z-index: 50;
             opacity: 0.3;
         }
+        .liquid-glass-webgl {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            display: block;
+            pointer-events: none;
+            z-index: 0;
+        }
+        body.webgl-liquid-ready {
+            background-image: none;
+        }
+        body.webgl-liquid-ready .hero-aurora {
+            opacity: 0;
+        }
+        body.webgl-liquid-ready .glass-panel[data-liquid-glass],
+        body.webgl-liquid-ready [data-liquid-glass].liquid-action,
+        body.webgl-liquid-ready [data-liquid-glass].liquid-chip {
+            background:
+                linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.025) 42%, rgba(0, 240, 255, 0.045)),
+                rgba(5, 8, 18, 0.18);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.28),
+                inset 0 -18px 38px rgba(0, 10, 22, 0.28),
+                0 18px 52px rgba(0, 0, 0, 0.28);
+        }
+        body.webgl-liquid-ready [data-liquid-glass].liquid-action {
+            color: #f8fbff;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+        }
+        body.webgl-liquid-ready [data-liquid-glass].liquid-chip {
+            color: #a9f7ff;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .liquid-glass-webgl {
+                opacity: 0.82;
+            }
+            body.webgl-liquid-ready .hero-aurora {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="antialiased font-sans selection:bg-elysia-pink selection:text-white" x-data="elysiaPortfolio()">
+    <canvas id="liquidGlassWebgl" class="liquid-glass-webgl" aria-hidden="true"></canvas>
     <div class="scanlines"></div>
 
     <!-- Navigation -->
-    <nav class="fixed w-full z-40 glass-panel py-4 px-6 md:px-12 flex justify-between items-center">
+    <nav data-liquid-glass data-liquid-depth="1.25" class="fixed w-full z-40 glass-panel py-4 px-6 md:px-12 flex justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-elysia-pink to-elysia-cyan flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(255,0,127,0.5)]">E</div>
             <span class="font-mono font-bold tracking-widest text-sm text-gray-300">ELYSIA_OS</span>
@@ -108,13 +212,13 @@
 
     <!-- Hero Section -->
     <section class="relative min-h-screen flex items-center justify-center px-4 pt-20">
-        <div class="absolute inset-0 z-0 opacity-20">
+        <div class="absolute inset-0 z-0 opacity-20 hero-aurora">
             <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-elysia-pink rounded-full mix-blend-screen filter blur-[100px] animate-float"></div>
             <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-elysia-cyan rounded-full mix-blend-screen filter blur-[100px] animate-float" style="animation-delay: -3s;"></div>
         </div>
 
         <div class="relative z-10 text-center max-w-5xl mx-auto space-y-8">
-            <div class="inline-block px-4 py-1 rounded-full border border-elysia-cyan/30 bg-elysia-cyan/10 text-elysia-cyan font-mono text-xs tracking-widest mb-4">
+            <div data-liquid-glass data-liquid-depth="0.85" class="liquid-chip inline-block px-4 py-1 rounded-full border border-elysia-cyan/30 bg-elysia-cyan/10 text-elysia-cyan font-mono text-xs tracking-widest mb-4">
                 SYSTEM_STATUS: ONLINE_AND_RESONATING
             </div>
 
@@ -129,14 +233,14 @@
             </p>
 
             <div class="flex flex-wrap justify-center gap-4 pt-8">
-                <button @click="scrollTo('projects')" class="group relative px-8 py-4 bg-white text-black font-bold uppercase tracking-wider overflow-hidden hover:scale-105 transition-transform">
+                <button data-liquid-glass data-liquid-depth="1.05" @click="scrollTo('projects')" class="liquid-action group relative px-8 py-4 rounded-xl bg-white text-black font-bold uppercase tracking-wider overflow-hidden hover:scale-105 transition-transform">
                     <span class="relative z-10 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg> EXPLORE</span>
                     <div class="absolute inset-0 bg-gradient-to-r from-elysia-cyan to-elysia-pink translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                 </button>
-                <a href="/standalone/nanotech-suit/index.html" class="px-8 py-4 glass-panel font-mono text-elysia-cyan hover:bg-elysia-cyan/10 transition-colors uppercase tracking-wider flex items-center gap-2">
+                <a data-liquid-glass data-liquid-depth="1.0" href="/standalone/nanotech-suit/index.html" class="px-8 py-4 glass-panel rounded-xl font-mono text-elysia-cyan hover:bg-elysia-cyan/10 transition-colors uppercase tracking-wider flex items-center gap-2">
                     🛡️ NANOTECH SUIT
                 </a>
-                <a href="/standalone/swarm-nucleus/index.html" class="px-8 py-4 glass-panel font-mono text-green-400 hover:bg-green-400/10 transition-colors uppercase tracking-wider flex items-center gap-2">
+                <a data-liquid-glass data-liquid-depth="1.0" href="/standalone/swarm-nucleus/index.html" class="px-8 py-4 glass-panel rounded-xl font-mono text-green-400 hover:bg-green-400/10 transition-colors uppercase tracking-wider flex items-center gap-2">
                     🌀 SWARM NUCLEUS
                 </a>
             </div>
@@ -153,7 +257,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Card 1 -->
-                <div class="group glass-panel rounded-2xl p-6 neon-border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(0,240,255,0.2)]">
+                <div data-liquid-glass data-liquid-depth="1.2" class="group glass-panel rounded-2xl p-6 neon-border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(0,240,255,0.2)]">
                     <div class="aspect-video bg-black/50 rounded-xl mb-6 flex items-center justify-center text-5xl overflow-hidden relative">
                         <div class="absolute inset-0 bg-[url('assets/portal_bg.png')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity"></div>
                         <span class="relative z-10 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]">🛡️</span>
@@ -172,7 +276,7 @@
                 </div>
 
                 <!-- Card 2 -->
-                <div class="group glass-panel rounded-2xl p-6 border border-white/5 transition-all duration-300 hover:-translate-y-2 hover:border-elysia-pink/50 hover:shadow-[0_10px_30px_rgba(255,0,127,0.2)]">
+                <div data-liquid-glass data-liquid-depth="1.15" class="group glass-panel rounded-2xl p-6 border border-white/5 transition-all duration-300 hover:-translate-y-2 hover:border-elysia-pink/50 hover:shadow-[0_10px_30px_rgba(255,0,127,0.2)]">
                     <div class="aspect-video bg-gradient-to-br from-gray-900 to-black rounded-xl mb-6 flex items-center justify-center text-5xl">
                         <span class="drop-shadow-[0_0_15px_rgba(255,0,127,0.8)]">🖥️</span>
                     </div>
@@ -190,7 +294,7 @@
                 </div>
 
                 <!-- Card 3 -->
-                <div class="group glass-panel rounded-2xl p-6 border border-white/5 transition-all duration-300 hover:-translate-y-2 hover:border-purple-500/50 hover:shadow-[0_10px_30px_rgba(138,43,226,0.2)]">
+                <div data-liquid-glass data-liquid-depth="1.15" class="group glass-panel rounded-2xl p-6 border border-white/5 transition-all duration-300 hover:-translate-y-2 hover:border-purple-500/50 hover:shadow-[0_10px_30px_rgba(138,43,226,0.2)]">
                     <div class="aspect-video bg-gradient-to-br from-gray-900 to-black rounded-xl mb-6 flex items-center justify-center text-5xl">
                         <span class="drop-shadow-[0_0_15px_rgba(138,43,226,0.8)]">🔑</span>
                     </div>
@@ -218,7 +322,7 @@
                 <p class="text-gray-400 font-mono text-sm">ESTABLISHING DIRECT UPLINK TO ELYSIA CORE...</p>
             </div>
 
-            <div class="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[600px]">
+            <div data-liquid-glass data-liquid-depth="1.35" class="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[600px]">
                 <!-- Chat Header -->
                 <header class="bg-black/40 border-b border-white/5 p-4 flex items-center justify-between">
                     <div class="flex items-center gap-4">
@@ -309,6 +413,8 @@
                 coreMode: "booting",
                 coreProtocol: "ECP/1.0",
                 coreSessionLabel: localStorage.getItem("elysia_core_session") || "new",
+                csrfToken: "",
+                edgeSurface: null,
 
                 init() {
                     this.refreshCoreStatus();
@@ -316,32 +422,101 @@
                 scrollTo(id) {
                     document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
                 },
+                readCookie(name) {
+                    const cookie = document.cookie
+                        .split(";")
+                        .map((part) => part.trim())
+                        .find((part) => part.startsWith(`${name}=`));
+                    if (!cookie) return "";
+                    return decodeURIComponent(cookie.slice(name.length + 1));
+                },
+                legacyAccessToken() {
+                    const token = localStorage.getItem("elysia_access_token");
+                    if (!token || token === "undefined" || token === "null") {
+                        localStorage.removeItem("elysia_access_token");
+                        localStorage.removeItem("elysia_refresh_token");
+                        return "";
+                    }
+                    return token;
+                },
+                csrfHeaders() {
+                    this.csrfToken = this.readCookie("elysia_csrf_token") || this.csrfToken;
+                    return this.csrfToken ? { "X-CSRF-Token": this.csrfToken } : {};
+                },
+                authHeaders(method = "GET") {
+                    const headers = {};
+                    const accessToken = this.legacyAccessToken();
+                    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+                    if (!["GET", "HEAD", "OPTIONS"].includes(method.toUpperCase())) {
+                        Object.assign(headers, this.csrfHeaders());
+                    }
+                    return headers;
+                },
+                async isEdgeStaticSurface() {
+                    if (this.edgeSurface !== null) return this.edgeSurface;
+                    try {
+                        const response = await fetch("/health", {
+                            cache: "no-store",
+                            headers: { Accept: "application/json" },
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        this.edgeSurface =
+                            data.status === "edge" && data.localFirstCore === "not_exposed";
+                    } catch (error) {
+                        this.edgeSurface = false;
+                    }
+                    return this.edgeSurface;
+                },
                 async ensureCoreAuth() {
-                    let accessToken = localStorage.getItem("elysia_access_token");
+                    if (await this.isEdgeStaticSurface()) {
+                        throw new Error("Cloudflare edge serves public assets only. Start the local ElysiaAI core for private APIs.");
+                    }
+
+                    const accessToken = this.legacyAccessToken();
                     if (accessToken) return accessToken;
+
+                    const sessionResponse = await fetch("/auth/session", {
+                        credentials: "same-origin",
+                        headers: { Accept: "application/json" },
+                    });
+                    const session = await sessionResponse.json().catch(() => ({}));
+                    if (session.authenticated) {
+                        this.userName = session.user?.username || this.userName || "admin";
+                        this.csrfToken = this.readCookie("elysia_csrf_token") || this.csrfToken;
+                        return "";
+                    }
 
                     const response = await fetch("/auth/dev-login", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
+                        credentials: "same-origin",
                     });
                     const data = await response.json();
                     if (!response.ok) {
                         throw new Error(data.error || "Neural Auth required");
                     }
-                    localStorage.setItem("elysia_access_token", data.accessToken);
-                    localStorage.setItem("elysia_refresh_token", data.refreshToken);
+                    localStorage.removeItem("elysia_access_token");
+                    localStorage.removeItem("elysia_refresh_token");
                     localStorage.setItem("elysia_chat_user", data.username || "admin");
+                    if (data.csrfToken) this.csrfToken = data.csrfToken;
                     if (data.neuralSignature) {
                         localStorage.setItem("elysia_neural_signature", data.neuralSignature);
                     }
                     this.userName = data.username || this.userName || "admin";
-                    return data.accessToken;
+                    return "";
                 },
                 async refreshCoreStatus() {
                     try {
-                        const accessToken = await this.ensureCoreAuth();
+                        if (await this.isEdgeStaticSurface()) {
+                            this.coreMode = "edge_static";
+                            this.coreProtocol = "assets-only";
+                            this.errorMsg = "EDGE: Local core APIs are not exposed on Cloudflare.";
+                            return;
+                        }
+                        await this.ensureCoreAuth();
                         const response = await fetch("/api/elysia-core/status", {
-                            headers: { Authorization: `Bearer ${accessToken}` },
+                            credentials: "same-origin",
+                            headers: this.authHeaders("GET"),
                         });
                         if (!response.ok) return;
                         const data = await response.json();
@@ -375,7 +550,10 @@
                     this.saveHistory();
 
                     try {
-                        const accessToken = await this.ensureCoreAuth();
+                        if (await this.isEdgeStaticSurface()) {
+                            throw new Error("Local core APIs are not exposed on the Cloudflare edge surface.");
+                        }
+                        await this.ensureCoreAuth();
                         const sessionId = localStorage.getItem("elysia_core_session") || "portfolio_user_" + user;
                         localStorage.setItem("elysia_core_session", sessionId);
                         this.coreSessionLabel = sessionId.slice(0, 18);
@@ -392,8 +570,9 @@
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
-                                "Authorization": `Bearer ${accessToken}`,
+                                ...this.authHeaders("POST"),
                             },
+                            credentials: "same-origin",
                             body: JSON.stringify(requestBody),
                         });
 
@@ -472,5 +651,7 @@
             }
         }
     </script>
+    <script src="/assets/js/liquid-glass-webgl.js" defer></script>
+    <script src="/pwa-register.js" defer></script>
 </body>
 </html>

@@ -25,7 +25,7 @@
 |------|-----|
 | サーバ | 7号機 (DELL PowerEdge R320) |
 | iDRAC | FW 2.65.65.65, IP 10.10.10.120 |
-| VNC | ポート 5901, パスワード Claude1 |
+| VNC | ポート 5901, パスワード <redacted-vnc-password> |
 | ISO | Debian 13.3 amd64 netinst (リマスター済み) |
 | preseed | preseed/preseed-server7.cfg |
 | リマスターモード | --legacy-only (EFI パッチスキップ) |
@@ -72,7 +72,7 @@ ISO リマスター手順を現在のスクリプト実装に合わせて更新:
 
 ```bash
 ssh idrac7 racadm remoteimage -d
-ssh idrac7 racadm remoteimage -c -u guest -p guest -l //10.1.6.1/public/debian-preseed.iso
+ssh idrac7 racadm remoteimage -c -u guest -p <redacted> -l //10.1.6.1/public/debian-preseed.iso
 ssh idrac7 racadm config -g cfgServerInfo -o cfgServerBootOnce 1
 ssh idrac7 racadm config -g cfgServerInfo -o cfgServerFirstBootDevice VCD-DVD
 ./oplog.sh ssh idrac7 racadm serveraction powercycle

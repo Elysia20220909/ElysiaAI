@@ -14,6 +14,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | E.L.I.S.I.A. Windows / macOS admin client setup | `docs/ELISIA_LOCAL_SERVER_CLIENT_SETUP.md` |
 | E.L.I.S.I.A. Windows / macOS host server design | `docs/ELISIA_WINDOWS_MACOS_HOST_SERVER.md` |
 | E.L.I.S.I.A. Mark LXXXV Windows / macOS host server, style, and cost | `docs/ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.md` |
+| Tauri desktop distribution | `docs/TAURI_DISTRIBUTION.md` |
 | Stark home local server build | `docs/STARK_HOME_LOCAL_SERVER_BUILD.md` |
 | Stark home automated setup | `docs/STARK_HOME_AUTOMATED_SETUP.md` |
 | Stark home local server build, Japanese / English | `docs/STARK_HOME_LOCAL_SERVER_BUILD_JA_EN.md` |
@@ -27,6 +28,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | API | `docs/API.md`, `docs/API_REFERENCE.md` |
 | Environment | `docs/ENVIRONMENT.md` |
 | Troubleshooting | `docs/TROUBLESHOOTING.md` |
+| Git history recovery | `docs/GIT_RECOVERY_RUNBOOK.md` |
 | Cloudflare Workers Builds | `docs/deployment/CLOUDFLARE_WORKERS_BUILDS.md` |
 
 ## Security
@@ -37,6 +39,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Threat model | `docs/THREAT_MODEL.md` |
 | Cookie auth and CSRF | `docs/security/AUTH_COOKIE_CSRF.md` |
 | Dependency audit | `docs/SECURITY_AUDIT.md` |
+| Takumi Guard setup | `docs/TAKUMI_GUARD_SETUP.md` |
 | Secret management | `docs/SECRET_MANAGEMENT.md` |
 | Customization security | `docs/CUSTOMIZATION_SECURITY_GUIDE.md` |
 
@@ -59,6 +62,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Need | File |
 | --- | --- |
 | Agent integration patterns | `docs/learnings/agent-integrations.md` |
+| AI coding cost and context policy | `docs/AI_CODING_COST_POLICY.md` |
 | Testing and security gates | `docs/learnings/testing-and-security.md` |
 | Photo/game automation safety | `docs/learnings/photo-automation.md` |
 | GitHub repository file and folder list basics, Japanese | `docs/github-basics/README.ja.md` |

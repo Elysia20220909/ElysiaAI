@@ -17,7 +17,7 @@ def test_sovereign_sharding():
     # 1. Force a clean state for test
     singularity_engine.is_ascended = False
     singularity_engine.sovereign_mode = False
-    os.environ["SOVEREIGN_TOKEN"] = "ELYSIA_ACTUAL_2026_SOVEREIGN"
+    os.environ["SOVEREIGN_TOKEN"] = "test-sovereign-token"
 
     # Mock a high-level soul via Forge (ensures proper shrouding/encryption)
     mock_soul = soul_forge._get_default_soul()

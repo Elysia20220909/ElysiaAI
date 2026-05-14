@@ -43,6 +43,22 @@ root_password=$("$YQ" '.root_password' "$CONFIG")
 user_name=$("$YQ" '.user_name' "$CONFIG")
 user_password=$("$YQ" '.user_password' "$CONFIG")
 
+require_non_default_secret() {
+    name="$1"
+    value="$2"
+    lower=$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')
+
+    case "$lower" in
+        ""|"password"|"changeme"|"change_me"|"change-me"|"root"|"debian")
+            echo "ERROR: ${name} must be set to a non-default secret in ${CONFIG}" >&2
+            exit 1
+            ;;
+    esac
+}
+
+require_non_default_secret "root_password" "$root_password"
+require_non_default_secret "user_password" "$user_password"
+
 console_order="console=tty0 console=ttyS1,115200n8"
 
 result=$(sed \

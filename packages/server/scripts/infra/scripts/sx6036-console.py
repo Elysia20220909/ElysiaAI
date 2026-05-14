@@ -13,6 +13,7 @@ Exit codes:
 """
 
 import argparse
+import os
 import re
 import sys
 import time
@@ -272,9 +273,9 @@ def main():
     parser = argparse.ArgumentParser(description="SX6036 InfiniBand switch serial console CLI")
     parser.add_argument("--device", default="/dev/ttyUSB0")
     parser.add_argument("--baudrate", type=int, default=9600)
-    parser.add_argument("--user", default="admin")
-    parser.add_argument("--pass", dest="password", default="admin")
-    parser.add_argument("--enable-pass", default="admin")
+    parser.add_argument("--user", default=os.getenv("SX6036_SWITCH_USER", "admin"))
+    parser.add_argument("--pass", dest="password", default=os.getenv("SX6036_SWITCH_PASS"))
+    parser.add_argument("--enable-pass", default=os.getenv("SX6036_ENABLE_PASS"))
     parser.add_argument("--timeout", type=int, default=30)
 
     sub = parser.add_subparsers(dest="subcommand", required=True)
@@ -293,6 +294,9 @@ def main():
     p_configure.add_argument("file", help="File with one command per line")
 
     args = parser.parse_args()
+
+    if not args.password or not args.enable_pass:
+        parser.error("Set --pass/--enable-pass or SX6036_SWITCH_PASS/SX6036_ENABLE_PASS.")
 
     ser = serial_open(args.device, args.baudrate)
 

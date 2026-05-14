@@ -32,8 +32,14 @@ jobs:
       - name: Dependency Alignment Guard
         run: bun run check:deps
 
+      - name: Prisma Schema Validate
+        run: bun run db:validate
+
       - name: Run Biome (Format & Lint Check)
         run: bun run lint
+
+      - name: Run TypeScript Typecheck
+        run: bun run typecheck
 
       - name: Run Bun Tests
         run: bun run test
@@ -114,11 +120,17 @@ jobs:
           profile: minimal
           override: true
 
+      - name: Cargo Format Check (Sovereign Shield)
+        run: cd packages/shield-agent && cargo fmt --check
+
       - name: Cargo Check (Sovereign Shield)
         run: cd packages/shield-agent && cargo check
 
       # ==============================
       # 4. Security Governance
       # ==============================
+      - name: Repository Security Audit
+        run: bun run security:audit
+
       - name: Secret Scan (Lightweight)
         run: bun run security:glassworm -- --ci

@@ -513,7 +513,7 @@ function buildSetupResponse(payload: SlackSlashCommandPayload) {
 			`GINROU_ALLOWED_CHANNEL_IDS=${channel}`,
 			"GINROU_GATE_DEFAULT_LOCKED=false",
 			`GINROU_DEFAULT_REPO=${repo}`,
-			"GITHUB_TOKEN=github_pat_...",
+			"GITHUB_TOKEN=<github-token>",
 			"```",
 			"",
 			"Slack official GitHub feed:",

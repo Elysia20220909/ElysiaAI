@@ -164,9 +164,13 @@ export interface LocalOpsFutureStage {
 		| "local-intelligence"
 		| "ambient-home"
 		| "multi-user-support"
+		| "readme-screenshots"
+		| "rag-import-ux"
 		| "advanced-ci-cd"
 		| "abyss-rtos"
-		| "sovereign-mesh";
+		| "shield-agent"
+		| "sovereign-mesh"
+		| "tauri-distribution";
 	title: string;
 	status: "ready" | "next" | "locked";
 	horizon: "now" | "next" | "later";
@@ -1421,6 +1425,7 @@ function buildFuturePlan(
 	homeServer: LocalOpsHomeServerReadiness,
 	services: LocalOpsService[],
 	diagnostics: LocalOpsDiagnostic[],
+	cwd: string,
 ): LocalOpsFuturePlan {
 	const gateById = new Map(homeServer.gates.map((gate) => [gate.id, gate]));
 	const serviceById = new Map(services.map((service) => [service.id, service]));
@@ -1433,6 +1438,36 @@ function buildFuturePlan(
 	const modelReady =
 		isReadyService("ollama") &&
 		diagnosticById.get("ollama-models")?.status === "ready";
+	const fileIncludes = (relativePath: string, needle: string) => {
+		const path = join(cwd, ...relativePath.split("/"));
+		try {
+			return existsSync(path) && readFileSync(path, "utf8").includes(needle);
+		} catch {
+			return false;
+		}
+	};
+	const multiUserUiReady = fileIncludes(
+		"public/stark-ops.html",
+		'id="operator-profiles-title"',
+	);
+	const ragImportUxReady = fileIncludes(
+		"public/stark-ops.html",
+		'id="rag-import-title"',
+	);
+	const readmeScreenshotReady = [
+		"docs/screenshots/desktop.png",
+		"docs/screenshots/local-ops.png",
+		"docs/screenshots/security-center.png",
+	].every((relativePath) => existsSync(join(cwd, ...relativePath.split("/"))));
+	const advancedCiReady =
+		fileIncludes(".github/workflows/ci.yml", "Run TypeScript Typecheck") &&
+		fileIncludes(".github/workflows/ci.yml", "Repository Security Audit");
+	const shieldAgentReady =
+		existsSync(join(cwd, "packages", "shield-agent", "Cargo.toml")) &&
+		existsSync(join(cwd, "packages", "shield-agent", "src", "main.rs"));
+	const tauriDistributionReady =
+		existsSync(join(cwd, "src-tauri", "tauri.conf.json")) &&
+		existsSync(join(cwd, "docs", "TAURI_DISTRIBUTION.md"));
 	const rawStages: Array<
 		Omit<LocalOpsFutureStage, "status" | "horizon"> & {
 			ready: boolean;
@@ -1519,7 +1554,7 @@ function buildFuturePlan(
 		{
 			id: "multi-user-support",
 			title: "Multi-User Support",
-			ready: false,
+			ready: multiUserUiReady,
 			track: "planned",
 			readinessGain: 10,
 			dependencies: [
@@ -1527,14 +1562,47 @@ function buildFuturePlan(
 				"UI-level account switching",
 				"Per-user local preferences",
 			],
-			nextAction:
-				"Design UI-level user switching and management without changing auth policy yet",
+			nextAction: multiUserUiReady
+				? "Validate profile switching against authenticated sessions before changing auth policy"
+				: "Design UI-level user switching and management without changing auth policy yet",
+			safety: "manual-only",
+		},
+		{
+			id: "readme-screenshots",
+			title: "README Screenshots",
+			ready: readmeScreenshotReady,
+			track: "core",
+			readinessGain: 8,
+			dependencies: [
+				"Desktop screenshot",
+				"Local Ops screenshot",
+				"Security Center screenshot",
+			],
+			nextAction: readmeScreenshotReady
+				? "Refresh screenshots only after visible UI changes"
+				: "Capture real UI screenshots into docs/screenshots",
+			safety: "manual-only",
+		},
+		{
+			id: "rag-import-ux",
+			title: "RAG Import UX",
+			ready: ragImportUxReady,
+			track: "planned",
+			readinessGain: 10,
+			dependencies: [
+				"Local document staging",
+				"Import queue review",
+				"Auth-aware upload handoff",
+			],
+			nextAction: ragImportUxReady
+				? "Wire staged documents into the FastAPI memory importer after manual review"
+				: "Add local document staging and import review before full ingestion",
 			safety: "manual-only",
 		},
 		{
 			id: "advanced-ci-cd",
 			title: "Advanced CI/CD",
-			ready: false,
+			ready: advancedCiReady,
 			track: "experimental",
 			readinessGain: 12,
 			dependencies: [
@@ -1542,8 +1610,9 @@ function buildFuturePlan(
 				"Automated integration test coverage",
 				"Coverage gate reporting",
 			],
-			nextAction:
-				"Add a non-blocking ZAP scan and integration coverage report before enforcing 100% gates",
+			nextAction: advancedCiReady
+				? "Keep gates visible and make enforcement stricter only after the signal is stable"
+				: "Add a non-blocking ZAP scan and integration coverage report before enforcing 100% gates",
 			safety: "manual-only",
 		},
 		{
@@ -1562,6 +1631,18 @@ function buildFuturePlan(
 			safety: "manual-only",
 		},
 		{
+			id: "shield-agent",
+			title: "Shield Agent",
+			ready: shieldAgentReady,
+			track: "experimental",
+			readinessGain: 12,
+			dependencies: ["Rust crate", "Cargo check", "Threat validation loop"],
+			nextAction: shieldAgentReady
+				? "Promote Shield signals into Local Ops without enabling hidden remediation"
+				: "Restore the Rust Shield Agent crate and minimal validation entrypoint",
+			safety: "manual-only",
+		},
+		{
 			id: "sovereign-mesh",
 			title: "Sovereign Mesh",
 			ready: false,
@@ -1574,6 +1655,22 @@ function buildFuturePlan(
 			],
 			nextAction:
 				"Draft the distributed AI OS network protocol after private mesh and recovery are proven",
+			safety: "manual-only",
+		},
+		{
+			id: "tauri-distribution",
+			title: "Tauri Distribution",
+			ready: tauriDistributionReady,
+			track: "planned",
+			readinessGain: 8,
+			dependencies: [
+				"Tauri config",
+				"Packaging runbook",
+				"Release artifact policy",
+			],
+			nextAction: tauriDistributionReady
+				? "Dry-run desktop packaging on each target OS before publishing release assets"
+				: "Document desktop build, signing, and release artifact steps",
 			safety: "manual-only",
 		},
 	];
@@ -2387,7 +2484,7 @@ export function buildLocalOpsOverview(
 	const homeServer =
 		options.homeServer ??
 		buildHomeServerReadiness(cwd, diagnostics, logs, options.homeServerProbes);
-	const future = buildFuturePlan(homeServer, services, diagnostics);
+	const future = buildFuturePlan(homeServer, services, diagnostics, cwd);
 	const clients = buildClientSurfaces(cwd);
 	const secureMesh = buildSecureMeshPlan(homeServer, clients);
 	const improvements = buildImprovementSuggestions(

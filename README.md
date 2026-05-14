@@ -264,15 +264,15 @@ bun scripts/manage.ts check
 
 ## スクリーンショット
 
-現在のリポジトリには、README 用の完成版 UI スクリーンショットはまだ固定配置していません。まずは既存のビジュアルアセットを掲載しています。
+実 UI から取得した README 用スクリーンショットです。Local Ops の運用画面、デスクトップ入口、Security Center を固定配置しています。
 
 | Preview | 説明 |
 | --- | --- |
-| ![ElysiaAI Logo](public/logo.png) | ElysiaAI / Elysia OS ロゴ |
-| ![Dashboard visual](dashboard/bg.png) | ダッシュボード用ビジュアル |
-| ![Portal visual](public/assets/portal_bg.png) | ポータル用ビジュアル |
+| ![Desktop UI](docs/screenshots/desktop.png) | ElysiaAI デスクトップ / チャット入口 |
+| ![Local Ops](docs/screenshots/local-ops.png) | Local Ops、Operator Profiles、RAG Import |
+| ![Security Center](docs/screenshots/security-center.png) | Sovereign Security Center |
 
-実 UI のスクリーンショットを追加する場合は、次の配置を推奨します。
+更新するときは、同じ配置に上書きします。
 
 ```text
 docs/screenshots/desktop.png
@@ -314,17 +314,17 @@ ElysiaAI は、以下のフェーズを経て進化します。
 
 - [x] **Memory Encryption**: Milvus 記憶領域の暗号化基盤
 - [x] **RBAC Foundation**: 役割ベースの権限管理ガード
-- [ ] **Multi-User Support**: UI レベルでの複数ユーザー切り替え・管理
-- [ ] **README Screenshots**: 実 UI スクリーンショットの追加
-- [ ] **RAG Import UX**: ローカル文書取り込み体験の改善
-- [ ] **Advanced CI/CD**: セキュリティ・品質ゲートの自動化強化
+- [x] **Multi-User Support**: UI レベルでの複数ユーザー切り替え・管理
+- [x] **README Screenshots**: 実 UI スクリーンショットの追加
+- [x] **RAG Import UX**: ローカル文書取り込み体験の改善
+- [x] **Advanced CI/CD**: セキュリティ・品質ゲートの自動化強化
 
 ### Phase 3: Transcendence
 
 - [ ] **AbyssRTOS Integration**: 完全隔離された実行環境
 - [x] **Shield Agent**: Rust 製防壁によるリアルタイム脅威検知
 - [ ] **Sovereign Mesh**: 分散型 AI OS ネットワーク
-- [ ] **Tauri Distribution**: デスクトップ版配布手順の整理
+- [x] **Tauri Distribution**: デスクトップ版配布手順の整理
 
 ---
 

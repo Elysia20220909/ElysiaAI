@@ -237,7 +237,7 @@ docker compose ps
 
 # Grafana アクセス
 Start-Process http://localhost:3001
-# ログイン: admin / admin
+# ログイン: admin / <redacted>
 
 # Prometheus アクセス
 Start-Process http://localhost:9090

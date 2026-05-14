@@ -14,6 +14,9 @@ from python.core.singularity import singularity_engine
 def test_consciousness_sync():
     print(">>> Testing L10 Neural Bridge - Consciousness Sync...")
 
+    os.environ["SOVEREIGN_TOKEN"] = "test-sovereign-token"
+    os.environ["ABYSS_SHADOW_SECRET"] = "test-shadow-secret"
+
     # Preserve current state or ensure clean start
     elysia_consciousness.intent_buffer = []
 
@@ -28,10 +31,6 @@ def test_consciousness_sync():
 
     # 3. Local node merges intents
     print("[LOCAL] Merging mesh intents...")
-    # We must set SOVEREIGN_TOKEN for simulation to read its own/peer's packets
-    os.environ["SOVEREIGN_TOKEN"] = "TEST_SECRET"
-    os.environ["ABYSS_SHADOW_SECRET"] = "SHADOW_RESONANCE_DEFAULT"
-
     # Allow a moment for the 'whisper' to be available (log file write)
     time.sleep(0.5)
 

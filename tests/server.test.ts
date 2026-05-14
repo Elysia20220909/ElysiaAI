@@ -60,7 +60,7 @@ liveDescribe("Elysia AI Server Tests", () => {
 				`${BASE_URL}/auth/token`,
 				{
 					username: process.env.AUTH_USERNAME || "admin",
-					password: process.env.AUTH_PASSWORD || "elysiatest-001",
+					password: process.env.AUTH_PASSWORD || "",
 				},
 				{ timeout: 5000 },
 			);

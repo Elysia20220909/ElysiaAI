@@ -29,6 +29,7 @@ ElysiaAI の動作をカスタマイズするための環境変数の一覧で�
 | `VOICEVOX_URL` | `http://localhost:50021` | VOICEVOX エンジンの URL。 |
 | `ELYSIA_USER_NAME` | `User` | Python ペルソナエンジンがプロンプト内で使う表示名。 |
 | `ELYSIA_OPERATOR_CODENAME` | (空) | 表示名に添える任意のコードネーム。プロンプト注入を避けるため制御文字は除去されます。 |
+| `TAKUMI_WEBHOOK_SIGNING_SECRET` | (空) | Takumi byGMO / Shisho Cloud Webhook Endpoint の署名検証用シークレット。登録画面で一度だけ表示されるため、安全なシークレット管理に保存してください。 |
 
 ---
 > [!TIP]

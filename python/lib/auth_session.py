@@ -27,6 +27,15 @@ CredentialVerifier = Callable[[str, str], "UserIdentity | None"]
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
 
+def _secret_from_env(name: str) -> str:
+    value = os.getenv(name)
+    if value:
+        return value
+    if os.getenv("NODE_ENV") == "production":
+        raise RuntimeError(f"Missing required production environment variable: {name}")
+    return secrets.token_hex(32)
+
+
 class AuthError(Exception):
     def __init__(self, message: str, status_code: int, code: str) -> None:
         super().__init__(message)
@@ -59,10 +68,10 @@ class AuthSettings:
     @classmethod
     def from_env(cls) -> AuthSettings:
         return cls(
-            jwt_secret=os.getenv("JWT_SECRET", "elysia-sovereign-secret"),
-            jwt_refresh_secret=os.getenv("JWT_REFRESH_SECRET", "elysia-refresh-secret"),
+            jwt_secret=_secret_from_env("JWT_SECRET"),
+            jwt_refresh_secret=_secret_from_env("JWT_REFRESH_SECRET"),
             auth_username=os.getenv("AUTH_USERNAME", "admin"),
-            auth_password=os.getenv("AUTH_PASSWORD", "elysiatest-001"),
+            auth_password=os.getenv("AUTH_PASSWORD", ""),
             access_ttl_seconds=int(os.getenv("ACCESS_TOKEN_TTL_SECONDS", str(15 * 60))),
             refresh_ttl_seconds=int(os.getenv("REFRESH_TOKEN_TTL_SECONDS", str(7 * 24 * 60 * 60))),
             cookie_secure=_env_bool_or_none("AUTH_COOKIE_SECURE"),

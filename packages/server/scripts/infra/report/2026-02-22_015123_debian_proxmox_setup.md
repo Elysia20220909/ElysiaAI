@@ -84,7 +84,7 @@ Redfish VirtualMedia API では SMB/HTTP 接続が確立できなかったため
 
 ```
 # BMC ログイン
-POST /cgi/login.cgi  name=claude&pwd=Claude123
+POST /cgi/login.cgi  name=claude&pwd=<redacted-bmc-password>
 
 # CSRF トークン取得
 GET /cgi/url_redirect.cgi?url_name=topmenu → SmcCsrfInsert から取得

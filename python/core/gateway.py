@@ -9,6 +9,8 @@ import threading
 import time
 from typing import Any
 
+from python.lib.runtime_secrets import get_required_secret
+
 
 logger = logging.getLogger("CognitiveGateway")
 
@@ -30,7 +32,7 @@ class CognitiveGateway:
         self.lock = threading.Lock()
 
         # Phase 19: Security Infrastructure
-        self.secret = os.getenv("RESONANCE_SECRET", "ELYSIAN_DEFAULT_RESONANCE_KEY").encode()
+        self.secret = get_required_secret("RESONANCE_SECRET").encode()
         self.seen_nonces: set[str] = set()
         self.max_nonce_cache = 100
 

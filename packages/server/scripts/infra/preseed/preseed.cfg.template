@@ -43,6 +43,7 @@ d-i partman/confirm boolean true
 d-i partman/confirm_nooverwrite boolean true
 
 ### Root password
+# Passwords are rendered from local config; generated outputs should not be committed.
 d-i passwd/root-login boolean true
 d-i passwd/root-password password %%ROOT_PASSWORD%%
 d-i passwd/root-password-again password %%ROOT_PASSWORD%%
@@ -52,7 +53,7 @@ d-i passwd/user-fullname string Debian User
 d-i passwd/username string %%USER_NAME%%
 d-i passwd/user-password password %%USER_PASSWORD%%
 d-i passwd/user-password-again password %%USER_PASSWORD%%
-d-i user-setup/allow-password-weak boolean true
+d-i user-setup/allow-password-weak boolean false
 
 ### APT / Package selection
 tasksel tasksel/first multiselect standard
