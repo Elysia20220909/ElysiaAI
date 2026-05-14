@@ -8,9 +8,11 @@ configuration publishes a safe edge surface only:
 
 - public static files from `public/`
 - `/health` and `/api/health` edge status responses
-- explicit `503` responses for private local API routes
+- explicit `403` responses for private local API routes
 
 This keeps the public surface useful while preserving the local privacy boundary.
+The local-only route responses are deliberately non-5xx so expected edge
+rejections do not look like Worker outages in Cloudflare observability.
 
 ## Why the Root Build Failed
 
@@ -20,8 +22,9 @@ Cloudflare Workers Builds ran:
 npx wrangler deploy
 ```
 
-from the repository root. Without a `wrangler.jsonc`, Wrangler tried automatic
-application detection against the root workspace and failed before deployment.
+from the repository root. When Wrangler cannot find or is not pointed at the
+checked-in `wrangler.jsonc`, it tries automatic application detection against
+the root workspace and fails before deployment.
 
 The full server bundle is also not Worker-compatible:
 
@@ -35,12 +38,15 @@ The full server bundle is also not Worker-compatible:
 Use these settings for the edge/static deployment:
 
 - Root directory: repository root
-- Build command: `npm run build` or blank if only static assets are needed
-- Deploy command: `npx wrangler deploy`
+- Build command: `npm run build:cloudflare` or blank if only static assets are needed
+- Deploy command: `npm run deploy:cloudflare`
 - Worker name: match `name` in `wrangler.jsonc` (`elysia-ai` by default)
 
 If the Cloudflare dashboard Worker has a different name, update
 `wrangler.jsonc` to match it before retrying the build.
+
+The Cloudflare scripts pass `--config wrangler.jsonc` explicitly so Wrangler
+does not fall back to root workspace auto-detection.
 
 ## Full App Deployment
 

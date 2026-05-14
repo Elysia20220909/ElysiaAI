@@ -26,10 +26,28 @@ SILVERWOLF_CHANNEL_NAME = "silverwolf-lv999"
 SILVERWOLF_ROLE_NAME = "Silver Wolf Lv.999"
 ABYSS_CHANNEL_NAME = "elysia-abyss-collab"
 ABYSS_ROLE_NAME = "ElysiaAI Abyss Lv.999"
+ABYSS_PROTOCOL_SERVER_NAME = "〔 ᴀʙʏss_ᴘʀᴏᴛᴏᴄᴏʟ_999 〕"
+ABYSS_PROTOCOL_CATEGORY_NAME = "▬▬▬ 深淵領域: ABYSS ▬▬▬"
+ABYSS_PROTOCOL_ROLE_NAME = "Abyss Protocol Lv.999"
+ABYSS_PROTOCOL_CHANNELS = [
+    (
+        "abyss-command",
+        "Abyss Protocol Lv.999 command deck: consent-first server styling, no destructive actions.",
+    ),
+    (
+        "abyss-signal",
+        "Abyss Protocol signal relay: announcements, status pulses, and lore drops.",
+    ),
+    (
+        "abyss-archive",
+        "Abyss Protocol archive: builds, screenshots, and artifacts worth preserving.",
+    ),
+]
 
 PERMISSIONS = {
     "administrator": 0x8,
     "manage_channels": 0x10,
+    "manage_guild": 0x20,
     "send_messages": 0x800,
     "embed_links": 0x4000,
     "manage_roles": 0x10000000,
@@ -73,6 +91,7 @@ def parse_args() -> argparse.Namespace:
             "crown-admin",
             "silverwolf",
             "abyss-collab",
+            "abyss-overdrive",
             "all",
         ],
         default="inspect",
@@ -270,7 +289,7 @@ def print_summary(
     print(f"Visible roles: {len([role for role in roles if role.get('name') != '@everyone'])}")
     print("")
     print("Bot capabilities in this guild:")
-    for name in ("manage_channels", "send_messages", "embed_links", "manage_roles"):
+    for name in ("manage_channels", "manage_guild", "send_messages", "embed_links", "manage_roles"):
         print(f"  {name}: {has_permission(bot_permissions, name)}")
 
 
@@ -600,6 +619,272 @@ def run_abyss_collab_operation(
         print("[+] ElysiaAI abyss collaboration posted.")
 
 
+def channel_type(channel: dict[str, Any]) -> int:
+    try:
+        return int(channel.get("type", -1))
+    except (TypeError, ValueError):
+        return -1
+
+
+def find_channel_by_name(
+    channels: list[dict[str, Any]],
+    name: str,
+    expected_type: int,
+) -> dict[str, Any] | None:
+    return next(
+        (
+            channel
+            for channel in channels
+            if channel.get("name") == name and channel_type(channel) == expected_type
+        ),
+        None,
+    )
+
+
+def rename_guild_for_abyss_protocol(
+    headers: dict[str, str],
+    guild: dict[str, Any],
+    guild_id: str,
+    apply: bool,
+) -> None:
+    current_name = str(guild.get("name") or "")
+    if current_name == ABYSS_PROTOCOL_SERVER_NAME:
+        print(f"[*] Server name already set to {ABYSS_PROTOCOL_SERVER_NAME}.")
+        return
+
+    if dry_run_or_apply(
+        apply,
+        f"Rename server from {current_name!r} to {ABYSS_PROTOCOL_SERVER_NAME!r}",
+    ):
+        request_json(
+            headers,
+            "PATCH",
+            f"/guilds/{guild_id}",
+            json_body={"name": ABYSS_PROTOCOL_SERVER_NAME},
+        )
+        print("[+] Server name updated.")
+
+
+def ensure_abyss_protocol_category(
+    headers: dict[str, str],
+    guild_id: str,
+    channels: list[dict[str, Any]],
+    apply: bool,
+) -> dict[str, Any] | None:
+    category = find_channel_by_name(channels, ABYSS_PROTOCOL_CATEGORY_NAME, 4)
+    if category:
+        print(f"[*] Category {ABYSS_PROTOCOL_CATEGORY_NAME} already exists ({category.get('id')}).")
+        return category
+
+    if dry_run_or_apply(apply, f"Create category {ABYSS_PROTOCOL_CATEGORY_NAME}"):
+        return request_json(
+            headers,
+            "POST",
+            f"/guilds/{guild_id}/channels",
+            json_body={"name": ABYSS_PROTOCOL_CATEGORY_NAME, "type": 4},
+        )
+    return None
+
+
+def ensure_abyss_protocol_channel(
+    headers: dict[str, str],
+    guild_id: str,
+    channels: list[dict[str, Any]],
+    category: dict[str, Any] | None,
+    name: str,
+    topic: str,
+    apply: bool,
+) -> dict[str, Any] | None:
+    existing = find_channel_by_name(channels, name, 0)
+    parent_id = category.get("id") if category else None
+    payload: dict[str, Any] = {"topic": topic}
+    if parent_id:
+        payload["parent_id"] = parent_id
+
+    if existing:
+        description = f"Update #{name} topic"
+        if parent_id:
+            description += f" and place it under {ABYSS_PROTOCOL_CATEGORY_NAME}"
+        if dry_run_or_apply(apply, description):
+            request_json(
+                headers,
+                "PATCH",
+                f"/channels/{existing['id']}",
+                json_body=payload,
+            )
+        return existing
+
+    create_payload: dict[str, Any] = {"name": name, "type": 0, "topic": topic}
+    if parent_id:
+        create_payload["parent_id"] = parent_id
+
+    description = f"Create text channel #{name}"
+    if parent_id:
+        description += f" under {ABYSS_PROTOCOL_CATEGORY_NAME}"
+    if dry_run_or_apply(apply, description):
+        return request_json(
+            headers,
+            "POST",
+            f"/guilds/{guild_id}/channels",
+            json_body=create_payload,
+        )
+    return None
+
+
+def ensure_abyss_protocol_role(
+    headers: dict[str, str],
+    guild_id: str,
+    roles: list[dict[str, Any]],
+    apply: bool,
+) -> dict[str, Any] | None:
+    role = next((item for item in roles if item.get("name") == ABYSS_PROTOCOL_ROLE_NAME), None)
+    if role:
+        if role.get("managed"):
+            raise SystemExit(
+                f"[!] Existing @{ABYSS_PROTOCOL_ROLE_NAME} is managed by an integration; refusing to modify it."
+            )
+        if permission_value(role) != 0:
+            raise SystemExit(
+                f"[!] Existing @{ABYSS_PROTOCOL_ROLE_NAME} has permissions. Refusing to assign a non-cosmetic role."
+            )
+        print(f"[*] Role @{ABYSS_PROTOCOL_ROLE_NAME} already exists ({role.get('id')}).")
+        return role
+
+    if dry_run_or_apply(apply, f"Create cosmetic role @{ABYSS_PROTOCOL_ROLE_NAME} with no permissions"):
+        return request_json(
+            headers,
+            "POST",
+            f"/guilds/{guild_id}/roles",
+            json_body={
+                "name": ABYSS_PROTOCOL_ROLE_NAME,
+                "permissions": "0",
+                "color": 0x06B6D4,
+                "hoist": False,
+                "mentionable": False,
+            },
+        )
+    return None
+
+
+def build_abyss_overdrive_embed(guild: dict[str, Any], rng: random.Random) -> dict[str, Any]:
+    protocol_id = hashlib.sha256(
+        f"abyss-protocol-999:{guild.get('id')}:{dt.datetime.now(dt.timezone.utc):%Y%m%d}".encode(
+            "utf-8"
+        )
+    ).hexdigest()[:12].upper()
+    phases = rng.sample(
+        [
+            "ABYSS_COMMAND",
+            "SIGNAL_RELAY",
+            "MEMORY_ARCHIVE",
+            "NOIR_TERMINAL",
+            "ELYSIA_CORE",
+            "LV999_VISUAL",
+        ],
+        4,
+    )
+    channel_lines = "\n".join(f"`#{name}`" for name, _topic in ABYSS_PROTOCOL_CHANNELS)
+
+    return {
+        "title": f"{ABYSS_PROTOCOL_SERVER_NAME} // Overdrive Online",
+        "description": (
+            "```ansi\n"
+            "\u001b[2;36m> boot abyss_protocol_999 --visual-overdrive\u001b[0m\n"
+            "\u001b[2;35m> theme: deep-cyan / noir / ceremonial\u001b[0m\n"
+            "\u001b[2;32m> integrity: preserved\u001b[0m\n"
+            "\u001b[2;33m> permissions: cosmetic only\u001b[0m\n"
+            "```\n"
+            "深淵の名を掲げつつ、守るべきものは静かに守る。"
+        ),
+        "color": 0x06B6D4,
+        "fields": [
+            {
+                "name": "Server",
+                "value": f"`{guild.get('id')}`\n`{ABYSS_PROTOCOL_SERVER_NAME}`",
+                "inline": True,
+            },
+            {
+                "name": "Protocol ID",
+                "value": f"`{protocol_id}`",
+                "inline": True,
+            },
+            {
+                "name": "Channels",
+                "value": channel_lines,
+                "inline": False,
+            },
+            {
+                "name": "Active Phases",
+                "value": "\n".join(f"`{phase}`" for phase in phases),
+                "inline": False,
+            },
+            {
+                "name": "Safety Lock",
+                "value": "No deletes. No bans. No permission escalation. Dedicated channels only.",
+                "inline": False,
+            },
+        ],
+        "footer": {"text": "Abyss Protocol 999 executed by Elysia Funhouse"},
+        "timestamp": dt.datetime.now(dt.timezone.utc).isoformat(),
+    }
+
+
+def post_abyss_protocol_launch(
+    headers: dict[str, str],
+    guild: dict[str, Any],
+    channel: dict[str, Any] | None,
+    rng: random.Random,
+    apply: bool,
+) -> None:
+    target = f"#{channel.get('name')}" if channel else f"#{ABYSS_PROTOCOL_CHANNELS[0][0]}"
+    if dry_run_or_apply(apply, f"Post Abyss Protocol 999 launch embed to {target}"):
+        if not channel:
+            print("[!] No launch channel was available after setup.")
+            return
+        payload = {
+            "content": "",
+            "embeds": [build_abyss_overdrive_embed(guild, rng)],
+            "allowed_mentions": {"parse": []},
+        }
+        request_json(headers, "POST", f"/channels/{channel['id']}/messages", json_body=payload)
+        print("[+] Abyss Protocol 999 launch embed posted.")
+
+
+def run_abyss_overdrive_operation(
+    headers: dict[str, str],
+    guild: dict[str, Any],
+    guild_id: str,
+    user_id: str,
+    channels: list[dict[str, Any]],
+    roles: list[dict[str, Any]],
+    rng: random.Random,
+    apply: bool,
+) -> None:
+    rename_guild_for_abyss_protocol(headers, guild, guild_id, apply)
+    category = ensure_abyss_protocol_category(headers, guild_id, channels, apply)
+
+    launch_channel: dict[str, Any] | None = None
+    for name, topic in ABYSS_PROTOCOL_CHANNELS:
+        channel = ensure_abyss_protocol_channel(
+            headers,
+            guild_id,
+            channels,
+            category,
+            name,
+            topic,
+            apply,
+        )
+        if name == ABYSS_PROTOCOL_CHANNELS[0][0]:
+            launch_channel = channel
+
+    role = ensure_abyss_protocol_role(headers, guild_id, roles, apply)
+    if role and dry_run_or_apply(apply, f"Assign @{ABYSS_PROTOCOL_ROLE_NAME} to user {user_id}"):
+        request_json(headers, "PUT", f"/guilds/{guild_id}/members/{user_id}/roles/{role['id']}")
+        print("[+] Abyss Protocol cosmetic role assigned.")
+
+    post_abyss_protocol_launch(headers, guild, launch_channel, rng, apply)
+
+
 def main() -> int:
     args = parse_args()
     token = get_bot_token()
@@ -631,6 +916,7 @@ def main() -> int:
         print("  crown-admin  -> create a no-permission cosmetic role and assign it to the admin")
         print("  silverwolf   -> create a Silver Wolf Lv.999 cosmetic channel, role, and embed")
         print("  abyss-collab -> create an ElysiaAI abyss collaboration channel, role, and embed")
+        print("  abyss-overdrive -> rename/style the server as Abyss Protocol 999 with safe channels")
         print("  all          -> make-lab + crown-admin + post pulse to #elysia-lab")
         print("")
         print("Nothing was changed. Add --apply with an action to execute.")
@@ -676,6 +962,29 @@ def main() -> int:
         if not has_permission(bot_permissions, "embed_links"):
             raise SystemExit("[!] Bot lacks Embed Links.")
         run_abyss_collab_operation(
+            headers,
+            guild,
+            str(args.guild_id),
+            str(args.admin_user_id),
+            channels,
+            roles,
+            rng,
+            args.apply,
+        )
+    elif args.action == "abyss-overdrive":
+        if str(guild.get("name") or "") != ABYSS_PROTOCOL_SERVER_NAME and not has_permission(
+            bot_permissions, "manage_guild"
+        ):
+            raise SystemExit("[!] Bot lacks Manage Server for the Abyss Protocol rename.")
+        if not has_permission(bot_permissions, "manage_channels"):
+            raise SystemExit("[!] Bot lacks Manage Channels.")
+        if not has_permission(bot_permissions, "manage_roles"):
+            raise SystemExit("[!] Bot lacks Manage Roles.")
+        if not has_permission(bot_permissions, "send_messages"):
+            raise SystemExit("[!] Bot lacks Send Messages.")
+        if not has_permission(bot_permissions, "embed_links"):
+            raise SystemExit("[!] Bot lacks Embed Links.")
+        run_abyss_overdrive_operation(
             headers,
             guild,
             str(args.guild_id),

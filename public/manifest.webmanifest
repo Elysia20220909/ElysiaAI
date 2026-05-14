@@ -1,16 +1,25 @@
 {
-  "name": "ElysiaAI Local Ops",
-  "short_name": "Elysia Ops",
+  "name": "ElysiaAI",
+  "short_name": "ElysiaAI",
   "description": "Manual-supervised local home server command center for ElysiaAI.",
+  "id": "/",
   "start_url": "/stark-ops.html",
   "scope": "/",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "display": "standalone",
-  "background_color": "#101010",
+  "background_color": "#0f1110",
   "theme_color": "#101010",
   "orientation": "any",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

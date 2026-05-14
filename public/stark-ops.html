@@ -5,26 +5,43 @@
     <title>ElysiaAI Local Ops</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#101010" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Elysia Ops" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="preload" href="/pwa-shell.js" as="script" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <style>
       :root {
         color-scheme: dark;
-        --bg: #101010;
-        --band: #171717;
-        --panel: #1f1f1f;
-        --panel-strong: #292421;
-        --line: #443b35;
+        --space-8: 8px;
+        --space-12: 12px;
+        --space-16: 16px;
+        --space-24: 24px;
+        --bg: #0f1110;
+        --band: #151916;
+        --panel: rgba(25, 27, 25, 0.84);
+        --panel-strong: rgba(38, 35, 30, 0.86);
+        --line: rgba(218, 191, 140, 0.25);
         --text: #f6f1ea;
-        --muted: #b8aea4;
+        --muted: #b9c0b7;
         --red: #a83232;
         --gold: #d8ad5f;
         --cyan: #52d7e8;
         --green: #55d98f;
         --amber: #f2bb57;
         --danger: #ff6b7a;
+        --plum: #b9a0f5;
         --disabled: #8d9299;
+        --glass-surface: rgba(22, 27, 25, 0.68);
+        --glass-surface-strong: rgba(34, 35, 31, 0.82);
+        --glass-edge: rgba(255, 255, 255, 0.15);
+        --glass-shadow: 0 16px 48px rgba(0, 0, 0, 0.34);
+        --safe-top: env(safe-area-inset-top, 0px);
+        --safe-right: env(safe-area-inset-right, 0px);
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+        --safe-left: env(safe-area-inset-left, 0px);
       }
 
       * {
@@ -35,7 +52,9 @@
         min-height: 100vh;
         margin: 0;
         background:
-          linear-gradient(180deg, rgba(168, 50, 50, 0.18), transparent 260px),
+          linear-gradient(180deg, rgba(216, 173, 95, 0.13), transparent 240px),
+          linear-gradient(135deg, rgba(82, 215, 232, 0.08), transparent 42%),
+          linear-gradient(225deg, rgba(85, 217, 143, 0.06), transparent 45%),
           var(--bg);
         color: var(--text);
         font-family:
@@ -43,47 +62,132 @@
           "Segoe UI", sans-serif;
       }
 
+      [hidden] {
+        display: none !important;
+      }
+
       main {
         width: min(1240px, calc(100% - 32px));
         margin: 0 auto;
-        padding: 24px 0 36px;
+        padding:
+          calc(var(--space-16) + var(--safe-top))
+          max(0px, var(--safe-right))
+          calc(var(--space-24) + var(--safe-bottom))
+          max(0px, var(--safe-left));
       }
 
-      header {
+      header.app-nav {
+        position: sticky;
+        top: calc(8px + var(--safe-top));
+        z-index: 20;
         display: grid;
         grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
-        gap: 18px;
-        min-height: 80px;
-        border-bottom: 1px solid var(--line);
-        margin-bottom: 18px;
+        gap: var(--space-16);
+        min-height: 104px;
+        border: 1px solid var(--glass-edge);
+        border-radius: 8px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 42%),
+          var(--glass-surface);
+        box-shadow: var(--glass-shadow);
+        padding: var(--space-12);
+        margin-bottom: var(--space-16);
+        backdrop-filter: blur(22px) saturate(1.35);
+        -webkit-backdrop-filter: blur(22px) saturate(1.35);
+        transition:
+          min-height 180ms ease,
+          background-color 180ms ease,
+          box-shadow 180ms ease;
       }
 
       .mark {
-        width: 56px;
-        height: 56px;
+        width: 64px;
+        height: 64px;
         border-radius: 8px;
         object-fit: cover;
         background: var(--panel);
+        box-shadow: 0 0 0 1px var(--glass-edge);
+        transition:
+          width 180ms ease,
+          height 180ms ease;
       }
 
-      h1 {
+      .title-stack {
+        min-width: 0;
+        display: grid;
+        gap: 6px;
+      }
+
+      .nav-eyebrow {
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        transition:
+          opacity 160ms ease,
+          height 160ms ease;
+      }
+
+      header.app-nav h1 {
         margin: 0;
-        font-size: 26px;
+        font-size: clamp(28px, 3vw, 44px);
         line-height: 1.1;
         letter-spacing: 0;
+        transition: font-size 180ms ease;
+      }
+
+      .nav-subtitle-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
       }
 
       .subline {
-        margin-top: 6px;
+        min-width: min(100%, 320px);
         color: var(--muted);
         font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .hud-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 28px;
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        padding: 3px 10px;
+        background: rgba(255, 255, 255, 0.06);
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        transition:
+          opacity 160ms ease,
+          transform 160ms ease,
+          color 160ms ease,
+          border-color 160ms ease;
+      }
+
+      .hud-pill.is-swapping {
+        opacity: 0.55;
+        transform: translateY(-2px);
+      }
+
+      .hud-dot {
+        width: 7px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 14px currentColor;
       }
 
       .actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: var(--space-8);
         justify-content: flex-end;
       }
 
@@ -92,16 +196,18 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: var(--space-8);
         min-height: 40px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: var(--panel-strong);
+        background: var(--glass-surface-strong);
         color: var(--text);
         cursor: pointer;
         padding: 0 14px;
         font-weight: 800;
         text-decoration: none;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
       }
 
       button:hover,
@@ -109,22 +215,58 @@
         border-color: var(--gold);
       }
 
+      button:focus-visible,
+      a.button:focus-visible {
+        border-color: var(--cyan);
+        outline: 2px solid rgba(82, 215, 232, 0.52);
+        outline-offset: 2px;
+      }
+
+      .top-action {
+        min-width: 88px;
+      }
+
+      .top-action.is-primary {
+        border-color: rgba(82, 215, 232, 0.38);
+      }
+
+      .top-action.is-secondary {
+        color: var(--muted);
+      }
+
+      .action-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 18px;
+        aspect-ratio: 1;
+        border: 1px solid currentColor;
+        border-radius: 50%;
+        font-size: 10px;
+        line-height: 1;
+      }
+
       .grid {
         display: grid;
         grid-template-columns: 360px minmax(0, 1fr);
-        gap: 16px;
+        gap: var(--space-16);
       }
 
       .section {
         min-width: 0;
+        scroll-margin-top: calc(96px + var(--safe-top));
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: rgba(31, 31, 31, 0.92);
-        padding: 16px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 96px),
+          var(--glass-surface);
+        padding: var(--space-16);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(16px) saturate(1.2);
+        -webkit-backdrop-filter: blur(16px) saturate(1.2);
       }
 
       .section + .section {
-        margin-top: 16px;
+        margin-top: var(--space-16);
       }
 
       .section h2 {
@@ -137,6 +279,55 @@
       .readiness {
         display: grid;
         gap: 14px;
+      }
+
+      .sidebar-nav {
+        display: grid;
+        gap: var(--space-12);
+      }
+
+      .sidebar-group {
+        display: grid;
+        gap: var(--space-8);
+      }
+
+      .sidebar-group-title {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .sidebar-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 40px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 0 var(--space-12);
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .sidebar-item:hover,
+      .sidebar-item:focus-visible,
+      .sidebar-item[aria-current="page"] {
+        border-color: rgba(82, 215, 232, 0.38);
+        background: rgba(82, 215, 232, 0.09);
+        outline: none;
+      }
+
+      .sidebar-item[aria-current="page"]::after {
+        width: 7px;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: var(--cyan);
+        box-shadow: 0 0 12px var(--cyan);
+        content: "";
       }
 
       .score {
@@ -610,6 +801,136 @@
         color: var(--danger);
       }
 
+      .install-coach {
+        position: fixed;
+        right: max(16px, var(--safe-right));
+        bottom: max(16px, var(--safe-bottom));
+        z-index: 80;
+        width: min(380px, calc(100vw - 32px));
+        border: 1px solid var(--glass-edge);
+        border-radius: 8px;
+        background:
+          linear-gradient(160deg, rgba(82, 215, 232, 0.1), transparent 42%),
+          var(--glass-surface-strong);
+        box-shadow: 0 18px 52px rgba(0, 0, 0, 0.48);
+        padding: 14px;
+        backdrop-filter: blur(24px) saturate(1.35);
+        -webkit-backdrop-filter: blur(24px) saturate(1.35);
+      }
+
+      .install-coach-head {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .install-coach h2 {
+        margin: 0;
+        color: var(--text);
+        font-size: 16px;
+      }
+
+      .install-coach p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .coach-close {
+        min-width: 36px;
+        min-height: 40px;
+        padding: 0;
+      }
+
+      .install-steps {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin: 14px 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .install-steps li {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .coach-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      html[data-display-mode="standalone"] header.app-nav {
+        top: max(8px, var(--safe-top));
+      }
+
+      html.scrolled header.app-nav {
+        min-height: 72px;
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.3);
+      }
+
+      html.scrolled header.app-nav h1 {
+        font-size: 24px;
+      }
+
+      html.scrolled .mark {
+        width: 48px;
+        height: 48px;
+      }
+
+      html.scrolled .nav-eyebrow {
+        height: 0;
+        opacity: 0;
+        overflow: hidden;
+      }
+
+      @media (prefers-reduced-transparency: reduce) {
+        header.app-nav,
+        .section,
+        .install-coach,
+        button,
+        a.button {
+          background: var(--band);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      @media (prefers-contrast: more) {
+        :root {
+          --line: rgba(255, 255, 255, 0.55);
+          --glass-edge: rgba(255, 255, 255, 0.4);
+        }
+
+        .sidebar-item[aria-current="page"] {
+          outline: 2px solid var(--cyan);
+          outline-offset: 2px;
+        }
+      }
+
       @media (max-width: 980px) {
         .grid,
         .clients,
@@ -633,39 +954,127 @@
       }
 
       @media (max-width: 680px) {
-        header {
-          grid-template-columns: auto minmax(0, 1fr);
+        main {
+          width: min(100% - 24px, 1240px);
         }
 
-        header .actions {
+        header.app-nav {
+          grid-template-columns: auto minmax(0, 1fr);
+          align-items: start;
+          min-height: 0;
+        }
+
+        header.app-nav .actions {
           grid-column: 1 / -1;
           justify-content: flex-start;
         }
 
-        h1 {
-          font-size: 22px;
+        header.app-nav h1 {
+          font-size: 30px;
+        }
+
+        .mark {
+          width: 52px;
+          height: 52px;
+        }
+
+        .install-steps {
+          grid-template-columns: 1fr;
+        }
+
+        html.scrolled header.app-nav h1 {
+          font-size: 24px;
         }
       }
     </style>
   </head>
   <body>
     <main>
-      <header>
-        <img class="mark" src="/logo.png" alt="" />
-        <div>
+      <header class="app-nav" aria-label="Local Ops navigation">
+        <img class="mark" src="/logo.png" alt="" decoding="async" />
+        <div class="title-stack">
+          <div class="nav-eyebrow">Local-first command center</div>
           <h1>ElysiaAI Local Ops</h1>
-          <div class="subline" id="summary">Loading house systems...</div>
+          <div class="nav-subtitle-row">
+            <div class="subline" id="summary">Loading house systems...</div>
+            <span class="hud-pill unknown" id="pwa-shell-state" aria-live="polite">
+              <span class="hud-dot" aria-hidden="true"></span>
+              <span data-pwa-label>PWA shell</span>
+            </span>
+          </div>
         </div>
         <div class="actions">
-          <button id="refresh" type="button">Refresh</button>
-          <a class="button" href="/native-lite.html">Native Lite</a>
-          <a class="button" href="/suit-hud.html">Suit HUD</a>
-          <a class="button" href="/suit-viewer.html">3D Viewer</a>
+          <button id="refresh" class="top-action is-primary" type="button">
+            <span class="action-icon" aria-hidden="true">R</span>
+            <span>Refresh</span>
+          </button>
+          <a class="button top-action is-primary" href="/native-lite.html">
+            <span class="action-icon" aria-hidden="true">N</span>
+            <span>Native</span>
+          </a>
+          <a class="button top-action is-primary" href="/suit-hud.html">
+            <span class="action-icon" aria-hidden="true">H</span>
+            <span>HUD</span>
+          </a>
+          <button id="install-guide" class="top-action install-trigger" type="button" hidden>
+            Install
+          </button>
+          <a class="button top-action is-secondary" href="/suit-viewer.html">Viewer</a>
         </div>
       </header>
 
+      <div
+        id="install-coach"
+        class="install-coach"
+        role="dialog"
+        aria-labelledby="install-title"
+        hidden
+      >
+        <div class="install-coach-head">
+          <div>
+            <h2 id="install-title">Install Elysia Ops</h2>
+            <p id="install-copy">
+              On iPhone or iPad, open Safari Share, choose Add to Home Screen,
+              then Add.
+            </p>
+          </div>
+          <button id="install-dismiss" class="coach-close" type="button" aria-label="Close install guide">
+            x
+          </button>
+        </div>
+        <ol class="install-steps" aria-label="Install steps">
+          <li id="install-step-one">Share</li>
+          <li id="install-step-two">Add to Home Screen</li>
+          <li id="install-step-three">Add</li>
+        </ol>
+        <div class="coach-actions">
+          <button id="install-action" type="button">Got it</button>
+        </div>
+      </div>
+
       <div class="grid">
-        <aside>
+        <aside class="sidebar">
+          <nav class="section sidebar-nav" aria-label="Ops hierarchy">
+            <h2>Navigator</h2>
+            <div class="sidebar-group">
+              <div class="sidebar-group-title">Overview</div>
+              <a class="sidebar-item" href="#readiness-title" data-section-nav="readiness-title" aria-current="page">Readiness</a>
+              <a class="sidebar-item" href="#services-title" data-section-nav="services-title">House Systems</a>
+              <a class="sidebar-item" href="#host-title" data-section-nav="host-title">Host Inventory</a>
+            </div>
+            <div class="sidebar-group">
+              <div class="sidebar-group-title">Planning</div>
+              <a class="sidebar-item" href="#home-server-title" data-section-nav="home-server-title">Home Gates</a>
+              <a class="sidebar-item" href="#future-title" data-section-nav="future-title">Future Path</a>
+              <a class="sidebar-item" href="#secure-mesh-title" data-section-nav="secure-mesh-title">Secure Mesh</a>
+            </div>
+            <div class="sidebar-group">
+              <div class="sidebar-group-title">Maintenance</div>
+              <a class="sidebar-item" href="#clients-title" data-section-nav="clients-title">Client Surfaces</a>
+              <a class="sidebar-item" href="#diagnostics-title" data-section-nav="diagnostics-title">Diagnostics</a>
+              <a class="sidebar-item" href="#improvements-title" data-section-nav="improvements-title">Improvements</a>
+            </div>
+          </nav>
           <section class="section readiness" aria-labelledby="readiness-title">
             <h2 id="readiness-title">Readiness</h2>
             <div class="score">
@@ -1083,10 +1492,8 @@
       }
 
       refresh.addEventListener("click", loadOps);
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("/service-worker.js").catch(() => {});
-      }
       loadOps();
     </script>
+    <script src="/pwa-shell.js" defer></script>
   </body>
 </html>
