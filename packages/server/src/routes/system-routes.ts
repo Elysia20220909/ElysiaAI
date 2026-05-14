@@ -4,6 +4,7 @@ import { proxyToFastAPI } from "../lib/constants";
 import { collectLocalOpsOverview } from "../lib/local-ops";
 import { logger } from "../lib/logger";
 import { collectNativeLiteSnapshot } from "../lib/native-lite";
+import { checkOllamaStatus } from "../lib/ollama-service";
 import {
 	buildSuitStatus,
 	getAegisFridayPersonaPrompt,
@@ -110,6 +111,11 @@ const publicRoutes = new Elysia()
 	})
 	.get("/api/local-ops", async () => {
 		return await collectLocalOpsOverview({ assumeCoreUp: true });
+	})
+	.get("/api/ollama/status", async ({ set }) => {
+		const status = await checkOllamaStatus();
+		if (status.status === "offline") set.status = 503;
+		return status;
 	})
 	.get("/api/native-lite", () => collectNativeLiteSnapshot())
 	.get("/api/suit/status", () => buildSuitStatus())

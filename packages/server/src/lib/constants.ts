@@ -1,6 +1,9 @@
 import axios from "axios";
 import { config } from "../../../../src/config.ts";
 import { logger } from "./logger";
+import { normalizeOllamaBaseUrl } from "./ollama-service";
+
+const ollamaBaseUrl = normalizeOllamaBaseUrl(config.ollamaBaseUrl);
 
 export const CONFIG = {
 	PORT: config.port,
@@ -10,10 +13,10 @@ export const CONFIG = {
 	JWT_SECRET: config.jwtSecret,
 	JWT_REFRESH_SECRET: config.jwtRefreshSecret,
 	MODEL_NAME: config.ollamaModel,
-	OLLAMA_BASE_URL: config.ollamaBaseUrl,
+	OLLAMA_BASE_URL: ollamaBaseUrl,
 	OPEN_LLM_VTUBER_ENABLED: config.openLlmVtuberEnabled,
 	OPEN_LLM_VTUBER_BASE_URL: config.openLlmVtuberBaseUrl,
-	RAG_API_URL: `${config.ollamaBaseUrl}/api/generate`,
+	RAG_API_URL: `${ollamaBaseUrl}/api/generate`,
 	RAG_TIMEOUT: 60000,
 	AUTH_USERNAME: config.authUsername,
 	AUTH_PASSWORD: config.authPassword,

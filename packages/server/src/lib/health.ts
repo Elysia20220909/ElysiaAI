@@ -1,6 +1,7 @@
 import axios from "axios";
 import Redis from "ioredis";
 import { config } from "../../../../src/config.ts";
+import { checkOllamaStatus } from "./ollama-service";
 import { checkOpenLlmVtuberStatus } from "./open-llm-vtuber";
 
 export interface HealthStatus {
@@ -32,6 +33,13 @@ export interface ServiceHealth {
 	responseTime?: number;
 	error?: string;
 	lastCheck: string;
+	version?: string;
+	model?: {
+		configured: string;
+		ready: boolean;
+		matched?: string;
+		availableCount?: number;
+	};
 }
 
 export function disabledServiceHealth(reason: string): ServiceHealth {
@@ -158,34 +166,29 @@ export async function checkFastAPI(fastAPIUrl: string): Promise<ServiceHealth> {
 
 // Ollama Health Check
 export async function checkOllama(ollamaUrl: string): Promise<ServiceHealth> {
-	const startTime = Date.now();
-	try {
-		const response = await axios.get(`${ollamaUrl}/api/version`, {
-			timeout: 5000,
-		});
+	const status = await checkOllamaStatus({ baseUrl: ollamaUrl });
+	const serviceStatus =
+		status.status === "online"
+			? status.responseTime < 500
+				? "up"
+				: "degraded"
+			: status.status === "degraded"
+				? "degraded"
+				: "down";
 
-		const responseTime = Date.now() - startTime;
-
-		if (response.status === 200) {
-			return {
-				status: responseTime < 500 ? "up" : "degraded",
-				responseTime,
-				lastCheck: new Date().toISOString(),
-			};
-		}
-
-		return {
-			status: "degraded",
-			responseTime,
-			lastCheck: new Date().toISOString(),
-		};
-	} catch (error) {
-		return {
-			status: "down",
-			error: error instanceof Error ? error.message : "Connection failed",
-			lastCheck: new Date().toISOString(),
-		};
-	}
+	return {
+		status: serviceStatus,
+		responseTime: status.responseTime,
+		error: status.error || status.recommendations[0],
+		lastCheck: status.lastCheck,
+		version: status.version,
+		model: {
+			configured: status.configuredModel,
+			ready: status.modelReady,
+			matched: status.matchedModel,
+			availableCount: status.models.length,
+		},
+	};
 }
 
 export async function checkOpenLlmVtuberService(

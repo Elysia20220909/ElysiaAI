@@ -6,6 +6,7 @@
 import { config } from "../../../../src/config.ts";
 import { emailNotifier } from "./email-notifier";
 import { logger } from "./logger";
+import { ollamaApiUrl } from "./ollama-service";
 import { webhookManager } from "./webhook-events";
 
 interface HealthCheck {
@@ -73,9 +74,12 @@ class HealthMonitor {
 				try {
 					const ollamaUrl = config.ollamaBaseUrl;
 					// Use the correct endpoint for Ollama health check
-					const response = await fetch(`${ollamaUrl}/api/version`, {
-						signal: AbortSignal.timeout(5000),
-					});
+					const response = await fetch(
+						ollamaApiUrl("/api/version", ollamaUrl),
+						{
+							signal: AbortSignal.timeout(5000),
+						},
+					);
 					return response.ok;
 				} catch {
 					return false;
