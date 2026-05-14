@@ -16,6 +16,8 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | E.L.I.S.I.A. Windows / macOS host server design | `docs/ELISIA_WINDOWS_MACOS_HOST_SERVER.md` |
 | E.L.I.S.I.A. Mark LXXXV Windows / macOS host server, style, and cost | `docs/ELISIA_MARK85_WINDOWS_MACOS_HOST_SERVER.md` |
 | Tauri desktop distribution | `docs/TAURI_DISTRIBUTION.md` |
+| AURELION personal cognitive OS spec | `docs/AURELION_PERSONAL_COGNITIVE_OS_SPEC.ja.md` |
+| AURELION Stage 1 Local Stark Desk implementation plan | `docs/AURELION_STAGE1_LOCAL_STARK_DESK_PLAN.ja.md` |
 | E.L.I.S.I.A. Mark LXXXV safe mini lab design/spec | `docs/ELISIA_MARK85_SAFE_MINI_LAB_DESIGN_SPEC.ja.md`, `docs/ELISIA_MARK85_SAFE_MINI_LAB_DESIGN_SPEC.en-US.md` |
 | E.L.I.S.I.A. logic board parts and schematic reading | `docs/ELISIA_LOGIC_BOARD_PARTS_AND_SCHEMATIC_READING.ja.md`, `docs/ELISIA_LOGIC_BOARD_PARTS_AND_SCHEMATIC_READING.en-US.md` |
 | Stark home local server build | `docs/STARK_HOME_LOCAL_SERVER_BUILD.md` |
