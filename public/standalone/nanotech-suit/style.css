@@ -19,6 +19,8 @@
     --glass-border: rgba(255, 255, 255, 0.1);
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Outfit:wght@300;400;600&display=swap');
+
 * {
     margin: 0;
     padding: 0;
@@ -178,100 +180,6 @@ body::after {
     font-weight: 600; 
     font-family: 'Orbitron';
     text-shadow: 0 0 10px var(--suit-cyan-glow);
-}
-
-/* Distributed OS */
-.os-panel {
-    top: 92px;
-    left: calc(50% - 210px);
-    width: 420px;
-}
-
-.os-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-}
-
-.os-grid div {
-    min-height: 58px;
-    border: 1px solid var(--glass-border);
-    background: rgba(255, 255, 255, 0.025);
-    border-radius: 4px;
-    padding: 9px;
-}
-
-.os-grid span,
-.domain-pill span {
-    display: block;
-    color: rgba(255, 255, 255, 0.42);
-    font-size: 0.56rem;
-    letter-spacing: 1px;
-}
-
-.os-grid strong {
-    display: block;
-    margin-top: 4px;
-    color: white;
-    font-family: 'Orbitron';
-    font-size: 0.92rem;
-}
-
-.domain-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 12px;
-}
-
-.domain-pill {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
-    align-items: center;
-    border: 1px solid rgba(0, 242, 255, 0.12);
-    background: rgba(0, 242, 255, 0.04);
-    border-radius: 4px;
-    padding: 6px 8px;
-    font-size: 0.62rem;
-    letter-spacing: 1px;
-}
-
-.domain-pill strong {
-    color: white;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.domain-status {
-    color: var(--suit-gold);
-    font-family: 'Orbitron';
-    font-size: 0.58rem;
-}
-
-.os-actions {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 7px;
-    margin-top: 10px;
-}
-
-.os-actions button {
-    min-height: 30px;
-    border: 1px solid rgba(0, 242, 255, 0.22);
-    background: rgba(0, 242, 255, 0.055);
-    color: var(--suit-cyan);
-    font-family: 'Orbitron';
-    font-size: 0.54rem;
-    letter-spacing: 1px;
-}
-
-.os-actions button:hover,
-.os-actions button:focus {
-    outline: none;
-    border-color: var(--hud-border-active);
-    background: rgba(0, 242, 255, 0.15);
 }
 
 /* Nano-Assembly Progress */
@@ -452,17 +360,13 @@ body::after {
     top: 30px;
     font-family: 'Orbitron';
     font-weight: 900;
-    width: 100%;
-    text-align: center;
-    font-size: 1.45rem;
-    letter-spacing: 9px;
+    font-size: 2rem;
+    letter-spacing: 15px;
     color: white;
     text-transform: uppercase;
     opacity: 0.9;
     text-shadow: 2px 2px 0 var(--suit-red), -2px -2px 0 var(--suit-cyan);
     animation: titleFlicker 5s infinite;
-    pointer-events: none;
-    z-index: 6;
 }
 
 @keyframes titleFlicker {
@@ -503,7 +407,6 @@ body::after {
 
     .hud-panel,
     .vitals-panel,
-    .os-panel,
     .nano-panel,
     .combat-panel,
     .scanner-panel,

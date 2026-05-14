@@ -29,7 +29,6 @@ import { fileRoutes } from "./routes/file-routes";
 import { learningRoutes } from "./routes/learning-routes";
 import { neuralSystemRoutes } from "./routes/neural-system-routes";
 import { projectRoutes } from "./routes/project-routes";
-import { ruleRoutes } from "./routes/rule-routes";
 import { sessionRoutes } from "./routes/session-routes";
 import { slackRoutes } from "./routes/slack-routes";
 import { systemRoutes } from "./routes/system-routes";
@@ -164,7 +163,6 @@ app
 	})
 	.use(authRoutes)
 	.use(projectRoutes)
-	.use(ruleRoutes)
 	.use(elysiaCoreRoutes)
 	.use(aiRoutes)
 	.use(slackRoutes)

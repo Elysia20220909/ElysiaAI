@@ -49,7 +49,6 @@ from python.core.perception import elysia_perception
 from python.core.persona import elysia_persona
 from python.core.singularity import singularity_engine
 from python.lib.abyssal_stealth import AbyssalStealth, get_shrouded_resonance_key
-from python.lib.auth_session import AuthError, AuthService, auth_exception_handler, create_auth_router
 from python.lib.file_phantom import phantom
 from python.lib.guardian import guardian
 from python.lib.phantom_vault import phantom_vault
@@ -147,9 +146,6 @@ app = FastAPI(
     description="エリシアちゃんの長期記憶と感情トラッキング ♡",
     version="2.0.0",
 )
-auth_service = AuthService()
-app.add_exception_handler(AuthError, auth_exception_handler)
-app.include_router(create_auth_router(auth_service))
 
 # Epic 7: フロントエンドとの統合 (CORS 制限)
 # Allow local development origins only for security
