@@ -98,6 +98,124 @@ How to choose the first part:
 - Choose the helmet if the goal is the strongest Mark LXXXV and E.L.I.S.I.A. HUD feeling.
 - If starting from 3D models, prefer files that clearly state licensing, modification rights, and wearable safety notes.
 
+## Prop Mechanical Fabrication Roadmap
+
+This roadmap is for visual props, opening effects, and HUD experience. It is not for strength enhancement, flight, propulsion, or load-bearing wearable machinery.
+
+Common materials:
+
+- EVA foam, PETG/PLA 3D printed parts, thin ABS sheet, fabric, nylon webbing.
+- Magnets, hook-and-loop tape, zippers, small hinges, plastic buckles.
+- Diffused LEDs, USB 5V-class battery packs, low-output servos, reachable power switches.
+- Rubber trim, foam padding, heat-shrink tubing, and cable sleeving.
+
+Avoid:
+
+- Linkages that move heavy loads.
+- Strong springs, pneumatics, hydraulics, or high-output motors.
+- Sharp metal edges.
+- Body-supporting exoskeleton structures.
+- Any mechanism that closes strongly near skin, neck, or fingers.
+
+### Phase 1: Helmet-Focused Build
+
+Purpose:
+
+- Get the strongest Mark LXXXV feeling first.
+- Safely test visor motion, LEDs, voice lines, and a simple HUD.
+
+Fabrication approach:
+
+- Start with cardboard or EVA foam to verify head size, visibility, and breathing space.
+- Use a front-opening or lift-up visor with light hinges and magnetic retention.
+- Keep manual opening as the default. If motorized, move only a very light decorative panel.
+- Start with a simulated HUD through a small display, reflected phone screen, or simple internal indicator.
+- Keep the battery removable and away from the back of the neck.
+
+Safety gate:
+
+- Wearable for 30 minutes without breathing, heat, or neck-fatigue issues.
+- Does not block critical vision.
+- Removable with one hand.
+- Visor cannot pinch fingers.
+
+### Phase 2: Front-Opening Chest And Shoulders
+
+Purpose:
+
+- Add the core silhouette.
+- Build the arc core, shoulder armor, and front-opening effect.
+
+Fabrication approach:
+
+- Use EVA foam or lightweight printed segmented panels.
+- Keep shoulders flexible; avoid a rigid one-piece shoulder cage.
+- Use zippers, magnets, hook-and-loop tape, and light hinges for the front opening.
+- Diffuse arc-core LEDs and provide airflow.
+- Distribute weight across the torso with nylon webbing rather than hanging it from the shoulders.
+
+Safety gate:
+
+- Can breathe deeply.
+- Shoulders can lift without neck or arm compression.
+- Front can be opened by the wearer.
+- LEDs do not become hot during use.
+
+### Phase 3: Low-Output Forearm Panel
+
+Purpose:
+
+- Safely test small decorative motion.
+- Create a nanotech-panel style effect.
+
+Fabrication approach:
+
+- Build the forearm as a top/bottom clamshell with hook-and-loop tape or magnets.
+- Motorize only light decorative panels.
+- Use low-output, slow servo motion and soft panel edges.
+- Add mechanical stops so the panel cannot over-rotate.
+- Keep a manual release or passive opening path.
+
+Safety gate:
+
+- Motion force is low enough to stop by hand without pain.
+- Finger gaps are either eliminated or wide enough to escape.
+- Power-off state is safe.
+- No heat buildup during repeated motion.
+
+### Phase 4: Full Visual Suit Shell
+
+Purpose:
+
+- Combine proven modules into a full display, cosplay, or event shell.
+
+Fabrication approach:
+
+- Keep the suit modular: helmet, chest, shoulders, forearms, waist, and legs.
+- Do not optimize for stairs, crouching, or long walks at first.
+- Use soft materials around knees, hips, elbows, and neck.
+- Make all wiring detachable with simple connectors.
+- Prepare a transport box, repair kit, spare magnets, and spare straps.
+
+Safety gate:
+
+- Wearer can remove it without a handler.
+- Hard parts cannot stab the body during a fall.
+- Walking tests start on a flat indoor floor.
+- Public event use has breaks and a nearby helper.
+
+Recommended fabrication order:
+
+```text
+helmet visor mock
+  -> helmet LED/HUD audio
+  -> chest front-open mock
+  -> shoulder range test
+  -> forearm passive shell
+  -> forearm low-output motion
+  -> full visual suit shell
+```
+
 ## Recommended Architecture
 
 ```text
