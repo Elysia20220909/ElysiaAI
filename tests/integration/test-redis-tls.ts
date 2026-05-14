@@ -3,7 +3,9 @@ import Redis from "ioredis";
 const redisUrl = process.env.REDIS_URL;
 
 if (!redisUrl) {
-	throw new Error("REDIS_URL is required for this live Redis integration test.");
+	throw new Error(
+		"REDIS_URL is required for this live Redis integration test.",
+	);
 }
 
 const url = new URL(redisUrl);

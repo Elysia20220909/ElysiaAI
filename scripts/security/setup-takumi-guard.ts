@@ -18,12 +18,18 @@ function readLines(file: string): string[] {
 		return [];
 	}
 
-	return readFileSync(file, "utf8").split(/\r?\n/).filter((line, index, lines) => {
-		return !(index === lines.length - 1 && line === "");
-	});
+	return readFileSync(file, "utf8")
+		.split(/\r?\n/)
+		.filter((line, index, lines) => {
+			return !(index === lines.length - 1 && line === "");
+		});
 }
 
-function writeLinesIfChanged(file: string, lines: string[], detail: string): FileResult {
+function writeLinesIfChanged(
+	file: string,
+	lines: string[],
+	detail: string,
+): FileResult {
 	const next = `${lines.join("\n")}\n`;
 	const previous = existsSync(file) ? readFileSync(file, "utf8") : "";
 
@@ -37,7 +43,10 @@ function writeLinesIfChanged(file: string, lines: string[], detail: string): Fil
 
 function ensureProjectNpmrc(file: string): FileResult {
 	const lines = readLines(file).filter((line) => {
-		return !/^\s*registry\s*=/.test(line) && !/^\s*\/\/npm\.flatt\.tech\/:_authToken\s*=/.test(line);
+		return (
+			!/^\s*registry\s*=/.test(line) &&
+			!/^\s*\/\/npm\.flatt\.tech\/:_authToken\s*=/.test(line)
+		);
 	});
 
 	return writeLinesIfChanged(
@@ -69,12 +78,16 @@ function ensureUserNpmrc(file: string, token: string | undefined): FileResult {
 	return writeLinesIfChanged(
 		file,
 		next,
-		token ? "user registry and auth token configured" : "user registry configured; existing token preserved if present",
+		token
+			? "user registry and auth token configured"
+			: "user registry configured; existing token preserved if present",
 	);
 }
 
 function ensureYarnrc(file: string): FileResult {
-	const lines = readLines(file).filter((line) => !/^\s*npmRegistryServer\s*:/.test(line));
+	const lines = readLines(file).filter(
+		(line) => !/^\s*npmRegistryServer\s*:/.test(line),
+	);
 
 	return writeLinesIfChanged(
 		file,
@@ -87,14 +100,24 @@ function ensureBunfig(file: string): FileResult {
 	const registryLine = `registry = { url = "${REGISTRY_URL}" }`;
 
 	if (!existsSync(file)) {
-		return writeLinesIfChanged(file, ["[install]", registryLine], "Bun registry configured");
+		return writeLinesIfChanged(
+			file,
+			["[install]", registryLine],
+			"Bun registry configured",
+		);
 	}
 
 	const lines = readLines(file);
-	const installIndex = lines.findIndex((line) => /^\s*\[install\]\s*$/.test(line));
+	const installIndex = lines.findIndex((line) =>
+		/^\s*\[install\]\s*$/.test(line),
+	);
 
 	if (installIndex === -1) {
-		return writeLinesIfChanged(file, [...lines, "", "[install]", registryLine], "Bun registry configured");
+		return writeLinesIfChanged(
+			file,
+			[...lines, "", "[install]", registryLine],
+			"Bun registry configured",
+		);
 	}
 
 	const nextSectionIndex = lines.findIndex((line, index) => {
@@ -102,7 +125,9 @@ function ensureBunfig(file: string): FileResult {
 	});
 	const endIndex = nextSectionIndex === -1 ? lines.length : nextSectionIndex;
 	const registryIndex = lines.findIndex((line, index) => {
-		return index > installIndex && index < endIndex && /^\s*registry\s*=/.test(line);
+		return (
+			index > installIndex && index < endIndex && /^\s*registry\s*=/.test(line)
+		);
 	});
 
 	const next = [...lines];
@@ -116,29 +141,42 @@ function ensureBunfig(file: string): FileResult {
 }
 
 function hasTakumiToken(file: string): boolean {
-	return readLines(file).some((line) => /^\s*\/\/npm\.flatt\.tech\/:_authToken\s*=\s*\S+/.test(line));
+	return readLines(file).some((line) =>
+		/^\s*\/\/npm\.flatt\.tech\/:_authToken\s*=\s*\S+/.test(line),
+	);
 }
 
-async function verifyBlockedPackage(token: string | undefined): Promise<boolean> {
+async function verifyBlockedPackage(
+	token: string | undefined,
+): Promise<boolean> {
 	const headers: Record<string, string> = {};
 	if (token) {
 		headers.authorization = `Bearer ${token}`;
 	}
 
 	try {
-		const response = await fetch(`https://${REGISTRY_HOST}/@panda-guard%2Ftest-malicious`, {
-			headers,
-		});
+		const response = await fetch(
+			`https://${REGISTRY_HOST}/@panda-guard%2Ftest-malicious`,
+			{
+				headers,
+			},
+		);
 
 		if (response.status === 403) {
-			console.log("[ok] Takumi Guard blocked @panda-guard/test-malicious with 403");
+			console.log(
+				"[ok] Takumi Guard blocked @panda-guard/test-malicious with 403",
+			);
 			return true;
 		}
 
-		console.log(`[warn] Expected 403 for blocked test package, received ${response.status}`);
+		console.log(
+			`[warn] Expected 403 for blocked test package, received ${response.status}`,
+		);
 		return false;
 	} catch (error) {
-		console.log(`[warn] Blocklist verification failed: ${(error as Error).message}`);
+		console.log(
+			`[warn] Blocklist verification failed: ${(error as Error).message}`,
+		);
 		return false;
 	}
 }
@@ -159,9 +197,13 @@ async function main() {
 	}
 
 	if (hasTakumiToken(userNpmrc)) {
-		console.log("[ok] Takumi Guard auth token is configured in the user npm config");
+		console.log(
+			"[ok] Takumi Guard auth token is configured in the user npm config",
+		);
 	} else {
-		console.log(`[info] No auth token found. Set ${TAKUMI_TOKEN_ENV} to enable tracking and notifications.`);
+		console.log(
+			`[info] No auth token found. Set ${TAKUMI_TOKEN_ENV} to enable tracking and notifications.`,
+		);
 	}
 
 	if (args.has("--verify-block")) {
@@ -173,6 +215,8 @@ async function main() {
 }
 
 main().catch((error) => {
-	console.error(`[error] ${error instanceof Error ? error.message : String(error)}`);
+	console.error(
+		`[error] ${error instanceof Error ? error.message : String(error)}`,
+	);
 	process.exitCode = 1;
 });

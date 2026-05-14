@@ -1,10 +1,11 @@
 import { createClient } from "redis";
 
-const redisUrl =
-	process.env.REDIS_URL;
+const redisUrl = process.env.REDIS_URL;
 
 if (!redisUrl) {
-	throw new Error("REDIS_URL is required for this live Redis integration test.");
+	throw new Error(
+		"REDIS_URL is required for this live Redis integration test.",
+	);
 }
 
 const client = createClient({

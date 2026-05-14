@@ -226,10 +226,7 @@ const MAIN_CATEGORIES = new Set<SaizeriyaCategory>([
 ]);
 
 function normalizeText(value: string): string {
-	return value
-		.normalize("NFKC")
-		.toLowerCase()
-		.replace(/\s+/g, "");
+	return value.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
 }
 
 function yen(value: number): string {
@@ -273,10 +270,13 @@ export function filterMenu(
 	const base = filter.query ? searchMenu(menu, filter.query) : [...menu];
 	return base
 		.filter((item) => !filter.category || item.category === filter.category)
-		.filter((item) => !filter.maxPriceYen || item.priceYen <= filter.maxPriceYen)
+		.filter(
+			(item) => !filter.maxPriceYen || item.priceYen <= filter.maxPriceYen,
+		)
 		.filter(
 			(item) =>
-				filter.includeCheckStore || (item.availability ?? "regular") === "regular",
+				filter.includeCheckStore ||
+				(item.availability ?? "regular") === "regular",
 		)
 		.filter((item) => {
 			if (tags.length === 0) return true;
@@ -348,8 +348,11 @@ export function suggestCombo(
 	const sides = usable.filter((item) => !isMainItem(item));
 	const mainSets = buildMainSets(mains, people);
 	const sideSets = buildSideSets(sides);
-	let best: { items: SaizeriyaMenuItem[]; totalYen: number; score: number } | null =
-		null;
+	let best: {
+		items: SaizeriyaMenuItem[];
+		totalYen: number;
+		score: number;
+	} | null = null;
 
 	for (const mainSet of mainSets) {
 		for (const sideSet of sideSets) {
@@ -357,8 +360,11 @@ export function suggestCombo(
 			const totalYen = items.reduce((sum, item) => sum + item.priceYen, 0);
 			if (totalYen > options.budgetYen) continue;
 			const categories = new Set(items.map((item) => item.category)).size;
-			const popular = items.filter((item) => item.tags.includes("popular")).length;
-			const score = totalYen + categories * 35 + popular * 20 + sideSet.length * 15;
+			const popular = items.filter((item) =>
+				item.tags.includes("popular"),
+			).length;
+			const score =
+				totalYen + categories * 35 + popular * 20 + sideSet.length * 15;
 			if (!best || score > best.score) best = { items, totalYen, score };
 		}
 	}
@@ -415,14 +421,24 @@ export function summarizeCart(
 	menu: SaizeriyaMenuItem[],
 	people = 1,
 ): {
-	rows: Array<{ item: SaizeriyaMenuItem; quantity: number; subtotalYen: number }>;
+	rows: Array<{
+		item: SaizeriyaMenuItem;
+		quantity: number;
+		subtotalYen: number;
+	}>;
 	totalYen: number;
 	perPersonYen: number;
 } {
 	const rows = cart.lines.flatMap((line) => {
 		const item = menu.find((candidate) => candidate.code === line.code);
 		if (!item) return [];
-		return [{ item, quantity: line.quantity, subtotalYen: item.priceYen * line.quantity }];
+		return [
+			{
+				item,
+				quantity: line.quantity,
+				subtotalYen: item.priceYen * line.quantity,
+			},
+		];
 	});
 	const totalYen = rows.reduce((sum, row) => sum + row.subtotalYen, 0);
 	return {
@@ -449,7 +465,9 @@ export function formatCombo(combo: ReturnType<typeof suggestCombo>): string {
 	}
 	return [
 		"おすすめセット",
-		...combo.items.map((item) => `- ${item.code} ${item.name}: ${yen(item.priceYen)}`),
+		...combo.items.map(
+			(item) => `- ${item.code} ${item.name}: ${yen(item.priceYen)}`,
+		),
 		`合計: ${yen(combo.totalYen)}`,
 		`1人あたり: ${yen(combo.perPersonYen)}`,
 	].join("\n");
@@ -519,7 +537,8 @@ function optionText(
 }
 
 function optionTags(options: Record<string, string | boolean>): string[] {
-	const tagText = optionText(options, "tag") ?? optionText(options, "tags") ?? "";
+	const tagText =
+		optionText(options, "tag") ?? optionText(options, "tags") ?? "";
 	return tagText
 		.split(",")
 		.map((tag) => tag.trim())
@@ -527,7 +546,8 @@ function optionTags(options: Record<string, string | boolean>): string[] {
 }
 
 async function loadMenu(options: Record<string, string | boolean>) {
-	const menuPath = optionText(options, "menu") ?? process.env.SAIZERIYA_MENU_JSON;
+	const menuPath =
+		optionText(options, "menu") ?? process.env.SAIZERIYA_MENU_JSON;
 	if (!menuPath) return BUILT_IN_MENU;
 	const raw = await readFile(resolve(menuPath), "utf8");
 	const parsed = JSON.parse(raw) as SaizeriyaMenuItem[];
@@ -570,7 +590,8 @@ export async function runSaizeriyaCli(args: string[]): Promise<string> {
 	const json = parsed.options.json === true;
 	const includeCheckStore = parsed.options["include-check"] === true;
 
-	if (parsed.command === "help" || parsed.command === "--help") return helpText();
+	if (parsed.command === "help" || parsed.command === "--help")
+		return helpText();
 
 	if (parsed.command === "list") {
 		const items = filterMenu(menu, {
@@ -619,7 +640,9 @@ export async function runSaizeriyaCli(args: string[]): Promise<string> {
 				menu,
 				optionNumber(parsed.options, "people", 1),
 			);
-			return json ? JSON.stringify(summary, null, 2) : formatCartSummary(summary);
+			return json
+				? JSON.stringify(summary, null, 2)
+				: formatCartSummary(summary);
 		}
 
 		const itemToken = parsed.positionals.slice(1).join(" ");
