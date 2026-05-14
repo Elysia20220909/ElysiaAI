@@ -43,7 +43,7 @@
     "ollama": "^0.6.3",
     "ollama-ai-provider": "^1.2.0",
     "openai": "^6.10.0",
-    "prisma": "^7.8.0",
+    "prisma": "^6.19.3",
     "redis": "^5.10.0",
     "sanitize-html": "^2.17.0",
     "ws": "^8.18.3"
