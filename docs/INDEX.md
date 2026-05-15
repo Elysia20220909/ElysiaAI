@@ -7,6 +7,8 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Need | File |
 | --- | --- |
 | Project overview | `README.md` |
+| MVP scope and acceptance criteria | `docs/MVP.md` |
+| Git workflow and branch discipline | `docs/GIT_WORKFLOW.md` |
 | Getting started | `docs/GETTING_STARTED.md` |
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |
 | E.L.I.S.I.A. local server hardware design and costs | `docs/ELISIA_LOCAL_SERVER_HARDWARE_DESIGN.md` |
