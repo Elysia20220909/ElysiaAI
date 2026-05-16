@@ -14,6 +14,13 @@ export interface TraceEvent {
 	hash?: string;
 }
 
+export interface TraceVerificationResult {
+	ok: boolean;
+	checked: number;
+	brokenAt?: number;
+	errors: string[];
+}
+
 const SECRET_PATTERNS = [
 	/sk-[a-zA-Z0-9-]{12,}/g,
 	/(api[_-]?key|token|secret|password)\s*[:=]\s*[^\s,;]+/gi,
@@ -43,6 +50,11 @@ function sanitizeTraceEvent(event: Omit<TraceEvent, "previousHash" | "hash">): O
 	};
 }
 
+function clampLimit(limit: number, max = 500): number {
+	if (!Number.isFinite(limit)) return 50;
+	return Math.max(1, Math.min(Math.floor(limit), max));
+}
+
 export class TraceLogger {
 	private readonly logDir = join(process.cwd(), "logs", "blackwall");
 	private readonly logFile = join(this.logDir, `trace-${new Date().toISOString().split("T")[0]}.jsonl`);
@@ -55,20 +67,11 @@ export class TraceLogger {
 
 	private getLastHash(): string {
 		try {
-			if (!existsSync(this.logFile)) {
-				return "GENESIS";
-			}
-
+			if (!existsSync(this.logFile)) return "GENESIS";
 			const content = readFileSync(this.logFile, "utf-8").trim();
-			if (!content) {
-				return "GENESIS";
-			}
-
+			if (!content) return "GENESIS";
 			const lastLine = content.split("\n").pop();
-			if (!lastLine) {
-				return "GENESIS";
-			}
-
+			if (!lastLine) return "GENESIS";
 			const parsed = JSON.parse(lastLine);
 			return parsed.hash || "GENESIS";
 		} catch {
@@ -78,6 +81,21 @@ export class TraceLogger {
 
 	private calculateHash(payload: object): string {
 		return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+	}
+
+	private readAll(): TraceEvent[] {
+		if (!existsSync(this.logFile)) return [];
+		return readFileSync(this.logFile, "utf-8")
+			.split("\n")
+			.map((line) => line.trim())
+			.filter(Boolean)
+			.flatMap((line) => {
+				try {
+					return [JSON.parse(line) as TraceEvent];
+				} catch {
+					return [];
+				}
+			});
 	}
 
 	public write(event: Omit<TraceEvent, "previousHash" | "hash">): TraceEvent {
@@ -92,8 +110,38 @@ export class TraceLogger {
 		payload.hash = hash;
 
 		appendFileSync(this.logFile, `${JSON.stringify(payload)}\n`, "utf-8");
-
 		return payload;
+	}
+
+	public readRecent(limit = 50): TraceEvent[] {
+		return this.readAll().slice(-clampLimit(limit)).reverse();
+	}
+
+	public verifyChain(limit = 500): TraceVerificationResult {
+		const events = this.readAll().slice(-clampLimit(limit, 5000));
+		const errors: string[] = [];
+		if (events.length === 0) return { ok: true, checked: 0, errors };
+
+		let previousHash = events[0]?.previousHash || "GENESIS";
+		for (let index = 0; index < events.length; index++) {
+			const event = events[index];
+			const { hash, ...payload } = event;
+			const expectedHash = this.calculateHash(payload);
+
+			if (event.previousHash !== previousHash) {
+				errors.push(`previous hash mismatch at index ${index}`);
+				return { ok: false, checked: index + 1, brokenAt: index, errors };
+			}
+
+			if (hash !== expectedHash) {
+				errors.push(`hash mismatch at index ${index}`);
+				return { ok: false, checked: index + 1, brokenAt: index, errors };
+			}
+
+			previousHash = hash || "GENESIS";
+		}
+
+		return { ok: true, checked: events.length, errors };
 	}
 }
 
