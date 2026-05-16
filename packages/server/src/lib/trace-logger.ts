@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
 export interface TraceEvent {
 	time: string;
@@ -12,6 +12,35 @@ export interface TraceEvent {
 	reason?: string;
 	previousHash?: string;
 	hash?: string;
+}
+
+const SECRET_PATTERNS = [
+	/sk-[a-zA-Z0-9-]{12,}/g,
+	/(api[_-]?key|token|secret|password)\s*[:=]\s*[^\s,;]+/gi,
+	/(bearer)\s+[a-zA-Z0-9._-]+/gi,
+];
+
+export function redactBlackwallText(value?: string): string | undefined {
+	if (value === undefined) return undefined;
+	let redacted = value;
+	for (const pattern of SECRET_PATTERNS) {
+		redacted = redacted.replace(pattern, (match) => {
+			if (/^bearer\s/i.test(match)) return "Bearer ***";
+			if (/^sk-/i.test(match)) return "sk-***";
+			const key = match.split(/[:=]/)[0]?.trim() || "secret";
+			return `${key}=***`;
+		});
+	}
+	return redacted.slice(0, 512);
+}
+
+function sanitizeTraceEvent(event: Omit<TraceEvent, "previousHash" | "hash">): Omit<TraceEvent, "previousHash" | "hash"> {
+	return {
+		...event,
+		process: redactBlackwallText(event.process),
+		destination: redactBlackwallText(event.destination),
+		reason: redactBlackwallText(event.reason),
+	};
 }
 
 export class TraceLogger {
@@ -55,7 +84,7 @@ export class TraceLogger {
 		const previousHash = this.getLastHash();
 
 		const payload: TraceEvent = {
-			...event,
+			...sanitizeTraceEvent(event),
 			previousHash,
 		};
 
