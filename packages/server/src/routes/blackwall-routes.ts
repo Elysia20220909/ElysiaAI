@@ -5,6 +5,7 @@ import {
 	requireLocalBlackwallRequest,
 	sanitizeBlackwallInput,
 } from "../lib/blackwall-guards";
+import { blackwallSingularityGovernor } from "../lib/blackwall-singularity-governor";
 
 export const blackwallRoutes = new Elysia({ prefix: "/api/blackwall" })
 	.get("/status", ({ request }) => {
@@ -35,6 +36,25 @@ export const blackwallRoutes = new Elysia({ prefix: "/api/blackwall" })
 				reverseShellBehavior: t.Optional(t.Boolean()),
 				promptInjectionSignal: t.Optional(t.Boolean()),
 				fileReadSpike: t.Optional(t.Boolean()),
+			}),
+		},
+	)
+	.post(
+		"/singularity/forecast",
+		({ body, request }) => {
+			const error = requireLocalBlackwallRequest(request);
+			if (error) return error;
+
+			return blackwallSingularityGovernor.forecast(body);
+		},
+		{
+			body: t.Object({
+				traceChainOk: t.Optional(t.Boolean()),
+				blackoutMode: t.Optional(t.Boolean()),
+				ghostRoomTickets: t.Optional(t.Numeric()),
+				highRiskEvents: t.Optional(t.Numeric()),
+				operatorPresent: t.Optional(t.Boolean()),
+				lastDecisionRisk: t.Optional(t.Numeric()),
 			}),
 		},
 	)
