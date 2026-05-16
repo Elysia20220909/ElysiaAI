@@ -2,8 +2,8 @@ name: 🛡️ Sovereign Security & Integrity Tests
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 毎日深夜に実行
-  workflow_dispatch:      # 手動実行
+    - cron: '0 0 * * *'
+  workflow_dispatch:
   push:
     branches: [ "master", "main", "dev" ]
     paths:
@@ -13,20 +13,40 @@ on:
       - 'docs/**'
       - 'README.md'
       - 'requirements.txt'
+      - 'requirements.lock'
       - 'package.json'
       - 'bun.lock'
+      - 'bun.lockb'
       - 'prisma/**'
       - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   security-audit:
     name: "🔍 セキュリティ監査 (Audit)"
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+
+      - name: Install JS Dependencies
+        run: |
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            bun install --frozen-lockfile
+          else
+            echo "::warning::No Bun lockfile found. Falling back to bun install"
+            bun install
+          fi
 
       - name: Bun Audit (JS/TS)
         run: bun audit
@@ -35,7 +55,7 @@ jobs:
         run: bun run security:glassworm -- --ci
 
       - name: Setup Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.11"
 
@@ -44,78 +64,112 @@ jobs:
 
       - name: Python Safety Check
         run: |
-          uv pip install safety
-          uv run safety check
+          uv pip install --system "safety<4"
+          if [ -f requirements.lock ]; then
+            python -m safety check -r requirements.lock --full-report
+          else
+            python -m safety check -r requirements.txt --full-report
+          fi
 
       - name: Generate SBOM
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610
         with:
           format: spdx-json
           output-file: elysia-sbom.spdx.json
 
+      - name: Generate SBOM Digest
+        run: sha256sum elysia-sbom.spdx.json > elysia-sbom.spdx.json.sha256
+
       - name: Upload SBOM
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: sbom
-          path: elysia-sbom.spdx.json
+          path: |
+            elysia-sbom.spdx.json
+            elysia-sbom.spdx.json.sha256
+          retention-days: 90
 
   unit-tests:
     name: "🧪 統合テスト (Tests)"
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
 
       - name: Install JS Dependencies
-        run: bun install
+        run: |
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            bun install --frozen-lockfile
+          else
+            echo "::warning::No Bun lockfile found. Falling back to bun install"
+            bun install
+          fi
 
       - name: Run Bun Tests with Coverage
         run: bun run test --coverage
 
+      - name: Upload Bun Coverage
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: bun-security-test-coverage
+          path: coverage/
+          retention-days: 14
+
       - name: Setup Python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.11"
 
       - name: Install Python Dependencies
         run: |
-          pip install -r requirements.txt
-          pip install pytest-cov
+          python -m pip install --upgrade pip
+          if [ -f requirements.lock ]; then
+            python -m pip install -r requirements.lock
+          else
+            python -m pip install -r requirements.txt
+          fi
+          python -m pip install pytest-cov
 
       - name: Run Python Tests with Coverage
-        run: pytest --cov=python --cov-report=term-missing tests/python tests/test_kernel.py
+        run: python -m pytest --cov=python --cov-report=term-missing tests/python tests/test_kernel.py
 
   zap-scan:
     name: "🛡️ OWASP ZAP Security Scan"
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
 
       - name: Install Dependencies & Setup Env
         run: |
-          bun install
+          if [ -f bun.lock ] || [ -f bun.lockb ]; then
+            bun install --frozen-lockfile
+          else
+            echo "::warning::No Bun lockfile found. Falling back to bun install"
+            bun install
+          fi
           cp .env.example .env
-          # Use a mock secret for testing if needed
           sed -i 's/JWT_SECRET=.*/JWT_SECRET=zap-scan-secret-key/' .env
 
       - name: Start Server in Background
         run: |
           bun scripts/manage.ts dev:ci &
-          # Wait for server to be ready (Base health)
           timeout 60s bash -c 'until curl -s http://localhost:3000/health; do sleep 2; done'
-          # Verify Auth path (Should return 400 or 401, but not 404/500)
           curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/auth/token | grep -qE "400|401"
-          # Verify AI path
           curl -f http://localhost:3000/api/health || exit 1
 
       - name: ZAP Scan
-        uses: zaproxy/action-baseline@903697920364e8333538c642823a17082f66a24 # v0.15.0
+        uses: zaproxy/action-baseline@903697920364e8333538c642823a17082f66a24
         with:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
@@ -126,6 +180,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs: [security-audit, unit-tests, zap-scan]
+
     steps:
       - name: Notify Meteor#6267
         run: |
