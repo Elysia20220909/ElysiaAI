@@ -6,7 +6,10 @@
     "start": "bun run packages/server/src/index.ts",
     "desktop": "bun tauri dev",
     "test": "bun test",
-    "lint": "bunx biome check . && python -m ruff check ."
+    "lint": "bunx biome check . && python -m ruff check .",
+    "ai:quick": "bun run lint",
+    "ai:check": "bun run lint && bun run test",
+    "ai:security": "bun audit"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
