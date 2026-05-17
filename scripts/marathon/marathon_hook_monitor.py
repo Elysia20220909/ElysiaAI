@@ -6,6 +6,13 @@ import json
 import sys
 from pathlib import Path
 from datetime import datetime, timezone
+
+CURRENT_DIR = Path(__file__).resolve().parent
+SCRIPTS_DIR = CURRENT_DIR.parent
+
+sys.path.insert(0, str(CURRENT_DIR))
+sys.path.insert(0, str(SCRIPTS_DIR))
+
 from marathon_templates import MarathonNotifier
 from marathon_news_bot import run_sweep
 
