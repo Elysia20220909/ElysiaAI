@@ -7,6 +7,8 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Need | File |
 | --- | --- |
 | Project overview | `README.md` |
+| MVP scope and acceptance criteria | `docs/MVP.md` |
+| Git workflow and branch discipline | `docs/GIT_WORKFLOW.md` |
 | Getting started | `docs/GETTING_STARTED.md` |
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |
 | E.L.I.S.I.A. local server hardware design and costs | `docs/ELISIA_LOCAL_SERVER_HARDWARE_DESIGN.md` |
@@ -26,6 +28,10 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Project structure | `docs/PROJECT_STRUCTURE.md` |
 | API | `docs/API.md`, `docs/API_REFERENCE.md` |
 | Environment | `docs/ENVIRONMENT.md` |
+| Testing | `docs/TESTING.md` |
+| CI policy | `docs/CI_POLICY.md` |
+| Release checklist | `docs/RELEASE_CHECKLIST.md` |
+| Screenshots | `docs/SCREENSHOTS.md` |
 | Troubleshooting | `docs/TROUBLESHOOTING.md` |
 | Cloudflare Workers Builds | `docs/deployment/CLOUDFLARE_WORKERS_BUILDS.md` |
 
@@ -39,6 +45,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Dependency audit | `docs/SECURITY_AUDIT.md` |
 | Secret management | `docs/SECRET_MANAGEMENT.md` |
 | Customization security | `docs/CUSTOMIZATION_SECURITY_GUIDE.md` |
+| Security testing | `docs/security/SECURITY_TESTING_GUIDE.md` |
 
 ## Integrations
 

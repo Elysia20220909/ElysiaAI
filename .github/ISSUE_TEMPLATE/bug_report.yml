@@ -1,0 +1,92 @@
+name: Bug report
+description: Report a reproducible problem in ElysiaAI
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve ElysiaAI. Please avoid sharing secrets, webhook URLs, private RAG content, or personal logs.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+      placeholder: Describe the bug clearly.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest steps that reproduce the issue.
+      placeholder: |
+        1. Run ...
+        2. Open ...
+        3. See ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Docs
+        - CI / release
+        - Security
+        - Backend
+        - Python kernel
+        - Rust shield-agent
+        - UI / desktop
+        - RAG / memory
+        - Unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Bun, Python, Rust, Ollama, Docker, or other relevant versions.
+      placeholder: |
+        OS:
+        Bun:
+        Python:
+        Rust:
+        Ollama:
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Redact secrets, tokens, private paths, webhook URLs, and private RAG content before posting.
+      render: text
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: I removed secrets, tokens, webhook URLs, and private RAG content.
+          required: true
+        - label: I included the smallest reproduction I can provide.
+          required: false
