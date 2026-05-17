@@ -22,6 +22,7 @@ import { slackSocketModeBridge } from "./lib/slack-socket-mode";
 import { adminRoutes } from "./routes/admin-routes";
 import { aiRoutes, handleElysiaLove, handleFeedback } from "./routes/ai-routes";
 import { authRoutes } from "./routes/auth-routes";
+import { blackwallRoutes } from "./routes/blackwall-routes";
 import { customizationRoutes } from "./routes/customization-routes";
 import { databaseRoutes } from "./routes/database-routes";
 import { elysiaCoreRoutes } from "./routes/elysia-core-routes";
@@ -58,6 +59,7 @@ app
 					{ name: "gpu", description: "Realtime GPU Inference" },
 					{ name: "system", description: "Infra & Monitoring" },
 					{ name: "vtuber", description: "Open-LLM-VTuber bridge" },
+					{ name: "blackwall", description: "BLACKWALL local runtime defense" },
 				],
 			},
 		}),
@@ -165,6 +167,7 @@ app
 		requestStartedAt.delete(request);
 	})
 	.use(authRoutes)
+	.use(blackwallRoutes)
 	.use(projectRoutes)
 	.use(ruleRoutes)
 	.use(elysiaCoreRoutes)
