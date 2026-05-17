@@ -1,6 +1,13 @@
 name: Sovereign Sentinel (Cloud Monitor)
 
 on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/sovereign-sentinel.yml"
+      - "scripts/marathon/**"
+      - "scripts/marathon_templates.py"
   schedule:
     - cron: '*/15 * * * *' # Every 15 minutes
   workflow_dispatch:      # Manual trigger
