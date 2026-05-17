@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BLACKWALL // Netrunner Deck</title>
+  <link rel="stylesheet" href="css/blackwall.css" />
+  <link rel="stylesheet" href="css/blackwall-deck.css" />
+</head>
+<body class="blackwall-deck-root">
+  <main class="deck-shell">
+    <section class="hero-panel">
+      <div>
+        <p class="eyebrow">ElysiaAI Local Defensive Runtime</p>
+        <h1>BLACKWALL Netrunner Deck</h1>
+        <p class="subcopy">Trace Chain, Ghost Room, Local Blackout, and Singularity posture in one local-first console.</p>
+      </div>
+      <div class="event-orb" aria-hidden="true"></div>
+    </section>
+
+    <section class="deck-grid">
+      <article class="deck-card status-card">
+        <div class="card-header">
+          <span>BLACKWALL STATUS</span>
+          <button id="refresh-button" type="button">Refresh</button>
+        </div>
+        <strong id="runtime-status">UNKNOWN</strong>
+        <p id="runtime-id">runtime: --</p>
+      </article>
+
+      <article class="deck-card">
+        <div class="card-header"><span>LOCAL BLACKOUT</span></div>
+        <strong id="blackout-mode">--</strong>
+        <p>Operator approval is required for manual blackout transitions.</p>
+      </article>
+
+      <article class="deck-card">
+        <div class="card-header"><span>SINGULARITY POSTURE</span></div>
+        <strong id="singularity-posture">--</strong>
+        <p id="singularity-recommendation">recommendation: --</p>
+      </article>
+
+      <article class="deck-card">
+        <div class="card-header"><span>GHOST ROOM</span></div>
+        <strong id="ghost-room-count">--</strong>
+        <p>Containment pressure from local runtime tickets.</p>
+      </article>
+    </section>
+
+    <section class="deck-grid wide">
+      <article class="deck-card console-card">
+        <div class="card-header"><span>TRACE CHAIN</span></div>
+        <pre id="trace-output">Trace feed not loaded.</pre>
+      </article>
+
+      <article class="deck-card console-card">
+        <div class="card-header"><span>EVENT HORIZON FORECAST</span></div>
+        <pre id="forecast-output">Forecast not loaded.</pre>
+      </article>
+    </section>
+  </main>
+
+  <script src="js/blackwall-deck.js"></script>
+</body>
+</html>
