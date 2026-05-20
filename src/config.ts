@@ -29,6 +29,13 @@ const unsafeProductionEnvValues: Record<string, Set<string>> = {
 	]),
 };
 
+function splitCsvEnv(value: string): string[] {
+	return value
+		.split(",")
+		.map((item) => item.trim())
+		.filter(Boolean);
+}
+
 export function getEnv(key: string, defaultValue?: string): string {
 	const value = process.env[key];
 	const isProd = process.env.NODE_ENV === "production";
@@ -68,6 +75,9 @@ export const config = {
 	// Security & Hardening
 	forceHttps: getEnv("FORCE_HTTPS", "false") === "true",
 	cspEnabled: getEnv("CSP_ENABLED", "true") === "true",
+	allowedCorsOrigins: splitCsvEnv(getEnv("ALLOWED_CORS_ORIGINS", "")),
+	publicRegistrationEnabled:
+		getEnv("PUBLIC_REGISTRATION_ENABLED", "false") === "true",
 	masterApiKey: getEnv("MASTER_API_KEY", ""),
 	encryptionSecret: getEnv(
 		"ENCRYPTION_SECRET",
