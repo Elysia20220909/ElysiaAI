@@ -39,6 +39,7 @@
     "check:deps": "bun scripts/tests/check-dependency-alignment.ts",
     "check:encoding": "bun scripts/run-python.ts scripts/tests/check-encoding.py",
     "check:git-hygiene": "bun scripts/tests/check-git-hygiene.ts",
+    "check:runner-policy": "bun scripts/tests/check-runner-policy.ts",
     "security:glassworm": "bun scripts/security/scan_glassworm.ts",
     "security:audit": "bun scripts/run-python.ts scripts/security/audit_dependencies.py"
   },

@@ -87,6 +87,19 @@ Recommended values:
 
 Secret scans and policy checks should fail closed. Do not use `continue-on-error` for secret scanning unless the PR explains why and the behavior is temporary.
 
+## Runner isolation
+
+Self-hosted runners are trusted execution zones. Pull request code must stay on
+GitHub-hosted runners and must not receive privileged secrets.
+
+Required split:
+
+- `pull_request`: GitHub-hosted, read-only, no secrets except `GITHUB_TOKEN`.
+- `push`, `schedule`, `workflow_dispatch`, and release tags: trusted workflows.
+
+Self-hosted jobs must live in trusted workflows and use an ICE runner label. See
+`docs/security/ICE_RUNNER_POLICY.md`.
+
 ## Review rule
 
 CI changes must include a short verification note describing what workflow was changed, what risk was reduced, and what follow-up remains.
