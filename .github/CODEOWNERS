@@ -1,0 +1,31 @@
+# ❄️ ICE Layer 3 CODEOWNERS
+
+# Global fallback
+* @Elysia20220909
+
+# Security critical infrastructure
+.github/ @Elysia20220909
+.github/workflows/ @Elysia20220909
+scripts/ @Elysia20220909
+
+# AI kernel and execution
+python/ @Elysia20220909
+python/kernel/ @Elysia20220909
+kernel/ @Elysia20220909
+
+# Backend / API
+packages/server/ @Elysia20220909
+packages/api/ @Elysia20220909
+
+# Database / schema
+prisma/ @Elysia20220909
+
+# Infrastructure
+infra/ @Elysia20220909
+docker/ @Elysia20220909
+
+# Desktop / native
+src-tauri/ @Elysia20220909
+
+# Security documentation
+docs/security/ @Elysia20220909
