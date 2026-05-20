@@ -39,12 +39,18 @@ import { vtuberRoutes } from "./routes/vtuber-routes";
 
 const app = new Elysia();
 const requestStartedAt = new WeakMap<Request, number>();
+const corsOrigin = config.allowedCorsOrigins.length > 0 ? config.allowedCorsOrigins : !isProd;
 
 checkEnvironmentOrExit();
 
 app
 	.use(helmet())
-	.use(cors())
+	.use(
+		cors({
+			origin: corsOrigin,
+			credentials: true,
+		}),
+	)
 	.use(
 		swagger({
 			documentation: {
