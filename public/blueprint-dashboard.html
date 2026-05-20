@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ElysiaAI Blueprint Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      background: #07111f;
+      color: #d9f7ff;
+      font-family: 'JetBrains Mono', monospace;
+      overflow: hidden;
+    }
+
+    .grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+
+    .container {
+      padding: 24px;
+    }
+
+    .title {
+      font-size: 42px;
+      color: #7fe7ff;
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      color: #8fb8c7;
+      margin-bottom: 24px;
+    }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .panel {
+      border: 1px solid rgba(127, 231, 255, 0.35);
+      background: rgba(6, 18, 30, 0.82);
+      padding: 16px;
+      min-height: 220px;
+      box-shadow: 0 0 18px rgba(0,255,255,0.08);
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      color: #7fe7ff;
+      font-size: 18px;
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 8px;
+      border-left: 3px solid #7fe7ff;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .warning {
+      border-left-color: #ffd166;
+    }
+
+    .critical {
+      border-left-color: #ff4d6d;
+    }
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+
+  <div class="container">
+    <div class="title">ELYSIAAI // BLUEPRINT DASHBOARD</div>
+    <div class="subtitle">Local AI-Native Embedded Operations Console</div>
+
+    <div class="panel-grid">
+      <div class="panel">
+        <h2>DEVICE FLEET</h2>
+        <div class="status">
+          Windows Gaming PC // ONLINE
+        </div>
+        <div class="status">
+          Mac Studio // ONLINE
+        </div>
+        <div class="status warning">
+          SSD usage approaching maintenance threshold
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>THERMAL MAP</h2>
+        <pre>
+CPU 57°C
+GPU 64°C
+Raspberry Pi 49°C
+        </pre>
+      </div>
+
+      <div class="panel">
+        <h2>AI DIAGNOSTIC KERNEL</h2>
+        <p>
+          Local LLM analysis active.
+          Monitoring thermal patterns,
+          storage pressure, and device health.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h2>SECURITY WATCH</h2>
+        <p>
+          No abnormal process behavior detected.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h2>NOTIFICATION HUB</h2>
+        <p>
+          Discord webhook standby.
+          Local desktop alerts armed.
+        </p>
+      </div>
+
+      <div class="panel">
+        <h2>RESEARCH MODE</h2>
+        <p>
+          Room-as-a-Suit orchestration active.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
