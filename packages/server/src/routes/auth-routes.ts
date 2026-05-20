@@ -1,4 +1,5 @@
 import { Elysia, t } from "elysia";
+import { config, isProd } from "../../../../src/config.ts";
 import {
 	assertCsrfForCookieAuth,
 	authErrorResponse,
@@ -130,7 +131,6 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			return jsonError(500, "Failed to generate dev token", "AUTH_DEV_FAILED");
 		}
 	})
-	// Auth: current browser session
 	.get("/session", ({ request }) => {
 		try {
 			const payload = getOptionalAccessToken(request);
@@ -157,7 +157,6 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			return authErrorResponse(error);
 		}
 	})
-	// Auth: token issuance via HttpOnly cookies
 	.post(
 		"/token",
 		async ({ body, request }: { body: LoginBody; request: Request }) => {
@@ -195,10 +194,17 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			}),
 		},
 	)
-	// Auth: register new user
 	.post(
 		"/register",
 		async ({ body }: { body: LoginBody }) => {
+			if (isProd && !config.publicRegistrationEnabled) {
+				return jsonError(
+					403,
+					"Public registration is disabled",
+					"AUTH_REGISTER_DISABLED",
+				);
+			}
+
 			const { username, password } = body;
 			try {
 				const newUser = await createUser(username, password);
@@ -230,7 +236,6 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			}),
 		},
 	)
-	// Auth: refresh access token and rotate refresh cookie
 	.post("/refresh", async ({ body, request }) => {
 		const resolved = resolveRefreshTokenFromRequest(
 			request,
@@ -258,7 +263,6 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 			return authErrorResponse(error, "Token refresh failed");
 		}
 	})
-	// Auth: logout and revoke refresh token when present
 	.post("/logout", async ({ body, request }) => {
 		const resolved = resolveRefreshTokenFromRequest(
 			request,
