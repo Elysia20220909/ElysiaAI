@@ -1,0 +1,34 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "WriteElysiaAiLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents"
+      ],
+      "Resource": [
+        "arn:aws:logs:REPLACE_WITH_REGION:REPLACE_WITH_ACCOUNT_ID:log-group:/elysiaai/*",
+        "arn:aws:logs:REPLACE_WITH_REGION:REPLACE_WITH_ACCOUNT_ID:log-group:/elysiaai/*:log-stream:*"
+      ]
+    },
+    {
+      "Sid": "PublishOperationalMetrics",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:PutMetricData"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "cloudwatch:namespace": "ElysiaAI"
+        }
+      }
+    }
+  ]
+}
+

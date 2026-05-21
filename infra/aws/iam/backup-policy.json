@@ -1,0 +1,52 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListBackupBucketPrefixes",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetBucketLocation",
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::REPLACE_WITH_BUCKET_NAME",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "daily",
+            "daily/*",
+            "weekly",
+            "weekly/*",
+            "incident",
+            "incident/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "WriteAndRestoreBackupObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::REPLACE_WITH_BUCKET_NAME/daily/*",
+        "arn:aws:s3:::REPLACE_WITH_BUCKET_NAME/weekly/*",
+        "arn:aws:s3:::REPLACE_WITH_BUCKET_NAME/incident/*"
+      ]
+    },
+    {
+      "Sid": "UseBackupKmsKeyWhenConfigured",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey"
+      ],
+      "Resource": "arn:aws:kms:REPLACE_WITH_REGION:REPLACE_WITH_ACCOUNT_ID:key/REPLACE_WITH_KEY_ID"
+    }
+  ]
+}
+
