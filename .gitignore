@@ -192,3 +192,8 @@ scripts/wordlists/
 *.dll
 *.so
 *.dylib
+
+# SSD health logs
+ssd_logs/*.csv
+ssd_logs/*.txt
+!ssd_logs/.gitkeep
