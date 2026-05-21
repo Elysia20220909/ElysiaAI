@@ -38,6 +38,10 @@ Use `docs/INDEX.md` to load task-specific docs only when needed.
 - Never disable Gitleaks, CodeQL, security audit, or test workflows.
 - Never commit secrets, tokens, webhook URLs, or private keys.
 - Treat `.github/workflows/`, `scripts/`, `python/`, `kernel/`, `prisma/`, and `src-tauri/` as protected zones.
+- Treat self-hosted runners as protected execution zones.
+- Keep `pull_request` workflows GitHub-hosted, read-only, and free of privileged secrets.
+- Never combine `pull_request_target` with self-hosted runners.
+- Require ICE runner labels for self-hosted jobs: `ice-linux-trusted`, `ice-macos-trusted`, `ice-windows-trusted`, or `ice-arm64-lab`.
 - Prefer small focused PRs.
 - Avoid large integration PRs.
 - Explain security impact for workflow or auth changes.
@@ -68,6 +72,7 @@ Expected CI checks:
 
 - Gitleaks Secret Detection
 - CodeQL Analysis
+- ICE Runner Policy
 - Security Audit
 - Unit Tests
 - OWASP ZAP where applicable
