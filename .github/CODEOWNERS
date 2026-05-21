@@ -1,0 +1,18 @@
+# Repository-wide fallback owner.
+* @Elysia20220909
+
+# Security-critical automation and policy.
+.github/** @Elysia20220909
+SECURITY.md @Elysia20220909
+.env.example @Elysia20220909
+
+# Runtime, API, data access, and deployment surfaces.
+packages/server/** @Elysia20220909
+packages/shared/** @Elysia20220909
+python/** @Elysia20220909
+kernel/** @Elysia20220909
+usr/** @Elysia20220909
+prisma/** @Elysia20220909
+src-tauri/** @Elysia20220909
+Dockerfile @Elysia20220909
+docker-compose.yml @Elysia20220909

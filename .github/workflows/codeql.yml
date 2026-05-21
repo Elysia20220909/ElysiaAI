@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: ["master", "main", "dev"]
   schedule:
-    - cron: "23 3 * * 2"
+    - cron: "0 4 * * 1"
 
 permissions:
   actions: read
@@ -40,6 +40,8 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
+          queries: +security-and-quality
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@8e62b596d4a3d7cb05f4b401b1a92b6ddf9efc3c

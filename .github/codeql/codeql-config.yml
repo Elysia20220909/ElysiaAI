@@ -1,0 +1,11 @@
+name: ElysiaAI CodeQL config
+
+paths-ignore:
+  - ".github/assets/**"
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/target/**"
+  - "**/.venv/**"
+  - "data/**"
+  - "python/data/**"
+  - "public/**"

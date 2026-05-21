@@ -1,30 +1,176 @@
 version: 2
 updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "02:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(actions)"
+
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "sunday"
+      time: "03:00"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      npm-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(npm)"
     open-pull-requests-limit: 10
 
   - package-ecosystem: "npm"
     directory: "/packages/server"
     schedule:
       interval: "weekly"
+      day: "sunday"
+      time: "03:10"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      server-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(server)"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm"
+    directory: "/packages/shared"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "03:20"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      shared-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(shared)"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "npm"
+    directory: "/apps/web"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "03:30"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      web-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(web)"
     open-pull-requests-limit: 5
 
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "sunday"
+      time: "04:00"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    commit-message:
+      prefix: "deps(pip)"
     open-pull-requests-limit: 5
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: "pip"
+    directory: "/python"
     schedule:
       interval: "weekly"
+      day: "sunday"
+      time: "04:10"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    commit-message:
+      prefix: "deps(python)"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "pip"
+    directory: "/python/gpu_infer"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "04:20"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    commit-message:
+      prefix: "deps(gpu)"
+    open-pull-requests-limit: 5
 
   - package-ecosystem: "cargo"
     directory: "/packages/shield-agent"
     schedule:
       interval: "weekly"
+      day: "sunday"
+      time: "05:00"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      shield-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(shield)"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "cargo"
+    directory: "/src-tauri"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "05:10"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      tauri-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(tauri)"
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "cargo"
+    directory: "/packages/server/scripts/infra/tools"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "05:20"
+      timezone: "Asia/Tokyo"
+    allow:
+      - dependency-type: "direct"
+    groups:
+      infra-tools-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    commit-message:
+      prefix: "deps(infra-tools)"
     open-pull-requests-limit: 5

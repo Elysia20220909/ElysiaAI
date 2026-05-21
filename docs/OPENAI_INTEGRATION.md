@@ -78,7 +78,7 @@ X-Elysia-Provider: openai
 `.env` ファイルに追加:
 
 ```env
-OPENAI_API_KEY=sk-proj-your-api-key-here
+OPENAI_API_KEY=your_openai_api_key_here
 OPENAI_MODEL=gpt-5.1-codex-max  # 既定モデル（GPT-5.1-Codex-Max Preview）
 ```
 
