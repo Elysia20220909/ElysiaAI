@@ -1,2 +1,2 @@
 [install]
-registry = { url = "https://npm.flatt.tech/" }
+registry = { url = "https://registry.npmjs.org/" }
