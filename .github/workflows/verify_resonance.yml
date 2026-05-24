@@ -2,9 +2,12 @@ name: 🌸 Elysia OS Resonance Verification (CI)
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, main, dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ master, main, dev ]
+
+permissions:
+  contents: read
 
 jobs:
   resonance-check:

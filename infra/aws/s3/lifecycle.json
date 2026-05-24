@@ -1,0 +1,52 @@
+{
+  "Rules": [
+    {
+      "ID": "ExpireDailyBackupsAfter30Days",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "daily/"
+      },
+      "Expiration": {
+        "Days": 30
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 30
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 7
+      }
+    },
+    {
+      "ID": "ExpireWeeklyBackupsAfter90Days",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "weekly/"
+      },
+      "Expiration": {
+        "Days": 90
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 90
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 7
+      }
+    },
+    {
+      "ID": "ExpireIncidentBackupsAfter365Days",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "incident/"
+      },
+      "Expiration": {
+        "Days": 365
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 365
+      },
+      "AbortIncompleteMultipartUpload": {
+        "DaysAfterInitiation": 7
+      }
+    }
+  ]
+}

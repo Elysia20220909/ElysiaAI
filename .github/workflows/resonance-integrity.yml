@@ -2,9 +2,12 @@ name: Resonance Integrity (CI)
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, dev ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ master, main, dev ]
+
+permissions:
+  contents: read
 
 jobs:
   backend-integrity:
