@@ -69,3 +69,4 @@ case "$archive_path" in
 esac
 
 echo "Restore complete: ${destination_dir}"
+

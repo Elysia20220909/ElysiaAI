@@ -103,3 +103,4 @@ fi
 echo "Uploading backup to ${destination}"
 aws "${aws_args[@]}"
 echo "Backup uploaded: ${destination}"
+

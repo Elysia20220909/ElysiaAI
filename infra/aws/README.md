@@ -117,3 +117,4 @@ them back into an active ElysiaAI workspace.
 6. Run a test backup with a non-sensitive test folder.
 7. Restore the test backup into a temporary folder and verify contents.
 8. Add CloudWatch and Secrets Manager only after backups are reliable.
+

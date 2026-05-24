@@ -35,3 +35,4 @@ Start with simple alarms:
 
 Notify through SNS, Discord, Slack, or another channel that does not expose
 secret values in the message body.
+
