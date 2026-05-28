@@ -2,14 +2,18 @@ name: Takumi Guard Check
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "master", "main", "dev" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "master", "main", "dev" ]
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       id-token: write # Required for OIDC
     steps:
       - uses: actions/checkout@v6

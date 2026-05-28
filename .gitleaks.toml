@@ -1,0 +1,39 @@
+title = "ElysiaAI ICE secret detection policy"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowed placeholders and local-only examples"
+regexes = [
+  '''example[_-]?secret''',
+  '''dummy[_-]?token''',
+  '''test[_-]?secret''',
+  '''changeme''',
+  '''your[_-]?(api|token|secret|key)''',
+  '''localhost'''
+]
+paths = [
+  '''(^|/)docs/''',
+  '''(^|/)README\.md$''',
+  '''(^|/)\.env\.example$''',
+  '''(^|/)\.env\.template$'''
+]
+
+[[rules]]
+id = "discord-webhook-url"
+description = "Discord webhook URL"
+regex = '''https://discord(?:app)?\.com/api/webhooks/[0-9]+/[A-Za-z0-9_\-]+'''
+tags = ["secret", "discord", "webhook"]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API key"
+regex = '''sk-(?:proj|svcacct)?-[A-Za-z0-9_\-]{20,}'''
+tags = ["secret", "openai", "api-key"]
+
+[[rules]]
+id = "generic-bearer-token"
+description = "Hardcoded bearer token"
+regex = '''(?i)bearer\s+[A-Za-z0-9._\-]{24,}'''
+tags = ["secret", "bearer"]

@@ -33,6 +33,50 @@ Use `docs/INDEX.md` to load task-specific docs only when needed.
 - Do not commit `.env`, logs, generated deletion results, uploads, or local caches.
 - Before finishing code changes, run the smallest relevant quality gate.
 
+## ICE Security Rules
+
+- Never disable Gitleaks, CodeQL, security audit, or test workflows.
+- Never commit secrets, tokens, webhook URLs, or private keys.
+- Treat `.github/workflows/`, `scripts/`, `python/`, `kernel/`, `prisma/`, and `src-tauri/` as protected zones.
+- Treat self-hosted runners as protected execution zones.
+- Keep `pull_request` workflows GitHub-hosted, read-only, and free of privileged secrets.
+- Never combine `pull_request_target` with self-hosted runners.
+- Require ICE runner labels for self-hosted jobs: `ice-linux-trusted`, `ice-macos-trusted`, `ice-windows-trusted`, or `ice-arm64-lab`.
+- Prefer small focused PRs.
+- Avoid large integration PRs.
+- Explain security impact for workflow or auth changes.
+- Respect CODEOWNERS intent for security-sensitive paths.
+- Prefer fail-closed behavior where practical.
+
+## Preferred Branch Style
+
+Use:
+
+```text
+codex/security-gitleaks
+codex/auth-hardening
+codex/server-cors-guard
+```
+
+Avoid:
+
+```text
+codex/all-in-one
+codex/massive-refactor
+integrate-everything
+```
+
+## Required Checks
+
+Expected CI checks:
+
+- Gitleaks Secret Detection
+- CodeQL Analysis
+- ICE Runner Policy
+- Security Audit
+- Unit Tests
+- OWASP ZAP where applicable
+
 ## Common Commands
 
 ```powershell
