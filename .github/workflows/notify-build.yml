@@ -1,0 +1,147 @@
+name: Build Slack Notify
+
+on:
+  workflow_run:
+    workflows:
+      - "CI/CD"
+      - "CI (minimal permissions)"
+      - "ElysiaAI CI (Guardian)"
+      - "🚀 Release & Artifacts"
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: none
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.id || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  notify:
+    name: Notify Slack
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - name: Skip when Slack webhook is not configured
+        if: env.SLACK_WEBHOOK_URL == ''
+        run: echo "::notice::SLACK_WEBHOOK_URL is not set; skipping Slack notification."
+
+      - name: Build Slack payload
+        if: env.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_run" ]; then
+            workflow="$(jq -r '.workflow_run.name // "Workflow"' "$GITHUB_EVENT_PATH")"
+            branch="$(jq -r '.workflow_run.head_branch // "unknown"' "$GITHUB_EVENT_PATH")"
+            conclusion="$(jq -r '.workflow_run.conclusion // "unknown"' "$GITHUB_EVENT_PATH")"
+            actor="$(jq -r '.workflow_run.actor.login // "unknown"' "$GITHUB_EVENT_PATH")"
+            run_url="$(jq -r '.workflow_run.html_url' "$GITHUB_EVENT_PATH")"
+            title="$(jq -r '.workflow_run.display_title // .workflow_run.head_commit.message // "Workflow run"' "$GITHUB_EVENT_PATH")"
+            sha="$(jq -r '.workflow_run.head_sha // ""' "$GITHUB_EVENT_PATH")"
+          else
+            workflow="${GITHUB_WORKFLOW}"
+            branch="${GITHUB_REF_NAME}"
+            conclusion="manual test"
+            actor="${GITHUB_ACTOR}"
+            run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            title="Manual Slack notification test"
+            sha="${GITHUB_SHA}"
+          fi
+
+          short_sha="${sha:0:7}"
+          if [ -z "$short_sha" ]; then
+            short_sha="unknown"
+          fi
+
+          case "$conclusion" in
+            success)
+              icon=":white_check_mark:"
+              ;;
+            failure|timed_out|cancelled|action_required)
+              icon=":warning:"
+              ;;
+            *)
+              icon=":information_source:"
+              ;;
+          esac
+
+          headline="${icon} *${workflow}* finished with *${conclusion}* on \`${branch}\`"
+
+          jq -n \
+            --arg text "$headline" \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg branch "$branch" \
+            --arg conclusion "$conclusion" \
+            --arg actor "$actor" \
+            --arg title "$title" \
+            --arg sha "$short_sha" \
+            --arg run_url "$run_url" \
+            '{
+              text: $text,
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: $text
+                  }
+                },
+                {
+                  type: "section",
+                  fields: [
+                    {
+                      type: "mrkdwn",
+                      text: ("*Repository:*\n" + $repository)
+                    },
+                    {
+                      type: "mrkdwn",
+                      text: ("*Branch:*\n" + $branch)
+                    },
+                    {
+                      type: "mrkdwn",
+                      text: ("*Status:*\n" + $conclusion)
+                    },
+                    {
+                      type: "mrkdwn",
+                      text: ("*Actor:*\n" + $actor)
+                    },
+                    {
+                      type: "mrkdwn",
+                      text: ("*Commit:*\n" + $sha)
+                    },
+                    {
+                      type: "mrkdwn",
+                      text: ("*Run:*\n" + $title)
+                    }
+                  ]
+                },
+                {
+                  type: "actions",
+                  elements: [
+                    {
+                      type: "button",
+                      text: {
+                        type: "plain_text",
+                        text: "View run"
+                      },
+                      url: $run_url
+                    }
+                  ]
+                }
+              ]
+            }' > slack-payload.json
+
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload-file-path: slack-payload.json
+          errors: true

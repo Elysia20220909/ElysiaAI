@@ -37,12 +37,15 @@
     "check:deps": "bun scripts/tests/check-dependency-alignment.ts",
     "check:encoding": "bun scripts/run-python.ts scripts/tests/check-encoding.py",
     "check:git-hygiene": "bun scripts/tests/check-git-hygiene.ts",
+    "security:ci-workflows": "bun scripts/security/scan_ci_workflows.ts",
+    "security:workflow-permissions": "bun scripts/security/inventory_workflow_permissions.ts",
+    "security:workflow-permission-prs": "bun scripts/security/create_workflow_permission_prs.ts",
     "security:glassworm": "bun scripts/security/scan_glassworm.ts",
     "security:audit": "bun scripts/run-python.ts scripts/security/audit_dependencies.py"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.2",
-    "@elysiajs/jwt": "latest",
+    "@elysiajs/jwt": "1.4.2",
     "@elysiajs/static": "^1.4.10",
     "@prisma/client": "^6.19.3",
     "elysia": "^1.4.28",
@@ -54,7 +57,7 @@
     "@playwright/test": "^1.56.1",
     "@tauri-apps/api": "^2.11.0",
     "@tauri-apps/cli": "^2.11.0",
-    "bun-types": "latest",
+    "bun-types": "1.3.14",
     "typescript": "^6.0.3"
   }
 }

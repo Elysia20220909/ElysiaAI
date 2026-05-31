@@ -29,6 +29,8 @@ out/
 *.pem
 DEBUG_REPORT.md
 AEGIS_LEDGER.md
+gitleaks-report.json
+gitleaks-*-report.json
 
 # debug
 npm-debug.log*

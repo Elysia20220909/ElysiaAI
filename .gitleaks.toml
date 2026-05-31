@@ -1,0 +1,31 @@
+title = "ElysiaAI gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated build output is not committed and can mirror source false positives."
+paths = [
+  '''^dist/''',
+]
+
+[[allowlists]]
+description = "Documented bearer-token placeholders in examples and negative tests."
+regexTarget = "match"
+regexes = [
+  '''Authorization:\s*Bearer\s+(?:YOUR_TOKEN|YOUR_JWT_TOKEN|invalid_token)''',
+]
+
+[[allowlists]]
+description = "FFXIV graphics option names that match the generic API key heuristic."
+regexTarget = "secret"
+regexes = [
+  '''^(?:RadialBlur_DX11|OcclusionCulling_DX11|ShadowLOD_DX11|DistortionWater_DX11)$''',
+]
+
+[[allowlists]]
+description = "Known local-development encryption fallback rejected by production config validation."
+regexTarget = "secret"
+regexes = [
+  '''^elysia-default-shadow-key-777$''',
+]

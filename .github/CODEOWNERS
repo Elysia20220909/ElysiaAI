@@ -1,0 +1,20 @@
+# ElysiaAI ownership map
+#
+# Enable "Require review from Code Owners" in GitHub branch protection or rulesets
+# for this file to become an enforced review gate.
+
+* @Elysia20220909
+
+# CI/CD and repository trust boundary files require owner review.
+.github/CODEOWNERS @Elysia20220909
+.github/dependabot.yml @Elysia20220909
+.github/workflows/ @Elysia20220909
+.github/workflows/** @Elysia20220909
+.gitleaks.toml @Elysia20220909
+
+# Security automation and dependency audit policy.
+scripts/security/ @Elysia20220909
+scripts/security/** @Elysia20220909
+docs/CI_POLICY.md @Elysia20220909
+docs/SECRET_MANAGEMENT.md @Elysia20220909
+docs/SECURITY.md @Elysia20220909

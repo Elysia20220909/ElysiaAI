@@ -12,9 +12,18 @@ export type ChatMode =
 	| "technical"
 	| "openai";
 
+export type ModelProvider =
+	| "fastapi"
+	| "ollama"
+	| "llama-cpp"
+	| "openai-compatible"
+	| "openai";
+
 export type ChatRequest = {
 	messages: Message[];
 	mode?: ChatMode;
+	provider?: ModelProvider;
+	model?: string;
 };
 
 export type ChatSession = {

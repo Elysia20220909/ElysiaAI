@@ -65,12 +65,24 @@ def audit_bun() -> bool:
     return result.returncode == 0
 
 
-def pip_audit_command() -> list[str]:
+def pip_audit_base_command() -> list[str]:
     exe_name = "pip-audit.exe" if os.name == "nt" else "pip-audit"
     local_exe = REPO_ROOT / ".venv" / ("Scripts" if os.name == "nt" else "bin") / exe_name
     if local_exe.exists():
-        return [str(local_exe), "--local"]
-    return [sys.executable, "-m", "pip_audit", "--local"]
+        return [str(local_exe)]
+    return [sys.executable, "-m", "pip_audit"]
+
+
+def pip_audit_command() -> list[str]:
+    command = pip_audit_base_command()
+    requirement_file = REPO_ROOT / "requirements.lock"
+    if not requirement_file.exists():
+        requirement_file = REPO_ROOT / "requirements.txt"
+    if requirement_file.exists():
+        command.extend(["-r", str(requirement_file)])
+    else:
+        command.append("--local")
+    return command
 
 
 def audit_python() -> bool:

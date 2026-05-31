@@ -1,0 +1,223 @@
+name: Runner Watchdog
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  id-token: none
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  check-runners:
+    name: Check self-hosted runners
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - name: Query repository runners
+        id: runners
+        shell: bash
+        env:
+          RUNNER_WATCHDOG_TOKEN: ${{ secrets.RUNNER_WATCHDOG_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${RUNNER_WATCHDOG_TOKEN}" ]; then
+            echo "::warning::RUNNER_WATCHDOG_TOKEN is not set; skipping self-hosted runner API check."
+            {
+              echo "checked=false"
+              echo "total=0"
+              echo "offline<<EOF"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          api="${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/runners?per_page=100"
+          json="$(
+            curl -fsSL \
+              -H "Authorization: Bearer ${RUNNER_WATCHDOG_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "$api"
+          )"
+
+          printf '%s\n' "$json" > runners.json
+
+          total="$(jq -r '.total_count // 0' runners.json)"
+          offline="$(
+            jq -r '
+              .runners[]
+              | select(.status != "online")
+              | "- " + .name + " (" + .status + ", busy=" + (.busy | tostring) + ")"
+            ' runners.json
+          )"
+
+          {
+            echo "checked=true"
+            echo "total=${total}"
+            echo "offline<<EOF"
+            printf '%s\n' "$offline"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build Slack alert payload
+        if: steps.runners.outputs.offline != '' && env.SLACK_WEBHOOK_URL != ''
+        shell: bash
+        env:
+          OFFLINE_RUNNERS: ${{ steps.runners.outputs.offline }}
+          TOTAL_RUNNERS: ${{ steps.runners.outputs.total }}
+        run: |
+          set -euo pipefail
+
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          jq -n \
+            --arg repository "$GITHUB_REPOSITORY" \
+            --arg offline "$OFFLINE_RUNNERS" \
+            --arg total "$TOTAL_RUNNERS" \
+            --arg run_url "$run_url" \
+            '{
+              text: (":warning: Self-hosted runner offline detected in " + $repository),
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: (":warning: *Self-hosted runner offline detected*\n*" + $repository + "*")
+                  }
+                },
+                {
+                  type: "section",
+                  fields: [
+                    {
+                      type: "mrkdwn",
+                      text: ("*Total runners:*\n" + $total)
+                    },
+                    {
+                      type: "mrkdwn",
+                      text: ("*Workflow:*\nRunner Watchdog")
+                    }
+                  ]
+                },
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: ("*Offline runners:*\n```" + $offline + "```")
+                  }
+                },
+                {
+                  type: "actions",
+                  elements: [
+                    {
+                      type: "button",
+                      text: {
+                        type: "plain_text",
+                        text: "View watchdog run"
+                      },
+                      url: $run_url
+                    }
+                  ]
+                }
+              ]
+            }' > slack-payload.json
+
+      - name: Alert Slack if any runner is offline
+        if: steps.runners.outputs.offline != '' && env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload-file-path: slack-payload.json
+          errors: true
+
+      - name: Warn when Slack webhook is missing
+        if: steps.runners.outputs.offline != '' && env.SLACK_WEBHOOK_URL == ''
+        run: echo "::warning::SLACK_WEBHOOK_URL is not set; updating the tracking issue only."
+
+      - name: Open or update tracking issue
+        if: steps.runners.outputs.offline != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OFFLINE_RUNNERS: ${{ steps.runners.outputs.offline }}
+          TOTAL_RUNNERS: ${{ steps.runners.outputs.total }}
+        run: |
+          set -euo pipefail
+
+          checked_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+
+          {
+            echo "Self-hosted runner watchdog detected runner(s) that are not online."
+            echo
+            echo "- Repository: ${GITHUB_REPOSITORY}"
+            echo "- Total runners: ${TOTAL_RUNNERS}"
+            echo "- Checked at: ${checked_at}"
+            echo "- Watchdog run: ${run_url}"
+            echo
+            echo "Offline runners:"
+            echo
+            echo '```text'
+            printf '%s\n' "$OFFLINE_RUNNERS"
+            echo '```'
+          } > runner-watchdog-issue.md
+
+          issue_number="$(
+            gh issue list \
+              --state open \
+              --search '"Runner offline detected" in:title' \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+
+          if [ -n "$issue_number" ]; then
+            gh issue edit "$issue_number" --body-file runner-watchdog-issue.md
+            exit 0
+          fi
+
+          labels="$(gh label list --limit 200 --json name --jq '.[].name' 2>/dev/null || true)"
+          label_args=()
+          for label in infra runner incident; do
+            if printf '%s\n' "$labels" | grep -Fxq "$label"; then
+              label_args+=(--label "$label")
+            fi
+          done
+
+          gh issue create \
+            --title "Runner offline detected" \
+            --body-file runner-watchdog-issue.md \
+            "${label_args[@]}"
+
+      - name: Close recovered tracking issue
+        if: steps.runners.outputs.checked == 'true' && steps.runners.outputs.offline == ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          issue_number="$(
+            gh issue list \
+              --state open \
+              --search '"Runner offline detected" in:title' \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+
+          if [ -z "$issue_number" ]; then
+            exit 0
+          fi
+
+          checked_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          gh issue close "$issue_number" \
+            --comment "All self-hosted runners are online again as of ${checked_at}."

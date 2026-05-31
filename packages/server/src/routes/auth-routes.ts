@@ -42,18 +42,18 @@ type LoginUser = {
 const testRefreshTokenStore = new InMemoryRefreshTokenStore();
 
 function getRefreshTokenStore(): RefreshTokenStore {
-	return process.env.ELYSIA_TEST_MODE === "1" || isDevAutoLoginEnabled()
+	return isEnvFlagEnabled("ELYSIA_TEST_MODE") || isDevAutoLoginEnabled()
 		? testRefreshTokenStore
 		: tokenService;
 }
 
+function isEnvFlagEnabled(key: string): boolean {
+	const value = process.env[key]?.trim().toLowerCase();
+	return value === "1" || value === "true";
+}
+
 function isDevAutoLoginEnabled(): boolean {
-	return (
-		process.env.NODE_ENV !== "production" &&
-		(process.env.ELYSIA_TEST_MODE === "1" ||
-			process.env.ELYSIA_KERNEL_LITE === "1" ||
-			process.env.ELYSIA_DEV_AUTO_LOGIN === "1")
-	);
+	return !isProd && isEnvFlagEnabled("ELYSIA_DEV_AUTO_LOGIN");
 }
 
 function normalizeLoginUser(user: unknown): LoginUser {
@@ -164,7 +164,7 @@ export const authRoutes = new Elysia({ prefix: "/auth" })
 
 			let user: LoginUser;
 
-			if (process.env.ELYSIA_TEST_MODE === "1" && username === "elysia-test") {
+			if (isEnvFlagEnabled("ELYSIA_TEST_MODE") && username === "elysia-test") {
 				logger.info("[TEST MODE] Bypassing auth for elysia-test");
 				user = { id: "test-uid-001", username: "elysia-test", role: "admin" };
 			} else {

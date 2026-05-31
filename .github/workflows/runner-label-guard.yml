@@ -1,0 +1,19 @@
+name: runner label guard
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: List repository runners and labels
+        run: |
+          gh api repos/$GITHUB_REPOSITORY/actions/runners \
+            --jq '.runners[] | "id:"+(.id|tostring)+" name:"+.name+" labels:"+([.labels[].name] | join(","))' || true

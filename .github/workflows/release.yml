@@ -7,7 +7,8 @@ on:
       - 'v*'
 
 permissions:
-  contents: write
+  contents: read
+  id-token: none
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,12 +18,15 @@ jobs:
   release:
     name: "📦 Create GitHub Release"
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Generate Changelog
         run: |

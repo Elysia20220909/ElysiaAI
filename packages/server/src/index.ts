@@ -39,7 +39,8 @@ import { vtuberRoutes } from "./routes/vtuber-routes";
 
 const app = new Elysia();
 const requestStartedAt = new WeakMap<Request, number>();
-const corsOrigin = config.allowedCorsOrigins.length > 0 ? config.allowedCorsOrigins : !isProd;
+const corsOrigin =
+	config.allowedCorsOrigins.length > 0 ? config.allowedCorsOrigins : !isProd;
 
 checkEnvironmentOrExit();
 
@@ -277,6 +278,8 @@ app
 			body: t.Object({
 				messages: t.Array(t.Object({ role: t.String(), content: t.String() })),
 				mode: t.Optional(t.String()),
+				provider: t.Optional(t.String()),
+				model: t.Optional(t.String()),
 				sessionId: t.Optional(t.String()),
 			}),
 		},

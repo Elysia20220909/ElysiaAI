@@ -42,6 +42,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Security guide | `docs/SECURITY.md` |
 | Threat model | `docs/THREAT_MODEL.md` |
 | Cookie auth and CSRF | `docs/security/AUTH_COOKIE_CSRF.md` |
+| Self-hosted runner netns isolation playbook, Japanese | `docs/security/SELF_HOSTED_RUNNER_NETNS_PLAYBOOK.ja.md` |
 | Dependency audit | `docs/SECURITY_AUDIT.md` |
 | Secret management | `docs/SECRET_MANAGEMENT.md` |
 | Customization security | `docs/CUSTOMIZATION_SECURITY_GUIDE.md` |

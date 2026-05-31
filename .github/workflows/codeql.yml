@@ -12,6 +12,7 @@ on:
 permissions:
   actions: read
   contents: read
+  id-token: none
   security-events: write
 
 concurrency:
@@ -30,18 +31,22 @@ jobs:
             build-mode: none
           - language: python
             build-mode: none
+          - language: rust
+            build-mode: none
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@8e62b596d4a3d7cb05f4b401b1a92b6ddf9efc3c
+        uses: github/codeql-action/init@dc73d59c2d7bd4f8194098a91219eeee6d8a1719 # v4
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@8e62b596d4a3d7cb05f4b401b1a92b6ddf9efc3c
+        uses: github/codeql-action/analyze@dc73d59c2d7bd4f8194098a91219eeee6d8a1719 # v4
         with:
           category: "/language:${{ matrix.language }}"

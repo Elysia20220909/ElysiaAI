@@ -1,0 +1,129 @@
+name: Repository snapshot
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_repository:
+        description: "Private snapshot repository as owner/repo. Defaults to vars.SNAPSHOT_TARGET_REPOSITORY."
+        required: false
+        type: string
+      target_branch:
+        description: "Snapshot repository branch."
+        required: false
+        default: snapshots
+        type: string
+  schedule:
+    - cron: "23 18 * * 1"
+
+permissions:
+  contents: read
+  id-token: none
+
+concurrency:
+  group: repository-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    name: Snapshot important repository files
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_DIR: ${{ runner.temp }}/repository-source
+      SNAPSHOT_DIR: ${{ runner.temp }}/repository-snapshot
+      TARGET_DIR: ${{ runner.temp }}/snapshot-target
+      SNAPSHOT_TARGET_REPOSITORY: ${{ inputs.target_repository || vars.SNAPSHOT_TARGET_REPOSITORY }}
+      SNAPSHOT_TARGET_BRANCH: ${{ inputs.target_branch || 'snapshots' }}
+    steps:
+      - name: Check configuration
+        run: |
+          set -euo pipefail
+          if [ -z "${SNAPSHOT_TARGET_REPOSITORY:-}" ]; then
+            echo "::notice::Set vars.SNAPSHOT_TARGET_REPOSITORY or pass workflow_dispatch target_repository."
+            exit 0
+          fi
+          case "$SNAPSHOT_TARGET_REPOSITORY" in
+            */*) ;;
+            *) echo "::error::SNAPSHOT_TARGET_REPOSITORY must be owner/repo"; exit 1 ;;
+          esac
+
+      - name: Clone source repository
+        if: env.SNAPSHOT_TARGET_REPOSITORY != ''
+        env:
+          SOURCE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: bearer ${SOURCE_TOKEN}" \
+            clone --depth 1 --branch "${GITHUB_REF_NAME}" \
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$SOURCE_DIR"
+
+      - name: Build tracked-file snapshot
+        if: env.SNAPSHOT_TARGET_REPOSITORY != ''
+        working-directory: ${{ env.SOURCE_DIR }}
+        run: |
+          set -euo pipefail
+          bash scripts/security/snapshot-repository-state.sh "$SNAPSHOT_DIR"
+
+      - name: Resolve snapshot repository token
+        if: env.SNAPSHOT_TARGET_REPOSITORY != ''
+        id: target-token
+        env:
+          SNAPSHOT_APP_ID: ${{ secrets.SNAPSHOT_APP_ID }}
+          SNAPSHOT_APP_PRIVATE_KEY: ${{ secrets.SNAPSHOT_APP_PRIVATE_KEY }}
+          SNAPSHOT_REPOSITORY_TOKEN: ${{ secrets.SNAPSHOT_REPOSITORY_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "${SNAPSHOT_APP_ID:-}" ] && [ -n "${SNAPSHOT_APP_PRIVATE_KEY:-}" ]; then
+            node "$SOURCE_DIR/scripts/security/github-app-installation-token.mjs" > "$RUNNER_TEMP/snapshot-token"
+          elif [ -n "${SNAPSHOT_REPOSITORY_TOKEN:-}" ]; then
+            printf '%s\n' "$SNAPSHOT_REPOSITORY_TOKEN" > "$RUNNER_TEMP/snapshot-token"
+          else
+            echo "::error::Set SNAPSHOT_APP_ID/SNAPSHOT_APP_PRIVATE_KEY or SNAPSHOT_REPOSITORY_TOKEN."
+            exit 1
+          fi
+          echo "::add-mask::$(cat "$RUNNER_TEMP/snapshot-token")"
+
+      - name: Clone snapshot repository
+        if: env.SNAPSHOT_TARGET_REPOSITORY != ''
+        run: |
+          set -euo pipefail
+          token="$(cat "$RUNNER_TEMP/snapshot-token")"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: bearer ${token}" \
+            clone "https://github.com/${SNAPSHOT_TARGET_REPOSITORY}.git" "$TARGET_DIR"
+          cd "$TARGET_DIR"
+          git config "http.https://github.com/.extraheader" "AUTHORIZATION: bearer ${token}"
+          if git ls-remote --exit-code --heads origin "$SNAPSHOT_TARGET_BRANCH" >/dev/null 2>&1; then
+            git fetch --depth 1 origin "$SNAPSHOT_TARGET_BRANCH"
+            git checkout "$SNAPSHOT_TARGET_BRANCH"
+          else
+            git checkout --orphan "$SNAPSHOT_TARGET_BRANCH"
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+
+      - name: Sync snapshot and commit only on changes
+        if: env.SNAPSHOT_TARGET_REPOSITORY != ''
+        run: |
+          set -euo pipefail
+          cd "$TARGET_DIR"
+          dest="repositories/${GITHUB_REPOSITORY}"
+          case "$dest" in
+            repositories/*/*) ;;
+            *) echo "::error::Unexpected snapshot destination: $dest"; exit 1 ;;
+          esac
+          rm -rf "$dest"
+          mkdir -p "$dest"
+          cp -a "$SNAPSHOT_DIR"/. "$dest"/
+
+          if [ -z "$(git status --porcelain -- "$dest")" ]; then
+            echo "No snapshot changes for $GITHUB_REPOSITORY."
+            exit 0
+          fi
+
+          git config user.name "elysia-snapshot-bot"
+          git config user.email "elysia-snapshot-bot@users.noreply.github.com"
+          git add "$dest"
+          if git diff --cached --quiet -- "$dest"; then
+            echo "No staged snapshot changes for $GITHUB_REPOSITORY."
+            exit 0
+          fi
+          git commit -m "chore(snapshot): update ${GITHUB_REPOSITORY} repository state"
+          git push origin "$SNAPSHOT_TARGET_BRANCH"

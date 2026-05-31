@@ -16,13 +16,12 @@ import { feedbackService, knowledgeService } from "../lib/database";
 import { defenseManager } from "../lib/defense-manager";
 import { logger } from "../lib/logger";
 import {
-	type OpenAIChatMessage,
-	streamChatWithOpenAI,
-} from "../lib/openai-integration";
+	type LlmChatMessage,
+	streamChatWithModelProvider,
+} from "../lib/model-providers";
 import { secureVault } from "../lib/secure-vault";
 
 const casualChat = { generateCasualResponse, getRandomTopic };
-const openaiIntegration = { streamChatWithOpenAI };
 const validationErrors = new Set([
 	"Messages are required",
 	"Too many messages",
@@ -36,6 +35,8 @@ type IncomingChatMessage = { role?: string; content?: string };
 type ElysiaLoveBody = {
 	messages: IncomingChatMessage[];
 	mode?: string;
+	provider?: string;
+	model?: string;
 	sessionId?: string;
 };
 type FeedbackBody = {
@@ -106,7 +107,7 @@ async function buildChatContext(body: ElysiaLoveBody) {
 	const llmConfig = {
 		systemPrompt: personaContext.systemPrompt,
 		temperature: personaContext.temperature,
-		model: CONFIG.MODEL_NAME,
+		model: body.model,
 	};
 
 	const sanitizedMessages = validateAndSanitizeMessages(body.messages);
@@ -137,7 +138,7 @@ async function buildChatContext(body: ElysiaLoveBody) {
 		messagesWithSystem: [
 			{ role: "system", content: enhancedSystemPrompt },
 			...sanitizedMessages,
-		] satisfies OpenAIChatMessage[],
+		] satisfies LlmChatMessage[],
 	};
 }
 
@@ -155,69 +156,47 @@ export async function handleElysiaLove(body: ElysiaLoveBody, request: Request) {
 		const { mode, llmConfig, fallbackCasualResponse, messagesWithSystem } =
 			await buildChatContext(body);
 		const sessionId = body.sessionId || payload.userId || "default";
-
-		if (mode === "openai") {
-			const stream = new ReadableStream({
-				async start(controller) {
-					try {
-						for await (const chunk of openaiIntegration.streamChatWithOpenAI(
-							messagesWithSystem,
-							{
-								model: llmConfig.model,
-								temperature: llmConfig.temperature,
-							},
-						)) {
-							controller.enqueue(
-								new TextEncoder().encode(
-									`data: ${JSON.stringify({ content: chunk })}\n\n`,
-								),
-							);
-						}
-						controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
-						controller.close();
-					} catch (error) {
+		const providerMode = body.provider || mode;
+		const encoder = new TextEncoder();
+		const stream = new ReadableStream({
+			async start(controller) {
+				try {
+					for await (const event of streamChatWithModelProvider(
+						messagesWithSystem,
+						{
+							mode: providerMode,
+							model: llmConfig.model,
+							temperature: llmConfig.temperature,
+							sessionId,
+							timeoutMs: CONFIG.RAG_TIMEOUT,
+						},
+					)) {
+						const payload =
+							event.content !== undefined
+								? { content: event.content }
+								: event.metadata || {};
 						controller.enqueue(
-							new TextEncoder().encode(
-								`data: ${JSON.stringify({ error: String(error), content: fallbackCasualResponse })}\n\n`,
-							),
+							encoder.encode(`data: ${JSON.stringify(payload)}\n\n`),
 						);
-						controller.close();
 					}
-				},
-			});
-
-			return new Response(stream, {
-				headers: {
-					"Content-Type": "text/event-stream",
-					"x-elysia-mode": mode,
-				},
-			});
-		}
-
-		const upstream = await axios.post(
-			`${CONFIG.FASTAPI_BASE_URL}/chat`,
-			{
-				messages: messagesWithSystem,
-				session_id: sessionId,
-				stream: true,
+					controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+					controller.close();
+				} catch (error) {
+					controller.enqueue(
+						encoder.encode(
+							`data: ${JSON.stringify({ error: String(error), content: fallbackCasualResponse })}\n\n`,
+						),
+					);
+					controller.close();
+				}
 			},
-			{
-				headers: {
-					"X-API-Key": CONFIG.FASTAPI_API_KEY,
-					"Content-Type": "application/json",
-				},
-				responseType: "stream",
-				timeout: CONFIG.RAG_TIMEOUT,
-			},
-		);
+		});
 
-		return new Response(upstream.data, {
-			status: upstream.status,
+		return new Response(stream, {
 			headers: {
-				"Content-Type": String(
-					upstream.headers["content-type"] || "text/event-stream",
-				),
+				"Content-Type": "text/event-stream; charset=utf-8",
 				"x-elysia-mode": mode,
+				"x-elysia-provider-mode": providerMode,
 			},
 		});
 	} catch (error: any) {
@@ -313,6 +292,8 @@ export const aiRoutes = new Elysia({ prefix: "/api/ai" }).guard(
 							t.Object({ role: t.String(), content: t.String() }),
 						),
 						mode: t.Optional(t.String()),
+						provider: t.Optional(t.String()),
+						model: t.Optional(t.String()),
 						sessionId: t.Optional(t.String()),
 					}),
 				},
