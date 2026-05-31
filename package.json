@@ -16,6 +16,8 @@
 		"dev": "bun run --cwd packages/server dev",
 		"dev:lite": "bun scripts/boot.ts --lite",
 		"hooks:install": "git config core.hooksPath .githooks",
+		"setup:codex-winui": "powershell -ExecutionPolicy Bypass -File tools/Setup-CodexWinUI.ps1 -Apply",
+		"check:codex-winui": "powershell -ExecutionPolicy Bypass -File tools/Setup-CodexWinUI.ps1",
 		"branch:auto": "bun scripts/auto-branch.ts",
 		"notify:commit": "bun scripts/slack-commit-notify.ts --dry-run && bun scripts/discord-commit-notify.ts --dry-run",
 		"notify:commit:slack": "bun scripts/slack-commit-notify.ts --dry-run",
