@@ -79,13 +79,16 @@ export class BlackwallSingularityGovernor {
 
 		if (risk >= 80) {
 			posture = "BLACKWALL_EVENT_HORIZON";
-			recommendation = signal.blackoutMode ? "hold_local_blackout" : "request_operator_approval";
+			recommendation = signal.blackoutMode
+				? "hold_local_blackout"
+				: "request_operator_approval";
 		} else if (risk >= 55) {
 			posture = "GHOST_PRESSURE";
 			recommendation = "review_ghost_room";
 		} else if (risk >= 25) {
 			posture = "WATCHFUL_ASCENT";
-			recommendation = signal.traceChainOk === false ? "review_trace_chain" : "observe";
+			recommendation =
+				signal.traceChainOk === false ? "review_trace_chain" : "observe";
 		}
 
 		if (reasons.length === 0) {

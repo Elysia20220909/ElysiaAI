@@ -1,9 +1,18 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { IceEvaluationInput, IceEvaluationResult, IceLevel } from "./ice-policy-engine";
+import type {
+	IceEvaluationInput,
+	IceEvaluationResult,
+	IceLevel,
+} from "./ice-policy-engine";
 import { traceLogger } from "./trace-logger";
 
-export type ContainmentStatus = "observed" | "caged" | "ghost_room" | "black_ice" | "local_blackout";
+export type ContainmentStatus =
+	| "observed"
+	| "caged"
+	| "ghost_room"
+	| "black_ice"
+	| "local_blackout";
 
 export interface ContainmentTicket {
 	id: string;
@@ -34,7 +43,12 @@ function statusFromIceLevel(iceLevel: IceLevel): ContainmentStatus {
 }
 
 export class ContainmentGrid {
-	private readonly gridDir = join(process.cwd(), "logs", "blackwall", "ghost-room");
+	private readonly gridDir = join(
+		process.cwd(),
+		"logs",
+		"blackwall",
+		"ghost-room",
+	);
 
 	constructor() {
 		if (!existsSync(this.gridDir)) {
@@ -43,10 +57,17 @@ export class ContainmentGrid {
 	}
 
 	public shouldContain(decision: IceEvaluationResult): boolean {
-		return decision.action === "contain" || decision.action === "block" || decision.iceLevel === "L2_CAGE";
+		return (
+			decision.action === "contain" ||
+			decision.action === "block" ||
+			decision.iceLevel === "L2_CAGE"
+		);
 	}
 
-	public createTicket(input: IceEvaluationInput, decision: IceEvaluationResult): ContainmentTicket {
+	public createTicket(
+		input: IceEvaluationInput,
+		decision: IceEvaluationResult,
+	): ContainmentTicket {
 		const id = `qrn_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
 		const snapshotPath = join(this.gridDir, `${id}.json`);
 		const ticket: ContainmentTicket = {
@@ -73,7 +94,11 @@ export class ContainmentGrid {
 			},
 		};
 
-		writeFileSync(snapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf-8");
+		writeFileSync(
+			snapshotPath,
+			`${JSON.stringify(snapshot, null, 2)}\n`,
+			"utf-8",
+		);
 		traceLogger.write({
 			time: ticket.createdAt,
 			event: "blackwall.containment.ticket_created",

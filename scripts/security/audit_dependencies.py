@@ -146,7 +146,12 @@ def query_osv(queries: list[dict[str, object]]) -> list[tuple[str, str, str, str
 
 
 def audit_rust() -> bool:
-    crates = active_rust_crates()
+    try:
+        crates = active_rust_crates()
+    except (FileNotFoundError, RuntimeError) as exc:
+        print(f"Rust OSV audit skipped: cargo is not available or cargo tree failed ({exc})")
+        return True
+
     queries = [
         {
             "package": {"ecosystem": "crates.io", "name": name},

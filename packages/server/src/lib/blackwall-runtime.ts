@@ -1,8 +1,8 @@
+import { containmentGrid } from "./containment-grid";
 import type { IceEvaluationInput } from "./ice-policy-engine";
 import { icePolicyEngine } from "./ice-policy-engine";
-import { containmentGrid } from "./containment-grid";
-import { traceLogger } from "./trace-logger";
 import { logger } from "./logger";
+import { traceLogger } from "./trace-logger";
 
 export interface RuntimeEvaluationResult {
 	decision: ReturnType<typeof icePolicyEngine.evaluate>;
@@ -42,7 +42,9 @@ export class BlackwallRuntime {
 			destination: input.destination,
 		});
 
-		let containmentTicket;
+		let containmentTicket:
+			| ReturnType<typeof containmentGrid.createTicket>
+			| undefined;
 
 		if (containmentGrid.shouldContain(decision)) {
 			containmentTicket = containmentGrid.createTicket(input, decision);
@@ -55,7 +57,9 @@ export class BlackwallRuntime {
 		}
 
 		if (decision.iceLevel === "L5_LOCAL_BLACKOUT") {
-			this.activateLocalBlackout("Critical runtime evaluation threshold reached.");
+			this.activateLocalBlackout(
+				"Critical runtime evaluation threshold reached.",
+			);
 		}
 
 		return {

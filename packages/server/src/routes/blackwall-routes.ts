@@ -1,10 +1,10 @@
 import { Elysia, t } from "elysia";
-import { blackwallRuntime } from "../lib/blackwall-runtime";
 import {
 	requireBlackwallOperator,
 	requireLocalBlackwallRequest,
 	sanitizeBlackwallInput,
 } from "../lib/blackwall-guards";
+import { blackwallRuntime } from "../lib/blackwall-runtime";
 import { blackwallSingularityGovernor } from "../lib/blackwall-singularity-governor";
 import { traceLogger } from "../lib/trace-logger";
 
