@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+umask 077
 
 have() {
   command -v "$1" >/dev/null 2>&1
@@ -18,8 +19,17 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="${REPO_ROOT:-$(cd -- "$script_dir/.." && pwd)}"
 app_name="${APP_NAME:-$(basename "$repo_root" | tr '[:upper:]' '[:lower:]')}"
 stamp="${BACKUP_STAMP:-$(date -u +%Y-%m-%dT%H%M%SZ)}"
-work_dir="${BACKUP_WORKDIR:-/tmp/${app_name}-backup-${stamp}}"
 uploads_dir="${UPLOADS_DIR:-$repo_root/uploads}"
+keep_work_dir="${BACKUP_KEEP_WORKDIR:-0}"
+work_dir_is_temp=0
+
+if [[ -n "${BACKUP_WORKDIR:-}" ]]; then
+  work_dir="$BACKUP_WORKDIR"
+else
+  temp_parent="${TMPDIR:-/tmp}"
+  work_dir="$(mktemp -d "${temp_parent%/}/${app_name}-backup-${stamp}.XXXXXX")"
+  work_dir_is_temp=1
+fi
 
 backup_dest_dir="${BACKUP_DEST_DIR:-}"
 backup_s3_uri="${BACKUP_S3_URI:-}"
@@ -29,12 +39,20 @@ sync_delete="${BACKUP_SYNC_DELETE:-0}"
 
 [[ -n "$backup_dest_dir" || -n "$backup_s3_uri" ]] || die "set BACKUP_DEST_DIR or BACKUP_S3_URI"
 
+cleanup() {
+  if [[ "$keep_work_dir" != "1" && "$work_dir_is_temp" == "1" && -n "${work_dir:-}" ]]; then
+    rm -rf -- "$work_dir"
+  fi
+}
+trap cleanup EXIT
+
 have git || die "git is required"
 if [[ -n "$backup_s3_uri" ]]; then
   have aws || die "aws CLI is required when BACKUP_S3_URI is set"
 fi
 
 mkdir -p "$work_dir"
+chmod 700 "$work_dir"
 
 if ! git -C "$repo_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   die "$repo_root is not a git repository"
@@ -133,4 +151,8 @@ else
 fi
 
 printf 'backup complete: %s\n' "$stamp"
-printf 'local working files remain in %s\n' "$work_dir"
+if [[ "$keep_work_dir" == "1" || "$work_dir_is_temp" != "1" ]]; then
+  printf 'local working files remain in %s\n' "$work_dir"
+else
+  printf 'local working files removed from %s\n' "$work_dir"
+fi

@@ -28,9 +28,6 @@ jobs:
     name: Snapshot important repository files
     runs-on: ubuntu-latest
     env:
-      SOURCE_DIR: ${{ runner.temp }}/repository-source
-      SNAPSHOT_DIR: ${{ runner.temp }}/repository-snapshot
-      TARGET_DIR: ${{ runner.temp }}/snapshot-target
       SNAPSHOT_TARGET_REPOSITORY: ${{ inputs.target_repository || vars.SNAPSHOT_TARGET_REPOSITORY }}
       SNAPSHOT_TARGET_BRANCH: ${{ inputs.target_branch || 'snapshots' }}
     steps:
@@ -52,16 +49,19 @@ jobs:
           SOURCE_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          source_dir="${RUNNER_TEMP}/repository-source"
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: bearer ${SOURCE_TOKEN}" \
             clone --depth 1 --branch "${GITHUB_REF_NAME}" \
-            "https://github.com/${GITHUB_REPOSITORY}.git" "$SOURCE_DIR"
+            "https://github.com/${GITHUB_REPOSITORY}.git" "$source_dir"
 
       - name: Build tracked-file snapshot
         if: env.SNAPSHOT_TARGET_REPOSITORY != ''
-        working-directory: ${{ env.SOURCE_DIR }}
         run: |
           set -euo pipefail
-          bash scripts/security/snapshot-repository-state.sh "$SNAPSHOT_DIR"
+          source_dir="${RUNNER_TEMP}/repository-source"
+          snapshot_dir="${RUNNER_TEMP}/repository-snapshot"
+          cd "$source_dir"
+          bash scripts/security/snapshot-repository-state.sh "$snapshot_dir"
 
       - name: Resolve snapshot repository token
         if: env.SNAPSHOT_TARGET_REPOSITORY != ''
@@ -73,7 +73,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "${SNAPSHOT_APP_ID:-}" ] && [ -n "${SNAPSHOT_APP_PRIVATE_KEY:-}" ]; then
-            node "$SOURCE_DIR/scripts/security/github-app-installation-token.mjs" > "$RUNNER_TEMP/snapshot-token"
+            node "${RUNNER_TEMP}/repository-source/scripts/security/github-app-installation-token.mjs" > "$RUNNER_TEMP/snapshot-token"
           elif [ -n "${SNAPSHOT_REPOSITORY_TOKEN:-}" ]; then
             printf '%s\n' "$SNAPSHOT_REPOSITORY_TOKEN" > "$RUNNER_TEMP/snapshot-token"
           else
@@ -86,10 +86,11 @@ jobs:
         if: env.SNAPSHOT_TARGET_REPOSITORY != ''
         run: |
           set -euo pipefail
+          target_dir="${RUNNER_TEMP}/snapshot-target"
           token="$(cat "$RUNNER_TEMP/snapshot-token")"
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: bearer ${token}" \
-            clone "https://github.com/${SNAPSHOT_TARGET_REPOSITORY}.git" "$TARGET_DIR"
-          cd "$TARGET_DIR"
+            clone "https://github.com/${SNAPSHOT_TARGET_REPOSITORY}.git" "$target_dir"
+          cd "$target_dir"
           git config "http.https://github.com/.extraheader" "AUTHORIZATION: bearer ${token}"
           if git ls-remote --exit-code --heads origin "$SNAPSHOT_TARGET_BRANCH" >/dev/null 2>&1; then
             git fetch --depth 1 origin "$SNAPSHOT_TARGET_BRANCH"
@@ -103,7 +104,9 @@ jobs:
         if: env.SNAPSHOT_TARGET_REPOSITORY != ''
         run: |
           set -euo pipefail
-          cd "$TARGET_DIR"
+          snapshot_dir="${RUNNER_TEMP}/repository-snapshot"
+          target_dir="${RUNNER_TEMP}/snapshot-target"
+          cd "$target_dir"
           dest="repositories/${GITHUB_REPOSITORY}"
           case "$dest" in
             repositories/*/*) ;;
@@ -111,7 +114,7 @@ jobs:
           esac
           rm -rf "$dest"
           mkdir -p "$dest"
-          cp -a "$SNAPSHOT_DIR"/. "$dest"/
+          cp -a "$snapshot_dir"/. "$dest"/
 
           if [ -z "$(git status --porcelain -- "$dest")" ]; then
             echo "No snapshot changes for $GITHUB_REPOSITORY."

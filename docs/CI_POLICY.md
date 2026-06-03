@@ -150,6 +150,16 @@ Rust checks should use explicit manifests:
 cargo check --manifest-path packages/shield-agent/Cargo.toml
 ```
 
+## Dependency audit gate
+
+CI dependency vulnerability checks should call the repository wrapper:
+
+```bash
+bun run security:audit
+```
+
+This wrapper keeps Bun, Python `pip-audit`, and Rust OSV checks under one failure policy. New workflows should prefer this gate over separate Python-only scanners unless a PR documents why the extra scanner is needed.
+
 ## Artifacts
 
 Artifacts should have explicit retention periods.

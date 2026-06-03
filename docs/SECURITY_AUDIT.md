@@ -1,6 +1,6 @@
 # Security Audit
 
-Last updated: 2026-05-03
+Last updated: 2026-06-03
 
 ## Current Status
 
@@ -8,6 +8,18 @@ Last updated: 2026-05-03
 - Python local environment: `pip-audit --local` reports no known vulnerabilities after upgrading `setuptools` to `>=78.1.1`.
 - Supply chain scan: `bun run security:glassworm -- --ci` reports no blocking findings.
 - Rust/Tauri: `src-tauri` is upgraded to Tauri `2.11.0`, `tauri-build` `2.6.0`, `reqwest` `0.13`, and `thiserror` `2.0`.
+
+## CI Integration
+
+The primary dependency audit gate is `bun run security:audit`. It runs:
+
+- `bun audit` for JavaScript and TypeScript dependencies.
+- `pip-audit` for Python dependencies, preferring `requirements.lock` and falling back to `requirements.txt`.
+- The Rust OSV query in `scripts/security/audit_dependencies.py` for the active Tauri crate tree.
+
+`.github/workflows/security.yml` runs this gate on pull requests, pushes to protected branches, manual dispatch, and the weekly schedule. `.github/workflows/security-tests.yml` also uses the same gate before producing the SBOM artifact, so Python, Bun, and Rust advisories follow one allowlist and one failure policy.
+
+The PyPA `gh-action-pip-audit` action is available upstream, but this repository currently installs `pip-audit` directly and calls the local wrapper. That keeps action pinning simple and preserves the project-specific Python and Rust advisory allowlists in one audited script.
 
 ## Residual Rust Advisory Context
 
@@ -29,6 +41,13 @@ Python environment checks expect the local `.venv` to contain `pip-audit`. Insta
 
 ```bash
 .venv/Scripts/python.exe -m pip install pip-audit==2.10.0
+```
+
+For CI-style local verification after dependency changes, run:
+
+```bash
+bun run check:deps
+bun run security:audit
 ```
 
 ## Notes
