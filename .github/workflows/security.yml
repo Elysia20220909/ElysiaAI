@@ -1,0 +1,305 @@
+name: Security & Preflight
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ "master", "main", "dev" ]
+  push:
+    branches: [ "master", "main", "dev" ]
+  schedule:
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: read
+  id-token: none
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dependency-review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48
+        with:
+          fail-on-severity: high
+
+  pip-audit:
+    name: pip-audit (CVE check)
+    runs-on: ubuntu-latest
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+            python/requirements.txt
+            python/pyproject.toml
+            python/gpu_infer/requirements.txt
+
+      - name: Upgrade pip
+        run: python -m pip install -U pip
+
+      - name: Install Python audit tooling
+        run: python -m pip install "pip-audit>=2.9,<3"
+
+      - name: Run pip-audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit
+          python - <<'PY'
+          import json
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          targets = [
+              Path("requirements.txt"),
+              Path("python/requirements.txt"),
+              Path("python/gpu_infer/requirements.txt"),
+          ]
+          audits = []
+          errors = []
+
+          for req in targets:
+              if not req.exists():
+                  continue
+              safe_name = str(req).replace("/", "-").replace("\\", "-")
+              out = Path("audit") / f"{safe_name}.json"
+              cmd = [
+                  sys.executable,
+                  "-m",
+                  "pip_audit",
+                  "-r",
+                  str(req),
+                  "--format=json",
+              ]
+              proc = subprocess.run(
+                  cmd,
+                  text=True,
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.PIPE,
+                  encoding="utf-8",
+                  errors="replace",
+              )
+              if proc.stdout.strip():
+                  out.write_text(proc.stdout, encoding="utf-8")
+                  try:
+                      payload = json.loads(proc.stdout)
+                      payload["_source"] = str(req)
+                      audits.append(payload)
+                  except json.JSONDecodeError:
+                      errors.append(
+                          {
+                              "source": str(req),
+                              "error": "invalid JSON from pip-audit",
+                              "stderr": proc.stderr,
+                          }
+                      )
+              if proc.returncode not in (0, 1):
+                  errors.append(
+                      {
+                          "source": str(req),
+                          "returncode": proc.returncode,
+                          "stderr": proc.stderr,
+                      }
+                  )
+
+          if not audits and not errors:
+              errors.append({"source": "requirements", "error": "no requirements files found"})
+
+          Path("audit.json").write_text(
+              json.dumps({"audits": audits, "errors": errors}, indent=2),
+              encoding="utf-8",
+          )
+          if errors:
+              for err in errors:
+                  print(
+                      f"pip-audit error for {err.get('source')}: "
+                      f"{err.get('error', err.get('returncode'))}",
+                      file=sys.stderr,
+                  )
+                  if err.get("stderr"):
+                      print(err["stderr"], file=sys.stderr)
+              raise SystemExit(2)
+          PY
+
+      - name: Upload audit artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: audit.json
+          path: |
+            audit.json
+            audit/*.json
+          retention-days: 30
+
+      - name: Fail on high/critical findings
+        run: |
+          python - <<'PY'
+          import json
+          import math
+          import sys
+
+          with open("audit.json", encoding="utf-8") as fh:
+              data = json.load(fh)
+
+          if data.get("errors"):
+              raise SystemExit(1)
+
+          def cvss_v3_score(vector):
+              metrics = {}
+              for part in str(vector).split("/"):
+                  if ":" not in part:
+                      continue
+                  key, value = part.split(":", 1)
+                  metrics[key] = value
+              if metrics.get("CVSS") not in {"3.0", "3.1"}:
+                  return None
+              scope_changed = metrics.get("S") == "C"
+              av = {"N": 0.85, "A": 0.62, "L": 0.55, "P": 0.2}.get(metrics.get("AV"), 0)
+              ac = {"L": 0.77, "H": 0.44}.get(metrics.get("AC"), 0)
+              pr = (
+                  {"N": 0.85, "L": 0.68, "H": 0.5}
+                  if scope_changed
+                  else {"N": 0.85, "L": 0.62, "H": 0.27}
+              ).get(metrics.get("PR"), 0)
+              ui = {"N": 0.85, "R": 0.62}.get(metrics.get("UI"), 0)
+              cia = {"H": 0.56, "L": 0.22, "N": 0}
+              c = cia.get(metrics.get("C"), 0)
+              i = cia.get(metrics.get("I"), 0)
+              a = cia.get(metrics.get("A"), 0)
+              impact_base = 1 - ((1 - c) * (1 - i) * (1 - a))
+              if scope_changed:
+                  impact = 7.52 * (impact_base - 0.029) - 3.25 * ((impact_base - 0.02) ** 15)
+              else:
+                  impact = 6.42 * impact_base
+              exploitability = 8.22 * av * ac * pr * ui
+              if impact <= 0:
+                  return 0
+              raw = min((1.08 if scope_changed else 1) * (impact + exploitability), 10)
+              return math.ceil(raw * 10) / 10
+
+          def sev_num(value):
+              if value is None:
+                  return 0
+              if isinstance(value, str):
+                  lower = value.lower()
+                  if lower in {"critical", "crit"}:
+                      return 4
+                  if lower == "high":
+                      return 3
+                  if lower == "medium":
+                      return 2
+                  if lower == "low":
+                      return 1
+                  score = cvss_v3_score(value)
+                  if score is None:
+                      try:
+                          score = float(value)
+                      except ValueError:
+                          return 0
+                  return 4 if score >= 9 else 3 if score >= 7 else 2 if score >= 4 else 1 if score > 0 else 0
+              if isinstance(value, (int, float)):
+                  return 4 if value >= 9 else 3 if value >= 7 else 2 if value >= 4 else 1 if value > 0 else 0
+              if isinstance(value, list):
+                  return max([sev_num(item) for item in value] + [0])
+              if isinstance(value, dict):
+                  return max(sev_num(value.get(key)) for key in ("severity", "score", "cvss"))
+              return 0
+
+          def iter_dependencies(payload):
+              if isinstance(payload, list):
+                  yield from payload
+              elif isinstance(payload, dict):
+                  if isinstance(payload.get("audits"), list):
+                      for audit in payload["audits"]:
+                          yield from iter_dependencies(audit)
+                  elif isinstance(payload.get("dependencies"), list):
+                      yield from payload["dependencies"]
+                  elif "vulns" in payload:
+                      yield payload
+
+          findings = []
+          for package in iter_dependencies(data):
+              for vuln in package.get("vulns", []):
+                  severity = sev_num(vuln.get("severity") or vuln.get("cvss"))
+                  findings.append((severity, package.get("name"), vuln.get("id")))
+
+          worst = max([severity for severity, _, _ in findings] + [0])
+          unknown = [(package, vuln_id) for severity, package, vuln_id in findings if severity == 0]
+          if worst >= 3 or unknown:
+              print("High/Critical or unknown-severity Python vulnerability findings:")
+              for severity, package, vuln_id in findings:
+                  if severity >= 3 or severity == 0:
+                      print(f"- {package}: {vuln_id}")
+              raise SystemExit(1)
+
+          print(f"No high/critical Python vulnerabilities found ({len(findings)} total findings).")
+          PY
+
+  preflight:
+    name: PyTest (quick)
+    runs-on: ubuntu-latest
+    needs: pip-audit
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+            python/requirements.txt
+            python/pyproject.toml
+
+      - name: Upgrade pip
+        run: python -m pip install -U pip
+
+      - name: Install dev dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f "pyproject.toml" ]; then
+            pip install -e ".[dev]" || pip install -e .
+          elif [ -f "requirements-dev.txt" ]; then
+            pip install -r requirements-dev.txt
+          elif [ -f "requirements.txt" ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run tests
+        run: python -m pytest -q tests/python tests/test_kernel.py
