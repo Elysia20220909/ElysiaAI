@@ -1,6 +1,12 @@
 export type IceAction = "allow" | "observe" | "ask_user" | "contain" | "block";
 
-export type IceLevel = "L0_OPEN" | "L1_WATCH" | "L2_CAGE" | "L3_GHOST_ROOM" | "L4_BLACK_ICE" | "L5_LOCAL_BLACKOUT";
+export type IceLevel =
+	| "L0_OPEN"
+	| "L1_WATCH"
+	| "L2_CAGE"
+	| "L3_GHOST_ROOM"
+	| "L4_BLACK_ICE"
+	| "L5_LOCAL_BLACKOUT";
 
 export interface IceEvaluationInput {
 	process?: string;
@@ -29,23 +35,73 @@ export interface IceEvaluationResult {
 }
 
 const LOCAL_DESTINATIONS = new Set(["localhost", "127.0.0.1", "::1"]);
-const SAFE_LAB_PROCESSES = new Set(["kali-lab", "parrot-lab", "blackarch-lab", "juice-shop", "dvwa", "webgoat", "ollama", "lm-studio", "llama.cpp"]);
+const SAFE_LAB_PROCESSES = new Set([
+	"kali-lab",
+	"parrot-lab",
+	"blackarch-lab",
+	"juice-shop",
+	"dvwa",
+	"webgoat",
+	"ollama",
+	"lm-studio",
+	"llama.cpp",
+]);
 
 function normalizeDestination(destination = ""): string {
-	return destination.trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0].split(":")[0];
+	return destination
+		.trim()
+		.toLowerCase()
+		.replace(/^https?:\/\//, "")
+		.split("/")[0]
+		.split(":")[0];
 }
 
 function isLocalDestination(destination?: string): boolean {
 	const normalized = normalizeDestination(destination);
-	return LOCAL_DESTINATIONS.has(normalized) || normalized.endsWith(".local") || normalized.startsWith("192.168.") || normalized.startsWith("10.") || /^172\.(1[6-9]|2\d|3[0-1])\./.test(normalized);
+	return (
+		LOCAL_DESTINATIONS.has(normalized) ||
+		normalized.endsWith(".local") ||
+		normalized.startsWith("192.168.") ||
+		normalized.startsWith("10.") ||
+		/^172\.(1[6-9]|2\d|3[0-1])\./.test(normalized)
+	);
 }
 
-function actionFromRisk(risk: number): { action: IceAction; iceLevel: IceLevel; requiresUserApproval: boolean } {
-	if (risk >= 90) return { action: "block", iceLevel: "L5_LOCAL_BLACKOUT", requiresUserApproval: true };
-	if (risk >= 75) return { action: "block", iceLevel: "L4_BLACK_ICE", requiresUserApproval: true };
-	if (risk >= 60) return { action: "contain", iceLevel: "L3_GHOST_ROOM", requiresUserApproval: true };
-	if (risk >= 40) return { action: "ask_user", iceLevel: "L2_CAGE", requiresUserApproval: true };
-	if (risk >= 20) return { action: "observe", iceLevel: "L1_WATCH", requiresUserApproval: false };
+function actionFromRisk(risk: number): {
+	action: IceAction;
+	iceLevel: IceLevel;
+	requiresUserApproval: boolean;
+} {
+	if (risk >= 90)
+		return {
+			action: "block",
+			iceLevel: "L5_LOCAL_BLACKOUT",
+			requiresUserApproval: true,
+		};
+	if (risk >= 75)
+		return {
+			action: "block",
+			iceLevel: "L4_BLACK_ICE",
+			requiresUserApproval: true,
+		};
+	if (risk >= 60)
+		return {
+			action: "contain",
+			iceLevel: "L3_GHOST_ROOM",
+			requiresUserApproval: true,
+		};
+	if (risk >= 40)
+		return {
+			action: "ask_user",
+			iceLevel: "L2_CAGE",
+			requiresUserApproval: true,
+		};
+	if (risk >= 20)
+		return {
+			action: "observe",
+			iceLevel: "L1_WATCH",
+			requiresUserApproval: false,
+		};
 	return { action: "allow", iceLevel: "L0_OPEN", requiresUserApproval: false };
 }
 

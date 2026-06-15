@@ -938,7 +938,7 @@ async def get_app_component(app_id: str):
         Path(f"public/apps/{app_id}.component.html"),
         Path(f"usr/share/elysia/apps/{app_id}.component.html"),
     ]
-    
+
     for component_path in locations:
         if component_path.exists():
             with open(component_path, encoding="utf-8") as f:
@@ -1224,22 +1224,19 @@ class RevealRequest(BaseModel):
     phantom_id: str
     output_name: str | None = None
 
+
 @app.post("/api/aether/shroud", dependencies=peripheral_white_ice)
-async def aether_shroud(
-    file: UploadFile = File(...),
-    chunk_size: int = Body(10),
-    camo_type: str = Body("dll")
-):
+async def aether_shroud(file: UploadFile = File(...), chunk_size: int = Body(10), camo_type: str = Body("dll")):
     """
     Shatters and camouflages an uploaded video file.
     """
     temp_path = f"python/data/temp_{uuid.uuid4()}.tmp"
     os.makedirs("python/data", exist_ok=True)
-    
+
     try:
         with open(temp_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        
+
         phantom_id = phantom_vault.shroud_video(temp_path, chunk_size_mb=chunk_size, camo_type=camo_type)
         return {"status": "success", "phantom_id": phantom_id, "message": "Target has been shrouded in the Abyss."}
     except Exception as e:
@@ -1248,6 +1245,7 @@ async def aether_shroud(
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
 
 @app.post("/api/aether/reveal", dependencies=peripheral_white_ice)
 async def aether_reveal(req: RevealRequest):
@@ -1260,6 +1258,7 @@ async def aether_reveal(req: RevealRequest):
     except Exception as e:
         logger.error(f"❌ AETHER Reveal Failure: {e}")
         raise HTTPException(500, str(e))
+
 
 @app.get("/api/aether/list", dependencies=peripheral_white_ice)
 async def aether_list():
@@ -1276,7 +1275,9 @@ async def aether_dashboard():
     Serves the AETHER Vault dashboard HTML.
     """
     from fastapi.responses import FileResponse
+
     return FileResponse("dashboard/aether.html")
+
 
 # ==================== VOICEVOX TTS Extension ====================
 @app.post("/tts")
@@ -1285,37 +1286,37 @@ async def tts(req: VoiceRequest):
     VOICEVOX Engine を使用して音声を生成します。
     """
     speaker = req.speaker_id if req.speaker_id is not None else CONFIG["VOICEVOX_SPEAKER_ID"]
-    
+
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
             # 1. クエリ生成
             query_res = await client.post(
-                f"{CONFIG['VOICEVOX_BASE_URL']}/audio_query",
-                params={"text": req.text, "speaker": speaker}
+                f"{CONFIG['VOICEVOX_BASE_URL']}/audio_query", params={"text": req.text, "speaker": speaker}
             )
             query_res.raise_for_status()
             query_data = query_res.json()
-            
+
             # 2. パラメータ調整 (可愛さのブラッシュアップ)
             query_data["speedScale"] = req.speed_scale if req.speed_scale is not None else CONFIG["VOICEVOX_SPEED"]
             query_data["pitchScale"] = req.pitch_scale if req.pitch_scale is not None else CONFIG["VOICEVOX_PITCH"]
-            query_data["intonationScale"] = req.intonation_scale if req.intonation_scale is not None else CONFIG["VOICEVOX_INTONATION"]
+            query_data["intonationScale"] = (
+                req.intonation_scale if req.intonation_scale is not None else CONFIG["VOICEVOX_INTONATION"]
+            )
             query_data["volumeScale"] = req.volume_scale if req.volume_scale is not None else CONFIG["VOICEVOX_VOLUME"]
-            
+
             # 3. 音声合成
             synth_res = await client.post(
-                f"{CONFIG['VOICEVOX_BASE_URL']}/synthesis",
-                params={"speaker": speaker},
-                json=query_data
+                f"{CONFIG['VOICEVOX_BASE_URL']}/synthesis", params={"speaker": speaker}, json=query_data
             )
             synth_res.raise_for_status()
-            
+
             # フロントエンドの期待に合わせて Base64 エンコードして返す
             import base64
+
             audio_b64 = base64.b64encode(synth_res.content).decode("utf-8")
-            
+
             return JSONResponse(content={"audio": audio_b64})
-            
+
         except httpx.HTTPError as e:
             logger.error(f"❌ VOICEVOX Error: {e}")
             raise HTTPException(status_code=502, detail=f"VOICEVOX Engine communication error: {e}")

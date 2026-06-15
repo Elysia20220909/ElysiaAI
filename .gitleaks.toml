@@ -11,9 +11,18 @@ regexes = [
   '''test[_-]?secret''',
   '''changeme''',
   '''your[_-]?(api|token|secret|key)''',
-  '''localhost'''
+  '''localhost''',
+  '''RadialBlur_DX11''',
+  '''OcclusionCulling_DX11''',
+  '''ShadowLOD_DX11''',
+  '''DistortionWater_DX11'''
 ]
 paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)dist/''',
+  '''(^|/)coverage/''',
+  '''(^|/)target/''',
+  '''(^|/)src-tauri/target/''',
   '''(^|/)docs/''',
   '''(^|/)README\.md$''',
   '''(^|/)\.env\.example$''',

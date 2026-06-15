@@ -1,8 +1,11 @@
 import Redis from "ioredis";
 
 // クラウドRedis接続情報
-const redisUrl =
-	"redis://default:Hr7pQ66mbyxnu9M2QTPyy31fYC1l97wV@redis-10200.c54.ap-northeast-1-2.ec2.cloud.redislabs.com:10200";
+const redisUrl = process.env.REDIS_URL;
+if (!redisUrl) {
+	console.error("❌ REDIS_URL is required for this manual integration test.");
+	process.exit(1);
+}
 
 console.log("🔄 Redis接続テスト (ioredis)...");
 

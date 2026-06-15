@@ -1,476 +1,1037 @@
 <!DOCTYPE html>
-<html lang="ja" class="scroll-smooth">
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elysia OS // Resonance - Sovereign AI Portfolio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js" defer></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        elysia: {
-                            pink: '#ff007f',
-                            cyan: '#00f0ff',
-                            purple: '#8a2be2',
-                            dark: '#050510',
-                            card: 'rgba(10, 10, 25, 0.6)',
-                        }
-                    },
-                    animation: {
-                        'glow-pulse': 'glow 3s ease-in-out infinite alternate',
-                        'float': 'float 6s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        glow: {
-                            '0%': { boxShadow: '0 0 20px rgba(255, 0, 127, 0.2)' },
-                            '100%': { boxShadow: '0 0 40px rgba(0, 240, 255, 0.6)' }
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #050510;
-            background-image:
-                radial-gradient(circle at 15% 50%, rgba(255, 0, 127, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.15) 0%, transparent 50%);
-            color: #e2e8f0;
-            overflow-x: hidden;
-        }
-        .glass-panel {
-            background: rgba(15, 15, 25, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-        }
-        .text-gradient {
-            background: linear-gradient(135deg, #ff007f 0%, #00f0ff 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .neon-border {
-            position: relative;
-        }
-        .neon-border::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            padding: 2px;
-            background: linear-gradient(135deg, #ff007f, #00f0ff);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-        }
-        .scanlines {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
-            background-size: 100% 4px;
-            pointer-events: none;
-            z-index: 50;
-            opacity: 0.3;
-        }
-    </style>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>ElysiaAI Daily Local Desk</title>
+	<style>
+		:root {
+			color-scheme: light;
+			--bg: #f7f8fb;
+			--panel: #ffffff;
+			--ink: #162033;
+			--muted: #667085;
+			--line: #d7dce5;
+			--blue: #2563eb;
+			--green: #15803d;
+			--amber: #b45309;
+			--red: #b91c1c;
+			--soft-blue: #e8f0ff;
+			--soft-green: #e8f7ee;
+			--soft-amber: #fff3df;
+			--soft-red: #feecec;
+			font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			min-height: 100vh;
+			background: var(--bg);
+			color: var(--ink);
+		}
+
+		button,
+		input {
+			font: inherit;
+		}
+
+		button {
+			border: 1px solid var(--line);
+			border-radius: 6px;
+			background: var(--panel);
+			color: var(--ink);
+			cursor: pointer;
+			min-height: 40px;
+			padding: 0 14px;
+		}
+
+		button.primary {
+			background: var(--blue);
+			border-color: var(--blue);
+			color: #ffffff;
+		}
+
+		button:disabled {
+			cursor: not-allowed;
+			opacity: 0.55;
+		}
+
+		.app {
+			display: grid;
+			grid-template-columns: 280px minmax(0, 1fr) 340px;
+			min-height: 100vh;
+		}
+
+		.sidebar,
+		.workspace,
+		.inspector {
+			min-width: 0;
+		}
+
+		.sidebar {
+			border-right: 1px solid var(--line);
+			background: #fbfcff;
+			padding: 20px;
+		}
+
+		.workspace {
+			display: grid;
+			grid-template-rows: auto minmax(0, 1fr) auto;
+			padding: 20px;
+			gap: 14px;
+		}
+
+		.inspector {
+			border-left: 1px solid var(--line);
+			background: #fbfcff;
+			padding: 20px;
+			overflow: auto;
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin-bottom: 22px;
+		}
+
+		.mark {
+			display: grid;
+			place-items: center;
+			width: 40px;
+			height: 40px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: linear-gradient(135deg, #ffffff, #e8f0ff);
+			font-weight: 800;
+			color: var(--blue);
+		}
+
+		h1,
+		h2,
+		h3,
+		p {
+			margin: 0;
+		}
+
+		h1 {
+			font-size: 18px;
+			letter-spacing: 0;
+		}
+
+		h2 {
+			font-size: 15px;
+			margin-bottom: 10px;
+		}
+
+		h3 {
+			font-size: 13px;
+			margin-bottom: 8px;
+		}
+
+		.muted {
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.panel {
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: 8px;
+		}
+
+		.section {
+			margin-top: 18px;
+		}
+
+		.gate-list,
+		.source-list,
+		.memory-list,
+		.search-list {
+			display: grid;
+			gap: 8px;
+		}
+
+		.gate {
+			display: grid;
+			grid-template-columns: 10px minmax(0, 1fr);
+			gap: 10px;
+			align-items: start;
+			padding: 10px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: var(--panel);
+		}
+
+		.dot {
+			width: 10px;
+			height: 10px;
+			margin-top: 4px;
+			border-radius: 999px;
+			background: var(--muted);
+		}
+
+		.gate.ready .dot {
+			background: var(--green);
+		}
+
+		.gate.attention .dot {
+			background: var(--amber);
+		}
+
+		.gate.blocked .dot {
+			background: var(--red);
+		}
+
+		.topbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+		}
+
+		.status-pill {
+			border-radius: 999px;
+			border: 1px solid var(--line);
+			padding: 7px 10px;
+			background: var(--panel);
+			color: var(--muted);
+			font-size: 12px;
+			white-space: nowrap;
+		}
+
+		.status-pill.ready {
+			background: var(--soft-green);
+			color: var(--green);
+			border-color: #b7e3c4;
+		}
+
+		.status-pill.blocked {
+			background: var(--soft-red);
+			color: var(--red);
+			border-color: #fac8c8;
+		}
+
+		.status-pill.attention {
+			background: var(--soft-amber);
+			color: var(--amber);
+			border-color: #f1d29d;
+		}
+
+		.chat {
+			overflow: auto;
+			padding: 18px;
+		}
+
+		.message-list {
+			display: grid;
+			gap: 12px;
+			max-width: 920px;
+			margin: 0 auto;
+		}
+
+		.message {
+			display: grid;
+			gap: 5px;
+			max-width: 76%;
+		}
+
+		.message.user {
+			justify-self: end;
+		}
+
+		.message.assistant {
+			justify-self: start;
+		}
+
+		.bubble {
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			padding: 12px 14px;
+			line-height: 1.65;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+			background: var(--panel);
+		}
+
+		.message.user .bubble {
+			background: var(--soft-blue);
+			border-color: #bfd2ff;
+		}
+
+		.message.assistant .bubble {
+			background: #ffffff;
+		}
+
+		.composer {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: 10px;
+			max-width: 920px;
+			width: 100%;
+			margin: 0 auto;
+		}
+
+		input {
+			width: 100%;
+			min-height: 42px;
+			border: 1px solid var(--line);
+			border-radius: 6px;
+			background: var(--panel);
+			color: var(--ink);
+			padding: 0 12px;
+			outline: none;
+		}
+
+		input:focus {
+			border-color: var(--blue);
+			box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+		}
+
+		.search-box {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: 8px;
+		}
+
+		.item {
+			padding: 10px;
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: var(--panel);
+		}
+
+		.path {
+			font-family: Consolas, "SFMono-Regular", ui-monospace, monospace;
+			font-size: 11px;
+			color: var(--blue);
+			overflow-wrap: anywhere;
+		}
+
+		.snippet {
+			margin-top: 6px;
+			font-size: 12px;
+			line-height: 1.55;
+			color: var(--ink);
+			overflow-wrap: anywhere;
+		}
+
+		.empty {
+			display: grid;
+			place-items: center;
+			min-height: 100%;
+			text-align: center;
+			color: var(--muted);
+			gap: 8px;
+		}
+
+		.empty strong {
+			color: var(--ink);
+			font-size: 18px;
+		}
+
+		.toolbar {
+			display: flex;
+			gap: 8px;
+			flex-wrap: wrap;
+		}
+
+		.section-heading {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+			margin-bottom: 10px;
+		}
+
+		.section-heading h2 {
+			margin-bottom: 0;
+		}
+
+		button.small {
+			min-height: 30px;
+			padding: 0 9px;
+			font-size: 12px;
+		}
+
+		button.danger {
+			color: var(--red);
+			border-color: #fac8c8;
+			background: var(--soft-red);
+		}
+
+		.item-head {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 8px;
+		}
+
+		.summary-grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 8px;
+			margin-bottom: 8px;
+		}
+
+		.summary-pill {
+			border: 1px solid var(--line);
+			border-radius: 8px;
+			background: var(--panel);
+			padding: 9px;
+			min-width: 0;
+		}
+
+		.summary-pill.ok {
+			background: var(--soft-green);
+			border-color: #b7e3c4;
+		}
+
+		.summary-pill.attention {
+			background: var(--soft-amber);
+			border-color: #f1d29d;
+		}
+
+		.summary-pill.critical {
+			background: var(--soft-red);
+			border-color: #fac8c8;
+		}
+
+		@media (max-width: 1100px) {
+			.app {
+				grid-template-columns: 240px minmax(0, 1fr);
+			}
+
+			.inspector {
+				grid-column: 1 / -1;
+				border-left: 0;
+				border-top: 1px solid var(--line);
+				max-height: 38vh;
+			}
+		}
+
+		@media (max-width: 760px) {
+			.app {
+				display: block;
+			}
+
+			.sidebar,
+			.inspector {
+				border: 0;
+				border-bottom: 1px solid var(--line);
+			}
+
+			.workspace {
+				min-height: 72vh;
+				padding: 14px;
+			}
+
+			.topbar,
+			.composer,
+			.search-box {
+				grid-template-columns: 1fr;
+				display: grid;
+				align-items: stretch;
+			}
+
+			.message {
+				max-width: 100%;
+			}
+		}
+	</style>
 </head>
-<body class="antialiased font-sans selection:bg-elysia-pink selection:text-white" x-data="elysiaPortfolio()">
-    <div class="scanlines"></div>
+<body>
+	<div class="app" data-app>
+		<aside class="sidebar">
+			<div class="brand">
+				<div class="mark">E</div>
+				<div>
+					<h1>ElysiaAI</h1>
+					<p class="muted">毎日使うローカルAIデスク</p>
+				</div>
+			</div>
 
-    <!-- Navigation -->
-    <nav class="fixed w-full z-40 glass-panel py-4 px-6 md:px-12 flex justify-between items-center">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-elysia-pink to-elysia-cyan flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(255,0,127,0.5)]">E</div>
-            <span class="font-mono font-bold tracking-widest text-sm text-gray-300">ELYSIA_OS</span>
-        </div>
-        <div class="hidden md:flex gap-8 text-sm font-mono tracking-wider">
-            <a href="#projects" class="hover:text-elysia-cyan transition-colors">PROJECTS</a>
-            <a href="#chat" class="hover:text-elysia-pink transition-colors">NEURAL_CHAT</a>
-            <a href="/standalone/login/index.html" class="px-4 py-1 neon-border rounded hover:bg-white/5 transition-all text-elysia-cyan">LOGIN</a>
-        </div>
-    </nav>
+			<div class="section">
+				<h2>MVPの現在地</h2>
+				<div class="gate-list" data-gates></div>
+			</div>
 
-    <!-- Hero Section -->
-    <section class="relative min-h-screen flex items-center justify-center px-4 pt-20">
-        <div class="absolute inset-0 z-0 opacity-20">
-            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-elysia-pink rounded-full mix-blend-screen filter blur-[100px] animate-float"></div>
-            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-elysia-cyan rounded-full mix-blend-screen filter blur-[100px] animate-float" style="animation-delay: -3s;"></div>
-        </div>
+			<div class="section">
+				<div class="section-heading">
+					<h2>記憶</h2>
+					<button class="small" data-clear-memory type="button">Clear</button>
+				</div>
+				<div class="memory-list" data-memory></div>
+			</div>
+		</aside>
 
-        <div class="relative z-10 text-center max-w-5xl mx-auto space-y-8">
-            <div class="inline-block px-4 py-1 rounded-full border border-elysia-cyan/30 bg-elysia-cyan/10 text-elysia-cyan font-mono text-xs tracking-widest mb-4">
-                SYSTEM_STATUS: ONLINE_AND_RESONATING
-            </div>
+		<main class="workspace">
+			<header class="topbar">
+				<div>
+					<h2>今日のAIデスク</h2>
+					<p class="muted" data-session>session: starting</p>
+				</div>
+				<div class="toolbar">
+					<span class="status-pill" data-auth>auth: checking</span>
+					<span class="status-pill" data-mode>mode: idle</span>
+				</div>
+			</header>
 
-            <h1 class="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-tight">
-                <span class="text-white">ELYSIA AI</span><br />
-                <span class="text-gradient">RESONANCE</span>
-            </h1>
+			<section class="panel chat" data-chat>
+				<div class="empty" data-empty>
+					<strong>今日の席はまだ静かです。</strong>
+					<span>質問、検索、記憶がここに整います。</span>
+				</div>
+				<div class="message-list" data-messages></div>
+			</section>
 
-            <p class="text-gray-400 max-w-2xl mx-auto text-lg md:text-xl font-light leading-relaxed">
-                にゃん♪ エリシアだよ〜♡ 「主権知性」を備えた次世代OSへようこそ。<br />
-                あなたの意識を、ナノテクと共鳴させよう。
-            </p>
+			<form class="composer" data-composer>
+				<input
+					data-input
+					type="text"
+					autocomplete="off"
+					placeholder="今日片づけたいことを聞く"
+					maxlength="1200"
+				/>
+				<button class="primary" data-send type="submit">Ask</button>
+			</form>
+		</main>
 
-            <div class="flex flex-wrap justify-center gap-4 pt-8">
-                <button @click="scrollTo('projects')" class="group relative px-8 py-4 bg-white text-black font-bold uppercase tracking-wider overflow-hidden hover:scale-105 transition-transform">
-                    <span class="relative z-10 flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg> EXPLORE</span>
-                    <div class="absolute inset-0 bg-gradient-to-r from-elysia-cyan to-elysia-pink translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                </button>
-                <a href="/standalone/nanotech-suit/index.html" class="px-8 py-4 glass-panel font-mono text-elysia-cyan hover:bg-elysia-cyan/10 transition-colors uppercase tracking-wider flex items-center gap-2">
-                    🛡️ NANOTECH SUIT
-                </a>
-                <a href="/standalone/swarm-nucleus/index.html" class="px-8 py-4 glass-panel font-mono text-green-400 hover:bg-green-400/10 transition-colors uppercase tracking-wider flex items-center gap-2">
-                    🌀 SWARM NUCLEUS
-                </a>
-            </div>
-        </div>
-    </section>
+		<aside class="inspector">
+			<section>
+				<h2>ローカルファイル</h2>
+				<form class="search-box" data-search-form>
+					<input
+						data-search-input
+						type="text"
+						autocomplete="off"
+						placeholder="探したいメモやコード"
+						maxlength="400"
+					/>
+					<button data-search-button type="submit">Find</button>
+				</form>
+				<div class="section search-list" data-search-results></div>
+			</section>
 
-    <!-- Works Section -->
-    <section id="projects" class="py-24 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="max-w-7xl mx-auto">
-            <div class="flex items-end gap-4 mb-16">
-                <h2 class="text-3xl md:text-5xl font-bold text-white tracking-tight">FEATURED <span class="text-gradient">MODULES</span></h2>
-                <div class="h-[2px] flex-1 bg-gradient-to-r from-elysia-pink/50 to-transparent mb-2"></div>
-            </div>
+			<section class="section">
+				<h2>参照した文脈</h2>
+				<div class="source-list" data-sources></div>
+			</section>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Card 1 -->
-                <div class="group glass-panel rounded-2xl p-6 neon-border transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(0,240,255,0.2)]">
-                    <div class="aspect-video bg-black/50 rounded-xl mb-6 flex items-center justify-center text-5xl overflow-hidden relative">
-                        <div class="absolute inset-0 bg-[url('assets/portal_bg.png')] bg-cover bg-center opacity-40 group-hover:opacity-60 transition-opacity"></div>
-                        <span class="relative z-10 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]">🛡️</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-2 font-mono">Nanotech Suit NSS-01</h3>
-                    <p class="text-sm text-gray-400 mb-6 line-clamp-3">
-                        14億個のナノマシンを制御する主権防衛スーツ。ニューラルリンクによる神経接続と高度なHUDを搭載。
-                    </p>
-                    <div class="flex flex-wrap gap-2 mb-6">
-                        <span class="px-2 py-1 bg-elysia-cyan/10 text-elysia-cyan border border-elysia-cyan/30 rounded text-xs font-mono">Nanotech</span>
-                        <span class="px-2 py-1 bg-red-500/10 text-red-400 border border-red-500/30 rounded text-xs font-mono">Combat</span>
-                    </div>
-                    <a href="/standalone/nanotech-suit/index.html" class="block w-full py-3 bg-white/5 hover:bg-white/10 text-center rounded font-mono text-sm tracking-widest text-white transition-colors">
-                        INITIATE_MODULE
-                    </a>
-                </div>
+			<section class="section">
+				<div class="section-heading">
+					<h2>Security Agent</h2>
+					<button class="small" data-security-refresh type="button">Scan</button>
+				</div>
+				<div class="source-list" data-security-status></div>
+				<div class="section source-list" data-security-results></div>
+			</section>
+		</aside>
+	</div>
 
-                <!-- Card 2 -->
-                <div class="group glass-panel rounded-2xl p-6 border border-white/5 transition-all duration-300 hover:-translate-y-2 hover:border-elysia-pink/50 hover:shadow-[0_10px_30px_rgba(255,0,127,0.2)]">
-                    <div class="aspect-video bg-gradient-to-br from-gray-900 to-black rounded-xl mb-6 flex items-center justify-center text-5xl">
-                        <span class="drop-shadow-[0_0_15px_rgba(255,0,127,0.8)]">🖥️</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-2 font-mono">Sovereign Desktop</h3>
-                    <p class="text-sm text-gray-400 mb-6 line-clamp-3">
-                        完全レスポンシブな主権デスクトップUI。洗練されたウィンドウマネージャーとシステムトレイを完備。
-                    </p>
-                    <div class="flex flex-wrap gap-2 mb-6">
-                        <span class="px-2 py-1 bg-white/5 text-gray-300 border border-white/10 rounded text-xs font-mono">TailwindCSS</span>
-                        <span class="px-2 py-1 bg-white/5 text-gray-300 border border-white/10 rounded text-xs font-mono">Alpine.js</span>
-                    </div>
-                    <a href="/desktop.html" class="block w-full py-3 bg-elysia-pink/20 hover:bg-elysia-pink/30 text-center rounded font-mono text-sm tracking-widest text-white transition-colors border border-elysia-pink/50">
-                        ACCESS_WORKSPACE
-                    </a>
-                </div>
+	<script>
+		const state = {
+			sessionId:
+				localStorage.getItem("elysia_mvp_session") ||
+				`mvp-${Date.now().toString(36)}`,
+			csrfToken:
+				localStorage.getItem("elysia_csrf_token") ||
+				readCookie("elysia_csrf_token") ||
+				"",
+			accessToken: "",
+			messages: JSON.parse(localStorage.getItem("elysia_mvp_messages") || "[]"),
+			loading: false,
+			mode: "idle",
+			sources: [],
+		};
 
-                <!-- Card 3 -->
-                <div class="group glass-panel rounded-2xl p-6 border border-white/5 transition-all duration-300 hover:-translate-y-2 hover:border-purple-500/50 hover:shadow-[0_10px_30px_rgba(138,43,226,0.2)]">
-                    <div class="aspect-video bg-gradient-to-br from-gray-900 to-black rounded-xl mb-6 flex items-center justify-center text-5xl">
-                        <span class="drop-shadow-[0_0_15px_rgba(138,43,226,0.8)]">🔑</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-2 font-mono">Neural Auth</h3>
-                    <p class="text-sm text-gray-400 mb-6 line-clamp-3">
-                        量子暗号化されたニューラルリンク認証ゲートウェイ。セキュアなトークン管理と侵入検知システム。
-                    </p>
-                    <div class="flex flex-wrap gap-2 mb-6">
-                        <span class="px-2 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/30 rounded text-xs font-mono">Security</span>
-                        <span class="px-2 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/30 rounded text-xs font-mono">JWT</span>
-                    </div>
-                    <a href="/standalone/login/index.html" class="block w-full py-3 bg-purple-500/20 hover:bg-purple-500/30 text-center rounded font-mono text-sm tracking-widest text-white transition-colors border border-purple-500/50">
-                        AUTHENTICATE
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
+		localStorage.setItem("elysia_mvp_session", state.sessionId);
 
-    <!-- Chat Section -->
-    <section id="chat" class="py-24 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="max-w-4xl mx-auto">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">NEURAL <span class="text-gradient">COMMUNICATION</span></h2>
-                <p class="text-gray-400 font-mono text-sm">ESTABLISHING DIRECT UPLINK TO ELYSIA CORE...</p>
-            </div>
+		const el = {
+			auth: document.querySelector("[data-auth]"),
+			chat: document.querySelector("[data-chat]"),
+			clearMemory: document.querySelector("[data-clear-memory]"),
+			composer: document.querySelector("[data-composer]"),
+			empty: document.querySelector("[data-empty]"),
+			gates: document.querySelector("[data-gates]"),
+			input: document.querySelector("[data-input]"),
+			memory: document.querySelector("[data-memory]"),
+			messages: document.querySelector("[data-messages]"),
+			mode: document.querySelector("[data-mode]"),
+			searchButton: document.querySelector("[data-search-button]"),
+			searchForm: document.querySelector("[data-search-form]"),
+			searchInput: document.querySelector("[data-search-input]"),
+			searchResults: document.querySelector("[data-search-results]"),
+			securityRefresh: document.querySelector("[data-security-refresh]"),
+			securityResults: document.querySelector("[data-security-results]"),
+			securityStatus: document.querySelector("[data-security-status]"),
+			send: document.querySelector("[data-send]"),
+			session: document.querySelector("[data-session]"),
+			sources: document.querySelector("[data-sources]"),
+		};
 
-            <div class="glass-panel rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[600px]">
-                <!-- Chat Header -->
-                <header class="bg-black/40 border-b border-white/5 p-4 flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div class="relative">
-                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-elysia-pink to-purple-600 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(255,0,127,0.4)]">💕</div>
-                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0f0f19]"></div>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-white tracking-wide">Elysia_AI_Core</h3>
-                            <p class="text-xs text-gray-400 font-mono" x-text="currentEmotion.toUpperCase() + ' // ONLINE'"></p>
-                        </div>
-                    </div>
-                    <div class="hidden sm:flex flex-col items-end gap-1 font-mono text-[0.65rem] text-gray-400">
-                        <span x-text="'CORE: ' + coreMode.toUpperCase()"></span>
-                        <span x-text="'PROTO: ' + coreProtocol"></span>
-                        <span x-text="'SESSION: ' + coreSessionLabel"></span>
-                    </div>
-                    <div class="flex gap-2">
-                        <div class="w-3 h-3 rounded-full bg-red-500/50"></div>
-                        <div class="w-3 h-3 rounded-full bg-yellow-500/50"></div>
-                        <div class="w-3 h-3 rounded-full bg-green-500/50"></div>
-                    </div>
-                </header>
+		function readCookie(name) {
+			return document.cookie
+				.split(";")
+				.map((part) => part.trim())
+				.find((part) => part.startsWith(`${name}=`))
+				?.split("=")
+				.slice(1)
+				.join("=") || "";
+		}
 
-                <!-- Chat Messages -->
-                <main id="chatContainer" class="flex-1 overflow-y-auto p-6 space-y-6 bg-black/20" style="scroll-behavior: smooth;">
-                    <div x-show="messages.length === 0" class="flex flex-col items-center justify-center h-full opacity-50 space-y-4">
-                        <div class="text-6xl mb-4">✨</div>
-                        <p class="text-lg text-white font-medium">UPLINK ESTABLISHED</p>
-                        <p class="text-sm text-gray-400 font-mono">Awaiting your input, Operator.</p>
-                    </div>
+		function escapeHtml(value) {
+			return String(value)
+				.replaceAll("&", "&amp;")
+				.replaceAll("<", "&lt;")
+				.replaceAll(">", "&gt;")
+				.replaceAll('"', "&quot;")
+				.replaceAll("'", "&#039;");
+		}
 
-                    <template x-for="msg in messages" :key="msg.id">
-                        <div :class="msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'">
-                            <div :class="msg.role === 'user' ? 'bg-elysia-cyan/20 border-elysia-cyan/30 text-white rounded-tl-2xl' : 'bg-white/5 border-white/10 text-gray-200 rounded-tr-2xl'"
-                                 class="max-w-[80%] rounded-b-2xl px-5 py-3 border backdrop-blur-md shadow-lg relative group">
-                                <span x-show="msg.role === 'assistant'" class="absolute -left-2 -top-2 w-6 h-6 bg-elysia-pink rounded-full flex items-center justify-center text-[10px] border-2 border-black">E</span>
-                                <p class="text-sm md:text-base leading-relaxed whitespace-pre-wrap font-sans" x-text="msg.content"></p>
-                            </div>
-                        </div>
-                    </template>
+		function setPill(node, text, status) {
+			node.textContent = text;
+			node.className = `status-pill ${status || ""}`.trim();
+		}
 
-                    <div x-show="loading" class="flex justify-start">
-                        <div class="bg-white/5 border border-white/10 rounded-2xl rounded-tr-sm px-5 py-3 flex items-center gap-2">
-                            <div class="w-2 h-2 bg-elysia-pink rounded-full animate-bounce"></div>
-                            <div class="w-2 h-2 bg-elysia-cyan rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                            <div class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
-                        </div>
-                    </div>
-                </main>
+		function authHeaders(json = true) {
+			const headers = {};
+			if (json) headers["Content-Type"] = "application/json";
+			if (state.accessToken)
+				headers.Authorization = `Bearer ${state.accessToken}`;
+			if (state.csrfToken) headers["X-CSRF-Token"] = state.csrfToken;
+			return headers;
+		}
 
-                <!-- Chat Input -->
-                <div class="bg-black/40 border-t border-white/5 p-4">
-                    <form @submit.prevent="sendMessage" class="flex gap-3 relative">
-                        <input type="text" x-model="userName" placeholder="ID (Optional)" class="hidden md:block w-32 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-elysia-cyan font-mono" maxlength="16">
-                        <input type="text" x-model="input" :disabled="loading" placeholder="Transmit message to Elysia..." class="flex-1 bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-white focus:outline-none focus:border-elysia-pink transition-colors disabled:opacity-50" autocomplete="off">
-                        <button type="submit" :disabled="loading || !input.trim()" class="px-6 py-3 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 flex items-center gap-2">
-                            <span class="hidden sm:inline">SEND</span>
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </button>
-                    </form>
-                    <div x-show="errorMsg" class="mt-2 text-xs text-red-400 font-mono" x-text="errorMsg"></div>
-                </div>
-            </div>
-        </div>
-    </section>
+		async function ensureAuth() {
+			const cookieToken = readCookie("elysia_csrf_token");
+			if (cookieToken && cookieToken !== state.csrfToken) {
+				state.csrfToken = cookieToken;
+				localStorage.setItem("elysia_csrf_token", state.csrfToken);
+			}
+			if (state.accessToken) {
+				setPill(el.auth, "auth: local", "ready");
+				return true;
+			}
+			if (state.csrfToken && cookieToken) {
+				const sessionResponse = await fetch("/auth/session", {
+					credentials: "same-origin",
+				});
+				const sessionData = await sessionResponse.json().catch(() => ({}));
+				if (sessionResponse.ok && sessionData.authenticated) {
+					setPill(el.auth, "auth: local", "ready");
+					return true;
+				}
+			}
+			state.csrfToken = "";
+			localStorage.removeItem("elysia_csrf_token");
+			const response = await fetch("/auth/dev-login", {
+				method: "POST",
+				credentials: "same-origin",
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				setPill(el.auth, "auth: locked", "blocked");
+				throw new Error(data.error || "dev login is disabled");
+			}
+			state.csrfToken = data.csrfToken || readCookie("elysia_csrf_token") || "";
+			state.accessToken = data.accessToken || "";
+			localStorage.setItem("elysia_csrf_token", state.csrfToken);
+			setPill(el.auth, `auth: ${data.username || "local"}`, "ready");
+			return true;
+		}
 
-    <!-- Footer -->
-    <footer class="border-t border-white/5 py-12 text-center relative z-10 bg-black/50">
-        <div class="text-2xl mb-4 opacity-50">🌸</div>
-        <p class="text-gray-500 font-mono text-sm tracking-widest">© 2026 ELYSIA_OS PROJECT. ALL RIGHTS RESERVED.</p>
-        <div class="mt-6 flex justify-center gap-6">
-            <a href="https://github.com/Elysia20220909/ElysiaAI" target="_blank" class="text-gray-400 hover:text-white transition-colors">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path></svg>
-            </a>
-        </div>
-    </footer>
+		function saveMessages() {
+			localStorage.setItem("elysia_mvp_messages", JSON.stringify(state.messages));
+		}
 
-    <script>
-        function elysiaPortfolio() {
-            return {
-                messages: JSON.parse(localStorage.getItem("elysia_chat_history") || "[]"),
-                input: "",
-                loading: false,
-                userName: localStorage.getItem("elysia_chat_user") || "",
-                errorMsg: "",
-                currentEmotion: "neutral",
-                coreMode: "booting",
-                coreProtocol: "ECP/1.0",
-                coreSessionLabel: localStorage.getItem("elysia_core_session") || "new",
+		function renderMessages() {
+			el.empty.style.display = state.messages.length ? "none" : "grid";
+			el.messages.innerHTML = state.messages
+				.map(
+					(message) => `
+						<article class="message ${message.role}">
+							<p class="muted">${message.role === "user" ? "You" : "ElysiaAI"}</p>
+							<div class="bubble">${escapeHtml(message.content)}</div>
+						</article>
+					`,
+				)
+				.join("");
+			el.chat.scrollTop = el.chat.scrollHeight;
+		}
 
-                init() {
-                    this.refreshCoreStatus();
-                },
-                scrollTo(id) {
-                    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-                },
-                async ensureCoreAuth() {
-                    let accessToken = localStorage.getItem("elysia_access_token");
-                    if (accessToken) return accessToken;
+		function renderSources(sources) {
+			state.sources = sources || [];
+			if (!state.sources.length) {
+				el.sources.innerHTML = `<div class="item muted">まだ参照元はありません。</div>`;
+				return;
+			}
+			el.sources.innerHTML = state.sources
+				.map(
+					(source) => `
+						<div class="item">
+							<div class="path">${escapeHtml(source.path)}:${source.line}</div>
+							<div class="snippet">${escapeHtml(source.snippet)}</div>
+						</div>
+					`,
+				)
+				.join("");
+		}
 
-                    const response = await fetch("/auth/dev-login", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                    });
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || "Neural Auth required");
-                    }
-                    localStorage.setItem("elysia_access_token", data.accessToken);
-                    localStorage.setItem("elysia_refresh_token", data.refreshToken);
-                    localStorage.setItem("elysia_chat_user", data.username || "admin");
-                    if (data.neuralSignature) {
-                        localStorage.setItem("elysia_neural_signature", data.neuralSignature);
-                    }
-                    this.userName = data.username || this.userName || "admin";
-                    return data.accessToken;
-                },
-                async refreshCoreStatus() {
-                    try {
-                        const accessToken = await this.ensureCoreAuth();
-                        const response = await fetch("/api/elysia-core/status", {
-                            headers: { Authorization: `Bearer ${accessToken}` },
-                        });
-                        if (!response.ok) return;
-                        const data = await response.json();
-                        this.coreMode = data.core?.status || "online";
-                        this.coreProtocol = data.core?.protocol || this.coreProtocol;
-                        const latest = data.core?.activeSessions?.[0];
-                        if (latest) {
-                            this.coreSessionLabel = latest.id.slice(0, 18);
-                        }
-                    } catch (error) {
-                        this.coreMode = "auth_required";
-                        this.errorMsg = "NEURAL AUTH: " + (error?.message || error);
-                    }
-                },
-                async sendMessage() {
-                    if (!this.input.trim() || this.loading) return;
-                    this.errorMsg = "";
-                    const userMessage = this.input.trim();
-                    const user = this.userName ? this.userName : "Operator";
+		function renderSearch(results) {
+			if (!results.length) {
+				el.searchResults.innerHTML = `<div class="item muted">一致するローカル文脈はまだありません。</div>`;
+				return;
+			}
+			el.searchResults.innerHTML = results
+				.map(
+					(result) => `
+						<div class="item">
+							<div class="path">${escapeHtml(result.path)}:${result.line}</div>
+							<div class="snippet">${escapeHtml(result.snippet)}</div>
+						</div>
+					`,
+				)
+				.join("");
+		}
 
-                    this.messages.push({
-                        id: Date.now(),
-                        role: "user",
-                        content: userMessage,
-                    });
+		async function refreshReadiness() {
+			const response = await fetch("/api/mvp/readiness", {
+				credentials: "same-origin",
+			});
+			const data = await response.json();
+			el.gates.innerHTML = data.gates
+				.map(
+					(gate) => `
+						<div class="gate ${gate.status}">
+							<span class="dot"></span>
+							<div>
+								<h3>${escapeHtml(gate.label)}</h3>
+								<p class="muted">${escapeHtml(gate.detail)}</p>
+							</div>
+						</div>
+					`,
+				)
+				.join("");
+			setPill(
+				el.mode,
+				`mode: ${state.mode}`,
+				data.status === "blocked" ? "blocked" : "ready",
+			);
+		}
 
-                    this.input = "";
-                    this.loading = true;
-                    this.scrollToBottom();
-                    localStorage.setItem("elysia_chat_user", this.userName);
-                    this.saveHistory();
+		async function refreshMemory() {
+			try {
+				await ensureAuth();
+				const response = await fetch(
+					`/api/mvp/memory?sessionId=${encodeURIComponent(state.sessionId)}`,
+					{ credentials: "same-origin", headers: authHeaders(false) },
+				);
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "memory is locked");
+				if (!data.recent?.length) {
+					el.clearMemory.disabled = true;
+					el.memory.innerHTML = `<div class="item muted">まだ記憶はありません。</div>`;
+					return;
+				}
+				el.clearMemory.disabled = false;
+				el.memory.innerHTML = data.recent
+					.slice(-4)
+					.reverse()
+					.map(
+						(memory) => `
+							<div class="item">
+								<div class="item-head">
+									<div class="path">${escapeHtml(memory.role)} · ${escapeHtml(memory.createdAt)}</div>
+									<button class="small danger" data-delete-memory="${escapeHtml(memory.id)}" type="button">削除</button>
+								</div>
+								<div class="snippet">${escapeHtml(memory.content)}</div>
+							</div>
+						`,
+					)
+					.join("");
+			} catch {
+				el.clearMemory.disabled = true;
+				el.memory.innerHTML = `<div class="item muted">記憶はロックされています。</div>`;
+			}
+		}
 
-                    try {
-                        const accessToken = await this.ensureCoreAuth();
-                        const sessionId = localStorage.getItem("elysia_core_session") || "portfolio_user_" + user;
-                        localStorage.setItem("elysia_core_session", sessionId);
-                        this.coreSessionLabel = sessionId.slice(0, 18);
-                        const requestBody = {
-                            messages: this.messages.map((m) => ({
-                                role: m.role,
-                                content: m.content,
-                            })),
-                            stream: true,
-                            sessionId,
-                        };
+		function renderSecurityAgent(report) {
+			const summaries = Object.values(report.summary || {});
+			el.securityStatus.innerHTML = `
+				<div class="item">
+					<div class="path">status: ${escapeHtml(report.status || "unknown")}</div>
+					<div class="snippet">last scan: ${escapeHtml(report.generatedAt || "not yet")}</div>
+				</div>
+			`;
+			const summaryHtml = summaries
+				.map(
+					(item) => `
+						<div class="summary-pill ${escapeHtml(item.severity)}">
+							<div class="path">${escapeHtml(item.label)}</div>
+							<div class="snippet">${escapeHtml(item.severity)} · ${Number(item.count || 0)} alerts</div>
+						</div>
+					`,
+				)
+				.join("");
+			const findings = (report.findings || [])
+				.filter((finding) => finding.severity !== "ok")
+				.slice(0, 6);
+			const fallback = (report.findings || [])
+				.filter((finding) => finding.severity === "ok")
+				.slice(0, 4);
+			const visibleFindings = findings.length ? findings : fallback;
+			const findingHtml = visibleFindings
+				.map(
+					(finding) => `
+						<div class="item">
+							<div class="path">${escapeHtml(finding.severity)} · ${escapeHtml(finding.title)}</div>
+							<div class="snippet">${escapeHtml(finding.detail)}</div>
+							${
+								finding.path
+									? `<div class="snippet">${escapeHtml(finding.path)}${finding.line ? `:${finding.line}` : ""}</div>`
+									: ""
+							}
+						</div>
+					`,
+				)
+				.join("");
+			const actionRuns = (report.actions?.runs || []).slice(0, 4);
+			const actionHtml = actionRuns.length
+				? `
+					<div class="item">
+						<div class="path">GitHub Actions · ${escapeHtml(report.actions.repository)}</div>
+						${actionRuns
+							.map(
+								(run) => `
+									<div class="snippet">
+										${escapeHtml(run.workflowName)} · ${escapeHtml(run.status)}${run.conclusion ? ` / ${escapeHtml(run.conclusion)}` : ""}<br />
+										${escapeHtml(run.title)} · ${escapeHtml(run.updatedAt || run.createdAt)}
+									</div>
+								`,
+							)
+							.join("")}
+					</div>
+				`
+				: "";
+			el.securityResults.innerHTML = `
+				<div class="summary-grid">${summaryHtml}</div>
+				${actionHtml}
+				${findingHtml || `<div class="item muted">Security Agent is quiet.</div>`}
+			`;
+		}
 
-                        let response = await fetch("/api/elysia-core/chat", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "Authorization": `Bearer ${accessToken}`,
-                            },
-                            body: JSON.stringify(requestBody),
-                        });
+		async function refreshSecurityAgent() {
+			try {
+				await ensureAuth();
+				el.securityRefresh.disabled = true;
+				el.securityStatus.innerHTML = `<div class="item muted">Security Agentが確認中です。</div>`;
+				const response = await fetch("/api/mvp/security-agent", {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "security scan failed");
+				renderSecurityAgent(data);
+			} catch (error) {
+				el.securityStatus.innerHTML = `<div class="item muted">${
+					error instanceof Error
+						? escapeHtml(error.message)
+						: "Security Agent is locked."
+				}</div>`;
+				el.securityResults.innerHTML = "";
+			} finally {
+				el.securityRefresh.disabled = false;
+			}
+		}
 
-                        if (!response.ok) {
-                            throw new Error(`Connection Error (${response.status})`);
-                        }
-                        this.coreMode = response.headers.get("x-elysia-core-mode") || "kernel";
-                        this.coreProtocol = response.headers.get("x-elysia-core-protocol") || this.coreProtocol;
-                        const requestId = response.headers.get("x-elysia-core-request-id");
-                        if (requestId) localStorage.setItem("elysia_core_request", requestId);
+		async function deleteMemory(id) {
+			if (!id) return;
+			await ensureAuth();
+			const response = await fetch(
+				`/api/mvp/memory/${encodeURIComponent(id)}?sessionId=${encodeURIComponent(state.sessionId)}`,
+				{
+					method: "DELETE",
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				},
+			);
+			if (!response.ok) {
+				const data = await response.json().catch(() => ({}));
+				throw new Error(data.error || "memory delete failed");
+			}
+			await refreshMemory();
+			await refreshReadiness();
+		}
 
-                        const reader = response.body.getReader();
-                        const decoder = new TextDecoder();
-                        const assistantMessage = {
-                            id: Date.now() + 1,
-                            role: "assistant",
-                            content: "",
-                        };
-                        this.messages.push(assistantMessage);
+		async function clearMemory() {
+			if (!window.confirm("このセッションの記憶をすべて削除します。よろしいですか？")) {
+				return;
+			}
+			await ensureAuth();
+			el.clearMemory.disabled = true;
+			const response = await fetch(
+				`/api/mvp/memory?sessionId=${encodeURIComponent(state.sessionId)}`,
+				{
+					method: "DELETE",
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				},
+			);
+			if (!response.ok) {
+				const data = await response.json().catch(() => ({}));
+				throw new Error(data.error || "memory clear failed");
+			}
+			await refreshMemory();
+			await refreshReadiness();
+		}
 
-                        let received = false;
-                        while (true) {
-                            const { done, value } = await reader.read();
-                            if (done) break;
-                            const chunk = decoder.decode(value);
-                            const lines = chunk.split("\n");
-                            for (const line of lines) {
-                                if (line.startsWith("data: ")) {
-                                    if (line === "data: [DONE]") continue;
-                                    try {
-                                        const data = JSON.parse(line.slice(6));
-                                        const frame = data.protocolFrame;
-                                        if (frame?.protocol) this.coreProtocol = frame.protocol;
-                                        if (frame?.sessionId) this.coreSessionLabel = frame.sessionId.slice(0, 18);
-                                        if (data.emotion) this.currentEmotion = data.emotion;
-                                        if (data.mode) this.coreMode = data.mode;
-                                        if (data.content) {
-                                            assistantMessage.content += data.content;
-                                            received = true;
-                                            this.scrollToBottom();
-                                        }
-                                    } catch (e) {}
-                                }
-                            }
-                        }
+		async function sendMessage(event) {
+			event.preventDefault();
+			if (state.loading || !el.input.value.trim()) return;
+			await ensureAuth();
 
-                        if (!received) {
-                            this.errorMsg = "Uplink silent. No response from Core.";
-                        }
-                        this.saveHistory();
-                        this.refreshCoreStatus();
-                    } catch (error) {
-                        this.errorMsg = "UPLINK ERROR: " + (error?.message || error);
-                        this.messages.push({
-                            id: Date.now() + 1,
-                            role: "assistant",
-                            content: "⚠️ SYSTEM_FAULT: Connection to Elysia Core failed.",
-                        });
-                        this.saveHistory();
-                    } finally {
-                        this.loading = false;
-                        this.scrollToBottom();
-                    }
-                },
-                scrollToBottom() {
-                    this.$nextTick(() => {
-                        const container = document.getElementById("chatContainer");
-                        if (container) {
-                            container.scrollTop = container.scrollHeight;
-                        }
-                    });
-                },
-                saveHistory() {
-                    localStorage.setItem("elysia_chat_history", JSON.stringify(this.messages));
-                }
-            }
-        }
-    </script>
+			const content = el.input.value.trim();
+			el.input.value = "";
+			state.messages.push({ role: "user", content });
+			const assistant = { role: "assistant", content: "" };
+			state.messages.push(assistant);
+			state.loading = true;
+			state.mode = "thinking";
+			el.send.disabled = true;
+			setPill(el.mode, "mode: thinking", "");
+			renderMessages();
+			saveMessages();
+
+			try {
+				const response = await fetch("/api/elysia-core/chat", {
+					method: "POST",
+					credentials: "same-origin",
+					headers: authHeaders(),
+					body: JSON.stringify({
+						messages: state.messages.slice(0, -1),
+						sessionId: state.sessionId,
+						stream: true,
+					}),
+				});
+
+				if (!response.ok || !response.body) {
+					const data = await response.json().catch(() => ({}));
+					throw new Error(data.error || `chat failed: ${response.status}`);
+				}
+
+				state.mode = response.headers.get("x-elysia-core-mode") || "local";
+				setPill(el.mode, `mode: ${state.mode}`, "ready");
+
+				const reader = response.body.getReader();
+				const decoder = new TextDecoder();
+				let buffer = "";
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+					buffer += decoder.decode(value, { stream: true });
+					const frames = buffer.split("\n\n");
+					buffer = frames.pop() || "";
+					for (const frame of frames) {
+						const line = frame.split("\n").find((entry) => entry.startsWith("data: "));
+						if (!line || line === "data: [DONE]") continue;
+						const data = JSON.parse(line.slice(6));
+						if (data.content) {
+							assistant.content += data.content;
+							renderMessages();
+						}
+						if (data.sources) renderSources(data.sources);
+						if (data.mode) {
+							state.mode = data.mode;
+							setPill(el.mode, `mode: ${state.mode}`, "ready");
+						}
+					}
+				}
+				if (!assistant.content) assistant.content = "No response body was returned.";
+				saveMessages();
+				await refreshMemory();
+				await refreshReadiness();
+			} catch (error) {
+				assistant.content =
+					error instanceof Error ? error.message : "Local chat failed.";
+				state.mode = "error";
+				setPill(el.mode, "mode: error", "blocked");
+				renderMessages();
+				saveMessages();
+			} finally {
+				state.loading = false;
+				el.send.disabled = false;
+			}
+		}
+
+		async function searchFiles(event) {
+			event.preventDefault();
+			const query = el.searchInput.value.trim();
+			if (!query) return;
+			await ensureAuth();
+			el.searchButton.disabled = true;
+			try {
+				const response = await fetch("/api/mvp/search", {
+					method: "POST",
+					credentials: "same-origin",
+					headers: authHeaders(),
+					body: JSON.stringify({ query, limit: 8 }),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "search failed");
+				renderSearch(data.results || []);
+			} catch (error) {
+				renderSearch([
+					{
+						path: "search",
+						line: 0,
+						snippet:
+							error instanceof Error ? error.message : "Local search failed.",
+					},
+				]);
+			} finally {
+				el.searchButton.disabled = false;
+			}
+		}
+
+		async function boot() {
+			el.session.textContent = `session: ${state.sessionId}`;
+			renderMessages();
+			renderSources([]);
+			renderSearch([]);
+			el.securityStatus.innerHTML = `<div class="item muted">Security Agentは待機中です。</div>`;
+			el.securityResults.innerHTML = "";
+			try {
+				await ensureAuth();
+			} catch {
+				setPill(el.auth, "auth: locked", "blocked");
+			}
+			await refreshReadiness();
+			await refreshMemory();
+			await refreshSecurityAgent();
+			window.setInterval(refreshReadiness, 15000);
+		}
+
+		el.composer.addEventListener("submit", sendMessage);
+		el.clearMemory.addEventListener("click", () => {
+			clearMemory().catch((error) => {
+				el.memory.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Memory clear failed.")}</div>`;
+			});
+		});
+		el.memory.addEventListener("click", (event) => {
+			const button = event.target.closest("[data-delete-memory]");
+			if (!button) return;
+			deleteMemory(button.dataset.deleteMemory).catch((error) => {
+				el.memory.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Memory delete failed.")}</div>`;
+			});
+		});
+		el.searchForm.addEventListener("submit", searchFiles);
+		el.securityRefresh.addEventListener("click", refreshSecurityAgent);
+		boot();
+	</script>
 </body>
 </html>

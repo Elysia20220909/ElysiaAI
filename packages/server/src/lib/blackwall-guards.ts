@@ -19,12 +19,18 @@ export function isLocalRequest(request: Request): boolean {
 	return LOCAL_HOSTS.has(url.hostname) && LOCAL_HOSTS.has(ip);
 }
 
-export function requireLocalBlackwallRequest(request: Request): Response | null {
+export function requireLocalBlackwallRequest(
+	request: Request,
+): Response | null {
 	if (isLocalRequest(request)) {
 		return null;
 	}
 
-	return jsonError(403, "BLACKWALL local runtime routes require localhost access", "BLACKWALL_LOCAL_ONLY");
+	return jsonError(
+		403,
+		"BLACKWALL local runtime routes require localhost access",
+		"BLACKWALL_LOCAL_ONLY",
+	);
 }
 
 export function requireBlackwallOperator(request: Request): Response | null {
@@ -44,7 +50,9 @@ export function clampBlackwallText(value?: string): string | undefined {
 	return value.slice(0, MAX_TEXT_LENGTH);
 }
 
-export function sanitizeBlackwallInput<T extends Record<string, unknown>>(input: T): T {
+export function sanitizeBlackwallInput<T extends Record<string, unknown>>(
+	input: T,
+): T {
 	return {
 		...input,
 		process: clampBlackwallText(input.process as string | undefined),

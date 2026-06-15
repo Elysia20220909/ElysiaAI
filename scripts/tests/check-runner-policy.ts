@@ -142,7 +142,9 @@ function checkWorkflow(workflow: WorkflowCheck) {
 		}
 
 		if (!hasTrustedRunnerLabel(block)) {
-			failures.push(`self-hosted runs-on block is missing an ICE label: ${block}`);
+			failures.push(
+				`self-hosted runs-on block is missing an ICE label: ${block}`,
+			);
 		}
 	}
 

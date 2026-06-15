@@ -21,7 +21,7 @@ export type CoreSession = {
 	updatedAt: string;
 	messageCount: number;
 	emotion: CoreEmotion;
-	mode: "kernel" | "local-fallback";
+	mode: "kernel" | "local-ollama" | "local-fallback";
 };
 
 const sessions = new Map<string, CoreSession>();
@@ -91,6 +91,9 @@ export function getCoreStatus() {
 		name: "Elysia_AI_Core",
 		capabilities: [
 			"authenticated neural chat",
+			"direct local Ollama chat",
+			"minimal workspace RAG and file search",
+			"runtime memory journal",
 			"FastAPI/Ollama streaming bridge",
 			"local-first fallback conversation",
 			"session telemetry",

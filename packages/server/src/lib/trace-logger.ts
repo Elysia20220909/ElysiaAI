@@ -1,5 +1,5 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export interface TraceEvent {
@@ -41,7 +41,9 @@ export function redactBlackwallText(value?: string): string | undefined {
 	return redacted.slice(0, 512);
 }
 
-function sanitizeTraceEvent(event: Omit<TraceEvent, "previousHash" | "hash">): Omit<TraceEvent, "previousHash" | "hash"> {
+function sanitizeTraceEvent(
+	event: Omit<TraceEvent, "previousHash" | "hash">,
+): Omit<TraceEvent, "previousHash" | "hash"> {
 	return {
 		...event,
 		process: redactBlackwallText(event.process),
@@ -57,7 +59,10 @@ function clampLimit(limit: number, max = 500): number {
 
 export class TraceLogger {
 	private readonly logDir = join(process.cwd(), "logs", "blackwall");
-	private readonly logFile = join(this.logDir, `trace-${new Date().toISOString().split("T")[0]}.jsonl`);
+	private readonly logFile = join(
+		this.logDir,
+		`trace-${new Date().toISOString().split("T")[0]}.jsonl`,
+	);
 
 	constructor() {
 		if (!existsSync(this.logDir)) {

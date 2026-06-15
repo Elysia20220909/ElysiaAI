@@ -78,7 +78,7 @@ X-Elysia-Provider: openai
 `.env` ファイルに追加:
 
 ```env
-OPENAI_API_KEY=sk-proj-your-api-key-here
+OPENAI_API_KEY=<your-openai-api-key>
 OPENAI_MODEL=gpt-5.1-codex-max  # 既定モデル（GPT-5.1-Codex-Max Preview）
 ```
 
@@ -229,7 +229,7 @@ try {
 cat .env | grep OPENAI_API_KEY
 
 # 設定されていない場合
-echo "OPENAI_API_KEY=sk-proj-your-key-here" >> .env
+echo "OPENAI_API_KEY=<your-openai-api-key>" >> .env
 ```
 
 ### エラー: "OpenAI API error"

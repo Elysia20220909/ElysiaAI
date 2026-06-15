@@ -41,7 +41,6 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^8.0.5",
     "ollama": "^0.6.3",
-    "ollama-ai-provider": "^1.2.0",
     "openai": "^6.10.0",
     "prisma": "^6.19.3",
     "redis": "^5.10.0",

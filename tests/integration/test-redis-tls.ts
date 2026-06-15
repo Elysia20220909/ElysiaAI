@@ -1,9 +1,13 @@
 import Redis from "ioredis";
 
 // クラウドRedis接続情報 - 複数の接続オプションをテスト
-const url = new URL(
-	"redis://default:Hr7pQ66mbyxnu9M2QTPyy31fYC1l97wV@redis-10200.c54.ap-northeast-1-2.ec2.cloud.redislabs.com:10200",
-);
+const redisUrl = process.env.REDIS_URL;
+if (!redisUrl) {
+	console.error("❌ REDIS_URL is required for this manual integration test.");
+	process.exit(1);
+}
+
+const url = new URL(redisUrl);
 
 console.log("📋 接続情報:");
 console.log("  ホスト:", url.hostname);

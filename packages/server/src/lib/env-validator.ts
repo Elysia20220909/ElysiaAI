@@ -79,10 +79,10 @@ const ENV_SCHEMA: EnvConfig[] = [
 		name: "ENCRYPTION_SECRET",
 		required: true,
 		productionOnly: true,
-		default: "elysia-default-shadow-key-777",
+		default: "local development encryption secret only",
 		description: "保存データ暗号化用シークレット",
 		validator: (v) => v.length >= 32,
-		disallowedValues: ["elysia-default-shadow-key-777"],
+		disallowedValues: ["local development encryption secret only"],
 	},
 	{
 		name: "ENCRYPTION_SALT",

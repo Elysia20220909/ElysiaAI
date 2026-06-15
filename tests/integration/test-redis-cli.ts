@@ -1,22 +1,26 @@
 // 公式Node Redis クライアントでテスト
 // redis-cli互換の接続方法
-const { exec } = require("node:child_process");
+const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
-const redisUrl =
-	"redis://default:Hr7pQ66mbyxnu9M2QTPyy31fYC1l97wV@redis-10200.c54.ap-northeast-1-2.ec2.cloud.redislabs.com:10200";
+const redisUrl = process.env.REDIS_URL;
+if (!redisUrl) {
+	console.error("❌ REDIS_URL is required for this manual integration test.");
+	process.exit(1);
+}
 
 console.log("🔍 redis-cli互換テストを実行...");
-console.log("URL:", redisUrl);
+console.log("URL:", new URL(redisUrl).host);
 
 (async () => {
 	try {
 		// PINGテスト
 		console.log("🔄 PING実行...");
-		const { stdout: ping } = await execAsync(
-			`npx redis-cli -u "${redisUrl}" PING`,
+		const { stdout: ping } = await execFileAsync(
+			"npx",
+			["redis-cli", "-u", redisUrl, "PING"],
 			{
 				timeout: 10000,
 			},
@@ -25,8 +29,9 @@ console.log("URL:", redisUrl);
 
 		// INFO取得
 		console.log("🔄 INFO SERVER取得...");
-		const { stdout: info } = await execAsync(
-			`npx redis-cli -u "${redisUrl}" INFO server`,
+		const { stdout: info } = await execFileAsync(
+			"npx",
+			["redis-cli", "-u", redisUrl, "INFO", "server"],
 			{
 				timeout: 10000,
 			},

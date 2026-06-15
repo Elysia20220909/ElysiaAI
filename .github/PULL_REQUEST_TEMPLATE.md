@@ -1,23 +1,48 @@
-## 🌸 PR Description
+## Summary
 
-※ この Pull Request が対応する Issue や、変更の目的を簡潔に記載してください。
+Describe the change in one or two sentences.
 
-- **Related Issue:** #[Issue番号]
+## Scope
 
-### 💡 変更内容 (What changed?)
-<!-- 詳細な変更点をリストアップしてください -->
-- [ ] 
-- [ ] 
+- [ ] Docs
+- [ ] CI / release
+- [ ] Security
+- [ ] Backend
+- [ ] Python kernel
+- [ ] Rust shield-agent
+- [ ] UI / desktop
 
-### 🧪 テスト・検証 (How to test?)
-<!-- レビュアーが動作確認するための手順を書いてください -->
-1. `make doctor` が通ることを確認
-2. 
+## Verification
 
-### ✅ チェックリスト (Checklist)
-- [ ] 新規機能や変更に関するドキュメントを更新しました
-- [ ] コードのフォーマット（Lint）を実行しました
-- [ ] 新しいスキルを追加した場合、`tests/python/test_sovereign_skills.py` にテストケースを追加しました
+Commands run:
 
-### ✨ Resonance (想い)
-<!-- もしあれば、この変更に込めた想いや、Elysiaへのメッセージを書いてください -->
+```text
+# paste commands here
+```
+
+Results:
+
+```text
+# paste short result summary here
+```
+
+## Risk
+
+- [ ] Low
+- [ ] Medium
+- [ ] High
+
+## Security review
+
+- [ ] No secrets, tokens, webhook URLs, or private paths are included.
+- [ ] RAG content is treated as untrusted reference material.
+- [ ] External posts, file writes, and destructive operations require human confirmation.
+- [ ] Artifacts do not include private logs or sensitive files.
+
+## Rollback
+
+Explain how to revert this change safely.
+
+## Notes for reviewers
+
+Add anything reviewers should focus on.

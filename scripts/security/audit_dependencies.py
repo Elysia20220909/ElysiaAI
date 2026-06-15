@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 from urllib import request
 
+
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 if hasattr(sys.stderr, "reconfigure"):
@@ -143,9 +144,7 @@ def audit_rust() -> bool:
         for name, version in sorted(crates.items())
     ]
     vulnerabilities = query_osv(queries)
-    unallowed = [
-        vuln for vuln in vulnerabilities if vuln[2] not in RUST_ADVISORY_ALLOWLIST
-    ]
+    unallowed = [vuln for vuln in vulnerabilities if vuln[2] not in RUST_ADVISORY_ALLOWLIST]
     allowed = [vuln for vuln in vulnerabilities if vuln[2] in RUST_ADVISORY_ALLOWLIST]
 
     if allowed:

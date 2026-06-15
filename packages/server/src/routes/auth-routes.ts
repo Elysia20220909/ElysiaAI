@@ -99,6 +99,7 @@ async function issueCookieSession(
 		username: user.username,
 		role: user.role,
 		neuralSignature,
+		...(isDevAutoLoginEnabled() ? { accessToken: tokens.accessToken } : {}),
 		...body,
 	});
 }

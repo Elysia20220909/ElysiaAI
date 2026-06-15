@@ -8,6 +8,9 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | --- | --- |
 | Project overview | `README.md` |
 | MVP scope and acceptance criteria | `docs/MVP.md` |
+| MVP readiness and current gaps | `MVP_READINESS.md` |
+| MVP demo scenario | `docs/MVP_DEMO_3_MINUTE_SCENARIO.md` |
+| Beta 0.1 execution plan | `docs/BETA_0_1_EXECUTION_PLAN.md` |
 | Git workflow and branch discipline | `docs/GIT_WORKFLOW.md` |
 | Getting started | `docs/GETTING_STARTED.md` |
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |

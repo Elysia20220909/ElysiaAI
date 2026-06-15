@@ -29,6 +29,7 @@ import { elysiaCoreRoutes } from "./routes/elysia-core-routes";
 import { fileRoutes } from "./routes/file-routes";
 import { gpuRoutes } from "./routes/gpu-routes";
 import { learningRoutes } from "./routes/learning-routes";
+import { mvpRoutes } from "./routes/mvp-routes";
 import { neuralSystemRoutes } from "./routes/neural-system-routes";
 import { projectRoutes } from "./routes/project-routes";
 import { ruleRoutes } from "./routes/rule-routes";
@@ -39,7 +40,8 @@ import { vtuberRoutes } from "./routes/vtuber-routes";
 
 const app = new Elysia();
 const requestStartedAt = new WeakMap<Request, number>();
-const corsOrigin = config.allowedCorsOrigins.length > 0 ? config.allowedCorsOrigins : !isProd;
+const corsOrigin =
+	config.allowedCorsOrigins.length > 0 ? config.allowedCorsOrigins : !isProd;
 
 checkEnvironmentOrExit();
 
@@ -184,6 +186,7 @@ app
 	.use(adminRoutes)
 	.use(sessionRoutes)
 	.use(learningRoutes)
+	.use(mvpRoutes)
 	.use(neuralSystemRoutes)
 	.use(customizationRoutes)
 	.use(fileRoutes)
@@ -310,10 +313,13 @@ app
 		}
 		return "ElysiaAI Landing Page (Resource Missing)";
 	})
-	.listen(config.port);
+	.listen({
+		port: Number(config.port),
+		hostname: config.bindHost,
+	});
 
 logger.info(
-	`🌸 ElysiaAI Sovereign Server started on port ${config.port} (Modular Mode)`,
+	`🌸 ElysiaAI Sovereign Server started on ${config.bindHost}:${config.port} (Modular Mode)`,
 );
 
 void slackSocketModeBridge.start().catch((error) => {

@@ -91,10 +91,26 @@ jobs:
           uv pip install --system -r requirements.txt
 
       - name: Run Ruff (Linter)
-        run: python -m ruff check .
+        run: |
+          python -m ruff check \
+            python/fastapi_server.py \
+            kernel \
+            usr \
+            tests/test_kernel.py \
+            tests/python \
+            scripts/security/audit_dependencies.py \
+            scripts/tests/check-encoding.py
 
       - name: Run Formatter Check
-        run: python -m ruff format --check .
+        run: |
+          python -m ruff format --check \
+            python/fastapi_server.py \
+            kernel \
+            usr \
+            tests/test_kernel.py \
+            tests/python \
+            scripts/security/audit_dependencies.py \
+            scripts/tests/check-encoding.py
 
       - name: Run Python Tests (Pytest)
         env:

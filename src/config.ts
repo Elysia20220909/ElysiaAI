@@ -13,7 +13,7 @@ const requiredProductionEnvKeys = new Set([
 
 const unsafeProductionEnvValues: Record<string, Set<string>> = {
 	AUTH_PASSWORD: new Set(["elysiatest-001", "your-strong-password-here"]),
-	ENCRYPTION_SECRET: new Set(["elysia-default-shadow-key-777"]),
+	ENCRYPTION_SECRET: new Set(["local development encryption secret only"]),
 	ENCRYPTION_SALT: new Set(["abyssal-salt"]),
 	JWT_REFRESH_SECRET: new Set([
 		"elysia-refresh-secret",
@@ -68,6 +68,7 @@ export const isProd = process.env.NODE_ENV === "production";
 export const config = {
 	// Core
 	port: getEnv("PORT", "3000"),
+	bindHost: getEnv("BIND_HOST", getEnv("HOST", "127.0.0.1")),
 	nodeEnv: getEnv("NODE_ENV", "development"),
 	sessionSecret: getEnv("SESSION_SECRET", "dev_secret_only"),
 	dbUrl: getEnv("DATABASE_URL", "file:./prisma/dev.db"),
@@ -81,7 +82,7 @@ export const config = {
 	masterApiKey: getEnv("MASTER_API_KEY", ""),
 	encryptionSecret: getEnv(
 		"ENCRYPTION_SECRET",
-		"elysia-default-shadow-key-777",
+		"local development encryption secret only",
 	),
 	encryptionSalt: getEnv("ENCRYPTION_SALT", "abyssal-salt"),
 	defenseRulesFile: getEnv("DEFENSE_RULES_FILE", ""),

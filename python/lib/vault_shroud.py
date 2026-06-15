@@ -11,6 +11,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env"))
 
 logger = logging.getLogger("VaultShroud")
 
+
 class AbyssalShroud:
     """
     Handles unified AES-256-GCM encryption compatible with the Node.js stack.
@@ -18,7 +19,7 @@ class AbyssalShroud:
     """
 
     def __init__(self):
-        self.secret = os.getenv("ENCRYPTION_SECRET", "elysia-default-shadow-key-777")
+        self.secret = os.getenv("ENCRYPTION_SECRET", "local development encryption secret only")
         self.salt = os.getenv("ENCRYPTION_SALT", "abyssal-salt")
         self.key = self._derive_key()
         self.cipher = AESGCM(self.key)
@@ -29,14 +30,7 @@ class AbyssalShroud:
         Derives a 256-bit key using scrypt, matching Node.js scryptSync defaults.
         N=16384, r=8, p=1
         """
-        return hashlib.scrypt(
-            self.secret.encode(),
-            salt=self.salt.encode(),
-            n=16384,
-            r=8,
-            p=1,
-            dklen=32
-        )
+        return hashlib.scrypt(self.secret.encode(), salt=self.salt.encode(), n=16384, r=8, p=1, dklen=32)
 
     def encrypt(self, data: str | bytes, aad: str = "ELYSIOS") -> str:
         """
@@ -47,12 +41,12 @@ class AbyssalShroud:
         payload = data if isinstance(data, bytes) else data.encode()
         # cryptography library's AESGCM.encrypt returns ciphertext + 16-byte tag
         ciphertext_with_tag = self.cipher.encrypt(nonce, payload, aad.encode())
-        
+
         iv_hex = nonce.hex()
         # The tag is the last 16 bytes
         ciphertext = ciphertext_with_tag[:-16].hex()
         auth_tag = ciphertext_with_tag[-16:].hex()
-        
+
         return f"{iv_hex}:{auth_tag}:{ciphertext}"
 
     def decrypt(self, shrouded_data: str, aad: str = "ELYSIOS") -> str:
@@ -64,14 +58,14 @@ class AbyssalShroud:
             parts = shrouded_data.split(":")
             if len(parts) != 3:
                 raise ValueError("Malformed shrouded data format.")
-            
+
             iv = bytes.fromhex(parts[0])
             auth_tag = bytes.fromhex(parts[1])
             ciphertext = bytes.fromhex(parts[2])
-            
+
             # Reconstruct the combined format expected by cryptography library
             payload = ciphertext + auth_tag
-            
+
             decrypted_bytes = self.cipher.decrypt(iv, payload, aad.encode())
             return decrypted_bytes.decode("utf-8")
         except Exception as e:
@@ -95,6 +89,7 @@ class AbyssalShroud:
         with open(path, encoding="utf-8") as f:
             enc_data = f.read()
         return self.decrypt(enc_data)
+
 
 # Global Instance
 shroud = AbyssalShroud()
