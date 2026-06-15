@@ -4,7 +4,7 @@
 
 Beta 0.1の目的は、ElysiaAIを「開発者の手元で動くMVP」から「限定テスターが毎日試せるPrivate AI Cockpit」へ進めること。
 
-現時点では、Core MVP、Ollama縦通し、RAG、Memory、Security Agent、Windows Tauri、ローカルSecurity Gateは確認済み。残るブロッカーは、GitHub Actionsの未push実行、macOS実機確認、デモ収録、テスター投入である。
+現時点では、Core MVP、Ollama縦通し、RAG、Memory、Security Agent、Windows Tauri、ローカルSecurity Gate、GitHub Actionsは確認済み。残るブロッカーは、macOS実機確認、デモ収録、テスター投入である。
 
 ## P0: Release Gate
 
@@ -24,12 +24,16 @@ Beta 0.1の目的は、ElysiaAIを「開発者の手元で動くMVP」から「�
   - Tracking issue: #104
   - Beta 0.1では「既知の上流依存リスク」として扱う
 - [ ] macOS実機で `bun tauri dev` を確認する
+  - Runbook: `docs/MACOS_TAURI_DEV_VERIFICATION.md`
+  - Tracking issue: #105
 - [x] 差分をpushし、GitHub Actionsを実行する
 
 ## P1: Demo Package
 
 - [x] 3分デモ台本を作成する
 - [ ] 実機Tauriウィンドウで3分デモ動画を収録する
+  - Runbook: `docs/DEMO_RECORDING_RUNBOOK.md`
+  - Tracking issue: #106
 - [ ] READMEにデモ動画リンクとKnown Issuesを追加する
 - [ ] Beta 0.1タグ用のリリースノートを作る
 

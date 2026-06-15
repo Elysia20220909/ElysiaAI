@@ -112,6 +112,8 @@ flowchart LR
 - [x] Security AgentでGitHub Actions実行履歴を取得できるようにした
 - [x] 最新差分をpushし、GitHub Actions成功を確認した
 - [x] Dependabot alert #7をdismissせず、上流依存リスクとしてIssue #104で追跡した
+- [x] macOS `bun tauri dev` 実機確認Runbookを作成し、Issue #105で追跡した
+- [x] 3分デモ動画収録Runbookを作成し、Issue #106で追跡した
 - [ ] macOSで `bun tauri dev` を起動確認する
 
 ## ローカル検証結果
@@ -217,6 +219,6 @@ bun tauri dev
 ## 次に残る仕事
 
 - macOSで `bun tauri dev` を実機確認する
+- `docs/DEMO_RECORDING_RUNBOOK.md` に沿って3分デモ動画を収録する
 - Dependabot alert #7の上流更新をIssue #104で追跡する
-- 3分デモ動画を収録する
 - 3〜5人のテスターへBeta 0.1候補を投入する

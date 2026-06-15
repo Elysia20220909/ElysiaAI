@@ -12,7 +12,9 @@
 - `OLLAMA_MODEL` に合わせたモデルをpullしておく
 - `bun run dev:lite` でローカルスタックを起動しておく
 - WindowsはVisual Studio Build Tools導入後にTauriで `bun tauri dev` を起動しておく
+- macOSは `docs/MACOS_TAURI_DEV_VERIFICATION.md` に沿って `bun tauri dev` を確認しておく
 - GitHub Actions / Gitleaks / CodeQLの画面をすぐ開ける状態にしておく
+- 収録時は `docs/DEMO_RECORDING_RUNBOOK.md` の撮影後チェックを使う
 
 ## 画面の流れ
 
