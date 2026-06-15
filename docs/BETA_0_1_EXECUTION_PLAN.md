@@ -19,10 +19,12 @@ Beta 0.1の目的は、ElysiaAIを「開発者の手元で動くMVP」から「�
   - Tauri Rust buildは完了
   - `target\debug\app.exe` 起動まで到達
 - [x] GitHub Actionsの最新実行を確認する
-  - 最新はDependabot Updatesで `cancelled`
-  - 今回差分は未pushのため未実行
+  - 最新の `master` 実行は `ElysiaAI CI (Guardian)` / `ICE Runner Policy` ともにsuccess
+- [x] Dependabot alert #7はdismissせず、上流依存リスクとして追跡する
+  - Tracking issue: #104
+  - Beta 0.1では「既知の上流依存リスク」として扱う
 - [ ] macOS実機で `bun tauri dev` を確認する
-- [ ] 差分をpushし、GitHub Actionsを実行する
+- [x] 差分をpushし、GitHub Actionsを実行する
 
 ## P1: Demo Package
 
@@ -67,6 +69,7 @@ Beta 0.1の目的は、ElysiaAIを「開発者の手元で動くMVP」から「�
 - GitHub Actionsが成功している
 - Windows/macOSのTauri起動が確認済み
 - Secrets検出ゼロが維持されている
+- Dependabot alert #7はdismissせず、Issue #104で既知の上流依存リスクとして追跡している
 - 3分デモ動画が完成している
 - 3〜5人のテスターから初回フィードバックを回収している
 - P0/P1の重大不具合がIssue化されている

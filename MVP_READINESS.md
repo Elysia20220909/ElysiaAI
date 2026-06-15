@@ -110,8 +110,9 @@ flowchart LR
 - [x] GitHub Actionsの最新実行結果を確認した
 - [x] Ollama未起動時のUI文言をやさしい復帰案内へ調整した
 - [x] Security AgentでGitHub Actions実行履歴を取得できるようにした
+- [x] 最新差分をpushし、GitHub Actions成功を確認した
+- [x] Dependabot alert #7をdismissせず、上流依存リスクとしてIssue #104で追跡した
 - [ ] macOSで `bun tauri dev` を起動確認する
-- [ ] 今回の未push差分でGitHub Actionsを実行確認する
 
 ## ローカル検証結果
 
@@ -157,14 +158,13 @@ flowchart LR
 
 ### 残るCI論点
 
-- GitHub Actionsの最新実行は、2026-06-12作成 / 2026-06-13更新のDependabot Updatesで `cancelled`
-- GitHub Actionsの直近非Dependabot CIは、2026-06-03の `CI (minimal permissions)` がsuccess
-- 今回のローカル差分は未pushのため、この差分そのもののGitHub Actions結果は未実行
+- GitHub Actionsの最新 `master` 実行は `ElysiaAI CI (Guardian)` / `ICE Runner Policy` ともにsuccess
 - Pythonの `ruff check .` は、MVP外の既存スクリプト群まで含むため167件で引き続き失敗する
 - Pythonの `ruff format --check .` は、MVP外の既存スクリプト群69件で引き続き失敗する
 - Pythonの無指定 `pytest` は、MVP外の既存Discord / Marathon系スクリプトを収集してimport errorになる
 - CIのPython Ruff対象は、Kernel / MVP関連の守るべき範囲へ明示的に限定した
 - Biomeはlint成功。ただしschema 2.4.15とCLI 2.5.0の情報メッセージが残る
+- Dependabot alert #7は `glib 0.20.0` へ直接更新できず、Tauri/Wryの上流依存リスクとしてIssue #104で追跡する
 - macOS Tauri実機確認は未実施
 
 ## ローカル確認コマンド
@@ -217,6 +217,6 @@ bun tauri dev
 ## 次に残る仕事
 
 - macOSで `bun tauri dev` を実機確認する
-- 今回の差分をpushし、GitHub Actionsを確認する
+- Dependabot alert #7の上流更新をIssue #104で追跡する
 - 3分デモ動画を収録する
 - 3〜5人のテスターへBeta 0.1候補を投入する

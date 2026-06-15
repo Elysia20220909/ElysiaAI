@@ -34,6 +34,8 @@ tauri 2.11.2 / tauri-runtime 2.11.2 / tauri-runtime-wry 2.11.2
 
 `cargo update -p glib --precise 0.20.0 --manifest-path src-tauri/Cargo.toml` is not valid because `gtk 0.18.2` requires `glib ^0.18`. The project is on the latest compatible Tauri patch line, so the remaining alert is an upstream Tauri/Linux GTK3 stack constraint rather than an app-level direct dependency. Keep the alert open and revisit when Tauri/Wry moves away from `gtk 0.18` or exposes a compatible Linux WebView stack using `glib >= 0.20`.
 
+Tracking decision: do not dismiss Dependabot alert #7. Track the upstream fix in GitHub issue #104 and treat it as a known upstream dependency risk for Beta 0.1 unless an active exploit path or compatible upstream fix appears.
+
 ## How To Run
 
 ```bash
