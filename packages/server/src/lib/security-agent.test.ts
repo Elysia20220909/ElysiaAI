@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,6 +6,16 @@ import { buildSecurityAgentReport } from "./security-agent";
 
 const tempDirs: string[] = [];
 const originalFetch = globalThis.fetch;
+const githubEnvKeys = [
+	"GITHUB_REPOSITORY",
+	"GITHUB_REF_NAME",
+	"GITHUB_HEAD_REF",
+	"GITHUB_TOKEN",
+	"GH_TOKEN",
+] as const;
+const originalGithubEnv = Object.fromEntries(
+	githubEnvKeys.map((key) => [key, process.env[key]]),
+);
 
 async function makeWorkspace() {
 	const root = await mkdtemp(join(tmpdir(), "elysia-security-agent-"));
@@ -29,14 +39,28 @@ async function makeWorkspace() {
 	return root;
 }
 
-afterEach(async () => {
-	globalThis.fetch = originalFetch;
-	await Promise.all(
-		tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
-	);
-});
-
 describe("Security Agent report", () => {
+	beforeEach(() => {
+		for (const key of githubEnvKeys) delete process.env[key];
+	});
+
+	afterEach(async () => {
+		globalThis.fetch = originalFetch;
+		for (const key of githubEnvKeys) {
+			const value = originalGithubEnv[key];
+			if (value === undefined) {
+				delete process.env[key];
+			} else {
+				process.env[key] = value;
+			}
+		}
+		await Promise.all(
+			tempDirs
+				.splice(0)
+				.map((dir) => rm(dir, { recursive: true, force: true })),
+		);
+	});
+
 	test("returns clean MVP security gates when policy files are present", async () => {
 		const root = await makeWorkspace();
 		const report = await buildSecurityAgentReport(root);
