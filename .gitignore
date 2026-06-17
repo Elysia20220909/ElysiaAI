@@ -9,6 +9,33 @@ node_modules/
 .pnp
 .pnp.js
 
+# model artifacts
+models/
+checkpoints/
+weights/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.onnx
+*.gguf
+*.ggml
+
+# cache directories
+.cache/
+.cache-huggingface/
+.huggingface/
+torch_extensions/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.turbo/
+.vite/
+.next/cache/
+htmlcov/
+
 # testing
 /coverage
 /.tmp/
