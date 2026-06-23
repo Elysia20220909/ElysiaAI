@@ -29,6 +29,24 @@ ElysiaAI は、Bun / Elysia の高速な API 層、FastAPI の AI Kernel、Tauri
 
 ---
 
+## Beta 0.1 Preview
+
+Beta 0.1では、ElysiaAIを限定テスターが毎日試せるPrivate AI Cockpitへ近づけています。
+
+- WindowsでTauri起動、実Ollama `llama3.2`、RAG、Memory、Security Agentの縦通しを確認済みです。
+- macOS実機確認は `docs/MACOS_TAURI_DEV_VERIFICATION.md` に沿って実施予定です。
+- 3分デモ動画は `docs/DEMO_RECORDING_RUNBOOK.md` に沿って収録予定です。完成後、このREADMEへリンクを追加します。
+- リリース候補の概要は `docs/BETA_0_1_RELEASE_NOTES.md`、少人数テスター向け案内は `docs/BETA_0_1_TESTER_GUIDE.md` にまとめています。
+
+Known Issues:
+
+- macOSの `bun tauri dev` 実機確認は未完了です。
+- 3分デモ動画は未収録です。
+- Dependabot alert #7の `glib` は、Tauri / Wry / Linux GTK3系の上流依存リスクとしてIssue #104で追跡中です。
+- MVP外の古いPythonスクリプトまで含めた無指定テストは失敗する場合があるため、Beta 0.1ではMVP関連の対象範囲を明示して確認しています。
+
+---
+
 ## 機能
 
 - **ローカル AI デスクトップ**
@@ -158,6 +176,14 @@ Tauri デスクトップ:
 ```powershell
 bun run desktop
 ```
+
+デスクトップ配布前の静的点検:
+
+```powershell
+bun run desktop:check
+```
+
+配布候補を作る場合は、先に [Tauri Distribution Runbook](docs/TAURI_DISTRIBUTION_RUNBOOK.md) と [Release Checklist](docs/RELEASE_CHECKLIST.md) を確認してください。
 
 ### 5. Docker で試す場合
 
@@ -324,7 +350,7 @@ ElysiaAI は、以下のフェーズを経て進化します。
 - [ ] **AbyssRTOS Integration**: 完全隔離された実行環境
 - [x] **Shield Agent**: Rust 製防壁によるリアルタイム脅威検知
 - [ ] **Sovereign Mesh**: 分散型 AI OS ネットワーク
-- [ ] **Tauri Distribution**: デスクトップ版配布手順の整理
+- [ ] **Tauri Distribution**: `desktop:check` と配布Runbookは追加済み。署名、公証、自動更新、実機bundle検証は継続
 
 ---
 

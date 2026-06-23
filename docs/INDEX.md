@@ -11,6 +11,9 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | MVP readiness and current gaps | `MVP_READINESS.md` |
 | MVP demo scenario | `docs/MVP_DEMO_3_MINUTE_SCENARIO.md` |
 | Beta 0.1 execution plan | `docs/BETA_0_1_EXECUTION_PLAN.md` |
+| Beta 0.1 release notes | `docs/BETA_0_1_RELEASE_NOTES.md` |
+| Beta 0.1 tester guide | `docs/BETA_0_1_TESTER_GUIDE.md` |
+| Product priority implementation plan | `docs/PRODUCT_PRIORITY_IMPLEMENTATION_PLAN.md` |
 | Git workflow and branch discipline | `docs/GIT_WORKFLOW.md` |
 | Getting started | `docs/GETTING_STARTED.md` |
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |
@@ -34,6 +37,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Testing | `docs/TESTING.md` |
 | CI policy | `docs/CI_POLICY.md` |
 | Release checklist | `docs/RELEASE_CHECKLIST.md` |
+| Tauri distribution runbook | `docs/TAURI_DISTRIBUTION_RUNBOOK.md` |
 | Screenshots | `docs/SCREENSHOTS.md` |
 | Troubleshooting | `docs/TROUBLESHOOTING.md` |
 | Cloudflare Workers Builds | `docs/deployment/CLOUDFLARE_WORKERS_BUILDS.md` |

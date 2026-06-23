@@ -21,9 +21,12 @@ import {
 	appendMvpMemory,
 	buildLocalRagContext,
 	chatWithOllama,
+	getWorkspaceRoot,
 	readRecentMvpMemory,
 } from "../lib/mvp-local-ai";
 import { verifyNeuralAccessRequest } from "../lib/neural-auth-system";
+import { recordPrivacyEvent } from "../lib/privacy-ledger";
+import { buildProjectMemoryContext } from "../lib/project-memory";
 
 function requireCoreSession(request: Request) {
 	try {
@@ -70,6 +73,7 @@ export const elysiaCoreRoutes = new Elysia()
 				const incoming = body as {
 					messages?: unknown;
 					sessionId?: string;
+					projectId?: string;
 					stream?: boolean;
 					protocolFrame?: ElysiaCoreFrame<ChatRequestPayload>;
 				};
@@ -86,8 +90,19 @@ export const elysiaCoreRoutes = new Elysia()
 					[...messages].reverse().find((message) => message.role === "user")
 						?.content || "";
 				const emotion = detectCoreEmotion(lastUser);
-				const ragContext = await buildLocalRagContext(lastUser, { limit: 5 });
+				const ragContext = await buildLocalRagContext(lastUser, {
+					limit: 5,
+					userId: session.username,
+				});
 				const recentMemory = await readRecentMvpMemory(sessionId, { limit: 6 });
+				const root = getWorkspaceRoot();
+				const projectMemory = await buildProjectMemoryContext({
+					root,
+					ownerKey: session.username,
+					projectId: incoming.projectId,
+					query: lastUser,
+					limit: 5,
+				});
 				const kernelMessages = [
 					{ role: "system", content: coreSystemPrompt(session.username) },
 					...messages,
@@ -106,6 +121,12 @@ export const elysiaCoreRoutes = new Elysia()
 									(memory) =>
 										`[${memory.createdAt}] ${memory.role}: ${memory.content}`,
 								),
+							].join("\n")
+						: "",
+					projectMemory.context
+						? [
+								"Project memory follows. Use it only inside this project boundary.",
+								projectMemory.context,
 							].join("\n")
 						: "",
 				].filter(Boolean);
@@ -145,6 +166,23 @@ export const elysiaCoreRoutes = new Elysia()
 						emotion,
 						"local-ollama",
 					);
+					void recordPrivacyEvent({
+						root,
+						ownerKey: session.username,
+						projectId: incoming.projectId,
+						scope: "chat",
+						provider: "local-ollama",
+						direction: "local-service",
+						purpose: "Local chat response generated",
+						dataClass: "conversation",
+						payload: lastUser,
+						metadata: {
+							sessionId,
+							requestId,
+							sourceCount: ragContext.sources.length,
+							projectMemoryCount: projectMemory.memories.length,
+						},
+					}).catch(() => undefined);
 					const accepted = buildProtocolEvent(
 						"chat.accepted",
 						{
@@ -181,6 +219,7 @@ export const elysiaCoreRoutes = new Elysia()
 							context: ragContext.context,
 							mode: "local-ollama",
 							sources: ragContext.sources,
+							projectMemories: projectMemory.memories,
 						},
 					);
 					return createSseResponse(
@@ -192,12 +231,14 @@ export const elysiaCoreRoutes = new Elysia()
 								requestId,
 								context: ragContext.context,
 								sources: ragContext.sources,
+								projectMemories: projectMemory.memories,
 								protocolFrame: accepted,
 							},
 							{ content: ollama.content, protocolFrame: delta },
 							{
 								context: ragContext.context,
 								sources: ragContext.sources,
+								projectMemories: projectMemory.memories,
 								protocolFrame: complete,
 							},
 						],
@@ -235,6 +276,22 @@ export const elysiaCoreRoutes = new Elysia()
 								: "Elysia core is online, but the kernel returned an empty resonance.";
 						const kernelEmotion = data.emotion || emotion;
 						touchCoreSession(sessionId, session.username, 1, emotion, "kernel");
+						void recordPrivacyEvent({
+							root,
+							ownerKey: session.username,
+							projectId: incoming.projectId,
+							scope: "chat",
+							provider: "fastapi-kernel",
+							direction: "local-service",
+							purpose: "FastAPI kernel chat response generated",
+							dataClass: "conversation",
+							payload: lastUser,
+							metadata: {
+								sessionId,
+								requestId,
+								baseUrl: CONFIG.FASTAPI_BASE_URL,
+							},
+						}).catch(() => undefined);
 						const accepted = buildProtocolEvent(
 							"chat.accepted",
 							{
@@ -307,6 +364,18 @@ export const elysiaCoreRoutes = new Elysia()
 					fallback.emotion,
 					"local-fallback",
 				);
+				void recordPrivacyEvent({
+					root,
+					ownerKey: session.username,
+					projectId: incoming.projectId,
+					scope: "chat",
+					provider: "local-fallback",
+					direction: "local",
+					purpose: "Local fallback response generated",
+					dataClass: "conversation",
+					payload: lastUser,
+					metadata: { sessionId, requestId },
+				}).catch(() => undefined);
 				const accepted = buildProtocolEvent(
 					"chat.accepted",
 					{ requestId, sessionId, actor: "Elysia_AI_Core" },
@@ -375,6 +444,7 @@ export const elysiaCoreRoutes = new Elysia()
 				sessionId: t.Optional(t.String()),
 				stream: t.Optional(t.Boolean()),
 				protocolFrame: t.Optional(t.Any()),
+				projectId: t.Optional(t.String()),
 			}),
 		},
 	);

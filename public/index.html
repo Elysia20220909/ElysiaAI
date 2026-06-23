@@ -20,6 +20,9 @@
 			--soft-green: #e8f7ee;
 			--soft-amber: #fff3df;
 			--soft-red: #feecec;
+			--soft-rose: #fff0f3;
+			--soft-violet: #f3f0ff;
+			--soft-cyan: #e9f8fb;
 			font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 		}
 
@@ -35,7 +38,9 @@
 		}
 
 		button,
-		input {
+		input,
+		select,
+		textarea {
 			font: inherit;
 		}
 
@@ -267,6 +272,27 @@
 			background: #ffffff;
 		}
 
+		.message.assistant.emotion-joy .bubble {
+			border-color: #f1d29d;
+			background: #fffaf0;
+		}
+
+		.message.assistant.emotion-affection .bubble {
+			border-color: #f4c6d4;
+			background: var(--soft-rose);
+		}
+
+		.message.assistant.emotion-exhaustion .bubble,
+		.message.assistant.emotion-loneliness .bubble {
+			border-color: #d8cffa;
+			background: var(--soft-violet);
+		}
+
+		.message.assistant.emotion-focused .bubble {
+			border-color: #a8dce7;
+			background: var(--soft-cyan);
+		}
+
 		.composer {
 			display: grid;
 			grid-template-columns: minmax(0, 1fr) auto;
@@ -276,7 +302,9 @@
 			margin: 0 auto;
 		}
 
-		input {
+		input,
+		select,
+		textarea {
 			width: 100%;
 			min-height: 42px;
 			border: 1px solid var(--line);
@@ -287,12 +315,153 @@
 			outline: none;
 		}
 
-		input:focus {
+		textarea {
+			min-height: 86px;
+			padding: 10px 12px;
+			resize: vertical;
+			line-height: 1.5;
+		}
+
+		input:focus,
+		select:focus,
+		textarea:focus {
 			border-color: var(--blue);
 			box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
 		}
 
-		.search-box {
+		.search-box,
+		.project-box,
+		.memory-box,
+		.artifact-box,
+		.approval-box {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			gap: 8px;
+		}
+
+		.memory-box,
+		.artifact-box,
+		.approval-box {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.artifact-content {
+			min-height: 132px;
+			font-family: Consolas, "SFMono-Regular", ui-monospace, monospace;
+			font-size: 12px;
+		}
+
+		.artifact-preview {
+			max-height: 220px;
+			overflow: auto;
+		}
+
+		.artifact-preview pre {
+			margin: 0;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+			font-family: Consolas, "SFMono-Regular", ui-monospace, monospace;
+			font-size: 12px;
+			line-height: 1.55;
+		}
+
+		.checkbox-row {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.checkbox-row input {
+			width: 16px;
+			min-height: 16px;
+			padding: 0;
+		}
+
+		.voice-box {
+			display: grid;
+			gap: 10px;
+		}
+
+		.voice-grid {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) 92px;
+			gap: 8px;
+		}
+
+		.voice-field {
+			display: grid;
+			gap: 5px;
+		}
+
+		.range-row {
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr) 42px;
+			align-items: center;
+			gap: 8px;
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		input[type="range"] {
+			min-height: 28px;
+			padding: 0;
+		}
+
+		.voice-status {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 8px;
+		}
+
+		.tester-box {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 8px;
+		}
+
+		.tester-box input {
+			grid-column: span 2;
+		}
+
+		.emotion-badge {
+			border: 1px solid #bfd2ff;
+			border-radius: 999px;
+			background: var(--soft-blue);
+			color: var(--blue);
+			font-size: 11px;
+			padding: 4px 8px;
+			white-space: nowrap;
+		}
+
+		.emotion-badge.emotion-joy {
+			border-color: #f1d29d;
+			background: var(--soft-amber);
+			color: var(--amber);
+		}
+
+		.emotion-badge.emotion-affection {
+			border-color: #f4c6d4;
+			background: var(--soft-rose);
+			color: #be185d;
+		}
+
+		.emotion-badge.emotion-exhaustion,
+		.emotion-badge.emotion-loneliness {
+			border-color: #d8cffa;
+			background: var(--soft-violet);
+			color: #6d28d9;
+		}
+
+		.emotion-badge.emotion-focused {
+			border-color: #a8dce7;
+			background: var(--soft-cyan);
+			color: #0e7490;
+		}
+
+		.knowledge-box {
 			display: grid;
 			grid-template-columns: minmax(0, 1fr) auto;
 			gap: 8px;
@@ -303,6 +472,11 @@
 			border: 1px solid var(--line);
 			border-radius: 8px;
 			background: var(--panel);
+		}
+
+		.item.selected {
+			border-color: #bfd2ff;
+			background: var(--soft-blue);
 		}
 
 		.path {
@@ -432,10 +606,16 @@
 
 			.topbar,
 			.composer,
-			.search-box {
+			.search-box,
+			.tester-box,
+			.voice-grid {
 				grid-template-columns: 1fr;
 				display: grid;
 				align-items: stretch;
+			}
+
+			.tester-box input {
+				grid-column: auto;
 			}
 
 			.message {
@@ -503,6 +683,209 @@
 
 		<aside class="inspector">
 			<section>
+				<div class="section-heading">
+					<h2>Setup Wizard</h2>
+					<button class="small" data-setup-refresh type="button">Check</button>
+				</div>
+				<div class="source-list" data-setup-summary></div>
+				<div class="section source-list" data-setup-list></div>
+			</section>
+
+			<section class="section">
+				<div class="section-heading">
+					<h2>Daily Desk Brief</h2>
+					<button class="small" data-brief-refresh type="button">Refresh</button>
+				</div>
+				<div class="source-list" data-brief-summary></div>
+				<div class="section source-list" data-brief-list></div>
+			</section>
+
+			<section class="section">
+				<div class="section-heading">
+					<h2>Tester Analytics</h2>
+					<button class="small" data-tester-refresh type="button">Refresh</button>
+				</div>
+				<div class="summary-grid" data-tester-summary></div>
+				<form class="tester-box section" data-tester-form>
+					<select data-tester-area aria-label="Tester area">
+						<option value="setup">Setup</option>
+						<option value="chat">Chat</option>
+						<option value="knowledge">Knowledge</option>
+						<option value="memory">Memory</option>
+						<option value="artifact">Artifact</option>
+						<option value="voice">Voice</option>
+						<option value="privacy">Privacy</option>
+						<option value="approval">Approval</option>
+						<option value="tauri">Tauri</option>
+					</select>
+					<select data-tester-outcome aria-label="Tester outcome">
+						<option value="success">Success</option>
+						<option value="attention">Attention</option>
+						<option value="blocked">Blocked</option>
+						<option value="error">Error</option>
+						<option value="neutral">Neutral</option>
+					</select>
+					<select data-tester-severity aria-label="Tester severity">
+						<option value="info">Info</option>
+						<option value="low">Low</option>
+						<option value="medium">Medium</option>
+						<option value="high">High</option>
+					</select>
+					<input
+						data-tester-duration
+						type="number"
+						min="0"
+						step="1"
+						placeholder="minutes"
+						aria-label="Duration minutes"
+					/>
+					<button data-tester-add type="submit">Log</button>
+				</form>
+				<div class="section source-list" data-tester-recommendations></div>
+				<div class="section source-list" data-tester-events></div>
+			</section>
+
+			<section class="section">
+				<div class="section-heading">
+					<h2>Voice / Emotion</h2>
+					<button class="small" data-voice-test type="button">Test</button>
+				</div>
+				<div class="voice-box">
+					<label class="checkbox-row">
+						<input data-voice-enabled type="checkbox" />
+						<span>返答をローカル音声で読む</span>
+					</label>
+					<div class="voice-grid">
+						<label class="voice-field">
+							<span class="muted">Preset</span>
+							<select data-voice-preset aria-label="Voice preset">
+								<option value="auto">Auto emotion</option>
+								<option value="calm">Calm</option>
+								<option value="bright">Bright</option>
+								<option value="soft">Soft</option>
+								<option value="focused">Focused</option>
+							</select>
+						</label>
+						<label class="voice-field">
+							<span class="muted">Speaker</span>
+							<input data-voice-speaker type="number" min="0" max="999" step="1" />
+						</label>
+					</div>
+					<label class="voice-field">
+						<span class="muted">Read aloud</span>
+						<select data-voice-read-mode aria-label="Read aloud mode">
+							<option value="summary">Summary</option>
+							<option value="full">Full</option>
+							<option value="silent-badge">Silent Badge</option>
+						</select>
+					</label>
+					<label class="range-row">
+						<span>Speed</span>
+						<input data-voice-speed type="range" min="0.75" max="1.4" step="0.01" />
+						<span data-voice-speed-value>1.04</span>
+					</label>
+					<div class="item voice-status" data-voice-status>
+						<span class="muted">Voice UIは待機中です。</span>
+						<span class="emotion-badge">neutral</span>
+					</div>
+				</div>
+			</section>
+
+			<section>
+				<div class="section-heading">
+					<h2>Project Memory</h2>
+					<button class="small" data-project-refresh type="button">Refresh</button>
+				</div>
+				<select data-project-select aria-label="Project"></select>
+				<form class="project-box section" data-project-form>
+					<input
+						data-project-name
+						type="text"
+						autocomplete="off"
+						placeholder="新しいプロジェクト名"
+						maxlength="120"
+					/>
+					<button data-project-create type="submit">New</button>
+				</form>
+				<form class="memory-box section" data-project-memory-form>
+					<input
+						data-project-memory-title
+						type="text"
+						autocomplete="off"
+						placeholder="記憶の見出し"
+						maxlength="160"
+					/>
+					<textarea
+						data-project-memory-content
+						placeholder="このプロジェクトで覚えておくこと"
+						maxlength="2400"
+					></textarea>
+					<label class="checkbox-row">
+						<input data-project-memory-pinned type="checkbox" />
+						<span>大切な記憶として根づかせる</span>
+					</label>
+					<button data-project-memory-add type="submit">Remember</button>
+				</form>
+				<div class="section source-list" data-project-memory-list></div>
+			</section>
+
+			<section>
+				<div class="section-heading">
+					<h2>Artifact Workbench</h2>
+					<div class="toolbar">
+						<button class="small" data-artifact-new type="button">New</button>
+						<button class="small" data-artifact-refresh type="button">Refresh</button>
+					</div>
+				</div>
+				<form class="artifact-box section" data-artifact-form>
+					<input
+						data-artifact-title
+						type="text"
+						autocomplete="off"
+						placeholder="成果物タイトル"
+						maxlength="160"
+					/>
+					<select data-artifact-kind aria-label="Artifact kind">
+						<option value="markdown">Markdown</option>
+						<option value="checklist">Checklist</option>
+						<option value="code">Code</option>
+						<option value="mermaid">Mermaid</option>
+						<option value="json">JSON</option>
+					</select>
+					<textarea
+						class="artifact-content"
+						data-artifact-content
+						placeholder="会話から残したい成果物、設計メモ、コード、チェックリスト"
+						maxlength="200000"
+					></textarea>
+					<div class="toolbar">
+						<button data-artifact-save type="submit">Save</button>
+						<button class="small" data-artifact-from-answer type="button">Last Answer</button>
+					</div>
+				</form>
+				<div class="section item artifact-preview" data-artifact-preview>
+					<div class="muted">成果物を選ぶか、Last Answerから作成できます。</div>
+				</div>
+				<div class="section source-list" data-artifact-list></div>
+			</section>
+
+			<section>
+				<div class="section-heading">
+					<h2>Knowledge</h2>
+					<button class="small" data-knowledge-refresh type="button">Refresh</button>
+				</div>
+				<form class="knowledge-box" data-knowledge-form>
+					<input
+						data-knowledge-file
+						type="file"
+						accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf"
+					/>
+					<button data-knowledge-import type="submit">Import</button>
+				</form>
+				<div class="section source-list" data-knowledge-list></div>
+			</section>
+
+			<section class="section">
 				<h2>ローカルファイル</h2>
 				<form class="search-box" data-search-form>
 					<input
@@ -520,6 +903,51 @@
 			<section class="section">
 				<h2>参照した文脈</h2>
 				<div class="source-list" data-sources></div>
+			</section>
+
+			<section class="section">
+				<div class="section-heading">
+					<h2>Privacy Ledger</h2>
+					<button class="small" data-privacy-refresh type="button">Refresh</button>
+				</div>
+				<div class="summary-grid" data-privacy-summary></div>
+				<div class="section source-list" data-privacy-posture></div>
+				<div class="section source-list" data-privacy-events></div>
+			</section>
+
+			<section class="section">
+				<div class="section-heading">
+					<h2>Agent Approval Gate</h2>
+					<button class="small" data-approval-refresh type="button">Refresh</button>
+				</div>
+				<div class="summary-grid" data-approval-summary></div>
+				<form class="approval-box section" data-approval-form>
+					<input
+						data-approval-tool
+						type="text"
+						autocomplete="off"
+						placeholder="tool name: apply_patch / shell / slack"
+						maxlength="120"
+					/>
+					<select data-approval-action aria-label="Action class">
+						<option value="write-file">write-file</option>
+						<option value="delete-file">delete-file</option>
+						<option value="os-command">os-command</option>
+						<option value="external-send">external-send</option>
+						<option value="network-call">network-call</option>
+						<option value="secret-access">secret-access</option>
+						<option value="deploy">deploy</option>
+						<option value="read">read</option>
+						<option value="unknown">unknown</option>
+					</select>
+					<textarea
+						data-approval-request
+						placeholder="実行前に確認したい操作内容"
+						maxlength="4000"
+					></textarea>
+					<button data-approval-request-button type="submit">Request Approval</button>
+				</form>
+				<div class="section source-list" data-approval-list></div>
 			</section>
 
 			<section class="section">
@@ -547,21 +975,82 @@
 			loading: false,
 			mode: "idle",
 			sources: [],
+			projects: [],
+			selectedProjectId: localStorage.getItem("elysia_project_id") || "",
+			artifacts: [],
+			selectedArtifactId: "",
+			setup: null,
+			brief: null,
+			tester: null,
+			testerBootRecorded: false,
+			testerSessionId:
+				localStorage.getItem("elysia_tester_session") ||
+				`tester-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+			voiceEnabled: localStorage.getItem("elysia_voice_enabled") === "true",
+			voicePreset: localStorage.getItem("elysia_voice_preset") || "auto",
+			voiceReadMode: localStorage.getItem("elysia_voice_read_mode") || "summary",
+			voiceSpeaker: Number(localStorage.getItem("elysia_voice_speaker") || "2"),
+			voiceSpeed: Number(localStorage.getItem("elysia_voice_speed") || "1.04"),
+			voiceLastEmotion: "neutral",
+			voiceAudio: null,
+			voiceBusy: false,
 		};
 
 		localStorage.setItem("elysia_mvp_session", state.sessionId);
+		localStorage.setItem("elysia_tester_session", state.testerSessionId);
 
 		const el = {
+			approvalAction: document.querySelector("[data-approval-action]"),
+			approvalForm: document.querySelector("[data-approval-form]"),
+			approvalList: document.querySelector("[data-approval-list]"),
+			approvalRefresh: document.querySelector("[data-approval-refresh]"),
+			approvalRequest: document.querySelector("[data-approval-request]"),
+			approvalRequestButton: document.querySelector("[data-approval-request-button]"),
+			approvalSummary: document.querySelector("[data-approval-summary]"),
+			approvalTool: document.querySelector("[data-approval-tool]"),
+			artifactContent: document.querySelector("[data-artifact-content]"),
+			artifactForm: document.querySelector("[data-artifact-form]"),
+			artifactFromAnswer: document.querySelector("[data-artifact-from-answer]"),
+			artifactKind: document.querySelector("[data-artifact-kind]"),
+			artifactList: document.querySelector("[data-artifact-list]"),
+			artifactNew: document.querySelector("[data-artifact-new]"),
+			artifactPreview: document.querySelector("[data-artifact-preview]"),
+			artifactRefresh: document.querySelector("[data-artifact-refresh]"),
+			artifactSave: document.querySelector("[data-artifact-save]"),
+			artifactTitle: document.querySelector("[data-artifact-title]"),
 			auth: document.querySelector("[data-auth]"),
+			briefList: document.querySelector("[data-brief-list]"),
+			briefRefresh: document.querySelector("[data-brief-refresh]"),
+			briefSummary: document.querySelector("[data-brief-summary]"),
 			chat: document.querySelector("[data-chat]"),
 			clearMemory: document.querySelector("[data-clear-memory]"),
 			composer: document.querySelector("[data-composer]"),
 			empty: document.querySelector("[data-empty]"),
 			gates: document.querySelector("[data-gates]"),
 			input: document.querySelector("[data-input]"),
+			knowledgeFile: document.querySelector("[data-knowledge-file]"),
+			knowledgeForm: document.querySelector("[data-knowledge-form]"),
+			knowledgeImport: document.querySelector("[data-knowledge-import]"),
+			knowledgeList: document.querySelector("[data-knowledge-list]"),
+			knowledgeRefresh: document.querySelector("[data-knowledge-refresh]"),
 			memory: document.querySelector("[data-memory]"),
 			messages: document.querySelector("[data-messages]"),
 			mode: document.querySelector("[data-mode]"),
+			projectCreate: document.querySelector("[data-project-create]"),
+			projectForm: document.querySelector("[data-project-form]"),
+			projectMemoryAdd: document.querySelector("[data-project-memory-add]"),
+			projectMemoryContent: document.querySelector("[data-project-memory-content]"),
+			projectMemoryForm: document.querySelector("[data-project-memory-form]"),
+			projectMemoryList: document.querySelector("[data-project-memory-list]"),
+			projectMemoryPinned: document.querySelector("[data-project-memory-pinned]"),
+			projectMemoryTitle: document.querySelector("[data-project-memory-title]"),
+			projectName: document.querySelector("[data-project-name]"),
+			projectRefresh: document.querySelector("[data-project-refresh]"),
+			projectSelect: document.querySelector("[data-project-select]"),
+			privacyEvents: document.querySelector("[data-privacy-events]"),
+			privacyPosture: document.querySelector("[data-privacy-posture]"),
+			privacyRefresh: document.querySelector("[data-privacy-refresh]"),
+			privacySummary: document.querySelector("[data-privacy-summary]"),
 			searchButton: document.querySelector("[data-search-button]"),
 			searchForm: document.querySelector("[data-search-form]"),
 			searchInput: document.querySelector("[data-search-input]"),
@@ -571,7 +1060,28 @@
 			securityStatus: document.querySelector("[data-security-status]"),
 			send: document.querySelector("[data-send]"),
 			session: document.querySelector("[data-session]"),
+			setupList: document.querySelector("[data-setup-list]"),
+			setupRefresh: document.querySelector("[data-setup-refresh]"),
+			setupSummary: document.querySelector("[data-setup-summary]"),
 			sources: document.querySelector("[data-sources]"),
+			testerAdd: document.querySelector("[data-tester-add]"),
+			testerArea: document.querySelector("[data-tester-area]"),
+			testerDuration: document.querySelector("[data-tester-duration]"),
+			testerEvents: document.querySelector("[data-tester-events]"),
+			testerForm: document.querySelector("[data-tester-form]"),
+			testerOutcome: document.querySelector("[data-tester-outcome]"),
+			testerRecommendations: document.querySelector("[data-tester-recommendations]"),
+			testerRefresh: document.querySelector("[data-tester-refresh]"),
+			testerSeverity: document.querySelector("[data-tester-severity]"),
+			testerSummary: document.querySelector("[data-tester-summary]"),
+			voiceEnabled: document.querySelector("[data-voice-enabled]"),
+			voicePreset: document.querySelector("[data-voice-preset]"),
+			voiceReadMode: document.querySelector("[data-voice-read-mode]"),
+			voiceSpeaker: document.querySelector("[data-voice-speaker]"),
+			voiceSpeed: document.querySelector("[data-voice-speed]"),
+			voiceSpeedValue: document.querySelector("[data-voice-speed-value]"),
+			voiceStatus: document.querySelector("[data-voice-status]"),
+			voiceTest: document.querySelector("[data-voice-test]"),
 		};
 
 		function readCookie(name) {
@@ -605,6 +1115,225 @@
 				headers.Authorization = `Bearer ${state.accessToken}`;
 			if (state.csrfToken) headers["X-CSRF-Token"] = state.csrfToken;
 			return headers;
+		}
+
+		function emotionLabel(emotion) {
+			const labels = {
+				neutral: "neutral",
+				joy: "joy",
+				affection: "affection",
+				exhaustion: "exhaustion",
+				loneliness: "loneliness",
+				focused: "focused",
+			};
+			return labels[String(emotion || "").toLowerCase()] || "neutral";
+		}
+
+		function emotionClass(emotion) {
+			return `emotion-${emotionLabel(emotion)}`;
+		}
+
+		function parseJsonObject(value) {
+			try {
+				const parsed = JSON.parse(value || "{}");
+				return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+					? parsed
+					: {};
+			} catch {
+				return {};
+			}
+		}
+
+		function summarizeForSpeech(text) {
+			const normalized = String(text || "")
+				.replace(/```[\s\S]*?```/g, "コードブロックを省略します。")
+				.replace(/\s+/g, " ")
+				.trim();
+			const sentences = normalized
+				.split(/(?<=[。.!?！？])\s+/)
+				.filter(Boolean)
+				.slice(0, 3)
+				.join(" ");
+			return (sentences || normalized).slice(0, 520);
+		}
+
+		function speechTextForMode(text, mode) {
+			const normalized = String(text || "").replace(/\s+/g, " ").trim();
+			if (mode === "full") return normalized.slice(0, 3800);
+			return summarizeForSpeech(normalized);
+		}
+
+		function setVoiceStatus(message, emotion = state.voiceLastEmotion) {
+			if (!el.voiceStatus) return;
+			el.voiceStatus.innerHTML = `
+				<span class="muted">${escapeHtml(message)}</span>
+				<span class="emotion-badge ${emotionClass(emotion)}">${escapeHtml(emotionLabel(emotion))}</span>
+			`;
+		}
+
+		function syncVoiceControls() {
+			if (!el.voiceEnabled) return;
+			el.voiceEnabled.checked = state.voiceEnabled;
+			el.voicePreset.value = state.voicePreset;
+			el.voiceReadMode.value = state.voiceReadMode;
+			el.voiceSpeaker.value = String(state.voiceSpeaker || 2);
+			el.voiceSpeed.value = String(state.voiceSpeed || 1.04);
+			el.voiceSpeedValue.textContent = Number(state.voiceSpeed || 1.04).toFixed(2);
+			setVoiceStatus(
+				state.voiceReadMode === "silent-badge"
+					? "Silent Badgeです。声を出さず、感情だけ表示します。"
+					: state.voiceEnabled
+					? "Voice UIはONです。返答完了後にローカルで読み上げます。"
+					: "Voice UIはOFFです。必要な時だけ静かに起こせます。",
+			);
+		}
+
+		function persistVoiceSettings() {
+			localStorage.setItem("elysia_voice_enabled", String(state.voiceEnabled));
+			localStorage.setItem("elysia_voice_preset", state.voicePreset);
+			localStorage.setItem("elysia_voice_read_mode", state.voiceReadMode);
+			localStorage.setItem("elysia_voice_speaker", String(state.voiceSpeaker || 2));
+			localStorage.setItem("elysia_voice_speed", String(state.voiceSpeed || 1.04));
+		}
+
+		function setVoiceEnabled(enabled) {
+			state.voiceEnabled = Boolean(enabled);
+			persistVoiceSettings();
+			syncVoiceControls();
+			refreshDailyDeskBrief().catch(() => undefined);
+			void recordTesterUiEvent({
+				eventType: "feature",
+				area: "voice",
+				action: "toggle",
+				outcome: "success",
+				metadata: { enabled: state.voiceEnabled },
+			}).catch(() => undefined);
+		}
+
+		async function wireTauriVoiceMenu() {
+			const tauriEvent = window.__TAURI__?.event;
+			if (!tauriEvent?.listen) return;
+			try {
+				await tauriEvent.listen("elysia://voice-toggle", (event) => {
+					setVoiceEnabled(Boolean(event.payload?.enabled));
+				});
+			} catch {
+				// Browser mode or older Tauri bridge: ignore.
+			}
+		}
+
+		async function loadVoiceSettings() {
+			try {
+				await ensureAuth();
+				const response = await fetch("/api/voice/settings", {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json().catch(() => ({}));
+				if (!response.ok) throw new Error(data.error || "voice settings failed");
+				if (!localStorage.getItem("elysia_voice_speaker")) {
+					state.voiceSpeaker = Number(data.defaults?.speakerId || state.voiceSpeaker || 2);
+				}
+				if (!localStorage.getItem("elysia_voice_speed")) {
+					state.voiceSpeed = Number(data.defaults?.speedScale || state.voiceSpeed || 1.04);
+				}
+			} catch (error) {
+				setVoiceStatus(
+					error instanceof Error ? error.message : "Voice settings are unavailable.",
+				);
+			} finally {
+				syncVoiceControls();
+			}
+		}
+
+		async function speakText(text, emotion = "neutral", force = false) {
+			if (!force && !state.voiceEnabled) return;
+			if (!force && state.voiceReadMode === "silent-badge") {
+				state.voiceLastEmotion = emotionLabel(emotion);
+				setVoiceStatus("Silent Badgeとして感情だけ表示しました。", state.voiceLastEmotion);
+				void recordTesterUiEvent({
+					eventType: "feature",
+					area: "voice",
+					action: "silent-badge",
+					outcome: "success",
+					metadata: { force },
+				}).catch(() => undefined);
+				await refreshDailyDeskBrief().catch(() => undefined);
+				return;
+			}
+			const spokenText = speechTextForMode(
+				text,
+				force ? "summary" : state.voiceReadMode,
+			);
+			if (!spokenText || state.voiceBusy) return;
+
+			await ensureAuth();
+			const startedAt = performance.now();
+			state.voiceBusy = true;
+			state.voiceLastEmotion = emotionLabel(emotion);
+			setVoiceStatus("VOICEVOXで音声を合成しています。", state.voiceLastEmotion);
+			try {
+				if (state.voiceAudio) {
+					state.voiceAudio.pause();
+					state.voiceAudio = null;
+				}
+				const response = await fetch("/api/voice/tts", {
+					method: "POST",
+					credentials: "same-origin",
+					headers: authHeaders(),
+					body: JSON.stringify({
+						text: spokenText,
+						emotion: state.voiceLastEmotion,
+						preset: state.voicePreset,
+						readMode: force ? "summary" : state.voiceReadMode,
+						projectId: state.selectedProjectId || undefined,
+						speakerId: Number(state.voiceSpeaker || 2),
+						speedScale: Number(state.voiceSpeed || 1.04),
+					}),
+				});
+				const data = await response.json().catch(() => ({}));
+				if (!response.ok) throw new Error(data.error || "voice synthesis failed");
+				const audio = new Audio(
+					`data:${data.mimeType || "audio/wav"};base64,${data.audio}`,
+				);
+				state.voiceAudio = audio;
+				audio.onended = () => {
+					state.voiceBusy = false;
+					setVoiceStatus("読み上げが完了しました。", state.voiceLastEmotion);
+				};
+				audio.onerror = () => {
+					state.voiceBusy = false;
+					setVoiceStatus("音声の再生に失敗しました。", state.voiceLastEmotion);
+				};
+				await audio.play();
+				setVoiceStatus("ElysiaAIが読み上げています。", state.voiceLastEmotion);
+				void recordTesterUiEvent({
+					eventType: "feature",
+					area: "voice",
+					action: "tts",
+					outcome: "success",
+					durationMs: Math.round(performance.now() - startedAt),
+					metadata: { force, speakerId: Number(state.voiceSpeaker || 2) },
+				}).catch(() => undefined);
+				await refreshPrivacyLedger();
+				await refreshDailyDeskBrief().catch(() => undefined);
+			} catch (error) {
+				state.voiceBusy = false;
+				setVoiceStatus(
+					error instanceof Error ? error.message : "Voice synthesis failed.",
+					state.voiceLastEmotion,
+				);
+				void recordTesterUiEvent({
+					eventType: "friction",
+					area: "voice",
+					action: "tts",
+					outcome: "error",
+					severity: "medium",
+					durationMs: Math.round(performance.now() - startedAt),
+					payload: error instanceof Error ? error.message : "voice synthesis failed",
+				}).catch(() => undefined);
+				await refreshPrivacyLedger().catch(() => undefined);
+			}
 		}
 
 		async function ensureAuth() {
@@ -654,8 +1383,16 @@
 			el.messages.innerHTML = state.messages
 				.map(
 					(message) => `
-						<article class="message ${message.role}">
-							<p class="muted">${message.role === "user" ? "You" : "ElysiaAI"}</p>
+						<article class="message ${message.role} ${
+							message.role === "assistant" ? emotionClass(message.emotion) : ""
+						}">
+							<p class="muted">${
+								message.role === "user" ? "You" : "ElysiaAI"
+							}${
+								message.role === "assistant" && message.emotion
+									? ` · ${escapeHtml(emotionLabel(message.emotion))}`
+									: ""
+							}</p>
 							<div class="bubble">${escapeHtml(message.content)}</div>
 						</article>
 					`,
@@ -697,6 +1434,836 @@
 					`,
 				)
 				.join("");
+		}
+
+		function renderKnowledge(sources) {
+			if (!sources.length) {
+				el.knowledgeList.innerHTML = `<div class="item muted">まだ投入された文書はありません。</div>`;
+				return;
+			}
+			el.knowledgeList.innerHTML = sources
+				.map(
+					(source) => `
+						<div class="item">
+							<div class="item-head">
+								<div class="path">${escapeHtml(source.name)}</div>
+								<div class="toolbar">
+									<button class="small" data-toggle-knowledge="${escapeHtml(source.id)}" data-next-status="${
+										source.status === "disabled" ? "ready" : "disabled"
+									}" type="button">${source.status === "disabled" ? "Enable" : "Disable"}</button>
+									<button class="small" data-reindex-knowledge="${escapeHtml(source.id)}" type="button">Reindex</button>
+									<button class="small danger" data-delete-knowledge="${escapeHtml(source.id)}" type="button">削除</button>
+								</div>
+							</div>
+							<div class="snippet">
+								${escapeHtml(source.status || "ready")} · ${escapeHtml(source.extractor || "plain-text")} ·
+								${Number(source.chunkCount || 0)} chunks · ${Math.round(Number(source.size || 0) / 1024)} KB<br />
+								${escapeHtml(source.updatedAt || source.createdAt || "")}
+							</div>
+						</div>
+					`,
+				)
+				.join("");
+		}
+
+		function renderProjects(projects, defaultProject) {
+			state.projects = projects || [];
+			if (!state.selectedProjectId && defaultProject?.id) {
+				state.selectedProjectId = defaultProject.id;
+				localStorage.setItem("elysia_project_id", state.selectedProjectId);
+			}
+			if (
+				state.selectedProjectId &&
+				!state.projects.some((project) => project.id === state.selectedProjectId)
+			) {
+				state.selectedProjectId = state.projects[0]?.id || "";
+				localStorage.setItem("elysia_project_id", state.selectedProjectId);
+			}
+			el.projectSelect.innerHTML = state.projects
+				.map(
+					(project) => `
+						<option value="${escapeHtml(project.id)}" ${
+							project.id === state.selectedProjectId ? "selected" : ""
+						}>${escapeHtml(project.name)}</option>
+					`,
+				)
+				.join("");
+		}
+
+		function gardenLabel(memory) {
+			if (memory.gardenState === "rooted") return "根づいた記憶";
+			if (memory.gardenState === "withered") return "薄れた記憶";
+			if (memory.gardenState === "compost") return "忘却候補";
+			return "芽の記憶";
+		}
+
+		function memoryEmotion(memory) {
+			return emotionLabel(parseJsonObject(memory.metadataJson).emotion);
+		}
+
+		function renderProjectMemory(memories) {
+			if (!state.selectedProjectId) {
+				el.projectMemoryList.innerHTML = `<div class="item muted">プロジェクトを選んでください。</div>`;
+				return;
+			}
+			if (!memories.length) {
+				el.projectMemoryList.innerHTML = `<div class="item muted">このプロジェクトの記憶はまだありません。</div>`;
+				return;
+			}
+			el.projectMemoryList.innerHTML = memories
+				.map(
+					(memory) => `
+						<div class="item">
+							<div class="item-head">
+								<div class="path">${escapeHtml(memory.title || gardenLabel(memory))}</div>
+								<div class="toolbar">
+									<button class="small" data-toggle-project-memory="${escapeHtml(memory.id)}" data-next-status="${
+										memory.status === "active" ? "disabled" : "active"
+									}" type="button">${memory.status === "active" ? "使わない" : "使う"}</button>
+									<button class="small" data-pin-project-memory="${escapeHtml(memory.id)}" data-next-pinned="${
+										memory.pinned ? "false" : "true"
+									}" type="button">${memory.pinned ? "Unpin" : "Pin"}</button>
+									<button class="small danger" data-forget-project-memory="${escapeHtml(memory.id)}" type="button">忘れる</button>
+								</div>
+							</div>
+							<div class="snippet">
+								${escapeHtml(gardenLabel(memory))} · ${escapeHtml(memory.status)} ·
+								strength ${Math.round(Number(memory.strength || 0) * 100)} · used ${Number(memory.useCount || 0)}
+								<span class="emotion-badge ${emotionClass(memoryEmotion(memory))}">${escapeHtml(memoryEmotion(memory))}</span><br />
+								${escapeHtml(memory.content)}
+							</div>
+						</div>
+					`,
+				)
+				.join("");
+		}
+
+		function renderDailyDeskBrief(brief) {
+			state.brief = brief || null;
+			if (!brief) {
+				el.briefSummary.innerHTML = `<div class="item muted">Daily Desk Briefは待機中です。</div>`;
+				el.briefList.innerHTML = "";
+				return;
+			}
+			el.briefSummary.innerHTML = `
+				<div class="item">
+					<div class="item-head">
+						<div class="path">${escapeHtml(brief.summary)}</div>
+						<span class="emotion-badge ${emotionClass(brief.emotion?.dominant)}">${escapeHtml(brief.emotion?.dominant || "neutral")}</span>
+					</div>
+					<div class="snippet">
+						${escapeHtml(brief.project?.name || "Daily Desk")} ·
+						${Number(brief.project?.memoryCount || 0)} memories ·
+						${escapeHtml(brief.voice?.readMode || "summary")}
+					</div>
+				</div>
+			`;
+			const notes = [
+				...(brief.notes || []),
+				...(brief.nextActions || []).map((action) => `Next: ${action}`),
+			].slice(0, 8);
+			el.briefList.innerHTML = notes.length
+				? notes
+						.map(
+							(note) => `
+								<div class="item">
+									<div class="snippet">${escapeHtml(note)}</div>
+								</div>
+							`,
+						)
+						.join("")
+				: `<div class="item muted">今日の短い便りはまだありません。</div>`;
+		}
+
+		async function refreshDailyDeskBrief() {
+			try {
+				await ensureAuth();
+				el.briefRefresh.disabled = true;
+				const params = new URLSearchParams();
+				if (state.selectedProjectId) params.set("projectId", state.selectedProjectId);
+				params.set("voiceEnabled", String(state.voiceEnabled));
+				params.set("voiceReadMode", state.voiceReadMode);
+				params.set("lastEmotion", state.voiceLastEmotion);
+				const response = await fetch(`/api/daily-desk/brief?${params.toString()}`, {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "daily desk brief failed");
+				renderDailyDeskBrief(data.brief);
+			} catch (error) {
+				el.briefSummary.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Daily Desk Brief is locked."
+				}</div>`;
+				el.briefList.innerHTML = "";
+			} finally {
+				el.briefRefresh.disabled = false;
+			}
+		}
+
+		function testerTone(event) {
+			if (["blocked", "error"].includes(event.outcome) || event.severity === "high") {
+				return "critical";
+			}
+			if (event.outcome === "attention" || event.severity === "medium") {
+				return "attention";
+			}
+			return "ok";
+		}
+
+		function formatDuration(ms) {
+			const value = Number(ms || 0);
+			if (!value) return "no duration";
+			const minutes = Math.max(1, Math.round(value / 60000));
+			return `${minutes} min`;
+		}
+
+		function renderTesterAnalytics(report) {
+			state.tester = report || null;
+			if (!report) {
+				el.testerSummary.innerHTML = "";
+				el.testerRecommendations.innerHTML = `<div class="item muted">Tester Analyticsは待機中です。</div>`;
+				el.testerEvents.innerHTML = "";
+				return;
+			}
+			const summary = report.summary || {};
+			el.testerSummary.innerHTML = [
+				["Events", summary.totalEvents || 0, "ok"],
+				["Friction", summary.frictions || 0, summary.frictions ? "attention" : "ok"],
+				["Success", summary.successes || 0, "ok"],
+				["Active", summary.activeDays || 0, "ok"],
+			]
+				.map(
+					([label, value, tone]) => `
+						<div class="summary-pill ${tone}">
+							<div class="path">${escapeHtml(label)}</div>
+							<div class="snippet">${Number(value)} ${label === "Active" ? "days" : "events"}</div>
+						</div>
+					`,
+				)
+				.join("");
+
+			const recommendations = report.recommendations || [];
+			el.testerRecommendations.innerHTML = recommendations.length
+				? recommendations
+						.map(
+							(recommendation) => `
+								<div class="item">
+									<div class="snippet">${escapeHtml(recommendation)}</div>
+								</div>
+							`,
+						)
+						.join("")
+				: `<div class="item muted">十分なテスターイベントがまだありません。</div>`;
+
+			const featureUsage = (report.featureUsage || []).slice(0, 5);
+			const recent = (report.recent || []).slice(0, 8);
+			const featureHtml = featureUsage
+				.map(
+					(item) => `
+						<div class="item">
+							<div class="item-head">
+								<div class="path">${escapeHtml(item.area)}</div>
+								<span class="summary-pill ${item.frictions ? "attention" : "ok"}">${Number(item.events)} events</span>
+							</div>
+							<div class="snippet">
+								success ${Number(item.successes || 0)} · friction ${Number(item.frictions || 0)}
+							</div>
+						</div>
+					`,
+				)
+				.join("");
+			const recentHtml = recent
+				.map(
+					(event) => `
+						<div class="item">
+							<div class="item-head">
+								<div class="path">${escapeHtml(event.area)} · ${escapeHtml(event.action)}</div>
+								<span class="summary-pill ${testerTone(event)}">${escapeHtml(event.outcome)}</span>
+							</div>
+							<div class="snippet">
+								${escapeHtml(event.eventType)} · ${escapeHtml(event.severity)} ·
+								${escapeHtml(formatDuration(event.durationMs))} · ${escapeHtml(event.createdAt)}
+								${event.payloadHash ? `<br />hash: ${escapeHtml(event.payloadHash.slice(0, 16))}...` : ""}
+							</div>
+						</div>
+					`,
+				)
+				.join("");
+			const hasTesterEvents = Boolean(featureHtml || recentHtml);
+			el.testerEvents.innerHTML = hasTesterEvents
+				? `${featureHtml}${recentHtml}`
+				: `<div class="item muted">まだテスターイベントはありません。</div>`;
+		}
+
+		async function refreshTesterAnalytics() {
+			try {
+				await ensureAuth();
+				el.testerRefresh.disabled = true;
+				const params = new URLSearchParams();
+				if (state.selectedProjectId) params.set("projectId", state.selectedProjectId);
+				const response = await fetch(`/api/tester-analytics/report?${params.toString()}`, {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "tester analytics failed");
+				renderTesterAnalytics(data);
+			} catch (error) {
+				el.testerSummary.innerHTML = "";
+				el.testerRecommendations.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Tester Analytics is locked."
+				}</div>`;
+				el.testerEvents.innerHTML = "";
+			} finally {
+				el.testerRefresh.disabled = false;
+			}
+		}
+
+		async function recordTesterUiEvent({
+			eventType = "feature",
+			area = "unknown",
+			action = "event",
+			outcome = "neutral",
+			severity = "info",
+			durationMs,
+			metadata = {},
+			payload,
+			refresh = false,
+		} = {}) {
+			await ensureAuth();
+			const response = await fetch("/api/tester-analytics/events", {
+				method: "POST",
+				credentials: "same-origin",
+				headers: authHeaders(),
+				body: JSON.stringify({
+					projectId: state.selectedProjectId || undefined,
+					testerId: state.testerSessionId,
+					sessionId: state.testerSessionId,
+					eventType,
+					area,
+					action,
+					outcome,
+					severity,
+					durationMs,
+					metadata: {
+						source: "mvp-ui",
+						readMode: state.voiceReadMode,
+						emotion: state.voiceLastEmotion,
+						...metadata,
+					},
+					payload,
+				}),
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.error || "tester event failed");
+			if (refresh) await refreshTesterAnalytics();
+			return data.event;
+		}
+
+		async function logManualTesterEvent(event) {
+			event.preventDefault();
+			const outcome = el.testerOutcome.value || "neutral";
+			const durationMinutes = Number(el.testerDuration.value || 0);
+			el.testerAdd.disabled = true;
+			try {
+				await recordTesterUiEvent({
+					eventType: ["attention", "blocked", "error"].includes(outcome)
+						? "friction"
+						: "feedback",
+					area: el.testerArea.value || "unknown",
+					action: "manual-log",
+					outcome,
+					severity: el.testerSeverity.value || "info",
+					durationMs: Number.isFinite(durationMinutes)
+						? Math.max(0, Math.round(durationMinutes * 60000))
+						: undefined,
+					metadata: { source: "tester-panel" },
+					refresh: true,
+				});
+				el.testerDuration.value = "";
+			} catch (error) {
+				el.testerRecommendations.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Tester event failed."
+				}</div>`;
+			} finally {
+				el.testerAdd.disabled = false;
+			}
+		}
+
+		function artifactKindLabel(kind) {
+			if (kind === "checklist") return "Checklist";
+			if (kind === "code") return "Code";
+			if (kind === "mermaid") return "Mermaid";
+			if (kind === "json") return "JSON";
+			return "Markdown";
+		}
+
+		function latestAssistantMessage() {
+			return [...state.messages]
+				.reverse()
+				.find((message) => message.role === "assistant" && message.content?.trim());
+		}
+
+		function renderArtifactPreview() {
+			const content = el.artifactContent.value.trim();
+			const kind = el.artifactKind.value || "markdown";
+			if (!content) {
+				el.artifactPreview.innerHTML = `<div class="muted">成果物を選ぶか、Last Answerから作成できます。</div>`;
+				return;
+			}
+			let preview = content;
+			if (kind === "json") {
+				try {
+					preview = JSON.stringify(JSON.parse(content), null, 2);
+				} catch {
+					preview = content;
+				}
+			}
+			el.artifactPreview.innerHTML = `
+				<div class="path">${escapeHtml(artifactKindLabel(kind))} preview</div>
+				<pre>${escapeHtml(preview)}</pre>
+			`;
+		}
+
+		function resetArtifactEditor() {
+			state.selectedArtifactId = "";
+			el.artifactTitle.value = "";
+			el.artifactKind.value = "markdown";
+			el.artifactContent.value = "";
+			el.artifactSave.textContent = "Save";
+			renderArtifactPreview();
+			renderArtifacts(state.artifacts);
+		}
+
+		function renderArtifacts(artifacts) {
+			state.artifacts = artifacts || [];
+			if (
+				state.selectedArtifactId &&
+				!state.artifacts.some((artifact) => artifact.id === state.selectedArtifactId)
+			) {
+				state.selectedArtifactId = "";
+				el.artifactSave.textContent = "Save";
+			}
+			if (!state.artifacts.length) {
+				el.artifactList.innerHTML = `<div class="item muted">このプロジェクトの成果物はまだありません。</div>`;
+				return;
+			}
+			el.artifactList.innerHTML = state.artifacts
+				.map(
+					(artifact) => `
+						<div class="item ${artifact.id === state.selectedArtifactId ? "selected" : ""}">
+							<div class="item-head">
+								<div class="path">${escapeHtml(artifact.title)}</div>
+								<div class="toolbar">
+									<button class="small" data-open-artifact="${escapeHtml(artifact.id)}" type="button">Open</button>
+									<button class="small danger" data-archive-artifact="${escapeHtml(artifact.id)}" type="button">Archive</button>
+								</div>
+							</div>
+							<div class="snippet">
+								${escapeHtml(artifactKindLabel(artifact.kind))} · ${escapeHtml(artifact.status)} ·
+								${Number(artifact.revisionCount || 0)} revisions<br />
+								${escapeHtml((artifact.content || "").slice(0, 220))}
+							</div>
+						</div>
+					`,
+				)
+				.join("");
+		}
+
+		function selectArtifact(id) {
+			const artifact = state.artifacts.find((candidate) => candidate.id === id);
+			if (!artifact) return;
+			state.selectedArtifactId = artifact.id;
+			el.artifactTitle.value = artifact.title || "";
+			el.artifactKind.value = artifact.kind || "markdown";
+			el.artifactContent.value = artifact.content || "";
+			el.artifactSave.textContent = "Update";
+			renderArtifactPreview();
+			renderArtifacts(state.artifacts);
+		}
+
+		function fillArtifactFromLastAnswer() {
+			const latest = latestAssistantMessage();
+			if (!latest) {
+				el.artifactPreview.innerHTML = `<div class="muted">保存できる直近の回答がまだありません。</div>`;
+				return;
+			}
+			const firstLine = latest.content
+				.split("\n")
+				.find((line) => line.trim())
+				?.replace(/^#+\s*/, "")
+				.trim()
+				.slice(0, 80);
+			state.selectedArtifactId = "";
+			el.artifactTitle.value = firstLine || "ElysiaAI Artifact";
+			el.artifactKind.value = latest.content.includes("- [ ]")
+				? "checklist"
+				: "markdown";
+			el.artifactContent.value = latest.content;
+			el.artifactSave.textContent = "Save";
+			renderArtifactPreview();
+			renderArtifacts(state.artifacts);
+		}
+
+		async function refreshArtifacts() {
+			try {
+				await ensureAuth();
+				el.artifactRefresh.disabled = true;
+				const params = new URLSearchParams();
+				if (state.selectedProjectId) params.set("projectId", state.selectedProjectId);
+				const response = await fetch(`/api/artifacts?${params.toString()}`, {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "artifact load failed");
+				renderArtifacts(data.artifacts || []);
+			} catch (error) {
+				el.artifactList.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Artifact workbench is locked."
+				}</div>`;
+			} finally {
+				el.artifactRefresh.disabled = false;
+			}
+		}
+
+		async function saveArtifact(event) {
+			event.preventDefault();
+			const title = el.artifactTitle.value.trim();
+			const content = el.artifactContent.value.trim();
+			if (!title || !content) return;
+			await ensureAuth();
+			el.artifactSave.disabled = true;
+			const artifactAction = state.selectedArtifactId ? "update" : "create";
+			try {
+				const payload = {
+					projectId: state.selectedProjectId || undefined,
+					title,
+					kind: el.artifactKind.value || "markdown",
+					content,
+					sourceTrace: {
+						sessionId: state.sessionId,
+						projectId: state.selectedProjectId || null,
+						sources: state.sources,
+						createdFrom: state.selectedArtifactId ? "workbench-update" : "workbench",
+					},
+				};
+				const response = await fetch(
+					state.selectedArtifactId
+						? `/api/artifacts/${encodeURIComponent(state.selectedArtifactId)}`
+						: "/api/artifacts",
+					{
+						method: state.selectedArtifactId ? "PATCH" : "POST",
+						credentials: "same-origin",
+						headers: authHeaders(),
+						body: JSON.stringify(
+							state.selectedArtifactId
+								? { ...payload, summary: "Workbench edit" }
+								: payload,
+						),
+					},
+				);
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "artifact save failed");
+				state.selectedArtifactId = data.artifact?.id || state.selectedArtifactId;
+				await refreshArtifacts();
+				await refreshPrivacyLedger();
+				if (state.selectedArtifactId) selectArtifact(state.selectedArtifactId);
+				void recordTesterUiEvent({
+					eventType: "feature",
+					area: "artifact",
+					action: artifactAction,
+					outcome: "success",
+					metadata: { kind: el.artifactKind.value || "markdown" },
+				}).catch(() => undefined);
+			} finally {
+				el.artifactSave.disabled = false;
+			}
+		}
+
+		async function archiveSelectedArtifact(id) {
+			if (!window.confirm("この成果物をアーカイブします。よろしいですか？")) {
+				return;
+			}
+			await ensureAuth();
+			const response = await fetch(`/api/artifacts/${encodeURIComponent(id)}`, {
+				method: "DELETE",
+				credentials: "same-origin",
+				headers: authHeaders(false),
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.error || "artifact archive failed");
+			if (state.selectedArtifactId === id) resetArtifactEditor();
+			await refreshArtifacts();
+			await refreshPrivacyLedger();
+		}
+
+		async function refreshProjects() {
+			try {
+				await ensureAuth();
+				const response = await fetch("/api/projects", {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "project load failed");
+				renderProjects(data.projects || [], data.defaultProject);
+				await refreshProjectMemory();
+			} catch (error) {
+				el.projectMemoryList.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Project memory is locked."
+				}</div>`;
+			}
+		}
+
+		async function refreshProjectMemory() {
+			if (!state.selectedProjectId) {
+				renderProjectMemory([]);
+				return;
+			}
+			const response = await fetch(
+				`/api/projects/${encodeURIComponent(state.selectedProjectId)}/memory`,
+				{
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				},
+			);
+			const data = await response.json();
+			if (!response.ok) throw new Error(data.error || "project memory load failed");
+			renderProjectMemory(data.memories || []);
+		}
+
+		async function createProject(event) {
+			event.preventDefault();
+			const name = el.projectName.value.trim();
+			if (!name) return;
+			await ensureAuth();
+			el.projectCreate.disabled = true;
+			try {
+				const response = await fetch("/api/projects", {
+					method: "POST",
+					credentials: "same-origin",
+					headers: authHeaders(),
+					body: JSON.stringify({ name }),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "project create failed");
+				state.selectedProjectId = data.project.id;
+				localStorage.setItem("elysia_project_id", state.selectedProjectId);
+				el.projectName.value = "";
+				await refreshProjects();
+				resetArtifactEditor();
+				await refreshArtifacts();
+				await refreshPrivacyLedger();
+				await refreshDailyDeskBrief();
+				void recordTesterUiEvent({
+					eventType: "milestone",
+					area: "memory",
+					action: "project-create",
+					outcome: "success",
+					metadata: { projectId: state.selectedProjectId },
+				}).catch(() => undefined);
+			} finally {
+				el.projectCreate.disabled = false;
+			}
+		}
+
+		async function addProjectMemory(event) {
+			event.preventDefault();
+			if (!state.selectedProjectId) return;
+			const content = el.projectMemoryContent.value.trim();
+			if (!content) return;
+			await ensureAuth();
+			el.projectMemoryAdd.disabled = true;
+			const pinned = el.projectMemoryPinned.checked;
+			try {
+				const response = await fetch(
+					`/api/projects/${encodeURIComponent(state.selectedProjectId)}/memory`,
+					{
+						method: "POST",
+						credentials: "same-origin",
+						headers: authHeaders(),
+						body: JSON.stringify({
+							title: el.projectMemoryTitle.value.trim(),
+							content,
+							pinned,
+							emotion: state.voiceLastEmotion,
+							metadata: {
+								emotion: state.voiceLastEmotion,
+								voiceReadMode: state.voiceReadMode,
+								voiceEnabled: state.voiceEnabled,
+							},
+						}),
+					},
+				);
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "project memory add failed");
+				el.projectMemoryTitle.value = "";
+				el.projectMemoryContent.value = "";
+				el.projectMemoryPinned.checked = false;
+				await refreshProjectMemory();
+				await refreshPrivacyLedger();
+				await refreshDailyDeskBrief();
+				void recordTesterUiEvent({
+					eventType: "feature",
+					area: "memory",
+					action: "remember",
+					outcome: "success",
+					metadata: {
+						pinned,
+						emotion: state.voiceLastEmotion,
+					},
+				}).catch(() => undefined);
+			} finally {
+				el.projectMemoryAdd.disabled = false;
+			}
+		}
+
+		async function updateProjectMemory(id, payload) {
+			await ensureAuth();
+			const response = await fetch(
+				`/api/projects/${encodeURIComponent(state.selectedProjectId)}/memory/${encodeURIComponent(id)}`,
+				{
+					method: "PATCH",
+					credentials: "same-origin",
+					headers: authHeaders(),
+					body: JSON.stringify(payload),
+				},
+			);
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.error || "project memory update failed");
+			await refreshProjectMemory();
+			await refreshPrivacyLedger();
+			await refreshDailyDeskBrief().catch(() => undefined);
+			void recordTesterUiEvent({
+				eventType: "feature",
+				area: "memory",
+				action: "update",
+				outcome: "success",
+				metadata: { fields: Object.keys(payload || {}) },
+			}).catch(() => undefined);
+		}
+
+		async function forgetProjectMemory(id) {
+			if (!window.confirm("このプロジェクト記憶を忘却候補へ移します。よろしいですか？")) {
+				return;
+			}
+			await ensureAuth();
+			const response = await fetch(
+				`/api/projects/${encodeURIComponent(state.selectedProjectId)}/memory/${encodeURIComponent(id)}`,
+				{
+					method: "DELETE",
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				},
+			);
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.error || "project memory forget failed");
+			await refreshProjectMemory();
+			await refreshPrivacyLedger();
+			await refreshDailyDeskBrief().catch(() => undefined);
+			void recordTesterUiEvent({
+				eventType: "feature",
+				area: "memory",
+				action: "forget",
+				outcome: "success",
+			}).catch(() => undefined);
+		}
+
+		function renderSetupWizard(readiness) {
+			state.setup = readiness;
+			el.setupSummary.innerHTML = `
+				<div class="gate ${escapeHtml(readiness.status)}">
+					<span class="dot"></span>
+					<div>
+						<h3>${escapeHtml(readiness.summary)}</h3>
+						<p class="muted">score ${Number(readiness.score || 0)} · model ${escapeHtml(readiness.model?.target || "unknown")}</p>
+					</div>
+				</div>
+			`;
+			el.setupList.innerHTML = (readiness.steps || [])
+				.map(
+					(step) => `
+						<div class="item">
+							<div class="item-head">
+								<div class="path">${escapeHtml(step.status)} · ${escapeHtml(step.title)}</div>
+								${
+									step.action?.id === "pull-model-command"
+										? `<button class="small" data-setup-action="${escapeHtml(step.action.id)}" type="button">Command</button>`
+										: ""
+								}
+							</div>
+							<div class="snippet">
+								${escapeHtml(step.detail)}
+								${step.command ? `<br /><code>${escapeHtml(step.command)}</code>` : ""}
+							</div>
+						</div>
+					`,
+				)
+				.join("");
+		}
+
+		async function refreshSetupWizard() {
+			try {
+				await ensureAuth();
+				el.setupRefresh.disabled = true;
+				el.setupSummary.innerHTML = `<div class="item muted">初回起動の状態を確認中です。</div>`;
+				const response = await fetch("/api/setup/readiness", {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "setup readiness failed");
+				renderSetupWizard(data);
+				void recordTesterUiEvent({
+					eventType: "feature",
+					area: "setup",
+					action: "readiness",
+					outcome:
+						data.status === "blocked"
+							? "blocked"
+							: data.status === "attention"
+								? "attention"
+								: "success",
+					severity: data.status === "blocked" ? "high" : data.status === "attention" ? "medium" : "info",
+					metadata: { score: data.score, model: data.model?.target },
+				}).catch(() => undefined);
+			} catch (error) {
+				el.setupSummary.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Setup wizard is locked."
+				}</div>`;
+				el.setupList.innerHTML = "";
+				void recordTesterUiEvent({
+					eventType: "friction",
+					area: "setup",
+					action: "readiness",
+					outcome: "error",
+					severity: "high",
+					payload: error instanceof Error ? error.message : "setup wizard is locked",
+				}).catch(() => undefined);
+			} finally {
+				el.setupRefresh.disabled = false;
+			}
+		}
+
+		async function requestSetupAction(actionId) {
+			if (actionId !== "pull-model-command") return;
+			await ensureAuth();
+			const response = await fetch("/api/setup/actions/pull-model", {
+				method: "POST",
+				credentials: "same-origin",
+				headers: authHeaders(),
+				body: JSON.stringify({ model: state.setup?.model?.target || "llama3.2" }),
+			});
+			const data = await response.json();
+			if (!response.ok) throw new Error(data.error || "setup action failed");
+			el.setupSummary.innerHTML = `
+				<div class="item">
+					<div class="path">manual command</div>
+					<div class="snippet"><code>${escapeHtml(data.command)}</code><br />${escapeHtml(data.note || "")}</div>
+				</div>
+			`;
 		}
 
 		async function refreshReadiness() {
@@ -758,6 +2325,372 @@
 				el.clearMemory.disabled = true;
 				el.memory.innerHTML = `<div class="item muted">記憶はロックされています。</div>`;
 			}
+		}
+
+		async function refreshKnowledge() {
+			try {
+				await ensureAuth();
+				const response = await fetch("/api/knowledge/sources", {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "knowledge is locked");
+				renderKnowledge(data.sources || []);
+			} catch (error) {
+				el.knowledgeList.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Knowledge is locked."
+				}</div>`;
+			}
+		}
+
+		async function importKnowledge(event) {
+			event.preventDefault();
+			const file = el.knowledgeFile.files?.[0];
+			if (!file) return;
+			await ensureAuth();
+			el.knowledgeImport.disabled = true;
+			try {
+				const formData = new FormData();
+				formData.append("file", file);
+				const response = await fetch("/api/knowledge/import", {
+					method: "POST",
+					credentials: "same-origin",
+					headers: authHeaders(false),
+					body: formData,
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "knowledge import failed");
+				el.knowledgeFile.value = "";
+				await refreshKnowledge();
+				await refreshReadiness();
+				await refreshPrivacyLedger();
+				void recordTesterUiEvent({
+					eventType: "feature",
+					area: "knowledge",
+					action: "import",
+					outcome: "success",
+					metadata: {
+						fileType: file.type || "unknown",
+						size: file.size,
+					},
+				}).catch(() => undefined);
+			} catch (error) {
+				el.knowledgeList.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Knowledge import failed."
+				}</div>`;
+				void recordTesterUiEvent({
+					eventType: "friction",
+					area: "knowledge",
+					action: "import",
+					outcome: "error",
+					severity: "medium",
+					payload: error instanceof Error ? error.message : "knowledge import failed",
+				}).catch(() => undefined);
+			} finally {
+				el.knowledgeImport.disabled = false;
+			}
+		}
+
+		async function updateKnowledgeStatus(id, status) {
+			await ensureAuth();
+			const response = await fetch(`/api/knowledge/sources/${encodeURIComponent(id)}`, {
+				method: "PATCH",
+				credentials: "same-origin",
+				headers: authHeaders(),
+				body: JSON.stringify({ status }),
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.error || "knowledge status update failed");
+			await refreshKnowledge();
+			await refreshPrivacyLedger();
+			void recordTesterUiEvent({
+				eventType: "feature",
+				area: "knowledge",
+				action: status === "disabled" ? "disable" : "enable",
+				outcome: "success",
+			}).catch(() => undefined);
+		}
+
+		async function reindexKnowledge(id) {
+			await ensureAuth();
+			const response = await fetch(`/api/knowledge/sources/${encodeURIComponent(id)}/reindex`, {
+				method: "POST",
+				credentials: "same-origin",
+				headers: authHeaders(false),
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.error || "knowledge reindex failed");
+			await refreshKnowledge();
+			await refreshPrivacyLedger();
+			void recordTesterUiEvent({
+				eventType: "feature",
+				area: "knowledge",
+				action: "reindex",
+				outcome: "success",
+			}).catch(() => undefined);
+		}
+
+		async function deleteKnowledge(id) {
+			if (!window.confirm("この文書をKnowledgeから削除します。よろしいですか？")) {
+				return;
+			}
+			await ensureAuth();
+			const response = await fetch(`/api/knowledge/sources/${encodeURIComponent(id)}`, {
+				method: "DELETE",
+				credentials: "same-origin",
+				headers: authHeaders(false),
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.error || "knowledge delete failed");
+			await refreshKnowledge();
+			await refreshPrivacyLedger();
+			void recordTesterUiEvent({
+				eventType: "feature",
+				area: "knowledge",
+				action: "delete",
+				outcome: "success",
+			}).catch(() => undefined);
+		}
+
+		function privacyTone(item) {
+			if (item.riskLevel === "high") return "critical";
+			if (!item.localOnly || ["required", "pending"].includes(item.approvalStatus)) {
+				return "attention";
+			}
+			return "ok";
+		}
+
+		function renderPrivacyLedger(data) {
+			const summary = data.summary || {};
+			el.privacySummary.innerHTML = [
+				["Local", summary.localOnly || 0, "ok"],
+				["External", summary.external || 0, summary.external ? "attention" : "ok"],
+				[
+					"Approval",
+					summary.requiresApproval || 0,
+					summary.requiresApproval ? "attention" : "ok",
+				],
+				["High Risk", summary.highRisk || 0, summary.highRisk ? "critical" : "ok"],
+			]
+				.map(
+					([label, value, tone]) => `
+						<div class="summary-pill ${tone}">
+							<div class="path">${escapeHtml(label)}</div>
+							<div class="snippet">${Number(value)} events</div>
+						</div>
+					`,
+				)
+				.join("");
+			el.privacyPosture.innerHTML = (data.posture || [])
+				.map(
+					(item) => `
+						<div class="item">
+							<div class="item-head">
+								<div class="path">${escapeHtml(item.label)} · ${escapeHtml(item.provider)}</div>
+								<span class="summary-pill ${privacyTone(item)}">${escapeHtml(item.localOnly ? "local" : "external")}</span>
+							</div>
+							<div class="snippet">
+								${escapeHtml(item.direction)} · ${escapeHtml(item.approvalStatus)} · ${escapeHtml(item.riskLevel)}<br />
+								${escapeHtml(item.detail)}
+								${item.lastEventAt ? `<br />last: ${escapeHtml(item.lastEventAt)}` : ""}
+							</div>
+						</div>
+					`,
+				)
+				.join("");
+			const events = (data.events || []).slice(0, 8);
+			el.privacyEvents.innerHTML = events.length
+				? events
+						.map(
+							(event) => `
+								<div class="item">
+									<div class="path">${escapeHtml(event.scope)} · ${escapeHtml(event.provider)} · ${escapeHtml(event.createdAt)}</div>
+									<div class="snippet">
+										${escapeHtml(event.purpose)}<br />
+										${escapeHtml(event.direction)} · ${escapeHtml(event.localOnly ? "local-only" : "external")} ·
+										${escapeHtml(event.approvalStatus)} · ${escapeHtml(event.riskLevel)}
+										${event.payloadHash ? `<br />hash: ${escapeHtml(event.payloadHash.slice(0, 16))}...` : ""}
+									</div>
+								</div>
+							`,
+						)
+						.join("")
+				: `<div class="item muted">まだPrivacy Ledgerのイベントはありません。</div>`;
+		}
+
+		async function refreshPrivacyLedger() {
+			try {
+				await ensureAuth();
+				el.privacyRefresh.disabled = true;
+				const params = new URLSearchParams();
+				if (state.selectedProjectId) params.set("projectId", state.selectedProjectId);
+				const response = await fetch(`/api/privacy/ledger?${params.toString()}`, {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "privacy ledger failed");
+				renderPrivacyLedger(data);
+			} catch (error) {
+				el.privacySummary.innerHTML = "";
+				el.privacyPosture.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Privacy Ledger is locked."
+				}</div>`;
+				el.privacyEvents.innerHTML = "";
+			} finally {
+				el.privacyRefresh.disabled = false;
+			}
+		}
+
+		function approvalTone(approval) {
+			if (approval.status === "denied" || approval.riskLevel === "critical") {
+				return "critical";
+			}
+			if (approval.status === "pending" || approval.riskLevel === "high") {
+				return "attention";
+			}
+			return "ok";
+		}
+
+		function renderAgentApprovalGate(data) {
+			const summary = data.summary || {};
+			el.approvalSummary.innerHTML = [
+				["Pending", summary.pending || 0, summary.pending ? "attention" : "ok"],
+				["Approved", summary.approved || 0, "ok"],
+				["Denied", summary.denied || 0, summary.denied ? "critical" : "ok"],
+				["High Risk", summary.highRisk || 0, summary.highRisk ? "attention" : "ok"],
+			]
+				.map(
+					([label, value, tone]) => `
+						<div class="summary-pill ${tone}">
+							<div class="path">${escapeHtml(label)}</div>
+							<div class="snippet">${Number(value)} approvals</div>
+						</div>
+					`,
+				)
+				.join("");
+			const approvals = (data.approvals || []).slice(0, 10);
+			el.approvalList.innerHTML = approvals.length
+				? approvals
+						.map(
+							(approval) => `
+								<div class="item">
+									<div class="item-head">
+										<div class="path">${escapeHtml(approval.status)} · ${escapeHtml(approval.toolName)} · ${escapeHtml(approval.actionClass)}</div>
+										<div class="toolbar">
+											${
+												approval.status === "pending"
+													? `
+														<button class="small" data-approve-tool="${escapeHtml(approval.id)}" type="button">Approve</button>
+														<button class="small danger" data-deny-tool="${escapeHtml(approval.id)}" type="button">Deny</button>
+													`
+													: ""
+											}
+										</div>
+									</div>
+									<div class="snippet">
+										<span class="summary-pill ${approvalTone(approval)}">${escapeHtml(approval.riskLevel)}</span>
+										${approval.expiresAt ? ` expires ${escapeHtml(approval.expiresAt)}` : ""}
+										${approval.decisionReason ? `<br />${escapeHtml(approval.decisionReason)}` : ""}
+										${approval.requestHash ? `<br />hash: ${escapeHtml(approval.requestHash.slice(0, 16))}...` : ""}
+									</div>
+								</div>
+							`,
+						)
+						.join("")
+				: `<div class="item muted">承認待ちの操作はありません。</div>`;
+		}
+
+		async function refreshAgentApprovalGate() {
+			try {
+				await ensureAuth();
+				el.approvalRefresh.disabled = true;
+				const response = await fetch("/api/agents/approvals/gate", {
+					credentials: "same-origin",
+					headers: authHeaders(false),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "approval gate failed");
+				renderAgentApprovalGate(data);
+			} catch (error) {
+				el.approvalSummary.innerHTML = "";
+				el.approvalList.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Agent Approval Gate is locked."
+				}</div>`;
+			} finally {
+				el.approvalRefresh.disabled = false;
+			}
+		}
+
+		function parseApprovalRequestPayload() {
+			const raw = el.approvalRequest.value.trim();
+			if (!raw) return {};
+			try {
+				return JSON.parse(raw);
+			} catch {
+				return { description: raw };
+			}
+		}
+
+		async function requestAgentApproval(event) {
+			event.preventDefault();
+			const toolName = el.approvalTool.value.trim();
+			if (!toolName) return;
+			await ensureAuth();
+			el.approvalRequestButton.disabled = true;
+			try {
+				const response = await fetch("/api/agents/approvals/request", {
+					method: "POST",
+					credentials: "same-origin",
+					headers: authHeaders(),
+					body: JSON.stringify({
+						toolName,
+						actionClass: el.approvalAction.value,
+						request: parseApprovalRequestPayload(),
+					}),
+				});
+				const data = await response.json();
+				if (!response.ok) throw new Error(data.error || "approval request failed");
+				el.approvalRequest.value = "";
+				await refreshAgentApprovalGate();
+				await refreshPrivacyLedger();
+				void recordTesterUiEvent({
+					eventType: "feature",
+					area: "approval",
+					action: "request",
+					outcome: "success",
+					metadata: { actionClass: el.approvalAction.value },
+				}).catch(() => undefined);
+			} finally {
+				el.approvalRequestButton.disabled = false;
+			}
+		}
+
+		async function decideAgentApproval(id, decision) {
+			await ensureAuth();
+			const response = await fetch(`/api/agents/approvals/${encodeURIComponent(id)}/decision`, {
+				method: "PATCH",
+				credentials: "same-origin",
+				headers: authHeaders(),
+				body: JSON.stringify({
+					decision,
+					reason:
+						decision === "approved"
+							? "Operator approved from local UI"
+							: "Operator denied from local UI",
+				}),
+			});
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) throw new Error(data.error || "approval decision failed");
+			await refreshAgentApprovalGate();
+			await refreshPrivacyLedger();
+			void recordTesterUiEvent({
+				eventType: "feature",
+				area: "approval",
+				action: decision,
+				outcome: "success",
+			}).catch(() => undefined);
 		}
 
 		function renderSecurityAgent(report) {
@@ -898,7 +2831,7 @@
 			const content = el.input.value.trim();
 			el.input.value = "";
 			state.messages.push({ role: "user", content });
-			const assistant = { role: "assistant", content: "" };
+			const assistant = { role: "assistant", content: "", emotion: "neutral" };
 			state.messages.push(assistant);
 			state.loading = true;
 			state.mode = "thinking";
@@ -906,6 +2839,7 @@
 			setPill(el.mode, "mode: thinking", "");
 			renderMessages();
 			saveMessages();
+			const startedAt = performance.now();
 
 			try {
 				const response = await fetch("/api/elysia-core/chat", {
@@ -915,6 +2849,7 @@
 					body: JSON.stringify({
 						messages: state.messages.slice(0, -1),
 						sessionId: state.sessionId,
+						projectId: state.selectedProjectId || undefined,
 						stream: true,
 					}),
 				});
@@ -944,6 +2879,18 @@
 							assistant.content += data.content;
 							renderMessages();
 						}
+						if (data.emotion) {
+							const nextEmotion = emotionLabel(data.emotion);
+							state.voiceLastEmotion = nextEmotion;
+							assistant.emotion = nextEmotion;
+							setVoiceStatus(
+								state.voiceEnabled
+									? "返答の感情を読み取りました。"
+									: "返答の感情だけ静かに表示しています。",
+								nextEmotion,
+							);
+							renderMessages();
+						}
 						if (data.sources) renderSources(data.sources);
 						if (data.mode) {
 							state.mode = data.mode;
@@ -953,8 +2900,23 @@
 				}
 				if (!assistant.content) assistant.content = "No response body was returned.";
 				saveMessages();
+				void speakText(assistant.content, assistant.emotion).catch(() => undefined);
 				await refreshMemory();
 				await refreshReadiness();
+				await refreshPrivacyLedger();
+				await refreshDailyDeskBrief();
+				void recordTesterUiEvent({
+					eventType: "feature",
+					area: "chat",
+					action: "send-message",
+					outcome: "success",
+					durationMs: Math.round(performance.now() - startedAt),
+					metadata: {
+						mode: state.mode,
+						hasSources: state.sources.length > 0,
+						emotion: assistant.emotion || "neutral",
+					},
+				}).catch(() => undefined);
 			} catch (error) {
 				assistant.content =
 					error instanceof Error ? error.message : "Local chat failed.";
@@ -962,6 +2924,15 @@
 				setPill(el.mode, "mode: error", "blocked");
 				renderMessages();
 				saveMessages();
+				void recordTesterUiEvent({
+					eventType: "friction",
+					area: "chat",
+					action: "send-message",
+					outcome: "error",
+					severity: "high",
+					durationMs: Math.round(performance.now() - startedAt),
+					payload: error instanceof Error ? error.message : "local chat failed",
+				}).catch(() => undefined);
 			} finally {
 				state.loading = false;
 				el.send.disabled = false;
@@ -984,6 +2955,7 @@
 				const data = await response.json();
 				if (!response.ok) throw new Error(data.error || "search failed");
 				renderSearch(data.results || []);
+				await refreshPrivacyLedger();
 			} catch (error) {
 				renderSearch([
 					{
@@ -1003,16 +2975,53 @@
 			renderMessages();
 			renderSources([]);
 			renderSearch([]);
+			renderKnowledge([]);
+			renderProjectMemory([]);
+			renderArtifacts([]);
+			renderArtifactPreview();
+			syncVoiceControls();
+			renderDailyDeskBrief(null);
+			renderTesterAnalytics(null);
+			el.approvalSummary.innerHTML = "";
+			el.approvalList.innerHTML = `<div class="item muted">Agent Approval Gateは待機中です。</div>`;
+			el.privacySummary.innerHTML = "";
+			el.privacyPosture.innerHTML = `<div class="item muted">Privacy Ledgerは待機中です。</div>`;
+			el.privacyEvents.innerHTML = "";
+			el.setupSummary.innerHTML = `<div class="item muted">Setup Wizardは待機中です。</div>`;
+			el.setupList.innerHTML = "";
 			el.securityStatus.innerHTML = `<div class="item muted">Security Agentは待機中です。</div>`;
 			el.securityResults.innerHTML = "";
 			try {
 				await ensureAuth();
+				if (!state.testerBootRecorded) {
+					state.testerBootRecorded = true;
+					await recordTesterUiEvent({
+						eventType: "session",
+						area: "setup",
+						action: "boot",
+						outcome: "started",
+						metadata: {
+							standalone: Boolean(window.__TAURI__),
+							userAgent: navigator.userAgent.slice(0, 120),
+						},
+					}).catch(() => undefined);
+				}
 			} catch {
 				setPill(el.auth, "auth: locked", "blocked");
 			}
+			await refreshSetupWizard();
+			await loadVoiceSettings();
 			await refreshReadiness();
+			await refreshProjects();
+			await refreshDailyDeskBrief();
+			await refreshArtifacts();
+			await refreshKnowledge();
+			await refreshAgentApprovalGate();
+			await refreshPrivacyLedger();
+			await refreshTesterAnalytics();
 			await refreshMemory();
 			await refreshSecurityAgent();
+			await wireTauriVoiceMenu();
 			window.setInterval(refreshReadiness, 15000);
 		}
 
@@ -1030,6 +3039,182 @@
 			});
 		});
 		el.searchForm.addEventListener("submit", searchFiles);
+		el.voiceEnabled.addEventListener("change", () => {
+			setVoiceEnabled(el.voiceEnabled.checked);
+		});
+		el.voicePreset.addEventListener("change", () => {
+			state.voicePreset = el.voicePreset.value || "auto";
+			persistVoiceSettings();
+			syncVoiceControls();
+		});
+		el.voiceReadMode.addEventListener("change", () => {
+			state.voiceReadMode = el.voiceReadMode.value || "summary";
+			persistVoiceSettings();
+			syncVoiceControls();
+			refreshDailyDeskBrief().catch(() => undefined);
+		});
+		el.voiceSpeaker.addEventListener("input", () => {
+			state.voiceSpeaker = Number(el.voiceSpeaker.value || 2);
+			persistVoiceSettings();
+			syncVoiceControls();
+		});
+		el.voiceSpeed.addEventListener("input", () => {
+			state.voiceSpeed = Number(el.voiceSpeed.value || 1.04);
+			persistVoiceSettings();
+			syncVoiceControls();
+		});
+		el.voiceTest.addEventListener("click", () => {
+			speakText(
+				"今日のAIデスクを始めます。声の調律はこのくらいです。",
+				state.voiceLastEmotion,
+				true,
+			).catch((error) => {
+				setVoiceStatus(
+					error instanceof Error ? error.message : "Voice test failed.",
+					state.voiceLastEmotion,
+				);
+			});
+		});
+		el.briefRefresh.addEventListener("click", refreshDailyDeskBrief);
+		el.setupRefresh.addEventListener("click", refreshSetupWizard);
+		el.setupList.addEventListener("click", (event) => {
+			const button = event.target.closest("[data-setup-action]");
+			if (!button) return;
+			requestSetupAction(button.dataset.setupAction).catch((error) => {
+				el.setupSummary.innerHTML = `<div class="item muted">${
+					error instanceof Error ? escapeHtml(error.message) : "Setup action failed."
+				}</div>`;
+			});
+		});
+		el.projectForm.addEventListener("submit", (event) => {
+			createProject(event).catch((error) => {
+				el.projectMemoryList.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Project create failed.")}</div>`;
+			});
+		});
+		el.projectMemoryForm.addEventListener("submit", (event) => {
+			addProjectMemory(event).catch((error) => {
+				el.projectMemoryList.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Project memory add failed.")}</div>`;
+			});
+		});
+		el.projectRefresh.addEventListener("click", refreshProjects);
+		el.projectSelect.addEventListener("change", () => {
+			state.selectedProjectId = el.projectSelect.value;
+			localStorage.setItem("elysia_project_id", state.selectedProjectId);
+			refreshProjectMemory().catch((error) => {
+				el.projectMemoryList.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Project memory load failed.")}</div>`;
+			});
+			resetArtifactEditor();
+			refreshArtifacts().catch((error) => {
+				el.artifactList.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Artifact load failed.")}</div>`;
+			});
+			refreshPrivacyLedger().catch((error) => {
+				el.privacyPosture.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Privacy ledger load failed.")}</div>`;
+			});
+			refreshDailyDeskBrief().catch((error) => {
+				el.briefSummary.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Daily Desk Brief failed.")}</div>`;
+			});
+			refreshTesterAnalytics().catch((error) => {
+				el.testerRecommendations.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Tester analytics failed.")}</div>`;
+			});
+		});
+		el.projectMemoryList.addEventListener("click", (event) => {
+			const toggleButton = event.target.closest("[data-toggle-project-memory]");
+			const pinButton = event.target.closest("[data-pin-project-memory]");
+			const forgetButton = event.target.closest("[data-forget-project-memory]");
+			const action = toggleButton
+				? updateProjectMemory(toggleButton.dataset.toggleProjectMemory, {
+						status: toggleButton.dataset.nextStatus,
+					})
+				: pinButton
+					? updateProjectMemory(pinButton.dataset.pinProjectMemory, {
+							pinned: pinButton.dataset.nextPinned === "true",
+						})
+					: forgetButton
+						? forgetProjectMemory(forgetButton.dataset.forgetProjectMemory)
+						: null;
+			if (action) {
+				action.catch((error) => {
+					el.projectMemoryList.innerHTML = `<div class="item muted">${
+						error instanceof Error ? escapeHtml(error.message) : "Project memory action failed."
+					}</div>`;
+				});
+			}
+		});
+		el.knowledgeForm.addEventListener("submit", importKnowledge);
+		el.knowledgeRefresh.addEventListener("click", refreshKnowledge);
+		el.testerForm.addEventListener("submit", logManualTesterEvent);
+		el.testerRefresh.addEventListener("click", refreshTesterAnalytics);
+		el.approvalForm.addEventListener("submit", (event) => {
+			requestAgentApproval(event).catch((error) => {
+				el.approvalList.innerHTML = `<div class="item muted">${escapeHtml(error.message || "Approval request failed.")}</div>`;
+			});
+		});
+		el.approvalRefresh.addEventListener("click", refreshAgentApprovalGate);
+		el.approvalList.addEventListener("click", (event) => {
+			const approveButton = event.target.closest("[data-approve-tool]");
+			const denyButton = event.target.closest("[data-deny-tool]");
+			const action = approveButton
+				? decideAgentApproval(approveButton.dataset.approveTool, "approved")
+				: denyButton
+					? decideAgentApproval(denyButton.dataset.denyTool, "denied")
+					: null;
+			if (action) {
+				action.catch((error) => {
+					el.approvalList.innerHTML = `<div class="item muted">${
+						error instanceof Error ? escapeHtml(error.message) : "Approval decision failed."
+					}</div>`;
+				});
+			}
+		});
+		el.privacyRefresh.addEventListener("click", refreshPrivacyLedger);
+		el.artifactForm.addEventListener("submit", (event) => {
+			saveArtifact(event).catch((error) => {
+				el.artifactPreview.innerHTML = `<div class="muted">${escapeHtml(error.message || "Artifact save failed.")}</div>`;
+			});
+		});
+		el.artifactRefresh.addEventListener("click", refreshArtifacts);
+		el.artifactNew.addEventListener("click", resetArtifactEditor);
+		el.artifactFromAnswer.addEventListener("click", fillArtifactFromLastAnswer);
+		el.artifactKind.addEventListener("change", renderArtifactPreview);
+		el.artifactContent.addEventListener("input", renderArtifactPreview);
+		el.artifactList.addEventListener("click", (event) => {
+			const openButton = event.target.closest("[data-open-artifact]");
+			const archiveButton = event.target.closest("[data-archive-artifact]");
+			const action = openButton
+				? selectArtifact(openButton.dataset.openArtifact)
+				: archiveButton
+					? archiveSelectedArtifact(archiveButton.dataset.archiveArtifact)
+					: null;
+			if (action instanceof Promise) {
+				action.catch((error) => {
+					el.artifactList.innerHTML = `<div class="item muted">${
+						error instanceof Error ? escapeHtml(error.message) : "Artifact action failed."
+					}</div>`;
+				});
+			}
+		});
+		el.knowledgeList.addEventListener("click", (event) => {
+			const toggleButton = event.target.closest("[data-toggle-knowledge]");
+			const reindexButton = event.target.closest("[data-reindex-knowledge]");
+			const deleteButton = event.target.closest("[data-delete-knowledge]");
+			const action = toggleButton
+				? updateKnowledgeStatus(
+						toggleButton.dataset.toggleKnowledge,
+						toggleButton.dataset.nextStatus,
+					)
+				: reindexButton
+					? reindexKnowledge(reindexButton.dataset.reindexKnowledge)
+					: deleteButton
+						? deleteKnowledge(deleteButton.dataset.deleteKnowledge)
+						: null;
+			if (action) {
+				action.catch((error) => {
+					el.knowledgeList.innerHTML = `<div class="item muted">${
+						error instanceof Error ? escapeHtml(error.message) : "Knowledge action failed."
+					}</div>`;
+				});
+			}
+		});
 		el.securityRefresh.addEventListener("click", refreshSecurityAgent);
 		boot();
 	</script>

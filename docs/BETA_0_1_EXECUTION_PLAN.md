@@ -34,12 +34,17 @@ Beta 0.1の目的は、ElysiaAIを「開発者の手元で動くMVP」から「�
 - [ ] 実機Tauriウィンドウで3分デモ動画を収録する
   - Runbook: `docs/DEMO_RECORDING_RUNBOOK.md`
   - Tracking issue: #106
-- [ ] READMEにデモ動画リンクとKnown Issuesを追加する
-- [ ] Beta 0.1タグ用のリリースノートを作る
+- [x] READMEにBeta 0.1の現在地とKnown Issuesを追加する
+- [ ] READMEに完成版デモ動画リンクを追加する
+- [x] Beta 0.1タグ用のリリースノートを作る
 
 ## P2: Tester Pilot
 
 対象は3〜5人に限定する。目的は大規模利用ではなく、初回起動と日常導線の摩擦を測ること。
+
+- [x] 少人数テスター向けガイドを作成する
+- [ ] 3〜5人のテスターへBeta 0.1候補を配布する
+- [ ] 初回フィードバックを回収してIssue化する
 
 ### テスター条件
 

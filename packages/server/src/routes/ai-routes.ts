@@ -15,10 +15,12 @@ import {
 import { feedbackService, knowledgeService } from "../lib/database";
 import { defenseManager } from "../lib/defense-manager";
 import { logger } from "../lib/logger";
+import { getWorkspaceRoot } from "../lib/mvp-local-ai";
 import {
 	type OpenAIChatMessage,
 	streamChatWithOpenAI,
 } from "../lib/openai-integration";
+import { recordPrivacyEvent } from "../lib/privacy-ledger";
 import { secureVault } from "../lib/secure-vault";
 
 const casualChat = { generateCasualResponse, getRandomTopic };
@@ -157,6 +159,20 @@ export async function handleElysiaLove(body: ElysiaLoveBody, request: Request) {
 		const sessionId = body.sessionId || payload.userId || "default";
 
 		if (mode === "openai") {
+			void recordPrivacyEvent({
+				root: getWorkspaceRoot(),
+				ownerKey: payload.userId || "bearer-user",
+				scope: "model-provider",
+				provider: "openai",
+				direction: "external",
+				purpose: "OpenAI chat stream requested",
+				dataClass: "conversation",
+				localOnly: false,
+				riskLevel: "medium",
+				approvalStatus: "required",
+				payload: messagesWithSystem,
+				metadata: { sessionId, mode, model: llmConfig.model },
+			}).catch(() => undefined);
 			const stream = new ReadableStream({
 				async start(controller) {
 					try {
@@ -210,6 +226,17 @@ export async function handleElysiaLove(body: ElysiaLoveBody, request: Request) {
 				timeout: CONFIG.RAG_TIMEOUT,
 			},
 		);
+		void recordPrivacyEvent({
+			root: getWorkspaceRoot(),
+			ownerKey: payload.userId || "bearer-user",
+			scope: "chat",
+			provider: "fastapi-kernel",
+			direction: "local-service",
+			purpose: "FastAPI chat stream requested",
+			dataClass: "conversation",
+			payload: messagesWithSystem,
+			metadata: { sessionId, mode, baseUrl: CONFIG.FASTAPI_BASE_URL },
+		}).catch(() => undefined);
 
 		return new Response(upstream.data, {
 			status: upstream.status,

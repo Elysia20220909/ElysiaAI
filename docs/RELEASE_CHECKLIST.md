@@ -21,6 +21,7 @@ bun run test
 bun run typecheck
 bun run check:encoding
 bun run check:git-hygiene
+bun run desktop:check
 bun run security:glassworm -- --ci
 ```
 
@@ -35,6 +36,30 @@ For Rust shield-agent changes:
 ```powershell
 cargo check --manifest-path packages/shield-agent/Cargo.toml
 ```
+
+For Tauri desktop distribution readiness:
+
+```powershell
+bun run desktop:check
+cargo check --manifest-path src-tauri/Cargo.toml
+```
+
+Run `bun run desktop:build` only after human release review. A successful local
+bundle is not the same as approval to publish, sign, notarize, or upload.
+
+## Tauri desktop bundle
+
+Before sharing a desktop candidate:
+
+- Review `docs/TAURI_DISTRIBUTION_RUNBOOK.md`.
+- Confirm `src-tauri/tauri.conf.json` product name, version, identifier, icons,
+  resources, and CSP.
+- Confirm `docs/THIRD_PARTY_NOTICES.md` covers bundled third-party assets and
+  runtime dependencies.
+- Record whether Windows signing, macOS notarization, and Tauri updater are
+  enabled or intentionally skipped.
+- Add unresolved desktop risks to release notes Known Issues.
+- Generate checksums for every installer or app bundle that leaves the machine.
 
 ## Tagging
 

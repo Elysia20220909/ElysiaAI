@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+### Added
+- Beta 0.1 release notes and tester guide for the private pilot.
+- README Beta 0.1 preview with current Known Issues and release links.
+
 ## [1.3.0] - 2026-04-27
 ### 🛡️ Security & Integrity (Major)
 - **Unified Encryption**: Standardized AES-256-GCM and scrypt KDF across Node.js and Python.

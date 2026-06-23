@@ -33,6 +33,8 @@
     "suit": "bun scripts/suit.ts",
     "dev:ci": "bun scripts/boot.ts --ci",
     "desktop": "bun tauri dev",
+    "desktop:check": "bun scripts/tauri-distribution-check.ts",
+    "desktop:build": "bun tauri build",
     "test": "bun test ./src/*.test.ts ./tests/*.test.ts ./tests/integration/*.test.ts ./tests/performance/*.test.ts ./packages/server/src/lib/*.test.ts",
     "lint": "bun node_modules/@biomejs/biome/bin/biome check .",
     "typecheck": "bun node_modules/typescript/bin/tsc --noEmit",

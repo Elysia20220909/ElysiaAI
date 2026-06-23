@@ -21,21 +21,30 @@ import { applySecurityHeaders } from "./lib/security-utils";
 import { slackSocketModeBridge } from "./lib/slack-socket-mode";
 import { adminRoutes } from "./routes/admin-routes";
 import { aiRoutes, handleElysiaLove, handleFeedback } from "./routes/ai-routes";
+import { agentApprovalRoutes } from "./routes/agent-approval-routes";
+import { artifactRoutes } from "./routes/artifact-routes";
 import { authRoutes } from "./routes/auth-routes";
 import { blackwallRoutes } from "./routes/blackwall-routes";
 import { customizationRoutes } from "./routes/customization-routes";
+import { dailyDeskRoutes } from "./routes/daily-desk-routes";
 import { databaseRoutes } from "./routes/database-routes";
 import { elysiaCoreRoutes } from "./routes/elysia-core-routes";
 import { fileRoutes } from "./routes/file-routes";
 import { gpuRoutes } from "./routes/gpu-routes";
+import { knowledgeRoutes } from "./routes/knowledge-routes";
 import { learningRoutes } from "./routes/learning-routes";
 import { mvpRoutes } from "./routes/mvp-routes";
 import { neuralSystemRoutes } from "./routes/neural-system-routes";
+import { privacyRoutes } from "./routes/privacy-routes";
+import { projectMemoryRoutes } from "./routes/project-memory-routes";
 import { projectRoutes } from "./routes/project-routes";
 import { ruleRoutes } from "./routes/rule-routes";
 import { sessionRoutes } from "./routes/session-routes";
+import { setupRoutes } from "./routes/setup-routes";
 import { slackRoutes } from "./routes/slack-routes";
 import { systemRoutes } from "./routes/system-routes";
+import { testerAnalyticsRoutes } from "./routes/tester-analytics-routes";
+import { voiceRoutes } from "./routes/voice-routes";
 import { vtuberRoutes } from "./routes/vtuber-routes";
 
 const app = new Elysia();
@@ -176,21 +185,30 @@ app
 	})
 	.use(authRoutes)
 	.use(blackwallRoutes)
+	.use(agentApprovalRoutes)
 	.use(projectRoutes)
+	.use(projectMemoryRoutes)
+	.use(artifactRoutes)
 	.use(ruleRoutes)
 	.use(elysiaCoreRoutes)
 	.use(aiRoutes)
 	.use(gpuRoutes)
+	.use(knowledgeRoutes)
 	.use(slackRoutes)
 	.use(systemRoutes)
 	.use(adminRoutes)
 	.use(sessionRoutes)
 	.use(learningRoutes)
+	.use(setupRoutes)
 	.use(mvpRoutes)
 	.use(neuralSystemRoutes)
+	.use(privacyRoutes)
 	.use(customizationRoutes)
 	.use(fileRoutes)
 	.use(databaseRoutes)
+	.use(dailyDeskRoutes)
+	.use(testerAnalyticsRoutes)
+	.use(voiceRoutes)
 	.use(vtuberRoutes)
 	.get("/health", async () => {
 		return await performHealthCheck();

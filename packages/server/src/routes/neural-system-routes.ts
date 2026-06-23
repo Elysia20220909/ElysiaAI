@@ -5,7 +5,9 @@ import {
 	buildAgentWorkbenchProfile,
 	planAgentWorkbenchTask,
 } from "../lib/agent-workbench";
+import { requestToolApproval } from "../lib/agent-approval-gate";
 import { jsonError } from "../lib/constants";
+import { getWorkspaceRoot } from "../lib/mvp-local-ai";
 import {
 	buildNeuralAuthStatusFromRequest,
 	getNeuralAuthEvents,
@@ -318,19 +320,44 @@ export const neuralSystemRoutes = new Elysia()
 	})
 	.post(
 		"/api/agents/workbench/plan",
-		({ request, body }) => {
+		async ({ request, body }) => {
 			const session = requireNeuralSession(request);
 			if (session instanceof Response) return session;
 
 			try {
 				const input = body as AgentWorkbenchPlanBody;
+				const plan = planAgentWorkbenchTask({
+					request: input.request ?? "",
+					mode: input.mode,
+					requestedBy: session.username,
+				});
+				const actionClass =
+					plan.taskKind === "deployment_release"
+						? "deploy"
+						: plan.taskKind === "repo_maintenance"
+							? "write-file"
+							: plan.taskKind === "destructive_or_secret"
+								? "secret-access"
+								: plan.decision === "confirm"
+									? "unknown"
+									: "read";
+				const gate = await requestToolApproval({
+					root: getWorkspaceRoot(),
+					ownerKey: session.username,
+					toolName: "agent-workbench",
+					actionClass,
+					request: {
+						planId: plan.id,
+						taskKind: plan.taskKind,
+						decision: plan.decision,
+						request: plan.request,
+						blockedCapabilities: plan.blockedCapabilities,
+					},
+				});
 				return {
 					session,
-					plan: planAgentWorkbenchTask({
-						request: input.request ?? "",
-						mode: input.mode,
-						requestedBy: session.username,
-					}),
+					plan,
+					gate,
 					workbench: buildAgentWorkbenchProfile(),
 				};
 			} catch (error) {

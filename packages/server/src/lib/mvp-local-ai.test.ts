@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { closeKnowledgeDatabases, importKnowledgeDocument } from "./knowledge-import";
 import {
 	appendMvpMemory,
 	buildLocalRagContext,
@@ -9,6 +10,7 @@ import {
 	deleteMvpMemoryRecord,
 	getMvpMemoryStats,
 	readRecentMvpMemory,
+	searchLocalKnowledge,
 	searchLocalWorkspace,
 } from "./mvp-local-ai";
 
@@ -31,6 +33,9 @@ async function makeWorkspace() {
 }
 
 afterEach(async () => {
+	closeKnowledgeDatabases();
+	(Bun as any).gc?.(true);
+	await new Promise((resolve) => setTimeout(resolve, 20));
 	await Promise.all(
 		tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
 	);
@@ -58,6 +63,30 @@ describe("MVP local AI helpers", () => {
 
 		expect(rag.sources.length).toBeGreaterThan(0);
 		expect(rag.context).toContain("README.ja.md");
+	});
+
+	test("includes imported knowledge in local RAG search", async () => {
+		const root = await makeWorkspace();
+		await importKnowledgeDocument({
+			root,
+			userId: "operator",
+			name: "project-memory.md",
+			content: "ElysiaAI uses imported knowledge for daily project memory.",
+		});
+
+		const results = await searchLocalKnowledge("daily project memory", {
+			root,
+			userId: "operator",
+			limit: 3,
+		});
+		const rag = await buildLocalRagContext("daily project memory", {
+			root,
+			userId: "operator",
+			limit: 3,
+		});
+
+		expect(results[0]?.path).toBe("knowledge/project-memory.md");
+		expect(rag.context).toContain("imported knowledge");
 	});
 
 	test("expands Japanese queries for daily RAG/file search terms", async () => {

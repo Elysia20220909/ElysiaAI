@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,76 +8,114 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  username      String         @unique
-  passwordHash  String
-  role          String         @default("user")
-  sessions      ChatSession[]
-  tokens        RefreshToken[]
-  feedback      Feedback[]
-  knowledge     KnowledgeBase[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                 String            @id @default(cuid())
+  username           String            @unique
+  passwordHash       String
+  role               String            @default("user")
+  sessions           ChatSession[]
+  tokens             RefreshToken[]
+  feedback           Feedback[]
+  knowledge          KnowledgeBase[]
+  knowledgeSources   KnowledgeSource[]
+  ownedProjects      Project[]         @relation("ProjectOwner")
+  projectMemberships ProjectMember[]
+  projectMemories    ProjectMemory[]
+  memoryEvents       MemoryEvent[]
+  artifacts          Artifact[]
+  answerTraces       AnswerTrace[]
+  privacyEvents      PrivacyEvent[]
+  testerEvents       TesterEvent[]
+  agentPlans         AgentPlan[]
+  requestedApprovals ToolApproval[]    @relation("ToolApprovalRequester")
+  decidedApprovals   ToolApproval[]    @relation("ToolApprovalDecider")
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@map("users")
 }
 
 model RefreshToken {
   id        String   @id @default(cuid())
   token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   revoked   Boolean  @default(false)
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
 }
 
 model ChatSession {
-  id        String    @id @default(cuid())
-  userId    String?
-  user      User?     @relation(fields: [userId], references: [id])
-  messages  Message[]
-  mode      String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id           String        @id @default(cuid())
+  userId       String?
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  messages     Message[]
+  answerTraces AnswerTrace[]
+  mode         String        @default("normal")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@map("chat_sessions")
 }
 
 model Message {
-  id        String      @id @default(cuid())
-  sessionId String
-  session   ChatSession @relation(fields: [sessionId], references: [id])
-  role      String      // 'user' or 'assistant'
-  content   String      // Encrypted
-  createdAt DateTime    @default(now())
+  id           String        @id @default(cuid())
+  sessionId    String
+  session      ChatSession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role         String
+  content      String
+  answerTraces AnswerTrace[]
+  createdAt    DateTime      @default(now())
+
+  @@index([sessionId])
+  @@map("messages")
 }
 
 model ActionLog {
   id        String   @id @default(cuid())
   action    String
   status    String
-  hash      String   // AEGIS Ledger 用のハッシュ
+  hash      String
   createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("action_logs")
 }
 
 model Feedback {
   id        String   @id @default(cuid())
   userId    String?
-  user      User?     @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   query     String
   answer    String
   rating    String
   reason    String?
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("feedbacks")
 }
 
 model KnowledgeBase {
   id        String   @id @default(cuid())
   userId    String?
-  user      User?     @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   question  String
-  answer    String   // Encrypted
+  answer    String
   source    String?
   verified  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([verified])
+  @@map("knowledge_base")
 }
 
 model VoiceLog {
@@ -90,4 +125,396 @@ model VoiceLog {
   emotion   String
   audioUrl  String?
   createdAt DateTime @default(now())
+
+  @@index([username])
+  @@index([createdAt])
+  @@map("voice_logs")
+}
+
+model Project {
+  id               String            @id @default(cuid())
+  ownerKey         String
+  ownerId          String?
+  owner            User?             @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  name             String
+  slug             String
+  description      String?
+  status           String            @default("active")
+  localScope       String            @default("workspace")
+  memoryPolicyJson String            @default("{}")
+  members          ProjectMember[]
+  knowledgeSources KnowledgeSource[]
+  memories         ProjectMemory[]
+  artifacts        Artifact[]
+  answerTraces     AnswerTrace[]
+  privacyEvents    PrivacyEvent[]
+  testerEvents     TesterEvent[]
+  agentPlans       AgentPlan[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([ownerKey])
+  @@index([ownerId])
+  @@index([status])
+  @@unique([ownerKey, slug])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ownerKey  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("owner")
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, ownerKey])
+  @@index([ownerKey])
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+model KnowledgeSource {
+  id            String          @id @default(cuid())
+  ownerKey      String
+  userId        String?
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  projectId     String?
+  project       Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  name          String
+  mimeType      String
+  size          Int
+  status        String          @default("ready")
+  extractor     String          @default("plain-text")
+  storagePath   String?
+  extractedText String?
+  sourceHash    String?
+  chunkCount    Int             @default(0)
+  lastIndexedAt DateTime?
+  chunks        DocumentChunk[]
+  embeddingJobs EmbeddingJob[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([ownerKey])
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+  @@index([sourceHash])
+  @@map("knowledge_sources")
+}
+
+model DocumentChunk {
+  id           String          @id @default(cuid())
+  sourceId     String
+  source       KnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  ownerKey     String
+  userId       String?
+  projectId    String?
+  chunkIndex   Int
+  path         String?
+  heading      String?
+  content      String
+  contentHash  String?
+  lineStart    Int?
+  lineEnd      Int?
+  tokenCount   Int?
+  embeddingKey String?
+  vectorStatus String          @default("pending")
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([ownerKey])
+  @@unique([sourceId, chunkIndex])
+  @@index([userId])
+  @@index([projectId])
+  @@index([sourceId])
+  @@index([vectorStatus])
+  @@map("document_chunks")
+}
+
+model EmbeddingJob {
+  id          String          @id @default(cuid())
+  sourceId    String
+  source      KnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  ownerKey    String
+  userId      String?
+  projectId   String?
+  status      String          @default("queued")
+  backend     String          @default("sentence-transformers")
+  model       String?
+  vectorStore String          @default("milvus-lite")
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([sourceId])
+  @@index([ownerKey])
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+  @@map("embedding_jobs")
+}
+
+model ProjectMemory {
+  id              String        @id @default(cuid())
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ownerKey        String
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  title           String?
+  content         String
+  source          String        @default("manual")
+  status          String        @default("active")
+  gardenState     String        @default("sprout")
+  strength        Float         @default(0.5)
+  confidence      Float         @default(0.5)
+  useCount        Int           @default(0)
+  pinned          Boolean       @default(false)
+  expiresAt       DateTime?
+  lastUsedAt      DateTime?
+  embeddingKey    String?
+  metadataJson    String        @default("{}")
+  sourceTraceJson String        @default("{}")
+  events          MemoryEvent[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([projectId])
+  @@index([ownerKey])
+  @@index([userId])
+  @@index([status])
+  @@index([gardenState])
+  @@index([pinned])
+  @@map("project_memories")
+}
+
+model MemoryEvent {
+  id          String        @id @default(cuid())
+  memoryId    String
+  memory      ProjectMemory @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  ownerKey    String
+  userId      String?
+  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventType   String
+  delta       Float?
+  reason      String?
+  payloadJson String        @default("{}")
+  createdAt   DateTime      @default(now())
+
+  @@index([memoryId])
+  @@index([ownerKey])
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("memory_events")
+}
+
+model Artifact {
+  id              String             @id @default(cuid())
+  ownerKey        String
+  projectId       String?
+  project         Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  authorId        String?
+  author          User?              @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  title           String
+  kind            String             @default("markdown")
+  status          String             @default("draft")
+  content         String
+  metadataJson    String             @default("{}")
+  sourceTraceJson String             @default("{}")
+  revisions       ArtifactRevision[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([ownerKey])
+  @@index([projectId])
+  @@index([authorId])
+  @@index([kind])
+  @@index([status])
+  @@map("artifacts")
+}
+
+model ArtifactRevision {
+  id           String   @id @default(cuid())
+  artifactId   String
+  artifact     Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+  content      String
+  summary      String?
+  metadataJson String   @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@index([artifactId])
+  @@index([createdAt])
+  @@map("artifact_revisions")
+}
+
+model AnswerTrace {
+  id                String       @id @default(cuid())
+  userId            String?
+  user              User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  projectId         String?
+  project           Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  sessionId         String?
+  session           ChatSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  messageId         String?
+  message           Message?     @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  provider          String       @default("local")
+  model             String?
+  localOnly         Boolean      @default(true)
+  sourcesJson       String       @default("[]")
+  memoriesJson      String       @default("[]")
+  externalCallsJson String       @default("[]")
+  createdAt         DateTime     @default(now())
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([sessionId])
+  @@index([messageId])
+  @@index([createdAt])
+  @@map("answer_traces")
+}
+
+model PrivacyEvent {
+  id             String   @id @default(cuid())
+  ownerKey       String
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  projectId      String?
+  project        Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  scope          String
+  provider       String
+  direction      String   @default("local")
+  purpose        String
+  dataClass      String   @default("unknown")
+  approvalStatus String   @default("not-required")
+  localOnly      Boolean  @default(true)
+  riskLevel      String   @default("low")
+  payloadHash    String?
+  metadataJson   String   @default("{}")
+  createdAt      DateTime @default(now())
+
+  @@index([ownerKey])
+  @@index([userId])
+  @@index([projectId])
+  @@index([provider])
+  @@index([approvalStatus])
+  @@index([createdAt])
+  @@map("privacy_events")
+}
+
+model TesterEvent {
+  id           String   @id @default(cuid())
+  ownerKey     String
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  projectId    String?
+  project      Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  testerHash   String?
+  sessionId    String?
+  eventType    String
+  area         String
+  action       String
+  outcome      String   @default("neutral")
+  severity     String   @default("info")
+  durationMs   Int?
+  payloadHash  String?
+  metadataJson String   @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@index([ownerKey])
+  @@index([userId])
+  @@index([projectId])
+  @@index([sessionId])
+  @@index([eventType])
+  @@index([area])
+  @@index([outcome])
+  @@index([createdAt])
+  @@map("tester_events")
+}
+
+model AgentPlan {
+  id           String         @id @default(cuid())
+  ownerKey     String
+  userId       String?
+  user         User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  projectId    String?
+  project      Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title        String
+  goal         String
+  status       String         @default("plan-only")
+  riskLevel    String         @default("medium")
+  source       String         @default("agent-workbench")
+  metadataJson String         @default("{}")
+  steps        AgentStep[]
+  approvals    ToolApproval[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([ownerKey])
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+  @@index([riskLevel])
+  @@map("agent_plans")
+}
+
+model AgentStep {
+  id           String        @id @default(cuid())
+  planId       String
+  plan         AgentPlan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  position     Int
+  title        String
+  detail       String?
+  status       String        @default("pending")
+  requiredGate String        @default("read")
+  toolName     String?
+  approval     ToolApproval?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([planId, position])
+  @@index([planId])
+  @@index([status])
+  @@index([requiredGate])
+  @@map("agent_steps")
+}
+
+model ToolApproval {
+  id             String     @id @default(cuid())
+  ownerKey       String
+  planId         String?
+  plan           AgentPlan?  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  stepId         String?     @unique
+  step           AgentStep?  @relation(fields: [stepId], references: [id], onDelete: Cascade)
+  requestedById  String?
+  requestedBy    User?       @relation("ToolApprovalRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  decidedById    String?
+  decidedBy      User?       @relation("ToolApprovalDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+  toolName       String
+  actionClass    String
+  riskLevel      String      @default("medium")
+  status         String      @default("pending")
+  requestJson    String      @default("{}")
+  requestHash    String?
+  decisionReason String?
+  expiresAt      DateTime?
+  decidedAt      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([ownerKey])
+  @@index([planId])
+  @@index([requestedById])
+  @@index([decidedById])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([actionClass])
+  @@map("tool_approvals")
 }

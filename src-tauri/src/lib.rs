@@ -1,6 +1,8 @@
 use std::process::Child;
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, State};
+#[cfg(desktop)]
+use tauri::menu::{CheckMenuItemBuilder, MenuBuilder, SubmenuBuilder};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 mod aegis;
 mod aether_core;
@@ -22,6 +24,9 @@ use crate::sovereign_secrecy::{SecrecyClass, SovereignFile};
 
 /// State holder for the background Python kernel process.
 struct KernelState(Mutex<Option<Child>>);
+
+/// Native desktop menu state for the web Voice / Emotion panel.
+struct VoiceMenuState(Mutex<bool>);
 
 /// Returns the current status of the AEGIS watchdog.
 #[tauri::command]
@@ -227,6 +232,39 @@ fn set_wind_force_resonance(force: f32) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .setup(|app| {
+            #[cfg(desktop)]
+            {
+                let handle = app.handle();
+                let voice_toggle =
+                    CheckMenuItemBuilder::with_id("voice-toggle", "Voice Output")
+                        .checked(false)
+                        .accelerator("CmdOrCtrl+Shift+V")
+                        .build(handle)?;
+                let voice_menu = SubmenuBuilder::new(handle, "Voice")
+                    .item(&voice_toggle)
+                    .build()?;
+                let menu = MenuBuilder::new(handle).item(&voice_menu).build()?;
+                app.set_menu(menu)?;
+
+                app.on_menu_event(move |app_handle, event| {
+                    if event.id() != "voice-toggle" {
+                        return;
+                    }
+                    let voice_state = app_handle.state::<VoiceMenuState>();
+                    let Ok(mut enabled) = voice_state.0.lock() else {
+                        return;
+                    };
+                    *enabled = !*enabled;
+                    let _ = voice_toggle.set_checked(*enabled);
+                    let _ = app_handle.emit(
+                        "elysia://voice-toggle",
+                        serde_json::json!({ "enabled": *enabled }),
+                    );
+                });
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_aegis_resonance,
             execute_signed_influence,
@@ -244,6 +282,7 @@ pub fn run() {
             responsible_ai_guard_report
         ])
         .manage(aegis::AegisWatchdog::init())
+        .manage(VoiceMenuState(Mutex::new(false)))
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

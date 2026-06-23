@@ -18,12 +18,15 @@ import {
 	sep,
 } from "node:path";
 import { config } from "../../../../src/config.ts";
+import { searchImportedKnowledge } from "./knowledge-import";
 
 export type MvpSearchResult = {
 	path: string;
 	line: number;
 	score: number;
 	snippet: string;
+	sourceId?: string;
+	sourceType?: "workspace" | "imported-knowledge";
 };
 
 export type MvpRagContext = {
@@ -284,6 +287,7 @@ export async function searchLocalWorkspace(
 				line: index + 1,
 				score,
 				snippet,
+				sourceType: "workspace",
 			});
 		}
 	}
@@ -296,13 +300,33 @@ export async function searchLocalWorkspace(
 		.slice(0, Math.max(1, Math.min(options.limit || MAX_RESULT_COUNT, 20)));
 }
 
+export async function searchLocalKnowledge(
+	query: string,
+	options: { root?: string; limit?: number; userId?: string } = {},
+): Promise<MvpSearchResult[]> {
+	const root = resolve(options.root || getWorkspaceRoot());
+	const limit = Math.max(1, Math.min(options.limit || MAX_RESULT_COUNT, 20));
+	const [workspace, imported] = await Promise.all([
+		searchLocalWorkspace(query, { root, limit }),
+		searchImportedKnowledge(query, { root, userId: options.userId, limit }),
+	]);
+
+	return [...imported, ...workspace]
+		.sort(
+			(left, right) =>
+				right.score - left.score || left.path.localeCompare(right.path),
+		)
+		.slice(0, limit);
+}
+
 export async function buildLocalRagContext(
 	query: string,
-	options: { root?: string; limit?: number } = {},
+	options: { root?: string; limit?: number; userId?: string } = {},
 ): Promise<MvpRagContext> {
-	const sources = await searchLocalWorkspace(query, {
+	const sources = await searchLocalKnowledge(query, {
 		root: options.root,
 		limit: options.limit || 5,
+		userId: options.userId,
 	});
 
 	if (sources.length === 0) {

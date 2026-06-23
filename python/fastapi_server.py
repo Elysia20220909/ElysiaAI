@@ -5,6 +5,7 @@ Elysia AI - RAG Server with FastAPI + Milvus Lite (Runner Memory)
 """
 
 import asyncio
+import base64
 import datetime
 import hashlib
 import hmac
@@ -12,9 +13,11 @@ import io
 import json
 import logging
 import os
+import re
 import sys
 import time
 import uuid
+import zlib
 
 
 # Force UTF-8 for IO in Windows environments
@@ -311,7 +314,154 @@ class VoiceRequest(BaseModel):
         populate_by_name = True
 
 
+class KnowledgeIndexChunk(BaseModel):
+    chunk_id: str
+    content: str
+    path: str | None = None
+    line_start: int | None = None
+    line_end: int | None = None
+
+
+class KnowledgeExtractRequest(BaseModel):
+    name: str
+    mime_type: str = "text/plain"
+    content_base64: str
+
+
+class KnowledgeIndexRequest(BaseModel):
+    source_id: str
+    source_name: str
+    owner_key: str
+    project_id: str | None = None
+    chunks: list[KnowledgeIndexChunk]
+
+
 # ==================== Helper Functions ====================
+PDF_STRING_TOKEN = r"(?:\((?:\\.|[^\\()])*\)|<[0-9A-Fa-f\s]+>)"
+
+
+def decode_pdf_literal_string(token: str) -> str:
+    body = token[1:-1]
+    output: list[str] = []
+    index = 0
+    while index < len(body):
+        char = body[index]
+        if char != "\\":
+            output.append(char)
+            index += 1
+            continue
+
+        index += 1
+        if index >= len(body):
+            break
+        escaped = body[index]
+        if escaped == "n":
+            output.append("\n")
+        elif escaped == "r":
+            output.append("\r")
+        elif escaped == "t":
+            output.append("\t")
+        elif escaped == "b":
+            output.append("\b")
+        elif escaped == "f":
+            output.append("\f")
+        elif escaped in {"\n", "\r"}:
+            pass
+        elif escaped in "01234567":
+            octal = escaped
+            for _ in range(2):
+                if index + 1 < len(body) and body[index + 1] in "01234567":
+                    index += 1
+                    octal += body[index]
+            output.append(chr(int(octal, 8)))
+        else:
+            output.append(escaped)
+        index += 1
+    return "".join(output)
+
+
+def decode_pdf_hex_string(token: str) -> str:
+    hex_value = re.sub(r"[<>\s]", "", token)
+    if len(hex_value) % 2:
+        hex_value += "0"
+    data = bytes.fromhex(hex_value)
+    if data.startswith(b"\xfe\xff"):
+        return data[2:].decode("utf-16-be", errors="ignore")
+    return data.decode("latin1", errors="ignore").replace("\x00", "")
+
+
+def decode_pdf_string_token(token: str) -> str:
+    return decode_pdf_literal_string(token) if token.startswith("(") else decode_pdf_hex_string(token)
+
+
+def extract_pdf_stream_text(stream: bytes) -> list[str]:
+    content = stream.decode("latin1", errors="ignore")
+    pieces: list[str] = []
+
+    for match in re.finditer(rf"({PDF_STRING_TOKEN})\s*Tj", content):
+        pieces.append(decode_pdf_string_token(match.group(1)))
+
+    for match in re.finditer(rf"\[([\s\S]*?)\]\s*TJ", content):
+        text = "".join(decode_pdf_string_token(item.group(0)) for item in re.finditer(PDF_STRING_TOKEN, match.group(1)))
+        if text:
+            pieces.append(text)
+
+    for match in re.finditer(rf"({PDF_STRING_TOKEN})\s*'", content):
+        pieces.append(decode_pdf_string_token(match.group(1)))
+
+    for match in re.finditer(rf"(?:-?\d+(?:\.\d+)?\s+){{2}}({PDF_STRING_TOKEN})\s*\"", content):
+        pieces.append(decode_pdf_string_token(match.group(1)))
+
+    return [piece.strip() for piece in pieces if piece.strip()]
+
+
+def extract_pdf_text_bytes(data: bytes) -> str:
+    binary = data.decode("latin1", errors="ignore")
+    pieces: list[str] = []
+    cursor = 0
+
+    while cursor < len(binary):
+        stream_marker = binary.find("stream", cursor)
+        if stream_marker == -1:
+            break
+        stream_start = stream_marker + len("stream")
+        if binary[stream_start : stream_start + 2] == "\r\n":
+            stream_start += 2
+        elif binary[stream_start : stream_start + 1] == "\n":
+            stream_start += 1
+
+        stream_end = binary.find("endstream", stream_start)
+        if stream_end == -1:
+            break
+
+        dict_start = max(0, binary.rfind("<<", 0, stream_marker))
+        dictionary = binary[dict_start:stream_marker]
+        stream = data[stream_start:stream_end].rstrip(b"\r\n")
+        if "/FlateDecode" in dictionary:
+            try:
+                stream = zlib.decompress(stream)
+            except Exception:
+                cursor = stream_end + len("endstream")
+                continue
+
+        pieces.extend(extract_pdf_stream_text(stream))
+        cursor = stream_end + len("endstream")
+
+    text = re.sub(r"\n{3,}", "\n\n", re.sub(r"[ \t]+", " ", "\n".join(pieces))).strip()
+    if not text:
+        raise ValueError("PDF text extraction found no selectable text. OCR support is not implemented yet")
+    return text
+
+
+def extract_knowledge_text(req: KnowledgeExtractRequest) -> tuple[str, str]:
+    data = base64.b64decode(req.content_base64)
+    name = req.name.lower()
+    mime = req.mime_type.lower()
+    if name.endswith(".pdf") or mime == "application/pdf":
+        return extract_pdf_text_bytes(data), "pdf-text"
+    return data.decode("utf-8", errors="replace").strip(), "plain-text"
+
+
 async def get_embedding(text: str) -> list[float]:
     """選択されたプロバイダーでEmbeddingsを取得"""
     global model_local
@@ -618,6 +768,82 @@ async def rag_search(query: Query = Body(...)) -> dict[str, Any]:
     except Exception as e:
         logger.error(f"❌ RAG search error: {e}")
         raise HTTPException(500, f"RAG search failed: {str(e)}")
+
+
+@app.post("/knowledge/extract", dependencies=peripheral_white_ice)
+async def extract_knowledge(req: KnowledgeExtractRequest) -> dict[str, Any]:
+    """Extract text from TXT, Markdown, or selectable-text PDF content."""
+    try:
+        text, extractor = extract_knowledge_text(req)
+        if not text:
+            raise HTTPException(400, "Knowledge document is empty")
+        return {
+            "status": "success",
+            "name": req.name,
+            "extractor": extractor,
+            "text": text,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Knowledge extraction failed: {e}")
+        raise HTTPException(400, f"Knowledge extraction failed: {str(e)}")
+
+
+@app.post("/knowledge/index", dependencies=peripheral_white_ice)
+async def index_knowledge(req: KnowledgeIndexRequest) -> dict[str, Any]:
+    """Index imported document chunks into the local Milvus-backed memory store."""
+    if not milvus_client:
+        return {
+            "status": "skipped",
+            "reason": "Milvus is not available in this FastAPI runtime.",
+            "indexed": 0,
+        }
+
+    try:
+        if not milvus_client.has_collection(CONFIG["COLLECTION_NAME"]):
+            return {
+                "status": "skipped",
+                "reason": f"Collection {CONFIG['COLLECTION_NAME']} is not initialized.",
+                "indexed": 0,
+            }
+
+        rows: list[dict[str, Any]] = []
+        for chunk in req.chunks:
+            text = chunk.content.strip()
+            if not text:
+                continue
+            rows.append(
+                {
+                    "session_id": f"knowledge:{req.owner_key}:{req.project_id or 'default'}",
+                    "role": "knowledge",
+                    "content": text,
+                    "emotion": "neutral",
+                    "timestamp": time.time(),
+                    "embedding": await get_embedding(text),
+                    "source_id": req.source_id,
+                    "source_name": req.source_name,
+                    "chunk_id": chunk.chunk_id,
+                    "path": chunk.path or f"knowledge/{req.source_name}",
+                    "line_start": chunk.line_start,
+                    "line_end": chunk.line_end,
+                    "project_id": req.project_id,
+                }
+            )
+
+        if rows:
+            milvus_client.insert(collection_name=CONFIG["COLLECTION_NAME"], data=rows)
+
+        return {
+            "status": "success",
+            "source_id": req.source_id,
+            "indexed": len(rows),
+            "embedding_provider": CONFIG.get("EMBEDDING_PROVIDER", "local"),
+            "collection": CONFIG["COLLECTION_NAME"],
+        }
+    except Exception as e:
+        logger.error(f"❌ Knowledge index failed: {e}")
+        raise HTTPException(500, f"Knowledge index failed: {str(e)}")
 
 
 @app.post("/api/sovereign/recall", dependencies=peripheral_white_ice)

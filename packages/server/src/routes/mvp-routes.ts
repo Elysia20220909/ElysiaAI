@@ -12,9 +12,11 @@ import {
 	getMvpMemoryStats,
 	getWorkspaceRoot,
 	readRecentMvpMemory,
+	searchLocalKnowledge,
 	searchLocalWorkspace,
 } from "../lib/mvp-local-ai";
 import { verifyNeuralAccessRequest } from "../lib/neural-auth-system";
+import { recordPrivacyEvent } from "../lib/privacy-ledger";
 import { buildSecurityAgentReport } from "../lib/security-agent";
 
 function requireMvpSession(request: Request) {
@@ -144,9 +146,21 @@ export const mvpRoutes = new Elysia({ prefix: "/api/mvp" })
 			const query = String((body as { query?: string }).query || "").trim();
 			if (!query) return jsonError(400, "Missing query");
 
-			const results = await searchLocalWorkspace(query, {
+			const results = await searchLocalKnowledge(query, {
 				limit: (body as { limit?: number }).limit,
+				userId: session.username,
 			});
+			void recordPrivacyEvent({
+				root: getWorkspaceRoot(),
+				ownerKey: session.username,
+				scope: "knowledge",
+				provider: "sqlite-fts-local",
+				direction: "local",
+				purpose: "Local knowledge search",
+				dataClass: "query",
+				payload: query,
+				metadata: { resultCount: results.length },
+			}).catch(() => undefined);
 			return {
 				query,
 				results,
@@ -168,9 +182,22 @@ export const mvpRoutes = new Elysia({ prefix: "/api/mvp" })
 			const query = String((body as { query?: string }).query || "").trim();
 			if (!query) return jsonError(400, "Missing query");
 
-			return await buildLocalRagContext(query, {
+			const context = await buildLocalRagContext(query, {
 				limit: (body as { limit?: number }).limit,
+				userId: session.username,
 			});
+			void recordPrivacyEvent({
+				root: getWorkspaceRoot(),
+				ownerKey: session.username,
+				scope: "knowledge",
+				provider: "sqlite-fts-local",
+				direction: "local",
+				purpose: "Local RAG context built",
+				dataClass: "query",
+				payload: query,
+				metadata: { sourceCount: context.sources.length },
+			}).catch(() => undefined);
+			return context;
 		},
 		{
 			body: t.Object({
