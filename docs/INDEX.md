@@ -77,6 +77,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Testing and security gates | `docs/learnings/testing-and-security.md` |
 | Photo/game automation safety | `docs/learnings/photo-automation.md` |
 | GitHub repository file and folder list basics, Japanese | `docs/github-basics/README.ja.md` |
+| Pixiv short plot memo | `docs/fictional/PIXIV_PLOT_MEMO_COLD_RAILING_HOT_BREATH.md` |
 | FF14 cinematic suit presets | `docs/fictional/FF14_CINEMATIC_MODE_PRESETS.md` |
 
 ## Archive
