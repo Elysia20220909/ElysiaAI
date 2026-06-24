@@ -178,6 +178,9 @@ prisma.config.mjs.bak
 /uploads/
 /temp/
 
+# Archived local-only visual assets
+/public/assets/portal_bg.png
+
 # Test results
 /test-results/
 /playwright-report/

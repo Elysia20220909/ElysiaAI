@@ -296,7 +296,7 @@ bun scripts/manage.ts check
 | --- | --- |
 | ![ElysiaAI Logo](public/logo.png) | ElysiaAI / Elysia OS ロゴ |
 | ![Dashboard visual](dashboard/bg.png) | ダッシュボード用ビジュアル |
-| ![Portal visual](public/assets/portal_bg.png) | ポータル用ビジュアル |
+| Portal visual | `public/assets/portal_bg.png` はローカルアーカイブ扱いです。必要な場合は `archive/2026-06-24-large-asset` から復元してください。 |
 
 実 UI のスクリーンショットを追加する場合は、次の配置を推奨します。
 
