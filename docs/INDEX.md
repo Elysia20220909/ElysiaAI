@@ -64,6 +64,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Open-LLM-VTuber | `docs/OPEN_LLM_VTUBER_INTEGRATION.md` |
 | Discord command center | `docs/DISCORD_GINROU_COMMAND_CENTER.md` |
 | Discord server 1086031216433713163 spec | `docs/DISCORD_SERVER_1086031216433713163_SPEC.md` |
+| Marathon patch scan | `docs/MARATHON_PATCH_SCAN_2026-06-24.md` |
 | Web search | `docs/WEB_SEARCH_INTEGRATION.md` |
 | Voice | `docs/VOICE_GUIDE.md`, `docs/VOICEVOX_SETUP.md` |
 | Scrapling | `docs/SCRAPLING_INTEGRATION.md` |
