@@ -17,6 +17,7 @@
 		"dev:lite": "bun scripts/boot.ts --lite",
 		"hooks:install": "git config core.hooksPath .githooks",
 		"branch:auto": "bun scripts/auto-branch.ts",
+		"morning": "bun scripts/morning-quick-check.ts",
 		"notify:commit": "bun scripts/slack-commit-notify.ts --dry-run && bun scripts/discord-commit-notify.ts --dry-run",
 		"notify:commit:slack": "bun scripts/slack-commit-notify.ts --dry-run",
 		"notify:commit:discord": "bun scripts/discord-commit-notify.ts --dry-run",
