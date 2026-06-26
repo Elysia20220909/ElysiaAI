@@ -305,5 +305,5 @@ const recentMessages = await prisma.message.findMany({
 ## 参考リンク
 
 - [Prisma ドキュメント](https://www.prisma.io/docs)
-- [API仕様書](http://localhost:3000/swagger)
+- [API仕様書](http://localhost:3000/openapi)
 - [プロジェクト構造](../STRUCTURE.md)

@@ -20,7 +20,7 @@ export const applySecurityHeaders = (set: any, url: string) => {
 	}
 
 	const reqUrl = new URL(url);
-	if (csp && !reqUrl.pathname.startsWith("/swagger")) {
+	if (csp && !reqUrl.pathname.startsWith("/openapi")) {
 		headers["Content-Security-Policy"] = csp;
 	}
 

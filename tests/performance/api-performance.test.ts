@@ -25,14 +25,14 @@ describeLive("API Performance Tests", () => {
 		console.log(`Root endpoint: ${duration.toFixed(2)}ms`);
 	});
 
-	it("Swagger JSON should respond within 200ms", async () => {
+	it("OpenAPI JSON should respond within 200ms", async () => {
 		const start = performance.now();
-		const response = await fetch(`${BASE_URL}/swagger/json`);
+		const response = await fetch(`${BASE_URL}/openapi/json`);
 		const duration = performance.now() - start;
 
 		expect(response.status).toBe(200);
 		expect(duration).toBeLessThan(200);
-		console.log(`Swagger JSON: ${duration.toFixed(2)}ms`);
+		console.log(`OpenAPI JSON: ${duration.toFixed(2)}ms`);
 	});
 
 	it("Should handle concurrent health checks", async () => {
@@ -164,12 +164,12 @@ describeLive("Response Size Optimization", () => {
 		expect(sizeInBytes).toBeLessThan(2048); // Less than 2KB
 	});
 
-	it("Swagger JSON should have reasonable size", async () => {
-		const response = await fetch(`${BASE_URL}/swagger/json`);
+	it("OpenAPI JSON should have reasonable size", async () => {
+		const response = await fetch(`${BASE_URL}/openapi/json`);
 		const text = await response.text();
 		const sizeInKB = new Blob([text]).size / 1024;
 
-		console.log(`Swagger JSON size: ${sizeInKB.toFixed(2)} KB`);
+		console.log(`OpenAPI JSON size: ${sizeInKB.toFixed(2)} KB`);
 
 		expect(sizeInKB).toBeLessThan(500); // Less than 500KB
 	});

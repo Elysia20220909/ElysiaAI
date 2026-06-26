@@ -15,6 +15,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Beta 0.1 tester guide | `docs/BETA_0_1_TESTER_GUIDE.md` |
 | Product priority implementation plan | `docs/PRODUCT_PRIORITY_IMPLEMENTATION_PLAN.md` |
 | HIG-style UI quality floor rules | `docs/HIG_DESIGN_FLOOR_RULES.md` |
+| Elysia framework adoption scan | `docs/ELYSIA_FRAMEWORK_ADOPTION_SCAN_2026-06-26.md` |
 | Git workflow and branch discipline | `docs/GIT_WORKFLOW.md` |
 | Getting started | `docs/GETTING_STARTED.md` |
 | Local home server ops | `docs/LOCAL_HOME_SERVER_OPS.md` |

@@ -112,7 +112,7 @@ bun run dev
 🚀 Elysia server is running!
 📡 Port: 3000
 🌐 URL: http://localhost:3000
-📚 Docs: http://localhost:3000/swagger
+📚 Docs: http://localhost:3000/openapi
 🏥 Health: http://localhost:3000/health
 📊 Metrics: http://localhost:3000/metrics
 ```
@@ -188,7 +188,7 @@ bunx playwright test
    ```
 
 4. **APIドキュメント確認**
-   - http://localhost:3000/swagger
+   - http://localhost:3000/openapi
 
 5. **CI/CD更新**
    - `.github/workflows/ci-cd.yml` にテスト追加

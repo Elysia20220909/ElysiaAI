@@ -5,8 +5,8 @@ dotenv.config();
 import { existsSync } from "node:fs";
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
+import { openapi } from "@elysiajs/openapi";
 import { staticPlugin } from "@elysiajs/static";
-import { swagger } from "@elysiajs/swagger";
 import { Elysia, t } from "elysia";
 import { helmet } from "elysia-helmet";
 import { config, isProd } from "../../../src/config.ts";
@@ -20,8 +20,8 @@ import { metricsCollector } from "./lib/metrics";
 import { applySecurityHeaders } from "./lib/security-utils";
 import { slackSocketModeBridge } from "./lib/slack-socket-mode";
 import { adminRoutes } from "./routes/admin-routes";
-import { aiRoutes, handleElysiaLove, handleFeedback } from "./routes/ai-routes";
 import { agentApprovalRoutes } from "./routes/agent-approval-routes";
+import { aiRoutes, handleElysiaLove, handleFeedback } from "./routes/ai-routes";
 import { artifactRoutes } from "./routes/artifact-routes";
 import { authRoutes } from "./routes/auth-routes";
 import { blackwallRoutes } from "./routes/blackwall-routes";
@@ -63,7 +63,8 @@ app
 		}),
 	)
 	.use(
-		swagger({
+		openapi({
+			path: "/openapi",
 			documentation: {
 				info: {
 					title: "ElysiaAI Core System",

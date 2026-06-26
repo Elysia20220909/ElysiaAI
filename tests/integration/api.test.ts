@@ -38,18 +38,18 @@ describeLive("API Root", () => {
 	});
 });
 
-describeLive("Swagger Documentation", () => {
-	it("GET /swagger - should return Swagger UI", async () => {
-		const response = await fetch(`${BASE_URL}/swagger`);
+describeLive("OpenAPI Documentation", () => {
+	it("GET /openapi - should return OpenAPI UI", async () => {
+		const response = await fetch(`${BASE_URL}/openapi`);
 		const text = await response.text();
 
 		expect(response.status).toBe(200);
 		expect(response.headers.get("content-type")).toContain("text/html");
-		expect(text).toContain("swagger");
+		expect(text.toLowerCase()).toContain("openapi");
 	});
 
-	it("GET /swagger/json - should return OpenAPI spec", async () => {
-		const response = await fetch(`${BASE_URL}/swagger/json`);
+	it("GET /openapi/json - should return OpenAPI spec", async () => {
+		const response = await fetch(`${BASE_URL}/openapi/json`);
 		const data = await response.json();
 
 		expect(response.status).toBe(200);

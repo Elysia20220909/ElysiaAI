@@ -28,7 +28,7 @@ const auditDataMap = new WeakMap<Request, AuditData>();
 
 export function createAuditMiddleware(options: AuditMiddlewareOptions = {}) {
 	const {
-		excludePaths = ["/health", "/metrics", "/swagger"],
+		excludePaths = ["/health", "/metrics", "/openapi"],
 		excludeMethods = ["OPTIONS"],
 	} = options;
 

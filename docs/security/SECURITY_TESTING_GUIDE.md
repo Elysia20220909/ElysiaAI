@@ -38,7 +38,7 @@ bash run-comprehensive-security-tests.sh
 
 - Ping エンドポイント (100 req, 10 concurrent)
 - Health Check (50 req, 5 concurrent)
-- Swagger UI (30 req, 3 concurrent)
+- OpenAPI Docs (30 req, 3 concurrent)
 - セキュリティヘッダー検証
 - API セキュリティチェック
 

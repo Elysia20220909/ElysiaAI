@@ -123,6 +123,9 @@ console.log(`Exporting ${spans.length} spans`);
 - ===================================
   \*/
 
+// Import OpenAPI plugin
+import { openapi } from "@elysiajs/openapi";
+
 // Import schemas
 import {
 ChatRequestSchema,
@@ -133,10 +136,10 @@ ApiTags,
 SecuritySchemes,
 } from "./types/openapi";
 
-// Configure Swagger with enhanced schemas
+// Configure OpenAPI with enhanced schemas
 app.use(
-swagger({
-path: "/swagger",
+openapi({
+path: "/openapi",
 documentation: {
 info: {
 title: "Elysia AI API",

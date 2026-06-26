@@ -290,7 +290,7 @@ npm run dev
 
 - **メインアプリ**: http://localhost:3000
 - **管理画面**: http://localhost:3000/admin-extended.html
-- **Swagger API**: http://localhost:3000/swagger
+- **OpenAPI Docs**: http://localhost:3000/openapi
 
 ---
 
