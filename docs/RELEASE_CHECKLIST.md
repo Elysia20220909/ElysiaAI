@@ -92,3 +92,10 @@ If a release is bad:
 5. Release a new patch tag after verification.
 
 Do not rewrite published tags unless the repository owner explicitly decides to do so.
+
+For large production release days, review:
+
+- `docs/PRODUCTION_DEPLOY_DAY_PLAYBOOK_2026-07-21.md`
+- `docs/EMERGENCY_ROLLBACK_RUNBOOK.md`
+- `docs/KUBERNETES_BACKUP_RECOVERY_STRATEGY.md` when using Kubernetes
+- `docs/OBSERVABILITY_QUICKSTART_2026.md`

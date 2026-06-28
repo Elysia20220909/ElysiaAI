@@ -1,0 +1,56 @@
+name: Good First Issue Labels
+
+on:
+  issues:
+    types: [opened, labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Issue number to normalize
+        required: true
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  normalize:
+    name: Normalize good first issue labels
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.event.issue.title, 'good first issue:') ||
+      contains(github.event.issue.labels.*.name, 'good first issue') ||
+      github.event.label.name == 'good first issue'
+
+    steps:
+      - name: Ensure companion labels and apply them
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          ensure_label() {
+            local name="$1"
+            local color="$2"
+            local description="$3"
+
+            gh label create "$name" \
+              --repo "$REPO" \
+              --color "$color" \
+              --description "$description" >/dev/null 2>&1 || true
+          }
+
+          ensure_label "good first issue" "7057ff" "Good for first-time contributors"
+          ensure_label "status:ready" "2da44e" "Ready for a contributor to pick up"
+          ensure_label "difficulty:easy" "0e8a16" "Small first contribution"
+          ensure_label "help wanted" "008672" "Maintainers welcome outside help"
+
+          gh issue edit "$ISSUE_NUMBER" \
+            --repo "$REPO" \
+            --add-label "good first issue" \
+            --add-label "status:ready" \
+            --add-label "difficulty:easy" \
+            --add-label "help wanted"

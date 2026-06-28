@@ -1,0 +1,104 @@
+name: Good first issue
+description: 初回コントリビューター向けの小さな課題
+title: "good first issue: "
+labels: ["good first issue", "help wanted", "status:ready", "difficulty:easy"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ElysiaAIへようこそ。小さく、明るく、終わりが見える課題として書いてください。
+
+        Secrets、APIキー、Webhook URL、個人ログ、private RAG contentは貼らないでください。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 問題の説明
+      description: どこで何が起きているかを1行から2行で書いてください。
+      placeholder: "例: Setup WizardでVOICEVOX未起動時の表示が分かりにくい"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する挙動
+      description: 正しい状態を1行で書いてください。
+      placeholder: "例: VOICEVOXは任意項目として表示され、起動手順が短く出る"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: できるだけ短くしてください。
+      value: |
+        1. ...
+        2. ...
+        3. ...
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 受け入れ基準
+      value: |
+        - [ ] 単体テストまたは動作確認を追加する
+        - [ ] `bun run check:encoding` が通る
+        - [ ] 変更がUIならスクリーンショットか確認メモを添える
+        - [ ] READMEまたはdocsに必要な追記をする
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 領域
+      options:
+        - docs
+        - ui
+        - api
+        - rag-memory
+        - setup
+        - voice
+        - privacy-security
+        - ci-release
+    validations:
+      required: true
+
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: 難易度
+      options:
+        - easy
+        - normal
+      default: 0
+
+  - type: input
+    id: files
+    attributes:
+      label: 関連ファイルの目星
+      placeholder: "例: docs/VOICE_GUIDE.md, packages/server/src/routes/voice-routes.ts"
+
+  - type: textarea
+    id: getting-started
+    attributes:
+      label: はじめかた
+      value: |
+        ```bash
+        git checkout -b feat/<short-issue-key>
+        bun install
+        bun run check:encoding
+        bun run test
+        ```
+
+        Draft PRリンクの型:
+
+        ```text
+        https://github.com/Elysia20220909/ElysiaAI/compare/master...<your-fork-owner>:ElysiaAI:feat/<short-issue-key>?quick_pull=1
+        ```
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 参考
+      description: スクリーンショット、ログ、関連Issueがあれば貼ってください。秘密情報は必ず伏せてください。
