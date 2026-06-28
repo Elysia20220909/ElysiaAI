@@ -17,6 +17,7 @@ Beta 0.1は、ElysiaAIをローカルで毎日試せるPrivate AI Cockpitへ近�
 - WindowsでTauri開発起動と実Ollama連携を確認
 - macOS実機確認と3分デモ収録のRunbookを追加
 - Tauri配布前点検の `desktop:check` とRunbookを追加
+- Windows/macOS向けのTauri配布ゲートとLinux `glib` advisory gateをCIに接続
 
 ## 確認済み
 
@@ -36,6 +37,7 @@ Beta 0.1は、ElysiaAIをローカルで毎日試せるPrivate AI Cockpitへ近�
 - 実Ollama `llama3.2` で `mode: local-ollama` 応答
 - Gitleaks worktree scanでSecrets検出ゼロ
 - GitHub Actionsの最新 `master` 実行成功
+- Guardian CIで `desktop:check:windows`、`desktop:check:macos`、`desktop:check:linux:beta` 相当の配布前点検を実行
 
 ## Known Issues
 
@@ -43,7 +45,7 @@ Beta 0.1は、ElysiaAIをローカルで毎日試せるPrivate AI Cockpitへ近�
 - 3分デモ動画は未収録
 - READMEへの完成版デモ動画リンクは未掲載
 - Windows署名、macOS公証、Tauri updaterは配布前レビューで判断
-- Dependabot alert #7の `glib` は、Tauri / Wry / Linux GTK3系の上流依存リスクとしてIssue #104で追跡中
+- Dependabot alert #7の `glib` は、Tauri / Wry / Linux GTK3系の上流依存リスクとしてIssue #104で追跡中。Linux配布は `desktop:check:linux` でblocker扱い
 - Pythonの無指定 `ruff check .` と無指定 `pytest` は、MVP外の既存スクリプトまで含めると失敗するため、Beta 0.1では対象範囲をMVP関連に限定
 
 ## テスターに見てほしいこと
@@ -63,4 +65,5 @@ Beta 0.1は、ElysiaAIをローカルで毎日試せるPrivate AI Cockpitへ近�
 - READMEに完成版デモ動画リンクを追加する
 - 3〜5人のテスターへBeta 0.1候補を配布する
 - `bun run desktop:check` の警告を確認し、署名/公証/更新方針を決める
+- Windows/macOS署名方針を決め、Linuxは `glib >= 0.20.0` へ上がるまで配布対象外として扱う
 - 初回フィードバックをIssueへ整理する

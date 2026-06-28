@@ -9,6 +9,8 @@ type Finding = {
 	message: string;
 };
 
+type DistributionPlatform = "windows" | "macos" | "linux";
+
 type TauriConfig = {
 	productName?: string;
 	version?: string;
@@ -34,7 +36,39 @@ const args = new Set(Bun.argv.slice(2));
 const root = process.cwd();
 const strict = args.has("--strict");
 const json = args.has("--json");
+const allowLinuxGlibAdvisory = args.has("--allow-linux-glib-advisory");
 const findings: Finding[] = [];
+
+function argValue(name: string) {
+	const prefix = `${name}=`;
+	const inline = Bun.argv.slice(2).find((arg) => arg.startsWith(prefix));
+	if (inline) {
+		return inline.slice(prefix.length).trim();
+	}
+	const index = Bun.argv.indexOf(name);
+	if (index >= 0) {
+		return Bun.argv[index + 1]?.trim();
+	}
+	return "";
+}
+
+function platformArg(): DistributionPlatform | undefined {
+	const value = argValue("--platform").toLowerCase();
+	if (!value) {
+		return undefined;
+	}
+	if (value === "windows" || value === "macos" || value === "linux") {
+		return value;
+	}
+	add(
+		"blocker",
+		"platform",
+		`Unsupported platform "${value}". Use windows, macos, or linux.`,
+	);
+	return undefined;
+}
+
+const platform = platformArg();
 
 function add(level: FindingLevel, area: string, message: string) {
 	findings.push({ level, area, message });
@@ -66,6 +100,37 @@ function tomlString(source: string, key: string) {
 	return match?.[1]?.trim() || "";
 }
 
+function cargoLockVersion(source: string, packageName: string) {
+	const escaped = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	const match = source.match(
+		new RegExp(
+			`\\[\\[package\\]\\]\\s+name = "${escaped}"\\s+version = "([^"]+)"`,
+			"m",
+		),
+	);
+	return match?.[1]?.trim() || "";
+}
+
+function semverGte(version: string, minimum: string) {
+	const toParts = (value: string) =>
+		value
+			.split(".")
+			.map((part) => Number.parseInt(part.replace(/\D.*/, ""), 10) || 0);
+	const current = toParts(version);
+	const floor = toParts(minimum);
+	for (let index = 0; index < Math.max(current.length, floor.length); index++) {
+		const left = current[index] || 0;
+		const right = floor[index] || 0;
+		if (left > right) {
+			return true;
+		}
+		if (left < right) {
+			return false;
+		}
+	}
+	return true;
+}
+
 function resourceBase(resource: string) {
 	return normalize(resource.replace(/\/?\*\*\/\*$/, "").replace(/\/?\*$/, ""));
 }
@@ -77,6 +142,88 @@ function checkFile(path: string, area: string, message: string) {
 	}
 	add("blocker", area, `${message}: missing ${path}`);
 	return false;
+}
+
+function warnIfEnvMissing(names: string[], area: string, message: string) {
+	const present = names.filter((name) => Boolean(Bun.env[name]));
+	if (present.length === names.length) {
+		add("pass", area, message);
+		return;
+	}
+	add(
+		"warn",
+		area,
+		`${message}: missing ${names.filter((name) => !Bun.env[name]).join(", ")}`,
+	);
+}
+
+function checkWindowsDistribution() {
+	checkFile("src-tauri/icons/icon.ico", "windows", "Windows icon is present");
+	warnIfEnvMissing(
+		["WINDOWS_CERTIFICATE", "WINDOWS_CERTIFICATE_PASSWORD"],
+		"windows-signing",
+		"Windows signing secrets are available",
+	);
+	add(
+		"warn",
+		"windows-signing",
+		"Unsigned beta bundles are allowed only when release notes state the limitation",
+	);
+}
+
+function checkMacosDistribution() {
+	checkFile("src-tauri/icons/icon.icns", "macos", "macOS icon is present");
+	warnIfEnvMissing(
+		["APPLE_ID", "APPLE_PASSWORD", "APPLE_TEAM_ID"],
+		"macos-notarization",
+		"macOS notarization credentials are available",
+	);
+	add(
+		"warn",
+		"macos-notarization",
+		"Unnotarized beta bundles are allowed only when release notes state the limitation",
+	);
+}
+
+function checkLinuxDistribution() {
+	checkFile(
+		"docs/TAURI_GLIB_ADVISORY_2026-06-28.md",
+		"linux-advisory",
+		"glib advisory note is present",
+	);
+	if (!existsFromRoot("src-tauri/Cargo.lock")) {
+		add(
+			"blocker",
+			"linux-advisory",
+			"Cargo.lock is required for advisory gate",
+		);
+		return;
+	}
+
+	const lockfile = readText("src-tauri/Cargo.lock");
+	const glibVersion = cargoLockVersion(lockfile, "glib");
+	if (!glibVersion) {
+		add("warn", "linux-advisory", "glib is not present in Cargo.lock");
+		return;
+	}
+	if (semverGte(glibVersion, "0.20.0")) {
+		add("pass", "linux-advisory", `glib ${glibVersion} is in patched range`);
+		return;
+	}
+	const message = `glib ${glibVersion} is below 0.20.0 through the Linux GTK3/WebKit stack`;
+	if (allowLinuxGlibAdvisory) {
+		add(
+			"warn",
+			"linux-advisory",
+			`${message}; explicit beta waiver flag was supplied`,
+		);
+		return;
+	}
+	add(
+		"blocker",
+		"linux-advisory",
+		`${message}; use --allow-linux-glib-advisory only for documented beta waiver`,
+	);
 }
 
 const config = readJson<TauriConfig>("src-tauri/tauri.conf.json");
@@ -225,6 +372,16 @@ if (existsFromRoot("src-tauri/target/release/bundle")) {
 	);
 }
 
+if (platform === "windows") {
+	checkWindowsDistribution();
+}
+if (platform === "macos") {
+	checkMacosDistribution();
+}
+if (platform === "linux") {
+	checkLinuxDistribution();
+}
+
 const counts = findings.reduce<Record<FindingLevel, number>>(
 	(acc, finding) => {
 		acc[finding.level] += 1;
@@ -238,7 +395,9 @@ if (json) {
 		JSON.stringify({ ok: counts.blocker === 0, counts, findings }, null, 2),
 	);
 } else {
-	console.log("Tauri distribution readiness");
+	console.log(
+		`Tauri distribution readiness${platform ? ` (${platform})` : ""}`,
+	);
 	console.log(
 		`pass=${counts.pass} warn=${counts.warn} blocker=${counts.blocker}`,
 	);

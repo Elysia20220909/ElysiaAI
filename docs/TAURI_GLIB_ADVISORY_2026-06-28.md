@@ -41,3 +41,20 @@ For Beta desktop distribution:
 * Recheck after Tauri/Wry publishes a Linux dependency chain that no longer depends on `gtk 0.18.x` or `glib 0.18.x`.
 * Do not dismiss the Dependabot alert as fixed until `Cargo.lock` resolves `glib >= 0.20.0`.
 
+## Connected gate
+
+The advisory is connected to `scripts/tauri-distribution-check.ts`.
+
+Use this command to block Linux distribution candidates while `glib` is below the patched range:
+
+```bash
+bun run desktop:check:linux
+```
+
+Use this command only to record the known Beta waiver in CI or local release notes:
+
+```bash
+bun run desktop:check:linux:beta
+```
+
+The waiver command keeps the risk visible. It does not approve Linux distribution.

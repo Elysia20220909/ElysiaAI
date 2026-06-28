@@ -1,11 +1,11 @@
 # Security Audit
 
-Last updated: 2026-06-15
+Last updated: 2026-06-28
 
 ## Current Status
 
 - JavaScript/Bun: `bun audit` reports no known vulnerabilities.
-- Python local environment: `pip-audit --local` reports no known vulnerabilities after upgrading `setuptools` to `>=78.1.1`.
+- Python local environment: `pip-audit --local` reports no known vulnerabilities after upgrading `setuptools` to `>=78.1.1`, `msgpack` to `>=1.2.1`, and `pydantic-settings` to `>=2.14.2`.
 - Supply chain scan: `bun run security:glassworm -- --ci` reports no blocking findings.
 - Rust/Tauri: `src-tauri` is upgraded to Tauri `2.11.2`, `tauri-build` `2.6.2`, `reqwest` `0.13.4`, and current compatible lockfile patches.
 

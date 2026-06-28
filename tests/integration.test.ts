@@ -38,6 +38,10 @@ describe("Integration Tests - Full Stack", () => {
 		expect(rootPkg.scripts).toHaveProperty("lint");
 		expect(rootPkg.scripts).toHaveProperty("start");
 		expect(rootPkg.scripts).toHaveProperty("test");
+		expect(rootPkg.scripts).toHaveProperty("desktop:check:windows");
+		expect(rootPkg.scripts).toHaveProperty("desktop:check:macos");
+		expect(rootPkg.scripts).toHaveProperty("desktop:check:linux");
+		expect(rootPkg.scripts).toHaveProperty("desktop:check:linux:beta");
 		expect(serverPkg.scripts).toHaveProperty("dev");
 		expect(rootPkg.scripts.boot).toContain("scripts/boot.ts");
 		expect(rootPkg.scripts.start).toBe("bun run --cwd packages/server start");
@@ -241,8 +245,40 @@ describe("Integration Tests - Full Stack", () => {
 		expect(workflow).toContain("bun run start");
 		expect(workflow).toContain("REDIS_ENABLED=false");
 		expect(workflow).toContain("localhost:3000/ping");
+		expect(workflow).toContain("Tauri Distribution Readiness Gate");
+		expect(workflow).toContain("bun run desktop:check -- --platform windows");
+		expect(workflow).toContain("bun run desktop:check -- --platform macos");
+		expect(workflow).toContain(
+			"bun run desktop:check -- --platform linux --allow-linux-glib-advisory",
+		);
 		expect(workflow).not.toContain("localhost:3000/health || exit 1");
 		console.log("✅ CI smoke test uses ping");
+	});
+
+	test("Tauri distribution check exposes platform advisory gates", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const checker = fs.readFileSync(
+			path.join(process.cwd(), "scripts", "tauri-distribution-check.ts"),
+			"utf-8",
+		);
+		const runbook = fs.readFileSync(
+			path.join(process.cwd(), "docs", "TAURI_DISTRIBUTION_RUNBOOK.md"),
+			"utf-8",
+		);
+
+		expect(checker).toContain('type DistributionPlatform = "windows"');
+		expect(checker).toContain("--allow-linux-glib-advisory");
+		expect(checker).toContain("checkLinuxDistribution");
+		expect(checker).toContain(
+			"is below 0.20.0 through the Linux GTK3/WebKit stack",
+		);
+		expect(runbook).toContain("bun run desktop:check:windows");
+		expect(runbook).toContain("bun run desktop:check:macos");
+		expect(runbook).toContain("bun run desktop:check:linux");
+		expect(runbook).toContain("bun run desktop:check:linux:beta");
+		console.log("✅ Tauri distribution platform gates are documented");
 	});
 });
 

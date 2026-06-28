@@ -43,6 +43,12 @@ jobs:
       - name: Dependency Alignment Guard
         run: bun run check:deps
 
+      - name: Tauri Distribution Readiness Gate
+        run: |
+          bun run desktop:check -- --platform windows
+          bun run desktop:check -- --platform macos
+          bun run desktop:check -- --platform linux --allow-linux-glib-advisory
+
       - name: Run Biome (Format & Lint Check)
         run: bun run lint
 

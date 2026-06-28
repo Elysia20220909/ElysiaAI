@@ -23,6 +23,7 @@ duckduckgo-search==8.1.1
 beautifulsoup4==4.14.3
 markdownify>=1.2.0
 scrapling==0.4.7
+msgpack>=1.2.1
 
 # Visual Perception (The Sight)
 Pillow>=12.2.0,<13.0.0
@@ -45,7 +46,7 @@ defusedxml==0.7.1
 fastapi==0.136.1
 uvicorn==0.46.0
 httpx>=0.27.0
-pydantic-settings>=2.2.1
+pydantic-settings>=2.14.2
 pytest>=8.2.0
 ruff>=0.8.0
 feedparser==6.0.12

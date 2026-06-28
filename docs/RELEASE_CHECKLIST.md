@@ -41,6 +41,9 @@ For Tauri desktop distribution readiness:
 
 ```powershell
 bun run desktop:check
+bun run desktop:check:windows
+bun run desktop:check:macos
+bun run desktop:check:linux:beta
 cargo check --manifest-path src-tauri/Cargo.toml
 ```
 
@@ -58,6 +61,11 @@ Before sharing a desktop candidate:
   runtime dependencies.
 - Record whether Windows signing, macOS notarization, and Tauri updater are
   enabled or intentionally skipped.
+- Confirm Windows candidates passed `bun run desktop:check:windows`.
+- Confirm macOS candidates passed `bun run desktop:check:macos` on a macOS host
+  before sharing a macOS build.
+- Confirm Linux candidates either pass `bun run desktop:check:linux` or remain
+  explicitly blocked by the `glib` advisory gate.
 - Add unresolved desktop risks to release notes Known Issues.
 - Generate checksums for every installer or app bundle that leaves the machine.
 
