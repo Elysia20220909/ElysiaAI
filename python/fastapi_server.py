@@ -401,7 +401,7 @@ def extract_pdf_stream_text(stream: bytes) -> list[str]:
     for match in re.finditer(rf"({PDF_STRING_TOKEN})\s*Tj", content):
         pieces.append(decode_pdf_string_token(match.group(1)))
 
-    for match in re.finditer(rf"\[([\s\S]*?)\]\s*TJ", content):
+    for match in re.finditer(r"\[([\s\S]*?)\]\s*TJ", content):
         text = "".join(decode_pdf_string_token(item.group(0)) for item in re.finditer(PDF_STRING_TOKEN, match.group(1)))
         if text:
             pieces.append(text)
