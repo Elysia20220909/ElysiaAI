@@ -45,6 +45,7 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Production deploy day playbook | `docs/PRODUCTION_DEPLOY_DAY_PLAYBOOK_2026-07-21.md` |
 | Emergency rollback runbook | `docs/EMERGENCY_ROLLBACK_RUNBOOK.md` |
 | Tauri distribution runbook | `docs/TAURI_DISTRIBUTION_RUNBOOK.md` |
+| Tauri glib advisory note | `docs/TAURI_GLIB_ADVISORY_2026-06-28.md` |
 | Screenshots | `docs/SCREENSHOTS.md` |
 | Troubleshooting | `docs/TROUBLESHOOTING.md` |
 | Cloudflare Workers Builds | `docs/deployment/CLOUDFLARE_WORKERS_BUILDS.md` |

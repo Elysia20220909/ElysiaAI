@@ -126,6 +126,22 @@ describe("Integration Tests - Full Stack", () => {
 		console.log("✅ Health UI includes core and companion status");
 	});
 
+	test("Daily desk exposes tester analytics report controls", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const desk = fs.readFileSync(
+			path.join(process.cwd(), "public", "index.html"),
+			"utf-8",
+		);
+
+		expect(desk).toContain("data-tester-report");
+		expect(desk).toContain("Beta Readiness");
+		expect(desk).toContain("Outcome Flow");
+		expect(desk).toContain("/api/tester-analytics/report");
+		console.log("✅ Tester analytics report UI is wired");
+	});
+
 	test("Environment template covers both server and kernel names", async () => {
 		const fs = await import("node:fs");
 		const path = await import("node:path");

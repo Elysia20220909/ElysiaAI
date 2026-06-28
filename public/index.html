@@ -575,6 +575,49 @@
 			border-color: #fac8c8;
 		}
 
+		.tester-report {
+			display: grid;
+			gap: 8px;
+			margin-bottom: 8px;
+		}
+
+		.report-meter {
+			height: 8px;
+			overflow: hidden;
+			border-radius: 999px;
+			background: #edf1f7;
+		}
+
+		.report-meter span {
+			display: block;
+			height: 100%;
+			border-radius: inherit;
+			background: var(--green);
+		}
+
+		.report-meter.attention span {
+			background: var(--amber);
+		}
+
+		.report-meter.critical span {
+			background: var(--red);
+		}
+
+		.report-row {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			align-items: center;
+			gap: 8px;
+			border-top: 1px solid var(--line);
+			padding-top: 8px;
+		}
+
+		.outcome-strip {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+		}
+
 		@media (max-width: 1100px) {
 			.app {
 				grid-template-columns: 240px minmax(0, 1fr);
@@ -706,6 +749,7 @@
 					<button class="small" data-tester-refresh type="button">Refresh</button>
 				</div>
 				<div class="summary-grid" data-tester-summary></div>
+				<div class="tester-report" data-tester-report></div>
 				<form class="tester-box section" data-tester-form>
 					<select data-tester-area aria-label="Tester area">
 						<option value="setup">Setup</option>
@@ -1071,6 +1115,7 @@
 			testerForm: document.querySelector("[data-tester-form]"),
 			testerOutcome: document.querySelector("[data-tester-outcome]"),
 			testerRecommendations: document.querySelector("[data-tester-recommendations]"),
+			testerReport: document.querySelector("[data-tester-report]"),
 			testerRefresh: document.querySelector("[data-tester-refresh]"),
 			testerSeverity: document.querySelector("[data-tester-severity]"),
 			testerSummary: document.querySelector("[data-tester-summary]"),
@@ -1618,10 +1663,91 @@
 			return `${minutes} min`;
 		}
 
+		function clampPercent(value) {
+			return Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+		}
+
+		function testerReadinessScore(summary) {
+			const total = Number(summary.totalEvents || 0);
+			if (!total) return 0;
+			const successRate = Number(summary.successes || 0) / total;
+			const frictionRate = Number(summary.frictions || 0) / total;
+			return clampPercent(45 + successRate * 45 - frictionRate * 35);
+		}
+
+		function testerScoreTone(score) {
+			if (score < 45) return "critical";
+			if (score < 72) return "attention";
+			return "ok";
+		}
+
+		function renderTesterReport(report) {
+			const summary = report?.summary || {};
+			const total = Number(summary.totalEvents || 0);
+			if (!total) {
+				el.testerReport.innerHTML = `
+					<div class="item muted">
+						<div class="path">Beta Readiness</div>
+						<div class="snippet">まだ判断材料がありません。Setup、Chat、Knowledgeを1回ずつ触ると輪郭が出ます。</div>
+					</div>
+				`;
+				return;
+			}
+			const score = testerReadinessScore(summary);
+			const tone = testerScoreTone(score);
+			const topFriction = (report.frictionAreas || [])[0];
+			const outcomes = Object.entries(report.outcomes || {})
+				.sort((left, right) => Number(right[1]) - Number(left[1]))
+				.slice(0, 6);
+			const outcomeHtml = outcomes.length
+				? outcomes
+						.map(
+							([name, count]) =>
+								`<span class="summary-pill ${testerTone({ outcome: name, severity: "info" })}">${escapeHtml(name)} ${Number(count)}</span>`,
+						)
+						.join("")
+				: `<span class="muted">no outcome</span>`;
+			const generated = report.generatedAt
+				? new Date(report.generatedAt).toLocaleString()
+				: "unknown";
+			el.testerReport.innerHTML = `
+				<div class="item">
+					<div class="item-head">
+						<div>
+							<div class="path">Beta Readiness</div>
+							<div class="snippet">${score}% · avg ${escapeHtml(formatDuration(summary.avgDurationMs))} · ${escapeHtml(generated)}</div>
+						</div>
+						<span class="summary-pill ${tone}">${score}%</span>
+					</div>
+					<div class="report-meter ${tone}" aria-label="Beta readiness ${score}%">
+						<span style="width: ${score}%"></span>
+					</div>
+				</div>
+				<div class="report-row">
+					<div>
+						<div class="path">Top Friction</div>
+						<div class="snippet">${
+							topFriction
+								? `${escapeHtml(topFriction.area)} · ${Number(topFriction.count)} events · high ${Number(topFriction.highSeverity || 0)}`
+								: "摩擦はまだ目立っていません"
+						}</div>
+					</div>
+					<span class="summary-pill ${topFriction ? "attention" : "ok"}">${topFriction ? "watch" : "clear"}</span>
+				</div>
+				<div class="report-row">
+					<div>
+						<div class="path">Outcome Flow</div>
+						<div class="outcome-strip">${outcomeHtml}</div>
+					</div>
+				</div>
+			`;
+		}
+
 		function renderTesterAnalytics(report) {
 			state.tester = report || null;
 			if (!report) {
 				el.testerSummary.innerHTML = "";
+				el.testerReport.innerHTML = "";
 				el.testerRecommendations.innerHTML = `<div class="item muted">Tester Analyticsは待機中です。</div>`;
 				el.testerEvents.innerHTML = "";
 				return;
@@ -1642,6 +1768,7 @@
 					`,
 				)
 				.join("");
+			renderTesterReport(report);
 
 			const recommendations = report.recommendations || [];
 			el.testerRecommendations.innerHTML = recommendations.length
@@ -1711,6 +1838,7 @@
 				renderTesterAnalytics(data);
 			} catch (error) {
 				el.testerSummary.innerHTML = "";
+				el.testerReport.innerHTML = "";
 				el.testerRecommendations.innerHTML = `<div class="item muted">${
 					error instanceof Error ? escapeHtml(error.message) : "Tester Analytics is locked."
 				}</div>`;
