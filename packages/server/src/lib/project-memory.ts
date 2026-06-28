@@ -1,7 +1,7 @@
+import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { Database } from "bun:sqlite";
 
 export type ProjectStatus = "active" | "archived";
 export type ProjectMemoryStatus = "active" | "disabled" | "forgotten";
@@ -88,15 +88,19 @@ function safeJson(value: unknown) {
 }
 
 function dbPathForRoot(root: string) {
-	const dbUrl =
-		process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")
-			? process.env.DATABASE_URL
-			: `file:${join(root, "prisma", "dev.db")}`;
+	const dbUrl = process.env.DATABASE_URL?.startsWith("file:")
+		? process.env.DATABASE_URL
+		: `file:${join(root, "prisma", "dev.db")}`;
 	const rawPath = dbUrl.slice("file:".length);
 	return isAbsolute(rawPath) ? rawPath : resolve(root, rawPath);
 }
 
-function ensureColumn(db: Database, table: string, column: string, ddl: string) {
+function ensureColumn(
+	db: Database,
+	table: string,
+	column: string,
+	ddl: string,
+) {
 	const columns = db.query(`PRAGMA table_info("${table}")`).all() as Array<{
 		name: string;
 	}>;
@@ -295,7 +299,11 @@ function nextGardenState(memory: ProjectMemoryRecord): GardenState {
 	return "sprout";
 }
 
-async function assertProjectAccess(root: string, ownerKey: string, projectId: string) {
+async function assertProjectAccess(
+	root: string,
+	ownerKey: string,
+	projectId: string,
+) {
 	const db = getProjectDb(root);
 	const row = db
 		.query('SELECT * FROM "projects" WHERE "id" = ? AND "ownerKey" = ?')
@@ -559,7 +567,9 @@ export async function setProjectMemoryState({
 	if (!project) return { updated: false };
 	const db = getProjectDb(root);
 	const row = db
-		.query('SELECT * FROM "project_memories" WHERE "id" = ? AND "projectId" = ? AND "ownerKey" = ?')
+		.query(
+			'SELECT * FROM "project_memories" WHERE "id" = ? AND "projectId" = ? AND "ownerKey" = ?',
+		)
 		.get(memoryId, projectId, ownerKey) as MemoryRow | undefined;
 	if (!row) return { updated: false };
 

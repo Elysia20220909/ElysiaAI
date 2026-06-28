@@ -57,7 +57,8 @@ function stepStatusForService(
 	service: LocalOpsService | undefined,
 	required: boolean,
 ): SetupStepStatus {
-	if (!service || service.status === "unknown") return required ? "attention" : "optional";
+	if (!service || service.status === "unknown")
+		return required ? "attention" : "optional";
 	if (["up", "ready", "degraded"].includes(service.status)) return "ready";
 	if (service.status === "disabled") return "optional";
 	return required ? "blocked" : "optional";
@@ -80,7 +81,8 @@ function buildOllamaStep(
 			id: "ollama",
 			title: "Ollama local model engine",
 			status: "blocked",
-			detail: "Ollamaが応答していません。ローカル推論を使うにはOllamaを起動してください。",
+			detail:
+				"Ollamaが応答していません。ローカル推論を使うにはOllamaを起動してください。",
 			command: "ollama serve",
 			url: service?.url,
 			evidence: [
@@ -205,7 +207,9 @@ function summarizeSetup(steps: SetupWizardStep[]) {
 	const attention = required.filter((step) => step.status === "attention");
 	const ready = required.filter((step) => step.status === "ready");
 	const score =
-		required.length === 0 ? 100 : Math.round((ready.length / required.length) * 100);
+		required.length === 0
+			? 100
+			: Math.round((ready.length / required.length) * 100);
 
 	if (blocked.length > 0) {
 		return {
@@ -269,7 +273,8 @@ export function buildSetupWizardReadiness({
 			service: fastapi,
 			required: true,
 			readyDetail: "FastAPI kernel health check is responding.",
-			blockedDetail: "FastAPI kernel is offline. RAG and heavier AI tools may fall back.",
+			blockedDetail:
+				"FastAPI kernel is offline. RAG and heavier AI tools may fall back.",
 			command: "bun scripts/manage.ts dev:lite",
 			port: portById.get("fastapi"),
 		}),
@@ -282,7 +287,8 @@ export function buildSetupWizardReadiness({
 			service: voicevox,
 			required: false,
 			readyDetail: "VOICEVOX is available for local TTS.",
-			blockedDetail: "VOICEVOX is optional. Start it when voice output is needed.",
+			blockedDetail:
+				"VOICEVOX is optional. Start it when voice output is needed.",
 			command: "Start VOICEVOX Engine manually",
 			port: portById.get("voicevox"),
 		}),

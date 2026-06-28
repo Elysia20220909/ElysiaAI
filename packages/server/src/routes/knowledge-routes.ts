@@ -1,7 +1,6 @@
 import { Elysia, t } from "elysia";
 import { authErrorResponse } from "../lib/auth-cookies";
 import { jsonError } from "../lib/constants";
-import { getWorkspaceRoot } from "../lib/mvp-local-ai";
 import {
 	deleteKnowledgeSource,
 	importKnowledgeDocument,
@@ -9,6 +8,7 @@ import {
 	reindexKnowledgeSource,
 	setKnowledgeSourceStatus,
 } from "../lib/knowledge-import";
+import { getWorkspaceRoot } from "../lib/mvp-local-ai";
 import { verifyNeuralAccessRequest } from "../lib/neural-auth-system";
 import { recordPrivacyEvent } from "../lib/privacy-ledger";
 

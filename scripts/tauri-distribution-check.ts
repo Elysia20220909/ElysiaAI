@@ -106,7 +106,11 @@ if (config) {
 	const frontendDist = config.build?.frontendDist || "";
 	if (frontendDist) {
 		const frontendPath = normalize(join("src-tauri", frontendDist));
-		checkFile(frontendPath, "frontend", `frontendDist resolves to ${frontendDist}`);
+		checkFile(
+			frontendPath,
+			"frontend",
+			`frontendDist resolves to ${frontendDist}`,
+		);
 	} else {
 		add("blocker", "frontend", "build.frontendDist is required");
 	}
@@ -151,7 +155,11 @@ if (config) {
 		if (csp.includes("*")) {
 			add("blocker", "security", "CSP should not contain wildcard sources");
 		}
-		for (const required of ["localhost:3000", "localhost:8000", "localhost:11434"]) {
+		for (const required of [
+			"localhost:3000",
+			"localhost:8000",
+			"localhost:11434",
+		]) {
 			if (csp.includes(required)) {
 				add("pass", "security", `CSP allows local service ${required}`);
 			} else {
@@ -183,18 +191,38 @@ if (existsFromRoot("src-tauri/Cargo.toml")) {
 	if (tomlString(cargo, "repository")) {
 		add("pass", "metadata", "Cargo repository is set");
 	} else {
-		add("warn", "metadata", "Cargo repository is empty; set before public bundle");
+		add(
+			"warn",
+			"metadata",
+			"Cargo repository is empty; set before public bundle",
+		);
 	}
 }
 
-checkFile("docs/THIRD_PARTY_NOTICES.md", "release", "Third-party notices are present");
-checkFile("docs/RELEASE_CHECKLIST.md", "release", "Release checklist is present");
-checkFile("docs/BETA_0_1_RELEASE_NOTES.md", "release", "Beta release notes are present");
+checkFile(
+	"docs/THIRD_PARTY_NOTICES.md",
+	"release",
+	"Third-party notices are present",
+);
+checkFile(
+	"docs/RELEASE_CHECKLIST.md",
+	"release",
+	"Release checklist is present",
+);
+checkFile(
+	"docs/BETA_0_1_RELEASE_NOTES.md",
+	"release",
+	"Beta release notes are present",
+);
 
 if (existsFromRoot("src-tauri/target/release/bundle")) {
 	add("pass", "artifacts", "Tauri bundle directory exists");
 } else {
-	add("warn", "artifacts", "No local Tauri bundle directory yet; run desktop build only after review");
+	add(
+		"warn",
+		"artifacts",
+		"No local Tauri bundle directory yet; run desktop build only after review",
+	);
 }
 
 const counts = findings.reduce<Record<FindingLevel, number>>(
@@ -206,7 +234,9 @@ const counts = findings.reduce<Record<FindingLevel, number>>(
 );
 
 if (json) {
-	console.log(JSON.stringify({ ok: counts.blocker === 0, counts, findings }, null, 2));
+	console.log(
+		JSON.stringify({ ok: counts.blocker === 0, counts, findings }, null, 2),
+	);
 } else {
 	console.log("Tauri distribution readiness");
 	console.log(
@@ -214,7 +244,11 @@ if (json) {
 	);
 	for (const finding of findings) {
 		const mark =
-			finding.level === "pass" ? "PASS" : finding.level === "warn" ? "WARN" : "BLOCK";
+			finding.level === "pass"
+				? "PASS"
+				: finding.level === "warn"
+					? "WARN"
+					: "BLOCK";
 		console.log(`[${mark}] ${finding.area}: ${finding.message}`);
 	}
 }

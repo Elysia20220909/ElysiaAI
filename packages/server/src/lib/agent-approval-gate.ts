@@ -1,7 +1,7 @@
+import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { Database } from "bun:sqlite";
 
 export type AgentActionClass =
 	| "read"
@@ -82,11 +82,6 @@ type AgentPlanRow = AgentPlanRecord & {
 	projectId?: string | null;
 	userId?: string | null;
 };
-type AgentStepRow = Omit<AgentStepRecord, "position"> & {
-	position: number;
-	detail?: string | null;
-	toolName?: string | null;
-};
 type ToolApprovalRow = Omit<ToolApprovalRecord, "requestHash"> & {
 	planId?: string | null;
 	stepId?: string | null;
@@ -136,15 +131,19 @@ function addMinutes(date: Date, minutes: number) {
 }
 
 function dbPathForRoot(root: string) {
-	const dbUrl =
-		process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")
-			? process.env.DATABASE_URL
-			: `file:${join(root, "prisma", "dev.db")}`;
+	const dbUrl = process.env.DATABASE_URL?.startsWith("file:")
+		? process.env.DATABASE_URL
+		: `file:${join(root, "prisma", "dev.db")}`;
 	const rawPath = dbUrl.slice("file:".length);
 	return isAbsolute(rawPath) ? rawPath : resolve(root, rawPath);
 }
 
-function ensureColumn(db: Database, table: string, column: string, ddl: string) {
+function ensureColumn(
+	db: Database,
+	table: string,
+	column: string,
+	ddl: string,
+) {
 	const columns = db.query(`PRAGMA table_info("${table}")`).all() as Array<{
 		name: string;
 	}>;
@@ -284,7 +283,8 @@ function safeJson(value: unknown, fallback = "{}") {
 }
 
 function hashRequest(value: unknown) {
-	const normalized = typeof value === "string" ? value : JSON.stringify(value ?? {});
+	const normalized =
+		typeof value === "string" ? value : JSON.stringify(value ?? {});
 	return createHash("sha256").update(normalized).digest("hex");
 }
 
@@ -295,7 +295,9 @@ function normalizeActionClass(value?: string): AgentActionClass {
 }
 
 function normalizeStatus(value?: string): ToolApprovalStatus {
-	const status = (value || "pending").trim().toLowerCase() as ToolApprovalStatus;
+	const status = (value || "pending")
+		.trim()
+		.toLowerCase() as ToolApprovalStatus;
 	if (!validStatuses.has(status)) throw new Error("Invalid approval status");
 	return status;
 }
@@ -307,7 +309,9 @@ function normalizeRisk(value?: string): AgentRiskLevel {
 }
 
 function normalizeText(value: unknown) {
-	return String(value || "").toLowerCase().normalize("NFKC");
+	return String(value || "")
+		.toLowerCase()
+		.normalize("NFKC");
 }
 
 function planFromRow(row: AgentPlanRow): AgentPlanRecord {
@@ -322,21 +326,6 @@ function planFromRow(row: AgentPlanRow): AgentPlanRecord {
 		riskLevel: normalizeRisk(row.riskLevel),
 		source: row.source,
 		metadataJson: row.metadataJson || "{}",
-		createdAt: String(row.createdAt),
-		updatedAt: String(row.updatedAt),
-	};
-}
-
-function stepFromRow(row: AgentStepRow): AgentStepRecord {
-	return {
-		id: row.id,
-		planId: row.planId,
-		position: Number(row.position),
-		title: row.title,
-		detail: row.detail || undefined,
-		status: row.status,
-		requiredGate: normalizeActionClass(row.requiredGate),
-		toolName: row.toolName || undefined,
 		createdAt: String(row.createdAt),
 		updatedAt: String(row.updatedAt),
 	};
@@ -364,24 +353,33 @@ function approvalFromRow(row: ToolApprovalRow): ToolApprovalRecord {
 	};
 }
 
-function inferActionClass(toolName: string, request: unknown): AgentActionClass {
+function inferActionClass(
+	toolName: string,
+	request: unknown,
+): AgentActionClass {
 	const text = normalizeText(`${toolName}\n${safeJson(request)}`);
-	if (/\b(read|get|list|search|inspect|status|plan)\b/.test(text)) return "read";
+	if (/\b(read|get|list|search|inspect|status|plan)\b/.test(text))
+		return "read";
 	if (/\b(write|edit|patch|save|create file|apply_patch)\b/.test(text)) {
 		return "write-file";
 	}
-	if (/\b(delete|remove|rm |unlink|trash|archive)\b/.test(text)) return "delete-file";
-	if (/\b(shell|powershell|cmd|exec|terminal|process|start-process)\b/.test(text)) {
+	if (/\b(delete|remove|rm |unlink|trash|archive)\b/.test(text))
+		return "delete-file";
+	if (
+		/\b(shell|powershell|cmd|exec|terminal|process|start-process)\b/.test(text)
+	) {
 		return "os-command";
 	}
 	if (/\b(slack|discord|gmail|send|post|webhook|publish)\b/.test(text)) {
 		return "external-send";
 	}
-	if (/\b(fetch|http|https|api|network|browser)\b/.test(text)) return "network-call";
+	if (/\b(fetch|http|https|api|network|browser)\b/.test(text))
+		return "network-call";
 	if (/\b(secret|token|api key|credential|password|private key)\b/.test(text)) {
 		return "secret-access";
 	}
-	if (/\b(deploy|release|push|publish|production)\b/.test(text)) return "deploy";
+	if (/\b(deploy|release|push|publish|production)\b/.test(text))
+		return "deploy";
 	return "unknown";
 }
 
@@ -418,7 +416,9 @@ export function evaluateAgentAction({
 			actionClass: inferred,
 			decision: "deny",
 			riskLevel: "critical",
-			reasons: ["Request matches a deny-by-default destructive or secret pattern."],
+			reasons: [
+				"Request matches a deny-by-default destructive or secret pattern.",
+			],
 			requiredApproval: false,
 		};
 	}
@@ -478,7 +478,9 @@ export function evaluateAgentAction({
 	}
 
 	if (inferred === "secret-access" || inferred === "deploy") {
-		reasons.push("Secret access, deployment, push, publish, or release is gated.");
+		reasons.push(
+			"Secret access, deployment, push, publish, or release is gated.",
+		);
 		return {
 			actionClass: inferred,
 			decision: "approval-required",
@@ -727,7 +729,10 @@ WHERE "ownerKey" = ?
 ORDER BY "updatedAt" DESC, "createdAt" DESC
 LIMIT ?
 `)
-		.all(ownerKey, Math.max(1, Math.min(Math.trunc(Number(limit) || 30), 100))) as AgentPlanRow[];
+		.all(
+			ownerKey,
+			Math.max(1, Math.min(Math.trunc(Number(limit) || 30), 100)),
+		) as AgentPlanRow[];
 	return rows.map(planFromRow);
 }
 
@@ -807,18 +812,32 @@ export async function assertToolApproved({
 	ownerKey: string;
 	approvalId?: string;
 	actionClass?: string;
-}): Promise<{ allowed: boolean; reason: string; approval?: ToolApprovalRecord }> {
+}): Promise<{
+	allowed: boolean;
+	reason: string;
+	approval?: ToolApprovalRecord;
+}> {
 	const action = normalizeActionClass(actionClass);
 	if (action === "read") {
-		return { allowed: true, reason: "Read-only action does not require approval" };
+		return {
+			allowed: true,
+			reason: "Read-only action does not require approval",
+		};
 	}
 	if (!approvalId) {
-		return { allowed: false, reason: "Approval id is required for this action" };
+		return {
+			allowed: false,
+			reason: "Approval id is required for this action",
+		};
 	}
 	const approval = await getToolApproval({ root, ownerKey, approvalId });
 	if (!approval) return { allowed: false, reason: "Approval not found" };
 	if (approval.actionClass !== action && action !== "unknown") {
-		return { allowed: false, reason: "Approval action class mismatch", approval };
+		return {
+			allowed: false,
+			reason: "Approval action class mismatch",
+			approval,
+		};
 	}
 	if (approval.status !== "approved") {
 		return {
@@ -850,7 +869,8 @@ export async function buildAgentApprovalGateReport({
 			pending: pending.length,
 			approved: approvals.filter((approval) => approval.status === "approved")
 				.length,
-			denied: approvals.filter((approval) => approval.status === "denied").length,
+			denied: approvals.filter((approval) => approval.status === "denied")
+				.length,
 			highRisk: highRisk.length,
 		},
 		plans,

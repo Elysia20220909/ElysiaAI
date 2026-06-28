@@ -1,11 +1,11 @@
 import { Elysia, t } from "elysia";
+import { requestToolApproval } from "../lib/agent-approval-gate";
 import {
 	AgentWorkbenchError,
 	type AgentWorkbenchMode,
 	buildAgentWorkbenchProfile,
 	planAgentWorkbenchTask,
 } from "../lib/agent-workbench";
-import { requestToolApproval } from "../lib/agent-approval-gate";
 import { jsonError } from "../lib/constants";
 import { getWorkspaceRoot } from "../lib/mvp-local-ai";
 import {

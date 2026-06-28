@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { buildDailyDeskBrief, normalizeVoiceReadMode } from "./daily-desk-brief";
+import {
+	buildDailyDeskBrief,
+	normalizeVoiceReadMode,
+} from "./daily-desk-brief";
 import type { PrivacyEventRecord } from "./privacy-ledger";
 import type { ProjectMemoryRecord, ProjectRecord } from "./project-memory";
 
@@ -77,7 +80,11 @@ describe("daily desk brief", () => {
 				}),
 			],
 			voiceEvents: [voiceEvent(JSON.stringify({ emotion: "focused" }))],
-			setup: { status: "ready", score: 100, summary: "Local cockpit is ready." },
+			setup: {
+				status: "ready",
+				score: 100,
+				summary: "Local cockpit is ready.",
+			},
 			voice: {
 				enabled: true,
 				readMode: "summary",

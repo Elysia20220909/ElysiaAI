@@ -1,9 +1,16 @@
+import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync } from "node:fs";
 import { readFile, rm } from "node:fs/promises";
-import { basename, dirname, extname, isAbsolute, join, resolve } from "node:path";
+import {
+	basename,
+	dirname,
+	extname,
+	isAbsolute,
+	join,
+	resolve,
+} from "node:path";
 import { inflateSync } from "node:zlib";
-import { Database } from "bun:sqlite";
 import { config } from "../../../../src/config.ts";
 
 export type KnowledgeSourceStatus = "ready" | "disabled";
@@ -141,9 +148,30 @@ function scoreText(text: string, terms: string[]): number {
 	return score;
 }
 
+const invalidSourceNameCharacters = new Set([
+	"<",
+	">",
+	":",
+	'"',
+	"/",
+	"\\",
+	"|",
+	"?",
+	"*",
+]);
+
+function isUnsafeSourceNameCharacter(character: string): boolean {
+	return (
+		character.charCodeAt(0) < 32 || invalidSourceNameCharacters.has(character)
+	);
+}
+
 function sanitizeSourceName(name: string): string {
-	const safeName = basename(name || "knowledge.txt")
-		.replace(/[<>:"/\\|?*\u0000-\u001f]/g, "_")
+	const safeName = Array.from(basename(name || "knowledge.txt"))
+		.map((character) =>
+			isUnsafeSourceNameCharacter(character) ? "_" : character,
+		)
+		.join("")
 		.slice(0, MAX_SOURCE_NAME)
 		.trim();
 	return safeName || "knowledge.txt";
@@ -159,12 +187,16 @@ function assertSupportedDocument(name: string, mimeType: string, size: number) {
 		!SUPPORTED_EXTENSIONS.has(extension) &&
 		!SUPPORTED_MIME_TYPES.has(mimeType)
 	) {
-		throw new Error("Knowledge import currently supports TXT, Markdown, and text PDFs");
+		throw new Error(
+			"Knowledge import currently supports TXT, Markdown, and text PDFs",
+		);
 	}
 }
 
 function isPdfDocument(name: string, mimeType = ""): boolean {
-	return extname(name).toLowerCase() === ".pdf" || mimeType === "application/pdf";
+	return (
+		extname(name).toLowerCase() === ".pdf" || mimeType === "application/pdf"
+	);
 }
 
 function decodePdfLiteralString(input: string): string {
@@ -189,7 +221,11 @@ function decodePdfLiteralString(input: string): string {
 			if (body[index + 1] === "\n") index++;
 		} else if (/[0-7]/.test(next)) {
 			let octal = next;
-			for (let count = 0; count < 2 && /[0-7]/.test(body[index + 1] || ""); count++) {
+			for (
+				let count = 0;
+				count < 2 && /[0-7]/.test(body[index + 1] || "");
+				count++
+			) {
 				octal += body[++index];
 			}
 			output += String.fromCharCode(Number.parseInt(octal, 8));
@@ -211,7 +247,7 @@ function decodePdfHexString(input: string): string {
 		}
 		return text;
 	}
-	return bytes.toString("latin1").replace(/\u0000/g, "");
+	return bytes.toString("latin1").split("\u0000").join("");
 }
 
 function decodePdfStringToken(token: string): string {
@@ -225,11 +261,13 @@ function extractPdfTextFromContentStream(stream: Buffer): string[] {
 	const pieces: string[] = [];
 	const stringToken = String.raw`(?:\((?:\\.|[^\\()])*\)|<[0-9A-Fa-f\s]+>)`;
 
-	for (const match of content.matchAll(new RegExp(`(${stringToken})\\s*Tj`, "g"))) {
+	for (const match of content.matchAll(
+		new RegExp(`(${stringToken})\\s*Tj`, "g"),
+	)) {
 		pieces.push(decodePdfStringToken(match[1]));
 	}
 
-	for (const match of content.matchAll(new RegExp(`\\[([\\s\\S]*?)\\]\\s*TJ`, "g"))) {
+	for (const match of content.matchAll(/\[([\s\S]*?)\]\s*TJ/g)) {
 		const arrayBody = match[1];
 		const text = [...arrayBody.matchAll(new RegExp(stringToken, "g"))]
 			.map((tokenMatch) => decodePdfStringToken(tokenMatch[0]))
@@ -237,11 +275,15 @@ function extractPdfTextFromContentStream(stream: Buffer): string[] {
 		if (text) pieces.push(text);
 	}
 
-	for (const match of content.matchAll(new RegExp(`(${stringToken})\\s*'`, "g"))) {
+	for (const match of content.matchAll(
+		new RegExp(`(${stringToken})\\s*'`, "g"),
+	)) {
 		pieces.push(decodePdfStringToken(match[1]));
 	}
 
-	for (const match of content.matchAll(new RegExp(`(?:-?\\d+(?:\\.\\d+)?\\s+){2}(${stringToken})\\s*"`, "g"))) {
+	for (const match of content.matchAll(
+		new RegExp(`(?:-?\\d+(?:\\.\\d+)?\\s+){2}(${stringToken})\\s*"`, "g"),
+	)) {
 		pieces.push(decodePdfStringToken(match[1]));
 	}
 
@@ -269,9 +311,16 @@ function extractPdfText(buffer: Buffer): string {
 		const dictStart = Math.max(0, binary.lastIndexOf("<<", streamMarker));
 		const dictionary = binary.slice(dictStart, streamMarker);
 		let stream = buffer.subarray(streamStart, streamEnd);
-		if (stream.length >= 2 && stream[stream.length - 2] === 13 && stream[stream.length - 1] === 10) {
+		if (
+			stream.length >= 2 &&
+			stream[stream.length - 2] === 13 &&
+			stream[stream.length - 1] === 10
+		) {
 			stream = stream.subarray(0, stream.length - 2);
-		} else if (stream.length >= 1 && (stream[stream.length - 1] === 10 || stream[stream.length - 1] === 13)) {
+		} else if (
+			stream.length >= 1 &&
+			(stream[stream.length - 1] === 10 || stream[stream.length - 1] === 13)
+		) {
 			stream = stream.subarray(0, stream.length - 1);
 		}
 
@@ -294,7 +343,9 @@ function extractPdfText(buffer: Buffer): string {
 		.replace(/\n{3,}/g, "\n\n")
 		.trim();
 	if (!text) {
-		throw new Error("PDF text extraction found no selectable text. OCR support is not implemented yet");
+		throw new Error(
+			"PDF text extraction found no selectable text. OCR support is not implemented yet",
+		);
 	}
 	return text;
 }
@@ -355,10 +406,9 @@ export function getKnowledgeStoreDir(root: string): string {
 }
 
 export function getKnowledgeDatabasePath(root: string): string {
-	const dbUrl =
-		process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")
-			? process.env.DATABASE_URL
-			: `file:${join(root, "prisma", "dev.db")}`;
+	const dbUrl = process.env.DATABASE_URL?.startsWith("file:")
+		? process.env.DATABASE_URL
+		: `file:${join(root, "prisma", "dev.db")}`;
 	const rawPath = dbUrl.slice("file:".length);
 	return isAbsolute(rawPath) ? rawPath : resolve(root, rawPath);
 }
@@ -375,7 +425,12 @@ function getSourceTextPath(root: string, sourceId: string): string {
 	return join(getKnowledgeStoreDir(root), "source-text", `${sourceId}.txt`);
 }
 
-function ensureColumn(db: Database, table: string, column: string, ddl: string) {
+function ensureColumn(
+	db: Database,
+	table: string,
+	column: string,
+	ddl: string,
+) {
 	const columns = db.query(`PRAGMA table_info("${table}")`).all() as Array<{
 		name: string;
 	}>;
@@ -493,7 +548,12 @@ END;
 `);
 
 	ensureColumn(db, "knowledge_sources", "ownerKey", `"ownerKey" TEXT`);
-	ensureColumn(db, "knowledge_sources", "extractedText", `"extractedText" TEXT`);
+	ensureColumn(
+		db,
+		"knowledge_sources",
+		"extractedText",
+		`"extractedText" TEXT`,
+	);
 	ensureColumn(db, "document_chunks", "ownerKey", `"ownerKey" TEXT`);
 	ensureColumn(db, "embedding_jobs", "ownerKey", `"ownerKey" TEXT`);
 }
@@ -566,7 +626,9 @@ function chunkFromRow(row: KnowledgeChunkRow): ImportedKnowledgeChunk {
 	};
 }
 
-async function readLegacySources(root: string): Promise<ImportedKnowledgeSource[]> {
+async function readLegacySources(
+	root: string,
+): Promise<ImportedKnowledgeSource[]> {
 	try {
 		return JSON.parse(await readFile(getSourcesPath(root), "utf8"));
 	} catch {
@@ -574,7 +636,9 @@ async function readLegacySources(root: string): Promise<ImportedKnowledgeSource[
 	}
 }
 
-async function readLegacyChunks(root: string): Promise<ImportedKnowledgeChunk[]> {
+async function readLegacyChunks(
+	root: string,
+): Promise<ImportedKnowledgeChunk[]> {
 	try {
 		const text = await readFile(getChunksPath(root), "utf8");
 		return text
@@ -620,7 +684,11 @@ async function migrateLegacyFileStore(root: string) {
 	const legacyChunks = await readLegacyChunks(root);
 	const db = getKnowledgeDb(root);
 	const insertLegacy = db.transaction(
-		(source: ImportedKnowledgeSource, chunks: ImportedKnowledgeChunk[], text: string) => {
+		(
+			source: ImportedKnowledgeSource,
+			chunks: ImportedKnowledgeChunk[],
+			text: string,
+		) => {
 			const existing = db
 				.query('SELECT "id" FROM "knowledge_sources" WHERE "id" = ?')
 				.get(source.id);
@@ -773,7 +841,14 @@ function updateEmbeddingJobStatus({
 UPDATE "embedding_jobs"
 SET "status" = ?, "error" = ?, "startedAt" = COALESCE("startedAt", ?), "completedAt" = ?, "updatedAt" = ?
 WHERE "id" = ?
-`).run(status, error || null, now, status === "running" ? null : now, now, jobId);
+`).run(
+		status,
+		error || null,
+		now,
+		status === "running" ? null : now,
+		now,
+		jobId,
+	);
 }
 
 function markChunksVectorStatus({
@@ -947,7 +1022,12 @@ VALUES (?, ?, NULL, NULL, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?)
 			source.createdAt,
 			source.updatedAt,
 		);
-		insertChunks(db, source, chunks, shouldUseFastApiIndex() ? "queued" : "pending");
+		insertChunks(
+			db,
+			source,
+			chunks,
+			shouldUseFastApiIndex() ? "queued" : "pending",
+		);
 		db.prepare(`
 INSERT INTO "embedding_jobs"
 ("id", "sourceId", "ownerKey", "userId", "projectId", "status", "backend", "model", "vectorStore", "error", "startedAt", "completedAt", "createdAt", "updatedAt")
@@ -989,7 +1069,11 @@ WHERE (? IS NULL OR "ownerKey" = ?)
 AND (? = 1 OR "status" != 'disabled')
 ORDER BY "updatedAt" DESC, "createdAt" DESC
 `)
-		.all(userId || null, userId || null, includeDisabled ? 1 : 0) as KnowledgeSourceRow[];
+		.all(
+			userId || null,
+			userId || null,
+			includeDisabled ? 1 : 0,
+		) as KnowledgeSourceRow[];
 	return rows.map(sourceFromRow);
 }
 
@@ -1015,8 +1099,12 @@ WHERE "id" = ? AND "ownerKey" = ?
 
 	const source = sourceFromRow(row);
 	const remove = db.transaction(() => {
-		db.prepare('DELETE FROM "document_chunks" WHERE "sourceId" = ?').run(sourceId);
-		db.prepare('DELETE FROM "embedding_jobs" WHERE "sourceId" = ?').run(sourceId);
+		db.prepare('DELETE FROM "document_chunks" WHERE "sourceId" = ?').run(
+			sourceId,
+		);
+		db.prepare('DELETE FROM "embedding_jobs" WHERE "sourceId" = ?').run(
+			sourceId,
+		);
 		db.prepare('DELETE FROM "knowledge_sources" WHERE "id" = ?').run(sourceId);
 	});
 	remove();
@@ -1100,7 +1188,8 @@ ORDER BY c."chunkIndex" ASC
 	}
 
 	const normalizedText = normalizeImportedText(content);
-	if (!normalizedText) throw new Error("Knowledge source has no stored text to reindex");
+	if (!normalizedText)
+		throw new Error("Knowledge source has no stored text to reindex");
 
 	const now = new Date().toISOString();
 	const source = sourceFromRow({
@@ -1113,13 +1202,27 @@ ORDER BY c."chunkIndex" ASC
 	const jobId = makeId("embjob");
 
 	const update = db.transaction(() => {
-		db.prepare('DELETE FROM "document_chunks" WHERE "sourceId" = ?').run(sourceId);
+		db.prepare('DELETE FROM "document_chunks" WHERE "sourceId" = ?').run(
+			sourceId,
+		);
 		db.prepare(`
 UPDATE "knowledge_sources"
 SET "extractedText" = ?, "sourceHash" = ?, "chunkCount" = ?, "lastIndexedAt" = ?, "updatedAt" = ?
 WHERE "id" = ?
-`).run(normalizedText, sha256(normalizedText), chunks.length, now, now, sourceId);
-		insertChunks(db, source, chunks, shouldUseFastApiIndex() ? "queued" : "pending");
+`).run(
+			normalizedText,
+			sha256(normalizedText),
+			chunks.length,
+			now,
+			now,
+			sourceId,
+		);
+		insertChunks(
+			db,
+			source,
+			chunks,
+			shouldUseFastApiIndex() ? "queued" : "pending",
+		);
 		db.prepare(`
 INSERT INTO "embedding_jobs"
 ("id", "sourceId", "ownerKey", "userId", "projectId", "status", "backend", "model", "vectorStore", "error", "startedAt", "completedAt", "createdAt", "updatedAt")
@@ -1173,7 +1276,12 @@ AND (? IS NULL OR c."ownerKey" = ?)
 ORDER BY "ftsRank" ASC
 LIMIT ?
 `)
-			.all(ftsQuery, userId || null, userId || null, limit * 4) as KnowledgeChunkRow[];
+			.all(
+				ftsQuery,
+				userId || null,
+				userId || null,
+				limit * 4,
+			) as KnowledgeChunkRow[];
 		if (rows.length > 0) return rows;
 	}
 
@@ -1210,7 +1318,10 @@ export async function searchImportedKnowledge(
 
 	for (const row of candidates) {
 		const chunk = chunkFromRow(row);
-		const lexicalScore = scoreText(`${chunk.sourceName}\n${chunk.content}`, terms);
+		const lexicalScore = scoreText(
+			`${chunk.sourceName}\n${chunk.content}`,
+			terms,
+		);
 		const ftsScore = row.ftsRank === null || row.ftsRank === undefined ? 0 : 8;
 		const score = lexicalScore + ftsScore;
 		if (score <= 0) continue;

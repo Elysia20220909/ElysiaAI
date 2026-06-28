@@ -81,7 +81,12 @@ function overview(overrides: Partial<LocalOpsOverview> = {}): LocalOpsOverview {
 		improvements: [],
 		briefing: [],
 		commands: [
-			{ label: "Setup", command: "bun scripts/manage.ts setup", cwd: ".", when: "first run" },
+			{
+				label: "Setup",
+				command: "bun scripts/manage.ts setup",
+				cwd: ".",
+				when: "first run",
+			},
 		],
 		safety: {
 			manualStartOnly: true,
@@ -115,7 +120,9 @@ describe("setup wizard readiness", () => {
 
 		expect(readiness.status).toBe("ready");
 		expect(readiness.model.available).toBe(true);
-		expect(readiness.steps.find((step) => step.id === "voicevox")?.status).toBe("optional");
+		expect(readiness.steps.find((step) => step.id === "voicevox")?.status).toBe(
+			"optional",
+		);
 	});
 
 	test("surfaces missing Ollama as the first blocker", () => {
@@ -154,7 +161,9 @@ describe("setup wizard readiness", () => {
 			},
 		});
 
-		const modelStep = readiness.steps.find((step) => step.id === "ollama-model");
+		const modelStep = readiness.steps.find(
+			(step) => step.id === "ollama-model",
+		);
 		expect(readiness.status).toBe("attention");
 		expect(modelStep?.command).toBe("ollama pull llama3.2");
 		expect(modelStep?.action?.path).toBe("/api/setup/actions/pull-model");

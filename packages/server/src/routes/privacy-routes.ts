@@ -121,7 +121,9 @@ export const privacyRoutes = new Elysia({ prefix: "/api/privacy" })
 			} catch (error) {
 				return jsonError(
 					400,
-					error instanceof Error ? error.message : "Privacy event create failed",
+					error instanceof Error
+						? error.message
+						: "Privacy event create failed",
 				);
 			}
 		},

@@ -1,7 +1,7 @@
+import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { Database } from "bun:sqlite";
 
 export type PrivacyDirection =
 	| "local"
@@ -93,15 +93,19 @@ function nowIso() {
 }
 
 function dbPathForRoot(root: string) {
-	const dbUrl =
-		process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")
-			? process.env.DATABASE_URL
-			: `file:${join(root, "prisma", "dev.db")}`;
+	const dbUrl = process.env.DATABASE_URL?.startsWith("file:")
+		? process.env.DATABASE_URL
+		: `file:${join(root, "prisma", "dev.db")}`;
 	const rawPath = dbUrl.slice("file:".length);
 	return isAbsolute(rawPath) ? rawPath : resolve(root, rawPath);
 }
 
-function ensureColumn(db: Database, table: string, column: string, ddl: string) {
+function ensureColumn(
+	db: Database,
+	table: string,
+	column: string,
+	ddl: string,
+) {
 	const columns = db.query(`PRAGMA table_info("${table}")`).all() as Array<{
 		name: string;
 	}>;
@@ -207,7 +211,8 @@ function payloadHash(value: unknown) {
 
 function normalizeDirection(value?: string): PrivacyDirection {
 	const direction = (value || "local").trim().toLowerCase() as PrivacyDirection;
-	if (!validDirections.has(direction)) throw new Error("Invalid privacy direction");
+	if (!validDirections.has(direction))
+		throw new Error("Invalid privacy direction");
 	return direction;
 }
 
@@ -270,7 +275,9 @@ function summarize(events: PrivacyEventRecord[]): PrivacyLedgerSummary {
 	};
 }
 
-function postureCatalog(): Array<Omit<PrivacyPostureItem, "eventCount" | "lastEventAt">> {
+function postureCatalog(): Array<
+	Omit<PrivacyPostureItem, "eventCount" | "lastEventAt">
+> {
 	const openAiConfigured = isConfigured("OPENAI_API_KEY");
 	const groqConfigured = isConfigured("GROQ_API_KEY");
 	const slackConfigured = isConfigured(
@@ -292,7 +299,8 @@ function postureCatalog(): Array<Omit<PrivacyPostureItem, "eventCount" | "lastEv
 			riskLevel: "low",
 			approvalStatus: "not-required",
 			configured: true,
-			detail: "Ollamaまたはローカルfallbackで処理します。会話内容を外部へ送信しません。",
+			detail:
+				"Ollamaまたはローカルfallbackで処理します。会話内容を外部へ送信しません。",
 		},
 		{
 			id: "knowledge-rag",
@@ -390,7 +398,8 @@ function postureCatalog(): Array<Omit<PrivacyPostureItem, "eventCount" | "lastEv
 			riskLevel: "high",
 			approvalStatus: slackConfigured ? "required" : "not-configured",
 			configured: slackConfigured,
-			detail: "ワークスペース外部へ投稿するため、送信前に人間の確認が必要です。",
+			detail:
+				"ワークスペース外部へ投稿するため、送信前に人間の確認が必要です。",
 		},
 		{
 			id: "discord",
@@ -546,7 +555,9 @@ export async function buildPrivacyPosture({
 		limit: 300,
 	});
 	return postureCatalog().map((item) => {
-		const itemEvents = events.filter((event) => matchesPostureItem(item, event));
+		const itemEvents = events.filter((event) =>
+			matchesPostureItem(item, event),
+		);
 		return {
 			...item,
 			eventCount: itemEvents.length,

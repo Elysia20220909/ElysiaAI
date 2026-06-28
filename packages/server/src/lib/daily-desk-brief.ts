@@ -1,4 +1,3 @@
-import { collectSetupWizardReadiness } from "./setup-wizard";
 import type { PrivacyEventRecord } from "./privacy-ledger";
 import { listPrivacyEvents } from "./privacy-ledger";
 import type { ProjectMemoryRecord, ProjectRecord } from "./project-memory";
@@ -7,6 +6,7 @@ import {
 	listProjectMemories,
 	listProjects,
 } from "./project-memory";
+import { collectSetupWizardReadiness } from "./setup-wizard";
 
 export type VoiceReadMode = "full" | "summary" | "silent-badge";
 
@@ -121,11 +121,16 @@ function emotionSummary(emotion: string, sourceCount: number) {
 	if (sourceCount === 0) {
 		return "感情メタデータはまだ静かです。次の会話や記憶から少しずつ育ちます。";
 	}
-	if (emotion === "focused") return "集中の気配が強めです。短く、実装に寄せた返答が合います。";
-	if (emotion === "exhaustion") return "疲れの気配があります。声は少し遅く、返答は要点中心が合います。";
-	if (emotion === "joy") return "明るい反応が増えています。達成感を崩さず、次の一手へ橋をかけます。";
-	if (emotion === "affection") return "寄り添いの文脈が濃い日です。柔らかい声色が自然です。";
-	if (emotion === "loneliness") return "静かな余白が目立ちます。急がず、短い確認を重ねる設計が合います。";
+	if (emotion === "focused")
+		return "集中の気配が強めです。短く、実装に寄せた返答が合います。";
+	if (emotion === "exhaustion")
+		return "疲れの気配があります。声は少し遅く、返答は要点中心が合います。";
+	if (emotion === "joy")
+		return "明るい反応が増えています。達成感を崩さず、次の一手へ橋をかけます。";
+	if (emotion === "affection")
+		return "寄り添いの文脈が濃い日です。柔らかい声色が自然です。";
+	if (emotion === "loneliness")
+		return "静かな余白が目立ちます。急がず、短い確認を重ねる設計が合います。";
 	return "平常運転です。声は控えめに、必要な時だけ前へ出ます。";
 }
 
@@ -171,10 +176,16 @@ export function buildDailyDeskBrief({
 	}
 
 	const dominant = dominantEmotion(counts, current);
-	const activeMemories = memories.filter((memory) => memory.status === "active");
+	const activeMemories = memories.filter(
+		(memory) => memory.status === "active",
+	);
 	const pinnedCount = memories.filter((memory) => memory.pinned).length;
-	const withered = memories.filter((memory) => memory.gardenState === "withered");
-	const recentKnowledge = memories.filter((memory) => memory.source === "knowledge").length;
+	const withered = memories.filter(
+		(memory) => memory.gardenState === "withered",
+	);
+	const recentKnowledge = memories.filter(
+		(memory) => memory.source === "knowledge",
+	).length;
 	const voiceEnabled = Boolean(voice.enabled);
 	const briefVoiceSummary = voiceSummary({
 		enabled: voiceEnabled,

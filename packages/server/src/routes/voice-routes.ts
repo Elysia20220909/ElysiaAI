@@ -19,7 +19,9 @@ function requireVoiceSession(request: Request) {
 	}
 }
 
-async function postVoicevoxTts(payload: ReturnType<typeof buildVoiceTtsPayload>) {
+async function postVoicevoxTts(
+	payload: ReturnType<typeof buildVoiceTtsPayload>,
+) {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), 45000);
 	try {

@@ -1,11 +1,6 @@
 import type { CoreEmotion } from "./elysia-core";
 
-export type VoicePreset =
-	| "auto"
-	| CoreEmotion
-	| "calm"
-	| "bright"
-	| "soft";
+export type VoicePreset = "auto" | CoreEmotion | "calm" | "bright" | "soft";
 
 export type VoiceTuning = {
 	speedScale: number;
@@ -137,7 +132,10 @@ export function buildVoiceTtsPayload(
 	return {
 		text,
 		emotion,
-		speaker_id: clampSpeaker(input.speaker_id ?? input.speakerId, speakerFallback),
+		speaker_id: clampSpeaker(
+			input.speaker_id ?? input.speakerId,
+			speakerFallback,
+		),
 		speedScale: clamp(
 			input.speedScale ?? defaults.speedScale,
 			preset.speedScale,

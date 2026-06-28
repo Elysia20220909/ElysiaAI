@@ -214,7 +214,9 @@ export const agentApprovalRoutes = new Elysia({ prefix: "/api/agents" })
 			} catch (error) {
 				return jsonError(
 					400,
-					error instanceof Error ? error.message : "Tool approval request failed",
+					error instanceof Error
+						? error.message
+						: "Tool approval request failed",
 				);
 			}
 		},
@@ -277,7 +279,9 @@ export const agentApprovalRoutes = new Elysia({ prefix: "/api/agents" })
 			} catch (error) {
 				return jsonError(
 					400,
-					error instanceof Error ? error.message : "Tool approval decision failed",
+					error instanceof Error
+						? error.message
+						: "Tool approval decision failed",
 				);
 			}
 		},

@@ -3,6 +3,7 @@ import { authErrorResponse } from "../lib/auth-cookies";
 import { jsonError } from "../lib/constants";
 import { getWorkspaceRoot } from "../lib/mvp-local-ai";
 import { verifyNeuralAccessRequest } from "../lib/neural-auth-system";
+import { recordPrivacyEvent } from "../lib/privacy-ledger";
 import {
 	addProjectMemory,
 	createProject,
@@ -11,7 +12,6 @@ import {
 	listProjects,
 	setProjectMemoryState,
 } from "../lib/project-memory";
-import { recordPrivacyEvent } from "../lib/privacy-ledger";
 
 function requireProjectMemorySession(request: Request) {
 	try {

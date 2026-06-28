@@ -1,7 +1,7 @@
+import { Database } from "bun:sqlite";
 import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { Database } from "bun:sqlite";
 
 export type TesterEventType =
 	| "session"
@@ -48,7 +48,12 @@ export type TesterAnalyticsReport = {
 		feedback: number;
 		avgDurationMs?: number;
 	};
-	featureUsage: Array<{ area: string; events: number; successes: number; frictions: number }>;
+	featureUsage: Array<{
+		area: string;
+		events: number;
+		successes: number;
+		frictions: number;
+	}>;
 	outcomes: Record<string, number>;
 	frictionAreas: Array<{ area: string; count: number; highSeverity: number }>;
 	recent: TesterEventRecord[];
@@ -92,15 +97,19 @@ function nowIso() {
 }
 
 function dbPathForRoot(root: string) {
-	const dbUrl =
-		process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")
-			? process.env.DATABASE_URL
-			: `file:${join(root, "prisma", "dev.db")}`;
+	const dbUrl = process.env.DATABASE_URL?.startsWith("file:")
+		? process.env.DATABASE_URL
+		: `file:${join(root, "prisma", "dev.db")}`;
 	const rawPath = dbUrl.slice("file:".length);
 	return isAbsolute(rawPath) ? rawPath : resolve(root, rawPath);
 }
 
-function ensureColumn(db: Database, table: string, column: string, ddl: string) {
+function ensureColumn(
+	db: Database,
+	table: string,
+	column: string,
+	ddl: string,
+) {
 	const columns = db.query(`PRAGMA table_info("${table}")`).all() as Array<{
 		name: string;
 	}>;
@@ -195,12 +204,14 @@ function hashPayload(value: unknown) {
 }
 
 function normalizeToken(value: unknown, fallback: string, max = 80) {
-	return String(value || fallback)
-		.trim()
-		.toLowerCase()
-		.replace(/[^\p{L}\p{N}_-]+/gu, "-")
-		.replace(/^-+|-+$/g, "")
-		.slice(0, max) || fallback;
+	return (
+		String(value || fallback)
+			.trim()
+			.toLowerCase()
+			.replace(/[^\p{L}\p{N}_-]+/gu, "-")
+			.replace(/^-+|-+$/g, "")
+			.slice(0, max) || fallback
+	);
 }
 
 function normalizeEventType(value?: string): TesterEventType {
@@ -247,7 +258,10 @@ function clampLimit(value: number | undefined, fallback: number, max: number) {
 	return Math.max(1, Math.min(Math.trunc(numeric), max));
 }
 
-function countBy<T extends string>(items: TesterEventRecord[], pick: (item: TesterEventRecord) => T) {
+function countBy<T extends string>(
+	items: TesterEventRecord[],
+	pick: (item: TesterEventRecord) => T,
+) {
 	return items.reduce<Record<string, number>>((counts, item) => {
 		const key = pick(item);
 		counts[key] = (counts[key] || 0) + 1;
@@ -271,24 +285,34 @@ function buildFeatureUsage(events: TesterEventRecord[]) {
 			return {
 				area,
 				events: areaEvents.length,
-				successes: areaEvents.filter((event) => event.outcome === "success").length,
+				successes: areaEvents.filter((event) => event.outcome === "success")
+					.length,
 				frictions: areaEvents.filter(isFriction).length,
 			};
 		})
-		.sort((left, right) => right.events - left.events || left.area.localeCompare(right.area));
+		.sort(
+			(left, right) =>
+				right.events - left.events || left.area.localeCompare(right.area),
+		);
 }
 
 function buildFrictionAreas(events: TesterEventRecord[]) {
 	return buildFeatureUsage(events.filter(isFriction))
 		.map((item) => {
-			const areaEvents = events.filter((event) => event.area === item.area && isFriction(event));
+			const areaEvents = events.filter(
+				(event) => event.area === item.area && isFriction(event),
+			);
 			return {
 				area: item.area,
 				count: areaEvents.length,
-				highSeverity: areaEvents.filter((event) => event.severity === "high").length,
+				highSeverity: areaEvents.filter((event) => event.severity === "high")
+					.length,
 			};
 		})
-		.sort((left, right) => right.count - left.count || right.highSeverity - left.highSeverity);
+		.sort(
+			(left, right) =>
+				right.count - left.count || right.highSeverity - left.highSeverity,
+		);
 }
 
 function buildRecommendations(events: TesterEventRecord[]) {
@@ -299,28 +323,41 @@ function buildRecommendations(events: TesterEventRecord[]) {
 		(event) => event.area === "chat" && event.outcome === "success",
 	);
 	const hasSetupBlocked = events.some(
-		(event) => event.area === "setup" && ["blocked", "error"].includes(event.outcome),
+		(event) =>
+			event.area === "setup" && ["blocked", "error"].includes(event.outcome),
 	);
 	const hasRagUsage = events.some((event) => event.area === "knowledge");
 
 	if (events.length === 0) {
-		recommendations.push("まずSetup Wizard、チャット、Knowledge Importを1回ずつ触ってもらう");
+		recommendations.push(
+			"まずSetup Wizard、チャット、Knowledge Importを1回ずつ触ってもらう",
+		);
 		return recommendations;
 	}
 	if (hasSetupBlocked) {
-		recommendations.push("初回起動の詰まりを最優先で直す。Setup Wizardの表示文と復帰導線を確認する");
+		recommendations.push(
+			"初回起動の詰まりを最優先で直す。Setup Wizardの表示文と復帰導線を確認する",
+		);
 	}
 	if (!hasChatSuccess) {
-		recommendations.push("チャット成功までの導線を確認する。local-ollama表示と失敗時メッセージを短くする");
+		recommendations.push(
+			"チャット成功までの導線を確認する。local-ollama表示と失敗時メッセージを短くする",
+		);
 	}
 	if (!hasRagUsage) {
-		recommendations.push("Knowledge Importへの入口を目立たせ、PDF投入後の成功状態を明確にする");
+		recommendations.push(
+			"Knowledge Importへの入口を目立たせ、PDF投入後の成功状態を明確にする",
+		);
 	}
 	if (frictionAreas[0]) {
-		recommendations.push(`${frictionAreas[0].area}で摩擦が多い。直近イベントを見て文言とボタン配置を調整する`);
+		recommendations.push(
+			`${frictionAreas[0].area}で摩擦が多い。直近イベントを見て文言とボタン配置を調整する`,
+		);
 	}
 	if (featureUsage.length > 0 && recommendations.length < 4) {
-		recommendations.push(`${featureUsage[0].area}はよく触られている。ここをBeta 0.1のデモ導線に据える`);
+		recommendations.push(
+			`${featureUsage[0].area}はよく触られている。ここをBeta 0.1のデモ導線に据える`,
+		);
 	}
 	return recommendations.slice(0, 5);
 }
@@ -454,19 +491,25 @@ export async function buildTesterAnalyticsReport({
 	const durations = events
 		.map((event) => event.durationMs)
 		.filter((duration): duration is number => Number.isFinite(duration));
-	const activeDays = new Set(events.map((event) => event.createdAt.slice(0, 10))).size;
+	const activeDays = new Set(
+		events.map((event) => event.createdAt.slice(0, 10)),
+	).size;
 	return {
 		generatedAt: nowIso(),
 		summary: {
 			totalEvents: events.length,
 			activeDays,
-			sessions: new Set(events.map((event) => event.sessionId).filter(Boolean)).size,
+			sessions: new Set(events.map((event) => event.sessionId).filter(Boolean))
+				.size,
 			successes: events.filter((event) => event.outcome === "success").length,
 			frictions: events.filter(isFriction).length,
 			feedback: events.filter((event) => event.eventType === "feedback").length,
 			avgDurationMs:
 				durations.length > 0
-					? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length)
+					? Math.round(
+							durations.reduce((sum, value) => sum + value, 0) /
+								durations.length,
+						)
 					: undefined,
 		},
 		featureUsage: buildFeatureUsage(events).slice(0, 12),

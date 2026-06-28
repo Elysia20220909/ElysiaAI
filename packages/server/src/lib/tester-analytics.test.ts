@@ -99,7 +99,9 @@ describe("tester analytics", () => {
 		expect(report.summary.totalEvents).toBe(3);
 		expect(report.summary.sessions).toBe(1);
 		expect(report.summary.frictions).toBe(1);
-		expect(report.featureUsage.find((item) => item.area === "chat")?.successes).toBe(1);
+		expect(
+			report.featureUsage.find((item) => item.area === "chat")?.successes,
+		).toBe(1);
 		expect(report.frictionAreas[0]?.area).toBe("knowledge");
 		expect(other).toHaveLength(1);
 	});

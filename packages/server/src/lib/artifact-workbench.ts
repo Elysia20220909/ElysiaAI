@@ -1,6 +1,6 @@
+import { Database } from "bun:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { Database } from "bun:sqlite";
 
 export type ArtifactKind =
 	| "markdown"
@@ -70,15 +70,19 @@ function nowIso() {
 }
 
 function dbPathForRoot(root: string) {
-	const dbUrl =
-		process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith("file:")
-			? process.env.DATABASE_URL
-			: `file:${join(root, "prisma", "dev.db")}`;
+	const dbUrl = process.env.DATABASE_URL?.startsWith("file:")
+		? process.env.DATABASE_URL
+		: `file:${join(root, "prisma", "dev.db")}`;
 	const rawPath = dbUrl.slice("file:".length);
 	return isAbsolute(rawPath) ? rawPath : resolve(root, rawPath);
 }
 
-function ensureColumn(db: Database, table: string, column: string, ddl: string) {
+function ensureColumn(
+	db: Database,
+	table: string,
+	column: string,
+	ddl: string,
+) {
 	const columns = db.query(`PRAGMA table_info("${table}")`).all() as Array<{
 		name: string;
 	}>;
@@ -183,7 +187,9 @@ function safeJson(value: unknown, fallback: string) {
 function normalizeKind(kind?: string): ArtifactKind {
 	const candidate = (kind || "markdown").trim().toLowerCase() as ArtifactKind;
 	if (!validKinds.has(candidate)) {
-		throw new Error("Artifact kind must be markdown, code, mermaid, json, or checklist");
+		throw new Error(
+			"Artifact kind must be markdown, code, mermaid, json, or checklist",
+		);
 	}
 	return candidate;
 }
@@ -191,7 +197,9 @@ function normalizeKind(kind?: string): ArtifactKind {
 function normalizeStatus(status?: string): ArtifactStatus {
 	const candidate = (status || "draft").trim().toLowerCase() as ArtifactStatus;
 	if (!validStatuses.has(candidate)) {
-		throw new Error("Artifact status must be draft, review, final, or archived");
+		throw new Error(
+			"Artifact status must be draft, review, final, or archived",
+		);
 	}
 	return candidate;
 }
@@ -412,7 +420,11 @@ export async function updateArtifact({
 	summary?: string;
 	metadata?: unknown;
 	sourceTrace?: unknown;
-}): Promise<{ updated: boolean; artifact?: ArtifactRecord; revision?: ArtifactRevisionRecord }> {
+}): Promise<{
+	updated: boolean;
+	artifact?: ArtifactRecord;
+	revision?: ArtifactRevisionRecord;
+}> {
 	const current = await getArtifact({ root, ownerKey, artifactId });
 	if (!current) return { updated: false };
 
@@ -423,7 +435,8 @@ export async function updateArtifact({
 		kind: kind === undefined ? current.kind : normalizeKind(kind),
 		status: status === undefined ? current.status : normalizeStatus(status),
 		content: content === undefined ? current.content : cleanContent(content),
-		metadataJson: metadata === undefined ? current.metadataJson : safeJson(metadata, "{}"),
+		metadataJson:
+			metadata === undefined ? current.metadataJson : safeJson(metadata, "{}"),
 		sourceTraceJson:
 			sourceTrace === undefined
 				? current.sourceTraceJson
