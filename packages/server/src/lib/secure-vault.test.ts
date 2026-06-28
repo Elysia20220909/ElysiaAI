@@ -29,12 +29,8 @@ describe("SecureVault", () => {
 		const encrypted = secureVault.encrypt("Sensitive Data");
 		const [iv, tag, ciphertext] = encrypted.split(":");
 
-		// Tamper with ciphertext
-		const tamperedCiphertext = `${ciphertext.substring(
-			0,
-			ciphertext.length - 2,
-		)}00`;
-		const tampered = `${iv}:${tag}:${tamperedCiphertext}`;
+		const tamperedTag = `${tag.slice(0, -1)}${tag.endsWith("0") ? "1" : "0"}`;
+		const tampered = `${iv}:${tamperedTag}:${ciphertext}`;
 
 		const decrypted = secureVault.decrypt(tampered);
 		expect(decrypted).toContain("ENCRYPTION ERROR");
