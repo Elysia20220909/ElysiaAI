@@ -38,7 +38,7 @@
     "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.3",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^8.0.5",
+    "nodemailer": "^9.0.1",
     "ollama": "^0.6.3",
     "openai": "^6.10.0",
     "prisma": "^6.19.3",
