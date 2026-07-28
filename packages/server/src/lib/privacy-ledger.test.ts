@@ -107,6 +107,8 @@ describe("privacy ledger store", () => {
 		expect(knowledge?.localOnly).toBe(true);
 		expect(knowledge?.approvalStatus).toBe("not-required");
 		expect(slack?.localOnly).toBe(false);
-		expect(["required", "not-configured"]).toContain(slack?.approvalStatus);
+		expect(["required", "not-configured"]).toContain(
+			slack?.approvalStatus ?? "",
+		);
 	});
 });

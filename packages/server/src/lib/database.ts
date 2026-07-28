@@ -6,6 +6,7 @@
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import { config } from "../../../../src/config.ts";
+import type { RefreshTokenRecord } from "./auth-tokens";
 import { logger } from "./logger";
 import { secureVault } from "./secure-vault";
 
@@ -87,11 +88,13 @@ export const tokenService = {
 		return prisma.refreshToken.create({ data });
 	},
 
-	async findByToken(token: string) {
-		return prisma.refreshToken.findUnique({
+	async findByToken(token: string): Promise<RefreshTokenRecord | null> {
+		const record = await prisma.refreshToken.findUnique({
 			where: { token },
 			include: { user: true },
 		});
+		if (!record?.userId) return null;
+		return { ...record, userId: record.userId };
 	},
 
 	async revoke(token: string) {

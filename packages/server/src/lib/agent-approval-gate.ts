@@ -87,6 +87,7 @@ type ToolApprovalRow = Omit<ToolApprovalRecord, "requestHash"> & {
 	stepId?: string | null;
 	requestedById?: string | null;
 	decidedById?: string | null;
+	requestHash?: string | null;
 	decisionReason?: string | null;
 	expiresAt?: string | null;
 	decidedAt?: string | null;
