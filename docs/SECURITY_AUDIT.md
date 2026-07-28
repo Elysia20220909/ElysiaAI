@@ -1,13 +1,13 @@
 # Security Audit
 
-Last updated: 2026-06-28
+Last updated: 2026-07-28
 
 ## Current Status
 
-- JavaScript/Bun: `bun audit` reports no known vulnerabilities.
-- Python local environment: `pip-audit --local` reports no known vulnerabilities after upgrading `setuptools` to `>=78.1.1`, `msgpack` to `>=1.2.1`, and `pydantic-settings` to `>=2.14.2`.
+- JavaScript/Bun: `bun audit` reports no known vulnerabilities. Root `overrides` pin `postcss` to `^8.5.23` and `protobufjs` to `^8.7.1` so `sanitize-html` and `@zilliz/milvus2-sdk-node` do not resolve known vulnerable transitive versions.
+- Python local environment: `pip-audit --local` reports no known vulnerabilities after upgrading `setuptools` to `>=83.0.0`, `msgpack` to `>=1.2.1`, and `pydantic-settings` to `>=2.14.2`.
 - Supply chain scan: `bun run security:glassworm -- --ci` reports no blocking findings.
-- Rust/Tauri: `src-tauri` is upgraded to Tauri `2.11.2`, `tauri-build` `2.6.2`, `reqwest` `0.13.4`, and current compatible lockfile patches.
+- Rust/Tauri: `src-tauri` is on the Tauri `2.11.x` patch line (`Cargo.lock` resolves `tauri` to `2.11.5`), `tauri-build` `2.6.2`, `reqwest` `0.13.4`, `anyhow` `1.0.103`, `plist` `1.10.0`, `quick-xml` `0.41.0`, and current compatible lockfile patches.
 
 ## Residual Rust Advisory Context
 
@@ -27,7 +27,7 @@ Dependabot alert #7 reports `GHSA-wrw7-89jp-8q8g` for `glib` in `src-tauri/Cargo
 - Current resolved path after compatible updates:
 
 ```text
-tauri 2.11.2 / tauri-runtime 2.11.2 / tauri-runtime-wry 2.11.2
+tauri 2.11.x / tauri-runtime 2.11.x / tauri-runtime-wry 2.11.x
   -> gtk 0.18.2 / webkit2gtk 2.0.2 / wry 0.55.1
   -> glib 0.18.5
 ```

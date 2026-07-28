@@ -1224,6 +1224,82 @@ async def pending_entitlements():
     return {"requests": []}
 
 
+class PullModelRequest(BaseModel):
+    model: str = "llama3.2"
+
+
+@app.get("/system/ollama/check", dependencies=peripheral_white_ice)
+async def check_ollama_status(model: str = "llama3.2"):
+    """Ollamaの稼働状況および特定のモデルの導入有無を確認します。"""
+    ollama_host = CONFIG.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(f"{ollama_host}/api/tags")
+            if resp.status_code == 200:
+                models = resp.json().get("models", [])
+                model_installed = any(m.get("name", "").startswith(model) for m in models)
+                return {"status": "online", "model_installed": model_installed}
+            return {"status": "error", "error": f"Ollama returned status {resp.status_code}"}
+    except Exception as e:
+        return {"status": "offline", "error": str(e)}
+
+
+@app.post("/system/ollama/pull", dependencies=peripheral_white_ice)
+async def pull_ollama_model(req: PullModelRequest = None):
+    """特定のモデルのダウンロードを非同期で開始し、進捗状況をストリーム中継します。"""
+    ollama_host = CONFIG.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+    model_name = req.model if req and req.model else CONFIG.get("OLLAMA_MODEL", "llama3.2")
+
+    async def progress_generator():
+        try:
+            async with httpx.AsyncClient(timeout=600.0) as client:
+                async with client.stream(
+                    "POST", f"{ollama_host}/api/pull", json={"name": model_name, "stream": True}
+                ) as response:
+                    async for line in response.aiter_lines():
+                        if line.strip():
+                            yield line + "\n"
+        except Exception as e:
+            yield json.dumps({"status": "error", "error": str(e)}) + "\n"
+
+    return StreamingResponse(progress_generator(), media_type="application/x-ndjson")
+
+
+class OllamaConfigRequest(BaseModel):
+    host: str
+    model: str
+
+
+@app.get("/system/ollama/config", dependencies=peripheral_white_ice)
+async def get_ollama_config():
+    """現在のOllama接続ホストURLおよびアクティブモデル名を取得します。"""
+    return {
+        "host": CONFIG.get("OLLAMA_HOST", "http://127.0.0.1:11434"),
+        "model": CONFIG.get("OLLAMA_MODEL", "llama3.2"),
+    }
+
+
+@app.post("/system/ollama/config", dependencies=peripheral_white_ice)
+async def save_ollama_config(req: OllamaConfigRequest):
+    """Ollama接続設定を動的に更新し、config.jsonファイルへ永続保存します。"""
+    CONFIG["OLLAMA_HOST"] = req.host
+    CONFIG["OLLAMA_MODEL"] = req.model
+    try:
+        config_path = Path("config.json")
+        config_data = {}
+        if config_path.exists():
+            with open(config_path, encoding="utf-8") as f:
+                config_data = json.load(f)
+        config_data["OLLAMA_HOST"] = req.host
+        config_data["OLLAMA_MODEL"] = req.model
+        with open(config_path, "w", encoding="utf-8") as f:
+            json.dump(config_data, f, indent=4)
+        logger.info(f"💾 Ollama config persisted: host={req.host}, model={req.model}")
+    except Exception as e:
+        logger.error(f"❌ Failed to persist config to disk: {e}")
+    return {"status": "SUCCESS", "host": req.host, "model": req.model}
+
+
 # ==================== Abyss File Phantom Extension ====================
 
 

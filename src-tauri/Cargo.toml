@@ -3,8 +3,8 @@ name = "app"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["shinsati1234 <shinsati1234@gmail.com>"]
-license = ""
-repository = ""
+license = "MIT"
+repository = "https://github.com/Elysia20220909/ElysiaAI"
 edition = "2021"
 rust-version = "1.77.2"
 
