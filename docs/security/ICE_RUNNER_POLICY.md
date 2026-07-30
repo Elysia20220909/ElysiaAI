@@ -19,6 +19,7 @@ Rules:
 
 - Use GitHub-hosted runners only, such as `ubuntu-latest`.
 - Use `permissions: contents: read` by default.
+- Use `pull-requests: read` only when a scanner needs PR commit metadata.
 - Do not use repository secrets except `secrets.GITHUB_TOKEN`.
 - Do not use deployment environments.
 - Do not run release, signing, deployment, or state-writing steps.

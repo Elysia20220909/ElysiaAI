@@ -23,7 +23,7 @@ function service(id: string, status: "up" | "down" | "disabled" = "up") {
 
 function overview(overrides: Partial<LocalOpsOverview> = {}): LocalOpsOverview {
 	return {
-		codename: "test",
+		codename: "StarkHouseLocalOps",
 		generatedAt: "2026-06-21T00:00:00.000Z",
 		mode: "manual-supervised",
 		readiness: { status: "ready", score: 100, summary: "ready" },
@@ -75,9 +75,21 @@ function overview(overrides: Partial<LocalOpsOverview> = {}): LocalOpsOverview {
 			gates: [],
 			probes: [],
 		},
-		future: { nextStageId: "foundation", stages: [] },
+		future: {
+			codename: "ElysiaFuturePath",
+			summary: "ready",
+			nextStageId: "foundation",
+			stages: [],
+		},
 		clients: [],
-		secureMesh: { routes: [], guards: [] },
+		secureMesh: {
+			codename: "ElysiaSecureMesh",
+			status: "ready",
+			score: 100,
+			summary: "ready",
+			routes: [],
+			guards: [],
+		},
 		improvements: [],
 		briefing: [],
 		commands: [

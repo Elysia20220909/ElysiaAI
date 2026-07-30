@@ -280,6 +280,60 @@ describe("Integration Tests - Full Stack", () => {
 		expect(runbook).toContain("bun run desktop:check:linux:beta");
 		console.log("✅ Tauri distribution platform gates are documented");
 	});
+
+	test("Tauri release sidecar config stays release-only", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const tauriConfig = fs.readFileSync(
+			path.join(process.cwd(), "src-tauri", "tauri.conf.json"),
+			"utf-8",
+		);
+		const parsedTauriConfig = JSON.parse(tauriConfig);
+		const releaseWorkflow = fs.readFileSync(
+			path.join(process.cwd(), ".github", "workflows", "release.yml"),
+			"utf-8",
+		);
+		const sidecarWriter = fs.readFileSync(
+			path.join(process.cwd(), "scripts", "write-tauri-sidecar-config.ts"),
+			"utf-8",
+		);
+
+		expect(tauriConfig).not.toContain("externalBin");
+		expect(parsedTauriConfig.app.security.csp).toContain("'unsafe-eval'");
+		expect(parsedTauriConfig.app.security.csp).not.toContain("*");
+		expect(releaseWorkflow).toContain("Write Tauri sidecar config");
+		expect(releaseWorkflow).toContain(
+			"matrix.platform == 'macos' && env.HAS_APPLE_CODESIGN_CERTS == 'true'",
+		);
+		expect(releaseWorkflow).toContain(
+			"args: --config src-tauri/tauri.sidecar.conf.json",
+		);
+		expect(releaseWorkflow).not.toContain("--allow-linux-glib-advisory' ||");
+		expect(releaseWorkflow).toContain("Linux Advisory Record");
+		expect(sidecarWriter).toContain('externalBin: ["bin/fastapi_server"]');
+		console.log("✅ Tauri sidecar config is generated only for release builds");
+	});
+
+	test("Desktop shell external script defines Alpine handlers", async () => {
+		const fs = await import("node:fs");
+		const path = await import("node:path");
+
+		const desktopHtml = fs.readFileSync(
+			path.join(process.cwd(), "public", "desktop.html"),
+			"utf-8",
+		);
+		const desktopJs = fs.readFileSync(
+			path.join(process.cwd(), "public", "js", "desktop.js"),
+			"utf-8",
+		);
+
+		expect(desktopHtml).toContain('src="js/desktop.js"');
+		expect(desktopJs).toContain("toggleApp(appId)");
+		expect(desktopJs).toContain("handleDrag(event)");
+		expect(desktopJs).toContain("diagnostics: { open: false, report: '' }");
+		console.log("✅ Desktop shell handlers are present in external JS");
+	});
 });
 
 describe("Configuration Validation", () => {

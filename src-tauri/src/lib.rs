@@ -231,16 +231,15 @@ fn set_wind_force_resonance(force: f32) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .setup(|app| {
             #[cfg(desktop)]
             {
                 let handle = app.handle();
-                let voice_toggle =
-                    CheckMenuItemBuilder::with_id("voice-toggle", "Voice Output")
-                        .checked(false)
-                        .accelerator("CmdOrCtrl+Shift+V")
-                        .build(handle)?;
+                let voice_toggle = CheckMenuItemBuilder::with_id("voice-toggle", "Voice Output")
+                    .checked(false)
+                    .accelerator("CmdOrCtrl+Shift+V")
+                    .build(handle)?;
                 let voice_menu = SubmenuBuilder::new(handle, "Voice")
                     .item(&voice_toggle)
                     .build()?;
@@ -262,6 +261,10 @@ pub fn run() {
                         serde_json::json!({ "enabled": *enabled }),
                     );
                 });
+
+                if let Err(error) = setup_kernel_process(handle) {
+                    eprintln!("[Elysia OS] Sidecar kernel startup failed: {error}");
+                }
             }
             Ok(())
         })
@@ -279,31 +282,74 @@ pub fn run() {
             save_secure_world_state,
             native_lite_snapshot,
             native_resonance_report,
-            responsible_ai_guard_report
+            responsible_ai_guard_report,
+            get_system_specs
         ])
         .manage(aegis::AegisWatchdog::init())
         .manage(VoiceMenuState(Mutex::new(false)))
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .manage(KernelState(Mutex::new(None)))
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application");
+
+    app.run(|app_handle, event| {
+        if let tauri::RunEvent::Exit = event {
+            let state = app_handle.state::<KernelState>();
+            shutdown_kernel(state);
+        }
+    });
 }
 
 fn setup_kernel_process(app_handle: &AppHandle) -> AppResult<()> {
     let project_root = get_project_root(app_handle)?;
-    let kernel_path = project_root.join("usr/lib/elysia/kernel.py");
 
-    println!("[Elysia OS] Spawning Kernel: {:?}", kernel_path);
+    #[cfg(debug_assertions)]
+    {
+        let server_path = project_root.join("python/fastapi_server.py");
+        println!(
+            "[Elysia OS] Spawning Kernel Server (Debug): {:?}",
+            server_path
+        );
+        let python_cmd = if cfg!(windows) { "python" } else { "python3" };
+        let child = std::process::Command::new(python_cmd)
+            .arg(&server_path)
+            .current_dir(&project_root)
+            .spawn()
+            .map_err(AppError::Io)?;
 
-    let python_cmd = if cfg!(windows) { "python" } else { "python3" };
-    let child = std::process::Command::new(python_cmd)
-        .arg(&kernel_path)
-        .current_dir(&project_root)
-        .spawn()
-        .map_err(AppError::Io)?;
+        let state = app_handle.state::<KernelState>();
+        *state.0.lock().unwrap() = Some(child);
+    }
 
-    let state = app_handle.state::<KernelState>();
-    *state.0.lock().unwrap() = Some(child);
+    #[cfg(not(debug_assertions))]
+    {
+        let resource_dir = app_handle
+            .path()
+            .resource_dir()
+            .map_err(|e| AppError::Env(e.to_string()))?;
+        let target_triple = sidecar_target_triple()?;
+        let ext = if cfg!(target_os = "windows") {
+            ".exe"
+        } else {
+            ""
+        };
+        let sidecar_name = format!("fastapi_server-{}{}", target_triple, ext);
+        let sidecar_path = resource_dir.join("bin").join(&sidecar_name);
 
-    println!("[Elysia OS] Resonance Kernel Active.");
+        println!(
+            "[Elysia OS] Spawning Sidecar Kernel (Release): {:?}",
+            sidecar_path
+        );
+
+        let child = std::process::Command::new(&sidecar_path)
+            .current_dir(&resource_dir)
+            .spawn()
+            .map_err(AppError::Io)?;
+
+        let state = app_handle.state::<KernelState>();
+        *state.0.lock().unwrap() = Some(child);
+    }
+
+    println!("[Elysia OS] Resonance Sidecar Kernel Active.");
     Ok(())
 }
 
@@ -336,4 +382,39 @@ fn get_project_root(_app_handle: &AppHandle) -> AppResult<std::path::PathBuf> {
             .resource_dir()
             .map_err(|e| AppError::Env(e.to_string()))
     }
+}
+
+#[cfg(not(debug_assertions))]
+fn sidecar_target_triple() -> AppResult<&'static str> {
+    match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("windows", "x86_64") => Ok("x86_64-pc-windows-msvc"),
+        ("macos", "x86_64") => Ok("x86_64-apple-darwin"),
+        ("macos", "aarch64") => Ok("aarch64-apple-darwin"),
+        ("linux", "x86_64") => Ok("x86_64-unknown-linux-gnu"),
+        ("linux", "aarch64") => Ok("aarch64-unknown-linux-gnu"),
+        (os, arch) => Err(AppError::Env(format!(
+            "unsupported sidecar target: {os}/{arch}"
+        ))),
+    }
+}
+
+/// Returns dynamic hardware specs (RAM in GB, OS name, Arch) for UI auto-recommendations.
+#[tauri::command]
+fn get_system_specs() -> serde_json::Value {
+    use sysinfo::System;
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    let total_memory = sys.total_memory(); // bytes
+    let total_gb = total_memory / 1024 / 1024 / 1024;
+
+    let os_name = System::name().unwrap_or_else(|| "Unknown".to_string());
+    let os_version = System::os_version().unwrap_or_else(|| "Unknown".to_string());
+
+    serde_json::json!({
+        "total_ram_gb": total_gb,
+        "os_name": os_name,
+        "os_version": os_version,
+        "arch": std::env::consts::ARCH
+    })
 }

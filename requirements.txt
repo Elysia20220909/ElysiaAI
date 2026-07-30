@@ -1,6 +1,6 @@
 # 🌸 ElysiaAI - Hardened Python OS Kernel Dependencies
 # Core Bridge (Binary Stdin/Stdout)
-setuptools>=78.1.1
+setuptools>=83.0.0
 python-dotenv==1.2.2
 numpy>=1.26.0,<3.0.0
 psutil==5.9.8
@@ -13,7 +13,7 @@ pymilvus[model]>=0.3.2
 milvus-lite>=2.4.0; platform_system != "Windows"
 ollama>=0.6.1
 sentence-transformers>=5.4.1,<6.0.0
-transformers==5.0.0rc3
+transformers>=5.5.0,<6.0.0
 
 # Monitoring & Diagnostics
 rich==15.0.0

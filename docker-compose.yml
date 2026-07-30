@@ -92,5 +92,17 @@ services:
     volumes:
       - ./data:/app/data:rw
 
+  # --- [7] Local Ollama Engine (Optional for container-only setups) ---
+  # To use this, uncomment the service below and update OLLAMA_BASE_URL to http://elysia-ollama:11434
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: elysia-ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   restart: always
+
 volumes:
   postgres_data:
+  # ollama_data:

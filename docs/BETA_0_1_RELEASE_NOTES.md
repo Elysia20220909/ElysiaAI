@@ -44,8 +44,8 @@ Beta 0.1は、ElysiaAIをローカルで毎日試せるPrivate AI Cockpitへ近�
 - macOS実機での `bun tauri dev` 確認は未完了
 - 3分デモ動画は未収録
 - READMEへの完成版デモ動画リンクは未掲載
-- Windows署名、macOS公証、Tauri updaterは配布前レビューで判断
-- Dependabot alert #7の `glib` は、Tauri / Wry / Linux GTK3系の上流依存リスクとしてIssue #104で追跡中。Linux配布は `desktop:check:linux` でblocker扱い
+- Windows署名、macOS公証、Tauri updaterは配布前レビューで判断（未署名・未公証のテスト配布ビルドでは、起動時にOSのセキュリティ警告である Windows Defender SmartScreen や macOS Gatekeeper が表示される制限があります）。
+- Dependabot alert #7の `glib` は、Tauri / Wry / Linux GTK3系の上流依存リスクとしてIssue #104で追跡中。Linux配布は `desktop:check:linux` でblocker扱い（`--allow-linux-glib-advisory` を明示的に指定した警告記録用ビルドのみが許容され、原則配布対象外）。
 - Pythonの無指定 `ruff check .` と無指定 `pytest` は、MVP外の既存スクリプトまで含めると失敗するため、Beta 0.1では対象範囲をMVP関連に限定
 
 ## テスターに見てほしいこと
