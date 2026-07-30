@@ -33,6 +33,14 @@ permissions:
   contents: read
 ```
 
+Pull request security scanners that inspect PR commit metadata may also use:
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: read
+```
+
 Release workflows may use:
 
 ```yaml
