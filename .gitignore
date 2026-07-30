@@ -152,6 +152,7 @@ bun.log
 **/dist/
 **/build/
 **/bun.lock
+!bun.lock
 /src/generated/prisma
 
 # Database files
