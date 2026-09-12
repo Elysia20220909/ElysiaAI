@@ -200,3 +200,9 @@ pop rbx
 pop rax
 add rsp, 16
 iretq
+
+.global trap_32
+trap_32:
+    push 0
+    push 32
+    jmp trap_common

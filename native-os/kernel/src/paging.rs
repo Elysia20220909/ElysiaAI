@@ -14,7 +14,9 @@ const NX: u64 = 1 << 63;
 const ADDRESS: u64 = 0x000f_ffff_ffff_f000;
 const TEST_VIRTUAL: u64 = 0x4000_0000;
 pub const UNMAPPED: u64 = 0x5000_0000;
-const MAX_TABLES: usize = 32;
+const MAX_TABLES: usize = 256;
+pub const DIRECT: u64 = 1 << 39;
+static mut KERNEL_ROOT: u64 = 0;
 #[repr(align(4096))]
 struct DataPage([u8; 4096]);
 static mut NX_PAGE: DataPage = DataPage([0; 4096]);
@@ -144,8 +146,13 @@ pub unsafe fn activate(allocator: &mut FrameAllocator, info: &BootInfo) {
         unsafe { tables.map(allocator, address, address, flags) };
     }
     if info.mode >= elysia_boot_protocol::BootMode::UserCooperate as u32 {
-        // All address spaces are completed under firmware identity mappings.
-        unsafe { crate::userspace::prepare(allocator, info.mode) };
+        // Supervisor-only access to eligible RAM. Exclude firmware, MMIO and
+        // kernel image pages, so no writable alias bypasses kernel RX protection.
+        for physical in (0..elysia_memory::LIMIT).step_by(PAGE as usize) {
+            if allocator.is_eligible(physical) {
+                unsafe { tables.map(allocator, DIRECT + physical, physical, WRITE | NX) };
+            }
+        }
     }
     let scratch = allocator
         .allocate()
@@ -166,6 +173,7 @@ pub unsafe fn activate(allocator: &mut FrameAllocator, info: &BootInfo) {
         platform::fail("firmware-root-reused");
     }
     let root = tables.root;
+    unsafe { KERNEL_ROOT = root };
     let mut low: u32;
     let high: u32;
     unsafe {
@@ -212,33 +220,19 @@ pub unsafe fn activate(allocator: &mut FrameAllocator, info: &BootInfo) {
     // Table and scratch frames remain owned. No free or remap while references survive.
 }
 
-/// Build a process root before the firmware identity map is retired. Kernel leaves
-/// remain supervisor-only; process pages have no shared user-writable backing.
-pub unsafe fn process_root(allocator: &mut FrameAllocator, pages: &[(u64, u64, bool)]) -> u64 {
-    let mut tables = Tables {
-        root: 0,
-        frames: [0; MAX_TABLES],
-        count: 0,
-    };
-    tables.root = unsafe { tables.table(allocator) };
-    let rodata = readonly_address();
-    let data = ptr::addr_of!(data_start) as u64;
-    let end = ptr::addr_of!(kernel_end) as u64;
-    for address in (KERNEL_BASE..end).step_by(PAGE as usize) {
-        let flags = if address < rodata {
-            0
-        } else if address < data {
-            NX
-        } else {
-            WRITE | NX
-        };
-        unsafe { tables.map(allocator, address, address, flags) };
+/// Every process shares supervisor mappings of the kernel image and direct RAM.
+pub fn kernel_layout() -> (u64, u64, u64) {
+    (
+        readonly_address(),
+        ptr::addr_of!(data_start) as u64,
+        ptr::addr_of!(kernel_end) as u64,
+    )
+}
+pub unsafe fn enter_kernel_root() {
+    unsafe {
+        asm!("mov cr3, {}",in(reg) KERNEL_ROOT,options(nostack));
     }
-    for &(virtual_address, physical, writable) in pages {
-        let flags = USER | if writable { WRITE | NX } else { 0 };
-        unsafe { tables.map(allocator, virtual_address, physical, flags) };
-    }
-    // The scheduler only loads this root into CR3. It never dereferences these
-    // table frames after bootstrap; no identity aliases for them are needed.
-    tables.root
+}
+pub unsafe fn direct_entry() -> u64 {
+    unsafe { ((DIRECT + KERNEL_ROOT) as *const u64).add(1).read() }
 }

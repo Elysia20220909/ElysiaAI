@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and test the M1/M2a/M2b kernel in a bounded, headless QEMU process."""
+"""Build and test the M1/M2a/M2b/M2c kernel in a bounded, headless QEMU process."""
 from __future__ import annotations
 
 import argparse
@@ -55,6 +55,11 @@ for name, (mode, fault) in USER_CASES.items():
         "kernel:user-switch from=0 to=1", "user:log pid=1 hex=62",
         "kernel:user-exit pid=1 status=0", f"kernel:user-tests-passed mode={mode}",
     ])
+LIFECYCLE_CASES = {"user-preempt": 18, "user-recycle": 19, "user-yield-spin": 20}
+for name, mode in LIFECYCLE_CASES.items():
+    CASES[name] = (47, ["kernel:allocation-rollback", "kernel:user-spaces-ready",
+                       "kernel:user-enter pid=0 cpl=3",
+                       f"kernel:lifecycle-tests-passed mode={mode}"])
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
           "kernel:entered", "kernel:exceptions-ready"]
 MEMORY_PREFIX = ["kernel:boot-info-valid", "kernel:frames-verified",
@@ -124,6 +129,58 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
                 later = output[output.find("\n", stopped.start()) + 1:]
                 if re.search(rf"(?:kernel:user-trap pid={pid} |user:log pid={pid} |kernel:user-switch from=\d+ to={pid}(?:\r?\n|$))", later):
                     errors.append(f"stopped process {pid} resumed")
+    if case in LIFECYCLE_CASES:
+        errors.extend(verify_lifecycle(case, output))
+    return errors
+
+
+def verify_lifecycle(case: str, output: str) -> list[str]:
+    errors = []
+    lines = output.splitlines()
+    rollback = re.search(r"kernel:allocation-rollback boundaries=(\d+) free=(\d+)", output)
+    generations = re.findall(r"kernel:generation-reclaimed generation=(\d+) free=(\d+)", output)
+    count = 64 if case == "user-recycle" else 1
+    if not rollback or int(rollback[1]) < 8:
+        errors.append("missing partial-construction rollback evidence")
+    if ([int(g) for g, _ in generations] != list(range(count)) or not rollback
+            or any(free != rollback[2] for _, free in generations)):
+        errors.append("missing generations or leaked frames")
+    roots = re.findall(r"kernel:user-spaces-ready roots=(0x[0-9a-f]+),(0x[0-9a-f]+)", output)
+    if len(roots) != count or any(a == b for a, b in roots):
+        errors.append("missing distinct roots for every generation")
+    if count > 1 and len(set(roots)) == count:
+        errors.append("no observed root-frame reuse")
+    for pid in (0, 1):
+        if lines.count(f"kernel:reaped pid={pid}") != count:
+            errors.append(f"incorrect reclamation count for process {pid}")
+    if case == "user-recycle":
+        for marker in ("kernel:user-exit pid=0 status=0",
+                       "kernel:user-stopped pid=1 vector=6 error=0x0 address=0x0"):
+            if lines.count(marker) != count:
+                errors.append("missing exit/fault in a recycling generation")
+    else:
+        for marker in ("kernel:timer-ready source=pit irq=0 hz=100",
+                       "user:log pid=1 hex=50", "user:log pid=1 hex=51",
+                       "kernel:user-exit pid=1 status=0",
+                       "kernel:budget-stopped pid=0 ticks=8"):
+            if lines.count(marker) != 1:
+                errors.append(f"missing or repeated lifecycle evidence: {marker}")
+        for pid in (0, 1):
+            ticks = [int(t) for t in re.findall(rf"kernel:preempt pid={pid} ticks=(\d+)", output)]
+            if not ticks or ticks != list(range(1, len(ticks) + 1)) or (pid == 0 and len(ticks) != 8):
+                errors.append(f"invalid cumulative timer accounting for process {pid}")
+            marker = "kernel:budget-stopped pid=0" if pid == 0 else "kernel:user-exit pid=1"
+            stopped = output.find(marker)
+            if stopped >= 0:
+                later = output[output.find("\n", stopped) + 1:]
+                if re.search(rf"(?:kernel:(?:preempt|user-trap) pid={pid} |user:log pid={pid} |kernel:user-switch from=\d+ to={pid}(?:\r?\n|$))", later):
+                    errors.append(f"stopped process {pid} resumed")
+        if case == "user-preempt" and "kernel:user-yield pid=0" in output:
+            errors.append("CPU hog yielded instead of requiring preemption")
+        if case == "user-yield-spin" and "kernel:user-yield pid=0" not in output:
+            errors.append("yield-spin fixture never yielded")
+        if output.find("user:log pid=1 hex=50") >= output.find("user:log pid=1 hex=51"):
+            errors.append("survivor progress reversed")
     return errors
 
 

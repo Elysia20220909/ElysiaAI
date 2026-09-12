@@ -1,6 +1,6 @@
 """Regression tests for the boot-result classifier, including false-success cases."""
 import unittest
-from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, verify_output
+from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, verify_output
 
 
 class VerdictTests(unittest.TestCase):
@@ -21,12 +21,47 @@ class VerdictTests(unittest.TestCase):
                 for reason, count in (("range", 8), ("number", 1), ("status", 1)):
                     line = f"kernel:syscall-rejected pid={pid} reason={reason}"
                     prefix.extend([line] * (count - markers.count(line)))
+        if case in LIFECYCLE_CASES:
+            count = 64 if case == "user-recycle" else 1
+            markers = ["kernel:allocation-rollback boundaries=12 free=50000"]
+            for generation in range(count):
+                markers.extend(["kernel:user-spaces-ready roots=0x100000,0x200000",
+                                "kernel:user-enter pid=0 cpl=3"])
+                if case == "user-recycle":
+                    markers.extend(["kernel:user-exit pid=0 status=0", "kernel:reaped pid=0",
+                                    "kernel:user-stopped pid=1 vector=6 error=0x0 address=0x0"])
+                else:
+                    markers.extend(["kernel:timer-ready source=pit irq=0 hz=100", "user:log pid=1 hex=50"])
+                    if case == "user-yield-spin":
+                        markers.append("kernel:user-yield pid=0")
+                    markers.extend(f"kernel:preempt pid=0 ticks={tick}" for tick in range(1, 9))
+                    markers.extend(["kernel:budget-stopped pid=0 ticks=8", "kernel:reaped pid=0",
+                                    "kernel:preempt pid=1 ticks=1", "user:log pid=1 hex=51",
+                                    "kernel:user-exit pid=1 status=0"])
+                markers.extend(["kernel:reaped pid=1",
+                                f"kernel:generation-reclaimed generation={generation} free=50000"])
+            markers.append(f"kernel:lifecycle-tests-passed mode={LIFECYCLE_CASES[case]}")
         return "\n".join(prefix + markers)
 
     def test_accepts_each_expected_result(self):
         for case, (code, _) in CASES.items():
             with self.subTest(case=case):
                 self.assertEqual(verify_output(case, code, self.transcript(case)), [])
+
+    def test_lifecycle_requires_reclamation_and_stable_counts(self):
+        output = self.transcript("user-recycle")
+        for corrupted in (output.replace("kernel:reaped pid=0", "omitted", 1),
+                          output.replace("generation=31 free=50000", "generation=31 free=49999"),
+                          output.replace("generation=63", "generation=62")):
+            self.assertTrue(verify_output("user-recycle", 47, corrupted))
+
+    def test_timer_budget_needs_cumulative_ticks_and_survivor(self):
+        output = self.transcript("user-preempt")
+        for corrupted in (output.replace("pid=0 ticks=4", "pid=0 ticks=1"),
+                          output.replace("user:log pid=1 hex=51", "omitted"),
+                          output + "\nkernel:preempt pid=0 ticks=9",
+                          output.replace("kernel:timer-ready", "omitted")):
+            self.assertTrue(verify_output("user-preempt", 47, corrupted))
 
     def test_success_text_without_successful_exit_is_rejected(self):
         self.assertTrue(verify_output("normal", 0, self.transcript("normal")))

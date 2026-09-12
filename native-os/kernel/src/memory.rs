@@ -73,3 +73,8 @@ pub unsafe fn initialize(info: &BootInfo, info_address: u64) -> &'static mut Fra
     ));
     frames
 }
+
+/// Single CPU with interrupts disabled; no allocator reference may overlap.
+pub unsafe fn frames() -> &'static mut FrameAllocator {
+    unsafe { &mut *ptr::addr_of_mut!(FRAMES) }
+}

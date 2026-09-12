@@ -1,11 +1,13 @@
 #![no_std]
 #![no_main]
 
+mod address_space;
 mod exceptions;
 mod memory;
 mod paging;
 #[path = "../../platform.rs"]
 mod platform;
+mod timer;
 mod userspace;
 
 use core::{

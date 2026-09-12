@@ -1,6 +1,9 @@
-//! Two fixed processes, cooperative execution, immutable mappings, no heap.
+//! Two owned process slots with bounded syscalls, timer budgets and reclamation.
 //! Only the kernel modifies process state, on one CPU with interrupts disabled.
-use crate::{exceptions, paging, platform};
+use crate::{
+    address_space::{Space, allocation_rollback},
+    exceptions, memory, paging, platform, timer,
+};
 use core::{
     arch::{asm, global_asm},
     ptr,
@@ -12,11 +15,9 @@ use elysia_kernel::{
 };
 use elysia_memory::FrameAllocator;
 
-#[repr(align(4096))]
-struct Pages([[u8; 4096]; 4]);
-// Distinct physical storage for code, data, private page and stack in each process.
-// Identity aliases are supervisor-only and are never exposed by the syscall ABI.
-static mut PAGES: [Pages; 2] = [Pages([[0; 4096]; 4]), Pages([[0; 4096]; 4])];
+static mut SPACES: [Option<Space>; 2] = [None, None];
+static mut BASELINE: usize = 0;
+static mut GENERATION: u64 = 0;
 #[derive(Clone, Copy)]
 struct Process {
     frame: Frame,
@@ -26,6 +27,8 @@ struct Process {
     logs: u32,
     exit: Option<u32>,
     fault: Option<(u64, u64, u64)>,
+    ticks: u64,
+    budget_stopped: bool,
 }
 static mut PROCESSES: [Process; 2] = [Process {
     frame: Frame::EMPTY,
@@ -35,6 +38,8 @@ static mut PROCESSES: [Process; 2] = [Process {
     logs: 0,
     exit: None,
     fault: None,
+    ticks: 0,
+    budget_stopped: false,
 }; 2];
 static mut CURRENT: usize = 0;
 static mut MODE: u32 = 0;
@@ -46,8 +51,13 @@ unsafe extern "C" {
     static user_image_end: u8;
 }
 
-/// Caller owns bootstrap initialization and still has firmware identity mappings.
-pub unsafe fn prepare(allocator: &mut FrameAllocator, mode: u32) {
+/// Called on the kernel root with interrupts disabled and no live processes.
+unsafe fn prepare(
+    allocator: &mut FrameAllocator,
+    mode: u32,
+    processes: &mut [Process; 2],
+    spaces: &mut [Option<Space>; 2],
+) {
     unsafe {
         MODE = mode;
         let start = ptr::addr_of!(user_image_start);
@@ -55,36 +65,39 @@ pub unsafe fn prepare(allocator: &mut FrameAllocator, mode: u32) {
         if length > PAGE as usize {
             platform::fail("user-image-size");
         }
+        if spaces.iter().any(Option::is_some) {
+            platform::fail("spawn-over-live-space");
+        }
         for pid in 0..2 {
-            let storage = ptr::addr_of_mut!(PAGES).cast::<Pages>().add(pid);
-            let pages = ptr::addr_of_mut!((*storage).0).cast::<u8>();
+            let space = Space::create(allocator, pid, 32).unwrap_or_else(|e| platform::fail(e));
+            let pages = (paging::DIRECT + space.pages[0]) as *mut u8;
             ptr::copy_nonoverlapping(start, pages, length);
-            let mappings = [
-                (CODE, pages as u64, false),
-                (DATA, pages as u64 + PAGE, true),
-                (
-                    PRIVATE + pid as u64 * 2 * PAGE,
-                    pages as u64 + 2 * PAGE,
-                    true,
-                ),
-                (STACK, pages as u64 + 3 * PAGE, true),
-            ];
-            let root = paging::process_root(allocator, &mappings);
-            let process = ptr::addr_of_mut!(PROCESSES).cast::<Process>().add(pid);
-            (*process).root = root;
-            (*process).runnable = true;
-            (*process).frame = Frame {
+            let root = space.root;
+            spaces[pid] = Some(space);
+            let process = &mut processes[pid];
+            *process = Process {
+                frame: Frame::EMPTY,
+                root,
+                runnable: true,
+                yielded: false,
+                logs: 0,
+                exit: None,
+                fault: None,
+                ticks: 0,
+                budget_stopped: false,
+            };
+            process.frame = Frame {
                 rip: CODE,
                 cs: 0x1b,
                 ss: 0x23,
                 rsp: STACK + PAGE,
-                rflags: 2,
+                rflags: if preemptive(mode) { 0x202 } else { 2 },
                 r12: pid as u64,
                 r13: mode as u64,
+                r14: GENERATION,
                 ..Frame::EMPTY
             };
         }
-        let processes = &*ptr::addr_of!(PROCESSES);
         if processes[0].root == processes[1].root {
             platform::fail("shared-user-root");
         }
@@ -98,9 +111,17 @@ pub unsafe fn prepare(allocator: &mut FrameAllocator, mode: u32) {
 /// Drop to Ring 3 only after the protected kernel address space is active.
 pub unsafe fn run(mode: u32) -> ! {
     unsafe {
-        if mode != MODE {
-            platform::fail("user-mode-contract");
+        let allocator = memory::frames();
+        BASELINE = allocator.free_count();
+        if mode >= 18 {
+            allocation_rollback(allocator);
         }
+        prepare(
+            allocator,
+            mode,
+            &mut *ptr::addr_of_mut!(PROCESSES),
+            &mut *ptr::addr_of_mut!(SPACES),
+        );
         // No floating-point/vector ABI yet: trap such instructions instead of
         // sharing firmware or process extended state. Kernel target uses soft-float.
         let mut cr0: u64;
@@ -115,6 +136,9 @@ pub unsafe fn run(mode: u32) -> ! {
             asm!("wrmsr",in("ecx") msr,in("eax") 0u32,in("edx") 0u32,options(nostack));
         }
         asm!("xor eax,eax","mov fs,ax","mov gs,ax","mov ax,0x23","mov ds,ax","mov es,ax",out("rax") _,options(nostack));
+        if preemptive(mode) {
+            timer::install();
+        }
         ACTIVE = true;
         CURRENT = 0;
         let process = ptr::addr_of!(PROCESSES).cast::<Process>();
@@ -140,12 +164,35 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
         if root != processes[current].root {
             platform::fail("process-root-mismatch");
         }
-        platform::log(format_args!(
-            "kernel:user-trap pid={current} vector={} cpl={}",
-            frame.vector,
-            frame.cs & 3
-        ));
-        frame.rflags = user_flags(frame.rflags);
+        if frame.vector != 32 {
+            platform::log(format_args!(
+                "kernel:user-trap pid={current} vector={} cpl={}",
+                frame.vector,
+                frame.cs & 3
+            ));
+        }
+        frame.rflags = user_flags(frame.rflags) | if preemptive(MODE) { 0x200 } else { 0 };
+        if frame.vector == 32 {
+            timer::acknowledge();
+            if !preemptive(MODE) {
+                platform::fail("unexpected-timer");
+            }
+            processes[current].ticks += 1;
+            processes[current].frame = *frame;
+            let ticks = processes[current].ticks;
+            platform::log(format_args!("kernel:preempt pid={current} ticks={ticks}"));
+            if !returnable(frame) {
+                processes[current].fault = Some((128, frame.rsp, 0));
+                processes[current].runnable = false;
+            } else if ticks >= if current == 0 { 8 } else { 64 } {
+                processes[current].budget_stopped = true;
+                processes[current].runnable = false;
+                platform::log(format_args!(
+                    "kernel:budget-stopped pid={current} ticks={ticks}"
+                ));
+            }
+            return schedule(processes, current);
+        }
         if frame.vector == 128 && !returnable(frame) {
             processes[current].fault = Some((128, frame.rsp, 0));
             processes[current].runnable = false;
@@ -235,8 +282,45 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
 
 unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame {
     unsafe {
-        let Some(next) = next_runnable(current, [processes[0].runnable, processes[1].runnable])
-        else {
+        // Leave the old CR3 before clearing a single leaf/table or returning frames.
+        paging::enter_kernel_root();
+        let spaces = &mut *ptr::addr_of_mut!(SPACES);
+        for pid in 0..2 {
+            if !processes[pid].runnable
+                && let Some(space) = spaces[pid].take()
+            {
+                space.release(memory::frames());
+                processes[pid].root = 0;
+                processes[pid].frame = Frame::EMPTY;
+                platform::log(format_args!("kernel:reaped pid={pid}"));
+            }
+        }
+        let next = if let Some(next) =
+            next_runnable(current, [processes[0].runnable, processes[1].runnable])
+        {
+            next
+        } else {
+            let free = memory::frames().free_count();
+            if free != BASELINE {
+                platform::fail("process-resource-leak");
+            }
+            if MODE >= 18 {
+                verify_lifecycle(processes, MODE);
+                let generation = GENERATION;
+                platform::log(format_args!(
+                    "kernel:generation-reclaimed generation={generation} free={free}"
+                ));
+                if MODE == 19 && GENERATION < 63 {
+                    GENERATION += 1;
+                    prepare(memory::frames(), MODE, processes, spaces);
+                    CURRENT = 0;
+                    asm!("mov cr3, {}",in(reg) processes[0].root,options(nostack));
+                    return ptr::addr_of!(processes[0].frame);
+                }
+                let mode = MODE;
+                platform::log(format_args!("kernel:lifecycle-tests-passed mode={mode}"));
+                platform::exit(0x17);
+            }
             verify_fixture(processes, MODE);
             let mode = MODE;
             platform::log(format_args!("kernel:user-tests-passed mode={mode}"));
@@ -280,5 +364,30 @@ fn verify_fixture(processes: &[Process; 2], mode: u32) {
             }
     {
         platform::fail("user-fixture-verdict");
+    }
+}
+
+fn preemptive(mode: u32) -> bool {
+    matches!(mode, 18 | 20)
+}
+fn verify_lifecycle(p: &[Process; 2], mode: u32) {
+    let valid = if mode == 19 {
+        p[0].exit == Some(0)
+            && p[0].fault.is_none()
+            && p[1].fault == Some((6, 0, 0))
+            && p[1].exit.is_none()
+    } else {
+        p[0].budget_stopped
+            && p[0].ticks == 8
+            && p[0].exit.is_none()
+            && p[0].fault.is_none()
+            && p[1].exit == Some(0)
+            && p[1].fault.is_none()
+            && !p[1].budget_stopped
+            && p[1].logs == 2
+            && p[1].ticks > 0
+    };
+    if !valid {
+        platform::fail("lifecycle-verdict");
     }
 }

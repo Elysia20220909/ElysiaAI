@@ -2,6 +2,8 @@
 .global user_image_start
 .global user_image_end
 user_image_start:
+    cmp r13, 18
+    jae lifecycle_start
     mov rax, r12
     add rax, 0x41
     mov byte ptr [0x60000000], al
@@ -199,4 +201,72 @@ user_fail:
     mov edi, 1
     int 0x80
     ud2
+// Fresh pages must not expose a previous owner's data, even when reused.
+lifecycle_start:
+    cmp qword ptr [0x60000000], 0
+    jne user_fail
+    mov rdi, r12
+    shl rdi, 13
+    add rdi, 0x70000000
+    cmp qword ptr [rdi], 0
+    jne user_fail
+    mov rax, 0x80000ff8
+    cmp qword ptr [rax], 0
+    jne user_fail
+    mov rax, r14
+    inc rax
+    mov qword ptr [0x60000000], rax
+    mov qword ptr [rdi], rax
+    push rax
+    cmp r13, 19
+    jne preempt_start
+    test r12, r12
+    jz user_exit
+    ud2
+preempt_start:
+    // At CPL3, POPF cannot clear IF with IOPL=0.
+    pushfq
+    and qword ptr [rsp], -513
+    popfq
+    pushfq
+    pop rax
+    test eax, 0x200
+    jz user_fail
+    test r12, r12
+    jnz survivor_start
+    cmp r13, 20
+    je yielding_hog
+cpu_hog:
+    jmp cpu_hog
+yielding_hog:
+    mov eax, 1
+    int 0x80
+    jmp yielding_hog
+survivor_start:
+    mov byte ptr [0x60000000], 0x50
+    xor eax, eax
+    mov edi, 0x60000000
+    mov esi, 1
+    int 0x80
+    cmp rax, 1
+    jne user_fail
+    mov ebx, 0x1122
+    mov r15d, 0x3344
+    mov ecx, 16000000
+survivor_loop:
+    cmp ebx, 0x1122
+    jne user_fail
+    cmp r15d, 0x3344
+    jne user_fail
+    dec ecx
+    jnz survivor_loop
+    pop rax
+    cmp rax, 1
+    jne user_fail
+    mov byte ptr [0x60000000], 0x51
+    xor eax, eax
+    int 0x80
+    cmp rax, 1
+    jne user_fail
+    jmp user_exit
 user_image_end:

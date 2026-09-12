@@ -137,6 +137,15 @@ impl FrameAllocator {
         None
     }
 
+    /// Eligibility is immutable after initialization, even while a frame is owned.
+    pub fn is_eligible(&self, address: u64) -> bool {
+        if address >= LIMIT || !address.is_multiple_of(PAGE) {
+            return false;
+        }
+        let index = (address / PAGE) as usize;
+        self.eligible[index / 64] & (1 << (index % 64)) != 0
+    }
+
     pub fn is_allocated(&self, address: u64) -> bool {
         if address >= LIMIT || !address.is_multiple_of(PAGE) {
             return false;
@@ -206,6 +215,29 @@ mod tests {
         assert_eq!(a.allocate(), None);
         assert_eq!(a.release(0x104000), Err("reserved-frame"));
     }
+    #[test]
+    fn direct_map_eligibility_survives_ownership_but_excludes_reserved_frames() {
+        let mut a = FrameAllocator::EMPTY;
+        a.initialize(
+            &descriptor(7, 0x100000, 2, 0),
+            48,
+            &[Range {
+                start: 0x101000,
+                end: 0x102000,
+            }],
+        )
+        .unwrap();
+        assert!(!a.is_eligible(0x101000));
+        assert!(!a.is_eligible(0));
+        assert!(!a.is_eligible(LIMIT));
+        assert!(!a.is_eligible(0x100001));
+        let frame = a.allocate().unwrap();
+        assert!(a.is_eligible(frame));
+        a.release(frame).unwrap();
+        assert!(a.is_eligible(frame));
+        assert!(!a.is_allocated(frame));
+    }
+
     #[test]
     fn exhaustion_reuse_and_double_free_preserve_counts() {
         let mut a = FrameAllocator::EMPTY;

@@ -28,6 +28,9 @@ pub enum BootMode {
     UserGate = 15,
     UserFpu = 16,
     UserBadReturn = 17,
+    UserPreempt = 18,
+    UserRecycle = 19,
+    UserYieldSpin = 20,
 }
 
 impl BootMode {
@@ -51,6 +54,9 @@ impl BootMode {
             15 => Some(Self::UserGate),
             16 => Some(Self::UserFpu),
             17 => Some(Self::UserBadReturn),
+            18 => Some(Self::UserPreempt),
+            19 => Some(Self::UserRecycle),
+            20 => Some(Self::UserYieldSpin),
             _ => None,
         }
     }

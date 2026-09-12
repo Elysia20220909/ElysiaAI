@@ -43,6 +43,9 @@ fn mode() -> BootMode {
         "user-gate" => BootMode::UserGate,
         "user-fpu" => BootMode::UserFpu,
         "user-bad-return" => BootMode::UserBadReturn,
+        "user-preempt" => BootMode::UserPreempt,
+        "user-recycle" => BootMode::UserRecycle,
+        "user-yield-spin" => BootMode::UserYieldSpin,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

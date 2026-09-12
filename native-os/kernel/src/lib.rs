@@ -1,5 +1,5 @@
 #![no_std]
-//! CPU-independent contracts for the bounded M2b process runtime.
+//! CPU-independent contracts for the bounded process runtime.
 
 pub const CODE: u64 = 0x4000_0000;
 pub const DATA: u64 = 0x6000_0000;
@@ -12,7 +12,7 @@ pub const EINVAL: u64 = (-22i64) as u64;
 pub const ENOSYS: u64 = (-38i64) as u64;
 
 /// Byte ranges must fit wholly inside a readable page belonging to the current
-/// process. The runtime never remaps pages and runs one CPU with interrupts off,
+/// process. Live process mappings are immutable; kernel handlers run on one CPU with interrupts off,
 /// so validation and copying cannot race with another address-space mutation.
 pub fn readable(pid: usize, pointer: u64, length: u64) -> bool {
     if pid >= 2 || length > MAX_LOG {

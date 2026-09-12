@@ -116,6 +116,7 @@ unsafe extern "C" {
     fn trap_29();
     fn trap_30();
     fn trap_31();
+    fn trap_32();
     fn trap_128();
     fn trap_255();
     pub fn restore_user(frame: *const crate::userspace::Frame) -> !;
@@ -164,6 +165,9 @@ pub unsafe fn install() {
             }
             entries.add(index).write(gate);
         }
+        entries
+            .add(32)
+            .write(Gate::handler(trap_32 as *const () as u64));
         let mut syscall = Gate::handler(trap_128 as *const () as u64);
         syscall.attributes = 0xee; // present interrupt gate, callable at DPL3
         entries.add(128).write(syscall);

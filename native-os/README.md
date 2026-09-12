@@ -1,7 +1,8 @@
 # ElysiaAI // INFINITE RESONANCE — 最初のカーネル
 
 UEFI ローダーから独自の x86-64 カーネルへ制御を渡し、物理ページを管理して
-独自ページテーブルへ切り替える、M1 / M2a / M2b の実装。M2b では固定した 2 プロセスを Ring 3 で協調実行する。
+独自ページテーブルへ切り替える、M1 / M2a / M2b / M2c の実装。固定した 2 プロセスを Ring 3 で動かし、
+M2c ではタイマーによる強制切替と、終了・故障・予算到達時の資源回収を加えた。
 既存の Bun / Python / Tauri アプリとは独立した Rust workspace としてビルドする。
 AI 推論、任意のアプリのロード、ファイルシステムはまだ含まない。
 
@@ -9,6 +10,7 @@ AI 推論、任意のアプリのロード、ファイルシステムはまだ�
 実測結果は [M1 起動検証](../docs/native-os/BOOT_VALIDATION.md) と
 [M2a メモリ検証](../docs/native-os/MEMORY_VALIDATION.md)、
 [M2b ユーザー空間の検証](../docs/native-os/USERSPACE_VALIDATION.md)、
+[M2c 資源回収と実行制御](../docs/native-os/LIFECYCLE_VALIDATION.md)、
 取得元と確認範囲は [依存関係](DEPENDENCIES.md) を参照する。
 
 ## 起動経路
@@ -23,6 +25,7 @@ QEMU / EDK II UEFI
   -> 物理ページの割り当て管理、予約領域・枯渇・解放の検査
   -> 独自 CR3 / ページ権限へ切り替え、対応付けた RAM の読み書き
   -> M2b ケースでは Ring 3、int 0x80、協調切替、プロセスの終了・故障
+  -> M2c ケースでは PIT 割り込み、累積 tick 上限、停止後の回収・再生成
   -> シリアル診断 / QEMU 終了
 ```
 
@@ -84,6 +87,9 @@ python native-os/tools/boot_test.py --case all
 | `user-invalid-opcode` / `user-io` | UD2 / 特権 I/O | #UD / #GP → 相手の継続 | 45 |
 | `user-bad-stack` / `user-bad-return` | 未マップのスタックへ push / 不正な復帰スタック | #PF / 復帰検査で停止 → 相手の継続 | 45 |
 | `user-gate` / `user-fpu` | DPL0 ゲートへ INT / 未対応の x87 命令 | #GP / #NM → 相手の継続 | 45 |
+| `user-preempt` | yield しない無限ループ | IRQ0 による切替、相手の完走、予算到達時の停止・回収 | 47 |
+| `user-recycle` | 正常終了と #UD を 64 世代反復 | root の再利用、消去済みデータ、毎回同じ空きフレーム数 | 47 |
+| `user-yield-spin` | yield を繰り返す無限ループ | 累積 tick を維持し、予算到達後に停止・回収 | 47 |
 
 M2b の各ケースでは、Ring 3 からの呼出し、不正システムコールの拒否、yield による切替、
 正常な相手の継続を必須にする。単にプロセスが故障しただけでは合格にならない。
@@ -96,7 +102,7 @@ M2b の各ケースでは、Ring 3 からの呼出し、不正システムコー
 対応付けたメモリの読み書きも必須。M1 のログだけでは M2a の合格にしない。
 
 `isa-debug-exit` へ書き込む値は通常 `0x10`、壊れた起動情報 `0x11`、意図的な例外 `0x12`、
-page fault の試験 `0x13`〜`0x15`、M2b 全体の成功 `0x16`、予期しない失敗 `0x7f`。
+page fault の試験 `0x13`〜`0x15`、M2b 全体の成功 `0x16`、M2c 全体の成功 `0x17`、予期しない失敗 `0x7f`。
 QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 したがってゲストの正常完了は 33 であり、全試験を通した Python runner 自体の成功は 0。
 
@@ -136,10 +142,11 @@ cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-bootloader -
 - 4 KiB ページ、256 MiB までの物理メモリ、最初の 1 MiB は予約。
   EFI Conventional Memory かつ Runtime 属性のないページだけを対象にする。
   kernel / 起動情報 / map は明示的にも除外する。重複 descriptor は受け付けない。
-- ページテーブルの構築は切り替え前に限り、各 root 最大 32 フレーム。カーネルの葉は supervisor-only。
+- 有効化前の root だけを構築する。カーネル用テーブルは最大 256 フレーム、
+  各プロセスの所有テーブルとユーザーページは合わせて最大 32 フレーム。カーネルの葉は supervisor-only。
   コードは RX、読み取り専用データは R/NX、データ・スタック・ページテーブルは RW/NX。
   CR0.WP と EFER.NXE を有効にし、旧 global TLB を除去して CR3 を更新する。
-- 割り込みは無効、1 CPU 限定。GDT / IDT / TSS を設定し、二重故障には専用 IST スタックを使う。
+- 1 CPU 限定。カーネル内は割り込み無効、M2c のプリエンプション試験だけユーザー実行時に IRQ0 を許可。GDT / IDT / TSS を設定し、二重故障には専用 IST スタックを使う。
   カーネル例外は終了、同期ユーザー例外はそのプロセスを停止する。NMI・二重故障・machine check は復帰しない失敗とする。
 - 起動情報のポインターは、このローダーからの有効なポインターを前提にする。
   任意の第三者ローダー、実機、Secure Boot、任意のアプリに対する完全な隔離を保証しない。
@@ -161,11 +168,16 @@ cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-bootloader -
 コードは user/RX、データ・専用ページ・スタックは user/RW/NX。
 同じ仮想アドレスでも物理ページは別々である。カーネルの物理アドレス別名は supervisor-only。
 
-ページと root は起動中に作成し、終了しても VM 終了まで保持する。動的マップ、回収、再起動は未実装。
+ページと root はプロセスの所有物として確保する。停止後はカーネル root へ移り、
+所有フレームをゼロ消去して返却する。64 世代の再生成と部分確保の失敗時の回収を試験する。
+共有する supervisor-only の RAM マッピングとカーネル本体は回収対象に含めない。
 システムコールはブロックせず、入口のカーネルスタックは 1 CPU の TSS RSP0 を共用する。
 ユーザーのコード・スタック範囲と CS / SS を復帰前に検査し、危険な RFLAGS は除去する。
 浮動小数点・SIMD の保存復元は未実装なので、CR0.EM / TS により使用を拒否する。
 
 ユーザープログラムはカーネルに埋め込んだアセンブリの試験用コードで、任意の ELF を読み込まない。
-タイマー割り込み・プリエンプション・CPU 予算の強制・IPC・AI 推論は未実装。
-yield しない無限ループから相手を救うことはできない。M2 全体の資源回収と一般化は残っている。
+M2c の `user-preempt` / `user-yield-spin` は PIT を約 100 Hz で動かす。
+累積割り込み回数が上限（試験では pid 0 が 8、pid 1 が 64）に達したプロセスを停止する。
+yield やシステムコールでカウンターを初期化しない。これは粗い tick 単位の制限であり、
+厳密な CPU 時間計測や実時間の期限保証ではない。カーネル処理中は割り込みを受け付けない。
+IPC、任意のアプリのロード、プロセス作成 API、AI 推論、実機向け APIC 対応は未実装。
