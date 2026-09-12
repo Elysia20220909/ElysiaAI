@@ -1,6 +1,8 @@
 #![no_std]
 //! CPU-independent contracts for the bounded process runtime.
 
+pub mod ipc;
+
 pub const CODE: u64 = 0x4000_0000;
 pub const DATA: u64 = 0x6000_0000;
 pub const PRIVATE: u64 = 0x7000_0000;
@@ -24,6 +26,11 @@ pub fn readable(pid: usize, pointer: u64, length: u64) -> bool {
     [CODE, DATA, PRIVATE + pid as u64 * 2 * PAGE, STACK]
         .into_iter()
         .any(|base| pointer >= base && pointer < base + PAGE && end <= base + PAGE)
+}
+
+/// Receive destinations must be writable data owned by this process, never code.
+pub fn writable(pid: usize, pointer: u64, length: u64) -> bool {
+    readable(pid, pointer, length) && !(CODE..CODE + PAGE).contains(&pointer)
 }
 
 /// Fixed executable and stack regions for this initial ABI. Validate before
@@ -107,6 +114,15 @@ impl Frame {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn receive_buffers_exclude_code_peer_pages_and_overflow() {
+        assert!(writable(0, DATA, 64));
+        assert!(writable(1, STACK + PAGE - 1, 1));
+        assert!(!writable(0, CODE, 1));
+        assert!(!writable(0, PRIVATE + 2 * PAGE, 1));
+        assert!(!writable(0, DATA + PAGE - 1, 2));
+        assert!(!writable(0, u64::MAX, 2));
+    }
     #[test]
     fn accepts_only_owned_readable_ranges() {
         for pid in 0..2 {

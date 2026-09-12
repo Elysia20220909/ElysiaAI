@@ -2,6 +2,8 @@
 .global user_image_start
 .global user_image_end
 user_image_start:
+    cmp r13, 21
+    jae ipc_start
     cmp r13, 18
     jae lifecycle_start
     mov rax, r12
@@ -269,4 +271,3 @@ survivor_loop:
     cmp rax, 1
     jne user_fail
     jmp user_exit
-user_image_end:

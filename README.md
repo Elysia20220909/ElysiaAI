@@ -20,29 +20,33 @@ AI が扱う記憶、道具、権限を OS の設計に組み込み、人が実�
 | --- | --- | --- |
 | M1：起動 | UEFI から独自の x86-64 Rust カーネルへ制御を渡し、起動・故障をログで判別 | 実機起動、Secure Boot 対応 |
 | M2a：メモリ管理 | 物理ページの割り当て・解放、独自ページテーブルへの切替、書込み禁止・実行禁止の故障検出 | 稼働中の任意のマッピング変更 |
-| M2b：ユーザー空間 | Ring 3 の 2 プロセス、ログ・yield・exit、協調切替、違反したプロセスの停止と残りの継続 | 任意のアプリのロード、IPC |
+| M2b：ユーザー空間 | Ring 3 の 2 プロセス、ログ・yield・exit、協調切替、違反したプロセスの停止と残りの継続 | 任意のアプリのロード |
 | M2c：資源回収・実行制御 | 終了・故障・tick 上限で所有フレームを回収。タイマーで無限ループを中断し、別プロセスを継続。64 世代の再生成 | 厳密な CPU 時間課金、マルチコア、一般的なプロセス作成 API |
+| M3a：通信と権限 | 最大 64 bytes・各方向 2 件の IPC、所有者・操作権限・世代の検査、待機と起床、失効・相手終了時の回収 | 権限の委譲・派生、任意の通信先、RAM 資料サービス |
 | 既存 AI アプリ | Bun / Elysia.js、Python / FastAPI、Tauri を使うホスト OS 上の開発基盤 | 独自 OS への移植、独自カーネル上での AI 推論 |
 
-M2b のユーザー空間に、M2c の資源回収とタイマーによる強制切替を追加しました。
+M2c の実行制御に、M3a の IPC と権限ハンドルを追加しました。
+固定した応答サービスへの依頼と、権限の拒否・失効・相手の終了時の待機解除を扱います。
 対象は Windows が動く x86-64 / UEFI PC を想定し、まず Windows 上の QEMU で検証します。
 ユーザー側の同期例外はそのプロセスを停止し、正常なプロセスを継続します。
 カーネル側の故障は停止します。固定した 2 プロセスの試験であり、一般的な OS の完成ではありません。
 
-2026-09-12 の検証記録では、指定した Windows / Rust / QEMU / UEFI の組み合わせで
-21 ケースの起動・故障・資源回収試験に合格しています。条件と実測結果は
+2026-09-13 の検証記録では、指定した Windows / Rust / QEMU / UEFI の組み合わせで
+27 ケースの起動・故障・資源回収・IPC 試験に合格しています。条件と実測結果は
 [M1 起動検証](docs/native-os/BOOT_VALIDATION.md) と
 [M2a メモリ検証](docs/native-os/MEMORY_VALIDATION.md)、
 [M2b ユーザー空間の検証](docs/native-os/USERSPACE_VALIDATION.md)、
-[M2c 資源回収と実行制御](docs/native-os/LIFECYCLE_VALIDATION.md) を参照してください。
+[M2c 資源回収と実行制御](docs/native-os/LIFECYCLE_VALIDATION.md)、
+[M3a 通信と権限](docs/native-os/IPC_VALIDATION.md) を参照してください。
 新規マシンでの環境構築全体、実機、日常利用できる OS としての安定性は未検証です。
 
-この文書は M2c を含む開発ブランチの内容を説明します。
+この文書は M3a を含む開発ブランチの内容を説明します。
 設計・M1・M2a は [PR #109](https://github.com/Elysia20220909/ElysiaAI/pull/109)、
 [PR #110](https://github.com/Elysia20220909/ElysiaAI/pull/110)、
 [PR #111](https://github.com/Elysia20220909/ElysiaAI/pull/111) の順に積み重ねています。
 M2b は文書整備の [PR #112](https://github.com/Elysia20220909/ElysiaAI/pull/112) の先に追加しています。
 M2c は [PR #113](https://github.com/Elysia20220909/ElysiaAI/pull/113) の M2b を基にしています。
+M3a は [PR #114](https://github.com/Elysia20220909/ElysiaAI/pull/114) の M2c を基にしています。
 既定ブランチへの採用状況は各 PR で確認してください。
 
 ## 独自 OS を読む・試す

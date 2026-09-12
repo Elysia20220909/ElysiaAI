@@ -13,7 +13,7 @@ The development tree contains two distinct tracks:
 
 | Track | Implemented scope | Limits |
 | --- | --- | --- |
-| Independent OS, M1 / M2a / M2b / M2c | UEFI entry into an x86-64 Rust kernel; physical page allocation and release; independent page tables; two Ring 3 processes with log/yield/exit syscalls and cooperative switching; fault containment, PIT preemption, cumulative tick limits and owned-frame reclamation in QEMU | No precise CPU-time accounting, IPC, general spawn API, guest AI inference, or verified hardware support |
+| Independent OS, M1 / M2a / M2b / M2c / M3a | UEFI entry into an x86-64 Rust kernel; physical page allocation and release; independent page tables; two Ring 3 processes with log/yield/exit syscalls and cooperative switching; fault containment, PIT preemption, cumulative tick limits and owned-frame reclamation, bounded IPC, per-process capability checks, blocking receive and cancellation in QEMU | No capability delegation, general endpoints, precise CPU-time accounting, general spawn API, guest AI inference, or verified hardware support |
 | Existing host application | Bun / Elysia.js, Python / FastAPI, and Tauri code for developing AI interactions on an existing OS | Has not been ported to the independent kernel |
 
 The host application's “AI Kernel” means its Python service, not the independent
@@ -24,20 +24,24 @@ two-process fixture, not a general-purpose application runtime.
 M2c also tests non-yielding and yielding CPU hogs, and 64 generations of exit/fault/reclamation.
 The target is x86-64 UEFI PCs commonly running Windows, initially tested in QEMU on Windows.
 
-The 2026-09-12 validation records report 21 passing boot, fault and lifecycle scenarios on
+M3a adds a two-party request/reply service with authority checks and cleanup on revoke or peer exit.
+
+The 2026-09-13 validation records report 27 passing boot, fault, lifecycle and IPC scenarios on
 the specified Windows, Rust, QEMU, and UEFI combination. See
 [M1 boot validation](docs/native-os/BOOT_VALIDATION.md) and
 [M2a memory validation](docs/native-os/MEMORY_VALIDATION.md), and
 [M2b userspace validation](docs/native-os/USERSPACE_VALIDATION.md), and
-[M2c lifecycle validation](docs/native-os/LIFECYCLE_VALIDATION.md) for evidence and limits.
+[M2c lifecycle validation](docs/native-os/LIFECYCLE_VALIDATION.md), and
+[M3a IPC validation](docs/native-os/IPC_VALIDATION.md) for evidence and limits.
 Full setup on a new machine and everyday OS stability have not been demonstrated.
 
-This overview describes the development lineage containing M2c. Design, M1, and M2a
+This overview describes the development lineage containing M3a. Design, M1, and M2a
 are stacked in [PR #109](https://github.com/Elysia20220909/ElysiaAI/pull/109),
 [PR #110](https://github.com/Elysia20220909/ElysiaAI/pull/110), and
 [PR #111](https://github.com/Elysia20220909/ElysiaAI/pull/111).
 M2b follows the repository guide in [PR #112](https://github.com/Elysia20220909/ElysiaAI/pull/112).
 M2c builds on M2b in [PR #113](https://github.com/Elysia20220909/ElysiaAI/pull/113).
+M3a builds on M2c in [PR #114](https://github.com/Elysia20220909/ElysiaAI/pull/114).
 Check the PRs for their adoption into the default branch.
 
 ## Start developing

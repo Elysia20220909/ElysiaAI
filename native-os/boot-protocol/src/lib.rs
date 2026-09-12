@@ -31,6 +31,12 @@ pub enum BootMode {
     UserPreempt = 18,
     UserRecycle = 19,
     UserYieldSpin = 20,
+    IpcEcho = 21,
+    IpcPeerExit = 22,
+    IpcPeerFault = 23,
+    IpcRevoke = 24,
+    IpcDeadlock = 25,
+    IpcQueue = 26,
 }
 
 impl BootMode {
@@ -57,6 +63,12 @@ impl BootMode {
             18 => Some(Self::UserPreempt),
             19 => Some(Self::UserRecycle),
             20 => Some(Self::UserYieldSpin),
+            21 => Some(Self::IpcEcho),
+            22 => Some(Self::IpcPeerExit),
+            23 => Some(Self::IpcPeerFault),
+            24 => Some(Self::IpcRevoke),
+            25 => Some(Self::IpcDeadlock),
+            26 => Some(Self::IpcQueue),
             _ => None,
         }
     }

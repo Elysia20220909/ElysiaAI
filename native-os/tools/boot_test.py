@@ -60,6 +60,13 @@ for name, mode in LIFECYCLE_CASES.items():
     CASES[name] = (47, ["kernel:allocation-rollback", "kernel:user-spaces-ready",
                        "kernel:user-enter pid=0 cpl=3",
                        f"kernel:lifecycle-tests-passed mode={mode}"])
+IPC_CASES = {"ipc-echo": 21, "ipc-peer-exit": 22, "ipc-peer-fault": 23,
+             "ipc-revoke": 24, "ipc-deadlock": 25, "ipc-queue": 26}
+for name, mode in IPC_CASES.items():
+    CASES[name] = (49, ["kernel:allocation-rollback", "kernel:user-spaces-ready",
+                       "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
+                       "user:log pid=0 hex=6f6b", "kernel:ipc-clean",
+                       f"kernel:ipc-tests-passed mode={mode}"])
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
           "kernel:entered", "kernel:exceptions-ready"]
 MEMORY_PREFIX = ["kernel:boot-info-valid", "kernel:frames-verified",
@@ -131,6 +138,8 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
                     errors.append(f"stopped process {pid} resumed")
     if case in LIFECYCLE_CASES:
         errors.extend(verify_lifecycle(case, output))
+    if case in IPC_CASES:
+        errors.extend(verify_ipc(case, output))
     return errors
 
 
@@ -181,6 +190,71 @@ def verify_lifecycle(case: str, output: str) -> list[str]:
             errors.append("yield-spin fixture never yielded")
         if output.find("user:log pid=1 hex=50") >= output.find("user:log pid=1 hex=51"):
             errors.append("survivor progress reversed")
+    return errors
+
+
+
+def verify_ipc(case: str, output: str) -> list[str]:
+    errors = []
+    lines = output.splitlines()
+    baseline = re.search(r"kernel:allocation-rollback boundaries=(\d+) free=(\d+)", output)
+    clean = re.search(r"kernel:ipc-clean free=(\d+)", output)
+    if not baseline or not clean or baseline[2] != clean[1]:
+        errors.append("IPC memory did not return to baseline")
+    blocked = set()
+    stopped = set()
+    for line in lines:
+        event = re.fullmatch(r"kernel:ipc-block pid=(\d+)", line)
+        if event:
+            pid = int(event[1])
+            if pid in blocked or pid in stopped:
+                errors.append("invalid receive block state")
+            blocked.add(pid)
+        event = re.fullmatch(r"kernel:ipc-wake pid=(\d+) result=(-?\d+)", line)
+        if event:
+            pid = int(event[1])
+            if pid not in blocked or pid in stopped:
+                errors.append("wake without live blocked receiver")
+            blocked.discard(pid)
+        event = re.match(r"kernel:user-(?:exit|stopped) pid=(\d+) ", line)
+        if event:
+            pid = int(event[1])
+            if pid in blocked or pid in stopped:
+                errors.append("blocked or already stopped process exited")
+            stopped.add(pid)
+        event = re.match(r"kernel:(?:user-trap|preempt) pid=(\d+) ", line)
+        if event and int(event[1]) in blocked | stopped:
+            errors.append("blocked/stopped process ran")
+        event = re.fullmatch(r"kernel:user-switch from=\d+ to=(\d+)", line)
+        if event and int(event[1]) in blocked | stopped:
+            errors.append("scheduler selected a blocked/stopped process")
+    if blocked or stopped != {0, 1}:
+        errors.append("IPC processes or waiters remain")
+    for pid in (0, 1):
+        if lines.count(f"kernel:reaped pid={pid}") != 1:
+            errors.append("missing process reclamation")
+    required = {
+        "ipc-echo": ["kernel:ipc-result pid=0 op=3 result=-9",
+                     "kernel:ipc-result pid=0 op=3 result=-13",
+                     "kernel:ipc-result pid=0 op=3 result=-90",
+                     "kernel:ipc-result pid=0 op=4 result=-14",
+                     "kernel:ipc-result pid=1 op=4 result=-90"],
+        "ipc-peer-exit": ["kernel:user-exit pid=1 status=0", "kernel:ipc-wake pid=0 result=-32"],
+        "ipc-peer-fault": ["kernel:user-stopped pid=1 vector=6 error=0x0 address=0x0", "kernel:ipc-wake pid=0 result=-32"],
+        "ipc-revoke": ["kernel:ipc-result pid=1 op=5 result=0", "kernel:ipc-wake pid=0 result=-32",
+                       "kernel:ipc-result pid=0 op=3 result=-9", "kernel:ipc-result pid=0 op=4 result=-9"],
+        "ipc-deadlock": ["kernel:ipc-result pid=1 op=4 result=-35", "kernel:ipc-wake pid=0 result=2"],
+        "ipc-queue": ["kernel:ipc-result pid=0 op=3 result=-11"],
+    }
+    for marker in required[case]:
+        if marker not in lines:
+            errors.append(f"missing IPC evidence: {marker}")
+    if case == "ipc-echo":
+        if lines.count("kernel:ipc-result pid=0 op=3 result=-9") != 2:
+            errors.append("missing forged or foreign handle rejection")
+        for pid in (0, 1):
+            if lines.count(f"kernel:ipc-result pid={pid} op=3 result=2") != 2:
+                errors.append("missing request/reply sends")
     return errors
 
 

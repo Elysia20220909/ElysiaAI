@@ -2,6 +2,7 @@
 
 状態: 長期設計案。固定した 2 プロセスの暫定 ABI は [ユーザー空間の検証](USERSPACE_VALIDATION.md)、
 M2c の所有フレーム回収・タイマー切替は [資源回収と実行制御](LIFECYCLE_VALIDATION.md) を参照する。
+M3a の IPC・権限ハンドル・待機解除は [通信と権限](IPC_VALIDATION.md) に記録する。
 以下の全機能を実装済みとは扱わない。
 [構想](README.md)、[権限設計](SECURITY.md)、[検証計画](MILESTONES.md)と合わせて読む。
 

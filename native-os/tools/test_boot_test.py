@@ -1,6 +1,6 @@
 """Regression tests for the boot-result classifier, including false-success cases."""
 import unittest
-from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, verify_output
+from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, verify_output
 
 
 class VerdictTests(unittest.TestCase):
@@ -21,6 +21,38 @@ class VerdictTests(unittest.TestCase):
                 for reason, count in (("range", 8), ("number", 1), ("status", 1)):
                     line = f"kernel:syscall-rejected pid={pid} reason={reason}"
                     prefix.extend([line] * (count - markers.count(line)))
+        if case in IPC_CASES:
+            markers = ["kernel:allocation-rollback boundaries=14 free=50000",
+                       "kernel:user-spaces-ready roots=0x100000,0x200000",
+                       "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3"]
+            if case == "ipc-echo":
+                markers.extend(["kernel:ipc-result pid=0 op=3 result=-9"] * 2)
+                markers.extend(["kernel:ipc-result pid=0 op=3 result=-13",
+                                "kernel:ipc-result pid=0 op=3 result=-90",
+                                "kernel:ipc-result pid=0 op=4 result=-14",
+                                "kernel:ipc-result pid=1 op=4 result=-90"])
+                markers.extend(["kernel:ipc-result pid=0 op=3 result=2"] * 2)
+                for _ in range(2):
+                    markers.extend(["kernel:ipc-block pid=0", "kernel:ipc-result pid=1 op=3 result=2",
+                                    "kernel:ipc-wake pid=0 result=2"])
+            elif case in ("ipc-peer-exit", "ipc-peer-fault"):
+                markers.extend(["kernel:ipc-block pid=0",
+                    "kernel:user-exit pid=1 status=0" if case == "ipc-peer-exit" else
+                    "kernel:user-stopped pid=1 vector=6 error=0x0 address=0x0",
+                    "kernel:reaped pid=1", "kernel:ipc-wake pid=0 result=-32"])
+            elif case == "ipc-revoke":
+                markers.extend(["kernel:ipc-block pid=0", "kernel:ipc-result pid=1 op=5 result=0",
+                                "kernel:ipc-wake pid=0 result=-32", "kernel:ipc-result pid=0 op=3 result=-9",
+                                "kernel:ipc-result pid=0 op=4 result=-9"])
+            elif case == "ipc-deadlock":
+                markers.extend(["kernel:ipc-block pid=0", "kernel:ipc-result pid=1 op=4 result=-35",
+                                "kernel:ipc-wake pid=0 result=2"])
+            else:
+                markers.append("kernel:ipc-result pid=0 op=3 result=-11")
+            markers.extend(["user:log pid=0 hex=6f6b", "kernel:user-exit pid=0 status=0", "kernel:reaped pid=0"])
+            if case not in ("ipc-peer-exit", "ipc-peer-fault"):
+                markers.extend(["kernel:user-exit pid=1 status=0", "kernel:reaped pid=1"])
+            markers.extend(["kernel:ipc-clean free=50000", f"kernel:ipc-tests-passed mode={IPC_CASES[case]}"])
         if case in LIFECYCLE_CASES:
             count = 64 if case == "user-recycle" else 1
             markers = ["kernel:allocation-rollback boundaries=12 free=50000"]
@@ -62,6 +94,23 @@ class VerdictTests(unittest.TestCase):
                           output + "\nkernel:preempt pid=0 ticks=9",
                           output.replace("kernel:timer-ready", "omitted")):
             self.assertTrue(verify_output("user-preempt", 47, corrupted))
+
+    def test_ipc_cannot_run_blocked_process_or_wake_without_wait(self):
+        output = self.transcript("ipc-echo")
+        bad = output.replace("kernel:ipc-block pid=0", "kernel:ipc-block pid=0\nkernel:user-switch from=1 to=0", 1)
+        self.assertTrue(verify_output("ipc-echo", 49, bad))
+        bad = output.replace("kernel:ipc-block pid=0", "omitted", 1)
+        self.assertTrue(verify_output("ipc-echo", 49, bad))
+
+    def test_ipc_requires_wakeup_reclamation_and_capability_rejections(self):
+        for case, marker in (("ipc-peer-fault", "kernel:ipc-wake pid=0 result=-32"),
+                             ("ipc-echo", "kernel:ipc-result pid=0 op=3 result=-9"),
+                             ("ipc-queue", "kernel:reaped pid=1"),
+                             ("ipc-revoke", "kernel:ipc-result pid=0 op=4 result=-9")):
+            output = self.transcript(case).replace(marker, "omitted", 1)
+            self.assertTrue(verify_output(case, 49, output))
+        output = self.transcript("ipc-echo").replace("kernel:ipc-clean free=50000", "kernel:ipc-clean free=49999")
+        self.assertTrue(verify_output("ipc-echo", 49, output))
 
     def test_success_text_without_successful_exit_is_rejected(self):
         self.assertTrue(verify_output("normal", 0, self.transcript("normal")))

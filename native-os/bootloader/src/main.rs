@@ -46,6 +46,12 @@ fn mode() -> BootMode {
         "user-preempt" => BootMode::UserPreempt,
         "user-recycle" => BootMode::UserRecycle,
         "user-yield-spin" => BootMode::UserYieldSpin,
+        "ipc-echo" => BootMode::IpcEcho,
+        "ipc-peer-exit" => BootMode::IpcPeerExit,
+        "ipc-peer-fault" => BootMode::IpcPeerFault,
+        "ipc-revoke" => BootMode::IpcRevoke,
+        "ipc-deadlock" => BootMode::IpcDeadlock,
+        "ipc-queue" => BootMode::IpcQueue,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

@@ -9,11 +9,20 @@ use core::{
     ptr,
 };
 pub use elysia_kernel::Frame;
+use elysia_kernel::ipc::{Channel, EDEADLK, EMSGSIZE, EPIPE, MAX_MESSAGE};
 use elysia_kernel::{
     CODE, DATA, EFAULT, EINVAL, ENOSYS, PAGE, PRIVATE, STACK, next_runnable, readable, returnable,
-    user_flags,
+    user_flags, writable,
 };
 use elysia_memory::FrameAllocator;
+
+static mut CHANNEL: Channel = Channel::EMPTY;
+#[derive(Clone, Copy)]
+struct PendingReceive {
+    handle: u64,
+    pointer: u64,
+    capacity: usize,
+}
 
 static mut SPACES: [Option<Space>; 2] = [None, None];
 static mut BASELINE: usize = 0;
@@ -29,6 +38,7 @@ struct Process {
     fault: Option<(u64, u64, u64)>,
     ticks: u64,
     budget_stopped: bool,
+    waiting: Option<PendingReceive>,
 }
 static mut PROCESSES: [Process; 2] = [Process {
     frame: Frame::EMPTY,
@@ -40,12 +50,16 @@ static mut PROCESSES: [Process; 2] = [Process {
     fault: None,
     ticks: 0,
     budget_stopped: false,
+    waiting: None,
 }; 2];
 static mut CURRENT: usize = 0;
 static mut MODE: u32 = 0;
 static mut ACTIVE: bool = false;
 
-global_asm!(include_str!("user_program.S"));
+global_asm!(
+    include_str!("user_program.S"),
+    include_str!("ipc_program.S")
+);
 unsafe extern "C" {
     static user_image_start: u8;
     static user_image_end: u8;
@@ -68,6 +82,13 @@ unsafe fn prepare(
         if spaces.iter().any(Option::is_some) {
             platform::fail("spawn-over-live-space");
         }
+        let handles = if mode >= 21 {
+            (&mut *ptr::addr_of_mut!(CHANNEL))
+                .start_pair()
+                .unwrap_or_else(|_| platform::fail("ipc-start"))
+        } else {
+            [[0; 2]; 2]
+        };
         for pid in 0..2 {
             let space = Space::create(allocator, pid, 32).unwrap_or_else(|e| platform::fail(e));
             let pages = (paging::DIRECT + space.pages[0]) as *mut u8;
@@ -85,6 +106,7 @@ unsafe fn prepare(
                 fault: None,
                 ticks: 0,
                 budget_stopped: false,
+                waiting: None,
             };
             process.frame = Frame {
                 rip: CODE,
@@ -95,6 +117,9 @@ unsafe fn prepare(
                 r12: pid as u64,
                 r13: mode as u64,
                 r14: GENERATION,
+                r8: handles[pid][0],
+                r9: handles[pid][1],
+                r10: handles[1 - pid][0], // deliberately disclose peer token to test ownership checks
                 ..Frame::EMPTY
             };
         }
@@ -184,7 +209,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
             if !returnable(frame) {
                 processes[current].fault = Some((128, frame.rsp, 0));
                 processes[current].runnable = false;
-            } else if ticks >= if current == 0 { 8 } else { 64 } {
+            } else if ticks >= if MODE >= 21 || current != 0 { 64 } else { 8 } {
                 processes[current].budget_stopped = true;
                 processes[current].runnable = false;
                 platform::log(format_args!(
@@ -254,6 +279,9 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                     ));
                     return schedule(processes, current);
                 }
+                3..=5 if MODE >= 21 => {
+                    return ipc_syscall(processes, current, frame);
+                }
                 _ => {
                     frame.rax = ENOSYS;
                     platform::log(format_args!(
@@ -286,23 +314,44 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
         paging::enter_kernel_root();
         let spaces = &mut *ptr::addr_of_mut!(SPACES);
         for pid in 0..2 {
-            if !processes[pid].runnable
+            if (processes[pid].exit.is_some()
+                || processes[pid].fault.is_some()
+                || processes[pid].budget_stopped)
                 && let Some(space) = spaces[pid].take()
             {
+                if MODE >= 21 {
+                    (&mut *ptr::addr_of_mut!(CHANNEL)).close_process(pid);
+                }
                 space.release(memory::frames());
                 processes[pid].root = 0;
                 processes[pid].frame = Frame::EMPTY;
                 platform::log(format_args!("kernel:reaped pid={pid}"));
             }
         }
+        if MODE >= 21 {
+            wake_receivers(processes);
+        }
         let next = if let Some(next) =
             next_runnable(current, [processes[0].runnable, processes[1].runnable])
         {
             next
         } else {
+            if processes.iter().any(|p| p.waiting.is_some()) {
+                platform::fail("ipc-stalled");
+            }
             let free = memory::frames().free_count();
             if free != BASELINE {
                 platform::fail("process-resource-leak");
+            }
+            if MODE >= 21 {
+                if !(&*ptr::addr_of!(CHANNEL)).is_clean() {
+                    platform::fail("ipc-resource-leak");
+                }
+                verify_ipc(processes, MODE);
+                platform::log(format_args!("kernel:ipc-clean free={free}"));
+                let mode = MODE;
+                platform::log(format_args!("kernel:ipc-tests-passed mode={mode}"));
+                platform::exit(0x18);
             }
             if MODE >= 18 {
                 verify_lifecycle(processes, MODE);
@@ -368,7 +417,7 @@ fn verify_fixture(processes: &[Process; 2], mode: u32) {
 }
 
 fn preemptive(mode: u32) -> bool {
-    matches!(mode, 18 | 20)
+    matches!(mode, 18 | 20..=26)
 }
 fn verify_lifecycle(p: &[Process; 2], mode: u32) {
     let valid = if mode == 19 {
@@ -389,5 +438,144 @@ fn verify_lifecycle(p: &[Process; 2], mode: u32) {
     };
     if !valid {
         platform::fail("lifecycle-verdict");
+    }
+}
+
+unsafe fn copy_message(
+    process: &Process,
+    pending: PendingReceive,
+    message: &elysia_kernel::ipc::Message,
+) {
+    unsafe {
+        let root: u64;
+        asm!("mov {}, cr3",out(reg) root,options(nomem,nostack));
+        asm!("mov cr3, {}",in(reg) process.root,options(nostack));
+        ptr::copy_nonoverlapping(
+            message.bytes.as_ptr(),
+            pending.pointer as *mut u8,
+            message.length,
+        );
+        asm!("mov cr3, {}",in(reg) root,options(nostack));
+    }
+}
+
+/// Only blocked receivers are revisited. A pending operation owns no user pointer
+/// reference; its mapping remains live, immutable and checked before the copy.
+unsafe fn wake_receivers(processes: &mut [Process; 2]) {
+    unsafe {
+        let channel = &mut *ptr::addr_of_mut!(CHANNEL);
+        for (pid, process) in processes.iter_mut().enumerate() {
+            let Some(pending) = process.waiting else {
+                continue;
+            };
+            let result = if !channel.is_open() {
+                Err(EPIPE)
+            } else if !writable(pid, pending.pointer, pending.capacity as u64) {
+                Err(EFAULT)
+            } else {
+                channel.receive(pid, pending.handle, pending.capacity)
+            };
+            let value = match result {
+                Ok(None) => continue,
+                Ok(Some(message)) => {
+                    copy_message(process, pending, &message);
+                    message.length as u64
+                }
+                Err(error) => error,
+            };
+            process.frame.rax = value;
+            process.waiting = None;
+            process.runnable = true;
+            platform::log(format_args!(
+                "kernel:ipc-wake pid={pid} result={}",
+                value as i64
+            ));
+        }
+    }
+}
+
+unsafe fn ipc_syscall(processes: &mut [Process; 2], pid: usize, frame: &mut Frame) -> *const Frame {
+    unsafe {
+        let operation = frame.rax;
+        let result = match operation {
+            3 => {
+                if frame.rdx > MAX_MESSAGE as u64 {
+                    Err(EMSGSIZE)
+                } else if !readable(pid, frame.rsi, frame.rdx) {
+                    Err(EFAULT)
+                } else {
+                    let mut message = [0u8; MAX_MESSAGE];
+                    ptr::copy_nonoverlapping(
+                        frame.rsi as *const u8,
+                        message.as_mut_ptr(),
+                        frame.rdx as usize,
+                    );
+                    (&mut *ptr::addr_of_mut!(CHANNEL))
+                        .send(pid, frame.rdi, &message[..frame.rdx as usize])
+                        .map(|n| n as u64)
+                }
+            }
+            4 => {
+                if frame.rdx > MAX_MESSAGE as u64 {
+                    Err(EMSGSIZE)
+                } else if !writable(pid, frame.rsi, frame.rdx) {
+                    Err(EFAULT)
+                } else {
+                    let pending = PendingReceive {
+                        handle: frame.rdi,
+                        pointer: frame.rsi,
+                        capacity: frame.rdx as usize,
+                    };
+                    match (&mut *ptr::addr_of_mut!(CHANNEL)).receive(
+                        pid,
+                        frame.rdi,
+                        pending.capacity,
+                    ) {
+                        Err(error) => Err(error),
+                        Ok(Some(message)) => {
+                            copy_message(&processes[pid], pending, &message);
+                            Ok(message.length as u64)
+                        }
+                        Ok(None) => {
+                            // With only two participants and no external producers, both
+                            // waiting is an immediate deadlock. Leave this caller running.
+                            if !processes[1 - pid].runnable {
+                                Err(EDEADLK)
+                            } else {
+                                processes[pid].frame = *frame;
+                                processes[pid].waiting = Some(pending);
+                                processes[pid].runnable = false;
+                                platform::log(format_args!("kernel:ipc-block pid={pid}"));
+                                return schedule(processes, pid);
+                            }
+                        }
+                    }
+                }
+            }
+            5 => (&mut *ptr::addr_of_mut!(CHANNEL))
+                .revoke(pid, frame.rdi)
+                .map(|()| 0),
+            _ => Err(ENOSYS),
+        };
+        frame.rax = result.unwrap_or_else(|error| error);
+        platform::log(format_args!(
+            "kernel:ipc-result pid={pid} op={operation} result={}",
+            frame.rax as i64
+        ));
+        wake_receivers(processes);
+        frame
+    }
+}
+
+fn verify_ipc(p: &[Process; 2], mode: u32) {
+    let peer_fault = if mode == 23 { Some((6, 0, 0)) } else { None };
+    if p[0].exit != Some(0)
+        || p[0].fault.is_some()
+        || p[0].logs != 1
+        || p[1].fault != peer_fault
+        || p[1].exit != if mode == 23 { None } else { Some(0) }
+        || p.iter().any(|p| p.waiting.is_some() || p.budget_stopped)
+    {
+        platform::fail("ipc-fixture-verdict");
     }
 }
