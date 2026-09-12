@@ -9,6 +9,7 @@ use elysia_memory::{FrameAllocator, PAGE};
 
 const PRESENT: u64 = 1;
 const WRITE: u64 = 2;
+const USER: u64 = 4;
 const NX: u64 = 1 << 63;
 const ADDRESS: u64 = 0x000f_ffff_ffff_f000;
 const TEST_VIRTUAL: u64 = 0x4000_0000;
@@ -62,7 +63,7 @@ impl Tables {
         if virtual_address >= (1 << 47)
             || !virtual_address.is_multiple_of(PAGE)
             || physical & !ADDRESS != 0
-            || flags & !(WRITE | NX) != 0
+            || flags & !(WRITE | NX | USER) != 0
             || flags & (WRITE | NX) == WRITE
         {
             platform::fail("page-map-contract");
@@ -74,11 +75,17 @@ impl Tables {
             let mut value = unsafe { entry.read() };
             if value == 0 {
                 let child = unsafe { self.table(allocator) };
-                value = child | PRESENT | WRITE; // supervisor only at every level
+                value = child | PRESENT | WRITE;
                 unsafe { entry.write(value) };
             }
             if value & PRESENT == 0 || value & (1 << 7) != 0 {
                 platform::fail("page-table-format");
+            }
+            // An intermediate entry may cover both kernel and user leaves. Only
+            // explicitly USER-marked leaves become accessible from Ring 3.
+            if flags & USER != 0 {
+                value |= USER;
+                unsafe { entry.write(value) };
             }
             table = value & ADDRESS;
         }
@@ -135,6 +142,10 @@ pub unsafe fn activate(allocator: &mut FrameAllocator, info: &BootInfo) {
             WRITE | NX
         };
         unsafe { tables.map(allocator, address, address, flags) };
+    }
+    if info.mode >= elysia_boot_protocol::BootMode::UserCooperate as u32 {
+        // All address spaces are completed under firmware identity mappings.
+        unsafe { crate::userspace::prepare(allocator, info.mode) };
     }
     let scratch = allocator
         .allocate()
@@ -199,4 +210,35 @@ pub unsafe fn activate(allocator: &mut FrameAllocator, info: &BootInfo) {
             .write_volatile(0xc3)
     };
     // Table and scratch frames remain owned. No free or remap while references survive.
+}
+
+/// Build a process root before the firmware identity map is retired. Kernel leaves
+/// remain supervisor-only; process pages have no shared user-writable backing.
+pub unsafe fn process_root(allocator: &mut FrameAllocator, pages: &[(u64, u64, bool)]) -> u64 {
+    let mut tables = Tables {
+        root: 0,
+        frames: [0; MAX_TABLES],
+        count: 0,
+    };
+    tables.root = unsafe { tables.table(allocator) };
+    let rodata = readonly_address();
+    let data = ptr::addr_of!(data_start) as u64;
+    let end = ptr::addr_of!(kernel_end) as u64;
+    for address in (KERNEL_BASE..end).step_by(PAGE as usize) {
+        let flags = if address < rodata {
+            0
+        } else if address < data {
+            NX
+        } else {
+            WRITE | NX
+        };
+        unsafe { tables.map(allocator, address, address, flags) };
+    }
+    for &(virtual_address, physical, writable) in pages {
+        let flags = USER | if writable { WRITE | NX } else { 0 };
+        unsafe { tables.map(allocator, virtual_address, physical, flags) };
+    }
+    // The scheduler only loads this root into CR3. It never dereferences these
+    // table frames after bootstrap; no identity aliases for them are needed.
+    tables.root
 }

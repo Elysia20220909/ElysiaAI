@@ -13,25 +13,27 @@ The development tree contains two distinct tracks:
 
 | Track | Implemented scope | Limits |
 | --- | --- | --- |
-| Independent OS, M1 / M2a | UEFI entry into an x86-64 Rust kernel; physical page allocation and release; independent page tables; fault diagnostics in QEMU | No user space, syscalls, execution switching, process isolation, guest AI inference, or verified hardware support |
+| Independent OS, M1 / M2a / M2b | UEFI entry into an x86-64 Rust kernel; physical page allocation and release; independent page tables; two Ring 3 processes with log/yield/exit syscalls and cooperative switching; fault containment in QEMU | No preemption, IPC, process resource reclamation, guest AI inference, or verified hardware support |
 | Existing host application | Bun / Elysia.js, Python / FastAPI, and Tauri code for developing AI interactions on an existing OS | Has not been ported to the independent kernel |
 
 The host application's “AI Kernel” means its Python service, not the independent
-kernel in `native-os/`. M2a is only the first part of the memory-management milestone.
-Protection faults currently stop the kernel after diagnosis; it cannot terminate
-one faulty process and continue running others.
+kernel in `native-os/`. M2b contains synchronous user faults by stopping the faulty
+process and continuing another. Kernel faults remain terminal. This is a bounded
+two-process fixture, not a general-purpose application runtime.
 
-The 2026-09-12 validation records report seven passing boot and fault scenarios on
+The 2026-09-12 validation records report 18 passing boot and fault scenarios on
 the specified Windows, Rust, QEMU, and UEFI combination. See
 [M1 boot validation](docs/native-os/BOOT_VALIDATION.md) and
-[M2a memory validation](docs/native-os/MEMORY_VALIDATION.md) for evidence and limits.
+[M2a memory validation](docs/native-os/MEMORY_VALIDATION.md), and
+[M2b userspace validation](docs/native-os/USERSPACE_VALIDATION.md) for evidence and limits.
 Full setup on a new machine and everyday OS stability have not been demonstrated.
 
-This overview describes the development lineage containing M2a. Design, M1, and M2a
+This overview describes the development lineage containing M2b. Design, M1, and M2a
 are stacked in [PR #109](https://github.com/Elysia20220909/ElysiaAI/pull/109),
 [PR #110](https://github.com/Elysia20220909/ElysiaAI/pull/110), and
 [PR #111](https://github.com/Elysia20220909/ElysiaAI/pull/111).
-Check those PRs for their adoption into the default branch.
+M2b follows the repository guide in [PR #112](https://github.com/Elysia20220909/ElysiaAI/pull/112).
+Check the PRs for their adoption into the default branch.
 
 ## Start developing
 

@@ -1,6 +1,6 @@
 """Regression tests for the boot-result classifier, including false-success cases."""
 import unittest
-from boot_test import CASES, PREFIX, FAULT_CASES, verify_output
+from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, verify_output
 
 
 class VerdictTests(unittest.TestCase):
@@ -12,7 +12,16 @@ class VerdictTests(unittest.TestCase):
         if case != "bad-boot-info":
             prefix.extend(["kernel:boot-info-valid", "kernel:frames-verified available=50000",
                            "kernel:paging-active new-root=0x100000", "kernel:mapped-memory-verified"])
-        return "\n".join(prefix + CASES[case][1])
+        markers = list(CASES[case][1])
+        if case in USER_CASES:
+            prefix.append("kernel:user-spaces-ready roots=0x100000,0x200000")
+            # Expand fixture evidence with all rejected requests, as actual user
+            # code emits them before yielding. The ordered markers remain intact.
+            for pid in (0, 1):
+                for reason, count in (("range", 8), ("number", 1), ("status", 1)):
+                    line = f"kernel:syscall-rejected pid={pid} reason={reason}"
+                    prefix.extend([line] * (count - markers.count(line)))
+        return "\n".join(prefix + markers)
 
     def test_accepts_each_expected_result(self):
         for case, (code, _) in CASES.items():
@@ -54,6 +63,25 @@ class VerdictTests(unittest.TestCase):
         for marker in ["kernel:paging-active", "kernel:mapped-memory-verified"]:
             output = self.transcript("readonly-page").replace(marker, "omitted")
             self.assertTrue(verify_output("readonly-page", 41, output))
+
+    def test_user_isolation_needs_survivor_progress_after_fault(self):
+        output = self.transcript("user-kernel")
+        output = output.replace("user:log pid=1 hex=62", "")
+        self.assertTrue(verify_output("user-kernel", 45, output))
+
+    def test_stopped_process_cannot_resume_even_with_success_marker(self):
+        output = self.transcript("user-peer") + "\nkernel:user-trap pid=0 vector=128 cpl=3"
+        self.assertTrue(verify_output("user-peer", 45, output))
+
+    def test_user_root_and_rejection_evidence_are_required(self):
+        output = self.transcript("user-cooperate")
+        for changed in [output.replace("0x200000", "0x100000"),
+                        output.replace("kernel:syscall-rejected pid=1 reason=range", "", 1)]:
+            self.assertTrue(verify_output("user-cooperate", 45, changed))
+
+    def test_unrelated_user_fault_is_not_isolation_success(self):
+        output = self.transcript("user-kernel").replace("error=0x5", "error=0x4")
+        self.assertTrue(verify_output("user-kernel", 45, output))
 
 
 if __name__ == "__main__":

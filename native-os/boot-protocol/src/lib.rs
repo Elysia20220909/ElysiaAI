@@ -17,6 +17,17 @@ pub enum BootMode {
     UnmappedPage = 4,
     ReadOnlyPage = 5,
     NoExecutePage = 6,
+    UserCooperate = 7,
+    UserKernel = 8,
+    UserPeer = 9,
+    UserReadonly = 10,
+    UserNoExecute = 11,
+    UserInvalidOpcode = 12,
+    UserIo = 13,
+    UserBadStack = 14,
+    UserGate = 15,
+    UserFpu = 16,
+    UserBadReturn = 17,
 }
 
 impl BootMode {
@@ -29,6 +40,17 @@ impl BootMode {
             4 => Some(Self::UnmappedPage),
             5 => Some(Self::ReadOnlyPage),
             6 => Some(Self::NoExecutePage),
+            7 => Some(Self::UserCooperate),
+            8 => Some(Self::UserKernel),
+            9 => Some(Self::UserPeer),
+            10 => Some(Self::UserReadonly),
+            11 => Some(Self::UserNoExecute),
+            12 => Some(Self::UserInvalidOpcode),
+            13 => Some(Self::UserIo),
+            14 => Some(Self::UserBadStack),
+            15 => Some(Self::UserGate),
+            16 => Some(Self::UserFpu),
+            17 => Some(Self::UserBadReturn),
             _ => None,
         }
     }

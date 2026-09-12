@@ -32,6 +32,17 @@ fn mode() -> BootMode {
         "unmapped-page" => BootMode::UnmappedPage,
         "readonly-page" => BootMode::ReadOnlyPage,
         "noexecute-page" => BootMode::NoExecutePage,
+        "user-cooperate" => BootMode::UserCooperate,
+        "user-kernel" => BootMode::UserKernel,
+        "user-peer" => BootMode::UserPeer,
+        "user-readonly" => BootMode::UserReadonly,
+        "user-noexecute" => BootMode::UserNoExecute,
+        "user-invalid-opcode" => BootMode::UserInvalidOpcode,
+        "user-io" => BootMode::UserIo,
+        "user-bad-stack" => BootMode::UserBadStack,
+        "user-gate" => BootMode::UserGate,
+        "user-fpu" => BootMode::UserFpu,
+        "user-bad-return" => BootMode::UserBadReturn,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

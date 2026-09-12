@@ -6,6 +6,7 @@ mod memory;
 mod paging;
 #[path = "../../platform.rs"]
 mod platform;
+mod userspace;
 
 use core::{
     arch::{asm, global_asm},
@@ -101,6 +102,9 @@ extern "sysv64" fn kernel_main(info: *const BootInfo) -> ! {
         unsafe {
             asm!("ud2", options(noreturn));
         }
+    }
+    if info.mode >= BootMode::UserCooperate as u32 {
+        unsafe { userspace::run(info.mode) }
     }
     platform::log(format_args!("kernel:ready"));
     platform::exit(0x10)

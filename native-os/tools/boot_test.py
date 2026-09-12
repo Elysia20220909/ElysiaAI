@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and test the M1/M2a kernel in a bounded, headless QEMU process."""
+"""Build and test the M1/M2a/M2b kernel in a bounded, headless QEMU process."""
 from __future__ import annotations
 
 import argparse
@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -26,6 +27,34 @@ CASES = {
     "readonly-page": (41, ["kernel:injecting-readonly", "kernel:fault:readonly"]),
     "noexecute-page": (43, ["kernel:injecting-noexecute", "kernel:fault:noexecute"]),
 }
+USER_CASES = {
+    "user-cooperate": (7, None),
+    "user-kernel": (8, "vector=14 error=0x5 address=0x2000000"),
+    "user-peer": (9, "vector=14 error=0x4 address=0x70002000"),
+    "user-readonly": (10, "vector=14 error=0x7 address=0x40000000"),
+    "user-noexecute": (11, "vector=14 error=0x15 address=0x60000000"),
+    "user-invalid-opcode": (12, "vector=6 error=0x0 address=0x0"),
+    "user-io": (13, "vector=13 error=0x0 address=0x0"),
+    "user-bad-stack": (14, "vector=14 error=0x6 address=0x8ffffff8"),
+    "user-gate": (15, "vector=13 error=0x202 address=0x0"),
+    "user-fpu": (16, "vector=7 error=0x0 address=0x0"),
+    "user-bad-return": (17, "vector=128 error=0x0 address=0x1000000000000"),
+}
+for name, (mode, fault) in USER_CASES.items():
+    CASES[name] = (45, [
+        "kernel:user-enter pid=0 cpl=3",
+        "kernel:user-trap pid=0 vector=128 cpl=3",
+        "kernel:syscall-rejected pid=0 reason=number",
+        "kernel:syscall-rejected pid=0 reason=range",
+        "user:log pid=0 hex=41", "kernel:user-yield pid=0",
+        "kernel:user-switch from=0 to=1",
+        "kernel:user-trap pid=1 vector=128 cpl=3",
+        "user:log pid=1 hex=42", "kernel:user-yield pid=1",
+        "kernel:user-switch from=1 to=0", "user:log pid=0 hex=61",
+        f"kernel:user-stopped pid=0 {fault}" if fault else "kernel:user-exit pid=0 status=0",
+        "kernel:user-switch from=0 to=1", "user:log pid=1 hex=62",
+        "kernel:user-exit pid=1 status=0", f"kernel:user-tests-passed mode={mode}",
+    ])
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
           "kernel:entered", "kernel:exceptions-ready"]
 MEMORY_PREFIX = ["kernel:boot-info-valid", "kernel:frames-verified",
@@ -81,6 +110,20 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
         errors.append("corrupted boot info was accepted")
     if case == "invalid-opcode" and "kernel:boot-info-valid" not in output:
         errors.append("exception did not follow a validated handoff")
+    if case in USER_CASES:
+        roots = re.search(r"kernel:user-spaces-ready roots=(0x[0-9a-f]+),(0x[0-9a-f]+)", output)
+        if not roots or int(roots[1], 16) == int(roots[2], 16):
+            errors.append("missing distinct process roots")
+        for pid in (0, 1):
+            for reason, count in (("range", 8), ("number", 1), ("status", 1)):
+                marker = f"kernel:syscall-rejected pid={pid} reason={reason}"
+                if output.splitlines().count(marker) != count:
+                    errors.append(f"incorrect rejection count: {marker}")
+            stopped = re.search(rf"kernel:user-(?:stopped|exit) pid={pid} ", output)
+            if stopped:
+                later = output[output.find("\n", stopped.start()) + 1:]
+                if re.search(rf"(?:kernel:user-trap pid={pid} |user:log pid={pid} |kernel:user-switch from=\d+ to={pid}(?:\r?\n|$))", later):
+                    errors.append(f"stopped process {pid} resumed")
     return errors
 
 

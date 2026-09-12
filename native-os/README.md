@@ -1,13 +1,14 @@
 # ElysiaAI // INFINITE RESONANCE — 最初のカーネル
 
 UEFI ローダーから独自の x86-64 カーネルへ制御を渡し、物理ページを管理して
-独自ページテーブルへ切り替える、M1 / M2a の実装。M2a は M2 の最初の実装単位である。
+独自ページテーブルへ切り替える、M1 / M2a / M2b の実装。M2b では固定した 2 プロセスを Ring 3 で協調実行する。
 既存の Bun / Python / Tauri アプリとは独立した Rust workspace としてビルドする。
-AI 推論、プロセス、ファイルシステムはまだ含まない。
+AI 推論、任意のアプリのロード、ファイルシステムはまだ含まない。
 
 設計の背景は [独自 OS の構想](../docs/native-os/README.md)、
 実測結果は [M1 起動検証](../docs/native-os/BOOT_VALIDATION.md) と
 [M2a メモリ検証](../docs/native-os/MEMORY_VALIDATION.md)、
+[M2b ユーザー空間の検証](../docs/native-os/USERSPACE_VALIDATION.md)、
 取得元と確認範囲は [依存関係](DEPENDENCIES.md) を参照する。
 
 ## 起動経路
@@ -21,6 +22,7 @@ QEMU / EDK II UEFI
   -> カーネル専用スタック、GDT / IDT、起動情報の検査
   -> 物理ページの割り当て管理、予約領域・枯渇・解放の検査
   -> 独自 CR3 / ページ権限へ切り替え、対応付けた RAM の読み書き
+  -> M2b ケースでは Ring 3、int 0x80、協調切替、プロセスの終了・故障
   -> シリアル診断 / QEMU 終了
 ```
 
@@ -58,7 +60,7 @@ QEMU / EDK II UEFI
 rustc +stable --version
 rustup target add --toolchain stable x86_64-unknown-none x86_64-unknown-uefi
 python -m unittest discover -s native-os/tools -p 'test_*.py' -v
-cargo +stable test --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory --locked
+cargo +stable test --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel --lib --locked
 python native-os/tools/boot_test.py --case all
 ```
 
@@ -76,6 +78,16 @@ python native-os/tools/boot_test.py --case all
 | `unmapped-page` | 未マップ領域を読み取る | 注入 → page fault、CR2 と error=0 を照合 | 39 |
 | `readonly-page` | 読み取り専用データへ書き込む | 注入 → page fault、CR2 と error=3 を照合 | 41 |
 | `noexecute-page` | 実行禁止データページを呼び出す | 注入 → page fault、CR2 と error=0x11 を照合 | 43 |
+| `user-cooperate` | 2 プロセスが yield して終了 | 各プロセスのレジスター・スタック・データ保持、両方の終了 | 45 |
+| `user-kernel` / `user-peer` | カーネル領域 / 相手だけのページを読む | 違反したプロセスの停止 → 相手のログ・終了 | 45 |
+| `user-readonly` / `user-noexecute` | ユーザーコードを書換え / データを実行 | 正確な page fault → 相手の継続 | 45 |
+| `user-invalid-opcode` / `user-io` | UD2 / 特権 I/O | #UD / #GP → 相手の継続 | 45 |
+| `user-bad-stack` / `user-bad-return` | 未マップのスタックへ push / 不正な復帰スタック | #PF / 復帰検査で停止 → 相手の継続 | 45 |
+| `user-gate` / `user-fpu` | DPL0 ゲートへ INT / 未対応の x87 命令 | #GP / #NM → 相手の継続 | 45 |
+
+M2b の各ケースでは、Ring 3 からの呼出し、不正システムコールの拒否、yield による切替、
+正常な相手の継続を必須にする。単にプロセスが故障しただけでは合格にならない。
+ユーザーのログは 16 進数にして、カーネル診断を偽装する文字列を出せないようにする。
 
 全ケースで、ローダー開始、ロード完了、Boot Services 終了、カーネルへの到達、
 独自例外テーブルの設定を順に要求する。予期しない故障・panic・時間切れ・終了コードの不一致は
@@ -84,7 +96,7 @@ python native-os/tools/boot_test.py --case all
 対応付けたメモリの読み書きも必須。M1 のログだけでは M2a の合格にしない。
 
 `isa-debug-exit` へ書き込む値は通常 `0x10`、壊れた起動情報 `0x11`、意図的な例外 `0x12`、
-page fault の試験 `0x13`〜`0x15`、予期しない失敗 `0x7f`。
+page fault の試験 `0x13`〜`0x15`、M2b 全体の成功 `0x16`、予期しない失敗 `0x7f`。
 QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 したがってゲストの正常完了は 33 であり、全試験を通した Python runner 自体の成功は 0。
 
@@ -99,7 +111,7 @@ QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 
 ```powershell
 cargo +stable fmt --manifest-path native-os/Cargo.toml --all -- --check
-cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory --all-targets --locked -- -D warnings
+cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel --lib --tests --locked -- -D warnings
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel --target x86_64-unknown-none --locked -- -D warnings
 $env:ELYSIA_KERNEL_PATH = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-kernel).Path
 $env:ELYSIA_BOOT_MODE = 'normal'
@@ -124,13 +136,36 @@ cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-bootloader -
 - 4 KiB ページ、256 MiB までの物理メモリ、最初の 1 MiB は予約。
   EFI Conventional Memory かつ Runtime 属性のないページだけを対象にする。
   kernel / 起動情報 / map は明示的にも除外する。重複 descriptor は受け付けない。
-- ページテーブルの構築は切り替え前に限り、最大 32 フレーム。全ページ supervisor-only。
+- ページテーブルの構築は切り替え前に限り、各 root 最大 32 フレーム。カーネルの葉は supervisor-only。
   コードは RX、読み取り専用データは R/NX、データ・スタック・ページテーブルは RW/NX。
   CR0.WP と EFER.NXE を有効にし、旧 global TLB を除去して CR3 を更新する。
-- 割り込みは無効、1 CPU 限定。GDT と IDT は独自に設定するが、例外は診断して終了するだけ。
-  `ud2` と 3 種類の page fault を故障注入する。二重故障用スタックや復帰処理は未実装。
+- 割り込みは無効、1 CPU 限定。GDT / IDT / TSS を設定し、二重故障には専用 IST スタックを使う。
+  カーネル例外は終了、同期ユーザー例外はそのプロセスを停止する。NMI・二重故障・machine check は復帰しない失敗とする。
 - 起動情報のポインターは、このローダーからの有効なポインターを前提にする。
-  任意の第三者ローダー、実機、Secure Boot、メモリ隔離を保証しない。
+  任意の第三者ローダー、実機、Secure Boot、任意のアプリに対する完全な隔離を保証しない。
 
-M2 全体はまだ未達成。次はユーザー空間・システムコール・実行切替と、
-不正なプロセスだけを停止してほかの処理を継続する試験へ進む。
+## M2b の暫定 ABI と制限
+
+`int 0x80` を DPL3 から呼ぶ。番号は RAX、引数は RDI / RSI、返り値は RAX。
+ほかの汎用レジスターと DF・算術フラグを保持する。これは固定試験用の ABI で、公開互換性は約束しない。
+
+| RAX | 操作 | 引数と結果 |
+| --- | --- | --- |
+| 0 | log | RDI=ユーザーポインター、RSI=0〜128 bytes。所有する単一ページ内の範囲だけをコピーし、長さを返す。不正な範囲は -14 |
+| 1 | yield | 他の runnable プロセスへ実行権を渡す。自分だけなら自分を継続し、0 を返す |
+| 2 | exit | RDI=u32 の終了状態。範囲外は -22。受理したら戻らず、残りのプロセスへ移る |
+| その他 | 未知の番号 | -38 を返す |
+
+コード `0x40000000`、データ `0x60000000`、スタック `0x80000000` は各 4 KiB。
+加えて `0x70000000 + pid * 0x2000` に各自専用の 4 KiB ページを持つ。
+コードは user/RX、データ・専用ページ・スタックは user/RW/NX。
+同じ仮想アドレスでも物理ページは別々である。カーネルの物理アドレス別名は supervisor-only。
+
+ページと root は起動中に作成し、終了しても VM 終了まで保持する。動的マップ、回収、再起動は未実装。
+システムコールはブロックせず、入口のカーネルスタックは 1 CPU の TSS RSP0 を共用する。
+ユーザーのコード・スタック範囲と CS / SS を復帰前に検査し、危険な RFLAGS は除去する。
+浮動小数点・SIMD の保存復元は未実装なので、CR0.EM / TS により使用を拒否する。
+
+ユーザープログラムはカーネルに埋め込んだアセンブリの試験用コードで、任意の ELF を読み込まない。
+タイマー割り込み・プリエンプション・CPU 予算の強制・IPC・AI 推論は未実装。
+yield しない無限ループから相手を救うことはできない。M2 全体の資源回収と一般化は残っている。

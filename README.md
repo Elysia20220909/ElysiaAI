@@ -4,7 +4,7 @@
 
 ElysiaAI は、カーネルから設計する独自の AI-Native OS を目指す長期開発プロジェクトです。
 AI が扱う記憶、道具、権限を OS の設計に組み込み、人が実行を理解し、制御できる環境を目指します。
-現在は、QEMU 上で起動とメモリ保護を検証する初期カーネルを開発しています。
+現在は、QEMU 上で起動・メモリ保護・ユーザープロセスの隔離を検証する初期カーネルを開発しています。
 
 [English](README.en.md) · [日本語の入口](README.ja.md) ·
 [行動規範](.github/CODE_OF_CONDUCT.md) · [開発への参加](CONTRIBUTING.md) ·
@@ -19,22 +19,26 @@ AI が扱う記憶、道具、権限を OS の設計に組み込み、人が実�
 | 対象 | 確認できていること | まだできないこと |
 | --- | --- | --- |
 | M1：起動 | UEFI から独自の x86-64 Rust カーネルへ制御を渡し、起動・故障をログで判別 | 実機起動、Secure Boot 対応 |
-| M2a：メモリ管理 | 物理ページの割り当て・解放、独自ページテーブルへの切替、書込み禁止・実行禁止の故障検出 | ユーザー空間、システムコール、実行切替、プロセス隔離 |
+| M2a：メモリ管理 | 物理ページの割り当て・解放、独自ページテーブルへの切替、書込み禁止・実行禁止の故障検出 | 動的なマッピング変更、終了時の資源回収 |
+| M2b：ユーザー空間 | Ring 3 の 2 プロセス、ログ・yield・exit、協調切替、違反したプロセスの停止と残りの継続 | プリエンプション、任意のアプリのロード、IPC |
 | 既存 AI アプリ | Bun / Elysia.js、Python / FastAPI、Tauri を使うホスト OS 上の開発基盤 | 独自 OS への移植、独自カーネル上での AI 推論 |
 
-M2a はメモリ管理の最初の実装単位です。保護違反はカーネルが診断して停止します。
-不正なプロセスだけを止め、ほかの処理を続ける機能は未実装です。
+M2a の物理ページ管理に、M2b のユーザー空間と協調切替を追加しました。
+ユーザー側の同期例外はそのプロセスを停止し、正常なプロセスを継続します。
+カーネル側の故障は停止します。固定した 2 プロセスの試験であり、一般的な OS の完成ではありません。
 
 2026-09-12 の検証記録では、指定した Windows / Rust / QEMU / UEFI の組み合わせで
-7 ケースの起動・故障試験に合格しています。条件と実測結果は
+18 ケースの起動・故障試験に合格しています。条件と実測結果は
 [M1 起動検証](docs/native-os/BOOT_VALIDATION.md) と
-[M2a メモリ検証](docs/native-os/MEMORY_VALIDATION.md) を参照してください。
+[M2a メモリ検証](docs/native-os/MEMORY_VALIDATION.md)、
+[M2b ユーザー空間の検証](docs/native-os/USERSPACE_VALIDATION.md) を参照してください。
 新規マシンでの環境構築全体、実機、日常利用できる OS としての安定性は未検証です。
 
-この文書は M2a を含む開発ブランチの内容を説明します。
+この文書は M2b を含む開発ブランチの内容を説明します。
 設計・M1・M2a は [PR #109](https://github.com/Elysia20220909/ElysiaAI/pull/109)、
 [PR #110](https://github.com/Elysia20220909/ElysiaAI/pull/110)、
 [PR #111](https://github.com/Elysia20220909/ElysiaAI/pull/111) の順に積み重ねています。
+M2b は文書整備の [PR #112](https://github.com/Elysia20220909/ElysiaAI/pull/112) の先に追加しています。
 既定ブランチへの採用状況は各 PR で確認してください。
 
 ## 独自 OS を読む・試す
@@ -50,7 +54,7 @@ M2a はメモリ管理の最初の実装単位です。保護違反はカーネ�
 環境の準備後、リポジトリのルートで実行します。
 
 ```powershell
-cargo +stable test --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory --locked
+cargo +stable test --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel --lib --locked
 python -m unittest discover -s native-os/tools -p 'test_*.py' -v
 python native-os/tools/boot_test.py --case all
 ```
