@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+"""Build and test the M1 kernel in a bounded, headless QEMU process."""
+from __future__ import annotations
+
+import argparse
+from datetime import datetime, timezone
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+EXPECTED_RUST = "1.96.0"
+EXPECTED_QEMU = "11.1.0 (v11.1.0-12130-ge470268ff4)"
+MACHINE = "pc-q35-11.1"
+CASES = {
+    "normal": (33, ["kernel:boot-info-valid", "kernel:ready"]),
+    "bad-boot-info": (35, ["kernel:boot-info-rejected:header"]),
+    "invalid-opcode": (37, ["kernel:injecting-invalid-opcode", "kernel:fault:invalid-opcode"]),
+    "stale-map-key": (33, [
+        "loader:map-key-rejected", "loader:exit-attempt=1",
+        "loader:boot-services-exited", "kernel:boot-info-valid", "kernel:ready",
+    ]),
+}
+PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
+          "kernel:entered", "kernel:exceptions-ready"]
+
+
+def execute(args: list[str], *, env: dict[str, str] | None = None,
+            timeout: float = 180) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        args, cwd=ROOT, env=env, check=False, text=True, encoding="utf-8",
+        errors="replace", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=timeout,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+    )
+
+
+def checked(args: list[str], *, env: dict[str, str] | None = None) -> str:
+    result = execute(args, env=env)
+    if result.returncode:
+        raise RuntimeError(f"{args[0]} failed ({result.returncode}):\n{result.stdout}")
+    return result.stdout
+
+
+def sha256(path: Path) -> str:
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def verify_output(case: str, code: int, output: str) -> list[str]:
+    """Require both the exact exit code and ordered evidence from each side of the handoff."""
+    expected_code, markers = CASES[case]
+    errors = []
+    if code != expected_code:
+        errors.append(f"exit code {code}, expected {expected_code}")
+    sequence = list(PREFIX)
+    if case == "stale-map-key":
+        sequence[2:2] = ["loader:map-key-rejected", "loader:exit-attempt=1"]
+        sequence += ["kernel:boot-info-valid", "kernel:ready"]
+    else:
+        if case == "invalid-opcode":
+            sequence.append("kernel:boot-info-valid")
+        sequence += markers
+    position = 0
+    for marker in sequence:
+        found = output.find(marker, position)
+        if found < 0:
+            errors.append(f"missing or out-of-order marker: {marker}")
+            break
+        position = found + len(marker)
+    if "failure:" in output or "panic" in output or "kernel:fault:unexpected" in output:
+        errors.append("unexpected failure diagnostic")
+    if case in ("bad-boot-info", "invalid-opcode") and "kernel:ready" in output:
+        errors.append("fault case reached normal completion")
+    if case == "bad-boot-info" and "kernel:boot-info-valid" in output:
+        errors.append("corrupted boot info was accepted")
+    if case == "invalid-opcode" and "kernel:boot-info-valid" not in output:
+        errors.append("exception did not follow a validated handoff")
+    return errors
+
+
+def qemu_path(path: Path) -> str:
+    # Commas delimit QEMU suboptions; doubling preserves a literal comma.
+    return path.resolve().as_posix().replace(",", ",,")
+
+
+def source_digest() -> str:
+    digest = hashlib.sha256()
+    for path in sorted(ROOT.rglob("*")):
+        relative = path.relative_to(ROOT)
+        if any(part in ("target", "out", "__pycache__") for part in relative.parts):
+            continue
+        if path.is_file():
+            digest.update(relative.as_posix().encode())
+            digest.update(b"\0")
+            digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
+def run(args: argparse.Namespace) -> int:
+    qemu = args.qemu.resolve()
+    firmware = args.firmware_dir.resolve()
+    code = firmware / "edk2-x86_64-code.fd"
+    variables = firmware / "edk2-i386-vars.fd"
+    for path in (qemu, code, variables):
+        if not path.is_file():
+            raise RuntimeError(f"Required tool/firmware missing: {path}")
+    rust = checked(["rustc", "+stable", "--version"]).strip()
+    if rust.split()[1] != EXPECTED_RUST:
+        raise RuntimeError(f"Expected Rust {EXPECTED_RUST}; found {rust}; no toolchain was changed")
+    qemu_version = checked([str(qemu), "--version"]).splitlines()[0]
+    if qemu_version != f"QEMU emulator version {EXPECTED_QEMU}":
+        raise RuntimeError(f"Expected QEMU {EXPECTED_QEMU}; found {qemu_version}")
+    out = ROOT / "out"
+    out.mkdir(exist_ok=True)
+    kernel = ROOT / "target/x86_64-unknown-none/release/elysia-kernel"
+    print("Building kernel", flush=True)
+    print(checked([
+        "cargo", "+stable", "rustc", "--locked", "-p", "elysia-kernel", "--bin", "elysia-kernel",
+        "--target", "x86_64-unknown-none", "--release", "--",
+        "-C", "relocation-model=static",
+        "-C", f"link-arg=-T{ROOT / 'kernel/linker.ld'}", "-C", "link-arg=--build-id=none",
+    ]), end="", flush=True)
+    results = []
+    selected = list(CASES) if args.case == "all" else [args.case]
+    for case in selected:
+        print(f"Testing {case}", flush=True)
+        environment = os.environ.copy()
+        environment.update(ELYSIA_KERNEL_PATH=str(kernel), ELYSIA_BOOT_MODE=case)
+        print(checked([
+            "cargo", "+stable", "build", "--locked", "-p", "elysia-bootloader",
+            "--bin", "elysia-bootloader", "--target", "x86_64-unknown-uefi", "--release",
+        ], env=environment), end="", flush=True)
+        case_dir = out / case
+        esp = case_dir / "esp"
+        boot = esp / "EFI/BOOT"
+        boot.mkdir(parents=True, exist_ok=True)
+        loader = boot / "BOOTX64.EFI"
+        shutil.copyfile(ROOT / "target/x86_64-unknown-uefi/release/elysia-bootloader.efi", loader)
+        mutable_vars = case_dir / "vars.fd"
+        shutil.copyfile(variables, mutable_vars)
+        command = [
+            str(qemu), "-machine", MACHINE, "-accel", "tcg", "-cpu", "qemu64",
+            "-smp", "1", "-m", "256M", "-nodefaults", "-no-user-config",
+            "-display", "none", "-monitor", "none", "-serial", "stdio",
+            "-nic", "none", "-no-reboot",
+            "-device", "isa-debug-exit,iobase=0xf4,iosize=0x04",
+            "-drive", f"if=pflash,format=raw,readonly=on,file={qemu_path(code)}",
+            "-drive", f"if=pflash,format=raw,file={qemu_path(mutable_vars)}",
+            "-drive", f"if=none,id=esp,format=raw,readonly=on,file=fat:ro:{qemu_path(esp)}",
+            "-device", "virtio-blk-pci,drive=esp,bootindex=1",
+        ]
+        started = time.monotonic()
+        try:
+            result = execute(command, timeout=args.timeout)
+            output = result.stdout
+            errors = verify_output(case, result.returncode, output)
+            returncode = result.returncode
+        except subprocess.TimeoutExpired as exc:
+            raw = exc.stdout or b""
+            output = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw
+            errors = ["QEMU timed out; the process was killed"]
+            returncode = None
+        duration = round(time.monotonic() - started, 3)
+        (case_dir / "serial.log").write_text(output, encoding="utf-8")
+        record = {
+            "case": case, "passed": not errors, "exit_code": returncode,
+            "seconds": duration, "errors": errors, "loader_sha256": sha256(loader),
+        }
+        results.append(record)
+        print(json.dumps(record), flush=True)
+    report = {
+        "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
+        "rust": rust, "qemu": qemu_version, "machine": MACHINE,
+        "memory_mib": 256, "vcpus": 1, "accelerator": "tcg", "network": "none",
+        "qemu_sha256": sha256(qemu), "firmware_code_sha256": sha256(code),
+        "firmware_vars_sha256": sha256(variables), "kernel_sha256": sha256(kernel),
+        "native_os_source_sha256": source_digest(), "cases": results,
+    }
+    (out / "results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    return 0 if all(case["passed"] for case in results) else 1
+
+
+def main() -> int:
+    default_tools = ROOT.parent / ".tools/qemu"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--qemu", type=Path, default=default_tools / "qemu-system-x86_64.exe")
+    parser.add_argument("--firmware-dir", type=Path, default=default_tools / "share")
+    parser.add_argument("--case", choices=["all", *CASES], default="all")
+    parser.add_argument("--timeout", type=float, default=45)
+    args = parser.parse_args()
+    if not 1 <= args.timeout <= 120:
+        parser.error("--timeout must be between 1 and 120 seconds")
+    try:
+        return run(args)
+    except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
+        print(f"Boot test failed: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
