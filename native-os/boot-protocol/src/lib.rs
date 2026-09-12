@@ -14,6 +14,9 @@ pub enum BootMode {
     BadBootInfo = 1,
     InvalidOpcode = 2,
     StaleMapKey = 3,
+    UnmappedPage = 4,
+    ReadOnlyPage = 5,
+    NoExecutePage = 6,
 }
 
 impl BootMode {
@@ -23,6 +26,9 @@ impl BootMode {
             1 => Some(Self::BadBootInfo),
             2 => Some(Self::InvalidOpcode),
             3 => Some(Self::StaleMapKey),
+            4 => Some(Self::UnmappedPage),
+            5 => Some(Self::ReadOnlyPage),
+            6 => Some(Self::NoExecutePage),
             _ => None,
         }
     }

@@ -19,7 +19,12 @@ name = "elysia-kernel"
 version = "0.1.0"
 dependencies = [
  "elysia-boot-protocol",
+ "elysia-memory",
 ]
+
+[[package]]
+name = "elysia-memory"
+version = "0.1.0"
 
 [[package]]
 name = "r-efi"

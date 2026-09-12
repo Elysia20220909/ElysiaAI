@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and test the M1 kernel in a bounded, headless QEMU process."""
+"""Build and test the M1/M2a kernel in a bounded, headless QEMU process."""
 from __future__ import annotations
 
 import argparse
@@ -18,16 +18,19 @@ EXPECTED_RUST = "1.96.0"
 EXPECTED_QEMU = "11.1.0 (v11.1.0-12130-ge470268ff4)"
 MACHINE = "pc-q35-11.1"
 CASES = {
-    "normal": (33, ["kernel:boot-info-valid", "kernel:ready"]),
+    "normal": (33, ["kernel:ready"]),
     "bad-boot-info": (35, ["kernel:boot-info-rejected:header"]),
     "invalid-opcode": (37, ["kernel:injecting-invalid-opcode", "kernel:fault:invalid-opcode"]),
-    "stale-map-key": (33, [
-        "loader:map-key-rejected", "loader:exit-attempt=1",
-        "loader:boot-services-exited", "kernel:boot-info-valid", "kernel:ready",
-    ]),
+    "stale-map-key": (33, ["kernel:ready"]),
+    "unmapped-page": (39, ["kernel:injecting-unmapped", "kernel:fault:unmapped"]),
+    "readonly-page": (41, ["kernel:injecting-readonly", "kernel:fault:readonly"]),
+    "noexecute-page": (43, ["kernel:injecting-noexecute", "kernel:fault:noexecute"]),
 }
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
           "kernel:entered", "kernel:exceptions-ready"]
+MEMORY_PREFIX = ["kernel:boot-info-valid", "kernel:frames-verified",
+                 "kernel:paging-active", "kernel:mapped-memory-verified"]
+FAULT_CASES = set(CASES) - {"normal", "stale-map-key"}
 
 
 def execute(args: list[str], *, env: dict[str, str] | None = None,
@@ -60,11 +63,9 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
     sequence = list(PREFIX)
     if case == "stale-map-key":
         sequence[2:2] = ["loader:map-key-rejected", "loader:exit-attempt=1"]
-        sequence += ["kernel:boot-info-valid", "kernel:ready"]
-    else:
-        if case == "invalid-opcode":
-            sequence.append("kernel:boot-info-valid")
-        sequence += markers
+    if case != "bad-boot-info":
+        sequence += MEMORY_PREFIX
+    sequence += markers
     position = 0
     for marker in sequence:
         found = output.find(marker, position)
@@ -74,7 +75,7 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
         position = found + len(marker)
     if "failure:" in output or "panic" in output or "kernel:fault:unexpected" in output:
         errors.append("unexpected failure diagnostic")
-    if case in ("bad-boot-info", "invalid-opcode") and "kernel:ready" in output:
+    if case in FAULT_CASES and "kernel:ready" in output:
         errors.append("fault case reached normal completion")
     if case == "bad-boot-info" and "kernel:boot-info-valid" in output:
         errors.append("corrupted boot info was accepted")

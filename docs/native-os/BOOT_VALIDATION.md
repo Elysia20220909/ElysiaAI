@@ -1,12 +1,15 @@
 # M1 起動検証 — UEFI から独自カーネルへ
 
+この文書は M1 の時点の記録。現在の M2a の結果と制限は [メモリ検証](MEMORY_VALIDATION.md) を参照する。
+
 2026-09-12 に、Windows ホスト上のヘッドレス QEMU で正常系と 3 種類の故障条件を実行した。
 4 ケースとも所定の診断と終了コードを確認し、M1 の起動条件をこの仮想環境で満たした。
 M0 の取得元・版・手順は固定したが、新規マシンへの環境構築全体はまだ実証していない。
 
-対象ソースはこの文書と同じ変更にある [native-os](../../native-os/README.md)。
+対象ソースは M1 コミット `43b81a0eda53abcf45cb40e432423b3768e805e5` の
+[native-os](https://github.com/Elysia20220909/ElysiaAI/tree/43b81a0eda53abcf45cb40e432423b3768e805e5/native-os)。
 設計の基準は `f142939b2e6c2e9d32dda10f30bdd67eda621aeb`（設計 Draft PR #109）。
-この実装のコミットは、この文書を含む PR の head で特定できる。
+M1 の実装レビューは Draft PR #110。
 
 ## 固定条件と結果
 

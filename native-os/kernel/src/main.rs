@@ -2,6 +2,8 @@
 #![no_main]
 
 mod exceptions;
+mod memory;
+mod paging;
 #[path = "../../platform.rs"]
 mod platform;
 
@@ -44,7 +46,8 @@ extern "sysv64" fn kernel_main(info: *const BootInfo) -> ! {
     }
     // SAFETY: our loader supplies a live, identity-mapped BootInfo in its retained image.
     // M1 does not accept arbitrary third-party loaders or reclaim their memory.
-    let info = unsafe { &*info };
+    let info_address = info as u64;
+    let info = unsafe { *info };
     if let Err(reason) = info.validate() {
         platform::log(format_args!("kernel:boot-info-rejected:{reason}"));
         platform::exit(0x11);
@@ -53,6 +56,44 @@ extern "sysv64" fn kernel_main(info: *const BootInfo) -> ! {
         "kernel:boot-info-valid descriptors={}",
         info.memory_map_size / info.descriptor_size
     ));
+    // Consume the firmware map while its old identity mapping is present. Only our copy
+    // of BootInfo and the allocator's bitmaps are used after switching the address space.
+    unsafe {
+        let frames = memory::initialize(&info, info_address);
+        paging::activate(frames, &info);
+    }
+    match BootMode::from_raw(info.mode) {
+        Some(BootMode::UnmappedPage) => {
+            exceptions::expect_page_fault(0x13, paging::UNMAPPED, 0);
+            platform::log(format_args!("kernel:injecting-unmapped"));
+            // SAFETY: deliberate fault in a terminal test; no Rust reference is formed.
+            unsafe {
+                asm!("mov rax, [{address}]", address = in(reg) paging::UNMAPPED, out("rax") _, options(nostack));
+            }
+            platform::fail("unmapped-access-succeeded");
+        }
+        Some(BootMode::ReadOnlyPage) => {
+            let address = paging::readonly_address();
+            exceptions::expect_page_fault(0x14, address, 3);
+            platform::log(format_args!("kernel:injecting-readonly"));
+            // SAFETY: terminal write-protection test; normal execution must never resume.
+            unsafe {
+                asm!("mov byte ptr [{address}], 0", address = in(reg) address, options(nostack));
+            }
+            platform::fail("readonly-write-succeeded");
+        }
+        Some(BootMode::NoExecutePage) => {
+            let address = paging::noexecute_address();
+            exceptions::expect_page_fault(0x15, address, 0x11);
+            platform::log(format_args!("kernel:injecting-noexecute"));
+            // SAFETY: the NX page contains RET; a missing NX protection returns to failure.
+            unsafe {
+                asm!("call {address}", address = in(reg) address, clobber_abi("sysv64"));
+            }
+            platform::fail("noexecute-call-succeeded");
+        }
+        _ => {}
+    }
     if info.mode == BootMode::InvalidOpcode as u32 {
         exceptions::expect_invalid_opcode();
         platform::log(format_args!("kernel:injecting-invalid-opcode"));

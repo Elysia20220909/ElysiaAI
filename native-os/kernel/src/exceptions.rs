@@ -1,7 +1,7 @@
 use crate::platform;
 use core::{
     arch::{asm, global_asm},
-    sync::atomic::{AtomicBool, Ordering},
+    sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering},
 };
 
 #[repr(C, packed)]
@@ -43,23 +43,33 @@ impl Gate {
         }
     }
 }
-static GDT: [u64; 3] = [0, 0x00af_9a00_0000_ffff, 0x00cf_9200_0000_ffff];
+// Accessed bits are preset so the CPU never needs to modify this read-only table.
+static GDT: [u64; 3] = [0, 0x00af_9b00_0000_ffff, 0x00cf_9300_0000_ffff];
 static mut IDT: [Gate; 256] = [Gate::EMPTY; 256];
 static EXPECT_UD: AtomicBool = AtomicBool::new(false);
+static EXPECT_PF: AtomicU32 = AtomicU32::new(0);
+static PF_ADDRESS: AtomicU64 = AtomicU64::new(0);
+static PF_ERROR: AtomicU64 = AtomicU64::new(0);
 
 global_asm!(
     ".section .text, \"ax\"",
     ".global invalid_opcode_stub",
     "invalid_opcode_stub:",
     "mov edi, 6",
+    "xor esi, esi",
+    "xor edx, edx",
     "jmp fault_stub",
     ".global page_fault_stub",
     "page_fault_stub:",
     "mov edi, 14",
+    "mov rsi, [rsp]",
+    "mov rdx, cr2",
     "jmp fault_stub",
     ".global unexpected_fault_stub",
     "unexpected_fault_stub:",
     "mov edi, 255",
+    "xor esi, esi",
+    "xor edx, edx",
     "fault_stub:",
     "cld",
     "and rsp, -16",
@@ -119,12 +129,36 @@ pub fn expect_invalid_opcode() {
     EXPECT_UD.store(true, Ordering::Relaxed);
 }
 
+pub fn expect_page_fault(code: u32, address: u64, error: u64) {
+    PF_ADDRESS.store(address, Ordering::Relaxed);
+    PF_ERROR.store(error, Ordering::Relaxed);
+    EXPECT_PF.store(code, Ordering::Release);
+}
+
 #[unsafe(no_mangle)]
-extern "sysv64" fn kernel_fault(vector: u32) -> ! {
+extern "sysv64" fn kernel_fault(vector: u32, error: u64, address: u64) -> ! {
     if vector == 6 && EXPECT_UD.load(Ordering::Relaxed) {
         platform::log(format_args!("kernel:fault:invalid-opcode"));
         platform::exit(0x12);
     }
-    platform::log(format_args!("kernel:fault:unexpected vector={vector}"));
+    let expected = EXPECT_PF.load(Ordering::Acquire);
+    if vector == 14
+        && (0x13..=0x15).contains(&expected)
+        && address == PF_ADDRESS.load(Ordering::Relaxed)
+        && error == PF_ERROR.load(Ordering::Relaxed)
+    {
+        let label = match expected {
+            0x13 => "unmapped",
+            0x14 => "readonly",
+            _ => "noexecute",
+        };
+        platform::log(format_args!(
+            "kernel:fault:{label} address={address:#x} error={error:#x}"
+        ));
+        platform::exit(expected);
+    }
+    platform::log(format_args!(
+        "kernel:fault:unexpected vector={vector} address={address:#x} error={error:#x}"
+    ));
     platform::exit(0x7f)
 }

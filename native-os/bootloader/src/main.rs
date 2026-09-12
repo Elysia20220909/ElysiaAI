@@ -29,6 +29,9 @@ fn mode() -> BootMode {
         "bad-boot-info" => BootMode::BadBootInfo,
         "invalid-opcode" => BootMode::InvalidOpcode,
         "stale-map-key" => BootMode::StaleMapKey,
+        "unmapped-page" => BootMode::UnmappedPage,
+        "readonly-page" => BootMode::ReadOnlyPage,
+        "noexecute-page" => BootMode::NoExecutePage,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

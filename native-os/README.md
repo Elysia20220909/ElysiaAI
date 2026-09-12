@@ -1,11 +1,13 @@
 # ElysiaAI // INFINITE RESONANCE — 最初のカーネル
 
-UEFI ローダーから独自の x86-64 カーネルへ制御を渡す、M1 の起動実装。
+UEFI ローダーから独自の x86-64 カーネルへ制御を渡し、物理ページを管理して
+独自ページテーブルへ切り替える、M1 / M2a の実装。M2a は M2 の最初の実装単位である。
 既存の Bun / Python / Tauri アプリとは独立した Rust workspace としてビルドする。
 AI 推論、プロセス、ファイルシステムはまだ含まない。
 
 設計の背景は [独自 OS の構想](../docs/native-os/README.md)、
-実測結果は [起動検証](../docs/native-os/BOOT_VALIDATION.md)、
+実測結果は [M1 起動検証](../docs/native-os/BOOT_VALIDATION.md) と
+[M2a メモリ検証](../docs/native-os/MEMORY_VALIDATION.md)、
 取得元と確認範囲は [依存関係](DEPENDENCIES.md) を参照する。
 
 ## 起動経路
@@ -17,11 +19,14 @@ QEMU / EDK II UEFI
   -> GetMemoryMap / ExitBootServices
   -> _start              (Rust x86_64-unknown-none)
   -> カーネル専用スタック、GDT / IDT、起動情報の検査
+  -> 物理ページの割り当て管理、予約領域・枯渇・解放の検査
+  -> 独自 CR3 / ページ権限へ切り替え、対応付けた RAM の読み書き
   -> シリアル診断 / QEMU 終了
 ```
 
 `bootloader/` はファームウェアとの引き継ぎ、`boot-protocol/` は起動情報と ELF の検査、
-`kernel/` は引き継ぎ後の CPU 設定と故障診断を担当する。
+`memory/` はホスト側でも試験できる物理ページの管理、
+`kernel/` は引き継ぎ後の CPU 設定、ページテーブル構築、故障診断を担当する。
 `platform.rs` の COM1 と QEMU 終了ポートは両方で使う。ホスト OS の API は呼ばない。
 
 カーネルを ELF として別にビルドし、ローダーへ埋め込む。M1 ではディスク上の任意ファイルを
@@ -53,7 +58,7 @@ QEMU / EDK II UEFI
 rustc +stable --version
 rustup target add --toolchain stable x86_64-unknown-none x86_64-unknown-uefi
 python -m unittest discover -s native-os/tools -p 'test_*.py' -v
-cargo +stable test --manifest-path native-os/Cargo.toml -p elysia-boot-protocol --locked
+cargo +stable test --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory --locked
 python native-os/tools/boot_test.py --case all
 ```
 
@@ -68,13 +73,19 @@ python native-os/tools/boot_test.py --case all
 | `bad-boot-info` | 起動情報の magic を壊す | `kernel:boot-info-rejected:header` | 35 |
 | `invalid-opcode` | 検査後に CPU の `ud2` 命令を実行 | 注入 → vector 6 の故障診断 | 37 |
 | `stale-map-key` | 最初の ExitBootServices へ誤ったキーを渡す | 拒否 → 再取得・再試行 → 正常完了 | 33 |
+| `unmapped-page` | 未マップ領域を読み取る | 注入 → page fault、CR2 と error=0 を照合 | 39 |
+| `readonly-page` | 読み取り専用データへ書き込む | 注入 → page fault、CR2 と error=3 を照合 | 41 |
+| `noexecute-page` | 実行禁止データページを呼び出す | 注入 → page fault、CR2 と error=0x11 を照合 | 43 |
 
 全ケースで、ローダー開始、ロード完了、Boot Services 終了、カーネルへの到達、
 独自例外テーブルの設定を順に要求する。予期しない故障・panic・時間切れ・終了コードの不一致は
 不合格。故障ケースに `kernel:ready` が出ても不合格とする。
+壊れた起動情報のケースを除き、物理ページ検査、独自ページテーブルの有効化、
+対応付けたメモリの読み書きも必須。M1 のログだけでは M2a の合格にしない。
 
 `isa-debug-exit` へ書き込む値は通常 `0x10`、壊れた起動情報 `0x11`、意図的な例外 `0x12`、
-予期しない失敗 `0x7f`。QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
+page fault の試験 `0x13`〜`0x15`、予期しない失敗 `0x7f`。
+QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 したがってゲストの正常完了は 33 であり、全試験を通した Python runner 自体の成功は 0。
 
 `native-os/out/<case>/serial.log` と `native-os/out/results.json` にローカルの証拠を残す。
@@ -88,7 +99,7 @@ python native-os/tools/boot_test.py --case all
 
 ```powershell
 cargo +stable fmt --manifest-path native-os/Cargo.toml --all -- --check
-cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol --all-targets --locked -- -D warnings
+cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory --all-targets --locked -- -D warnings
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel --target x86_64-unknown-none --locked -- -D warnings
 $env:ELYSIA_KERNEL_PATH = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-kernel).Path
 $env:ELYSIA_BOOT_MODE = 'normal'
@@ -107,12 +118,19 @@ cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-bootloader -
 - 起動情報と 32 KiB のメモリマップはローダー内の static 領域に置く。
   ExitBootServices のキー不一致時は、割り当てを増やさずマップを取り直し、最大 3 回で停止する。
   終了に成功した後はファームウェアサービスを呼ばない。
-- M1 は UEFI が残した identity mapping を利用する。ローダー、マップ、ページテーブルを
-  回収しない。ELF の W+X 拒否は入力の検査であり、CPU のページ権限を設定した証拠ではない。
+- M2a は初期化中だけ UEFI の identity mapping を利用する。起動情報をカーネルのスタックへ
+  コピーし、マップを物理ページ管理のビットマップへ反映した後、独自の四段ページテーブルへ切り替える。
+  切り替え後はローダーのポインターを参照しない。旧ローダーやファームウェアの領域は回収しない。
+- 4 KiB ページ、256 MiB までの物理メモリ、最初の 1 MiB は予約。
+  EFI Conventional Memory かつ Runtime 属性のないページだけを対象にする。
+  kernel / 起動情報 / map は明示的にも除外する。重複 descriptor は受け付けない。
+- ページテーブルの構築は切り替え前に限り、最大 32 フレーム。全ページ supervisor-only。
+  コードは RX、読み取り専用データは R/NX、データ・スタック・ページテーブルは RW/NX。
+  CR0.WP と EFER.NXE を有効にし、旧 global TLB を除去して CR3 を更新する。
 - 割り込みは無効、1 CPU 限定。GDT と IDT は独自に設定するが、例外は診断して終了するだけ。
-  page fault の専用入口はあるが今回の故障注入は `ud2`。二重故障用スタックや復帰処理は未実装。
+  `ud2` と 3 種類の page fault を故障注入する。二重故障用スタックや復帰処理は未実装。
 - 起動情報のポインターは、このローダーからの有効なポインターを前提にする。
   任意の第三者ローダー、実機、Secure Boot、メモリ隔離を保証しない。
 
-次の M2 では、予約領域を保護する物理メモリ管理と独自ページテーブルを先に作り、
-ユーザー空間・システムコール・実行切替へ進む。
+M2 全体はまだ未達成。次はユーザー空間・システムコール・実行切替と、
+不正なプロセスだけを停止してほかの処理を継続する試験へ進む。

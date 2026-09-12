@@ -7,6 +7,7 @@ rust-version.workspace = true
 
 [dependencies]
 elysia-boot-protocol = { path = "../boot-protocol" }
+elysia-memory = { path = "../memory" }
 
 [[bin]]
 name = "elysia-kernel"
