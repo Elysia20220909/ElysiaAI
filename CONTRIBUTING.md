@@ -1,89 +1,86 @@
-# ElysiaAI Contribution Guide
+# Contributing to ElysiaAI
 
-Thank you for helping improve ElysiaAI. This repository mixes Bun/Elysia,
-FastAPI/Python, local AI tooling, and security-sensitive configuration, so the
-main rule is simple: keep changes small, reviewable, and easy to verify.
+ElysiaAI の独自 OS、既存 AI アプリ、文書、試験への参加を歓迎します。
+まず [README](README.md) で現在地を、[行動規範](.github/CODE_OF_CONDUCT.md) で参加時の約束を確認してください。
+リポジトリへのアクセスや変更の採用は管理者が判断します。参加に必要なアクセスは管理者に相談してください。
 
-## Setup
+## 作業を始める前に
 
-Prerequisites:
+既存の変更、作業ブランチ、対象の仕様と適用される `AGENTS.md` を確認します。
+作業中の変更を上書きせず、目的を絞ったブランチや worktree で進めてください。
+大きな設計変更は、実装前に対象・理由・検証方法を Issue または Draft PR で相談します。
+脆弱性の詳細は通常の Issue に載せず、[セキュリティ方針](SECURITY.md) に従います。
 
-- Bun 1.1+
-- Python 3.11+
-- Docker, only when testing the container stack
-- Ollama, when testing local inference flows
+外部から取得したコードは、実行前にソース、依存関係、インストールスクリプト、Git hooks、
+CI、同梱バイナリ、認証情報の扱い、外部通信を確認してください。
+新しい依存関係は目的・取得元・版・ライセンスを記録し、不要な更新を混ぜません。
 
-```bash
-bun scripts/manage.ts setup
-bun scripts/manage.ts setup-python
-```
+## 変更する領域を選ぶ
 
-On Windows PowerShell:
+| 領域 | 最初に読む資料 | 開発環境 |
+| --- | --- | --- |
+| 独自 OS | [設計](docs/native-os/README.md)、[マイルストーン](docs/native-os/MILESTONES.md)、[実装手順](native-os/README.md) | 独立した Rust workspace、Python の試験ツール、指定版 QEMU / UEFI |
+| 既存 AI アプリ | [Beta テスターガイド](docs/BETA_0_1_TESTER_GUIDE.md)、[Git 運用](docs/GIT_WORKFLOW.md) | Bun / Python、変更に応じて Tauri など |
+| 文書 | 関連するコード、仕様、検証記録 | UTF-8 対応エディター、文書チェック用の Bun / Python |
+
+独自 OS の開発に既存 AI アプリ全体のセットアップは不要です。
+[依存関係の手順](native-os/DEPENDENCIES.md) に従い、ローカルのツール版を確認します。
+ホストアプリのセットアップは [README](README.md) の管理コマンドを使い、既存の `.env` を保持します。
+
+## 変更に応じた検証
+
+リポジトリのルートで、全変更に対して次を実行します。
 
 ```powershell
-Copy-Item .env.example .env
-bun scripts/manage.ts setup
-bun scripts/manage.ts setup-python
-```
-
-## Local Quality Gate
-
-Run these before opening a pull request:
-
-```bash
-bun run lint
-bun run test
-bun run typecheck
-bun run check:git-hygiene
 bun run check:encoding
-bun run security:glassworm -- --ci
+bun run check:git-hygiene
+git diff --check
 ```
 
-`bun scripts/manage.ts check` runs the Git hygiene and encoding guards plus a
-small project-structure audit.
+チェックは Git が追跡するファイルを対象にします。新規ファイルは内容を確認してから対象を絞って stage し、
+ステージ済み差分には `git diff --cached --check` も実行してください。
+文書だけの変更では、リンク先、コマンド、実装状況と記録の一致も確認します。
 
-## Git Hygiene
+独自 OS の変更では [ビルド・試験・静的解析](native-os/README.md) の手順を実行します。
+ホスト側の Rust / Python テストに加え、カーネルや起動経路の変更は QEMU の全ケースで検証します。
+保護機能の変更では、保護を壊すと試験が失敗することも確認してください。
+期待する故障の診断と、予期しないクラッシュを区別します。
 
-Never commit local secrets, runtime databases, generated logs, or personal
-workspace files. In particular, `.env` and `.env.*` are ignored; only
-`.env.example` should be tracked.
+既存アプリの TypeScript / JavaScript の変更では、関連するテストに加えて次を実行します。
 
-If a local environment file is already tracked, remove it from Git without
-deleting your local copy:
-
-```bash
-git rm --cached .env
+```powershell
+bun run lint
+bun run typecheck
+bun run test
 ```
 
-The `check:git-hygiene` script fails CI if forbidden environment files are
-tracked.
+Python、デスクトップ、CI などは対象に対応するテスト・解析・ビルドを追加します。
+実行できなかった検証は理由とともに記載し、合格扱いにしません。
+実機や新規環境で試していなければ、その範囲も明記します。
 
-## Encoding And Language
+## Pull Request に書くこと
 
-All tracked text files must be UTF-8. If Japanese or English text becomes
-mojibake, fix the text itself instead of suppressing the check. The
-`check:encoding` script scans tracked source and documentation for invalid
-UTF-8, replacement characters, and common Windows-1252/CP932 mojibake markers.
+[PR テンプレート](.github/pull_request_template.md) に沿って、小さな Draft PR を作成します。
+コミット名は `docs:`、`fix:`、`feat:` などの Conventional Commits を使います。
 
-## Dependency Policy
+- 解決する問題、変更後の振る舞い、対象外の範囲。
+- 対象のブランチと、積み重ねた PR があればその依存関係。
+- 検証したコミット、ツール版、実行コマンド、結果、未検証の範囲。
+- 権限・メモリ境界・外部通信・データ保存に関わる影響。
+- 問題が起きたときの戻し方。
 
-- Use `bun install` for JavaScript/TypeScript dependencies.
-- Keep Python dependencies aligned through the root `requirements.txt`.
-- Do not vendor third-party projects directly unless the license and update
-  policy are documented.
-- Open-LLM-VTuber should be integrated as an external service through the bridge
-  documented in `docs/OPEN_LLM_VTUBER_INTEGRATION.md`.
+AI の支援を使った場合も、投稿者がコード・出典・テスト結果を確認します。
+生成された説明を実測の証拠にせず、設計上の期待と確認済みの動作を分けてください。
+マージとリリースは管理者の確認後に行います。
 
-## Pull Requests
+## データと生成物
 
-- Use Conventional Commits, such as `feat:`, `fix:`, `docs:`, or `chore:`.
-- Include tests or a clear verification note for behavior changes.
-- Update README or docs when setup, commands, environment variables, or public
-  routes change.
-- Keep unrelated formatting churn out of feature PRs when possible.
+`.env`、API キー、Webhook URL、個人の会話、RAG 資料、実データを含むログはコミットしません。
+設定例には `.env.example` とダミー値を使います。ログや再現例は必要な範囲に絞って匿名化します。
+独自 OS の `native-os/out/`、ビルド成果物、モデル、依存関係の実体を PR に含めません。
+配布用バイナリやインストーラーの生成・公開は、通常のソース変更と分けて管理者と調整します。
+これはリポジトリの作業手順であり、ライセンスに追加の利用条件を課すものではありません。
 
-## Code Style
-
-- TypeScript and JavaScript use Biome: `bun run lint`.
-- Python uses Ruff: `python -m ruff check python tests/python tests/test_kernel.py`.
-- Prefer existing helpers and route patterns over new framework choices.
+既存の [MIT OR Apache-2.0](LICENSE) の選択を維持し、第三者のコード・素材の出典とライセンスを残します。
+秘密情報を誤って掲載した場合は、履歴から消すだけで済ませず、影響する認証情報を失効・更新し、
+[報告手順](SECURITY.md) に従って連絡してください。
