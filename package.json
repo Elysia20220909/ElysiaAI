@@ -7,7 +7,9 @@
     "packages/*"
   ],
   "overrides": {
-    "thrift": "^0.23.0"
+    "thrift": "^0.23.0",
+    "@ai-sdk/provider-utils": "4.0.33",
+    "deepmerge-ts": "8.0.2"
   },
 	"scripts": {
 		"boot": "bun scripts/boot.ts",
