@@ -43,6 +43,12 @@ pub enum BootMode {
     DocumentRange = 30,
     DocumentServiceExit = 31,
     DocumentServiceFault = 32,
+    RecoveryFault = 33,
+    RecoveryExit = 34,
+    RecoveryBudget = 35,
+    RecoveryRepeat = 36,
+    RecoveryAllocation = 37,
+    RecoveryLimit = 38,
 }
 
 impl BootMode {
@@ -81,6 +87,12 @@ impl BootMode {
             30 => Some(Self::DocumentRange),
             31 => Some(Self::DocumentServiceExit),
             32 => Some(Self::DocumentServiceFault),
+            33 => Some(Self::RecoveryFault),
+            34 => Some(Self::RecoveryExit),
+            35 => Some(Self::RecoveryBudget),
+            36 => Some(Self::RecoveryRepeat),
+            37 => Some(Self::RecoveryAllocation),
+            38 => Some(Self::RecoveryLimit),
             _ => None,
         }
     }

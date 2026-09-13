@@ -13,7 +13,7 @@ The development tree contains two distinct tracks:
 
 | Track | Implemented scope | Limits |
 | --- | --- | --- |
-| Independent OS, M1 / M2a / M2b / M2c / M3a / M3b | UEFI entry into an x86-64 Rust kernel; physical page allocation and release; independent page tables; two Ring 3 processes with log/yield/exit syscalls and cooperative switching; fault containment, PIT preemption, cumulative tick limits and owned-frame reclamation, bounded IPC, per-process capability checks, blocking receive, cancellation and permission-checked synthetic RAM document reads in QEMU | No capability delegation, general endpoints, precise CPU-time accounting, general spawn API, guest AI inference, or verified hardware support |
+| Independent OS, M1 / M2a / M2b / M2c / M3a / M3b / M3c | UEFI entry into an x86-64 Rust kernel; physical page allocation and release; independent page tables; two Ring 3 processes with log/yield/exit syscalls and cooperative switching; fault containment, PIT preemption, cumulative tick limits and owned-frame reclamation, bounded IPC, per-process capability checks, blocking receive, cancellation and permission-checked synthetic RAM document reads and bounded service restart in QEMU | No capability delegation, general endpoints, precise CPU-time accounting, general spawn API, guest AI inference, or verified hardware support |
 | Existing host application | Bun / Elysia.js, Python / FastAPI, and Tauri code for developing AI interactions on an existing OS | Has not been ported to the independent kernel |
 
 The host application's “AI Kernel” means its Python service, not the independent
@@ -25,19 +25,21 @@ M2c also tests non-yielding and yielding CPU hogs, and 64 generations of exit/fa
 The target is x86-64 UEFI PCs commonly running Windows, initially tested in QEMU on Windows.
 
 M3b adds a read-only synthetic RAM document service. The kernel binds authority checks to the
-actual IPC sender; a Ring 3 service replies. No host documents are loaded.
+actual IPC sender; a Ring 3 service replies. No host documents are loaded. M3c preserves the client while restarting the service,
+issues new connection handles, and tests eight restarts and allocation rollback.
 
-The 2026-09-13 validation records report 33 passing boot, fault, lifecycle, IPC and document scenarios on
+The 2026-09-13 validation records report 39 passing boot, fault, lifecycle, IPC, document and recovery scenarios on
 the specified Windows, Rust, QEMU, and UEFI combination. See
 [M1 boot validation](docs/native-os/BOOT_VALIDATION.md) and
 [M2a memory validation](docs/native-os/MEMORY_VALIDATION.md), and
 [M2b userspace validation](docs/native-os/USERSPACE_VALIDATION.md), and
 [M2c lifecycle validation](docs/native-os/LIFECYCLE_VALIDATION.md), and
 [M3a IPC validation](docs/native-os/IPC_VALIDATION.md), and
-[M3b document validation](docs/native-os/DOCUMENT_SERVICE_VALIDATION.md) for evidence and limits.
+[M3b document validation](docs/native-os/DOCUMENT_SERVICE_VALIDATION.md), and
+[M3c service recovery](docs/native-os/SERVICE_RECOVERY_VALIDATION.md) for evidence and limits.
 Full setup on a new machine and everyday OS stability have not been demonstrated.
 
-This overview describes the development lineage containing M3b. Design, M1, and M2a
+This overview describes the development lineage containing M3c. Design, M1, and M2a
 are stacked in [PR #109](https://github.com/Elysia20220909/ElysiaAI/pull/109),
 [PR #110](https://github.com/Elysia20220909/ElysiaAI/pull/110), and
 [PR #111](https://github.com/Elysia20220909/ElysiaAI/pull/111).
@@ -45,6 +47,7 @@ M2b follows the repository guide in [PR #112](https://github.com/Elysia20220909/
 M2c builds on M2b in [PR #113](https://github.com/Elysia20220909/ElysiaAI/pull/113).
 M3a builds on M2c in [PR #114](https://github.com/Elysia20220909/ElysiaAI/pull/114).
 M3b builds on M3a in [PR #115](https://github.com/Elysia20220909/ElysiaAI/pull/115).
+M3c builds on the development branch after merging [PR #116](https://github.com/Elysia20220909/ElysiaAI/pull/116).
 Check the PRs for their adoption into the default branch.
 
 ## Start developing

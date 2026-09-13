@@ -3,13 +3,14 @@
 ElysiaAI を、自作カーネルを持つローカルファーストの AI-Native OS として育てる。
 人の目的を受け取り、任された範囲で作業を進め、途中から再開できる環境を目指す。
 
-状態: 基本設計と M1 / M2a / M2b / M2c / M3a / M3b 実装。固定した QEMU / UEFI 構成で、独自カーネルの起動、
+状態: 基本設計と M1 / M2a / M2b / M2c / M3a / M3b / M3c 実装。固定した QEMU / UEFI 構成で、独自カーネルの起動、
 物理ページ管理、独自ページテーブル、Ring 3 の 2 プロセス、タイマー切替と停止後の資源回収を検証した。
 M3a では固定した 2 者間の IPC、権限ハンドル、待機と起床、失効・相手終了時の回収を追加した。
 M3b は固定の RAM 資料を IPC 経由で読み取り、権限・範囲・失効を検査する。
+M3c はクライアントを残した資料サービスの再起動と、8 回の反復・新しい権限での再接続を検証する。
 ユーザーの保護違反後も正常なプロセスは継続する。推論・実機動作・厳密な CPU 時間課金は未検証。
 実測と残る範囲は [M1](BOOT_VALIDATION.md)、[M2a](MEMORY_VALIDATION.md)、
-[M2b](USERSPACE_VALIDATION.md)、[M2c](LIFECYCLE_VALIDATION.md)、[M3a](IPC_VALIDATION.md)、[M3b](DOCUMENT_SERVICE_VALIDATION.md) に記載する。
+[M2b](USERSPACE_VALIDATION.md)、[M2c](LIFECYCLE_VALIDATION.md)、[M3a](IPC_VALIDATION.md)、[M3b](DOCUMENT_SERVICE_VALIDATION.md)、[M3c](SERVICE_RECOVERY_VALIDATION.md) に記載する。
 
 ## 読み進め方
 
@@ -20,6 +21,7 @@ M3b は固定の RAM 資料を IPC 経由で読み取り、権限・範囲・失
 | [段階別の検証計画](MILESTONES.md) | 実装の依存順序、合格条件、失敗時の観測方法 |
 | [起動検証](BOOT_VALIDATION.md) | M1 の固定環境、正常系と故障系の実測、未確認事項 |
 | [メモリ検証](MEMORY_VALIDATION.md) | M2a の予約領域、独自ページテーブル、CPU の保護違反と未達成範囲 |
+| [サービス復旧](SERVICE_RECOVERY_VALIDATION.md) | M3c の限定した再起動、クライアント継続、旧権限拒否、確保失敗の回収 |
 | [RAM 資料サービス](DOCUMENT_SERVICE_VALIDATION.md) | M3b の資料権限、範囲・失効検査、サービス終了後の回収 |
 | [通信と権限](IPC_VALIDATION.md) | M3a の依頼・応答、ハンドル検査、待機解除、通信資源の回収 |
 | [資源回収と実行制御](LIFECYCLE_VALIDATION.md) | M2c の再生成、消去・回収、タイマー割り込みと累積 tick 上限 |

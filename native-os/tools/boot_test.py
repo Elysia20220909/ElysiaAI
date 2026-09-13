@@ -77,6 +77,14 @@ for name, mode in DOCUMENT_CASES.items():
                        "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
                        "user:log pid=0 hex=6f6b", "kernel:documents-clean", "kernel:ipc-clean",
                        f"kernel:ipc-tests-passed mode={mode}"])
+RECOVERY_CASES = {"recovery-fault": 33, "recovery-exit": 34, "recovery-budget": 35,
+                  "recovery-repeat": 36, "recovery-allocation": 37, "recovery-limit": 38}
+for name, mode in RECOVERY_CASES.items():
+    CASES[name] = (49, ["kernel:allocation-rollback", "kernel:user-spaces-ready",
+                       "kernel:recovery-live generation=0", "kernel:timer-ready",
+                       "kernel:user-enter pid=0 cpl=3", "user:log pid=0 hex=6f6b",
+                       "kernel:documents-clean", "kernel:recovery-tests-passed",
+                       "kernel:ipc-clean", f"kernel:ipc-tests-passed mode={mode}"])
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
           "kernel:entered", "kernel:exceptions-ready"]
 MEMORY_PREFIX = ["kernel:boot-info-valid", "kernel:frames-verified",
@@ -148,10 +156,12 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
                     errors.append(f"stopped process {pid} resumed")
     if case in LIFECYCLE_CASES:
         errors.extend(verify_lifecycle(case, output))
-    if case in IPC_CASES or case in DOCUMENT_CASES:
+    if case in IPC_CASES or case in DOCUMENT_CASES or case in RECOVERY_CASES:
         errors.extend(verify_ipc(case, output))
     if case in DOCUMENT_CASES:
         errors.extend(verify_documents(case, output))
+    if case in RECOVERY_CASES:
+        errors.extend(verify_recovery(case, output))
     return errors
 
 
@@ -216,6 +226,15 @@ def verify_ipc(case: str, output: str) -> list[str]:
     blocked = set()
     stopped = set()
     for line in lines:
+        if case in RECOVERY_CASES:
+            restarted = re.fullmatch(r"kernel:recovery-live generation=(\d+) free=\d+", line)
+            if restarted and int(restarted[1]) > 0:
+                if 1 not in stopped or 1 in blocked:
+                    errors.append("service restarted before stopping")
+                stopped.discard(1)
+            budget = re.fullmatch(r"kernel:budget-stopped pid=(\d+) ticks=\d+", line)
+            if budget:
+                stopped.add(int(budget[1]))
         event = re.fullmatch(r"kernel:ipc-block pid=(\d+)", line)
         if event:
             pid = int(event[1])
@@ -243,7 +262,8 @@ def verify_ipc(case: str, output: str) -> list[str]:
     if blocked or stopped != {0, 1}:
         errors.append("IPC processes or waiters remain")
     for pid in (0, 1):
-        if lines.count(f"kernel:reaped pid={pid}") != 1:
+        expected_reaps = (9 if case in ("recovery-repeat", "recovery-limit") else 2) if case in RECOVERY_CASES and pid == 1 else 1
+        if lines.count(f"kernel:reaped pid={pid}") != expected_reaps:
             errors.append("missing process reclamation")
     required = {
         "ipc-echo": ["kernel:ipc-result pid=0 op=3 result=-9",
@@ -294,6 +314,51 @@ def verify_documents(case: str, output: str) -> list[str]:
         if not any(f"kernel:ipc-{operation} pid=0 {suffix}result=-32" in lines
                    for operation, suffix in (("wake", ""), ("result", "op=4 "))):
             errors.append("client did not observe service closure")
+    return errors
+
+
+def verify_recovery(case: str, output: str) -> list[str]:
+    errors = []
+    lines = output.splitlines()
+    count = 8 if case in ("recovery-repeat", "recovery-limit") else 1
+    live = re.findall(r"kernel:recovery-live generation=(\d+) free=(\d+)", output)
+    reclaimed = re.findall(r"kernel:service-reclaimed generation=(\d+) free=(\d+)", output)
+    failures = count + (case == "recovery-limit")
+    if [int(g) for g, _ in live] != list(range(count + 1)) or len({f for _, f in live}) != 1:
+        errors.append("restart generations or live frame counts differ")
+    if ([int(g) for g, _ in reclaimed] != list(range(failures))
+            or len({f for _, f in reclaimed}) != 1
+            or not live or not reclaimed or int(reclaimed[0][1]) <= int(live[0][1])):
+        errors.append("service reclamation did not preserve client frames")
+    statuses = [int(n) for n in re.findall(r"^kernel:document-response status=(-?\d+)$", output, re.M)]
+    if statuses != [-9, 0] * count:
+        errors.append("old document grant accepted or resumed read missing")
+    for marker, expected in (("kernel:reconnect pid=0 result=24", count),
+            ("kernel:reconnect pid=0 result=-14", count),
+            ("kernel:reconnect pid=0 result=-22", count),
+            ("kernel:reconnect pid=0 result=-11", 2 if case == "recovery-limit" else 1),
+            ("kernel:reconnect pid=1 result=-13", count + 1),
+            ("kernel:ipc-result pid=0 op=3 result=-9", count),
+            ("kernel:ipc-result pid=0 op=4 result=-9", count),
+            ("kernel:documents-clean", 1)):
+        if lines.count(marker) != expected:
+            errors.append(f"missing recovery evidence: {marker}")
+    disconnects = sum(lines.count(marker) for marker in
+                     ("kernel:ipc-wake pid=0 result=-32", "kernel:ipc-result pid=0 op=4 result=-32"))
+    if disconnects != failures:
+        errors.append("client did not observe every service disconnect")
+    if case == "recovery-budget":
+        if lines.count("kernel:budget-stopped pid=1 ticks=64") != 1:
+            errors.append("service CPU budget did not stop the hog")
+    elif case != "recovery-exit":
+        if lines.count("kernel:user-stopped pid=1 vector=6 error=0x0 address=0x0") != failures:
+            errors.append("missing service faults")
+    if case == "recovery-allocation":
+        rollback = re.findall(r"kernel:restart-allocation-rollback free=(\d+)", output)
+        if len(rollback) != 1 or not reclaimed or rollback[0] != reclaimed[0][1]:
+            errors.append("failed restart leaked frames")
+        if lines.count("kernel:reconnect pid=0 result=-12") != 1:
+            errors.append("allocation failure not reported to client")
     return errors
 
 

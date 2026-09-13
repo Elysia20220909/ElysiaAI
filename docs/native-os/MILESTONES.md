@@ -7,9 +7,10 @@ M2c では、固定した 2 プロセスの終了・故障・tick 上限時の�
 64 世代の再生成でも空きフレーム数が戻ることを確認した。
 M3a では、固定した 2 者間の IPC と権限ハンドル、待機・起床、相手終了時の回収を検証した。
 M3b では、固定の RAM 資料サービスと送信者ごとの読み取り権限を検証した。
+M3c では、資料サービスだけの再起動、クライアントの継続、旧権限拒否、8 回の復旧を検証した。
 M2 の一般化、M3 の権限委譲・任意サービス作成、M4 以降は未達成。実測は [起動検証](BOOT_VALIDATION.md)、
 [メモリ検証](MEMORY_VALIDATION.md)、[ユーザー空間の検証](USERSPACE_VALIDATION.md)、
-[資源回収と実行制御](LIFECYCLE_VALIDATION.md)、[通信と権限](IPC_VALIDATION.md)、[RAM 資料サービス](DOCUMENT_SERVICE_VALIDATION.md) を参照する。
+[資源回収と実行制御](LIFECYCLE_VALIDATION.md)、[通信と権限](IPC_VALIDATION.md)、[RAM 資料サービス](DOCUMENT_SERVICE_VALIDATION.md)、[サービス復旧](SERVICE_RECOVERY_VALIDATION.md) を参照する。
 基準コミットと既存構成は[構想](README.md)、実装上の境界は[基本設計](ARCHITECTURE.md)を参照する。
 
 ## 判定の原則

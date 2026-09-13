@@ -1,6 +1,6 @@
 """Regression tests for the boot-result classifier, including false-success cases."""
 import unittest
-from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, verify_output
+from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, RECOVERY_CASES, verify_output
 
 
 class VerdictTests(unittest.TestCase):
@@ -75,6 +75,35 @@ class VerdictTests(unittest.TestCase):
                 markers.extend(["kernel:user-exit pid=1 status=0", "kernel:reaped pid=1"])
             markers.extend(["kernel:documents-clean", "kernel:ipc-clean free=50000",
                             f"kernel:ipc-tests-passed mode={DOCUMENT_CASES[case]}"])
+        if case in RECOVERY_CASES:
+            count = 8 if case in ("recovery-repeat", "recovery-limit") else 1
+            markers = ["kernel:allocation-rollback boundaries=14 free=50000",
+                       "kernel:user-spaces-ready roots=0x100000,0x200000",
+                       "kernel:recovery-live generation=0 free=49972",
+                       "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
+                       "kernel:reconnect pid=0 result=-11", "kernel:reconnect pid=1 result=-13"]
+            for generation in range(count + (case == "recovery-limit")):
+                stop = ("kernel:budget-stopped pid=1 ticks=64" if case == "recovery-budget" else
+                        "kernel:user-exit pid=1 status=0" if case == "recovery-exit" else
+                        "kernel:user-stopped pid=1 vector=6 error=0x0 address=0x0")
+                markers.extend(["kernel:ipc-block pid=0", stop, "kernel:reaped pid=1",
+                                f"kernel:service-reclaimed generation={generation} free=49986",
+                                "kernel:ipc-wake pid=0 result=-32"])
+                if generation == count:
+                    markers.append("kernel:reconnect pid=0 result=-11")
+                    continue
+                markers.extend(["kernel:reconnect pid=0 result=-14", "kernel:reconnect pid=0 result=-22"])
+                if case == "recovery-allocation":
+                    markers.extend(["kernel:restart-allocation-rollback free=49986", "kernel:reconnect pid=0 result=-12"])
+                markers.extend([f"kernel:recovery-live generation={generation + 1} free=49972",
+                                "kernel:reconnect pid=0 result=24", "kernel:reconnect pid=1 result=-13",
+                                "kernel:ipc-result pid=0 op=3 result=-9", "kernel:ipc-result pid=0 op=4 result=-9",
+                                "kernel:document-response status=-9", "kernel:document-response status=0"])
+            markers.extend(["user:log pid=0 hex=6f6b", "kernel:user-exit pid=0 status=0", "kernel:reaped pid=0"])
+            if case != "recovery-limit":
+                markers.extend(["kernel:user-exit pid=1 status=0", "kernel:reaped pid=1"])
+            markers.extend(["kernel:documents-clean", f"kernel:recovery-tests-passed generation={count}",
+                            "kernel:ipc-clean free=50000", f"kernel:ipc-tests-passed mode={RECOVERY_CASES[case]}"])
         if case in LIFECYCLE_CASES:
             count = 64 if case == "user-recycle" else 1
             markers = ["kernel:allocation-rollback boundaries=12 free=50000"]
@@ -110,6 +139,21 @@ class VerdictTests(unittest.TestCase):
                              ("document-service-fault", "kernel:ipc-wake pid=0 result=-32")):
             with self.subTest(case=case):
                 self.assertTrue(verify_output(case, 49, self.transcript(case).replace(marker, "omitted", 1)))
+
+    def test_recovery_rejects_missing_disconnect_old_grant_and_leaked_frames(self):
+        for case, old, new in (
+            ("recovery-fault", "kernel:ipc-wake pid=0 result=-32", "omitted"),
+            ("recovery-repeat", "generation=4 free=49972", "generation=4 free=49971"),
+            ("recovery-repeat", "generation=4 free=49972", "generation=3 free=49972"),
+            ("recovery-fault", "kernel:document-response status=-9", "kernel:document-response status=0"),
+            ("recovery-allocation", "kernel:restart-allocation-rollback free=49986", "kernel:restart-allocation-rollback free=49985"),
+            ("recovery-budget", "kernel:budget-stopped pid=1 ticks=64", "kernel:budget-stopped pid=1 ticks=63")):
+            with self.subTest(case=case, marker=old):
+                self.assertTrue(verify_output(case, 49, self.transcript(case).replace(old, new, 1)))
+
+    def test_recovery_cannot_resume_stopped_service_before_replacement(self):
+        output = self.transcript("recovery-fault").replace("kernel:reaped pid=1", "kernel:reaped pid=1\nkernel:user-switch from=0 to=1", 1)
+        self.assertTrue(verify_output("recovery-fault", 49, output))
 
     def test_lifecycle_requires_reclamation_and_stable_counts(self):
         output = self.transcript("user-recycle")

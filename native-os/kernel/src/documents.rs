@@ -20,6 +20,7 @@ struct Delivery {
     caller: usize,
     message: Message,
 }
+#[derive(Clone)]
 pub struct Service {
     grants: [Option<Grant>; 2],
     generation: u64,

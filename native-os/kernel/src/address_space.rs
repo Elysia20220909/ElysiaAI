@@ -18,6 +18,9 @@ pub struct Space {
     count: usize,
 }
 impl Space {
+    pub fn frame_count(&self) -> usize {
+        self.count
+    }
     /// New mappings are not active until construction completes. On any allocation
     /// failure, discard every partially constructed table/page and restore counts.
     pub unsafe fn create(

@@ -69,6 +69,7 @@ impl Queue {
         Ok(Some(message))
     }
 }
+#[derive(Clone)]
 pub struct Channel {
     generation: u64,
     next_token: u64,
@@ -173,6 +174,10 @@ impl Channel {
         self.capabilities[pid] = [None; 2];
         self.open = false;
         self.queues = [Queue::EMPTY; 2];
+    }
+    /// A surviving client may reconnect only after its service has departed.
+    pub fn service_departed(&self) -> bool {
+        !self.open && self.alive == [true, false]
     }
     pub fn is_open(&self) -> bool {
         self.open

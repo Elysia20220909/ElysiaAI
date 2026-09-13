@@ -58,6 +58,12 @@ fn mode() -> BootMode {
         "document-range" => BootMode::DocumentRange,
         "document-service-exit" => BootMode::DocumentServiceExit,
         "document-service-fault" => BootMode::DocumentServiceFault,
+        "recovery-fault" => BootMode::RecoveryFault,
+        "recovery-exit" => BootMode::RecoveryExit,
+        "recovery-budget" => BootMode::RecoveryBudget,
+        "recovery-repeat" => BootMode::RecoveryRepeat,
+        "recovery-allocation" => BootMode::RecoveryAllocation,
+        "recovery-limit" => BootMode::RecoveryLimit,
         _ => platform::fail("unknown-boot-mode"),
     }
 }
