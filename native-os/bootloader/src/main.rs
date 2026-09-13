@@ -64,6 +64,12 @@ fn mode() -> BootMode {
         "recovery-repeat" => BootMode::RecoveryRepeat,
         "recovery-allocation" => BootMode::RecoveryAllocation,
         "recovery-limit" => BootMode::RecoveryLimit,
+        "elf-run" => BootMode::ElfRun,
+        "elf-fault" => BootMode::ElfFault,
+        "elf-readonly" => BootMode::ElfReadonly,
+        "elf-noexecute" => BootMode::ElfNoexecute,
+        "elf-reject" => BootMode::ElfReject,
+        "elf-rollback" => BootMode::ElfRollback,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

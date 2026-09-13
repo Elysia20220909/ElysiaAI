@@ -1,5 +1,5 @@
 [workspace]
-members = ["boot-protocol", "bootloader", "kernel", "memory"]
+members = ["boot-protocol", "bootloader", "kernel", "memory", "apps/probe"]
 resolver = "2"
 
 [workspace.package]

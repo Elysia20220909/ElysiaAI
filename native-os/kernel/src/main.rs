@@ -2,6 +2,7 @@
 #![no_main]
 
 mod address_space;
+mod elf_loader;
 mod exceptions;
 mod memory;
 mod paging;

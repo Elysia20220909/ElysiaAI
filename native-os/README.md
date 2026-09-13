@@ -1,13 +1,14 @@
 # ElysiaAI // INFINITE RESONANCE — 最初のカーネル
 
 UEFI ローダーから独自の x86-64 カーネルへ制御を渡し、物理ページを管理して
-独自ページテーブルへ切り替える、M1 / M2a / M2b / M2c / M3a / M3b / M3c の実装。固定した 2 プロセスを Ring 3 で動かし、
+独自ページテーブルへ切り替える、M1 / M2a / M2b / M2c / M3a / M3b / M3c / M3d の実装。固定した 2 プロセスを Ring 3 で動かし、
 M2c ではタイマーによる強制切替と、終了・故障・予算到達時の資源回収を加えた。
 M3a は固定した 2 者の IPC、権限ハンドル、待機と起床を扱う。
 M3b では、許可した合成資料を RAM から読み取るサービスを加えた。
 M3c はクライアントを維持したサービス再起動と、上限付きの再接続を扱う。
+M3d は別ビルドの静的 ELF を RAM から検査してロードする。
 既存の Bun / Python / Tauri アプリとは独立した Rust workspace としてビルドする。
-AI 推論、任意のアプリのロード、ファイルシステムはまだ含まない。
+AI 推論、汎用 ELF・ディスクからのロード、ファイルシステムはまだ含まない。
 
 設計の背景は [独自 OS の構想](../docs/native-os/README.md)、
 実測結果は [M1 起動検証](../docs/native-os/BOOT_VALIDATION.md) と
@@ -17,6 +18,7 @@ AI 推論、任意のアプリのロード、ファイルシステムはまだ�
 [M3a 通信と権限](../docs/native-os/IPC_VALIDATION.md)、
 [M3b RAM 資料サービス](../docs/native-os/DOCUMENT_SERVICE_VALIDATION.md)、
 [M3c サービス復旧](../docs/native-os/SERVICE_RECOVERY_VALIDATION.md)、
+[M3d ユーザー ELF](../docs/native-os/USER_ELF_VALIDATION.md)、
 取得元と確認範囲は [依存関係](DEPENDENCIES.md) を参照する。
 
 ## 起動経路
@@ -35,6 +37,7 @@ QEMU / EDK II UEFI
   -> M3a ケースでは send / receive / revoke、待機・起床、通信相手終了時の回収
   -> M3b ケースでは資料の read / revoke、範囲検査、サービス終了時の回収
   -> M3c ケースではサービスだけを再起動し、新しい権限で再接続
+  -> M3d ケースでは別ビルドの静的ユーザー ELF をロード
   -> シリアル診断 / QEMU 終了
 ```
 
@@ -76,7 +79,7 @@ cargo +stable test --manifest-path native-os/Cargo.toml -p elysia-boot-protocol 
 python native-os/tools/boot_test.py --case all
 ```
 
-最後のコマンドが、カーネルと各ケースのローダーをビルドし、QEMU を順番に起動する。
+最後のコマンドが、ユーザー ELF、カーネル、各ケースのローダーの順にビルドし、QEMU を順番に起動する。
 `--case normal` などで一つだけ実行できる。標準では各起動を 45 秒で打ち切り、
 時間切れのプロセスを終了して不合格にする。`--timeout` の範囲は 1〜120 秒。
 ツールの場所を変える場合は `--qemu` と `--firmware-dir` に指定する。
@@ -132,7 +135,8 @@ QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 ```powershell
 cargo +stable fmt --manifest-path native-os/Cargo.toml --all -- --check
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel --lib --tests --locked -- -D warnings
-cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel --target x86_64-unknown-none --locked -- -D warnings
+$env:ELYSIA_USER_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-user-probe).Path
+cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel -p elysia-user-probe --target x86_64-unknown-none --locked -- -D warnings
 $env:ELYSIA_KERNEL_PATH = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-kernel).Path
 $env:ELYSIA_BOOT_MODE = 'normal'
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-bootloader --target x86_64-unknown-uefi --locked -- -D warnings
@@ -239,7 +243,7 @@ syscall 6 は -13。データの保管・権限検査はカーネル内であり
 資料を読み終えた後に権限を失効しても、既に受け取ったコピーを取り消すものではない。
 
 追加ケースは `document-read`、`document-denied`、`document-revoke`、`document-range`、
-`document-service-exit`、`document-service-fault`。M3b までのケースは計 33 件で、M3c の 6 件を含む `--case all` は計 39 件。
+`document-service-exit`、`document-service-fault`。M3b までのケースは計 33 件で、M3c の 6 件、M3d の 6 件を含む `--case all` は計 45 件。
 サービスも最大 64 tick の制約を受ける。終了・故障・予算停止時は保留要求と権限を破棄し、
 通信資源とページを回収する。静的資料はカーネルの読み取り専用領域に残る。
 
@@ -270,3 +274,30 @@ syscall 6 は -13。データの保管・権限検査はカーネル内であり
 復旧試験は専用の 1 ページ以内のユーザーイメージを使い、既存ケースとロード経路を共有する。
 `recovery-allocation` は新サービスの確保上限を一度だけ 3 フレームに制限して部分失敗を起こす。
 通常の復旧経路は 32 フレームを上限とする。ケース一覧と実測値はサービス復旧の検証記録を参照する。
+
+## M3d のユーザー ELF
+
+`apps/probe/` はカーネルと別の Rust package と linker script を持つ最小プログラム。
+runner が先にビルドし、`ELYSIA_USER_ELF` のファイルを kernel の起動用 RAM bundle に埋め込む。
+実行コードは別 ELF だが、bundle の差し替えには現在カーネル・ローダーの再ビルドが必要。
+ディスクやホストファイルを実行中のゲストから読む機能ではない。生成 ELF は ignored の target 内にだけ置く。
+
+| 項目 | 最初の契約 |
+| --- | --- |
+| 形式 | 最大 64 KiB、ELF64 little-endian x86-64 ET_EXEC |
+| program headers | ちょうど 2 個の PT_LOAD。動的・interpreter・その他の型は拒否 |
+| コード | 0x40000000、RX、最大 4096 bytes。entry はファイル内にあるコード bytes の範囲 |
+| データ | 0x60000000、RW/NX、最大 4096 bytes。file size を超える部分はゼロ |
+| 整列 | 両セグメントとも p_align=4096、file offset は 4096 の倍数、ヘッダー領域外 |
+| スタック | プロセス専用、既存の 0x80000000 に 1 ページ、RW/NX |
+| 権限 | log / yield / exit のみ。IPC・資料・再起動のハンドルを発行しない |
+
+検査は確保前に完了する。ファイル範囲の桁あふれ、切り詰め、セグメント重複、W+X、
+カーネル・相手・スタックの配置、実行領域外の entry を拒否する。物理アドレス欄をロード先には使わない。
+受け付ける配置が固定なので、既存の所有ページ・範囲検査を使える。汎用 ELF ローダーではない。
+
+`elf-run` は初期データ・BSS・entry・独立ページを確認する。`elf-fault` / `elf-readonly` /
+`elf-noexecute` は故障隔離、`elf-reject` は不正入力 9 種、`elf-rollback` は全 14 箇所の部分確保失敗を扱う。
+ELF ケースは各プロセス 64 tick。ゲスト合格コード 51、runner 成功は 0。
+リンカー設定変更も build script の入力として追跡する。手動ビルド時もユーザー ELF を先に作り、
+`ELYSIA_USER_ELF` を設定してからカーネルをビルドする。

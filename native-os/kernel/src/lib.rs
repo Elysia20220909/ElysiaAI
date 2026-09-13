@@ -4,6 +4,7 @@
 pub mod documents;
 pub mod ipc;
 pub mod recovery;
+pub mod user_elf;
 
 pub const CODE: u64 = 0x4000_0000;
 pub const DATA: u64 = 0x6000_0000;

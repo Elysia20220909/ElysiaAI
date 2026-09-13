@@ -1,6 +1,6 @@
 """Regression tests for the boot-result classifier, including false-success cases."""
 import unittest
-from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, RECOVERY_CASES, verify_output
+from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, RECOVERY_CASES, ELF_CASES, verify_output
 
 
 class VerdictTests(unittest.TestCase):
@@ -104,6 +104,22 @@ class VerdictTests(unittest.TestCase):
                 markers.extend(["kernel:user-exit pid=1 status=0", "kernel:reaped pid=1"])
             markers.extend(["kernel:documents-clean", f"kernel:recovery-tests-passed generation={count}",
                             "kernel:ipc-clean free=50000", f"kernel:ipc-tests-passed mode={RECOVERY_CASES[case]}"])
+        if case in ELF_CASES:
+            markers = ["kernel:allocation-rollback boundaries=14 free=50000"]
+            if case == "elf-reject":
+                markers.extend(f"kernel:elf-rejected reason={reason} free=50000" for reason in
+                               ("header", "dynamic", "interpreter", "permissions", "kernel-address", "overlap", "entry", "overflow", "truncated"))
+            if case == "elf-rollback":
+                markers.append("kernel:elf-rollback boundaries=14 free=50000")
+            markers.extend(["kernel:elf-loaded pid=0 entry=0x40000010", "kernel:elf-loaded pid=1 entry=0x40000010",
+                            "kernel:user-spaces-ready roots=0x100000,0x200000", "kernel:timer-ready",
+                            "kernel:user-enter pid=0 cpl=3", "kernel:syscall-rejected pid=0 reason=number",
+                            "kernel:user-yield pid=0", "kernel:syscall-rejected pid=1 reason=number", "kernel:user-yield pid=1"])
+            faults = {"elf-fault": "vector=6 error=0x0 address=0x0", "elf-readonly": "vector=14 error=0x7 address=0x40000000",
+                      "elf-noexecute": "vector=14 error=0x15 address=0x60000000"}
+            markers.append(f"kernel:user-stopped pid=0 {faults[case]}" if case in faults else "kernel:user-exit pid=0 status=0")
+            markers.extend(["kernel:reaped pid=0", "user:log pid=1 hex=6f6b", "kernel:user-exit pid=1 status=0",
+                            "kernel:reaped pid=1", "kernel:elf-clean free=50000", f"kernel:elf-tests-passed mode={ELF_CASES[case]}"])
         if case in LIFECYCLE_CASES:
             count = 64 if case == "user-recycle" else 1
             markers = ["kernel:allocation-rollback boundaries=12 free=50000"]
@@ -154,6 +170,19 @@ class VerdictTests(unittest.TestCase):
     def test_recovery_cannot_resume_stopped_service_before_replacement(self):
         output = self.transcript("recovery-fault").replace("kernel:reaped pid=1", "kernel:reaped pid=1\nkernel:user-switch from=0 to=1", 1)
         self.assertTrue(verify_output("recovery-fault", 49, output))
+
+    def test_elf_rejects_missing_validation_reclamation_and_entry(self):
+        for case, old, new in (("elf-reject", "kernel:elf-rejected reason=overlap free=50000", "omitted"),
+                               ("elf-run", "entry=0x40000010", "entry=0x40000000"),
+                               ("elf-rollback", "kernel:elf-rollback boundaries=14 free=50000", "kernel:elf-rollback boundaries=14 free=49999"),
+                               ("elf-fault", "kernel:reaped pid=0", "omitted")):
+            with self.subTest(case=case):
+                self.assertTrue(verify_output(case, 51, self.transcript(case).replace(old,new,1)))
+
+    def test_elf_fault_requires_survivor_progress_and_no_resumption(self):
+        output = self.transcript("elf-fault")
+        self.assertTrue(verify_output("elf-fault",51,output + "\nkernel:user-trap pid=0 vector=128 cpl=3"))
+        self.assertTrue(verify_output("elf-fault",51,output.replace("user:log pid=1 hex=6f6b", "omitted")))
 
     def test_lifecycle_requires_reclamation_and_stable_counts(self):
         output = self.transcript("user-recycle")

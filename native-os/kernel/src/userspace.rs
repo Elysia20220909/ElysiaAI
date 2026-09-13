@@ -90,14 +90,14 @@ unsafe fn prepare(
         if spaces.iter().any(Option::is_some) {
             platform::fail("spawn-over-live-space");
         }
-        let handles = if mode >= 21 {
+        let handles = if ipc_mode(mode) {
             (&mut *ptr::addr_of_mut!(CHANNEL))
                 .start_pair()
                 .unwrap_or_else(|_| platform::fail("ipc-start"))
         } else {
             [[0; 2]; 2]
         };
-        let documents = if mode >= 27 {
+        let documents = if document_mode(mode) {
             (&mut *ptr::addr_of_mut!(DOCUMENTS))
                 .start_pair()
                 .unwrap_or_else(|_| platform::fail("documents-start"))
@@ -132,7 +132,7 @@ unsafe fn build_process(
     limit: usize,
 ) -> Result<(Process, Space), &'static str> {
     unsafe {
-        let (start, end) = if mode >= 33 {
+        let (start, end) = if recovery_mode(mode) {
             (
                 ptr::addr_of!(recovery_image_start),
                 ptr::addr_of!(recovery_image_end),
@@ -147,17 +147,27 @@ unsafe fn build_process(
         if length > PAGE as usize {
             return Err("user-image-size");
         }
-        let space = Space::create(allocator, pid, limit)?;
-        ptr::copy_nonoverlapping(start, (paging::DIRECT + space.pages[0]) as *mut u8, length);
+        let (space, entry) = if mode >= 39 {
+            let loaded = Space::from_elf(allocator, pid, crate::elf_loader::IMAGE, limit)?;
+            platform::log(format_args!(
+                "kernel:elf-loaded pid={pid} entry={:#x}",
+                loaded.1
+            ));
+            loaded
+        } else {
+            let space = Space::create(allocator, pid, limit)?;
+            ptr::copy_nonoverlapping(start, (paging::DIRECT + space.pages[0]) as *mut u8, length);
+            (space, CODE)
+        };
         let frame = Frame {
-            rip: CODE,
+            rip: entry,
             cs: 0x1b,
             ss: 0x23,
             rsp: STACK + PAGE,
             rflags: if preemptive(mode) { 0x202 } else { 2 },
             r12: pid as u64,
             r13: mode as u64,
-            r14: if mode >= 27 {
+            r14: if document_mode(mode) {
                 documents[1 - pid]
             } else {
                 GENERATION
@@ -195,13 +205,14 @@ pub unsafe fn run(mode: u32) -> ! {
         if mode >= 18 {
             allocation_rollback(allocator);
         }
+        crate::elf_loader::preflight(mode, allocator);
         prepare(
             allocator,
             mode,
             &mut *ptr::addr_of_mut!(PROCESSES),
             &mut *ptr::addr_of_mut!(SPACES),
         );
-        if mode >= 33 {
+        if recovery_mode(mode) {
             LIVE_FREE = allocator.free_count();
             SERVICE_FRAMES = (&*ptr::addr_of!(SPACES))[1].as_ref().unwrap().frame_count();
             CLIENT_ROOT = (&*ptr::addr_of!(PROCESSES))[0].root;
@@ -273,9 +284,9 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                 processes[current].fault = Some((128, frame.rsp, 0));
                 processes[current].runnable = false;
             } else if ticks
-                >= if MODE >= 33 && current == 0 {
+                >= if recovery_mode(MODE) && current == 0 {
                     1024
-                } else if MODE >= 21 || current != 0 {
+                } else if MODE >= 39 || ipc_mode(MODE) || current != 0 {
                     64
                 } else {
                     8
@@ -350,7 +361,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                     ));
                     return schedule(processes, current);
                 }
-                7 if MODE >= 33 => {
+                7 if recovery_mode(MODE) => {
                     frame.rax =
                         reconnect(processes, current, frame.rdi, frame.rsi).unwrap_or_else(|e| e);
                     platform::log(format_args!(
@@ -358,7 +369,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                         frame.rax as i64
                     ));
                 }
-                6 if MODE >= 27 => {
+                6 if document_mode(MODE) => {
                     let result = if frame.rsi != RESPONSE_SIZE as u64 {
                         Err(EINVAL)
                     } else if !writable(current, frame.rdi, frame.rsi) {
@@ -385,7 +396,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                         frame.rax as i64
                     ));
                 }
-                3..=5 if MODE >= 21 => {
+                3..=5 if ipc_mode(MODE) => {
                     return ipc_syscall(processes, current, frame);
                 }
                 _ => {
@@ -425,17 +436,17 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 || processes[pid].budget_stopped)
                 && let Some(space) = spaces[pid].take()
             {
-                if MODE >= 21 {
+                if ipc_mode(MODE) {
                     (&mut *ptr::addr_of_mut!(CHANNEL)).close_process(pid);
                 }
-                if MODE >= 27 {
+                if document_mode(MODE) {
                     (&mut *ptr::addr_of_mut!(DOCUMENTS)).close_process(pid);
                 }
                 space.release(memory::frames());
                 processes[pid].root = 0;
                 processes[pid].frame = Frame::EMPTY;
                 platform::log(format_args!("kernel:reaped pid={pid}"));
-                if MODE >= 33 && pid == 1 && spaces[0].is_some() {
+                if recovery_mode(MODE) && pid == 1 && spaces[0].is_some() {
                     let free = memory::frames().free_count();
                     if free != LIVE_FREE + SERVICE_FRAMES {
                         platform::fail("service-reclaim-leak");
@@ -447,7 +458,7 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 }
             }
         }
-        if MODE >= 21 {
+        if ipc_mode(MODE) {
             wake_receivers(processes);
         }
         let next = if let Some(next) =
@@ -462,17 +473,24 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
             if free != BASELINE {
                 platform::fail("process-resource-leak");
             }
-            if MODE >= 21 {
+            if MODE >= 39 {
+                verify_elf(processes, MODE);
+                let mode = MODE;
+                platform::log(format_args!("kernel:elf-clean free={free}"));
+                platform::log(format_args!("kernel:elf-tests-passed mode={mode}"));
+                platform::exit(0x19);
+            }
+            if ipc_mode(MODE) {
                 if !(&*ptr::addr_of!(CHANNEL)).is_clean() {
                     platform::fail("ipc-resource-leak");
                 }
-                if MODE >= 27 {
+                if document_mode(MODE) {
                     if !(&*ptr::addr_of!(DOCUMENTS)).is_clean() {
                         platform::fail("documents-resource-leak");
                     }
                     platform::log(format_args!("kernel:documents-clean"));
                 }
-                if MODE >= 33 {
+                if recovery_mode(MODE) {
                     verify_recovery(processes, MODE);
                 } else {
                     verify_ipc(processes, MODE);
@@ -545,8 +563,17 @@ fn verify_fixture(processes: &[Process; 2], mode: u32) {
     }
 }
 
+fn ipc_mode(mode: u32) -> bool {
+    matches!(mode, 21..=38)
+}
+fn document_mode(mode: u32) -> bool {
+    matches!(mode, 27..=38)
+}
+fn recovery_mode(mode: u32) -> bool {
+    matches!(mode, 33..=38)
+}
 fn preemptive(mode: u32) -> bool {
-    matches!(mode, 18 | 20..=38)
+    matches!(mode, 18 | 20..=44)
 }
 fn verify_lifecycle(p: &[Process; 2], mode: u32) {
     let valid = if mode == 19 {
@@ -577,7 +604,7 @@ unsafe fn copy_message(
     message: &elysia_kernel::ipc::Message,
 ) {
     unsafe {
-        if MODE >= 27 {
+        if document_mode(MODE) {
             // This channel has exactly two fixed peers; payload bytes cannot choose the sender.
             (&mut *ptr::addr_of_mut!(DOCUMENTS))
                 .delivered(pid, 1 - pid, *message)
@@ -606,7 +633,7 @@ unsafe fn wake_receivers(processes: &mut [Process; 2]) {
             };
             let result = if !channel.is_open() {
                 Err(EPIPE)
-            } else if MODE >= 27 && !(&*ptr::addr_of!(DOCUMENTS)).can_receive(pid) {
+            } else if document_mode(MODE) && !(&*ptr::addr_of!(DOCUMENTS)).can_receive(pid) {
                 Err(elysia_kernel::ipc::EAGAIN)
             } else if !writable(pid, pending.pointer, pending.capacity as u64) {
                 Err(EFAULT)
@@ -654,7 +681,7 @@ unsafe fn ipc_syscall(processes: &mut [Process; 2], pid: usize, frame: &mut Fram
                 }
             }
             4 => {
-                if MODE >= 27 && !(&*ptr::addr_of!(DOCUMENTS)).can_receive(pid) {
+                if document_mode(MODE) && !(&*ptr::addr_of!(DOCUMENTS)).can_receive(pid) {
                     Err(elysia_kernel::ipc::EAGAIN)
                 } else if frame.rdx > MAX_MESSAGE as u64 {
                     Err(EMSGSIZE)
@@ -836,4 +863,24 @@ fn verify_recovery(p: &[Process; 2], mode: u32) {
     platform::log(format_args!(
         "kernel:recovery-tests-passed generation={generation}"
     ));
+}
+
+fn verify_elf(p: &[Process; 2], mode: u32) {
+    let fault = match mode {
+        40 => Some((6, 0, 0)),
+        41 => Some((14, CODE, 7)),
+        42 => Some((14, DATA, 0x15)),
+        _ => None,
+    };
+    if p[0].fault != fault
+        || p[0].exit != if fault.is_some() { None } else { Some(0) }
+        || p[0].logs != if fault.is_some() { 0 } else { 1 }
+        || p[1].exit != Some(0)
+        || p[1].fault.is_some()
+        || p[1].logs != 1
+        || p.iter()
+            .any(|p| !p.yielded || p.waiting.is_some() || p.budget_stopped)
+    {
+        platform::fail("elf-fixture-verdict");
+    }
 }

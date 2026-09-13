@@ -25,26 +25,28 @@ AI が扱う記憶、道具、権限を OS の設計に組み込み、人が実�
 | M3a：通信と権限 | 最大 64 bytes・各方向 2 件の IPC、所有者・操作権限・世代の検査、待機と起床、失効・相手終了時の回収 | 権限の委譲・派生、任意の通信先 |
 | M3b：RAM 資料サービス | 固定の資料を IPC で読み取り。送信者に結び付いた権限、範囲・失効検査、終了時の要求・権限回収 | ファイルシステム、ホスト資料の読み込み、権限委譲 |
 | M3c：サービス復旧 | サービスだけを回収・再起動し、クライアントが新しい権限で再接続。8 回の反復と確保失敗の回収を検証 | 任意サービス管理、永続状態の復旧、再試行の待ち時間制御 |
+| M3d：ユーザー ELF | 別ビルドの静的 ELF を RAM から検査・ロード。初期データ・BSS・ページ保護と失敗時回収を検証 | 汎用 ELF、動的リンク、ディスクからのロード、任意の spawn API |
 | 既存 AI アプリ | Bun / Elysia.js、Python / FastAPI、Tauri を使うホスト OS 上の開発基盤 | 独自 OS への移植、独自カーネル上での AI 推論 |
 
-M3c では、資料サービスの故障・終了・CPU 予算超過からの復旧を追加しました。
-クライアントを残してサービスだけを作り直し、新しい権限で資料の読み取りを再開します。
+M3d では、カーネルと別にビルドした小さな ELF プログラムをロードできるようにしました。
+形式と配置を検査し、専用のメモリとスタックで動かします。
 対象は Windows が動く x86-64 / UEFI PC を想定し、まず Windows 上の QEMU で検証します。
 ユーザー側の同期例外はそのプロセスを停止し、正常なプロセスを継続します。
 カーネル側の故障は停止します。固定した 2 プロセスの試験であり、一般的な OS の完成ではありません。
 
 2026-09-13 の検証記録では、指定した Windows / Rust / QEMU / UEFI の組み合わせで
-39 ケースの起動・故障・資源回収・IPC・資料サービス・復旧試験に合格しています。条件と実測結果は
+45 ケースの起動・故障・資源回収・IPC・資料サービス・復旧・ELF 試験に合格しています。条件と実測結果は
 [M1 起動検証](docs/native-os/BOOT_VALIDATION.md) と
 [M2a メモリ検証](docs/native-os/MEMORY_VALIDATION.md)、
 [M2b ユーザー空間の検証](docs/native-os/USERSPACE_VALIDATION.md)、
 [M2c 資源回収と実行制御](docs/native-os/LIFECYCLE_VALIDATION.md)、
 [M3a 通信と権限](docs/native-os/IPC_VALIDATION.md)、
 [M3b RAM 資料サービス](docs/native-os/DOCUMENT_SERVICE_VALIDATION.md)、
-[M3c サービス復旧](docs/native-os/SERVICE_RECOVERY_VALIDATION.md) を参照してください。
+[M3c サービス復旧](docs/native-os/SERVICE_RECOVERY_VALIDATION.md)、
+[M3d ユーザー ELF](docs/native-os/USER_ELF_VALIDATION.md) を参照してください。
 新規マシンでの環境構築全体、実機、日常利用できる OS としての安定性は未検証です。
 
-この文書は M3c を含む開発ブランチの内容を説明します。
+この文書は M3d を含む開発ブランチの内容を説明します。
 設計・M1・M2a は [PR #109](https://github.com/Elysia20220909/ElysiaAI/pull/109)、
 [PR #110](https://github.com/Elysia20220909/ElysiaAI/pull/110)、
 [PR #111](https://github.com/Elysia20220909/ElysiaAI/pull/111) の順に積み重ねています。
@@ -53,6 +55,7 @@ M2c は [PR #113](https://github.com/Elysia20220909/ElysiaAI/pull/113) の M2b �
 M3a は [PR #114](https://github.com/Elysia20220909/ElysiaAI/pull/114) の M2c を基にしています。
 M3b は [PR #115](https://github.com/Elysia20220909/ElysiaAI/pull/115) の M3a を基にしています。
 M3c は [PR #116](https://github.com/Elysia20220909/ElysiaAI/pull/116) をマージした開発ブランチを基にしています。
+M3d は [PR #117](https://github.com/Elysia20220909/ElysiaAI/pull/117) の復旧機能を基にしています。
 既定ブランチへの採用状況は各 PR で確認してください。
 
 ## 独自 OS を読む・試す

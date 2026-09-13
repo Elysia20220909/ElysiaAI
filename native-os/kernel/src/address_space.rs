@@ -18,6 +18,28 @@ pub struct Space {
     count: usize,
 }
 impl Space {
+    /// Parse before allocating; copy only validated file bytes into freshly zeroed pages.
+    pub unsafe fn from_elf(
+        a: &mut FrameAllocator,
+        pid: usize,
+        bytes: &[u8],
+        limit: usize,
+    ) -> Result<(Self, u64), &'static str> {
+        let image = elysia_kernel::user_elf::Image::parse(bytes)?;
+        let space = unsafe { Self::create(a, pid, limit) }?;
+        for slot in 0..2 {
+            let data = image.bytes(slot);
+            unsafe {
+                ptr::copy_nonoverlapping(
+                    data.as_ptr(),
+                    (paging::DIRECT + space.pages[slot]) as *mut u8,
+                    data.len(),
+                );
+            }
+        }
+        Ok((space, image.entry))
+    }
+
     pub fn frame_count(&self) -> usize {
         self.count
     }

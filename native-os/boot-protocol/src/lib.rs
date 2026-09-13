@@ -49,6 +49,12 @@ pub enum BootMode {
     RecoveryRepeat = 36,
     RecoveryAllocation = 37,
     RecoveryLimit = 38,
+    ElfRun = 39,
+    ElfFault = 40,
+    ElfReadonly = 41,
+    ElfNoexecute = 42,
+    ElfReject = 43,
+    ElfRollback = 44,
 }
 
 impl BootMode {
@@ -93,6 +99,12 @@ impl BootMode {
             36 => Some(Self::RecoveryRepeat),
             37 => Some(Self::RecoveryAllocation),
             38 => Some(Self::RecoveryLimit),
+            39 => Some(Self::ElfRun),
+            40 => Some(Self::ElfFault),
+            41 => Some(Self::ElfReadonly),
+            42 => Some(Self::ElfNoexecute),
+            43 => Some(Self::ElfReject),
+            44 => Some(Self::ElfRollback),
             _ => None,
         }
     }

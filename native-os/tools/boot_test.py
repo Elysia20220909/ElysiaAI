@@ -85,6 +85,13 @@ for name, mode in RECOVERY_CASES.items():
                        "kernel:user-enter pid=0 cpl=3", "user:log pid=0 hex=6f6b",
                        "kernel:documents-clean", "kernel:recovery-tests-passed",
                        "kernel:ipc-clean", f"kernel:ipc-tests-passed mode={mode}"])
+ELF_CASES = {"elf-run": 39, "elf-fault": 40, "elf-readonly": 41,
+             "elf-noexecute": 42, "elf-reject": 43, "elf-rollback": 44}
+for name, mode in ELF_CASES.items():
+    CASES[name] = (51, ["kernel:allocation-rollback", "kernel:elf-loaded pid=0",
+                       "kernel:elf-loaded pid=1", "kernel:user-spaces-ready", "kernel:timer-ready",
+                       "kernel:user-enter pid=0 cpl=3", "user:log pid=1 hex=6f6b",
+                       "kernel:elf-clean", f"kernel:elf-tests-passed mode={mode}"])
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
           "kernel:entered", "kernel:exceptions-ready"]
 MEMORY_PREFIX = ["kernel:boot-info-valid", "kernel:frames-verified",
@@ -162,6 +169,8 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
         errors.extend(verify_documents(case, output))
     if case in RECOVERY_CASES:
         errors.extend(verify_recovery(case, output))
+    if case in ELF_CASES:
+        errors.extend(verify_elf(case, output))
     return errors
 
 
@@ -362,6 +371,46 @@ def verify_recovery(case: str, output: str) -> list[str]:
     return errors
 
 
+def verify_elf(case: str, output: str) -> list[str]:
+    errors = []
+    lines = output.splitlines()
+    baseline = re.search(r"kernel:allocation-rollback boundaries=\d+ free=(\d+)", output)
+    clean = re.search(r"kernel:elf-clean free=(\d+)", output)
+    if not baseline or not clean or baseline[1] != clean[1]:
+        errors.append("ELF process frames did not return to baseline")
+    roots = re.search(r"kernel:user-spaces-ready roots=(0x[0-9a-f]+),(0x[0-9a-f]+)", output)
+    if not roots or roots[1] == roots[2]:
+        errors.append("ELF processes share a root")
+    faults = {"elf-fault": "vector=6 error=0x0 address=0x0",
+              "elf-readonly": "vector=14 error=0x7 address=0x40000000",
+              "elf-noexecute": "vector=14 error=0x15 address=0x60000000"}
+    for pid in (0, 1):
+        for marker in (f"kernel:reaped pid={pid}", f"kernel:user-yield pid={pid}",
+                       f"kernel:syscall-rejected pid={pid} reason=number",
+                       f"kernel:elf-loaded pid={pid} entry=0x40000010"):
+            if lines.count(marker) != 1:
+                errors.append(f"missing ELF evidence: {marker}")
+        expected = f"kernel:user-stopped pid=0 {faults[case]}" if pid == 0 and case in faults else f"kernel:user-exit pid={pid} status=0"
+        if lines.count(expected) != 1:
+            errors.append("incorrect ELF process termination")
+        stopped = output.find(expected)
+        if stopped >= 0:
+            later = output[output.find("\n", stopped) + 1:]
+            if re.search(rf"(?:kernel:(?:user-trap|preempt) pid={pid} |user:log pid={pid} |kernel:user-switch from=\d+ to={pid}(?:\r?\n|$))", later):
+                errors.append("stopped ELF process resumed")
+    if case in faults and output.find("kernel:user-stopped pid=0") > output.find("user:log pid=1 hex=6f6b"):
+        errors.append("survivor did not progress after ELF process fault")
+    if case == "elf-reject":
+        rejected = re.findall(r"kernel:elf-rejected reason=(\S+) free=(\d+)", output)
+        if [reason for reason, _ in rejected] != ["header", "dynamic", "interpreter", "permissions", "kernel-address", "overlap", "entry", "overflow", "truncated"] or not baseline or any(free != baseline[1] for _, free in rejected):
+            errors.append("missing malformed ELF rejection or leaked frames")
+    if case == "elf-rollback":
+        rollback = re.search(r"kernel:elf-rollback boundaries=(\d+) free=(\d+)", output)
+        if not rollback or int(rollback[1]) < 8 or not baseline or rollback[2] != baseline[1]:
+            errors.append("ELF allocation rollback incomplete")
+    return errors
+
+
 def qemu_path(path: Path) -> str:
     # Commas delimit QEMU suboptions; doubling preserves a literal comma.
     return path.resolve().as_posix().replace(",", ",,")
@@ -397,13 +446,23 @@ def run(args: argparse.Namespace) -> int:
     out = ROOT / "out"
     out.mkdir(exist_ok=True)
     kernel = ROOT / "target/x86_64-unknown-none/release/elysia-kernel"
+    user_elf = ROOT / "target/x86_64-unknown-none/release/elysia-user-probe"
+    print("Building standalone user ELF", flush=True)
+    print(checked([
+        "cargo", "+stable", "rustc", "--locked", "-p", "elysia-user-probe",
+        "--target", "x86_64-unknown-none", "--release", "--",
+        "-C", "relocation-model=static",
+        "-C", f"link-arg=-T{ROOT / 'apps/probe/linker.ld'}", "-C", "link-arg=--build-id=none",
+    ]), end="", flush=True)
+    kernel_environment = os.environ.copy()
+    kernel_environment["ELYSIA_USER_ELF"] = str(user_elf)
     print("Building kernel", flush=True)
     print(checked([
         "cargo", "+stable", "rustc", "--locked", "-p", "elysia-kernel", "--bin", "elysia-kernel",
         "--target", "x86_64-unknown-none", "--release", "--",
         "-C", "relocation-model=static",
         "-C", f"link-arg=-T{ROOT / 'kernel/linker.ld'}", "-C", "link-arg=--build-id=none",
-    ]), end="", flush=True)
+    ], env=kernel_environment), end="", flush=True)
     results = []
     selected = list(CASES) if args.case == "all" else [args.case]
     for case in selected:
@@ -458,7 +517,7 @@ def run(args: argparse.Namespace) -> int:
         "memory_mib": 256, "vcpus": 1, "accelerator": "tcg", "network": "none",
         "qemu_sha256": sha256(qemu), "firmware_code_sha256": sha256(code),
         "firmware_vars_sha256": sha256(variables), "kernel_sha256": sha256(kernel),
-        "native_os_source_sha256": source_digest(), "cases": results,
+        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "cases": results,
     }
     (out / "results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return 0 if all(case["passed"] for case in results) else 1

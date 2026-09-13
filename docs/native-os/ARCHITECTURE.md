@@ -5,6 +5,7 @@ M2c の所有フレーム回収・タイマー切替は [資源回収と実行�
 M3a の IPC・権限ハンドル・待機解除は [通信と権限](IPC_VALIDATION.md) に記録する。
 M3b の固定資料と要求の検査は [RAM 資料サービス](DOCUMENT_SERVICE_VALIDATION.md) に記録する。
 M3c の限定した監督・再起動は [サービス復旧](SERVICE_RECOVERY_VALIDATION.md) に記録する。
+M3d の別ビルドの実行ファイルは [ユーザー ELF](USER_ELF_VALIDATION.md) に記録する。
 現段階では資料の保管と権限検査はカーネル内、IPC の受信・応答ループは Ring 3 に置く。
 以下の全機能を実装済みとは扱わない。
 [構想](README.md)、[権限設計](SECURITY.md)、[検証計画](MILESTONES.md)と合わせて読む。
