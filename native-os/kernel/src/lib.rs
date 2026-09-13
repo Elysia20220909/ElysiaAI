@@ -1,6 +1,7 @@
 #![no_std]
 //! CPU-independent contracts for the bounded process runtime.
 
+pub mod documents;
 pub mod ipc;
 
 pub const CODE: u64 = 0x4000_0000;
