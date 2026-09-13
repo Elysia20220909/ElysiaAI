@@ -6,6 +6,45 @@
 _start:
     cmp r12, 1
     jne recovery_fail
+    test r10, r10
+    jnz recovery_fail
+    test r14, r14
+    jnz recovery_fail
+    test r8, r8
+    jz recovery_fail
+    test r9, r9
+    jz recovery_fail
+    test r11, r11
+    jnz recovery_fail
+    // Unissued handles and wrong-operation handles must fail without queuing work.
+    mov eax, 3
+    xor edi, edi
+    mov esi, 0x60000000
+    mov edx, 32
+    int 0x80
+    cmp rax, -9
+    jne recovery_fail
+    mov eax, 4
+    xor edi, edi
+    mov esi, 0x60000100
+    mov edx, 64
+    int 0x80
+    cmp rax, -9
+    jne recovery_fail
+    mov eax, 3
+    mov rdi, r9
+    mov esi, 0x60000000
+    mov edx, 32
+    int 0x80
+    cmp rax, -13
+    jne recovery_fail
+    mov eax, 4
+    mov rdi, r8
+    mov esi, 0x60000100
+    mov edx, 64
+    int 0x80
+    cmp rax, -13
+    jne recovery_fail
     cmp qword ptr [0x60000388], 0x2468
     jne recovery_fail
     cmp qword ptr [0x60000390], 0
@@ -31,7 +70,7 @@ recovery_service_receive:
     inc ebx
     test r15, r15
     jz recovery_inject
-    cmp ebx, 3
+    cmp ebx, 4
     je recovery_inject
     mov eax, 6
     mov edi, 0x60000100

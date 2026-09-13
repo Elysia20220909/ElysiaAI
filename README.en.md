@@ -13,7 +13,7 @@ The development tree contains two distinct tracks:
 
 | Track | Implemented scope | Limits |
 | --- | --- | --- |
-| Independent OS, M1 / M2a / M2b / M2c / M3a / M3b / M3c / M3d / M3e | UEFI entry into an x86-64 Rust kernel; physical page allocation and release; independent page tables; two Ring 3 processes with log/yield/exit syscalls and cooperative switching; fault containment, PIT preemption, cumulative tick limits and owned-frame reclamation, bounded IPC, per-process capability checks, blocking receive, cancellation and permission-checked synthetic RAM document reads and bounded service restart and static user ELF loading in QEMU | No capability delegation, general endpoints, precise CPU-time accounting, general spawn API, guest AI inference, or verified hardware support |
+| Independent OS, M1 / M2a / M2b / M2c / M3a / M3b / M3c / M3d / M3e / M3f | UEFI entry into an x86-64 Rust kernel; physical page allocation and release; independent page tables; two Ring 3 processes with log/yield/exit syscalls and cooperative switching; fault containment, PIT preemption, cumulative tick limits and owned-frame reclamation, bounded IPC, per-process capability checks, blocking receive, cancellation and permission-checked synthetic RAM document reads and bounded service restart and static user ELF loading in QEMU | No capability delegation, general endpoints, precise CPU-time accounting, general spawn API, guest AI inference, or verified hardware support |
 | Existing host application | Bun / Elysia.js, Python / FastAPI, and Tauri code for developing AI interactions on an existing OS | Has not been ported to the independent kernel |
 
 The host application's “AI Kernel” means its Python service, not the independent
@@ -43,7 +43,9 @@ Full setup on a new machine and everyday OS stability have not been demonstrated
 
 M3e moves the recovery document service into a dedicated ELF, loaded on initial start and every restart; see [service ELF validation](docs/native-os/SERVICE_ELF_VALIDATION.md).
 
-This overview describes the development lineage containing M3e. Design, M1, and M2a
+M3f also builds the recovery client as an ELF and passes only role-specific startup handles. Document grants are issued only to the client; see [client ELF validation](docs/native-os/CLIENT_ELF_VALIDATION.md).
+
+This overview describes the development lineage containing M3f. Design, M1, and M2a
 are stacked in [PR #109](https://github.com/Elysia20220909/ElysiaAI/pull/109),
 [PR #110](https://github.com/Elysia20220909/ElysiaAI/pull/110), and
 [PR #111](https://github.com/Elysia20220909/ElysiaAI/pull/111).

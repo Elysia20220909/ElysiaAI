@@ -1,10 +1,60 @@
-// Separate bounded user image for service recovery fixtures.
-.section .rodata.recovery_image,"a"
-.global recovery_image_start
-.global recovery_image_end
-recovery_image_start:
+// Independent recovery client; only its own capabilities arrive at entry.
+.section .text.entry,"ax"
+    ud2
+    .space 14
+.global _start
+_start:
     test r12, r12
     jnz recovery_fail
+    test r10, r10
+    jnz recovery_fail
+    test r14, r14
+    jnz recovery_fail
+    test r8, r8
+    jz recovery_fail
+    test r9, r9
+    jz recovery_fail
+    test r11, r11
+    jz recovery_fail
+    cmp qword ptr [0x60000388], 0x13579
+    jne recovery_fail
+    cmp qword ptr [0x60000390], 0
+    jne recovery_fail
+    // Unissued handles and wrong-operation handles must fail without queuing work.
+    mov eax, 3
+    xor edi, edi
+    mov esi, 0x60000000
+    mov edx, 32
+    int 0x80
+    cmp rax, -9
+    jne recovery_fail
+    mov eax, 4
+    xor edi, edi
+    mov esi, 0x60000100
+    mov edx, 64
+    int 0x80
+    cmp rax, -9
+    jne recovery_fail
+    mov eax, 3
+    mov rdi, r9
+    mov esi, 0x60000000
+    mov edx, 32
+    int 0x80
+    cmp rax, -13
+    jne recovery_fail
+    mov eax, 4
+    mov rdi, r8
+    mov esi, 0x60000100
+    mov edx, 64
+    int 0x80
+    cmp rax, -13
+    jne recovery_fail
+    mov eax, 6
+    mov edi, 0x60000100
+    mov esi, 64
+    int 0x80
+    cmp rax, -13
+    jne recovery_fail
     mov qword ptr [0x60000300], 0x13579
     // A live service cannot be replaced.
     call recovery_connect
@@ -74,15 +124,11 @@ recovery_retry:
     call recovery_request
     mov [0x60000008], rbp
     call recovery_exchange
-    cmp qword ptr [0x60000100], -9
-    jne recovery_fail
-    mov esi, 0x60000108
-    mov ecx, 7
-1:
-    cmp qword ptr [rsi], 0
-    jne recovery_fail
-    add esi, 8
-    loop 1b
+    call recovery_denied
+    call recovery_request
+    mov qword ptr [0x60000008], 0
+    call recovery_exchange
+    call recovery_denied
     call recovery_request
     call recovery_exchange
     cmp qword ptr [0x60000100], 0
@@ -143,6 +189,17 @@ recovery_receive:
     mov edx, 64
     int 0x80
     ret
+recovery_denied:
+    cmp qword ptr [0x60000100], -9
+    jne recovery_fail
+    mov esi, 0x60000108
+    mov ecx, 7
+1:
+    cmp qword ptr [rsi], 0
+    jne recovery_fail
+    add esi, 8
+    loop 1b
+    ret
 recovery_ok:
     cmp qword ptr [0x60000300], 0x13579
     jne recovery_fail
@@ -163,4 +220,9 @@ recovery_fail:
     mov edi, 1
     int 0x80
     ud2
-recovery_image_end:
+
+.section .data,"aw"
+    .space 0x388
+    .quad 0x13579
+.section .bss,"aw",@nobits
+    .space 16

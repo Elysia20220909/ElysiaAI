@@ -78,11 +78,17 @@ class VerdictTests(unittest.TestCase):
         if case in RECOVERY_CASES:
             count = 8 if case in ("recovery-repeat", "recovery-limit") else 1
             markers = ["kernel:allocation-rollback boundaries=14 free=50000",
+                       "kernel:client-elf-loaded entry=0x40000010",
                        "kernel:service-elf-loaded generation=0 entry=0x40000010",
                        "kernel:user-spaces-ready roots=0x100000,0x200000",
                        "kernel:recovery-live generation=0 free=49972",
                        "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
                        "kernel:reconnect pid=0 result=-11", "kernel:reconnect pid=1 result=-13"]
+            markers.append("kernel:document-serve pid=0 result=-13")
+            for pid, n in ((0, 1), (1, count + 1)):
+                for operation in (3, 4):
+                    for error in (-9, -13):
+                        markers.extend([f"kernel:ipc-result pid={pid} op={operation} result={error}"] * n)
             for generation in range(count + (case == "recovery-limit")):
                 stop = ("kernel:budget-stopped pid=1 ticks=64" if case == "recovery-budget" else
                         "kernel:user-exit pid=1 status=0" if case == "recovery-exit" else
@@ -100,7 +106,7 @@ class VerdictTests(unittest.TestCase):
                                 f"kernel:recovery-live generation={generation + 1} free=49972",
                                 "kernel:reconnect pid=0 result=24", "kernel:reconnect pid=1 result=-13",
                                 "kernel:ipc-result pid=0 op=3 result=-9", "kernel:ipc-result pid=0 op=4 result=-9",
-                                "kernel:document-response status=-9", "kernel:document-response status=0"])
+                                "kernel:document-response status=-9", "kernel:document-response status=-9", "kernel:document-response status=0"])
             markers.extend(["user:log pid=0 hex=6f6b", "kernel:user-exit pid=0 status=0", "kernel:reaped pid=0"])
             if case != "recovery-limit":
                 markers.extend(["kernel:user-exit pid=1 status=0", "kernel:reaped pid=1"])
@@ -168,6 +174,12 @@ class VerdictTests(unittest.TestCase):
             ("recovery-budget", "kernel:budget-stopped pid=1 ticks=64", "kernel:budget-stopped pid=1 ticks=63")):
             with self.subTest(case=case, marker=old):
                 self.assertTrue(verify_output(case, 49, self.transcript(case).replace(old, new, 1)))
+
+    def test_recovery_requires_client_entry_and_role_denials(self):
+        for marker in ("kernel:client-elf-loaded entry=0x40000010", "kernel:document-serve pid=0 result=-13",
+                       "kernel:ipc-result pid=0 op=3 result=-13", "kernel:ipc-result pid=1 op=4 result=-9"):
+            with self.subTest(marker=marker):
+                self.assertTrue(verify_output("recovery-fault",49,self.transcript("recovery-fault").replace(marker,"omitted",1)))
 
     def test_recovery_requires_elf_load_for_each_generation(self):
         for before, after in (

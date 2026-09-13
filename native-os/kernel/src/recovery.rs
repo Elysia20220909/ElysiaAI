@@ -38,7 +38,7 @@ pub fn replacement(channel: &Channel, documents: &Service) -> Result<Replacement
     let mut documents = documents.clone();
     channel.close_process(0); // Retire the old connection, not the surviving process.
     let handles = channel.start_pair()?;
-    let grants = documents.start_pair()?;
+    let grants = documents.start_client()?;
     Ok(Replacement {
         channel,
         documents,

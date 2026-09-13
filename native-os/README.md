@@ -1,7 +1,7 @@
 # ElysiaAI // INFINITE RESONANCE — 最初のカーネル
 
 UEFI ローダーから独自の x86-64 カーネルへ制御を渡し、物理ページを管理して
-独自ページテーブルへ切り替える、M1 / M2a / M2b / M2c / M3a / M3b / M3c / M3d / M3e の実装。固定した 2 プロセスを Ring 3 で動かし、
+独自ページテーブルへ切り替える、M1 / M2a / M2b / M2c / M3a / M3b / M3c / M3d / M3e / M3f の実装。固定した 2 プロセスを Ring 3 で動かし、
 M2c ではタイマーによる強制切替と、終了・故障・予算到達時の資源回収を加えた。
 M3a は固定した 2 者の IPC、権限ハンドル、待機と起床を扱う。
 M3b では、許可した合成資料を RAM から読み取るサービスを加えた。
@@ -135,9 +135,10 @@ QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 ```powershell
 cargo +stable fmt --manifest-path native-os/Cargo.toml --all -- --check
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel --lib --tests --locked -- -D warnings
+$env:ELYSIA_CLIENT_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-document-client).Path
 $env:ELYSIA_SERVICE_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-document-service).Path
 $env:ELYSIA_USER_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-user-probe).Path
-cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel -p elysia-user-probe -p elysia-document-service --target x86_64-unknown-none --locked -- -D warnings
+cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel -p elysia-user-probe -p elysia-document-service -p elysia-document-client --target x86_64-unknown-none --locked -- -D warnings
 $env:ELYSIA_KERNEL_PATH = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-kernel).Path
 $env:ELYSIA_BOOT_MODE = 'normal'
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-bootloader --target x86_64-unknown-uefi --locked -- -D warnings
@@ -301,14 +302,14 @@ runner が先にビルドし、`ELYSIA_USER_ELF` のファイルを kernel の�
 `elf-noexecute` は故障隔離、`elf-reject` は不正入力 9 種、`elf-rollback` は全 14 箇所の部分確保失敗を扱う。
 ELF ケースは各プロセス 64 tick。ゲスト合格コード 51、runner 成功は 0。
 リンカー設定変更も build script の入力として追跡する。手動ビルド時もユーザー ELF を先に作り、
-`ELYSIA_USER_ELF` と `ELYSIA_SERVICE_ELF` を設定してからカーネルをビルドする。
+`ELYSIA_USER_ELF`、`ELYSIA_SERVICE_ELF`、`ELYSIA_CLIENT_ELF` を設定してからカーネルをビルドする。
 
 ## M3e の資料サービス ELF
 
 `apps/document-service/` は復旧試験のサービス側だけを独立させた内部 package。
 `recovery-*` の 6 ケースでは PID 1 の初回起動・再起動とも検査済み ELF entry を使う。
 runner は probe と service を先にビルドし、`ELYSIA_SERVICE_ELF` を追加で kernel に渡す。
-カーネル内の recovery_program.S はクライアント専用になった。旧 `document-*` の 6 ケースは
+M3e 時点ではクライアントをカーネル内に残したが、M3f で独立 ELF に移した。旧 `document-*` の 6 ケースは
 M3b の試験コードを維持する。ケースの追加ではなく既存復旧経路の移行であり、全件数は 45。
 
 サービスは受信した要求を syscall 6 へ渡す。読み取り権限の判定と資料バイトの提供は引き続きカーネルが行う。
@@ -317,3 +318,27 @@ ELF の出自だけで権限を与えず、既存のプロセス別 capability �
 クライアントの空間を保持し、古い通信・資料権限を拒否して読み取りを再開する。
 
 [検証記録](../docs/native-os/SERVICE_ELF_VALIDATION.md)。ディスク、動的リンク、実行中の bundle 差し替えは対象外。
+
+## M3f のクライアント ELF と起動契約
+
+`apps/document-client/` は復旧クライアントの独立 package。旧 recovery_program.S を移し、カーネルへの
+命令列の組み込みを除いた。runner は probe / service / client の三つの ELF を先に作り、各ハッシュを記録する。
+`recovery-*` の初回起動は双方を ELF からロードし、再起動時は service だけをロードする。
+
+| 起動レジスター | クライアント PID 0 | サービス PID 1 |
+| --- | --- | --- |
+| r8 / r9 | 自身の送信 / 受信 | 自身の送信 / 受信 |
+| r11 | 自身の資料権限 | 0（資料権限を発行しない） |
+| r10 / r14 | 0（相手の権限を渡さない） | 0 |
+| r12 / r13 / r15 | PID / 試験モード / 世代 | PID / 試験モード / 世代 |
+
+その他の汎用レジスターはゼロ。entry、stack、CPU 権限と flags はカーネルが設定する。
+`launch::recovery_frame` は確保前に契約を確認し、初回と再起動に共通で使う。
+資料の判定は IPC で確認した実際の送信者に結び付け、サービス自身への読み取り権限は不要。
+再接続の 24-byte 応答はクライアント自身の新しい send / receive / document のみ。
+各 ELF は未発行ハンドルと送受信の取り違えを試し、クライアントはサービス専用操作の拒否も確認する。
+再接続後は古い資料権限・ゼロ権限の両方が拒否され、認可済みの読み取りだけを再開する。
+
+従来の M3a/M3b 試験には負の検証用に相手のハンドルを渡す経路が残る。この契約は復旧 ELF の経路を対象とする。
+log / yield / exit と役割限定 syscall 6 / 7 は既存の契約を維持し、一般的な権限委譲 API は追加しない。
+[検証記録](../docs/native-os/CLIENT_ELF_VALIDATION.md)。全 45 ケース。実機や実行中の ELF 差し替えは未対応。

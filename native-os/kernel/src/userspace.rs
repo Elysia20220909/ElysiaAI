@@ -68,14 +68,11 @@ static mut ACTIVE: bool = false;
 global_asm!(
     include_str!("user_program.S"),
     include_str!("ipc_program.S"),
-    include_str!("document_program.S"),
-    include_str!("recovery_program.S")
+    include_str!("document_program.S")
 );
 unsafe extern "C" {
     static user_image_start: u8;
     static user_image_end: u8;
-    static recovery_image_start: u8;
-    static recovery_image_end: u8;
 }
 
 /// Called on the kernel root with interrupts disabled and no live processes.
@@ -98,9 +95,13 @@ unsafe fn prepare(
             [[0; 2]; 2]
         };
         let documents = if document_mode(mode) {
-            (&mut *ptr::addr_of_mut!(DOCUMENTS))
-                .start_pair()
-                .unwrap_or_else(|_| platform::fail("documents-start"))
+            let service = &mut *ptr::addr_of_mut!(DOCUMENTS);
+            (if recovery_mode(mode) {
+                service.start_client()
+            } else {
+                service.start_pair()
+            })
+            .unwrap_or_else(|_| platform::fail("documents-start"))
         } else {
             [0; 2]
         };
@@ -132,17 +133,30 @@ unsafe fn build_process(
     limit: usize,
 ) -> Result<(Process, Space), &'static str> {
     unsafe {
-        let (start, end) = if recovery_mode(mode) {
-            (
-                ptr::addr_of!(recovery_image_start),
-                ptr::addr_of!(recovery_image_end),
-            )
+        // Construct authority before allocating so invalid launch contracts cannot leak frames.
+        let authority = if recovery_mode(mode) {
+            elysia_kernel::launch::recovery_frame(pid, mode, generation, handles, documents)?
         } else {
-            (
-                ptr::addr_of!(user_image_start),
-                ptr::addr_of!(user_image_end),
-            )
+            Frame {
+                r12: pid as u64,
+                r13: mode as u64,
+                r14: if document_mode(mode) {
+                    documents[1 - pid]
+                } else {
+                    GENERATION
+                },
+                r15: generation,
+                r11: documents[pid],
+                r8: handles[pid][0],
+                r9: handles[pid][1],
+                r10: handles[1 - pid][0],
+                ..Frame::EMPTY
+            }
         };
+        let (start, end) = (
+            ptr::addr_of!(user_image_start),
+            ptr::addr_of!(user_image_end),
+        );
         let length = end as usize - start as usize;
         if length > PAGE as usize {
             return Err("user-image-size");
@@ -151,6 +165,13 @@ unsafe fn build_process(
             let loaded = Space::from_elf(allocator, pid, crate::elf_loader::SERVICE, limit)?;
             platform::log(format_args!(
                 "kernel:service-elf-loaded generation={generation} entry={:#x}",
+                loaded.1
+            ));
+            loaded
+        } else if recovery_mode(mode) {
+            let loaded = Space::from_elf(allocator, pid, crate::elf_loader::CLIENT, limit)?;
+            platform::log(format_args!(
+                "kernel:client-elf-loaded entry={:#x}",
                 loaded.1
             ));
             loaded
@@ -172,19 +193,7 @@ unsafe fn build_process(
             ss: 0x23,
             rsp: STACK + PAGE,
             rflags: if preemptive(mode) { 0x202 } else { 2 },
-            r12: pid as u64,
-            r13: mode as u64,
-            r14: if document_mode(mode) {
-                documents[1 - pid]
-            } else {
-                GENERATION
-            },
-            r15: generation,
-            r11: documents[pid],
-            r8: handles[pid][0],
-            r9: handles[pid][1],
-            r10: handles[1 - pid][0],
-            ..Frame::EMPTY
+            ..authority
         };
         Ok((
             Process {

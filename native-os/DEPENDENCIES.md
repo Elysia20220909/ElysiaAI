@@ -104,3 +104,10 @@ Cargo は `--locked` で取得内容を検査する。Rust と既存ホスト用
 新規 build script は linker.ld の変更追跡のみ。kernel build script は明示した二つの ELF の存在と変更を追跡する。
 外部依存・CI・hooks・同梱バイナリ・認証・通信・インストール処理を追加しない。
 ソースと runner の呼び出しを確認してからローカルビルドと QEMU 試験を実行した。
+
+## M3f の内部クライアント
+
+依存なしの `elysia-document-client` を追加。復旧クライアントのアセンブリを移し、起動権限の検査を追加した。
+新規 build script は linker.ld の変更追跡のみ。kernel は明示した三つの ELF ファイルを追跡する。
+ソース・依存・build script・hooks・CI・同梱バイナリ・認証・通信の変更を読み取り確認した。
+新しい外部依存、インストール、通信、認証処理、CI、配布物はない。ローカルビルド・試験だけを実施する。

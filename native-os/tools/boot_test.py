@@ -330,6 +330,17 @@ def verify_recovery(case: str, output: str) -> list[str]:
     errors = []
     lines = output.splitlines()
     count = 8 if case in ("recovery-repeat", "recovery-limit") else 1
+    if lines.count("kernel:client-elf-loaded entry=0x40000010") != 1:
+        errors.append("client ELF entry was not loaded exactly once")
+    if lines.count("kernel:document-serve pid=0 result=-13") != 1:
+        errors.append("client acquired service-only operation")
+    for pid, expected in ((0, 1), (1, count + 1)):
+        for operation in (3, 4):
+            if lines.count(f"kernel:ipc-result pid={pid} op={operation} result=-13") != expected:
+                errors.append("wrong-operation startup handle was not rejected")
+            invalid = expected + (count if pid == 0 else 0)
+            if lines.count(f"kernel:ipc-result pid={pid} op={operation} result=-9") != invalid:
+                errors.append("unissued or stale startup handle was not rejected")
     loaded = re.findall(r"kernel:service-elf-loaded generation=(\d+) entry=(0x[0-9a-f]+)", output)
     if loaded != [(str(g), "0x40000010") for g in range(count + 1)]:
         errors.append("service did not load ELF entry for every generation")
@@ -343,15 +354,13 @@ def verify_recovery(case: str, output: str) -> list[str]:
             or not live or not reclaimed or int(reclaimed[0][1]) <= int(live[0][1])):
         errors.append("service reclamation did not preserve client frames")
     statuses = [int(n) for n in re.findall(r"^kernel:document-response status=(-?\d+)$", output, re.M)]
-    if statuses != [-9, 0] * count:
+    if statuses != [-9, -9, 0] * count:
         errors.append("old document grant accepted or resumed read missing")
     for marker, expected in (("kernel:reconnect pid=0 result=24", count),
             ("kernel:reconnect pid=0 result=-14", count),
             ("kernel:reconnect pid=0 result=-22", count),
             ("kernel:reconnect pid=0 result=-11", 2 if case == "recovery-limit" else 1),
             ("kernel:reconnect pid=1 result=-13", count + 1),
-            ("kernel:ipc-result pid=0 op=3 result=-9", count),
-            ("kernel:ipc-result pid=0 op=4 result=-9", count),
             ("kernel:documents-clean", 1)):
         if lines.count(marker) != expected:
             errors.append(f"missing recovery evidence: {marker}")
@@ -451,7 +460,8 @@ def run(args: argparse.Namespace) -> int:
     kernel = ROOT / "target/x86_64-unknown-none/release/elysia-kernel"
     user_elf = ROOT / "target/x86_64-unknown-none/release/elysia-user-probe"
     service_elf = ROOT / "target/x86_64-unknown-none/release/elysia-document-service"
-    for package, directory in (("elysia-user-probe", "probe"), ("elysia-document-service", "document-service")):
+    client_elf = ROOT / "target/x86_64-unknown-none/release/elysia-document-client"
+    for package, directory in (("elysia-user-probe", "probe"), ("elysia-document-service", "document-service"), ("elysia-document-client", "document-client")):
         print(f"Building {package}", flush=True)
         print(checked([
             "cargo", "+stable", "rustc", "--locked", "-p", package,
@@ -462,6 +472,7 @@ def run(args: argparse.Namespace) -> int:
     kernel_environment = os.environ.copy()
     kernel_environment["ELYSIA_USER_ELF"] = str(user_elf)
     kernel_environment["ELYSIA_SERVICE_ELF"] = str(service_elf)
+    kernel_environment["ELYSIA_CLIENT_ELF"] = str(client_elf)
     print("Building kernel", flush=True)
     print(checked([
         "cargo", "+stable", "rustc", "--locked", "-p", "elysia-kernel", "--bin", "elysia-kernel",
@@ -523,7 +534,7 @@ def run(args: argparse.Namespace) -> int:
         "memory_mib": 256, "vcpus": 1, "accelerator": "tcg", "network": "none",
         "qemu_sha256": sha256(qemu), "firmware_code_sha256": sha256(code),
         "firmware_vars_sha256": sha256(variables), "kernel_sha256": sha256(kernel),
-        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "service_elf_sha256": sha256(service_elf), "cases": results,
+        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "service_elf_sha256": sha256(service_elf), "client_elf_sha256": sha256(client_elf), "cases": results,
     }
     (out / "results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return 0 if all(case["passed"] for case in results) else 1

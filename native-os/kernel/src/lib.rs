@@ -3,6 +3,7 @@
 
 pub mod documents;
 pub mod ipc;
+pub mod launch;
 pub mod recovery;
 pub mod user_elf;
 

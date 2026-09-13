@@ -133,3 +133,5 @@ QEMU はマシン全体のエミュレーションと、画面を表示しない
 [起動オプション](https://www.qemu.org/docs/master/system/invocation.html)
 
 M3e の復旧対象サービスは `apps/document-service` の ELF を使う。カーネル内のクライアント試験コードと別にビルドする。資料データと認可判断は依然カーネル側に置く。[検証と境界](SERVICE_ELF_VALIDATION.md)。
+
+M3f の復旧経路では client / service を別々の ELF からロードする。起動フレームは自身の送受信ハンドルだけを含み、資料権限は client のみに発行する。[起動契約と検証](CLIENT_ELF_VALIDATION.md)。

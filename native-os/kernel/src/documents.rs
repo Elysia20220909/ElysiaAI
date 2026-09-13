@@ -36,6 +36,13 @@ impl Service {
     };
     /// Issued by the kernel, never by untrusted requests. No host files are loaded.
     pub fn start_pair(&mut self) -> Result<[u64; 2], u64> {
+        self.start(true)
+    }
+    /// Recovery services only dispatch client requests; they receive no document grant.
+    pub fn start_client(&mut self) -> Result<[u64; 2], u64> {
+        self.start(false)
+    }
+    fn start(&mut self, include_service: bool) -> Result<[u64; 2], u64> {
         if !self.is_clean() {
             return Err(EAGAIN);
         }
@@ -43,6 +50,9 @@ impl Service {
         let end = self.next_token.checked_add(2).ok_or(EBADF)?;
         let first = self.next_token;
         self.grants = core::array::from_fn(|pid| {
+            if pid == SERVICE && !include_service {
+                return None;
+            }
             Some(Grant {
                 token: first + pid as u64,
                 generation,
@@ -51,7 +61,7 @@ impl Service {
         });
         self.generation = generation;
         self.next_token = end;
-        Ok([first, first + 1])
+        Ok([first, if include_service { first + 1 } else { 0 }])
     }
     pub fn can_receive(&self, pid: usize) -> bool {
         pid != SERVICE || self.pending.is_none()
@@ -165,6 +175,29 @@ mod tests {
     }
     fn status(response: [u8; 64]) -> u64 {
         u64::from_le_bytes(response[..8].try_into().unwrap())
+    }
+    #[test]
+    fn client_only_lifetimes_never_issue_a_service_grant() {
+        let mut s = Service::EMPTY;
+        let mut old = 0;
+        for _ in 0..9 {
+            let h = s.start_client().unwrap();
+            assert_ne!(h[0], 0);
+            assert_eq!(h[1], 0);
+            assert!(s.grants[SERVICE].is_none());
+            assert!(s.grant(SERVICE, h[0]).is_err());
+            assert!(s.grant(SERVICE, h[0] + 1).is_err());
+            assert_eq!(s.serve(SERVICE), Err(EAGAIN));
+            for denied in [0, old, h[0] + 1] {
+                let response = call(&mut s, request(1, denied, 0, 17));
+                assert_eq!(u64::from_le_bytes(response[..8].try_into().unwrap()), EBADF);
+                assert_eq!(&response[8..], &[0; 56]);
+            }
+            assert_eq!(&call(&mut s, request(1, h[0], 0, 17))[16..33], DOCUMENTS[0]);
+            old = h[0];
+            s.close_process(SERVICE);
+            assert!(s.is_clean());
+        }
     }
     #[test]
     fn read_is_bound_to_actual_caller_and_grant_target() {
