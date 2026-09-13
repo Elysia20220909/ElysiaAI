@@ -77,6 +77,8 @@ bun scripts/manage.ts dev
 `setup-python` は `.venv` を準備して Python の依存関係を導入します。
 既存の設定や作業中の変更を確認してから実行してください。
 
+`dev` は既存アプリの FastAPI Kernel と Bun サーバーを起動します。Bun サーバーは HTTP proxy として FastAPI へ要求を中継します。ここでの Kernel は Python サービスを指し、独自 OS のカーネルではありません。
+
 ローカル処理を重視しますが、外部 API、モデル取得、連携先への通信は設定と利用機能に依存します。
 「データが必ず端末外へ出ない」という保証ではありません。
 接続先・権限・保存するデータは [セキュリティ方針](SECURITY.md) に沿って確認します。
