@@ -37,6 +37,12 @@ pub enum BootMode {
     IpcRevoke = 24,
     IpcDeadlock = 25,
     IpcQueue = 26,
+    DocumentRead = 27,
+    DocumentDenied = 28,
+    DocumentRevoke = 29,
+    DocumentRange = 30,
+    DocumentServiceExit = 31,
+    DocumentServiceFault = 32,
 }
 
 impl BootMode {
@@ -69,6 +75,12 @@ impl BootMode {
             24 => Some(Self::IpcRevoke),
             25 => Some(Self::IpcDeadlock),
             26 => Some(Self::IpcQueue),
+            27 => Some(Self::DocumentRead),
+            28 => Some(Self::DocumentDenied),
+            29 => Some(Self::DocumentRevoke),
+            30 => Some(Self::DocumentRange),
+            31 => Some(Self::DocumentServiceExit),
+            32 => Some(Self::DocumentServiceFault),
             _ => None,
         }
     }

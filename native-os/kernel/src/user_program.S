@@ -2,6 +2,8 @@
 .global user_image_start
 .global user_image_end
 user_image_start:
+    cmp r13, 27
+    jae document_start
     cmp r13, 21
     jae ipc_start
     cmp r13, 18

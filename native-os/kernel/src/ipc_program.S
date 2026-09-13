@@ -232,4 +232,3 @@ ipc_ok:
     cmp rax, 2
     jne user_fail
     jmp user_exit
-user_image_end:

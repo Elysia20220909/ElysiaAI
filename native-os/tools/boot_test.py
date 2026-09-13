@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and test the M1/M2a/M2b/M2c kernel in a bounded, headless QEMU process."""
+"""Build and test the native OS kernel and document service in a bounded, headless QEMU process."""
 from __future__ import annotations
 
 import argparse
@@ -66,6 +66,16 @@ for name, mode in IPC_CASES.items():
     CASES[name] = (49, ["kernel:allocation-rollback", "kernel:user-spaces-ready",
                        "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
                        "user:log pid=0 hex=6f6b", "kernel:ipc-clean",
+                       f"kernel:ipc-tests-passed mode={mode}"])
+DOCUMENT_CASES = {"document-read": 27, "document-denied": 28, "document-revoke": 29,
+                  "document-range": 30, "document-service-exit": 31, "document-service-fault": 32}
+DOCUMENT_STATUSES = {"document-read": [0, 0, 0], "document-denied": [0, -9, -9, -38, -22],
+                     "document-revoke": [0, 0, -9], "document-range": [0, -22, -22, -90],
+                     "document-service-exit": [], "document-service-fault": []}
+for name, mode in DOCUMENT_CASES.items():
+    CASES[name] = (49, ["kernel:allocation-rollback", "kernel:user-spaces-ready",
+                       "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
+                       "user:log pid=0 hex=6f6b", "kernel:documents-clean", "kernel:ipc-clean",
                        f"kernel:ipc-tests-passed mode={mode}"])
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
           "kernel:entered", "kernel:exceptions-ready"]
@@ -138,8 +148,10 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
                     errors.append(f"stopped process {pid} resumed")
     if case in LIFECYCLE_CASES:
         errors.extend(verify_lifecycle(case, output))
-    if case in IPC_CASES:
+    if case in IPC_CASES or case in DOCUMENT_CASES:
         errors.extend(verify_ipc(case, output))
+    if case in DOCUMENT_CASES:
+        errors.extend(verify_documents(case, output))
     return errors
 
 
@@ -246,7 +258,7 @@ def verify_ipc(case: str, output: str) -> list[str]:
         "ipc-deadlock": ["kernel:ipc-result pid=1 op=4 result=-35", "kernel:ipc-wake pid=0 result=2"],
         "ipc-queue": ["kernel:ipc-result pid=0 op=3 result=-11"],
     }
-    for marker in required[case]:
+    for marker in required.get(case, []):
         if marker not in lines:
             errors.append(f"missing IPC evidence: {marker}")
     if case == "ipc-echo":
@@ -255,6 +267,33 @@ def verify_ipc(case: str, output: str) -> list[str]:
         for pid in (0, 1):
             if lines.count(f"kernel:ipc-result pid={pid} op=3 result=2") != 2:
                 errors.append("missing request/reply sends")
+    return errors
+
+
+def verify_documents(case: str, output: str) -> list[str]:
+    errors = []
+    lines = output.splitlines()
+    statuses = [int(n) for n in re.findall(r"^kernel:document-response status=(-?\d+)$", output, re.M)]
+    if statuses != DOCUMENT_STATUSES[case]:
+        errors.append("incorrect document responses")
+    if lines.count("kernel:documents-clean") != 1:
+        errors.append("document grants or pending work not reclaimed")
+    if lines.count("kernel:document-serve pid=0 result=-13") != 1:
+        errors.append("missing client service-call rejection")
+    for marker in ("kernel:document-serve pid=1 result=-14",
+                   "kernel:document-serve pid=1 result=-11",
+                   "kernel:document-serve pid=1 result=64",
+                   "kernel:ipc-result pid=1 op=4 result=-11"):
+        if lines.count(marker) != len(statuses):
+            errors.append(f"missing pending-request protection: {marker}")
+    if case in ("document-service-exit", "document-service-fault"):
+        reason = "exit pid=1 status=0" if case.endswith("exit") else "stopped pid=1 vector=6 error=0x0 address=0x0"
+        for marker in (f"kernel:user-{reason}", "kernel:ipc-result pid=0 op=3 result=-32"):
+            if marker not in lines:
+                errors.append(f"missing service closure evidence: {marker}")
+        if not any(f"kernel:ipc-{operation} pid=0 {suffix}result=-32" in lines
+                   for operation, suffix in (("wake", ""), ("result", "op=4 "))):
+            errors.append("client did not observe service closure")
     return errors
 
 

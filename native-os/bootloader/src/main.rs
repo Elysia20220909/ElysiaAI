@@ -52,6 +52,12 @@ fn mode() -> BootMode {
         "ipc-revoke" => BootMode::IpcRevoke,
         "ipc-deadlock" => BootMode::IpcDeadlock,
         "ipc-queue" => BootMode::IpcQueue,
+        "document-read" => BootMode::DocumentRead,
+        "document-denied" => BootMode::DocumentDenied,
+        "document-revoke" => BootMode::DocumentRevoke,
+        "document-range" => BootMode::DocumentRange,
+        "document-service-exit" => BootMode::DocumentServiceExit,
+        "document-service-fault" => BootMode::DocumentServiceFault,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

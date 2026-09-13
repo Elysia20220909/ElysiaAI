@@ -1,6 +1,6 @@
 """Regression tests for the boot-result classifier, including false-success cases."""
 import unittest
-from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, verify_output
+from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, verify_output
 
 
 class VerdictTests(unittest.TestCase):
@@ -53,6 +53,28 @@ class VerdictTests(unittest.TestCase):
             if case not in ("ipc-peer-exit", "ipc-peer-fault"):
                 markers.extend(["kernel:user-exit pid=1 status=0", "kernel:reaped pid=1"])
             markers.extend(["kernel:ipc-clean free=50000", f"kernel:ipc-tests-passed mode={IPC_CASES[case]}"])
+        if case in DOCUMENT_CASES:
+            markers = ["kernel:allocation-rollback boundaries=14 free=50000",
+                       "kernel:user-spaces-ready roots=0x100000,0x200000",
+                       "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
+                       "kernel:document-serve pid=0 result=-13"]
+            for status in DOCUMENT_STATUSES[case]:
+                markers.extend(["kernel:ipc-result pid=1 op=4 result=-11",
+                                "kernel:document-serve pid=1 result=-14",
+                                f"kernel:document-response status={status}",
+                                "kernel:document-serve pid=1 result=64",
+                                "kernel:document-serve pid=1 result=-11"])
+            if not DOCUMENT_STATUSES[case]:
+                markers.extend(["kernel:ipc-block pid=0",
+                    "kernel:user-exit pid=1 status=0" if case.endswith("exit") else
+                    "kernel:user-stopped pid=1 vector=6 error=0x0 address=0x0",
+                    "kernel:reaped pid=1", "kernel:ipc-wake pid=0 result=-32",
+                    "kernel:ipc-result pid=0 op=3 result=-32"])
+            markers.extend(["user:log pid=0 hex=6f6b", "kernel:user-exit pid=0 status=0", "kernel:reaped pid=0"])
+            if DOCUMENT_STATUSES[case]:
+                markers.extend(["kernel:user-exit pid=1 status=0", "kernel:reaped pid=1"])
+            markers.extend(["kernel:documents-clean", "kernel:ipc-clean free=50000",
+                            f"kernel:ipc-tests-passed mode={DOCUMENT_CASES[case]}"])
         if case in LIFECYCLE_CASES:
             count = 64 if case == "user-recycle" else 1
             markers = ["kernel:allocation-rollback boundaries=12 free=50000"]
@@ -79,6 +101,15 @@ class VerdictTests(unittest.TestCase):
         for case, (code, _) in CASES.items():
             with self.subTest(case=case):
                 self.assertEqual(verify_output(case, code, self.transcript(case)), [])
+
+    def test_documents_require_denial_replay_protection_and_reclamation(self):
+        for case, marker in (("document-denied", "kernel:document-response status=-9"),
+                             ("document-revoke", "kernel:documents-clean"),
+                             ("document-range", "kernel:document-serve pid=1 result=-14"),
+                             ("document-read", "kernel:document-serve pid=1 result=-11"),
+                             ("document-service-fault", "kernel:ipc-wake pid=0 result=-32")):
+            with self.subTest(case=case):
+                self.assertTrue(verify_output(case, 49, self.transcript(case).replace(marker, "omitted", 1)))
 
     def test_lifecycle_requires_reclamation_and_stable_counts(self):
         output = self.transcript("user-recycle")
