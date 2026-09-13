@@ -78,6 +78,7 @@ class VerdictTests(unittest.TestCase):
         if case in RECOVERY_CASES:
             count = 8 if case in ("recovery-repeat", "recovery-limit") else 1
             markers = ["kernel:allocation-rollback boundaries=14 free=50000",
+                       "kernel:service-elf-loaded generation=0 entry=0x40000010",
                        "kernel:user-spaces-ready roots=0x100000,0x200000",
                        "kernel:recovery-live generation=0 free=49972",
                        "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
@@ -95,7 +96,8 @@ class VerdictTests(unittest.TestCase):
                 markers.extend(["kernel:reconnect pid=0 result=-14", "kernel:reconnect pid=0 result=-22"])
                 if case == "recovery-allocation":
                     markers.extend(["kernel:restart-allocation-rollback free=49986", "kernel:reconnect pid=0 result=-12"])
-                markers.extend([f"kernel:recovery-live generation={generation + 1} free=49972",
+                markers.extend([f"kernel:service-elf-loaded generation={generation + 1} entry=0x40000010",
+                                f"kernel:recovery-live generation={generation + 1} free=49972",
                                 "kernel:reconnect pid=0 result=24", "kernel:reconnect pid=1 result=-13",
                                 "kernel:ipc-result pid=0 op=3 result=-9", "kernel:ipc-result pid=0 op=4 result=-9",
                                 "kernel:document-response status=-9", "kernel:document-response status=0"])
@@ -166,6 +168,17 @@ class VerdictTests(unittest.TestCase):
             ("recovery-budget", "kernel:budget-stopped pid=1 ticks=64", "kernel:budget-stopped pid=1 ticks=63")):
             with self.subTest(case=case, marker=old):
                 self.assertTrue(verify_output(case, 49, self.transcript(case).replace(old, new, 1)))
+
+    def test_recovery_requires_elf_load_for_each_generation(self):
+        for before, after in (
+            ("kernel:service-elf-loaded generation=0 entry=0x40000010", "omitted"),
+            ("kernel:service-elf-loaded generation=1 entry=0x40000010", "omitted"),
+            ("generation=1 entry=0x40000010", "generation=0 entry=0x40000010"),
+            ("entry=0x40000010", "entry=0x40000000"),
+        ):
+            with self.subTest(before=before, after=after):
+                output = self.transcript("recovery-fault").replace(before, after)
+                self.assertTrue(verify_output("recovery-fault", 49, output))
 
     def test_recovery_cannot_resume_stopped_service_before_replacement(self):
         output = self.transcript("recovery-fault").replace("kernel:reaped pid=1", "kernel:reaped pid=1\nkernel:user-switch from=0 to=1", 1)

@@ -131,3 +131,5 @@ QEMU はマシン全体のエミュレーションと、画面を表示しない
 実装時は `-display none` と明示的なシリアル出力を設定し、ホストの画面や入力を操作しない。
 [QEMU の概要](https://www.qemu.org/docs/master/system/introduction.html) /
 [起動オプション](https://www.qemu.org/docs/master/system/invocation.html)
+
+M3e の復旧対象サービスは `apps/document-service` の ELF を使う。カーネル内のクライアント試験コードと別にビルドする。資料データと認可判断は依然カーネル側に置く。[検証と境界](SERVICE_ELF_VALIDATION.md)。

@@ -147,7 +147,14 @@ unsafe fn build_process(
         if length > PAGE as usize {
             return Err("user-image-size");
         }
-        let (space, entry) = if mode >= 39 {
+        let (space, entry) = if recovery_mode(mode) && pid == 1 {
+            let loaded = Space::from_elf(allocator, pid, crate::elf_loader::SERVICE, limit)?;
+            platform::log(format_args!(
+                "kernel:service-elf-loaded generation={generation} entry={:#x}",
+                loaded.1
+            ));
+            loaded
+        } else if mode >= 39 {
             let loaded = Space::from_elf(allocator, pid, crate::elf_loader::IMAGE, limit)?;
             platform::log(format_args!(
                 "kernel:elf-loaded pid={pid} entry={:#x}",

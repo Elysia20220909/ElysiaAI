@@ -1,0 +1,73 @@
+// Dedicated document service. Handles arrive only from the kernel.
+.section .text.entry,"ax"
+    ud2
+    .space 14
+.global _start
+_start:
+    cmp r12, 1
+    jne recovery_fail
+    cmp qword ptr [0x60000388], 0x2468
+    jne recovery_fail
+    cmp qword ptr [0x60000390], 0
+    jne recovery_fail
+    mov qword ptr [0x60000390], 0x2468
+    mov eax, 7
+    mov edi, 0x60000200
+    mov esi, 24
+    int 0x80
+    cmp rax, -13
+    jne recovery_fail
+    xor ebx, ebx
+recovery_service_receive:
+    mov eax, 4
+    mov rdi, r9
+    mov esi, 0x60000000
+    mov edx, 64
+    int 0x80
+    cmp rax, -32
+    je recovery_exit
+    cmp rax, 32
+    jne recovery_fail
+    inc ebx
+    test r15, r15
+    jz recovery_inject
+    cmp ebx, 3
+    je recovery_inject
+    mov eax, 6
+    mov edi, 0x60000100
+    mov esi, 64
+    int 0x80
+    cmp rax, 64
+    jne recovery_fail
+    mov eax, 3
+    mov rdi, r8
+    mov esi, 0x60000100
+    mov edx, 64
+    int 0x80
+    cmp rax, 64
+    jne recovery_fail
+    jmp recovery_service_receive
+recovery_inject:
+    cmp r13, 34
+    je recovery_exit
+    cmp r13, 35
+    je recovery_spin
+    ud2
+recovery_spin:
+    jmp recovery_spin
+recovery_exit:
+    mov eax, 2
+    xor edi, edi
+    int 0x80
+    ud2
+recovery_fail:
+    mov eax, 2
+    mov edi, 1
+    int 0x80
+    ud2
+
+.section .data,"aw"
+    .space 0x388
+    .quad 0x2468
+.section .bss,"aw",@nobits
+    .space 16

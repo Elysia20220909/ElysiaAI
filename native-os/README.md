@@ -1,7 +1,7 @@
 # ElysiaAI // INFINITE RESONANCE — 最初のカーネル
 
 UEFI ローダーから独自の x86-64 カーネルへ制御を渡し、物理ページを管理して
-独自ページテーブルへ切り替える、M1 / M2a / M2b / M2c / M3a / M3b / M3c / M3d の実装。固定した 2 プロセスを Ring 3 で動かし、
+独自ページテーブルへ切り替える、M1 / M2a / M2b / M2c / M3a / M3b / M3c / M3d / M3e の実装。固定した 2 プロセスを Ring 3 で動かし、
 M2c ではタイマーによる強制切替と、終了・故障・予算到達時の資源回収を加えた。
 M3a は固定した 2 者の IPC、権限ハンドル、待機と起床を扱う。
 M3b では、許可した合成資料を RAM から読み取るサービスを加えた。
@@ -135,8 +135,9 @@ QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 ```powershell
 cargo +stable fmt --manifest-path native-os/Cargo.toml --all -- --check
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel --lib --tests --locked -- -D warnings
+$env:ELYSIA_SERVICE_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-document-service).Path
 $env:ELYSIA_USER_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-user-probe).Path
-cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel -p elysia-user-probe --target x86_64-unknown-none --locked -- -D warnings
+cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel -p elysia-user-probe -p elysia-document-service --target x86_64-unknown-none --locked -- -D warnings
 $env:ELYSIA_KERNEL_PATH = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-kernel).Path
 $env:ELYSIA_BOOT_MODE = 'normal'
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-bootloader --target x86_64-unknown-uefi --locked -- -D warnings
@@ -300,4 +301,19 @@ runner が先にビルドし、`ELYSIA_USER_ELF` のファイルを kernel の�
 `elf-noexecute` は故障隔離、`elf-reject` は不正入力 9 種、`elf-rollback` は全 14 箇所の部分確保失敗を扱う。
 ELF ケースは各プロセス 64 tick。ゲスト合格コード 51、runner 成功は 0。
 リンカー設定変更も build script の入力として追跡する。手動ビルド時もユーザー ELF を先に作り、
-`ELYSIA_USER_ELF` を設定してからカーネルをビルドする。
+`ELYSIA_USER_ELF` と `ELYSIA_SERVICE_ELF` を設定してからカーネルをビルドする。
+
+## M3e の資料サービス ELF
+
+`apps/document-service/` は復旧試験のサービス側だけを独立させた内部 package。
+`recovery-*` の 6 ケースでは PID 1 の初回起動・再起動とも検査済み ELF entry を使う。
+runner は probe と service を先にビルドし、`ELYSIA_SERVICE_ELF` を追加で kernel に渡す。
+カーネル内の recovery_program.S はクライアント専用になった。旧 `document-*` の 6 ケースは
+M3b の試験コードを維持する。ケースの追加ではなく既存復旧経路の移行であり、全件数は 45。
+
+サービスは受信した要求を syscall 6 へ渡す。読み取り権限の判定と資料バイトの提供は引き続きカーネルが行う。
+ELF の出自だけで権限を与えず、既存のプロセス別 capability 検査を通す。
+初期データと BSS を毎世代確認し、故障・終了・CPU 上限で回収後、新しいサービスをロードする。
+クライアントの空間を保持し、古い通信・資料権限を拒否して読み取りを再開する。
+
+[検証記録](../docs/native-os/SERVICE_ELF_VALIDATION.md)。ディスク、動的リンク、実行中の bundle 差し替えは対象外。

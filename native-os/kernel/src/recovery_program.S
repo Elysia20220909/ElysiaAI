@@ -4,7 +4,7 @@
 .global recovery_image_end
 recovery_image_start:
     test r12, r12
-    jnz recovery_service
+    jnz recovery_fail
     mov qword ptr [0x60000300], 0x13579
     // A live service cannot be replaced.
     call recovery_connect
@@ -143,51 +143,6 @@ recovery_receive:
     mov edx, 64
     int 0x80
     ret
-recovery_service:
-    cmp qword ptr [0x60000380], 0
-    jne recovery_fail
-    mov qword ptr [0x60000380], 0x2468
-    call recovery_connect
-    cmp rax, -13
-    jne recovery_fail
-    xor ebx, ebx
-recovery_service_receive:
-    mov eax, 4
-    mov rdi, r9
-    mov esi, 0x60000000
-    mov edx, 64
-    int 0x80
-    cmp rax, -32
-    je recovery_exit
-    cmp rax, 32
-    jne recovery_fail
-    inc ebx
-    test r15, r15
-    jz recovery_inject
-    cmp ebx, 3
-    je recovery_inject
-    mov eax, 6
-    mov edi, 0x60000100
-    mov esi, 64
-    int 0x80
-    cmp rax, 64
-    jne recovery_fail
-    mov eax, 3
-    mov rdi, r8
-    mov esi, 0x60000100
-    mov edx, 64
-    int 0x80
-    cmp rax, 64
-    jne recovery_fail
-    jmp recovery_service_receive
-recovery_inject:
-    cmp r13, 34
-    je recovery_exit
-    cmp r13, 35
-    je recovery_spin
-    ud2
-recovery_spin:
-    jmp recovery_spin
 recovery_ok:
     cmp qword ptr [0x60000300], 0x13579
     jne recovery_fail

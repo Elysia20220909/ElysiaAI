@@ -330,6 +330,9 @@ def verify_recovery(case: str, output: str) -> list[str]:
     errors = []
     lines = output.splitlines()
     count = 8 if case in ("recovery-repeat", "recovery-limit") else 1
+    loaded = re.findall(r"kernel:service-elf-loaded generation=(\d+) entry=(0x[0-9a-f]+)", output)
+    if loaded != [(str(g), "0x40000010") for g in range(count + 1)]:
+        errors.append("service did not load ELF entry for every generation")
     live = re.findall(r"kernel:recovery-live generation=(\d+) free=(\d+)", output)
     reclaimed = re.findall(r"kernel:service-reclaimed generation=(\d+) free=(\d+)", output)
     failures = count + (case == "recovery-limit")
@@ -447,15 +450,18 @@ def run(args: argparse.Namespace) -> int:
     out.mkdir(exist_ok=True)
     kernel = ROOT / "target/x86_64-unknown-none/release/elysia-kernel"
     user_elf = ROOT / "target/x86_64-unknown-none/release/elysia-user-probe"
-    print("Building standalone user ELF", flush=True)
-    print(checked([
-        "cargo", "+stable", "rustc", "--locked", "-p", "elysia-user-probe",
-        "--target", "x86_64-unknown-none", "--release", "--",
-        "-C", "relocation-model=static",
-        "-C", f"link-arg=-T{ROOT / 'apps/probe/linker.ld'}", "-C", "link-arg=--build-id=none",
-    ]), end="", flush=True)
+    service_elf = ROOT / "target/x86_64-unknown-none/release/elysia-document-service"
+    for package, directory in (("elysia-user-probe", "probe"), ("elysia-document-service", "document-service")):
+        print(f"Building {package}", flush=True)
+        print(checked([
+            "cargo", "+stable", "rustc", "--locked", "-p", package,
+            "--target", "x86_64-unknown-none", "--release", "--",
+            "-C", "relocation-model=static",
+            "-C", f"link-arg=-T{ROOT / 'apps' / directory / 'linker.ld'}", "-C", "link-arg=--build-id=none",
+        ]), end="", flush=True)
     kernel_environment = os.environ.copy()
     kernel_environment["ELYSIA_USER_ELF"] = str(user_elf)
+    kernel_environment["ELYSIA_SERVICE_ELF"] = str(service_elf)
     print("Building kernel", flush=True)
     print(checked([
         "cargo", "+stable", "rustc", "--locked", "-p", "elysia-kernel", "--bin", "elysia-kernel",
@@ -517,7 +523,7 @@ def run(args: argparse.Namespace) -> int:
         "memory_mib": 256, "vcpus": 1, "accelerator": "tcg", "network": "none",
         "qemu_sha256": sha256(qemu), "firmware_code_sha256": sha256(code),
         "firmware_vars_sha256": sha256(variables), "kernel_sha256": sha256(kernel),
-        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "cases": results,
+        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "service_elf_sha256": sha256(service_elf), "cases": results,
     }
     (out / "results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return 0 if all(case["passed"] for case in results) else 1
