@@ -1,162 +1,29 @@
-# 🌸 ElysiaAI // INFINITE RESONANCE
+# ElysiaAI // INFINITE RESONANCE
 
-### 感性と論理が共鳴する、次世代AI-Native OS。
+ElysiaAI は、カーネルから設計する独自の AI-Native OS を目指す長期開発プロジェクトです。
+日本語の主要な案内は [README.md](README.md) にまとめています。
 
-[![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
-[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
-[![技術者倫理 遵守済み](https://img.shields.io/badge/%E6%8A%80%E8%A1%93%E8%80%85%E5%80%AB%E7%90%86-%E9%81%B5%E5%AE%88%E6%B8%88%E3%81%BF-0a0a0a?style=for-the-badge&labelColor=ffffff)](https://技術者倫理.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
-[![Changelog](https://img.shields.io/badge/Changelog-Ja-blue?style=for-the-badge)](CHANGELOG.ja.md)
+現在は、資源回収と実行制御に、クライアントとサービスを別々の ELF にし、起動権限を整理した M3f の段階です。
+固定した 2 プロセスで、ログ・実行権の譲渡・終了と、不正なプロセスの停止後の継続を検証しています。
+無限ループの停止と、正常終了・故障を含む 64 世代の回収を Windows 上の QEMU で検証しています。
+固定した 2 プロセス間で依頼・応答と不正権限の拒否、相手終了時の待機解除を検証しています。
+資料は固定のテスト用データです。読み取り許可・範囲・失効をカーネルで検査します。
+サービスだけを再起動し、クライアントの状態を残して読み取りを再開できます。再起動は最大 8 回です。
+固定配置の静的 ELF を RAM から検査して動かせます。
+一般的な権限の委譲、汎用 ELF・ディスクからのロード、独自 OS 上の AI 推論、実機対応は未実装・未検証です。
+既存の Bun / Python / Tauri アプリはホスト OS 上で動く別の開発基盤です。
 
----
+- [構想・現在地・開発の入口](README.md)
+- [独自 OS の設計](docs/native-os/README.md) と [ビルド・試験手順](native-os/README.md)
+- [行動規範](.github/CODE_OF_CONDUCT.md)
+- [開発への参加](CONTRIBUTING.md)
+- [ライセンス：MIT OR Apache-2.0](LICENSE)
+- [セキュリティ方針と報告方法](SECURITY.md)
+- [English overview](README.en.md)
 
-## 🚀 Quick Start (5 min)
+ローカル処理を重視しますが、外部通信やデータ保存の範囲は設定と利用機能に依存します。
+実装状況と検証条件は、主要 README からリンクする記録で確認してください。
 
-ElysiaAIを最も速く体験する方法です。
+復旧対象サービスの初回起動と再起動を ELF ローダーへ統一しました。[M3e 検証記録](docs/native-os/SERVICE_ELF_VALIDATION.md)を参照してください。
 
-### 1. 準備
-- **Bun** (v1.1+) & **Python** (v3.11+)
-- **Ollama** (ローカル推論用: `llama3.2` 推奨)
-
-### 2. セットアップ
-```bash
-# リポジトリの取得
-git clone git@github.com:Elysia20220909/ElysiaAI.git
-cd ElysiaAI
-
-# 統合管理CLIによるセットアップ
-bun scripts/manage.ts setup
-bun scripts/manage.ts setup-python
-```
-
-### 3. 起動
-```bash
-bun scripts/manage.ts dev
-```
-> [!TIP]
-> ブラウザで `http://localhost:3000` を開くと、Elysia Desktop環境が展開されます。
-
-### 4. 依存ツールのセットアップ (重要)
-- **Milvus Lite**: セマンティック記憶（RAG）に使用されます。`bun scripts/manage.ts setup-python` で自動インストールされます。
-- **VOICEVOX**: 音声合成に使用されます。[公式サイト](https://voicevox.hiroshiba.jp/)からエンジンをダウンロードし、起動しておいてください。
-- **Windows セットアップ**: Windows環境では `scripts/setup-security.ps1` を実行して、セキュアなディレクトリ権限を設定することを推奨します。
-
----
-
-## 🧠 Why ElysiaAI?
-
-単なるチャットUIではありません。ElysiaAIは「思考」と「実行」の間に横たわる溝を埋めるために設計されました。
-
-- **Agent x Decision Tree**: AIが単に答えるだけでなく、決定木（Decision Tree）に基づいて論理的なステップを自律的に実行します。
-- **Sovereign Privacy**: ローカルLLM（Ollama）とMilvus Liteによる100%ローカルなRAG。あなたの思考は、あなたのマシンの外に出ることはありません。
-- **Resonance Design**: ランドリー工場の熱気から生まれた、美しく、それでいて強靭なUI/UX。
-
----
-
-## 🏗️ Architecture: The Resonance Loop
-
-ElysiaAIの心臓部は、論理（Python Kernel）と高速通信（Bun/Elysia.js）の共鳴によって動いています。
-
-```mermaid
-graph LR
-    U[User] <-->|Socket| B[Bun Backend]
-    B <-->|IPC/HTTP| P[Python Kernel]
-    P --> T[Tool Execution]
-    P --> D[Decision Tree]
-    P --> R[Local RAG]
-```
-
-- **Bun/Elysia.js**: 秒間数万のリクエストを処理する「神経」。
-- **Python Kernel**: 複雑な推論とツール実行を担う「脳」。
-- **Milvus Lite**: 全ての知識をセマンティックに記憶する「海」。
-
----
-
-## 🗺️ ロードマップ
-
-ElysiaAIは以下のフェーズを経て進化します。
-
-### Phase 1: Foundation (現在)
-- [x] Bun & Python Kernelの統合
-- [x] ローカルRAG (Milvus Lite) の実装
-- [x] 統合管理CLI (manage.ts) の開発
-
-### Phase 2: Resonance (次期)
-- [ ] **複数ユーザー対応**: マルチユーザー管理と権限制御 (RBAC)。
-- [ ] **メモリ暗号化**: Milvus記憶領域とログの AES-256-GCM 暗号化。
-- [ ] **高度なCI/CD**: 自動テストカバレッジの向上。
-
-### Phase 3: Transcendence
-- [ ] **AbyssRTOS 統合**: 完全隔離された実行環境。
-- [ ] **Shield Agent**: Rustによるリアルタイム脅威検知。
-- [ ] **Sovereign Mesh**: 分散型AI OSネットワーク。
-
----
-
-## 🔒 セキュリティ概念
-
-ElysiaAIは、以下の独自概念でユーザーの主権を保護します。
-
-- **Responsible AI**: ユーザーデータ、APIキー、非公開文書、チャットログ、RAGソースは、明示的な同意なく公開・記録・利用されるべきではありません。
-- **White ICE**: システム保護のための表層防壁。
-- **Black ICE**: 悪意ある入力を遮断する深層防壁。
-- **AbyssRTOS**: プロセスを外部から隠蔽する隔離実行環境。
-
-詳細は [SECURITY.md](./SECURITY.md)、[Responsible AI](./docs/RESPONSIBLE_AI.md)、[Threat Model](./docs/THREAT_MODEL.md) を参照してください。
-
----
-
-## 🛠️ 技術スタック
-
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | Alpine.js, Tailwind CSS, Lucide Icons |
-| **Backend** | Bun, Elysia.js, Prisma, SQLite |
-| **AI Kernel** | Python 3.11, FastAPI, LangChain |
-| **Memory** | Milvus Lite, Sentence-Transformers |
-| **Security** | AEGIS Ledger (Multi-layer ICE), JWT |
-
----
-
-## 🧪 品質ゲート
-
-Pull Request前に以下を実行してください。
-
-```bash
-bun run lint
-bun run test
-bun run typecheck
-bun run check:git-hygiene
-bun run check:encoding
-bun run security:glassworm -- --ci
-```
-
-`.env` や `.env.*` は追跡禁止です。追跡するのは `.env.example` のみです。
-文字化け検出は UTF-8 不正、置換文字、Windows-1252/CP932 系の典型的な崩れを検出します。
-
----
-
-## 🎙️ Open-LLM-VTuber Bridge
-
-Open-LLM-VTuber は外部サービスとして起動し、ElysiaAI から Bridge API で検出・監視します。
-
-```dotenv
-OPEN_LLM_VTUBER_ENABLED=true
-OPEN_LLM_VTUBER_BASE_URL=http://127.0.0.1:12393
-```
-
-詳細は [Open-LLM-VTuber Bridge](./docs/OPEN_LLM_VTUBER_INTEGRATION.md) を参照してください。
-
----
-
-## 🤝 コントリビュート
-
-ElysiaAIは、技術と感性の調和を信じる全ての開発者のために開かれています。
-詳細は [CONTRIBUTING.md](./CONTRIBUTING.md) をご覧ください。
-
-- **Bug Reports**: Issueテンプレートに従って報告してください。
-- **Pull Requests**: `Conventional Commits` 準拠をお願いしています。
-
----
-
-© 2026 Elysia20220909 // ElysiaAI Main // Crafted with passion in a laundry factory.
+相手の権限を起動レジスターから除き、資料権限はクライアントだけに発行します。[M3f 検証記録](docs/native-os/CLIENT_ELF_VALIDATION.md)。

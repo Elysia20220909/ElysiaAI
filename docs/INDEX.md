@@ -36,6 +36,10 @@ Optimized entry point for Claude Token Optimizer. Load only the file needed for 
 | Fictional suit system | `docs/fictional/MARK85_FANTASY_SUIT_SYSTEM.md` |
 | Mark LXXXV distributed wearable computing spec | `docs/fictional/MARK85_DISTRIBUTED_WEARABLE_COMPUTING_SPEC.md` |
 | Architecture | `docs/ARCHITECTURE.md` |
+| 独自 OS の構想と既存実装との関係 | [構想](native-os/README.md) |
+| 独自カーネルと AI サービスの基本設計 | [基本設計](native-os/ARCHITECTURE.md) |
+| 独自 OS の権限と信頼境界 | [権限設計](native-os/SECURITY.md) |
+| 独自 OS の段階別の合格条件 | [検証計画](native-os/MILESTONES.md) |
 | Project structure | `docs/PROJECT_STRUCTURE.md` |
 | API | `docs/API.md`, `docs/API_REFERENCE.md` |
 | Environment | `docs/ENVIRONMENT.md` |

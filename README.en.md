@@ -1,123 +1,97 @@
-# 🌸 ElysiaAI // INFINITE RESONANCE
+# ElysiaAI // INFINITE RESONANCE
 
-### Next-Gen AI-Native OS where Sensitivity and Logic Resonate.
+ElysiaAI is a long-term project to build an independent AI-native operating system,
+starting with its kernel. The goal is to make memory, tools, and permissions part
+of the OS design, with people able to understand and control what runs.
 
-[![Quick Start](https://img.shields.io/badge/Quick_Start-5_mins-6366f1?style=for-the-badge)](#-quick-start-5-min)
-[![Status](https://img.shields.io/badge/Status-Sentient_Active-emerald?style=for-the-badge)](https://github.com/Elysia20220909/ElysiaAI)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[日本語 / Main README](README.md) · [Code of conduct](.github/CODE_OF_CONDUCT.md) ·
+[Contributing](CONTRIBUTING.md) · [License](LICENSE) · [Security](SECURITY.md)
 
----
+## Current status
 
-## 🚀 Quick Start (5 min)
+The development tree contains two distinct tracks:
 
-The fastest way to experience ElysiaAI.
+| Track | Implemented scope | Limits |
+| --- | --- | --- |
+| Independent OS, M1 / M2a / M2b / M2c / M3a / M3b / M3c / M3d / M3e / M3f | UEFI entry into an x86-64 Rust kernel; physical page allocation and release; independent page tables; two Ring 3 processes with log/yield/exit syscalls and cooperative switching; fault containment, PIT preemption, cumulative tick limits and owned-frame reclamation, bounded IPC, per-process capability checks, blocking receive, cancellation and permission-checked synthetic RAM document reads and bounded service restart and static user ELF loading in QEMU | No capability delegation, general endpoints, precise CPU-time accounting, general spawn API, guest AI inference, or verified hardware support |
+| Existing host application | Bun / Elysia.js, Python / FastAPI, and Tauri code for developing AI interactions on an existing OS | Has not been ported to the independent kernel |
 
-### 1. Prerequisites
-- **Bun** (v1.1+) & **Python** (v3.11+)
-- **Ollama** (For local inference: `llama3.2` recommended)
+The host application's “AI Kernel” means its Python service, not the independent
+kernel in `native-os/`. M2b contains synchronous user faults by stopping the faulty
+process and continuing another. Kernel faults remain terminal. This is a bounded
+two-process fixture, not a general-purpose application runtime.
 
-### 2. Setup
-```bash
-# Clone the repository
-git clone git@github.com:Elysia20220909/ElysiaAI.git
-cd ElysiaAI
+M2c also tests non-yielding and yielding CPU hogs, and 64 generations of exit/fault/reclamation.
+The target is x86-64 UEFI PCs commonly running Windows, initially tested in QEMU on Windows.
 
-# Setup through the unified management CLI
+M3b adds a read-only synthetic RAM document service. The kernel binds authority checks to the
+actual IPC sender; a Ring 3 service replies. No host documents are loaded. M3c preserves the client while restarting the service,
+issues new connection handles, and tests eight restarts and allocation rollback.
+
+M3d loads a separately built static user ELF from a RAM bundle after validating its layout.
+The 2026-09-13 validation records report 45 passing boot, fault, lifecycle, IPC, document, recovery and ELF scenarios on
+the specified Windows, Rust, QEMU, and UEFI combination. See
+[M1 boot validation](docs/native-os/BOOT_VALIDATION.md) and
+[M2a memory validation](docs/native-os/MEMORY_VALIDATION.md), and
+[M2b userspace validation](docs/native-os/USERSPACE_VALIDATION.md), and
+[M2c lifecycle validation](docs/native-os/LIFECYCLE_VALIDATION.md), and
+[M3a IPC validation](docs/native-os/IPC_VALIDATION.md), and
+[M3b document validation](docs/native-os/DOCUMENT_SERVICE_VALIDATION.md), and
+[M3c service recovery](docs/native-os/SERVICE_RECOVERY_VALIDATION.md), and
+[M3d user ELF validation](docs/native-os/USER_ELF_VALIDATION.md) for evidence and limits.
+Full setup on a new machine and everyday OS stability have not been demonstrated.
+
+M3e moves the recovery document service into a dedicated ELF, loaded on initial start and every restart; see [service ELF validation](docs/native-os/SERVICE_ELF_VALIDATION.md).
+
+M3f also builds the recovery client as an ELF and passes only role-specific startup handles. Document grants are issued only to the client; see [client ELF validation](docs/native-os/CLIENT_ELF_VALIDATION.md).
+
+This overview describes the development lineage containing M3f. Design, M1, and M2a
+are stacked in [PR #109](https://github.com/Elysia20220909/ElysiaAI/pull/109),
+[PR #110](https://github.com/Elysia20220909/ElysiaAI/pull/110), and
+[PR #111](https://github.com/Elysia20220909/ElysiaAI/pull/111).
+M2b follows the repository guide in [PR #112](https://github.com/Elysia20220909/ElysiaAI/pull/112).
+M2c builds on M2b in [PR #113](https://github.com/Elysia20220909/ElysiaAI/pull/113).
+M3a builds on M2c in [PR #114](https://github.com/Elysia20220909/ElysiaAI/pull/114).
+M3b builds on M3a in [PR #115](https://github.com/Elysia20220909/ElysiaAI/pull/115).
+M3c builds on the development branch after merging [PR #116](https://github.com/Elysia20220909/ElysiaAI/pull/116).
+M3d builds on [PR #117](https://github.com/Elysia20220909/ElysiaAI/pull/117).
+Check the PRs for their adoption into the default branch.
+
+## Start developing
+
+For the independent OS, read the [design overview](docs/native-os/README.md),
+[milestones](docs/native-os/MILESTONES.md), and [dependency notes](native-os/DEPENDENCIES.md).
+Check out a branch containing `native-os/`, review the source and setup scripts,
+then follow the pinned environment and [build and test instructions](native-os/README.md).
+The Rust workspace is independent of the host app; Python drives the headless QEMU tests.
+
+For the existing host app, read the [Beta 0.1 tester guide](docs/BETA_0_1_TESTER_GUIDE.md)
+and [contribution guide](CONTRIBUTING.md). After reviewing dependencies and preparing
+Bun and Python, the management commands are:
+
+```powershell
 bun scripts/manage.ts setup
 bun scripts/manage.ts setup-python
-```
-
-### 3. Launch
-```bash
 bun scripts/manage.ts dev
 ```
-> [!TIP]
-> Open `http://localhost:3000` in your browser to experience the Elysia Desktop environment.
 
----
+These commands install dependencies, prepare Prisma and a Python virtual environment,
+and start the host app. The first command creates `.env` only if it is absent.
+Review existing configuration and uncommitted work before running setup.
+These steps do not boot the independent OS.
 
-## 🧠 Why ElysiaAI?
+Local processing is a design priority. External APIs, model downloads, integrations,
+and data retention depend on configuration and the features used. This is not a
+guarantee that data never leaves the machine. See the [security policy](SECURITY.md).
 
-ElysiaAI is more than just a chat UI. It was designed to bridge the gap between "thinking" and "executing."
+## Participate
 
-- **Agent x Decision Tree**: The AI doesn't just answer; it autonomously executes logical steps based on a decision tree.
-- **Sovereign Privacy**: 100% local RAG with local LLMs (Ollama) and Milvus Lite. Your thoughts never leave your machine.
-- **Resonance Design**: A beautiful yet robust UI/UX born from the heat and noise of a laundry factory.
+Contributions can improve code, documentation, tests, and design reviews. Follow
+[CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](.github/CODE_OF_CONDUCT.md).
+Repository access is controlled by its owner; a license does not grant GitHub access.
+Use [SECURITY.md](SECURITY.md) for vulnerabilities rather than posting sensitive details
+in ordinary issues. The detailed development documentation is currently in Japanese.
 
----
-
-## 🏗️ Architecture: The Resonance Loop
-
-The heart of ElysiaAI is powered by the resonance between logic (Python Kernel) and high-speed communication (Bun/Elysia.js).
-
-```mermaid
-graph LR
-    U[User] <-->|Socket| B[Bun Backend]
-    B <-->|IPC/HTTP| P[Python Kernel]
-    P --> T[Tool Execution]
-    P --> D[Decision Tree]
-    P --> R[Local RAG]
-```
-
-- **Bun/Elysia.js**: The "Nerve" handling tens of thousands of requests per second.
-- **Python Kernel**: The "Brain" responsible for complex reasoning and tool execution.
-- **Milvus Lite**: The "Ocean" where all knowledge is stored semantically.
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technologies |
-| :--- | :--- |
-| **Frontend** | Alpine.js, Tailwind CSS, Lucide Icons |
-| **Backend** | Bun, Elysia.js, Prisma, SQLite |
-| **AI Kernel** | Python 3.11, FastAPI, LangChain |
-| **Memory** | Milvus Lite, Sentence-Transformers |
-| **Security** | AEGIS Ledger (Multi-layer ICE), JWT |
-
----
-
-## 🧪 Quality Gate
-
-Run these before opening a pull request:
-
-```bash
-bun run lint
-bun run test
-bun run typecheck
-bun run check:git-hygiene
-bun run check:encoding
-bun run security:glassworm -- --ci
-```
-
-`.env` and `.env.*` must never be tracked. Only `.env.example` belongs in Git.
-The encoding guard catches invalid UTF-8, replacement characters, and common
-Windows-1252/CP932 mojibake fragments.
-
----
-
-## 🎙️ Open-LLM-VTuber Bridge
-
-Run Open-LLM-VTuber as an external companion service and let ElysiaAI discover
-and monitor it through the bridge API.
-
-```dotenv
-OPEN_LLM_VTUBER_ENABLED=true
-OPEN_LLM_VTUBER_BASE_URL=http://127.0.0.1:12393
-```
-
-See [Open-LLM-VTuber Bridge](./docs/OPEN_LLM_VTUBER_INTEGRATION.md) for details.
-
----
-
-## 🤝 Contributing
-
-ElysiaAI is open to all developers who believe in the harmony of technology and sensitivity.
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
-
-- **Bug Reports**: Please use the issue templates.
-- **Pull Requests**: We follow `Conventional Commits`.
-
----
-
-© 2026 Elysia20220909 // ElysiaAI Main // Crafted with passion in a laundry factory.
+ElysiaAI is dual-licensed under **MIT OR Apache-2.0**, at your option. See
+[LICENSE](LICENSE), [LICENSE-MIT](LICENSE-MIT), and [LICENSE-APACHE](LICENSE-APACHE).
+Third-party dependencies and assets retain their own license terms.

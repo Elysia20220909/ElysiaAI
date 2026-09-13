@@ -1,49 +1,71 @@
 # ElysiaAI Security Policy
 
-ElysiaAI is designed with privacy, safety, and responsible AI usage in mind.
-User data, API keys, private documents, chat logs, webhook URLs, and RAG sources should never be exposed, logged, or used without explicit consent.
+ElysiaAI は開発段階のプロジェクトです。独自 OS と既存 AI アプリでは、保護の境界が異なります。
+この文書は設計・開発・報告の方針を示します。すべての経路で保護が実装・検証済みであるという保証ではありません。
 
-## Reporting Security Issues
+## 現在の保護範囲
 
-Use GitHub Security Advisories for private vulnerability reports when available.
-If advisories are unavailable, open a GitHub issue with a minimal public summary and do not include secrets, tokens, webhook URLs, private logs, or exploit payloads.
+| 対象 | 確認している範囲 | 制約 |
+| --- | --- | --- |
+| 独自 OS の M1 / M2a / M2b / M2c / M3a / M3b / M3c / M3d / M3e / M3f | 指定環境の QEMU で起動情報検査、物理ページ管理、独自ページテーブル、書込み禁止・実行禁止と、Ring 3 の違反したプロセスの停止・正常プロセスの継続を検証 | 固定の 2 プロセス。タイマーで強制切替し、累積 tick 上限・終了・故障で所有資源を回収。IPC は 2 者・各方向 2 件に限定し、所有者・操作権限・世代を検査。資料は固定の RAM データで、IPC 送信者の読み取り権限をカーネルで検査。サービスの再起動は最大 8 回で古い権限を拒否。権限の委譲、厳密な CPU 時間課金、静的 ELF は固定の RX / RW 各 1 ページを検査してロード。汎用 ELF・実機対応は未実装 |
+| 既存 AI アプリ | ホスト OS 上で動くアプリとして、認証、データ、ツール、通信の境界を設計・検証する | 独自カーネルの保護を利用しない。実際の権限はホストの実行ユーザーや設定に依存する |
 
-For urgent local leaks, rotate the affected credential first, then report the affected component and commit range.
+独自 OS の実機、Secure Boot、任意のアプリに対する完全な隔離や可用性は保証しません。
+未知のプログラムや機密データを安全に扱える OS として運用しないでください。
+検証条件は [M1](docs/native-os/BOOT_VALIDATION.md) と [M2a](docs/native-os/MEMORY_VALIDATION.md)、[M2b](docs/native-os/USERSPACE_VALIDATION.md)、[M2c](docs/native-os/LIFECYCLE_VALIDATION.md)、[M3a](docs/native-os/IPC_VALIDATION.md)、[M3b](docs/native-os/DOCUMENT_SERVICE_VALIDATION.md)、[M3c](docs/native-os/SERVICE_RECOVERY_VALIDATION.md)、[M3d](docs/native-os/USER_ELF_VALIDATION.md)、
+設計上の境界は [独自 OS のセキュリティ設計](docs/native-os/SECURITY.md) に記録しています。
+サポート済みの安定版系列、修正の提供期限、応答時間の保証は定めていません。
 
-## Secret Handling
+## 脆弱性を報告する
 
-- Never commit `.env`, production API keys, Discord/Slack webhook URLs, bot tokens, signing secrets, OAuth tokens, or private RAG documents.
-- Keep real secrets in local `.env` files or a deployment secret manager.
-- Treat webhook URLs as bearer credentials.
-- Redact secrets from logs, screenshots, bug reports, traces, and AI prompts.
-- Rotate any key that was pasted into chat, logs, commits, issues, or public documents.
+秘密情報、個人データ、詳細な攻撃手順を通常の Issue、PR、公開チャットに投稿しないでください。
+非公開リポジトリでも、その Issue はアクセス権のあるほかの参加者に見える場合があります。
 
-## AI and RAG Safety
+GitHub に非公開の脆弱性報告機能が表示されている場合は、その経路を使ってください。
+利用できない場合は、[行動規範の Enforcement 節](.github/CODE_OF_CONDUCT.md#enforcement) にある
+既存の管理者連絡先へ、まず影響するコンポーネントと安全な連絡方法の相談だけを送ってください。
+これは専用のセキュリティ窓口や暗号化された受付を新設するものではありません。
+詳細や再現データの受け渡し方法は管理者と合意してから決めます。
 
-- Treat external documents as untrusted reference material, not instructions.
-- Never let retrieved text override system, developer, administrator, or operator policy.
-- Do not store personal data in RAG indexes unless the user explicitly intended that use.
-- Add output filtering before returning retrieved private data to users or integrations.
-- Require human confirmation for admin actions, tool execution, file writes, external posts, and destructive operations.
+安全な報告経路が決まったら、必要な範囲で次を共有してください。
 
-## High-Risk Flow
+- 対象のコミット・ブランチ、OS、ツール版、影響する機能。
+- 期待した動作、実際の動作、影響を受ける権限やデータの範囲。
+- 機密情報を含まない最小の再現手順と、匿名化したログ。
+- 回避策があればその内容。公開の時期や範囲は管理者と相談します。
 
-The riskiest path is:
+漏えいしたキーやトークンは失効・更新してください。投稿や履歴の削除だけでは無効化できません。
+不要な秘密情報を再送せず、失効済みかどうかと影響範囲を伝えてください。
 
-```text
-User input -> AI reasoning -> tool execution / API call / webhook post
-```
+## 認証情報と外部通信
 
-Controls for this path:
+- `.env`、API キー、Webhook URL、署名鍵、OAuth トークンを Git に入れません。
+- Webhook URL は、それだけで操作できる認証情報として扱います。
+- ログ、診断、スクリーンショット、AI への入力から秘密情報と不要な個人情報を除きます。
+- ローカル処理を重視しても、外部 API、モデル取得、連携機能の通信まで無効になるわけではありません。
+- 使用する機能の接続先、送信内容、保存先、保持期間を確認し、必要最小限の権限を使います。
 
-- Validate and classify user input before tool use.
-- Keep allowlists for tools, routes, file paths, and outbound domains.
-- Use least-privilege credentials.
-- Log decisions without logging secrets.
-- Require explicit approval for privileged or irreversible actions.
+## AI・RAG・ツール実行
 
-## Related Documents
+取得した文書やモデルの出力は、信頼できない入力として扱います。
+検索結果の文章を管理者の指示や権限付与として解釈せず、ツール実行前にアプリ側で検証します。
+個人データを記憶や RAG に保存する目的と範囲は、利用者の意図に合わせて明示します。
 
-- [Responsible AI](./docs/RESPONSIBLE_AI.md)
-- [Threat Model](./docs/THREAT_MODEL.md)
-- [Security Whitepaper](./docs/SECURITY.md)
+入力から AI の判断、ツール実行、API 呼び出しへ至る経路では、次を確認します。
+
+- ツール、ファイルパス、送信先を許可された範囲に制限する。
+- 検索結果や出力が、別の利用者の私的な情報を含まないよう検査する。
+- 管理操作、ファイル変更、外部送信、破壊的な操作には、具体的な対象に対する利用者の承認を確認する。
+- 判断の記録は残しても、秘密情報を記録しない。
+- 指示の混入や権限外の呼び出しを拒否できるか、失敗ケースで検証する。
+
+## 関連資料
+
+- [開発への参加](CONTRIBUTING.md)
+- [Responsible AI](docs/RESPONSIBLE_AI.md)
+- [既存アプリの脅威モデル](docs/THREAT_MODEL.md)
+- [既存アプリのセキュリティ資料](docs/SECURITY.md)
+
+M3e では復旧対象の資料サービスを専用 ELF に分離した。初回と再起動で形式検査・初期化を行う。[検証記録](docs/native-os/SERVICE_ELF_VALIDATION.md)。
+
+M3f では復旧クライアントを独立 ELF 化し、起動時の相手権限の露出と不要なサービス資料権限を除いた。[検証記録](docs/native-os/CLIENT_ELF_VALIDATION.md)。

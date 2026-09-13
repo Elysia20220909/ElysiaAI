@@ -1,0 +1,16 @@
+[workspace]
+members = ["boot-protocol", "bootloader", "kernel", "memory", "apps/probe", "apps/document-service", "apps/document-client"]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.96"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+opt-level = 2
+debug = true

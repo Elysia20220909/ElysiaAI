@@ -1,5 +1,16 @@
 # Contributor Covenant Code of Conduct
 
+## ElysiaAI での参加について
+
+この行動規範は、独自 OS、既存 AI アプリ、文書、Issue、コードレビューなど、
+ElysiaAI の開発に関わるやり取りに適用します。経験や意見が異なっても、相手を尊重してください。
+設計や検証結果への批判は、人格ではなく具体的な根拠と改善案に向けます。
+
+参加手順は [CONTRIBUTING.md](../CONTRIBUTING.md)、脆弱性の報告方法は
+[SECURITY.md](../SECURITY.md) を参照してください。
+診断ログや報告に、ほかの人の個人情報・認証情報を含めないよう配慮します。
+以下は既存の Contributor Covenant 2.1 の本文と連絡先です。
+
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.

@@ -210,6 +210,7 @@ mksSandbox.log
 
 # Tauri build artifacts
 src-tauri/target/
+/.tools/
 
 # Abyssal Data & Monetization
 /data/*
