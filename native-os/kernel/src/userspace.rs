@@ -46,6 +46,7 @@ struct Process {
     exit: Option<u32>,
     fault: Option<(u64, u64, u64)>,
     ticks: u64,
+    tick_limit: u64,
     budget_stopped: bool,
     waiting: Option<PendingReceive>,
 }
@@ -58,6 +59,7 @@ static mut PROCESSES: [Process; 2] = [Process {
     exit: None,
     fault: None,
     ticks: 0,
+    tick_limit: 0,
     budget_stopped: false,
     waiting: None,
 }; 2];
@@ -86,6 +88,10 @@ unsafe fn prepare(
         MODE = mode;
         if spaces.iter().any(Option::is_some) {
             platform::fail("spawn-over-live-space");
+        }
+        if recovery_mode(mode) {
+            elysia_kernel::launch::validate_pair(elysia_kernel::launch::BOOT)
+                .unwrap_or_else(|e| platform::fail(e));
         }
         let handles = if ipc_mode(mode) {
             (&mut *ptr::addr_of_mut!(CHANNEL))
@@ -133,9 +139,30 @@ unsafe fn build_process(
     limit: usize,
 ) -> Result<(Process, Space), &'static str> {
     unsafe {
+        let definition = if recovery_mode(mode) {
+            Some(
+                elysia_kernel::launch::BOOT
+                    .get(pid)
+                    .ok_or("launch-slot")?
+                    .validate(pid)?,
+            )
+        } else {
+            None
+        };
+        let limit = definition.map_or(limit, |d| limit.min(d.frames()));
+        let tick_limit = definition.map_or_else(
+            || {
+                if mode >= 39 || ipc_mode(mode) || pid != 0 {
+                    64
+                } else {
+                    8
+                }
+            },
+            |d| d.ticks(),
+        );
         // Construct authority before allocating so invalid launch contracts cannot leak frames.
-        let authority = if recovery_mode(mode) {
-            elysia_kernel::launch::recovery_frame(pid, mode, generation, handles, documents)?
+        let authority = if let Some(definition) = definition {
+            definition.frame(mode, generation, handles, documents)?
         } else {
             Frame {
                 r12: pid as u64,
@@ -161,14 +188,16 @@ unsafe fn build_process(
         if length > PAGE as usize {
             return Err("user-image-size");
         }
-        let (space, entry) = if recovery_mode(mode) && pid == 1 {
+        let (space, entry) = if definition
+            .is_some_and(|d| d.elf() == elysia_kernel::launch::Elf::Service)
+        {
             let loaded = Space::from_elf(allocator, pid, crate::elf_loader::SERVICE, limit)?;
             platform::log(format_args!(
                 "kernel:service-elf-loaded generation={generation} entry={:#x}",
                 loaded.1
             ));
             loaded
-        } else if recovery_mode(mode) {
+        } else if definition.is_some_and(|d| d.elf() == elysia_kernel::launch::Elf::Client) {
             let loaded = Space::from_elf(allocator, pid, crate::elf_loader::CLIENT, limit)?;
             platform::log(format_args!(
                 "kernel:client-elf-loaded entry={:#x}",
@@ -187,6 +216,14 @@ unsafe fn build_process(
             ptr::copy_nonoverlapping(start, (paging::DIRECT + space.pages[0]) as *mut u8, length);
             (space, CODE)
         };
+        if let Some(d) = definition {
+            platform::log(format_args!(
+                "kernel:launch-policy pid={pid} frames={} ticks={} document={} generation={generation}",
+                d.frames(),
+                d.ticks(),
+                d.document().is_some()
+            ));
+        }
         let frame = Frame {
             rip: entry,
             cs: 0x1b,
@@ -205,6 +242,7 @@ unsafe fn build_process(
                 exit: None,
                 fault: None,
                 ticks: 0,
+                tick_limit,
                 budget_stopped: false,
                 waiting: None,
             },
@@ -222,6 +260,34 @@ pub unsafe fn run(mode: u32) -> ! {
             allocation_rollback(allocator);
         }
         crate::elf_loader::preflight(mode, allocator);
+        if recovery_mode(mode) {
+            use elysia_kernel::launch::{BOOT, Definition};
+            let free = allocator.free_count();
+            for bad in [
+                Definition { peer: 0, ..BOOT[0] },
+                Definition {
+                    document: Some(1),
+                    ..BOOT[0]
+                },
+                Definition {
+                    frames: 33,
+                    ..BOOT[0]
+                },
+                Definition {
+                    ticks: 0,
+                    ..BOOT[0]
+                },
+            ] {
+                let mut documents = Service::EMPTY;
+                if documents.start_defined([bad, BOOT[1]]).is_ok()
+                    || !documents.is_clean()
+                    || allocator.free_count() != free
+                {
+                    platform::fail("launch-rejection-side-effect");
+                }
+            }
+            platform::log(format_args!("kernel:launch-definitions-rejected count=4"));
+        }
         prepare(
             allocator,
             mode,
@@ -299,15 +365,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
             if !returnable(frame) {
                 processes[current].fault = Some((128, frame.rsp, 0));
                 processes[current].runnable = false;
-            } else if ticks
-                >= if recovery_mode(MODE) && current == 0 {
-                    1024
-                } else if MODE >= 39 || ipc_mode(MODE) || current != 0 {
-                    64
-                } else {
-                    8
-                }
-            {
+            } else if ticks >= processes[current].tick_limit {
                 processes[current].budget_stopped = true;
                 processes[current].runnable = false;
                 platform::log(format_args!(

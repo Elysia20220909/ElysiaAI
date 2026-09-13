@@ -1,5 +1,113 @@
-//! Recovery-role register contract. Tokens authorize nothing without kernel ownership checks.
+//! Bounded boot definitions. Kernel policy, not ELF contents, authorizes resources.
 use crate::Frame;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Elf {
+    Client,
+    Service,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Definition {
+    pub elf: Elf,
+    pub peer: usize,
+    pub document: Option<usize>,
+    /// All owned physical frames, including page tables.
+    pub frames: usize,
+    pub ticks: u64,
+}
+
+const CEILING: [Definition; 2] = [
+    Definition {
+        elf: Elf::Client,
+        peer: 1,
+        document: Some(0),
+        frames: 32,
+        ticks: 1024,
+    },
+    Definition {
+        elf: Elf::Service,
+        peer: 0,
+        document: None,
+        frames: 32,
+        ticks: 64,
+    },
+];
+
+/// Trusted boot configuration; may reduce, never enlarge, CEILING.
+pub const BOOT: [Definition; 2] = CEILING;
+
+/// A validated definition cannot be constructed or enlarged by callers.
+#[derive(Clone, Copy)]
+pub struct Validated {
+    pid: usize,
+    definition: Definition,
+}
+impl Definition {
+    pub fn validate(self, pid: usize) -> Result<Validated, &'static str> {
+        let allowed = CEILING.get(pid).ok_or("launch-slot")?;
+        if self.elf != allowed.elf || self.peer != allowed.peer {
+            return Err("launch-target");
+        }
+        if self.document.is_some() && self.document != allowed.document {
+            return Err("launch-document");
+        }
+        if self.frames == 0
+            || self.frames > allowed.frames
+            || self.ticks == 0
+            || self.ticks > allowed.ticks
+        {
+            return Err("launch-budget");
+        }
+        Ok(Validated {
+            pid,
+            definition: self,
+        })
+    }
+}
+impl Validated {
+    pub fn elf(self) -> Elf {
+        self.definition.elf
+    }
+    pub fn frames(self) -> usize {
+        self.definition.frames
+    }
+    pub fn ticks(self) -> u64 {
+        self.definition.ticks
+    }
+    pub fn document(self) -> Option<usize> {
+        self.definition.document
+    }
+    pub fn frame(
+        self,
+        mode: u32,
+        generation: u64,
+        handles: [[u64; 2]; 2],
+        grants: [u64; 2],
+    ) -> Result<Frame, &'static str> {
+        if (grants[self.pid] != 0) != self.definition.document.is_some() {
+            return Err("launch-authority");
+        }
+        let [send, receive] = handles[self.pid];
+        if send == 0 || receive == 0 || send == receive {
+            return Err("launch-handles");
+        }
+        Ok(Frame {
+            r8: send,
+            r9: receive,
+            r11: grants[self.pid],
+            r12: self.pid as u64,
+            r13: mode as u64,
+            r15: generation,
+            ..Frame::EMPTY
+        })
+    }
+}
+
+pub fn validate_pair(definitions: [Definition; 2]) -> Result<[Validated; 2], &'static str> {
+    Ok([definitions[0].validate(0)?, definitions[1].validate(1)?])
+}
+
 /// Fresh registers contain only this process's communication handles and the client's grant.
 /// R12/R13/R15 are fixture identity/mode/generation, not authority. Other GPRs remain zero.
 pub fn recovery_frame(
@@ -9,22 +117,14 @@ pub fn recovery_frame(
     handles: [[u64; 2]; 2],
     grants: [u64; 2],
 ) -> Result<Frame, &'static str> {
-    if pid >= 2 || grants[0] == 0 || grants[1] != 0 {
+    let definitions = validate_pair(BOOT)?;
+    if grants[0] == 0 || grants[1] != 0 {
         return Err("launch-authority");
     }
-    let [send, receive] = handles[pid];
-    if send == 0 || receive == 0 || send == receive {
-        return Err("launch-handles");
-    }
-    Ok(Frame {
-        r8: send,
-        r9: receive,
-        r11: if pid == 0 { grants[0] } else { 0 },
-        r12: pid as u64,
-        r13: mode as u64,
-        r15: generation,
-        ..Frame::EMPTY
-    })
+    definitions
+        .get(pid)
+        .ok_or("launch-slot")?
+        .frame(mode, generation, handles, grants)
 }
 
 #[cfg(test)]
@@ -70,5 +170,71 @@ mod tests {
         ] {
             assert!(recovery_frame(pid, 33, 0, handles, grants).is_err());
         }
+    }
+}
+
+#[cfg(test)]
+mod policy_tests {
+    use super::*;
+    #[test]
+    fn rejects_authority_and_budget_escalation() {
+        for bad in [
+            Definition { peer: 0, ..BOOT[0] },
+            Definition {
+                peer: usize::MAX,
+                ..BOOT[0]
+            },
+            Definition {
+                elf: Elf::Service,
+                ..BOOT[0]
+            },
+            Definition {
+                document: Some(1),
+                ..BOOT[0]
+            },
+            Definition {
+                frames: 0,
+                ..BOOT[0]
+            },
+            Definition {
+                frames: 33,
+                ..BOOT[0]
+            },
+            Definition {
+                ticks: 0,
+                ..BOOT[0]
+            },
+            Definition {
+                ticks: 1025,
+                ..BOOT[0]
+            },
+        ] {
+            assert!(bad.validate(0).is_err());
+        }
+        assert!(
+            Definition {
+                document: Some(0),
+                ..BOOT[1]
+            }
+            .validate(1)
+            .is_err()
+        );
+        assert!(BOOT[0].validate(2).is_err());
+    }
+    #[test]
+    fn reduced_definition_cannot_receive_an_unrequested_grant() {
+        let p = Definition {
+            document: None,
+            frames: 14,
+            ticks: 8,
+            ..BOOT[0]
+        }
+        .validate(0)
+        .unwrap();
+        assert_eq!((p.frames(), p.ticks(), p.document()), (14, 8, None));
+        let h = [[1, 2], [3, 4]];
+        assert!(p.frame(36, 0, h, [5, 0]).is_err());
+        let f = p.frame(36, 0, h, [0, 0]).unwrap();
+        assert_eq!((f.r11, f.r10, f.r14), (0, 0, 0));
     }
 }

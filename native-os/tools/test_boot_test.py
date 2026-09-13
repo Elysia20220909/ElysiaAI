@@ -84,6 +84,9 @@ class VerdictTests(unittest.TestCase):
                        "kernel:recovery-live generation=0 free=49972",
                        "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
                        "kernel:reconnect pid=0 result=-11", "kernel:reconnect pid=1 result=-13"]
+            markers.extend(["kernel:launch-definitions-rejected count=4",
+                            "kernel:launch-policy pid=0 frames=32 ticks=1024 document=true generation=0",
+                            "kernel:launch-policy pid=1 frames=32 ticks=64 document=false generation=0"])
             markers.append("kernel:document-serve pid=0 result=-13")
             for pid, n in ((0, 1), (1, count + 1)):
                 for operation in (3, 4):
@@ -102,6 +105,7 @@ class VerdictTests(unittest.TestCase):
                 markers.extend(["kernel:reconnect pid=0 result=-14", "kernel:reconnect pid=0 result=-22"])
                 if case == "recovery-allocation":
                     markers.extend(["kernel:restart-allocation-rollback free=49986", "kernel:reconnect pid=0 result=-12"])
+                markers.append(f"kernel:launch-policy pid=1 frames=32 ticks=64 document=false generation={generation + 1}")
                 markers.extend([f"kernel:service-elf-loaded generation={generation + 1} entry=0x40000010",
                                 f"kernel:recovery-live generation={generation + 1} free=49972",
                                 "kernel:reconnect pid=0 result=24", "kernel:reconnect pid=1 result=-13",
@@ -149,6 +153,15 @@ class VerdictTests(unittest.TestCase):
                                 f"kernel:generation-reclaimed generation={generation} free=50000"])
             markers.append(f"kernel:lifecycle-tests-passed mode={LIFECYCLE_CASES[case]}")
         return "\n".join(prefix + markers)
+
+    def test_launch_policy_rejects_missing_or_escalated_evidence(self):
+        case = "recovery-repeat"
+        code = CASES[case][0]
+        original = self.transcript(case)
+        for old, new in [("kernel:launch-definitions-rejected count=4", ""),
+                         ("frames=32 ticks=64 document=false generation=1", "frames=33 ticks=64 document=false generation=1"),
+                         ("frames=32 ticks=64 document=false generation=1", "frames=32 ticks=64 document=true generation=1")]:
+            self.assertNotEqual(verify_output(case, code, original.replace(old, new)), [])
 
     def test_accepts_each_expected_result(self):
         for case, (code, _) in CASES.items():

@@ -342,3 +342,10 @@ ELF の出自だけで権限を与えず、既存のプロセス別 capability �
 従来の M3a/M3b 試験には負の検証用に相手のハンドルを渡す経路が残る。この契約は復旧 ELF の経路を対象とする。
 log / yield / exit と役割限定 syscall 6 / 7 は既存の契約を維持し、一般的な権限委譲 API は追加しない。
 [検証記録](../docs/native-os/CLIENT_ELF_VALIDATION.md)。全 45 ケース。実機や実行中の ELF 差し替えは未対応。
+
+## M3g の起動定義
+
+`kernel/src/launch.rs` の `BOOT` に ELF、通信先、資料権限、所有フレーム・CPU tick 上限を定義する。
+カーネルの `CEILING` を超える定義は権限発行前に拒否する。初回と復旧で同じ定義を使い、
+再起動時の定義変更も拒否する。対象は既存2プロセスで、外部設定や動的 spawn は未対応。
+[設計と検証記録](../docs/native-os/LAUNCH_POLICY_VALIDATION.md) を参照。

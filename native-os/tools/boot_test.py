@@ -169,6 +169,13 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
         errors.extend(verify_documents(case, output))
     if case in RECOVERY_CASES:
         errors.extend(verify_recovery(case, output))
+        if output.count("kernel:launch-definitions-rejected count=4") != 1:
+            errors.append("missing launch definition rejection evidence")
+        policies = re.findall(r"kernel:launch-policy pid=(\d+) frames=(\d+) ticks=(\d+) document=(true|false) generation=(\d+)", output)
+        expected_generations = re.findall(r"kernel:recovery-live generation=(\d+) free=", output)
+        expected = [("0", "32", "1024", "true", "0")] + [("1", "32", "64", "false", g) for g in expected_generations]
+        if policies != expected:
+            errors.append("launch definitions changed across process lifetimes")
     if case in ELF_CASES:
         errors.extend(verify_elf(case, output))
     return errors

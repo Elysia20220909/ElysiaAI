@@ -26,6 +26,7 @@ pub struct Service {
     generation: u64,
     next_token: u64,
     pending: Option<Delivery>,
+    definition: Option<[crate::launch::Definition; 2]>,
 }
 impl Service {
     pub const EMPTY: Self = Self {
@@ -33,16 +34,34 @@ impl Service {
         generation: 0,
         next_token: 0x100,
         pending: None,
+        definition: None,
     };
     /// Issued by the kernel, never by untrusted requests. No host files are loaded.
     pub fn start_pair(&mut self) -> Result<[u64; 2], u64> {
-        self.start(true)
+        let grants = self.start([Some(0), Some(1)])?;
+        self.definition = None;
+        Ok(grants)
     }
     /// Recovery services only dispatch client requests; they receive no document grant.
     pub fn start_client(&mut self) -> Result<[u64; 2], u64> {
-        self.start(false)
+        self.start_defined(crate::launch::BOOT)
     }
-    fn start(&mut self, include_service: bool) -> Result<[u64; 2], u64> {
+    pub fn start_defined(
+        &mut self,
+        definitions: [crate::launch::Definition; 2],
+    ) -> Result<[u64; 2], u64> {
+        let validated = crate::launch::validate_pair(definitions).map_err(|_| EACCES)?;
+        if self
+            .definition
+            .is_some_and(|previous| previous != definitions)
+        {
+            return Err(EACCES);
+        }
+        let grants = self.start(validated.map(|definition| definition.document()))?;
+        self.definition = Some(definitions);
+        Ok(grants)
+    }
+    fn start(&mut self, targets: [Option<usize>; 2]) -> Result<[u64; 2], u64> {
         if !self.is_clean() {
             return Err(EAGAIN);
         }
@@ -50,18 +69,22 @@ impl Service {
         let end = self.next_token.checked_add(2).ok_or(EBADF)?;
         let first = self.next_token;
         self.grants = core::array::from_fn(|pid| {
-            if pid == SERVICE && !include_service {
-                return None;
-            }
+            let document = targets[pid]?;
             Some(Grant {
                 token: first + pid as u64,
                 generation,
-                document: pid,
+                document,
             })
         });
         self.generation = generation;
         self.next_token = end;
-        Ok([first, if include_service { first + 1 } else { 0 }])
+        Ok(core::array::from_fn(|pid| {
+            if targets[pid].is_some() {
+                first + pid as u64
+            } else {
+                0
+            }
+        }))
     }
     pub fn can_receive(&self, pid: usize) -> bool {
         pid != SERVICE || self.pending.is_none()
