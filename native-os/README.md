@@ -342,3 +342,24 @@ ELF の出自だけで権限を与えず、既存のプロセス別 capability �
 従来の M3a/M3b 試験には負の検証用に相手のハンドルを渡す経路が残る。この契約は復旧 ELF の経路を対象とする。
 log / yield / exit と役割限定 syscall 6 / 7 は既存の契約を維持し、一般的な権限委譲 API は追加しない。
 [検証記録](../docs/native-os/CLIENT_ELF_VALIDATION.md)。全 45 ケース。実機や実行中の ELF 差し替えは未対応。
+
+## M3g の起動定義
+
+`kernel/src/launch.rs` の `BOOT` に ELF、通信先、資料権限、所有フレーム・CPU tick 上限を定義する。
+カーネルの `CEILING` を超える定義は権限発行前に拒否する。初回と復旧で同じ定義を使い、
+再起動時の定義変更も拒否する。対象は既存2プロセスで、外部設定や動的 spawn は未対応。
+[設計と検証記録](../docs/native-os/LAUNCH_POLICY_VALIDATION.md) を参照。
+
+## M4a の操作契約
+
+固定した1操作について、承認した資料・入力・予算と実行要求を照合し、状態を RAM に記録する。
+新しい `operation-*` の5ケースで、正常実行・拒否・中断・成否不明・失敗を区別する。
+承認元は明示的な試験用入力。実ユーザー向け承認画面、永続記録、AI 推論は含まない。
+[設計と検証記録](../docs/native-os/OPERATION_CONTRACT_VALIDATION.md) を参照。
+
+## M5a の操作記録の永続化
+
+`persist-*` の7ケースでは、runner が作る専用32 KiBディスクを2回の QEMU 起動で共有する。
+承認・実行状態を保存し、再起動後は完了・中断・成否不明・破損を照合して停止する。
+古い権限の復元や自動再実行は行わない。実ディスクやホスト共有は使わない。
+[形式・障害試験・検証記録](../docs/native-os/PERSISTENCE_VALIDATION.md) を参照。

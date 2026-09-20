@@ -68,16 +68,27 @@ recovery_service_receive:
     cmp rax, 32
     jne recovery_fail
     inc ebx
+    cmp r13, 45
+    jae operation_serve
     test r15, r15
     jz recovery_inject
     cmp ebx, 4
     je recovery_inject
+operation_serve:
     mov eax, 6
     mov edi, 0x60000100
     mov esi, 64
     int 0x80
     cmp rax, 64
     jne recovery_fail
+    cmp r13, 48
+    jne 2f
+    cmp qword ptr [0x60000000], 11
+    jne 2f
+    cmp qword ptr [0x60000100], 0
+    jne 2f
+    ud2
+2:
     mov eax, 3
     mov rdi, r8
     mov esi, 0x60000100

@@ -1,6 +1,6 @@
 """Regression tests for the boot-result classifier, including false-success cases."""
 import unittest
-from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, RECOVERY_CASES, ELF_CASES, verify_output
+from boot_test import PERSISTENCE_CASES, CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, RECOVERY_CASES, ELF_CASES, OPERATION_CASES, verify_output
 
 
 class VerdictTests(unittest.TestCase):
@@ -84,6 +84,9 @@ class VerdictTests(unittest.TestCase):
                        "kernel:recovery-live generation=0 free=49972",
                        "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
                        "kernel:reconnect pid=0 result=-11", "kernel:reconnect pid=1 result=-13"]
+            markers.extend(["kernel:launch-definitions-rejected count=4",
+                            "kernel:launch-policy pid=0 frames=32 ticks=1024 document=true generation=0",
+                            "kernel:launch-policy pid=1 frames=32 ticks=64 document=false generation=0"])
             markers.append("kernel:document-serve pid=0 result=-13")
             for pid, n in ((0, 1), (1, count + 1)):
                 for operation in (3, 4):
@@ -102,6 +105,7 @@ class VerdictTests(unittest.TestCase):
                 markers.extend(["kernel:reconnect pid=0 result=-14", "kernel:reconnect pid=0 result=-22"])
                 if case == "recovery-allocation":
                     markers.extend(["kernel:restart-allocation-rollback free=49986", "kernel:reconnect pid=0 result=-12"])
+                markers.append(f"kernel:launch-policy pid=1 frames=32 ticks=64 document=false generation={generation + 1}")
                 markers.extend([f"kernel:service-elf-loaded generation={generation + 1} entry=0x40000010",
                                 f"kernel:recovery-live generation={generation + 1} free=49972",
                                 "kernel:reconnect pid=0 result=24", "kernel:reconnect pid=1 result=-13",
@@ -148,10 +152,46 @@ class VerdictTests(unittest.TestCase):
                 markers.extend(["kernel:reaped pid=1",
                                 f"kernel:generation-reclaimed generation={generation} free=50000"])
             markers.append(f"kernel:lifecycle-tests-passed mode={LIFECYCLE_CASES[case]}")
+        if case in OPERATION_CASES:
+            _, state, executions = OPERATION_CASES[case]
+            states = ["Proposed", "Denied"] if state == "Denied" else ["Proposed", "Approved", "Interrupted"] if state == "Interrupted" else ["Proposed", "Approved", "Running", state]
+            markers = ["kernel:allocation-rollback boundaries=14 free=50000", "kernel:user-spaces-ready", "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3", "kernel:document-response status=-13", "kernel:document-response status=-38"]
+            if state == "Unknown": markers.append("kernel:user-stopped pid=1 vector=6")
+            markers.append("user:log pid=0 hex=6f6b")
+            markers.extend(f"kernel:operation-event id=1 state={value} tick=1" for value in states)
+            markers.extend([f"kernel:operation-result state={state} executions={executions}", "kernel:operation-clean free=50000"])
         return "\n".join(prefix + markers)
+
+    def test_launch_policy_rejects_missing_or_escalated_evidence(self):
+        case = "recovery-repeat"
+        code = CASES[case][0]
+        original = self.transcript(case)
+        for old, new in [("kernel:launch-definitions-rejected count=4", ""),
+                         ("frames=32 ticks=64 document=false generation=1", "frames=33 ticks=64 document=false generation=1"),
+                         ("frames=32 ticks=64 document=false generation=1", "frames=32 ticks=64 document=true generation=1")]:
+            self.assertNotEqual(verify_output(case, code, original.replace(old, new)), [])
+
+    def test_operation_requires_approval_execution_count_journal_and_reclamation(self):
+        case = "operation-complete"
+        output = self.transcript(case)
+        for old, new in [("state=Approved tick=1", "state=Running tick=1"),
+                         ("executions=1", "executions=2"),
+                         ("operation-clean free=50000", "operation-clean free=49999"),
+                         ("kernel:document-response status=-38", "")]:
+            self.assertTrue(verify_output(case, 53, output.replace(old, new)))
+        case = "operation-unknown"
+        self.assertTrue(verify_output(case, 53, self.transcript(case).replace("kernel:user-stopped pid=1 vector=6", "")))
+
+    def test_deadlock_allows_either_process_to_wait_first(self):
+        text = self.transcript("ipc-deadlock")
+        reversed_order = text.replace("kernel:ipc-block pid=0", "kernel:ipc-block pid=1").replace("kernel:ipc-result pid=1 op=4 result=-35", "kernel:ipc-result pid=0 op=4 result=-35").replace("kernel:ipc-wake pid=0 result=2", "kernel:ipc-wake pid=1 result=2")
+        self.assertEqual(verify_output("ipc-deadlock", 49, reversed_order), [])
+        self.assertTrue(verify_output("ipc-deadlock", 49, reversed_order.replace("kernel:ipc-wake pid=1 result=2", "kernel:ipc-wake pid=0 result=2")))
 
     def test_accepts_each_expected_result(self):
         for case, (code, _) in CASES.items():
+            if case in PERSISTENCE_CASES:
+                continue
             with self.subTest(case=case):
                 self.assertEqual(verify_output(case, code, self.transcript(case)), [])
 

@@ -31,6 +31,14 @@ pub struct Replacement {
 /// Construct new authority without modifying the live session. The caller only
 /// publishes this replacement after the new address space has been built.
 pub fn replacement(channel: &Channel, documents: &Service) -> Result<Replacement, u64> {
+    replacement_defined(channel, documents, crate::launch::BOOT)
+}
+pub fn replacement_defined(
+    channel: &Channel,
+    documents: &Service,
+    definitions: [crate::launch::Definition; 2],
+) -> Result<Replacement, u64> {
+    crate::launch::validate_pair(definitions).map_err(|_| EACCES)?;
     if !channel.service_departed() || !documents.is_clean() {
         return Err(EAGAIN);
     }
@@ -38,7 +46,7 @@ pub fn replacement(channel: &Channel, documents: &Service) -> Result<Replacement
     let mut documents = documents.clone();
     channel.close_process(0); // Retire the old connection, not the surviving process.
     let handles = channel.start_pair()?;
-    let grants = documents.start_client()?;
+    let grants = documents.start_defined(definitions)?;
     Ok(Replacement {
         channel,
         documents,
@@ -102,5 +110,32 @@ mod tests {
                 .length,
             3
         );
+    }
+}
+
+#[cfg(test)]
+mod definition_tests {
+    use super::*;
+    use crate::launch::BOOT;
+    #[test]
+    fn restart_preserves_reduced_authority_and_rejects_escalation_atomically() {
+        let mut definitions = BOOT;
+        definitions[0].document = None;
+        let mut c = Channel::EMPTY;
+        c.start_pair().unwrap();
+        let mut d = Service::EMPTY;
+        assert_eq!(d.start_defined(definitions).unwrap(), [0, 0]);
+        c.close_process(1);
+        d.close_process(1);
+        let expected = replacement_defined(&c, &d, definitions).unwrap();
+        assert_eq!(expected.grants, [0, 0]);
+        let mut invalid = definitions;
+        invalid[1].document = Some(0);
+        assert!(replacement_defined(&c, &d, invalid).is_err());
+        assert!(replacement_defined(&c, &d, BOOT).is_err());
+        let again = replacement_defined(&c, &d, definitions).unwrap();
+        assert_eq!(again.handles, expected.handles);
+        assert_eq!(again.grants, [0, 0]);
+        assert!(d.is_clean());
     }
 }

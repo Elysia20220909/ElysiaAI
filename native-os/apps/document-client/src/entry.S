@@ -56,6 +56,8 @@ _start:
     cmp rax, -13
     jne recovery_fail
     mov qword ptr [0x60000300], 0x13579
+    cmp r13, 45
+    jae operation_client
     // A live service cannot be replaced.
     call recovery_connect
     cmp rax, -11
@@ -220,6 +222,79 @@ recovery_fail:
     mov edi, 1
     int 0x80
     ud2
+
+// Fixed proposal agent for the operation-contract fixture. Cannot approve itself.
+operation_client:
+    mov qword ptr [0x60000000], 11
+    mov qword ptr [0x60000008], r11
+    mov qword ptr [0x60000010], 0
+    cmp r13, 49
+    jne 2f
+    mov qword ptr [0x60000010], 999
+2:
+    mov qword ptr [0x60000018], 16
+    call recovery_exchange
+    cmp qword ptr [0x60000100], -13
+    jne recovery_fail
+    // Agent-supplied approval command is not an interface.
+    mov qword ptr [0x60000000], 14
+    call recovery_exchange
+    cmp qword ptr [0x60000100], -38
+    jne recovery_fail
+    mov qword ptr [0x60000000], 10
+    call recovery_exchange
+    cmp qword ptr [0x60000100], 0
+    jne recovery_fail
+    cmp r13, 47
+    jne 3f
+    mov qword ptr [0x60000000], 12
+    call recovery_exchange
+    cmp qword ptr [0x60000100], 0
+    jne recovery_fail
+3:
+    mov qword ptr [0x60000000], 11
+    cmp r13, 45
+    jne 4f
+    // Changed input after approval must not execute.
+    mov qword ptr [0x60000018], 8
+    call recovery_exchange
+    cmp qword ptr [0x60000100], -13
+    jne recovery_fail
+    mov qword ptr [0x60000018], 16
+4:
+    call recovery_send
+    call recovery_receive
+    cmp r13, 48
+    jne 5f
+    cmp rax, -32
+    jne recovery_fail
+    jmp recovery_ok
+5:
+    cmp rax, 64
+    jne recovery_fail
+    cmp r13, 45
+    je operation_success
+    cmp r13, 49
+    je operation_failure
+    cmp qword ptr [0x60000100], -13
+    jne recovery_fail
+    jmp recovery_ok
+operation_failure:
+    cmp qword ptr [0x60000100], -22
+    jne recovery_fail
+    jmp operation_duplicate
+operation_success:
+    cmp qword ptr [0x60000100], 0
+    jne recovery_fail
+    cmp qword ptr [0x60000108], 16
+    jne recovery_fail
+    cmp dword ptr [0x60000110], 0x53594c45
+    jne recovery_fail
+operation_duplicate:
+    call recovery_exchange
+    cmp qword ptr [0x60000100], -13
+    jne recovery_fail
+    jmp recovery_ok
 
 .section .data,"aw"
     .space 0x388

@@ -70,6 +70,17 @@ fn mode() -> BootMode {
         "elf-noexecute" => BootMode::ElfNoexecute,
         "elf-reject" => BootMode::ElfReject,
         "elf-rollback" => BootMode::ElfRollback,
+        "operation-complete" => BootMode::OperationComplete,
+        "operation-denied" => BootMode::OperationDenied,
+        "operation-interrupted" => BootMode::OperationInterrupted,
+        "operation-unknown" => BootMode::OperationUnknown,
+        "operation-failed" => BootMode::OperationFailed,
+        "persist-complete" | "persist-corrupt" | "persist-truncated" | "persist-full" => {
+            BootMode::PersistComplete
+        }
+        "persist-interrupted" => BootMode::PersistInterrupted,
+        "persist-unknown" => BootMode::PersistUnknown,
+        "persist-torn" => BootMode::PersistTorn,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

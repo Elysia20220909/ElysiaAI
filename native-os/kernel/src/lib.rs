@@ -3,7 +3,9 @@
 
 pub mod documents;
 pub mod ipc;
+pub mod journal;
 pub mod launch;
+pub mod operations;
 pub mod recovery;
 pub mod user_elf;
 
