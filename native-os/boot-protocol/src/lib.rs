@@ -60,6 +60,10 @@ pub enum BootMode {
     OperationInterrupted = 47,
     OperationUnknown = 48,
     OperationFailed = 49,
+    PersistComplete = 50,
+    PersistInterrupted = 51,
+    PersistUnknown = 52,
+    PersistTorn = 53,
 }
 
 impl BootMode {
@@ -115,6 +119,10 @@ impl BootMode {
             47 => Some(Self::OperationInterrupted),
             48 => Some(Self::OperationUnknown),
             49 => Some(Self::OperationFailed),
+            50 => Some(Self::PersistComplete),
+            51 => Some(Self::PersistInterrupted),
+            52 => Some(Self::PersistUnknown),
+            53 => Some(Self::PersistTorn),
             _ => None,
         }
     }

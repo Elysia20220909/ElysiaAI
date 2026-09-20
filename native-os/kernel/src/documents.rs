@@ -23,6 +23,7 @@ struct Delivery {
 #[derive(Clone)]
 pub struct Service {
     pub work: crate::operations::Manager,
+    checkpoint: Option<fn(&crate::operations::Manager)>,
     fixture: u32,
     now: u64,
     grants: [Option<Grant>; 2],
@@ -34,6 +35,7 @@ pub struct Service {
 impl Service {
     pub const EMPTY: Self = Self {
         work: crate::operations::Manager::EMPTY,
+        checkpoint: None,
         fixture: 0,
         now: 0,
         grants: [None; 2],
@@ -42,6 +44,14 @@ impl Service {
         pending: None,
         definition: None,
     };
+    pub fn set_checkpoint(&mut self, hook: fn(&crate::operations::Manager)) {
+        self.checkpoint = Some(hook);
+    }
+    fn record_checkpoint(&self) {
+        if let Some(hook) = self.checkpoint {
+            hook(&self.work);
+        }
+    }
     /// Boot-test approval source only. There is no guest API for setting this.
     pub fn enable_operation_fixture(&mut self, mode: u32) {
         self.fixture = mode;
@@ -76,6 +86,7 @@ impl Service {
                 self.work
                     .propose(caller, plan, self.now)
                     .map_err(|_| EACCES)?;
+                self.record_checkpoint();
                 // Exact scripted human decision, not the submitted plan or an AI decision.
                 let approved = Plan {
                     id: 1,
@@ -91,12 +102,14 @@ impl Service {
                 self.work
                     .approve(approved, self.fixture != 46, self.now)
                     .map_err(|_| EACCES)?;
+                self.record_checkpoint();
                 Ok(&[])
             }
             11 => {
                 self.work
                     .begin(caller, plan, self.now)
                     .map_err(|_| EACCES)?;
+                self.record_checkpoint();
                 let result = offset
                     .checked_add(length)
                     .and_then(|end| usize::try_from(offset).ok().zip(usize::try_from(end).ok()))
@@ -107,6 +120,7 @@ impl Service {
                     self.work
                         .finish(SERVICE, result.is_ok(), self.now)
                         .map_err(|_| EACCES)?;
+                    self.record_checkpoint();
                 }
                 result
             }

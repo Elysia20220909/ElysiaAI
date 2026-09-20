@@ -114,6 +114,9 @@ unsafe fn prepare(
         };
         if work_mode(mode) {
             (&mut *ptr::addr_of_mut!(DOCUMENTS)).enable_operation_fixture(mode);
+            if crate::persistent::enabled() {
+                (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_checkpoint(crate::persistent::checkpoint);
+            }
         }
         for pid in 0..2 {
             let (process, space) = build_process(allocator, pid, mode, handles, documents, 0, 32)
