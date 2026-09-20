@@ -1,6 +1,6 @@
 """Regression tests for the boot-result classifier, including false-success cases."""
 import unittest
-from boot_test import CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, RECOVERY_CASES, ELF_CASES, OPERATION_CASES, verify_output
+from boot_test import PERSISTENCE_CASES, CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, RECOVERY_CASES, ELF_CASES, OPERATION_CASES, verify_output
 
 
 class VerdictTests(unittest.TestCase):
@@ -190,6 +190,8 @@ class VerdictTests(unittest.TestCase):
 
     def test_accepts_each_expected_result(self):
         for case, (code, _) in CASES.items():
+            if case in PERSISTENCE_CASES:
+                continue
             with self.subTest(case=case):
                 self.assertEqual(verify_output(case, code, self.transcript(case)), [])
 

@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import time
+from persistence_test import CASES as PERSISTENCE_CASES, exercise as persistence_exercise
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_RUST = "1.96.0"
@@ -99,6 +100,8 @@ for name, (mode, state, executions) in OPERATION_CASES.items():
     CASES[name] = (53, ["kernel:user-spaces-ready", "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
                        "user:log pid=0 hex=6f6b", f"kernel:operation-result state={state} executions={executions}",
                        "kernel:operation-clean"])
+for name in PERSISTENCE_CASES:
+    CASES[name] = (55, [])
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
           "kernel:entered", "kernel:exceptions-ready"]
 MEMORY_PREFIX = ["kernel:boot-info-valid", "kernel:frames-verified",
@@ -129,6 +132,8 @@ def sha256(path: Path) -> str:
 
 def verify_output(case: str, code: int, output: str) -> list[str]:
     """Require both the exact exit code and ordered evidence from each side of the handoff."""
+    if case in PERSISTENCE_CASES:
+        return ["persistence requires two-boot and disk-integrity verification"]
     expected_code, markers = CASES[case]
     errors = []
     if code != expected_code:
@@ -542,10 +547,13 @@ def run(args: argparse.Namespace) -> int:
         ]
         started = time.monotonic()
         try:
-            result = execute(command, timeout=args.timeout)
-            output = result.stdout
-            errors = verify_output(case, result.returncode, output)
-            returncode = result.returncode
+            if case in PERSISTENCE_CASES:
+                returncode, output, errors = persistence_exercise(command, case, case_dir, args.timeout, execute, verify_output)
+            else:
+                result = execute(command, timeout=args.timeout)
+                output = result.stdout
+                errors = verify_output(case, result.returncode, output)
+                returncode = result.returncode
         except subprocess.TimeoutExpired as exc:
             raw = exc.stdout or b""
             output = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw

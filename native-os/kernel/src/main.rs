@@ -4,8 +4,10 @@
 mod address_space;
 mod elf_loader;
 mod exceptions;
+mod journal_disk;
 mod memory;
 mod paging;
+mod persistent;
 #[path = "../../platform.rs"]
 mod platform;
 mod timer;
@@ -105,6 +107,10 @@ extern "sysv64" fn kernel_main(info: *const BootInfo) -> ! {
         unsafe {
             asm!("ud2", options(noreturn));
         }
+    }
+    if (50..=53).contains(&info.mode) {
+        persistent::boot(info.mode);
+        unsafe { userspace::run(45) }
     }
     if info.mode >= BootMode::UserCooperate as u32 {
         unsafe { userspace::run(info.mode) }

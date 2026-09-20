@@ -356,3 +356,10 @@ log / yield / exit と役割限定 syscall 6 / 7 は既存の契約を維持し�
 新しい `operation-*` の5ケースで、正常実行・拒否・中断・成否不明・失敗を区別する。
 承認元は明示的な試験用入力。実ユーザー向け承認画面、永続記録、AI 推論は含まない。
 [設計と検証記録](../docs/native-os/OPERATION_CONTRACT_VALIDATION.md) を参照。
+
+## M5a の操作記録の永続化
+
+`persist-*` の7ケースでは、runner が作る専用32 KiBディスクを2回の QEMU 起動で共有する。
+承認・実行状態を保存し、再起動後は完了・中断・成否不明・破損を照合して停止する。
+古い権限の復元や自動再実行は行わない。実ディスクやホスト共有は使わない。
+[形式・障害試験・検証記録](../docs/native-os/PERSISTENCE_VALIDATION.md) を参照。

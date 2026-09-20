@@ -75,6 +75,12 @@ fn mode() -> BootMode {
         "operation-interrupted" => BootMode::OperationInterrupted,
         "operation-unknown" => BootMode::OperationUnknown,
         "operation-failed" => BootMode::OperationFailed,
+        "persist-complete" | "persist-corrupt" | "persist-truncated" | "persist-full" => {
+            BootMode::PersistComplete
+        }
+        "persist-interrupted" => BootMode::PersistInterrupted,
+        "persist-unknown" => BootMode::PersistUnknown,
+        "persist-torn" => BootMode::PersistTorn,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

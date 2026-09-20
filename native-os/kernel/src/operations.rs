@@ -55,6 +55,9 @@ impl Manager {
         count: 0,
         executions: 0,
     };
+    pub fn plan(&self) -> Option<Plan> {
+        self.plan
+    }
     pub fn state(&self) -> State {
         self.state
     }
