@@ -92,6 +92,13 @@ for name, mode in ELF_CASES.items():
                        "kernel:elf-loaded pid=1", "kernel:user-spaces-ready", "kernel:timer-ready",
                        "kernel:user-enter pid=0 cpl=3", "user:log pid=1 hex=6f6b",
                        "kernel:elf-clean", f"kernel:elf-tests-passed mode={mode}"])
+OPERATION_CASES = {"operation-complete": (45, "Completed", 1), "operation-denied": (46, "Denied", 0),
+                   "operation-interrupted": (47, "Interrupted", 0), "operation-unknown": (48, "Unknown", 1),
+                   "operation-failed": (49, "Failed", 1)}
+for name, (mode, state, executions) in OPERATION_CASES.items():
+    CASES[name] = (53, ["kernel:user-spaces-ready", "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
+                       "user:log pid=0 hex=6f6b", f"kernel:operation-result state={state} executions={executions}",
+                       "kernel:operation-clean"])
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
           "kernel:entered", "kernel:exceptions-ready"]
 MEMORY_PREFIX = ["kernel:boot-info-valid", "kernel:frames-verified",
@@ -178,6 +185,20 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
             errors.append("launch definitions changed across process lifetimes")
     if case in ELF_CASES:
         errors.extend(verify_elf(case, output))
+    if case in OPERATION_CASES:
+        _, state, executions = OPERATION_CASES[case]
+        expected = ["Proposed", "Denied"] if state == "Denied" else ["Proposed", "Approved", "Interrupted"] if state == "Interrupted" else ["Proposed", "Approved", "Running", state]
+        events = re.findall(r"kernel:operation-event id=1 state=(\w+) tick=(\d+)", output)
+        if [e[0] for e in events] != expected or [int(e[1]) for e in events] != sorted(int(e[1]) for e in events):
+            errors.append("missing or invalid operation journal")
+        baseline = re.search(r"kernel:allocation-rollback boundaries=\d+ free=(\d+)", output)
+        clean = re.search(r"kernel:operation-clean free=(\d+)", output)
+        if not baseline or not clean or baseline[1] != clean[1]:
+            errors.append("operation resource leak")
+        if "kernel:document-response status=-38" not in output or "kernel:document-response status=-13" not in output:
+            errors.append("missing unapproved execution or self-approval rejection")
+        if state == "Unknown" and "kernel:user-stopped pid=1 vector=6" not in output:
+            errors.append("unknown result lacks observed service fault")
     return errors
 
 
@@ -291,12 +312,15 @@ def verify_ipc(case: str, output: str) -> list[str]:
         "ipc-peer-fault": ["kernel:user-stopped pid=1 vector=6 error=0x0 address=0x0", "kernel:ipc-wake pid=0 result=-32"],
         "ipc-revoke": ["kernel:ipc-result pid=1 op=5 result=0", "kernel:ipc-wake pid=0 result=-32",
                        "kernel:ipc-result pid=0 op=3 result=-9", "kernel:ipc-result pid=0 op=4 result=-9"],
-        "ipc-deadlock": ["kernel:ipc-result pid=1 op=4 result=-35", "kernel:ipc-wake pid=0 result=2"],
         "ipc-queue": ["kernel:ipc-result pid=0 op=3 result=-11"],
     }
     for marker in required.get(case, []):
         if marker not in lines:
             errors.append(f"missing IPC evidence: {marker}")
+    if case == "ipc-deadlock":
+        rejected = re.findall(r"kernel:ipc-result pid=([01]) op=4 result=-35", output)
+        if len(rejected) != 1 or f"kernel:ipc-wake pid={1 - int(rejected[0])} result=2" not in lines:
+            errors.append("missing symmetric deadlock rejection and peer wakeup")
     if case == "ipc-echo":
         if lines.count("kernel:ipc-result pid=0 op=3 result=-9") != 2:
             errors.append("missing forged or foreign handle rejection")

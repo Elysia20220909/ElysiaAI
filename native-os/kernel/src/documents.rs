@@ -22,6 +22,9 @@ struct Delivery {
 }
 #[derive(Clone)]
 pub struct Service {
+    pub work: crate::operations::Manager,
+    fixture: u32,
+    now: u64,
     grants: [Option<Grant>; 2],
     generation: u64,
     next_token: u64,
@@ -30,12 +33,90 @@ pub struct Service {
 }
 impl Service {
     pub const EMPTY: Self = Self {
+        work: crate::operations::Manager::EMPTY,
+        fixture: 0,
+        now: 0,
         grants: [None; 2],
         generation: 0,
         next_token: 0x100,
         pending: None,
         definition: None,
     };
+    /// Boot-test approval source only. There is no guest API for setting this.
+    pub fn enable_operation_fixture(&mut self, mode: u32) {
+        self.fixture = mode;
+    }
+    pub fn serve_at(&mut self, pid: usize, now: u64) -> Result<[u8; RESPONSE_SIZE], u64> {
+        self.now = now;
+        self.serve(pid)
+    }
+    fn operation(
+        &mut self,
+        caller: usize,
+        opcode: u64,
+        token: u64,
+        offset: u64,
+        length: u64,
+        document: usize,
+    ) -> Result<&'static [u8], u64> {
+        use crate::operations::Plan;
+        let plan = Plan {
+            id: 1,
+            caller,
+            executor: SERVICE,
+            version: 1,
+            target: token,
+            offset,
+            length,
+            byte_budget: 16,
+            deadline: 1024,
+        };
+        match opcode {
+            10 => {
+                self.work
+                    .propose(caller, plan, self.now)
+                    .map_err(|_| EACCES)?;
+                // Exact scripted human decision, not the submitted plan or an AI decision.
+                let approved = Plan {
+                    id: 1,
+                    caller: 0,
+                    executor: SERVICE,
+                    version: 1,
+                    target: self.grants[0].ok_or(EBADF)?.token,
+                    offset: if self.fixture == 49 { 999 } else { 0 },
+                    length: 16,
+                    byte_budget: 16,
+                    deadline: 1024,
+                };
+                self.work
+                    .approve(approved, self.fixture != 46, self.now)
+                    .map_err(|_| EACCES)?;
+                Ok(&[])
+            }
+            11 => {
+                self.work
+                    .begin(caller, plan, self.now)
+                    .map_err(|_| EACCES)?;
+                let result = offset
+                    .checked_add(length)
+                    .and_then(|end| usize::try_from(offset).ok().zip(usize::try_from(end).ok()))
+                    .and_then(|(start, end)| DOCUMENTS[document].get(start..end))
+                    .ok_or(EINVAL);
+                // Fault fixture leaves Running until the actual service fault is observed.
+                if self.fixture != 48 {
+                    self.work
+                        .finish(SERVICE, result.is_ok(), self.now)
+                        .map_err(|_| EACCES)?;
+                }
+                result
+            }
+            12 => {
+                self.work.interrupt(self.now).map_err(|_| EACCES)?;
+                Ok(&[])
+            }
+            _ => Err(ENOSYS),
+        }
+    }
     /// Issued by the kernel, never by untrusted requests. No host files are loaded.
     pub fn start_pair(&mut self) -> Result<[u64; 2], u64> {
         let grants = self.start([Some(0), Some(1)])?;
@@ -126,6 +207,16 @@ impl Service {
         let offset = word(16);
         let length = word(24);
         let grant = self.grant(delivery.caller, token)?;
+        if self.fixture != 0 {
+            return self.operation(
+                delivery.caller,
+                operation,
+                token,
+                offset,
+                length,
+                grant.document,
+            );
+        }
         match operation {
             1 => {
                 if length > MAX_READ as u64 {
@@ -163,7 +254,14 @@ impl Service {
         }
         Ok(response)
     }
+    pub fn close_process_at(&mut self, pid: usize, now: u64) {
+        self.now = now;
+        self.close_process(pid);
+    }
     pub fn close_process(&mut self, pid: usize) {
+        if self.fixture != 0 {
+            let _ = self.work.interrupt(self.now);
+        }
         if pid == SERVICE {
             self.grants = [None; 2];
             self.pending = None;

@@ -65,6 +65,7 @@ static mut PROCESSES: [Process; 2] = [Process {
 }; 2];
 static mut CURRENT: usize = 0;
 static mut MODE: u32 = 0;
+static mut CLOCK: u64 = 0;
 static mut ACTIVE: bool = false;
 
 global_asm!(
@@ -111,6 +112,9 @@ unsafe fn prepare(
         } else {
             [0; 2]
         };
+        if work_mode(mode) {
+            (&mut *ptr::addr_of_mut!(DOCUMENTS)).enable_operation_fixture(mode);
+        }
         for pid in 0..2 {
             let (process, space) = build_process(allocator, pid, mode, handles, documents, 0, 32)
                 .unwrap_or_else(|e| platform::fail(e));
@@ -355,6 +359,9 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
         frame.rflags = user_flags(frame.rflags) | if preemptive(MODE) { 0x200 } else { 0 };
         if frame.vector == 32 {
             timer::acknowledge();
+            CLOCK = CLOCK
+                .checked_add(1)
+                .unwrap_or_else(|| platform::fail("clock-overflow"));
             if !preemptive(MODE) {
                 platform::fail("unexpected-timer");
             }
@@ -450,7 +457,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                         Err(EFAULT)
                     } else {
                         (&mut *ptr::addr_of_mut!(DOCUMENTS))
-                            .serve(current)
+                            .serve_at(current, CLOCK)
                             .map(|response| {
                                 ptr::copy_nonoverlapping(
                                     response.as_ptr(),
@@ -514,7 +521,7 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                     (&mut *ptr::addr_of_mut!(CHANNEL)).close_process(pid);
                 }
                 if document_mode(MODE) {
-                    (&mut *ptr::addr_of_mut!(DOCUMENTS)).close_process(pid);
+                    (&mut *ptr::addr_of_mut!(DOCUMENTS)).close_process_at(pid, CLOCK);
                 }
                 space.release(memory::frames());
                 processes[pid].root = 0;
@@ -546,6 +553,47 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
             let free = memory::frames().free_count();
             if free != BASELINE {
                 platform::fail("process-resource-leak");
+            }
+            if work_mode(MODE) {
+                use elysia_kernel::operations::State;
+                let manager = &(&*ptr::addr_of!(DOCUMENTS)).work;
+                let expected = match MODE {
+                    45 => State::Completed,
+                    46 => State::Denied,
+                    47 => State::Interrupted,
+                    48 => State::Unknown,
+                    49 => State::Failed,
+                    _ => unreachable!(),
+                };
+                let executions = if matches!(MODE, 45 | 48 | 49) { 1 } else { 0 };
+                if manager.state() != expected
+                    || manager.executions() != executions
+                    || processes[0].exit != Some(0)
+                    || processes[0].fault.is_some()
+                    || processes.iter().any(|p| p.budget_stopped)
+                    || !(&*ptr::addr_of!(CHANNEL)).is_clean()
+                    || !(&*ptr::addr_of!(DOCUMENTS)).is_clean()
+                {
+                    platform::fail("operation-verdict");
+                }
+                if MODE == 48 {
+                    if processes[1].fault.map(|f| f.0) != Some(6) {
+                        platform::fail("operation-missing-fault");
+                    }
+                } else if processes[1].exit != Some(0) || processes[1].fault.is_some() {
+                    platform::fail("operation-service-exit");
+                }
+                for event in manager.events().iter().flatten() {
+                    platform::log(format_args!(
+                        "kernel:operation-event id={} state={:?} tick={}",
+                        event.id, event.state, event.tick
+                    ));
+                }
+                platform::log(format_args!(
+                    "kernel:operation-result state={expected:?} executions={executions}"
+                ));
+                platform::log(format_args!("kernel:operation-clean free={free}"));
+                platform::exit(0x1a);
             }
             if MODE >= 39 {
                 verify_elf(processes, MODE);
@@ -638,16 +686,19 @@ fn verify_fixture(processes: &[Process; 2], mode: u32) {
 }
 
 fn ipc_mode(mode: u32) -> bool {
-    matches!(mode, 21..=38)
+    matches!(mode, 21..=38 | 45..=49)
 }
 fn document_mode(mode: u32) -> bool {
-    matches!(mode, 27..=38)
+    matches!(mode, 27..=38 | 45..=49)
+}
+fn work_mode(mode: u32) -> bool {
+    matches!(mode, 45..=49)
 }
 fn recovery_mode(mode: u32) -> bool {
-    matches!(mode, 33..=38)
+    matches!(mode, 33..=38 | 45..=49)
 }
 fn preemptive(mode: u32) -> bool {
-    matches!(mode, 18 | 20..=44)
+    matches!(mode, 18 | 20..=49)
 }
 fn verify_lifecycle(p: &[Process; 2], mode: u32) {
     let valid = if mode == 19 {

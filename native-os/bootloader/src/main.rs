@@ -70,6 +70,11 @@ fn mode() -> BootMode {
         "elf-noexecute" => BootMode::ElfNoexecute,
         "elf-reject" => BootMode::ElfReject,
         "elf-rollback" => BootMode::ElfRollback,
+        "operation-complete" => BootMode::OperationComplete,
+        "operation-denied" => BootMode::OperationDenied,
+        "operation-interrupted" => BootMode::OperationInterrupted,
+        "operation-unknown" => BootMode::OperationUnknown,
+        "operation-failed" => BootMode::OperationFailed,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

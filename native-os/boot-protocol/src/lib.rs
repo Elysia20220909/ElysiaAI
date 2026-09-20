@@ -55,6 +55,11 @@ pub enum BootMode {
     ElfNoexecute = 42,
     ElfReject = 43,
     ElfRollback = 44,
+    OperationComplete = 45,
+    OperationDenied = 46,
+    OperationInterrupted = 47,
+    OperationUnknown = 48,
+    OperationFailed = 49,
 }
 
 impl BootMode {
@@ -105,6 +110,11 @@ impl BootMode {
             42 => Some(Self::ElfNoexecute),
             43 => Some(Self::ElfReject),
             44 => Some(Self::ElfRollback),
+            45 => Some(Self::OperationComplete),
+            46 => Some(Self::OperationDenied),
+            47 => Some(Self::OperationInterrupted),
+            48 => Some(Self::OperationUnknown),
+            49 => Some(Self::OperationFailed),
             _ => None,
         }
     }

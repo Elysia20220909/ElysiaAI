@@ -106,6 +106,8 @@ ipc_stale:
     jne user_fail
     jmp ipc_ok
 ipc_deadlock_reply:
+    cmp rax, -35
+    je ipc_deadlock_send
     cmp rax, 2
     jne user_fail
     cmp word ptr [0x60000008], 0x5942
@@ -158,8 +160,8 @@ ipc_deadlock:
     mov esi, 0x60000008
     mov edx, 2
     int 0x80
-    cmp rax, -35
-    jne user_fail
+    jmp ipc_deadlock_reply
+ipc_deadlock_send:
     mov word ptr [0x60000000], 0x5942
     call ipc_send_two
     jmp ipc_wait_shutdown
@@ -198,6 +200,10 @@ ipc_wait_shutdown:
     int 0x80
     cmp rax, -32
     jne user_fail
+    cmp r13, 25
+    jne user_exit
+    test r12, r12
+    jz ipc_ok
     jmp user_exit
 ipc_send_probe:
     mov eax, 3
