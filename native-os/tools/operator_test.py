@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 
 from persistence_test import fresh_image
+from qemu_test_utils import operation_result_errors, qemu_path
 
 
 CASES = {
@@ -52,8 +53,14 @@ def verdict(state, code, output, asynchronous=False):
         errors.append("guest failure")
     if state != "Completed" and ("state=Running" in output or "state=Completed" in output):
         errors.append("unapproved execution")
-    if output.count("kernel:operator-decision") != 1:
-        errors.append("decision was not single-use")
+    decisions = [line for line in output.splitlines() if line.startswith("kernel:operator-decision")]
+    decision_state = "Approved" if state == "Completed" else state
+    if len(decisions) != 1 or not re.fullmatch(
+        rf"kernel:operator-decision reason=\S+ state={decision_state} executions=0", decisions[0]
+    ):
+        errors.append("missing, duplicate, or incorrect operator decision")
+    if state == "Completed" or asynchronous:
+        errors.extend(operation_result_errors(output, state, int(state == "Completed")))
     if asynchronous:
         prompt = output.find(PROMPT)
         decision = output.find("kernel:operator-decision")
@@ -96,7 +103,7 @@ def exercise(command, case, case_dir, timeout, execute, verify_live, manual=Fals
         "-device",
         "isa-ide,id=journalide,iobase=0x1f0,iobase2=0x3f6,irq=14",
         "-drive",
-        f"if=none,id=journal,format=raw,cache=writeback,file={disk.as_posix()}",
+        f"if=none,id=journal,format=raw,cache=writeback,file={qemu_path(disk)}",
         "-device",
         "ide-hd,drive=journal,bus=journalide.0,unit=0",
     ]

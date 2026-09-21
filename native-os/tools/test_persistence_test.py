@@ -1,8 +1,11 @@
+import subprocess
+import tempfile
 import unittest
 import zlib
+from unittest.mock import Mock
 
 from boot_test import verify_output
-from persistence_test import fresh_image, recovery_errors
+from persistence_test import cut_errors, exercise, fresh_image, recovery_errors
 
 
 class PersistenceTests(unittest.TestCase):
@@ -39,3 +42,44 @@ class PersistenceTests(unittest.TestCase):
                 "x",
             )
         )
+
+    def test_cut_cannot_hide_guest_failure_or_continue_recovery(self):
+        output = "\n".join(
+            [
+                "kernel:persist-flushed state=Proposed sequence=1",
+                "kernel:persist-flushed state=Approved sequence=2",
+                "kernel:persist-cut state=Approved",
+                "kernel:panic unexpected fault",
+            ]
+        )
+        execute = Mock(
+            side_effect=[
+                subprocess.TimeoutExpired("qemu", 10, output=output.encode()),
+                subprocess.CompletedProcess(
+                    "qemu", 55, "kernel:persist-recovered state=Interrupted records=2 restored-authority=0 executions=0"
+                ),
+            ]
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            _, _, errors = exercise([], "persist-interrupted", directory, 45, execute, Mock())
+        self.assertTrue(errors)
+        self.assertEqual(execute.call_count, 1)
+
+    def test_cut_requires_the_exact_durable_prefix_and_single_checkpoint(self):
+        for case, states, cut in [
+            ("persist-interrupted", ["Proposed", "Approved"], "Approved"),
+            ("persist-unknown", ["Proposed", "Approved", "Running"], "Running"),
+            ("persist-torn", ["Proposed"], "Approved"),
+        ]:
+            lines = [f"kernel:persist-flushed state={state} sequence={i}" for i, state in enumerate(states, 1)]
+            lines.append(f"kernel:persist-cut state={cut}")
+            output = "\n".join(lines)
+            self.assertEqual(cut_errors(case, output), [])
+            for bad in [
+                "\n".join(lines[1:]),
+                output + "\n" + lines[-1],
+                output.replace(f"cut state={cut}", "cut state=Proposed"),
+                output + "\nfailure:unexpected",
+                output + "\nkernel:panic",
+            ]:
+                self.assertTrue(cut_errors(case, bad))

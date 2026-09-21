@@ -182,6 +182,12 @@ class VerdictTests(unittest.TestCase):
         case = "operation-unknown"
         self.assertTrue(verify_output(case, 53, self.transcript(case).replace("kernel:user-stopped pid=1 vector=6", "")))
 
+    def test_operation_rejects_prefixed_counts_and_duplicate_results(self):
+        output = self.transcript("operation-complete")
+        for count in ("10", "11", "01"):
+            self.assertTrue(verify_output("operation-complete", 53, output.replace("executions=1", f"executions={count}")))
+        self.assertTrue(verify_output("operation-complete", 53, output + "\nkernel:operation-result state=Completed executions=1"))
+
     def test_deadlock_allows_either_process_to_wait_first(self):
         text = self.transcript("ipc-deadlock")
         reversed_order = text.replace("kernel:ipc-block pid=0", "kernel:ipc-block pid=1").replace("kernel:ipc-result pid=1 op=4 result=-35", "kernel:ipc-result pid=0 op=4 result=-35").replace("kernel:ipc-wake pid=0 result=2", "kernel:ipc-wake pid=1 result=2")

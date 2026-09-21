@@ -15,6 +15,7 @@ import sys
 import time
 from persistence_test import CASES as PERSISTENCE_CASES, exercise as persistence_exercise
 from operator_test import CASES as OPERATOR_CASES, exercise as operator_exercise
+from qemu_test_utils import operation_result_errors, qemu_path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_RUST = "1.96.0"
@@ -196,6 +197,7 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
         errors.extend(verify_elf(case, output))
     if case in OPERATION_CASES:
         _, state, executions = OPERATION_CASES[case]
+        errors.extend(operation_result_errors(output, state, executions))
         expected = ["Proposed", "Denied"] if state == "Denied" else ["Proposed", "Approved", "Interrupted"] if state == "Interrupted" else ["Proposed", "Approved", "Running", state]
         events = re.findall(r"kernel:operation-event id=1 state=(\w+) tick=(\d+)", output)
         if [e[0] for e in events] != expected or [int(e[1]) for e in events] != sorted(int(e[1]) for e in events):
@@ -461,11 +463,6 @@ def verify_elf(case: str, output: str) -> list[str]:
         if not rollback or int(rollback[1]) < 8 or not baseline or rollback[2] != baseline[1]:
             errors.append("ELF allocation rollback incomplete")
     return errors
-
-
-def qemu_path(path: Path) -> str:
-    # Commas delimit QEMU suboptions; doubling preserves a literal comma.
-    return path.resolve().as_posix().replace(",", ",,")
 
 
 def source_digest() -> str:

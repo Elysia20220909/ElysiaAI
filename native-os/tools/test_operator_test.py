@@ -49,3 +49,22 @@ class OperatorVerdictTests(unittest.TestCase):
         )
         early = output.replace("kernel:async-work pid=0 count=100000", "") + "\nkernel:async-work pid=0 count=100000"
         self.assertTrue(verdict("Denied", 53, early, True))
+
+    def test_completed_requires_exact_single_execution_and_decision(self):
+        output = "\n".join(
+            [
+                "kernel:persist-flushed state=Proposed",
+                "kernel:operator-plan id=1",
+                "kernel:operator-prompt",
+                "kernel:persist-flushed state=Approved",
+                "kernel:operator-decision reason=input state=Approved executions=0",
+                "kernel:persist-flushed state=Running",
+                "kernel:persist-flushed state=Completed",
+                "kernel:operation-result state=Completed executions=1",
+            ]
+        )
+        self.assertEqual(verdict("Completed", 53, output), [])
+        for count in ("10", "11", "01"):
+            self.assertTrue(verdict("Completed", 53, output.replace("executions=1", f"executions={count}")))
+        self.assertTrue(verdict("Completed", 53, output.replace("executions=0", "executions=01")))
+        self.assertTrue(verdict("Completed", 53, output + "\nkernel:operation-result state=Completed executions=1"))

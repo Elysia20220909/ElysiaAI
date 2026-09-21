@@ -6,6 +6,8 @@ import tempfile
 import zlib
 from pathlib import Path
 
+from qemu_test_utils import qemu_path
+
 
 CASES = {
     "persist-complete": "Completed",
@@ -72,6 +74,22 @@ def recovery_errors(case, code, output, before, after):
     return errors
 
 
+def cut_errors(case, output):
+    flushed = {
+        "persist-interrupted": ["Proposed", "Approved"],
+        "persist-unknown": ["Proposed", "Approved", "Running"],
+        "persist-torn": ["Proposed"],
+    }[case]
+    cut_state = "Running" if case == "persist-unknown" else "Approved"
+    expected = [f"kernel:persist-flushed state={state} sequence={index}" for index, state in enumerate(flushed, 1)]
+    expected.append(f"kernel:persist-cut state={cut_state}")
+    actual = [line for line in output.splitlines() if line.startswith(("kernel:persist-flushed", "kernel:persist-cut"))]
+    errors = [] if actual == expected else ["wrong cut state or missing durable transition before cut"]
+    if any(marker in output for marker in ("failure:", "panic", "kernel:fault:unexpected", "kernel:operation-result")):
+        errors.append("guest failed or completed instead of waiting at cut")
+    return errors
+
+
 def exercise(command, case, case_dir, timeout, execute, verify_live):
     root = Path(case_dir).resolve()
     directory = Path(tempfile.mkdtemp(prefix="journal-", dir=root))
@@ -82,7 +100,7 @@ def exercise(command, case, case_dir, timeout, execute, verify_live):
         "-device",
         "isa-ide,id=journalide,iobase=0x1f0,iobase2=0x3f6,irq=14",
         "-drive",
-        f"if=none,id=journal,format=raw,cache=writeback,file={disk.as_posix()}",
+        f"if=none,id=journal,format=raw,cache=writeback,file={qemu_path(disk)}",
         "-device",
         "ide-hd,drive=journal,bus=journalide.0,unit=0",
     ]
@@ -101,7 +119,9 @@ def exercise(command, case, case_dir, timeout, execute, verify_live):
         if isinstance(first_output, bytes):
             first_output = first_output.decode("utf-8", "replace")
         killed = True
-        if not cut or "kernel:persist-cut state=" not in first_output:
+        if cut:
+            errors.extend(cut_errors(case, first_output))
+        else:
             errors.append("timeout without expected cut checkpoint")
     (directory / "first.log").write_text(first_output, encoding="utf-8")
     if errors:

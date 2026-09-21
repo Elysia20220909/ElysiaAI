@@ -30,7 +30,8 @@ pub fn decide(manager: &mut Manager) {
         .plan()
         .unwrap_or_else(|| platform::fail("operator-no-plan"));
     let now = manager.events().last().unwrap().unwrap().tick;
-    // Discard input buffered before the proposal. Never interpret it as consent.
+    // Discard the guest UART FIFO. The trusted host must send only after
+    // this prompt; bytes still queued on the host are outside this purge.
     out(0x3fa, 0xc7);
     platform::log(format_args!(
         "kernel:operator-plan id={} caller={} executor={} version={} target={} offset={} length={} byte-budget={} deadline-tick={}",
@@ -89,7 +90,7 @@ pub fn decide(manager: &mut Manager) {
         }
     }
     out(0x61, saved & !3);
-    // Drop trailing commands; this proposal accepts exactly one decision.
+    // Clear trailing bytes in the guest FIFO; this proposal accepts one decision.
     out(0x3fa, 0xc7);
     match decision {
         Some(value) => manager.approve(plan, value == Decision::Approve, now),

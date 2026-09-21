@@ -115,10 +115,14 @@ impl Service {
                 Ok(&[])
             }
             11 => {
-                self.work
-                    .begin(caller, plan, self.now)
-                    .map_err(|_| EACCES)?;
-                self.record_checkpoint();
+                let previous = self.work.state();
+                let result = self.work.begin(caller, plan, self.now);
+                // Expiry records Interrupted even though begin returns an error.
+                // Persist that transition before returning the denial to the client.
+                if self.work.state() != previous {
+                    self.record_checkpoint();
+                }
+                result.map_err(|_| EACCES)?;
                 let result = offset
                     .checked_add(length)
                     .and_then(|end| usize::try_from(offset).ok().zip(usize::try_from(end).ok()))
@@ -409,6 +413,44 @@ mod tests {
         assert_ne!(old, new);
         assert_eq!(status(call(&mut s, request(1, old[0], 0, 1))), EBADF);
         assert_eq!(status(call(&mut s, request(1, new[0], 0, 1))), 0);
+    }
+    #[test]
+    fn expired_execution_persists_interruption_before_returning_denial() {
+        use crate::operations::State;
+        use core::sync::atomic::{AtomicU64, Ordering};
+        static STATES: AtomicU64 = AtomicU64::new(0);
+        fn checkpoint(manager: &crate::operations::Manager) {
+            let previous = STATES.load(Ordering::SeqCst);
+            STATES.store((previous << 4) | manager.state() as u64, Ordering::SeqCst);
+        }
+        let mut service = Service::EMPTY;
+        let handles = service.start_client().unwrap();
+        service.enable_operation_fixture(45);
+        service.set_checkpoint(checkpoint);
+        assert_eq!(
+            status(call(&mut service, request(10, handles[0], 0, 16))),
+            0
+        );
+        assert_eq!(STATES.load(Ordering::SeqCst), 0x12);
+        // An unchanged state must not generate a duplicate journal record.
+        assert_eq!(
+            status(call(&mut service, request(11, handles[0], 0, 8))),
+            EACCES
+        );
+        assert_eq!(STATES.load(Ordering::SeqCst), 0x12);
+        service
+            .delivered(1, 0, request(11, handles[0], 0, 16))
+            .unwrap();
+        let response = service.serve_at(1, 1024).unwrap();
+        assert_eq!(status(response), EACCES);
+        assert_eq!(service.work.state(), State::Interrupted);
+        assert_eq!(service.work.executions(), 0);
+        assert_eq!(STATES.load(Ordering::SeqCst), 0x127);
+        assert_eq!(&response[8..], &[0; 56]);
+        service.close_process_at(0, 1025);
+        service.close_process_at(1, 1026);
+        assert_eq!(STATES.load(Ordering::SeqCst), 0x127);
+        assert!(service.is_clean());
     }
     #[test]
     fn departure_persists_interruption_once_without_restoring_authority() {
