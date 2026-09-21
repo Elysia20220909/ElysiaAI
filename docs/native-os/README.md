@@ -82,3 +82,6 @@ AbyssRTOS との名称統合や、リアルタイム OS としての保証も未
 M3e は復旧対象の資料サービスを専用 ELF に移した。[サービス ELF の検証](SERVICE_ELF_VALIDATION.md)に初回ロードと再起動の結果を記録する。
 
 M3f は復旧クライアントを独立 ELF に移し、起動時の権限を役割別に整理した。[検証記録](CLIENT_ELF_VALIDATION.md)。
+
+M5c は承認待ち中のクライアント処理継続と、拒否や期限切れ後の資源回収を扱う。
+[非同期承認の検証](ASYNC_APPROVAL_VALIDATION.md)に対象と制限を記載する。

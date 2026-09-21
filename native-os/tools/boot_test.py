@@ -15,6 +15,7 @@ import sys
 import time
 from persistence_test import CASES as PERSISTENCE_CASES, exercise as persistence_exercise
 from operator_test import CASES as OPERATOR_CASES, exercise as operator_exercise
+from qemu_test_utils import operation_result_errors, qemu_path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_RUST = "1.96.0"
@@ -196,6 +197,7 @@ def verify_output(case: str, code: int, output: str) -> list[str]:
         errors.extend(verify_elf(case, output))
     if case in OPERATION_CASES:
         _, state, executions = OPERATION_CASES[case]
+        errors.extend(operation_result_errors(output, state, executions))
         expected = ["Proposed", "Denied"] if state == "Denied" else ["Proposed", "Approved", "Interrupted"] if state == "Interrupted" else ["Proposed", "Approved", "Running", state]
         events = re.findall(r"kernel:operation-event id=1 state=(\w+) tick=(\d+)", output)
         if [e[0] for e in events] != expected or [int(e[1]) for e in events] != sorted(int(e[1]) for e in events):
@@ -463,11 +465,6 @@ def verify_elf(case: str, output: str) -> list[str]:
     return errors
 
 
-def qemu_path(path: Path) -> str:
-    # Commas delimit QEMU suboptions; doubling preserves a literal comma.
-    return path.resolve().as_posix().replace(",", ",,")
-
-
 def source_digest() -> str:
     digest = hashlib.sha256()
     for path in sorted(ROOT.rglob("*")):
@@ -591,11 +588,11 @@ def main() -> int:
     parser.add_argument("--qemu", type=Path, default=default_tools / "qemu-system-x86_64.exe")
     parser.add_argument("--firmware-dir", type=Path, default=default_tools / "share")
     parser.add_argument("--case", choices=["all", *CASES], default="all")
-    parser.add_argument("--operator-manual", action="store_true", help="Read a real operator decision from stdin (operator-approve only)")
+    parser.add_argument("--operator-manual", action="store_true", help="Read a real operator decision from stdin (operator-approve or async-approve)")
     parser.add_argument("--timeout", type=float, default=45)
     args = parser.parse_args()
-    if args.operator_manual and args.case != "operator-approve":
-        parser.error("--operator-manual requires --case operator-approve")
+    if args.operator_manual and args.case not in ("operator-approve", "async-approve"):
+        parser.error("--operator-manual requires --case operator-approve or async-approve")
     if not 1 <= args.timeout <= 120:
         parser.error("--timeout must be between 1 and 120 seconds")
     try:

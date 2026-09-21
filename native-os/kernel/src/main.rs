@@ -2,6 +2,7 @@
 #![no_main]
 
 mod address_space;
+mod async_operator;
 mod elf_loader;
 mod exceptions;
 mod journal_disk;
@@ -108,6 +109,10 @@ extern "sysv64" fn kernel_main(info: *const BootInfo) -> ! {
         unsafe {
             asm!("ud2", options(noreturn));
         }
+    }
+    if info.mode == 55 {
+        persistent::boot(info.mode);
+        unsafe { userspace::run(55) }
     }
     if info.mode == 54 {
         persistent::boot(info.mode);
