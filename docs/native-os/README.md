@@ -9,7 +9,8 @@ M3a では固定した 2 者間の IPC、権限ハンドル、待機と起床、
 M3b は固定の RAM 資料を IPC 経由で読み取り、権限・範囲・失効を検査する。
 M3c はクライアントを残した資料サービスの再起動と、8 回の反復・新しい権限での再接続を検証する。
 M3d は別ビルドの静的ユーザー ELF を RAM から検査してロードする。
-ユーザーの保護違反後も正常なプロセスは継続する。推論・実機動作・厳密な CPU 時間課金は未検証。
+ユーザーの保護違反後も正常なプロセスは継続する。M4/M5 の操作契約・承認・永続記録に加え、
+M6a では独立プロセスで小さな整数分類器を計算する。学習済みモデル・実機動作・厳密な CPU 時間課金は未検証。
 実測と残る範囲は [M1](BOOT_VALIDATION.md)、[M2a](MEMORY_VALIDATION.md)、
 [M2b](USERSPACE_VALIDATION.md)、[M2c](LIFECYCLE_VALIDATION.md)、[M3a](IPC_VALIDATION.md)、[M3b](DOCUMENT_SERVICE_VALIDATION.md)、[M3c](SERVICE_RECOVERY_VALIDATION.md)、[M3d](USER_ELF_VALIDATION.md) に記載する。
 
@@ -19,6 +20,7 @@ M3d は別ビルドの静的ユーザー ELF を RAM から検査してロード
 | --- | --- |
 | [基本設計](ARCHITECTURE.md) | 起動経路、カーネルとサービスの責務、作業の実行契約 |
 | [権限と信頼境界](SECURITY.md) | 権限の付与と失効、AI 入出力、記録、停止と復旧 |
+| [制限付き推論](INFERENCE_ENTRY_VALIDATION.md) | M6a の整数分類器、承認との接続、異常時の停止と資源回収 |
 | [段階別の検証計画](MILESTONES.md) | 実装の依存順序、合格条件、失敗時の観測方法 |
 | [起動検証](BOOT_VALIDATION.md) | M1 の固定環境、正常系と故障系の実測、未確認事項 |
 | [メモリ検証](MEMORY_VALIDATION.md) | M2a の予約領域、独自ページテーブル、CPU の保護違反と未達成範囲 |

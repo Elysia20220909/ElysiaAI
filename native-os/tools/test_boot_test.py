@@ -1,6 +1,23 @@
 """Regression tests for the boot-result classifier, including false-success cases."""
 import unittest
-from boot_test import OPERATOR_CASES, PERSISTENCE_CASES, CASES, PREFIX, FAULT_CASES, USER_CASES, LIFECYCLE_CASES, IPC_CASES, DOCUMENT_CASES, DOCUMENT_STATUSES, RECOVERY_CASES, ELF_CASES, OPERATION_CASES, verify_output
+
+from boot_test import (
+    CASES,
+    DOCUMENT_CASES,
+    DOCUMENT_STATUSES,
+    ELF_CASES,
+    FAULT_CASES,
+    INFERENCE_CASES,
+    IPC_CASES,
+    LIFECYCLE_CASES,
+    OPERATION_CASES,
+    OPERATOR_CASES,
+    PERSISTENCE_CASES,
+    PREFIX,
+    RECOVERY_CASES,
+    USER_CASES,
+    verify_output,
+)
 
 
 class VerdictTests(unittest.TestCase):
@@ -156,7 +173,8 @@ class VerdictTests(unittest.TestCase):
             _, state, executions = OPERATION_CASES[case]
             states = ["Proposed", "Denied"] if state == "Denied" else ["Proposed", "Approved", "Interrupted"] if state == "Interrupted" else ["Proposed", "Approved", "Running", state]
             markers = ["kernel:allocation-rollback boundaries=14 free=50000", "kernel:user-spaces-ready", "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3", "kernel:document-response status=-13", "kernel:document-response status=-38"]
-            if state == "Unknown": markers.append("kernel:user-stopped pid=1 vector=6")
+            if state == "Unknown":
+                markers.append("kernel:user-stopped pid=1 vector=6")
             markers.append("user:log pid=0 hex=6f6b")
             markers.extend(f"kernel:operation-event id=1 state={value} tick=1" for value in states)
             markers.extend([f"kernel:operation-result state={state} executions={executions}", "kernel:operation-clean free=50000"])
@@ -196,7 +214,7 @@ class VerdictTests(unittest.TestCase):
 
     def test_accepts_each_expected_result(self):
         for case, (code, _) in CASES.items():
-            if case in PERSISTENCE_CASES or case in OPERATOR_CASES:
+            if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES:
                 continue
             with self.subTest(case=case):
                 self.assertEqual(verify_output(case, code, self.transcript(case)), [])

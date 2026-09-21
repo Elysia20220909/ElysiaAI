@@ -110,9 +110,9 @@ extern "sysv64" fn kernel_main(info: *const BootInfo) -> ! {
             asm!("ud2", options(noreturn));
         }
     }
-    if info.mode == 55 {
+    if (55..=63).contains(&info.mode) {
         persistent::boot(info.mode);
-        unsafe { userspace::run(55) }
+        unsafe { userspace::run(info.mode) }
     }
     if info.mode == 54 {
         persistent::boot(info.mode);

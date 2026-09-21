@@ -9,6 +9,7 @@ import threading
 import time
 from pathlib import Path
 
+from inference_test import proposal_errors
 from persistence_test import fresh_image
 from qemu_test_utils import operation_result_errors, qemu_path
 
@@ -22,6 +23,16 @@ CASES = {
     "operator-replay": (b"approve 1\napprove 1\n", "Completed"),
 }
 CASES.update({name.replace("operator-", "async-"): value for name, value in list(CASES.items())})
+CASES.update(
+    {
+        "infer-approve": (b"approve 1\n", "Completed"),
+        "infer-short": (b"approve 1\n", "Completed"),
+        "infer-deny": (b"deny 1\n", "Denied"),
+        "infer-timeout": (None, "Interrupted"),
+        "infer-invalid": (b"approve 1 extra\n", "Interrupted"),
+        "infer-replay": (b"approve 1\napprove 1\n", "Completed"),
+    }
+)
 PROMPT = "kernel:operator-prompt"
 
 
@@ -107,7 +118,7 @@ def exercise(command, case, case_dir, timeout, execute, verify_live, manual=Fals
         "-device",
         "ide-hd,drive=journal,bus=journalide.0,unit=0",
     ]
-    asynchronous = case.startswith("async-")
+    asynchronous = case.startswith(("async-", "infer-"))
     payload, state = CASES[case]
     log = directory / "first.log"
     sent = False
@@ -162,6 +173,8 @@ def exercise(command, case, case_dir, timeout, execute, verify_live, manual=Fals
             process.stdin.close()
     output = log.read_text(encoding="utf-8", errors="replace")
     errors = verdict(state, process.returncode, output, asynchronous)
+    if case.startswith("infer-"):
+        errors.extend(proposal_errors(case, output))
     if not manual:
         reason = (
             "timeout"

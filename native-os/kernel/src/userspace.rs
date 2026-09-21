@@ -114,7 +114,7 @@ unsafe fn prepare(
         };
         if work_mode(mode) {
             (&mut *ptr::addr_of_mut!(DOCUMENTS)).enable_operation_fixture(mode);
-            if mode == 55 {
+            if matches!(mode, 55..=63) {
                 (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_approval(crate::async_operator::start);
             }
             if crate::persistent::operator_enabled() {
@@ -211,11 +211,49 @@ unsafe fn build_process(
             ));
             loaded
         } else if definition.is_some_and(|d| d.elf() == elysia_kernel::launch::Elf::Client) {
-            let loaded = Space::from_elf(allocator, pid, crate::elf_loader::CLIENT, limit)?;
-            platform::log(format_args!(
-                "kernel:client-elf-loaded entry={:#x}",
-                loaded.1
-            ));
+            let inference = (56..=63).contains(&mode);
+            let image = if inference {
+                crate::elf_loader::INFERENCE
+            } else {
+                crate::elf_loader::CLIENT
+            };
+            let loaded = Space::from_elf(allocator, pid, image, limit)?;
+            if inference {
+                // Fixed synthetic input, copied before the address space is published.
+                // Model evaluation is performed only in the user ELF.
+                let x: i16 = if mode == 57 {
+                    4
+                } else if mode == 62 {
+                    i16::MAX
+                } else {
+                    1
+                };
+                let y: i16 = if matches!(mode, 57 | 63) { 1 } else { 4 };
+                let input = [
+                    1,
+                    if mode == 59 { 3 } else { 2 },
+                    x as u8,
+                    (x >> 8) as u8,
+                    y as u8,
+                    (y >> 8) as u8,
+                    0,
+                    0,
+                ];
+                ptr::copy_nonoverlapping(
+                    input.as_ptr(),
+                    (paging::DIRECT + loaded.0.pages[1] + 0x400) as *mut u8,
+                    input.len(),
+                );
+                platform::log(format_args!(
+                    "kernel:inference-elf-loaded entry={:#x} input-count={} x={x} y={y}",
+                    loaded.1, input[1]
+                ));
+            } else {
+                platform::log(format_args!(
+                    "kernel:client-elf-loaded entry={:#x}",
+                    loaded.1
+                ));
+            }
             loaded
         } else if mode >= 39 {
             let loaded = Space::from_elf(allocator, pid, crate::elf_loader::IMAGE, limit)?;
@@ -374,7 +412,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
             if !preemptive(MODE) {
                 platform::fail("unexpected-timer");
             }
-            if MODE == 55 {
+            if matches!(MODE, 55..=63) {
                 crate::async_operator::poll(
                     &mut (&mut *ptr::addr_of_mut!(DOCUMENTS)).work,
                     CLOCK,
@@ -458,7 +496,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                     ));
                     return schedule(processes, current);
                 }
-                8 if MODE == 55 && current == 0 => {
+                8 if matches!(MODE, 55..=63) && current == 0 => {
                     frame.rax = (&*ptr::addr_of!(DOCUMENTS)).work.state() as u64;
                     if frame.rdi != 0 {
                         crate::async_operator::progress(frame.rdi);
@@ -544,7 +582,7 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 }
                 if document_mode(MODE) {
                     (&mut *ptr::addr_of_mut!(DOCUMENTS)).close_process_at(pid, CLOCK);
-                    if MODE == 55 {
+                    if matches!(MODE, 55..=63) {
                         crate::async_operator::cancel_if_finished(
                             &(&*ptr::addr_of!(DOCUMENTS)).work,
                         );
@@ -581,6 +619,40 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
             if free != BASELINE {
                 platform::fail("process-resource-leak");
             }
+            if matches!(MODE, 58..=63) {
+                let manager = &(&*ptr::addr_of!(DOCUMENTS)).work;
+                let client_ok = match MODE {
+                    60 => {
+                        processes[0].budget_stopped
+                            && processes[0].exit.is_none()
+                            && processes[0].fault.is_none()
+                    }
+                    61 => {
+                        processes[0].fault.map(|f| f.0) == Some(6) && !processes[0].budget_stopped
+                    }
+                    _ => {
+                        processes[0].exit == Some(0)
+                            && processes[0].fault.is_none()
+                            && !processes[0].budget_stopped
+                    }
+                };
+                if !client_ok
+                    || processes[1].exit != Some(0)
+                    || processes[1].fault.is_some()
+                    || processes[1].budget_stopped
+                    || manager.state() != elysia_kernel::operations::State::Empty
+                    || manager.executions() != 0
+                    || !(&*ptr::addr_of!(CHANNEL)).is_clean()
+                    || !(&*ptr::addr_of!(DOCUMENTS)).is_clean()
+                {
+                    platform::fail("inference-rejection-verdict");
+                }
+                platform::log(format_args!(
+                    "kernel:operation-result state=Empty executions=0"
+                ));
+                platform::log(format_args!("kernel:operation-clean free={free}"));
+                platform::exit(0x1a);
+            }
             if work_mode(MODE) {
                 use elysia_kernel::operations::State;
                 let manager = &(&*ptr::addr_of!(DOCUMENTS)).work;
@@ -590,14 +662,14 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                     47 => State::Interrupted,
                     48 => State::Unknown,
                     49 => State::Failed,
-                    55 => match manager.state() {
+                    55..=57 => match manager.state() {
                         s @ (State::Completed | State::Denied | State::Interrupted) => s,
                         _ => platform::fail("async-incomplete"),
                     },
                     _ => unreachable!(),
                 };
                 let executions = if matches!(MODE, 45 | 48 | 49)
-                    || (MODE == 55 && expected == State::Completed)
+                    || (matches!(MODE, 55..=57) && expected == State::Completed)
                 {
                     1
                 } else {
@@ -723,19 +795,19 @@ fn verify_fixture(processes: &[Process; 2], mode: u32) {
 }
 
 fn ipc_mode(mode: u32) -> bool {
-    matches!(mode, 21..=38 | 45..=49 | 55)
+    matches!(mode, 21..=38 | 45..=49 | 55..=63)
 }
 fn document_mode(mode: u32) -> bool {
-    matches!(mode, 27..=38 | 45..=49 | 55)
+    matches!(mode, 27..=38 | 45..=49 | 55..=63)
 }
 fn work_mode(mode: u32) -> bool {
-    matches!(mode, 45..=49 | 55)
+    matches!(mode, 45..=49 | 55..=63)
 }
 fn recovery_mode(mode: u32) -> bool {
-    matches!(mode, 33..=38 | 45..=49 | 55)
+    matches!(mode, 33..=38 | 45..=49 | 55..=63)
 }
 fn preemptive(mode: u32) -> bool {
-    matches!(mode, 18 | 20..=49 | 55)
+    matches!(mode, 18 | 20..=49 | 55..=63)
 }
 fn verify_lifecycle(p: &[Process; 2], mode: u32) {
     let valid = if mode == 19 {

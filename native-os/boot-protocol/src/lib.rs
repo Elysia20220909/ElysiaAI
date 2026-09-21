@@ -66,6 +66,14 @@ pub enum BootMode {
     PersistTorn = 53,
     OperatorApproval = 54,
     AsyncApproval = 55,
+    InferenceApproval = 56,
+    InferenceShort = 57,
+    InferenceModel = 58,
+    InferenceOversized = 59,
+    InferenceBudget = 60,
+    InferenceFault = 61,
+    InferenceRange = 62,
+    InferenceAbstain = 63,
 }
 
 impl BootMode {
@@ -127,6 +135,14 @@ impl BootMode {
             53 => Some(Self::PersistTorn),
             54 => Some(Self::OperatorApproval),
             55 => Some(Self::AsyncApproval),
+            56 => Some(Self::InferenceApproval),
+            57 => Some(Self::InferenceShort),
+            58 => Some(Self::InferenceModel),
+            59 => Some(Self::InferenceOversized),
+            60 => Some(Self::InferenceBudget),
+            61 => Some(Self::InferenceFault),
+            62 => Some(Self::InferenceRange),
+            63 => Some(Self::InferenceAbstain),
             _ => None,
         }
     }
