@@ -83,6 +83,8 @@ fn mode() -> BootMode {
         "persist-torn" => BootMode::PersistTorn,
         "operator-approve" | "operator-deny" | "operator-invalid" | "operator-wrong-id"
         | "operator-timeout" | "operator-replay" => BootMode::OperatorApproval,
+        "async-approve" | "async-deny" | "async-invalid" | "async-wrong-id" | "async-timeout"
+        | "async-replay" => BootMode::AsyncApproval,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

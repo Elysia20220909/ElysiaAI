@@ -134,7 +134,7 @@ impl Service {
                 result
             }
             12 => {
-                self.work.interrupt(self.now).map_err(|_| EACCES)?;
+                self.interrupt_operation()?;
                 Ok(&[])
             }
             _ => Err(ENOSYS),
@@ -281,9 +281,17 @@ impl Service {
         self.now = now;
         self.close_process(pid);
     }
+    fn interrupt_operation(&mut self) -> Result<(), u64> {
+        let previous = self.work.state();
+        self.work.interrupt(self.now).map_err(|_| EACCES)?;
+        if self.work.state() != previous {
+            self.record_checkpoint();
+        }
+        Ok(())
+    }
     pub fn close_process(&mut self, pid: usize) {
         if self.fixture != 0 {
-            let _ = self.work.interrupt(self.now);
+            let _ = self.interrupt_operation();
         }
         if pid == SERVICE {
             self.grants = [None; 2];
@@ -401,6 +409,57 @@ mod tests {
         assert_ne!(old, new);
         assert_eq!(status(call(&mut s, request(1, old[0], 0, 1))), EBADF);
         assert_eq!(status(call(&mut s, request(1, new[0], 0, 1))), 0);
+    }
+    #[test]
+    fn departure_persists_interruption_once_without_restoring_authority() {
+        use crate::operations::{Plan, State};
+        use core::sync::atomic::{AtomicUsize, Ordering};
+        static CHECKPOINTS: AtomicUsize = AtomicUsize::new(0);
+        fn checkpoint(manager: &crate::operations::Manager) {
+            assert!(matches!(
+                manager.state(),
+                State::Interrupted | State::Unknown
+            ));
+            CHECKPOINTS.fetch_add(1, Ordering::SeqCst);
+        }
+        for stage in 0..3 {
+            let mut service = Service::EMPTY;
+            let handles = service.start_client().unwrap();
+            service.enable_operation_fixture(55);
+            service.set_checkpoint(checkpoint);
+            let plan = Plan {
+                id: 1,
+                caller: 0,
+                executor: 1,
+                version: 1,
+                target: handles[0],
+                offset: 0,
+                length: 16,
+                byte_budget: 16,
+                deadline: 1024,
+            };
+            service.work.propose(0, plan, 1).unwrap();
+            if stage >= 1 {
+                service.work.approve(plan, true, 2).unwrap();
+            }
+            if stage == 2 {
+                service.work.begin(0, plan, 3).unwrap();
+            }
+            let before = CHECKPOINTS.load(Ordering::SeqCst);
+            service.close_process_at(0, 4);
+            service.close_process_at(1, 5);
+            assert_eq!(CHECKPOINTS.load(Ordering::SeqCst), before + 1);
+            assert!(service.is_clean());
+            assert_eq!(
+                service.work.state(),
+                if stage == 2 {
+                    State::Unknown
+                } else {
+                    State::Interrupted
+                }
+            );
+            assert!(service.work.begin(0, plan, 6).is_err());
+        }
     }
     #[test]
     fn departure_discards_pending_work_and_grants() {

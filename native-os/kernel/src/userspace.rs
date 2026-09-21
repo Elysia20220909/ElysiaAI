@@ -114,6 +114,9 @@ unsafe fn prepare(
         };
         if work_mode(mode) {
             (&mut *ptr::addr_of_mut!(DOCUMENTS)).enable_operation_fixture(mode);
+            if mode == 55 {
+                (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_approval(crate::async_operator::start);
+            }
             if crate::persistent::operator_enabled() {
                 (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_approval(crate::operator::decide);
             }
@@ -371,6 +374,13 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
             if !preemptive(MODE) {
                 platform::fail("unexpected-timer");
             }
+            if MODE == 55 {
+                crate::async_operator::poll(
+                    &mut (&mut *ptr::addr_of_mut!(DOCUMENTS)).work,
+                    CLOCK,
+                    current,
+                );
+            }
             processes[current].ticks += 1;
             processes[current].frame = *frame;
             let ticks = processes[current].ticks;
@@ -447,6 +457,12 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                         "kernel:user-exit pid={current} status={status}"
                     ));
                     return schedule(processes, current);
+                }
+                8 if MODE == 55 && current == 0 => {
+                    frame.rax = (&*ptr::addr_of!(DOCUMENTS)).work.state() as u64;
+                    if frame.rdi != 0 {
+                        crate::async_operator::progress(frame.rdi);
+                    }
                 }
                 7 if recovery_mode(MODE) => {
                     frame.rax =
@@ -528,6 +544,11 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 }
                 if document_mode(MODE) {
                     (&mut *ptr::addr_of_mut!(DOCUMENTS)).close_process_at(pid, CLOCK);
+                    if MODE == 55 {
+                        crate::async_operator::cancel_if_finished(
+                            &(&*ptr::addr_of!(DOCUMENTS)).work,
+                        );
+                    }
                 }
                 space.release(memory::frames());
                 processes[pid].root = 0;
@@ -569,9 +590,19 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                     47 => State::Interrupted,
                     48 => State::Unknown,
                     49 => State::Failed,
+                    55 => match manager.state() {
+                        s @ (State::Completed | State::Denied | State::Interrupted) => s,
+                        _ => platform::fail("async-incomplete"),
+                    },
                     _ => unreachable!(),
                 };
-                let executions = if matches!(MODE, 45 | 48 | 49) { 1 } else { 0 };
+                let executions = if matches!(MODE, 45 | 48 | 49)
+                    || (MODE == 55 && expected == State::Completed)
+                {
+                    1
+                } else {
+                    0
+                };
                 if manager.state() != expected
                     || manager.executions() != executions
                     || processes[0].exit != Some(0)
@@ -692,19 +723,19 @@ fn verify_fixture(processes: &[Process; 2], mode: u32) {
 }
 
 fn ipc_mode(mode: u32) -> bool {
-    matches!(mode, 21..=38 | 45..=49)
+    matches!(mode, 21..=38 | 45..=49 | 55)
 }
 fn document_mode(mode: u32) -> bool {
-    matches!(mode, 27..=38 | 45..=49)
+    matches!(mode, 27..=38 | 45..=49 | 55)
 }
 fn work_mode(mode: u32) -> bool {
-    matches!(mode, 45..=49)
+    matches!(mode, 45..=49 | 55)
 }
 fn recovery_mode(mode: u32) -> bool {
-    matches!(mode, 33..=38 | 45..=49)
+    matches!(mode, 33..=38 | 45..=49 | 55)
 }
 fn preemptive(mode: u32) -> bool {
-    matches!(mode, 18 | 20..=49)
+    matches!(mode, 18 | 20..=49 | 55)
 }
 fn verify_lifecycle(p: &[Process; 2], mode: u32) {
     let valid = if mode == 19 {

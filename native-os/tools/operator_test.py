@@ -2,6 +2,7 @@
 
 import hashlib
 import queue
+import re
 import subprocess
 import tempfile
 import threading
@@ -19,12 +20,13 @@ CASES = {
     "operator-timeout": (None, "Interrupted"),
     "operator-replay": (b"approve 1\napprove 1\n", "Completed"),
 }
+CASES.update({name.replace("operator-", "async-"): value for name, value in list(CASES.items())})
 PROMPT = "kernel:operator-prompt"
 
 
-def verdict(state, code, output):
+def verdict(state, code, output, asynchronous=False):
     errors = []
-    expected = 53 if state == "Completed" else 57
+    expected = 53 if asynchronous or state == "Completed" else 57
     if code != expected:
         errors.append(f"operator exit {code}, expected {expected}")
     markers = ["kernel:persist-flushed state=Proposed", "kernel:operator-plan id=1", PROMPT]
@@ -52,7 +54,37 @@ def verdict(state, code, output):
         errors.append("unapproved execution")
     if output.count("kernel:operator-decision") != 1:
         errors.append("decision was not single-use")
+    if asynchronous:
+        prompt = output.find(PROMPT)
+        decision = output.find("kernel:operator-decision")
+        for marker in ("kernel:async-work pid=0 count=", "kernel:async-progress pid=0 tick="):
+            position = output.find(marker)
+            if not prompt < position < decision:
+                errors.append(f"missing work before decision: {marker}")
+        baseline = re.search(r"kernel:allocation-rollback boundaries=\d+ free=(\d+)", output)
+        clean = re.search(r"kernel:operation-clean free=(\d+)", output)
+        if not baseline or not clean or baseline[1] != clean[1]:
+            errors.append("process frames did not return to baseline")
+        executions = int(state == "Completed")
+        for marker in (
+            f"kernel:operation-result state={state} executions={executions}",
+            "kernel:operation-clean free=",
+            "kernel:user-exit pid=0 status=0",
+            "kernel:user-exit pid=1 status=0",
+            "kernel:reaped pid=0",
+            "kernel:reaped pid=1",
+        ):
+            if output.find(marker, decision) < 0:
+                errors.append(f"missing normal cleanup: {marker}")
     return errors
+
+
+def send_input(stream, payload):
+    # Keep writes below the UART FIFO capacity; a host pipe is not a paced UART.
+    for offset in range(0, len(payload), 8):
+        stream.write(payload[offset : offset + 8])
+        stream.flush()
+        time.sleep(0.02)
 
 
 def exercise(command, case, case_dir, timeout, execute, verify_live, manual=False):
@@ -68,6 +100,7 @@ def exercise(command, case, case_dir, timeout, execute, verify_live, manual=Fals
         "-device",
         "ide-hd,drive=journal,bus=journalide.0,unit=0",
     ]
+    asynchronous = case.startswith("async-")
     payload, state = CASES[case]
     log = directory / "first.log"
     sent = False
@@ -87,15 +120,18 @@ def exercise(command, case, case_dir, timeout, execute, verify_live, manual=Fals
         try:
             while process.poll() is None:
                 output = log.read_text(encoding="utf-8", errors="replace")
-                if PROMPT in output and not sent:
+                if (
+                    PROMPT in output
+                    and not sent
+                    and (not asynchronous or ("kernel:async-work" in output and "kernel:async-progress" in output))
+                ):
                     sent = True
                     if manual:
                         print(output, flush=True)
                         payload = None
                         threading.Thread(target=read_operator, daemon=True).start()
                     if payload is not None:
-                        process.stdin.write(payload)
-                        process.stdin.flush()
+                        send_input(process.stdin, payload)
                 if manual and not answers.empty():
                     payload = answers.get_nowait()
                     state = (
@@ -106,8 +142,7 @@ def exercise(command, case, case_dir, timeout, execute, verify_live, manual=Fals
                         else "Interrupted"
                     )
                     try:
-                        process.stdin.write(payload)
-                        process.stdin.flush()
+                        send_input(process.stdin, payload)
                     except BrokenPipeError:
                         state = "Interrupted"
                 if time.monotonic() - started > timeout:
@@ -119,18 +154,18 @@ def exercise(command, case, case_dir, timeout, execute, verify_live, manual=Fals
             process.wait()
             process.stdin.close()
     output = log.read_text(encoding="utf-8", errors="replace")
-    errors = verdict(state, process.returncode, output)
+    errors = verdict(state, process.returncode, output, asynchronous)
     if not manual:
         reason = (
             "timeout"
-            if case == "operator-timeout"
+            if case.endswith("-timeout")
             else "invalid"
-            if case in ("operator-invalid", "operator-wrong-id")
+            if case.endswith(("-invalid", "-wrong-id"))
             else "input"
         )
         if f"kernel:operator-decision reason={reason}" not in output:
             errors.append("wrong decision reason")
-    if state == "Completed":
+    if state == "Completed" and not asynchronous:
         errors.extend(verify_live("operation-complete", process.returncode, output))
     before = hashlib.sha256(disk.read_bytes()).hexdigest()
     # Explicitly feed the old approval on reboot. No new prompt or authority may appear.

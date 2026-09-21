@@ -591,11 +591,11 @@ def main() -> int:
     parser.add_argument("--qemu", type=Path, default=default_tools / "qemu-system-x86_64.exe")
     parser.add_argument("--firmware-dir", type=Path, default=default_tools / "share")
     parser.add_argument("--case", choices=["all", *CASES], default="all")
-    parser.add_argument("--operator-manual", action="store_true", help="Read a real operator decision from stdin (operator-approve only)")
+    parser.add_argument("--operator-manual", action="store_true", help="Read a real operator decision from stdin (operator-approve or async-approve)")
     parser.add_argument("--timeout", type=float, default=45)
     args = parser.parse_args()
-    if args.operator_manual and args.case != "operator-approve":
-        parser.error("--operator-manual requires --case operator-approve")
+    if args.operator_manual and args.case not in ("operator-approve", "async-approve"):
+        parser.error("--operator-manual requires --case operator-approve or async-approve")
     if not 1 <= args.timeout <= 120:
         parser.error("--timeout must be between 1 and 120 seconds")
     try:

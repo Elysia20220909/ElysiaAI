@@ -245,6 +245,28 @@ operation_client:
     call recovery_exchange
     cmp qword ptr [0x60000100], 0
     jne recovery_fail
+    cmp r13, 55
+    jne 9f
+    xor ebp, ebp
+async_wait:
+    // Bounded independent arithmetic while the operation remains pending.
+    mov ecx, 100000
+async_compute:
+    inc rbp
+    pause
+    loop async_compute
+    mov eax, 8
+    mov rdi, rbp
+    int 0x80
+    cmp rax, 1
+    je async_wait
+    cmp rax, 2
+    je 9f
+    cmp rax, 5
+    je 9f
+    cmp rax, 7
+    jne recovery_fail
+9:
     cmp r13, 47
     jne 3f
     mov qword ptr [0x60000000], 12
@@ -253,8 +275,11 @@ operation_client:
     jne recovery_fail
 3:
     mov qword ptr [0x60000000], 11
+    cmp r13, 55
+    je 8f
     cmp r13, 45
     jne 4f
+8:
     // Changed input after approval must not execute.
     mov qword ptr [0x60000018], 8
     call recovery_exchange
@@ -272,6 +297,12 @@ operation_client:
 5:
     cmp rax, 64
     jne recovery_fail
+    cmp r13, 55
+    jne 7f
+    cmp qword ptr [0x60000100], -13
+    je recovery_ok
+    jmp operation_success
+7:
     cmp r13, 45
     je operation_success
     cmp r13, 49
