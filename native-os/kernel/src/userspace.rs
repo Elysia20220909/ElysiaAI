@@ -114,6 +114,9 @@ unsafe fn prepare(
         };
         if work_mode(mode) {
             (&mut *ptr::addr_of_mut!(DOCUMENTS)).enable_operation_fixture(mode);
+            if crate::persistent::operator_enabled() {
+                (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_approval(crate::operator::decide);
+            }
             if crate::persistent::enabled() {
                 (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_checkpoint(crate::persistent::checkpoint);
             }

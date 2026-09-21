@@ -24,6 +24,7 @@ struct Delivery {
 pub struct Service {
     pub work: crate::operations::Manager,
     checkpoint: Option<fn(&crate::operations::Manager)>,
+    approval: Option<fn(&mut crate::operations::Manager)>,
     fixture: u32,
     now: u64,
     grants: [Option<Grant>; 2],
@@ -36,6 +37,7 @@ impl Service {
     pub const EMPTY: Self = Self {
         work: crate::operations::Manager::EMPTY,
         checkpoint: None,
+        approval: None,
         fixture: 0,
         now: 0,
         grants: [None; 2],
@@ -46,6 +48,9 @@ impl Service {
     };
     pub fn set_checkpoint(&mut self, hook: fn(&crate::operations::Manager)) {
         self.checkpoint = Some(hook);
+    }
+    pub fn set_approval(&mut self, hook: fn(&mut crate::operations::Manager)) {
+        self.approval = Some(hook);
     }
     fn record_checkpoint(&self) {
         if let Some(hook) = self.checkpoint {
@@ -87,6 +92,10 @@ impl Service {
                     .propose(caller, plan, self.now)
                     .map_err(|_| EACCES)?;
                 self.record_checkpoint();
+                if let Some(hook) = self.approval {
+                    hook(&mut self.work);
+                    return Ok(&[]);
+                }
                 // Exact scripted human decision, not the submitted plan or an AI decision.
                 let approved = Plan {
                     id: 1,

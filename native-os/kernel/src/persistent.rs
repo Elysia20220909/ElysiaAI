@@ -7,6 +7,9 @@ use elysia_kernel::{
 };
 static mut INDEX: Index = Index::EMPTY;
 static mut MODE: u32 = 0;
+pub fn operator_enabled() -> bool {
+    unsafe { MODE == 54 }
+}
 pub fn enabled() -> bool {
     unsafe { MODE != 0 }
 }

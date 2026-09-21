@@ -14,6 +14,7 @@ import subprocess
 import sys
 import time
 from persistence_test import CASES as PERSISTENCE_CASES, exercise as persistence_exercise
+from operator_test import CASES as OPERATOR_CASES, exercise as operator_exercise
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_RUST = "1.96.0"
@@ -100,6 +101,9 @@ for name, (mode, state, executions) in OPERATION_CASES.items():
     CASES[name] = (53, ["kernel:user-spaces-ready", "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
                        "user:log pid=0 hex=6f6b", f"kernel:operation-result state={state} executions={executions}",
                        "kernel:operation-clean"])
+for name in OPERATOR_CASES:
+    CASES[name] = (55, [])
+
 for name in PERSISTENCE_CASES:
     CASES[name] = (55, [])
 PREFIX = ["loader:entered", "loader:kernel-loaded", "loader:boot-services-exited",
@@ -132,7 +136,7 @@ def sha256(path: Path) -> str:
 
 def verify_output(case: str, code: int, output: str) -> list[str]:
     """Require both the exact exit code and ordered evidence from each side of the handoff."""
-    if case in PERSISTENCE_CASES:
+    if case in PERSISTENCE_CASES or case in OPERATOR_CASES:
         return ["persistence requires two-boot and disk-integrity verification"]
     expected_code, markers = CASES[case]
     errors = []
@@ -547,7 +551,9 @@ def run(args: argparse.Namespace) -> int:
         ]
         started = time.monotonic()
         try:
-            if case in PERSISTENCE_CASES:
+            if case in OPERATOR_CASES:
+                returncode, output, errors = operator_exercise(command, case, case_dir, args.timeout, execute, verify_output, args.operator_manual)
+            elif case in PERSISTENCE_CASES:
                 returncode, output, errors = persistence_exercise(command, case, case_dir, args.timeout, execute, verify_output)
             else:
                 result = execute(command, timeout=args.timeout)
@@ -585,8 +591,11 @@ def main() -> int:
     parser.add_argument("--qemu", type=Path, default=default_tools / "qemu-system-x86_64.exe")
     parser.add_argument("--firmware-dir", type=Path, default=default_tools / "share")
     parser.add_argument("--case", choices=["all", *CASES], default="all")
+    parser.add_argument("--operator-manual", action="store_true", help="Read a real operator decision from stdin (operator-approve only)")
     parser.add_argument("--timeout", type=float, default=45)
     args = parser.parse_args()
+    if args.operator_manual and args.case != "operator-approve":
+        parser.error("--operator-manual requires --case operator-approve")
     if not 1 <= args.timeout <= 120:
         parser.error("--timeout must be between 1 and 120 seconds")
     try:

@@ -81,6 +81,8 @@ fn mode() -> BootMode {
         "persist-interrupted" => BootMode::PersistInterrupted,
         "persist-unknown" => BootMode::PersistUnknown,
         "persist-torn" => BootMode::PersistTorn,
+        "operator-approve" | "operator-deny" | "operator-invalid" | "operator-wrong-id"
+        | "operator-timeout" | "operator-replay" => BootMode::OperatorApproval,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

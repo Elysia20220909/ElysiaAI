@@ -1,6 +1,7 @@
 #![no_std]
 //! CPU-independent contracts for the bounded process runtime.
 
+pub mod approval;
 pub mod documents;
 pub mod ipc;
 pub mod journal;

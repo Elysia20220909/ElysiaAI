@@ -6,6 +6,7 @@ mod elf_loader;
 mod exceptions;
 mod journal_disk;
 mod memory;
+mod operator;
 mod paging;
 mod persistent;
 #[path = "../../platform.rs"]
@@ -107,6 +108,10 @@ extern "sysv64" fn kernel_main(info: *const BootInfo) -> ! {
         unsafe {
             asm!("ud2", options(noreturn));
         }
+    }
+    if info.mode == 54 {
+        persistent::boot(info.mode);
+        unsafe { userspace::run(45) }
     }
     if (50..=53).contains(&info.mode) {
         persistent::boot(info.mode);
