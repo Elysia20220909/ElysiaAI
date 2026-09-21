@@ -85,6 +85,16 @@ fn mode() -> BootMode {
         | "operator-timeout" | "operator-replay" => BootMode::OperatorApproval,
         "async-approve" | "async-deny" | "async-invalid" | "async-wrong-id" | "async-timeout"
         | "async-replay" => BootMode::AsyncApproval,
+        "infer-approve" | "infer-deny" | "infer-timeout" | "infer-invalid" | "infer-replay" => {
+            BootMode::InferenceApproval
+        }
+        "infer-short" => BootMode::InferenceShort,
+        "infer-model" => BootMode::InferenceModel,
+        "infer-oversized" => BootMode::InferenceOversized,
+        "infer-budget" => BootMode::InferenceBudget,
+        "infer-fault" => BootMode::InferenceFault,
+        "infer-range" => BootMode::InferenceRange,
+        "infer-abstain" => BootMode::InferenceAbstain,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

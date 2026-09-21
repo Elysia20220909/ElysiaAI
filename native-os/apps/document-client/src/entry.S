@@ -56,6 +56,22 @@ _start:
     cmp rax, -13
     jne recovery_fail
     mov qword ptr [0x60000300], 0x13579
+.ifdef INFERENCE_CLIENT
+    // SysV caller-saved capability registers survive the inference call.
+    push r8
+    push r9
+    push r11
+    sub rsp, 8
+    mov rdi, r13
+    call inference_propose
+    add rsp, 8
+    pop r11
+    pop r9
+    pop r8
+    test rax, rax
+    jz recovery_ok
+    mov [0x60000380], rax
+.endif
     cmp r13, 45
     jae operation_client
     // A live service cannot be replaced.
@@ -233,6 +249,10 @@ operation_client:
     mov qword ptr [0x60000010], 999
 2:
     mov qword ptr [0x60000018], 16
+.ifdef INFERENCE_CLIENT
+    mov rax, [0x60000380]
+    mov [0x60000018], rax
+.endif
     call recovery_exchange
     cmp qword ptr [0x60000100], -13
     jne recovery_fail
@@ -245,8 +265,13 @@ operation_client:
     call recovery_exchange
     cmp qword ptr [0x60000100], 0
     jne recovery_fail
+    cmp r13, 57
+    je async_wait_start
+    cmp r13, 56
+    je async_wait_start
     cmp r13, 55
     jne 9f
+async_wait_start:
     xor ebp, ebp
 async_wait:
     // Bounded independent arithmetic while the operation remains pending.
@@ -275,6 +300,10 @@ async_compute:
     jne recovery_fail
 3:
     mov qword ptr [0x60000000], 11
+    cmp r13, 57
+    je 8f
+    cmp r13, 56
+    je 8f
     cmp r13, 55
     je 8f
     cmp r13, 45
@@ -282,10 +311,19 @@ async_compute:
 8:
     // Changed input after approval must not execute.
     mov qword ptr [0x60000018], 8
+.ifdef INFERENCE_CLIENT
+    mov rax, [0x60000380]
+    xor rax, 24
+    mov [0x60000018], rax
+.endif
     call recovery_exchange
     cmp qword ptr [0x60000100], -13
     jne recovery_fail
     mov qword ptr [0x60000018], 16
+.ifdef INFERENCE_CLIENT
+    mov rax, [0x60000380]
+    mov [0x60000018], rax
+.endif
 4:
     call recovery_send
     call recovery_receive
@@ -297,8 +335,13 @@ async_compute:
 5:
     cmp rax, 64
     jne recovery_fail
+    cmp r13, 57
+    je async_result
+    cmp r13, 56
+    je async_result
     cmp r13, 55
     jne 7f
+async_result:
     cmp qword ptr [0x60000100], -13
     je recovery_ok
     jmp operation_success
@@ -317,7 +360,12 @@ operation_failure:
 operation_success:
     cmp qword ptr [0x60000100], 0
     jne recovery_fail
+.ifdef INFERENCE_CLIENT
+    mov rax, [0x60000380]
+    cmp [0x60000108], rax
+.else
     cmp qword ptr [0x60000108], 16
+.endif
     jne recovery_fail
     cmp dword ptr [0x60000110], 0x53594c45
     jne recovery_fail

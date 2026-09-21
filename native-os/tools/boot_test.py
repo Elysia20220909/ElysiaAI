@@ -3,19 +3,22 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import hashlib
 import json
 import os
 import re
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import time
-from persistence_test import CASES as PERSISTENCE_CASES, exercise as persistence_exercise
+from datetime import UTC, datetime
+from pathlib import Path
+
+from inference_test import CASES as INFERENCE_CASES, exercise as inference_exercise
 from operator_test import CASES as OPERATOR_CASES, exercise as operator_exercise
+from persistence_test import CASES as PERSISTENCE_CASES, exercise as persistence_exercise
 from qemu_test_utils import operation_result_errors, qemu_path
+
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_RUST = "1.96.0"
@@ -98,10 +101,13 @@ for name, mode in ELF_CASES.items():
 OPERATION_CASES = {"operation-complete": (45, "Completed", 1), "operation-denied": (46, "Denied", 0),
                    "operation-interrupted": (47, "Interrupted", 0), "operation-unknown": (48, "Unknown", 1),
                    "operation-failed": (49, "Failed", 1)}
-for name, (mode, state, executions) in OPERATION_CASES.items():
+for name, (_mode, state, executions) in OPERATION_CASES.items():
     CASES[name] = (53, ["kernel:user-spaces-ready", "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
                        "user:log pid=0 hex=6f6b", f"kernel:operation-result state={state} executions={executions}",
                        "kernel:operation-clean"])
+for name in INFERENCE_CASES:
+    CASES[name] = (53, [])
+
 for name in OPERATOR_CASES:
     CASES[name] = (55, [])
 
@@ -137,8 +143,8 @@ def sha256(path: Path) -> str:
 
 def verify_output(case: str, code: int, output: str) -> list[str]:
     """Require both the exact exit code and ordered evidence from each side of the handoff."""
-    if case in PERSISTENCE_CASES or case in OPERATOR_CASES:
-        return ["persistence requires two-boot and disk-integrity verification"]
+    if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES:
+        return ["this case requires its dedicated runner and disk-integrity verification"]
     expected_code, markers = CASES[case]
     errors = []
     if code != expected_code:
@@ -498,10 +504,11 @@ def run(args: argparse.Namespace) -> int:
     user_elf = ROOT / "target/x86_64-unknown-none/release/elysia-user-probe"
     service_elf = ROOT / "target/x86_64-unknown-none/release/elysia-document-service"
     client_elf = ROOT / "target/x86_64-unknown-none/release/elysia-document-client"
-    for package, directory in (("elysia-user-probe", "probe"), ("elysia-document-service", "document-service"), ("elysia-document-client", "document-client")):
+    inference_elf = ROOT / "target/x86_64-unknown-none/release/elysia-inference-client"
+    for package, directory in (("elysia-user-probe", "probe"), ("elysia-document-service", "document-service"), ("elysia-document-client", "document-client"), ("elysia-inference-client", "inference-client")):
         print(f"Building {package}", flush=True)
         print(checked([
-            "cargo", "+stable", "rustc", "--locked", "-p", package,
+            "cargo", "+stable", "rustc", "--locked", "-p", package, "--bin", package,
             "--target", "x86_64-unknown-none", "--release", "--",
             "-C", "relocation-model=static",
             "-C", f"link-arg=-T{ROOT / 'apps' / directory / 'linker.ld'}", "-C", "link-arg=--build-id=none",
@@ -510,6 +517,7 @@ def run(args: argparse.Namespace) -> int:
     kernel_environment["ELYSIA_USER_ELF"] = str(user_elf)
     kernel_environment["ELYSIA_SERVICE_ELF"] = str(service_elf)
     kernel_environment["ELYSIA_CLIENT_ELF"] = str(client_elf)
+    kernel_environment["ELYSIA_INFERENCE_ELF"] = str(inference_elf)
     print("Building kernel", flush=True)
     print(checked([
         "cargo", "+stable", "rustc", "--locked", "-p", "elysia-kernel", "--bin", "elysia-kernel",
@@ -550,6 +558,8 @@ def run(args: argparse.Namespace) -> int:
         try:
             if case in OPERATOR_CASES:
                 returncode, output, errors = operator_exercise(command, case, case_dir, args.timeout, execute, verify_output, args.operator_manual)
+            elif case in INFERENCE_CASES:
+                returncode, output, errors = inference_exercise(command, case, case_dir, args.timeout, execute)
             elif case in PERSISTENCE_CASES:
                 returncode, output, errors = persistence_exercise(command, case, case_dir, args.timeout, execute, verify_output)
             else:
@@ -571,12 +581,12 @@ def run(args: argparse.Namespace) -> int:
         results.append(record)
         print(json.dumps(record), flush=True)
     report = {
-        "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
+        "recorded_at_utc": datetime.now(UTC).isoformat(),
         "rust": rust, "qemu": qemu_version, "machine": MACHINE,
         "memory_mib": 256, "vcpus": 1, "accelerator": "tcg", "network": "none",
         "qemu_sha256": sha256(qemu), "firmware_code_sha256": sha256(code),
         "firmware_vars_sha256": sha256(variables), "kernel_sha256": sha256(kernel),
-        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "service_elf_sha256": sha256(service_elf), "client_elf_sha256": sha256(client_elf), "cases": results,
+        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "service_elf_sha256": sha256(service_elf), "client_elf_sha256": sha256(client_elf), "inference_elf_sha256": sha256(inference_elf), "cases": results,
     }
     (out / "results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return 0 if all(case["passed"] for case in results) else 1
@@ -588,11 +598,11 @@ def main() -> int:
     parser.add_argument("--qemu", type=Path, default=default_tools / "qemu-system-x86_64.exe")
     parser.add_argument("--firmware-dir", type=Path, default=default_tools / "share")
     parser.add_argument("--case", choices=["all", *CASES], default="all")
-    parser.add_argument("--operator-manual", action="store_true", help="Read a real operator decision from stdin (operator-approve or async-approve)")
+    parser.add_argument("--operator-manual", action="store_true", help="Read a real operator decision from stdin (operator-approve, async-approve, infer-approve, infer-short)")
     parser.add_argument("--timeout", type=float, default=45)
     args = parser.parse_args()
-    if args.operator_manual and args.case not in ("operator-approve", "async-approve"):
-        parser.error("--operator-manual requires --case operator-approve or async-approve")
+    if args.operator_manual and args.case not in ("operator-approve", "async-approve", "infer-approve", "infer-short"):
+        parser.error("--operator-manual requires --case operator-approve, async-approve, infer-approve or infer-short")
     if not 1 <= args.timeout <= 120:
         parser.error("--timeout must be between 1 and 120 seconds")
     try:

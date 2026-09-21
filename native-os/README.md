@@ -8,7 +8,8 @@ M3b では、許可した合成資料を RAM から読み取るサービスを�
 M3c はクライアントを維持したサービス再起動と、上限付きの再接続を扱う。
 M3d は別ビルドの静的 ELF を RAM から検査してロードする。
 既存の Bun / Python / Tauri アプリとは独立した Rust workspace としてビルドする。
-AI 推論、汎用 ELF・ディスクからのロード、ファイルシステムはまだ含まない。
+M4/M5 の操作契約・承認・永続記録に加え、M6a の小さな整数分類器を独立プロセスで試験する。
+学習済みモデル、LLM、汎用 ELF・ディスクからのロード、ファイルシステムはまだ含まない。
 
 設計の背景は [独自 OS の構想](../docs/native-os/README.md)、
 実測結果は [M1 起動検証](../docs/native-os/BOOT_VALIDATION.md) と
@@ -75,7 +76,7 @@ QEMU / EDK II UEFI
 rustc +stable --version
 rustup target add --toolchain stable x86_64-unknown-none x86_64-unknown-uefi
 python -m unittest discover -s native-os/tools -p 'test_*.py' -v
-cargo +stable test --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel --lib --locked
+cargo +stable test --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel -p elysia-inference-client --lib --locked
 python native-os/tools/boot_test.py --case all
 ```
 
@@ -134,11 +135,12 @@ QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 
 ```powershell
 cargo +stable fmt --manifest-path native-os/Cargo.toml --all -- --check
-cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel --lib --tests --locked -- -D warnings
+cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel -p elysia-inference-client --lib --tests --locked -- -D warnings
+$env:ELYSIA_INFERENCE_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-inference-client).Path
 $env:ELYSIA_CLIENT_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-document-client).Path
 $env:ELYSIA_SERVICE_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-document-service).Path
 $env:ELYSIA_USER_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-user-probe).Path
-cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel -p elysia-user-probe -p elysia-document-service -p elysia-document-client --target x86_64-unknown-none --locked -- -D warnings
+cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-kernel -p elysia-user-probe -p elysia-document-service -p elysia-document-client -p elysia-inference-client --target x86_64-unknown-none --locked -- -D warnings
 $env:ELYSIA_KERNEL_PATH = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-kernel).Path
 $env:ELYSIA_BOOT_MODE = 'normal'
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-bootloader --target x86_64-unknown-uefi --locked -- -D warnings
@@ -302,7 +304,7 @@ runner が先にビルドし、`ELYSIA_USER_ELF` のファイルを kernel の�
 `elf-noexecute` は故障隔離、`elf-reject` は不正入力 9 種、`elf-rollback` は全 14 箇所の部分確保失敗を扱う。
 ELF ケースは各プロセス 64 tick。ゲスト合格コード 51、runner 成功は 0。
 リンカー設定変更も build script の入力として追跡する。手動ビルド時もユーザー ELF を先に作り、
-`ELYSIA_USER_ELF`、`ELYSIA_SERVICE_ELF`、`ELYSIA_CLIENT_ELF` を設定してからカーネルをビルドする。
+`ELYSIA_USER_ELF`、`ELYSIA_SERVICE_ELF`、`ELYSIA_CLIENT_ELF`、`ELYSIA_INFERENCE_ELF` を設定してからカーネルをビルドする。
 
 ## M3e の資料サービス ELF
 
@@ -375,3 +377,10 @@ log / yield / exit と役割限定 syscall 6 / 7 は既存の契約を維持し�
 `async-*` では承認待ち中もクライアントの計算を継続する。
 拒否や期限切れ後も両プロセスを正常終了させ、資源を回収してから試験を終了する。
 [処理の流れと検証記録](../docs/native-os/ASYNC_APPROVAL_VALIDATION.md) を参照。
+
+## M6a の制限付き推論
+
+`apps/inference-client/` の独立 ELF が合成入力から整数モデルを計算し、8/16-byteの読み取り候補を返す。
+既存の起動権限と予算を維持し、COM1 の承認後だけ同じ操作を実行する。runner は4つのアプリ ELF を先に作る。
+モデル拒否・入力拒否・棄権・故障・暴走時は提案なしで回収する。
+[制限付き推論の検証](../docs/native-os/INFERENCE_ENTRY_VALIDATION.md)にモデル形式、12ケース、残る範囲を記載する。
