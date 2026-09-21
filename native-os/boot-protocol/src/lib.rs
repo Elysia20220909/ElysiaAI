@@ -64,6 +64,7 @@ pub enum BootMode {
     PersistInterrupted = 51,
     PersistUnknown = 52,
     PersistTorn = 53,
+    OperatorApproval = 54,
 }
 
 impl BootMode {
@@ -123,6 +124,7 @@ impl BootMode {
             51 => Some(Self::PersistInterrupted),
             52 => Some(Self::PersistUnknown),
             53 => Some(Self::PersistTorn),
+            54 => Some(Self::OperatorApproval),
             _ => None,
         }
     }
