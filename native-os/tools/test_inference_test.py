@@ -15,6 +15,7 @@ def identity(case):
     )
     count = 3 if case == "infer-oversized" else 2
     return [
+        "kernel:agent-bound id=1 pid=0 context=1 tools=1 approval=always recovery=reclaim",
         f"kernel:inference-elf-loaded entry=0x40000010 input-count={count} x={x} y={y}",
         "kernel:launch-policy pid=0 frames=32 ticks=1024 document=true generation=0",
         "kernel:launch-policy pid=1 frames=32 ticks=64 document=false generation=0",
@@ -92,6 +93,17 @@ def rejected_run(case):
 
 
 class InferenceVerdictTests(unittest.TestCase):
+    def test_agent_binding_is_unique_exact_and_precedes_loading(self):
+        lines = identity("infer-approve")
+        binding = lines[0]
+        self.assertEqual(identity_errors("infer-approve", "\n".join(lines)), [])
+        for bad in (
+            lines[1:], lines + [binding], lines[1:] + [binding],
+            [binding.replace("context=1", "context=3")] + lines[1:],
+            [binding.replace("approval=always", "approval=never")] + lines[1:],
+        ):
+            self.assertTrue(identity_errors("infer-approve", "\n".join(bad)))
+
     def test_input_prediction_and_plan_must_agree(self):
         for case, length in (("infer-approve", 16), ("infer-short", 8)):
             prediction = user_marker(f"infer:length{length}")

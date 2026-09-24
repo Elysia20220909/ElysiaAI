@@ -111,6 +111,16 @@ unsafe fn prepare(
             [0; 2]
         };
         if work_mode(mode) {
+            if (56..=72).contains(&mode) {
+                let agent = elysia_kernel::agent::ReadAgent::new(elysia_kernel::agent::READ_AGENT)
+                    .unwrap_or_else(|_| platform::fail("agent-manifest"));
+                (&mut *ptr::addr_of_mut!(DOCUMENTS))
+                    .bind_agent(agent)
+                    .unwrap_or_else(|_| platform::fail("agent-binding"));
+                platform::log(format_args!(
+                    "kernel:agent-bound id=1 pid=0 context=1 tools=1 approval=always recovery=reclaim"
+                ));
+            }
             (&mut *ptr::addr_of_mut!(DOCUMENTS)).enable_operation_fixture(mode);
             if matches!(mode, 55..=72) {
                 (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_approval(crate::async_operator::start);
@@ -1171,7 +1181,12 @@ fn verify_elf(p: &[Process; 2], mode: u32) {
 
 fn boot_definitions(mode: u32) -> [elysia_kernel::launch::Definition; 2] {
     if (56..=72).contains(&mode) {
-        elysia_kernel::launch::INFERENCE_BOOT
+        let mut definitions = elysia_kernel::launch::INFERENCE_BOOT;
+        definitions[0] = elysia_kernel::agent::ReadAgent::new(elysia_kernel::agent::READ_AGENT)
+            .unwrap_or_else(|_| platform::fail("agent-manifest"))
+            .launch()
+            .unwrap_or_else(|e| platform::fail(e));
+        definitions
     } else {
         elysia_kernel::launch::BOOT
     }

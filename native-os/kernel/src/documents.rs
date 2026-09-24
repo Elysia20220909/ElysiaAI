@@ -22,6 +22,7 @@ struct Delivery {
 }
 #[derive(Clone)]
 pub struct Service {
+    agent: Option<crate::agent::ReadAgent>,
     pub work: crate::operations::Manager,
     checkpoint: Option<fn(&crate::operations::Manager)>,
     approval: Option<fn(&mut crate::operations::Manager)>,
@@ -35,6 +36,7 @@ pub struct Service {
 }
 impl Service {
     pub const EMPTY: Self = Self {
+        agent: None,
         work: crate::operations::Manager::EMPTY,
         checkpoint: None,
         approval: None,
@@ -48,6 +50,20 @@ impl Service {
     };
     pub fn set_checkpoint(&mut self, hook: fn(&crate::operations::Manager)) {
         self.checkpoint = Some(hook);
+    }
+    /// Bind before launch and before any proposal; recovery cannot replace the policy.
+    pub fn bind_agent(&mut self, agent: crate::agent::ReadAgent) -> Result<(), u64> {
+        if self.work.state() != crate::operations::State::Empty
+            || self.agent.is_some_and(|old| old != agent)
+            || self
+                .definition
+                .is_none_or(|defs| agent.launch().ok() != Some(defs[0]))
+            || self.pending.is_some()
+        {
+            return Err(EACCES);
+        }
+        self.agent = Some(agent);
+        Ok(())
     }
     pub fn set_approval(&mut self, hook: fn(&mut crate::operations::Manager)) {
         self.approval = Some(hook);
@@ -234,6 +250,17 @@ impl Service {
         let offset = word(16);
         let length = word(24);
         let grant = self.grant(delivery.caller, token)?;
+        if let Some(agent) = self.agent {
+            if !matches!(operation, 1 | 2 | 10..=12) {
+                return Err(ENOSYS);
+            }
+            agent
+                .check_request(delivery.caller, grant.document, operation)
+                .map_err(|_| EACCES)?;
+            if self.fixture == 0 {
+                return Err(EACCES);
+            }
+        }
         if self.fixture != 0 {
             return self.operation(
                 delivery.caller,
@@ -315,6 +342,38 @@ impl Service {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn agent_binding_requires_matching_launch_and_cannot_be_replaced() {
+        use crate::agent::{AgentManifest, READ_AGENT, ReadAgent};
+        let agent = ReadAgent::new(READ_AGENT).unwrap();
+        let mut s = Service::EMPTY;
+        assert_eq!(s.bind_agent(agent), Err(EACCES));
+        let handles = s.start_defined(crate::launch::INFERENCE_BOOT).unwrap();
+        s.bind_agent(agent).unwrap();
+        let reduced = ReadAgent::new(AgentManifest {
+            memory_pages: 1,
+            ..READ_AGENT
+        })
+        .unwrap();
+        assert_eq!(s.bind_agent(reduced), Err(EACCES));
+        s.enable_operation_fixture(56);
+        assert_eq!(status(call(&mut s, request(1, handles[0], 0, 16))), EACCES);
+        assert_eq!(status(call(&mut s, request(11, handles[0], 0, 16))), EACCES);
+        assert_eq!(s.work.executions(), 0);
+        assert_eq!(status(call(&mut s, request(10, handles[0], 0, 16))), 0);
+        assert_eq!(s.bind_agent(agent), Err(EACCES));
+        assert_eq!(status(call(&mut s, request(11, handles[0], 0, 16))), 0);
+        assert_eq!(status(call(&mut s, request(11, handles[0], 0, 16))), EACCES);
+        assert_eq!(s.work.executions(), 1);
+        s.close_process(0);
+        s.close_process(1);
+        assert!(s.is_clean());
+        let fresh = s.start_defined(crate::launch::INFERENCE_BOOT).unwrap();
+        assert_ne!(fresh[0], handles[0]);
+        assert_eq!(status(call(&mut s, request(11, handles[0], 0, 16))), EBADF);
+        assert_eq!(status(call(&mut s, request(11, fresh[0], 0, 16))), EACCES);
+        assert_eq!(s.work.executions(), 1);
+    }
     fn request(op: u64, token: u64, offset: u64, length: u64) -> Message {
         let mut bytes = [0; 64];
         for (index, word) in [op, token, offset, length].into_iter().enumerate() {

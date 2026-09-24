@@ -123,6 +123,11 @@ def identity_errors(case, output):
     count = 3 if case == "infer-oversized" else 2
     expected = f"kernel:inference-elf-loaded entry=0x40000010 input-count={count} x={x} y={y}"
     errors = []
+    binding = "kernel:agent-bound id=1 pid=0 context=1 tools=1 approval=always recovery=reclaim"
+    lines = output.splitlines()
+    bindings = [line for line in lines if line.startswith("kernel:agent-bound")]
+    if bindings != [binding] or not 0 <= output.find(binding) < output.find(expected):
+        errors.append("missing, changed, duplicate or late agent binding")
     for marker in (
         expected,
         "kernel:launch-policy pid=0 frames=32 ticks=1024 document=true generation=0",

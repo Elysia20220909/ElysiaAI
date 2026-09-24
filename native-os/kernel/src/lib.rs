@@ -1,6 +1,7 @@
 #![no_std]
 //! CPU-independent contracts for the bounded process runtime.
 
+pub mod agent;
 pub mod approval;
 pub mod documents;
 pub mod inference_memory;
