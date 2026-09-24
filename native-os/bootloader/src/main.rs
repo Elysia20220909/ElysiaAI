@@ -95,6 +95,15 @@ fn mode() -> BootMode {
         "infer-fault" => BootMode::InferenceFault,
         "infer-range" => BootMode::InferenceRange,
         "infer-abstain" => BootMode::InferenceAbstain,
+        "infer-mem-grow" => BootMode::MemoryGrow,
+        "infer-mem-limit" => BootMode::MemoryLimit,
+        "infer-mem-release" => BootMode::MemoryRelease,
+        "infer-mem-fault" => BootMode::MemoryFault,
+        "infer-mem-budget" => BootMode::MemoryBudget,
+        "infer-mem-rollback" => BootMode::MemoryRollback,
+        "infer-mem-guard" => BootMode::MemoryGuard,
+        "infer-mem-nx" => BootMode::MemoryNx,
+        "infer-mem-released" => BootMode::MemoryReleased,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

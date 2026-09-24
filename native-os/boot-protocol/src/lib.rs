@@ -74,6 +74,15 @@ pub enum BootMode {
     InferenceFault = 61,
     InferenceRange = 62,
     InferenceAbstain = 63,
+    MemoryGrow = 64,
+    MemoryLimit = 65,
+    MemoryRelease = 66,
+    MemoryFault = 67,
+    MemoryBudget = 68,
+    MemoryRollback = 69,
+    MemoryGuard = 70,
+    MemoryNx = 71,
+    MemoryReleased = 72,
 }
 
 impl BootMode {
@@ -143,6 +152,15 @@ impl BootMode {
             61 => Some(Self::InferenceFault),
             62 => Some(Self::InferenceRange),
             63 => Some(Self::InferenceAbstain),
+            64 => Some(Self::MemoryGrow),
+            65 => Some(Self::MemoryLimit),
+            66 => Some(Self::MemoryRelease),
+            67 => Some(Self::MemoryFault),
+            68 => Some(Self::MemoryBudget),
+            69 => Some(Self::MemoryRollback),
+            70 => Some(Self::MemoryGuard),
+            71 => Some(Self::MemoryNx),
+            72 => Some(Self::MemoryReleased),
             _ => None,
         }
     }

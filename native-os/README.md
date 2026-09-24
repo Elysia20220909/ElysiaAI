@@ -9,6 +9,7 @@ M3c はクライアントを維持したサービス再起動と、上限付き�
 M3d は別ビルドの静的 ELF を RAM から検査してロードする。
 既存の Bun / Python / Tauri アプリとは独立した Rust workspace としてビルドする。
 M4/M5 の操作契約・承認・永続記録に加え、M6a の小さな整数分類器を独立プロセスで試験する。
+M6b は推論プロセス専用の最大64 KiBの作業領域と、確保・解放・停止時の上限管理を扱う。
 学習済みモデル、LLM、汎用 ELF・ディスクからのロード、ファイルシステムはまだ含まない。
 
 設計の背景は [独自 OS の構想](../docs/native-os/README.md)、
@@ -164,7 +165,7 @@ cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-bootloader -
 - 4 KiB ページ、256 MiB までの物理メモリ、最初の 1 MiB は予約。
   EFI Conventional Memory かつ Runtime 属性のないページだけを対象にする。
   kernel / 起動情報 / map は明示的にも除外する。重複 descriptor は受け付けない。
-- 有効化前の root だけを構築する。カーネル用テーブルは最大 256 フレーム、
+- root は有効化前に構築する。推論領域の変更時も一旦カーネル root へ移る。カーネル用テーブルは最大 256 フレーム、
   各プロセスの所有テーブルとユーザーページは合わせて最大 32 フレーム。カーネルの葉は supervisor-only。
   コードは RX、読み取り専用データは R/NX、データ・スタック・ページテーブルは RW/NX。
   CR0.WP と EFER.NXE を有効にし、旧 global TLB を除去して CR3 を更新する。
@@ -384,3 +385,11 @@ log / yield / exit と役割限定 syscall 6 / 7 は既存の契約を維持し�
 既存の起動権限と予算を維持し、COM1 の承認後だけ同じ操作を実行する。runner は4つのアプリ ELF を先に作る。
 モデル拒否・入力拒否・棄権・故障・暴走時は提案なしで回収する。
 [制限付き推論の検証](../docs/native-os/INFERENCE_ENTRY_VALIDATION.md)にモデル形式、12ケース、残る範囲を記載する。
+
+## M6b の推論メモリ
+
+`INFERENCE_BOOT` だけが、`0x90000000` から最大16ページ（64 KiB）の private RW/NX 領域を許可する。
+`int 0x80` の9番へ RDI=希望ページ数を渡し、0で全解放する。通常の `BOOT` と資料サービスには許可しない。
+ページテーブルも含めた32フレームの上限は維持し、部分確保の失敗では以前の領域とデータを保持する。
+推論のモデルと入力はこの領域にコピーして計算し、提案前に解放する。
+[推論メモリの検証](../docs/native-os/INFERENCE_MEMORY_VALIDATION.md)に ABI、9つの故障・回収試験、残る制限を記載する。

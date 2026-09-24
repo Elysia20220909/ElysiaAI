@@ -11,10 +11,11 @@ M3c では、資料サービスだけの再起動、クライアントの継続�
 M3d では、固定配置の静的ユーザー ELF のロードと保護・回収を検証した。
 M4/M5 では固定操作の承認・永続記録・復旧と、承認待ち中の処理継続まで実装した。
 M6a は独立プロセスで整数分類器を計算し、承認後だけ候補を実行する限定した入口。
+M6b はそのプロセスに最大64 KiBの専用作業領域を与え、上限超過と確保失敗、停止時の回収を検証する。
 M2 の一般化、M3 の権限委譲・任意サービス作成、M6 全体と M7 は未達成。実測は [起動検証](BOOT_VALIDATION.md)、
 [メモリ検証](MEMORY_VALIDATION.md)、[ユーザー空間の検証](USERSPACE_VALIDATION.md)、
 [資源回収と実行制御](LIFECYCLE_VALIDATION.md)、[通信と権限](IPC_VALIDATION.md)、[RAM 資料サービス](DOCUMENT_SERVICE_VALIDATION.md)、[サービス復旧](SERVICE_RECOVERY_VALIDATION.md)、[ユーザー ELF](USER_ELF_VALIDATION.md)、[非同期承認](ASYNC_APPROVAL_VALIDATION.md)、
-[制限付き推論](INFERENCE_ENTRY_VALIDATION.md) を参照する。
+[制限付き推論](INFERENCE_ENTRY_VALIDATION.md)、[推論メモリ](INFERENCE_MEMORY_VALIDATION.md) を参照する。
 基準コミットと既存構成は[構想](README.md)、実装上の境界は[基本設計](ARCHITECTURE.md)を参照する。
 
 ## 判定の原則

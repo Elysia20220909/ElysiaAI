@@ -323,8 +323,7 @@ def verify_ipc(case: str, output: str) -> list[str]:
         "ipc-echo": ["kernel:ipc-result pid=0 op=3 result=-9",
                      "kernel:ipc-result pid=0 op=3 result=-13",
                      "kernel:ipc-result pid=0 op=3 result=-90",
-                     "kernel:ipc-result pid=0 op=4 result=-14",
-                     "kernel:ipc-result pid=1 op=4 result=-90"],
+                     "kernel:ipc-result pid=0 op=4 result=-14"],
         "ipc-peer-exit": ["kernel:user-exit pid=1 status=0", "kernel:ipc-wake pid=0 result=-32"],
         "ipc-peer-fault": ["kernel:user-stopped pid=1 vector=6 error=0x0 address=0x0", "kernel:ipc-wake pid=0 result=-32"],
         "ipc-revoke": ["kernel:ipc-result pid=1 op=5 result=0", "kernel:ipc-wake pid=0 result=-32",
@@ -339,6 +338,13 @@ def verify_ipc(case: str, output: str) -> list[str]:
         if len(rejected) != 1 or f"kernel:ipc-wake pid={1 - int(rejected[0])} result=2" not in lines:
             errors.append("missing symmetric deadlock rejection and peer wakeup")
     if case == "ipc-echo":
+        # The timer may run the receiver before the first send. Its undersized
+        # receive then completes on wakeup, with the same error and retained message.
+        # The state machine above requires a live blocked receiver for every wake.
+        if sum(lines.count(marker) for marker in (
+            "kernel:ipc-result pid=1 op=4 result=-90", "kernel:ipc-wake pid=1 result=-90"
+        )) != 1:
+            errors.append("missing or duplicate undersized receive rejection")
         if lines.count("kernel:ipc-result pid=0 op=3 result=-9") != 2:
             errors.append("missing forged or foreign handle rejection")
         for pid in (0, 1):

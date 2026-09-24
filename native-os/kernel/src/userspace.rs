@@ -13,14 +13,12 @@ use elysia_kernel::documents::{RESPONSE_SIZE, Service};
 use elysia_kernel::ipc::{Channel, EDEADLK, EMSGSIZE, EPIPE, MAX_MESSAGE};
 use elysia_kernel::recovery::{self, CONNECTION_SIZE, ENOMEM, Supervisor};
 use elysia_kernel::{
-    CODE, DATA, EFAULT, EINVAL, ENOSYS, PAGE, PRIVATE, STACK, next_runnable, readable, returnable,
-    user_flags, writable,
+    CODE, DATA, EFAULT, EINVAL, ENOSYS, PAGE, PRIVATE, STACK, next_runnable,
+    readable as fixed_readable, returnable, user_flags, writable as fixed_writable,
 };
 use elysia_memory::FrameAllocator;
 
 static mut SUPERVISOR: Supervisor = Supervisor::NEW;
-static mut LIVE_FREE: usize = 0;
-static mut SERVICE_FRAMES: usize = 0;
 static mut CLIENT_ROOT: u64 = 0;
 static mut ALLOCATION_PROBED: bool = false;
 static mut DOCUMENTS: Service = Service::EMPTY;
@@ -91,7 +89,7 @@ unsafe fn prepare(
             platform::fail("spawn-over-live-space");
         }
         if recovery_mode(mode) {
-            elysia_kernel::launch::validate_pair(elysia_kernel::launch::BOOT)
+            elysia_kernel::launch::validate_pair(boot_definitions(mode))
                 .unwrap_or_else(|e| platform::fail(e));
         }
         let handles = if ipc_mode(mode) {
@@ -104,7 +102,7 @@ unsafe fn prepare(
         let documents = if document_mode(mode) {
             let service = &mut *ptr::addr_of_mut!(DOCUMENTS);
             (if recovery_mode(mode) {
-                service.start_client()
+                service.start_defined(boot_definitions(mode))
             } else {
                 service.start_pair()
             })
@@ -114,7 +112,7 @@ unsafe fn prepare(
         };
         if work_mode(mode) {
             (&mut *ptr::addr_of_mut!(DOCUMENTS)).enable_operation_fixture(mode);
-            if matches!(mode, 55..=63) {
+            if matches!(mode, 55..=72) {
                 (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_approval(crate::async_operator::start);
             }
             if crate::persistent::operator_enabled() {
@@ -154,7 +152,7 @@ unsafe fn build_process(
     unsafe {
         let definition = if recovery_mode(mode) {
             Some(
-                elysia_kernel::launch::BOOT
+                boot_definitions(mode)
                     .get(pid)
                     .ok_or("launch-slot")?
                     .validate(pid)?,
@@ -211,14 +209,18 @@ unsafe fn build_process(
             ));
             loaded
         } else if definition.is_some_and(|d| d.elf() == elysia_kernel::launch::Elf::Client) {
-            let inference = (56..=63).contains(&mode);
+            let inference = (56..=72).contains(&mode);
             let image = if inference {
                 crate::elf_loader::INFERENCE
             } else {
                 crate::elf_loader::CLIENT
             };
-            let loaded = Space::from_elf(allocator, pid, image, limit)?;
+            let arena_limit = definition.map_or(0, |d| d.memory_pages());
+            let loaded = Space::from_elf_with_arena(allocator, pid, image, limit, arena_limit)?;
             if inference {
+                platform::log(format_args!(
+                    "kernel:arena-policy pid={pid} max-pages={arena_limit} frames={limit}"
+                ));
                 // Fixed synthetic input, copied before the address space is published.
                 // Model evaluation is performed only in the user ELF.
                 let x: i16 = if mode == 57 {
@@ -311,6 +313,9 @@ pub unsafe fn run(mode: u32) -> ! {
             allocation_rollback(allocator);
         }
         crate::elf_loader::preflight(mode, allocator);
+        if mode == 69 {
+            crate::address_space::arena_rollback(allocator);
+        }
         if recovery_mode(mode) {
             use elysia_kernel::launch::{BOOT, Definition};
             let free = allocator.free_count();
@@ -346,10 +351,8 @@ pub unsafe fn run(mode: u32) -> ! {
             &mut *ptr::addr_of_mut!(SPACES),
         );
         if recovery_mode(mode) {
-            LIVE_FREE = allocator.free_count();
-            SERVICE_FRAMES = (&*ptr::addr_of!(SPACES))[1].as_ref().unwrap().frame_count();
             CLIENT_ROOT = (&*ptr::addr_of!(PROCESSES))[0].root;
-            let free = LIVE_FREE;
+            let free = allocator.free_count();
             platform::log(format_args!(
                 "kernel:recovery-live generation=0 free={free}"
             ));
@@ -412,7 +415,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
             if !preemptive(MODE) {
                 platform::fail("unexpected-timer");
             }
-            if matches!(MODE, 55..=63) {
+            if matches!(MODE, 55..=72) {
                 crate::async_operator::poll(
                     &mut (&mut *ptr::addr_of_mut!(DOCUMENTS)).work,
                     CLOCK,
@@ -496,7 +499,29 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                     ));
                     return schedule(processes, current);
                 }
-                8 if matches!(MODE, 55..=63) && current == 0 => {
+                9 => {
+                    // Pause the owner's address space before altering mappings or
+                    // freeing a frame. A return reloads CR3 with a fresh user TLB.
+                    paging::enter_kernel_root();
+                    {
+                        let space = (&mut *ptr::addr_of_mut!(SPACES))[current]
+                            .as_mut()
+                            .unwrap_or_else(|| platform::fail("arena-no-space"));
+                        frame.rax = space
+                            .resize_arena(memory::frames(), frame.rdi)
+                            .unwrap_or_else(|e| e);
+                        platform::log(format_args!(
+                            "kernel:arena-resize pid={current} request={} result={} pages={} limit={} frames={}",
+                            frame.rdi,
+                            frame.rax as i64,
+                            space.arena_pages(),
+                            space.arena_limit(),
+                            space.frame_count()
+                        ));
+                    }
+                    asm!("mov cr3, {}",in(reg) processes[current].root,options(nostack));
+                }
+                8 if matches!(MODE, 55..=72) && current == 0 => {
                     frame.rax = (&*ptr::addr_of!(DOCUMENTS)).work.state() as u64;
                     if frame.rdi != 0 {
                         crate::async_operator::progress(frame.rdi);
@@ -570,8 +595,8 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
     unsafe {
         // Leave the old CR3 before clearing a single leaf/table or returning frames.
         paging::enter_kernel_root();
-        let spaces = &mut *ptr::addr_of_mut!(SPACES);
         for pid in 0..2 {
+            let spaces = &mut *ptr::addr_of_mut!(SPACES);
             if (processes[pid].exit.is_some()
                 || processes[pid].fault.is_some()
                 || processes[pid].budget_stopped)
@@ -582,11 +607,18 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 }
                 if document_mode(MODE) {
                     (&mut *ptr::addr_of_mut!(DOCUMENTS)).close_process_at(pid, CLOCK);
-                    if matches!(MODE, 55..=63) {
+                    if matches!(MODE, 55..=72) {
                         crate::async_operator::cancel_if_finished(
                             &(&*ptr::addr_of!(DOCUMENTS)).work,
                         );
                     }
+                }
+                if space.arena_limit() != 0 {
+                    platform::log(format_args!(
+                        "kernel:arena-reclaim pid={pid} pages={} frames={}",
+                        space.arena_pages(),
+                        space.frame_count()
+                    ));
                 }
                 space.release(memory::frames());
                 processes[pid].root = 0;
@@ -594,7 +626,7 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 platform::log(format_args!("kernel:reaped pid={pid}"));
                 if recovery_mode(MODE) && pid == 1 && spaces[0].is_some() {
                     let free = memory::frames().free_count();
-                    if free != LIVE_FREE + SERVICE_FRAMES {
+                    if free != BASELINE - spaces[0].as_ref().unwrap().frame_count() {
                         platform::fail("service-reclaim-leak");
                     }
                     let generation = (&*ptr::addr_of!(SUPERVISOR)).generation;
@@ -619,16 +651,25 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
             if free != BASELINE {
                 platform::fail("process-resource-leak");
             }
-            if matches!(MODE, 58..=63) {
+            if matches!(MODE, 58..=72) {
                 let manager = &(&*ptr::addr_of!(DOCUMENTS)).work;
                 let client_ok = match MODE {
-                    60 => {
+                    60 | 68 => {
                         processes[0].budget_stopped
                             && processes[0].exit.is_none()
                             && processes[0].fault.is_none()
                     }
-                    61 => {
+                    61 | 67 => {
                         processes[0].fault.map(|f| f.0) == Some(6) && !processes[0].budget_stopped
+                    }
+                    70..=72 => {
+                        let base = elysia_kernel::inference_memory::BASE;
+                        let expected = match MODE {
+                            70 => (14, base + 16 * PAGE, 4),
+                            71 => (14, base, 21),
+                            _ => (14, base, 4),
+                        };
+                        processes[0].fault == Some(expected) && !processes[0].budget_stopped
                     }
                     _ => {
                         processes[0].exit == Some(0)
@@ -739,7 +780,12 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 ));
                 if MODE == 19 && GENERATION < 63 {
                     GENERATION += 1;
-                    prepare(memory::frames(), MODE, processes, spaces);
+                    prepare(
+                        memory::frames(),
+                        MODE,
+                        processes,
+                        &mut *ptr::addr_of_mut!(SPACES),
+                    );
                     CURRENT = 0;
                     asm!("mov cr3, {}",in(reg) processes[0].root,options(nostack));
                     return ptr::addr_of!(processes[0].frame);
@@ -795,19 +841,19 @@ fn verify_fixture(processes: &[Process; 2], mode: u32) {
 }
 
 fn ipc_mode(mode: u32) -> bool {
-    matches!(mode, 21..=38 | 45..=49 | 55..=63)
+    matches!(mode, 21..=38 | 45..=49 | 55..=72)
 }
 fn document_mode(mode: u32) -> bool {
-    matches!(mode, 27..=38 | 45..=49 | 55..=63)
+    matches!(mode, 27..=38 | 45..=49 | 55..=72)
 }
 fn work_mode(mode: u32) -> bool {
-    matches!(mode, 45..=49 | 55..=63)
+    matches!(mode, 45..=49 | 55..=72)
 }
 fn recovery_mode(mode: u32) -> bool {
-    matches!(mode, 33..=38 | 45..=49 | 55..=63)
+    matches!(mode, 33..=38 | 45..=49 | 55..=72)
 }
 fn preemptive(mode: u32) -> bool {
-    matches!(mode, 18 | 20..=49 | 55..=63)
+    matches!(mode, 18 | 20..=49 | 55..=72)
 }
 fn verify_lifecycle(p: &[Process; 2], mode: u32) {
     let valid = if mode == 19 {
@@ -998,8 +1044,8 @@ unsafe fn reconnect(
     length: u64,
 ) -> Result<u64, u64> {
     unsafe {
-        let spaces = &mut *ptr::addr_of_mut!(SPACES);
-        let generation = (&*ptr::addr_of!(SUPERVISOR)).next(pid, spaces[1].is_some())?;
+        let generation =
+            (&*ptr::addr_of!(SUPERVISOR)).next(pid, (&*ptr::addr_of!(SPACES))[1].is_some())?;
         if length != CONNECTION_SIZE {
             return Err(EINVAL);
         }
@@ -1012,8 +1058,12 @@ unsafe fn reconnect(
         {
             platform::fail("reconnect-client-state");
         }
-        let candidate =
-            recovery::replacement(&*ptr::addr_of!(CHANNEL), &*ptr::addr_of!(DOCUMENTS))?;
+        let candidate = recovery::replacement_defined(
+            &*ptr::addr_of!(CHANNEL),
+            &*ptr::addr_of!(DOCUMENTS),
+            boot_definitions(MODE),
+        )?;
+        let spaces = &mut *ptr::addr_of_mut!(SPACES);
         let previous_root = processes[0].root;
         paging::enter_kernel_root();
         let free = memory::frames().free_count();
@@ -1046,7 +1096,7 @@ unsafe fn reconnect(
                 return Err(ENOMEM);
             }
         };
-        if memory::frames().free_count() != LIVE_FREE {
+        if memory::frames().free_count() != free - space.frame_count() {
             platform::fail("restart-resource-leak");
         }
         // Commit the new space, capabilities and generation together while interrupts are disabled.
@@ -1116,5 +1166,28 @@ fn verify_elf(p: &[Process; 2], mode: u32) {
             .any(|p| !p.yielded || p.waiting.is_some() || p.budget_stopped)
     {
         platform::fail("elf-fixture-verdict");
+    }
+}
+
+fn boot_definitions(mode: u32) -> [elysia_kernel::launch::Definition; 2] {
+    if (56..=72).contains(&mode) {
+        elysia_kernel::launch::INFERENCE_BOOT
+    } else {
+        elysia_kernel::launch::BOOT
+    }
+}
+fn readable(pid: usize, pointer: u64, length: u64) -> bool {
+    fixed_readable(pid, pointer, length) || arena_readable(pid, pointer, length)
+}
+fn writable(pid: usize, pointer: u64, length: u64) -> bool {
+    fixed_writable(pid, pointer, length) || arena_readable(pid, pointer, length)
+}
+fn arena_readable(pid: usize, pointer: u64, length: u64) -> bool {
+    // The single CPU cannot resize an arena while copying or waking a receiver.
+    unsafe {
+        (&*ptr::addr_of!(SPACES))
+            .get(pid)
+            .and_then(Option::as_ref)
+            .is_some_and(|space| space.arena_contains(pointer, length))
     }
 }

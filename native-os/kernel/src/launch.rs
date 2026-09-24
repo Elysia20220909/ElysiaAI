@@ -15,6 +15,8 @@ pub struct Definition {
     /// All owned physical frames, including page tables.
     pub frames: usize,
     pub ticks: u64,
+    /// Private inference arena quota, separate from the total owned-frame limit.
+    pub memory_pages: usize,
 }
 
 const CEILING: [Definition; 2] = [
@@ -24,6 +26,7 @@ const CEILING: [Definition; 2] = [
         document: Some(0),
         frames: 32,
         ticks: 1024,
+        memory_pages: crate::inference_memory::MAX_PAGES,
     },
     Definition {
         elf: Elf::Service,
@@ -31,11 +34,20 @@ const CEILING: [Definition; 2] = [
         document: None,
         frames: 32,
         ticks: 64,
+        memory_pages: 0,
     },
 ];
 
 /// Trusted boot configuration; may reduce, never enlarge, CEILING.
-pub const BOOT: [Definition; 2] = CEILING;
+pub const BOOT: [Definition; 2] = [
+    Definition {
+        memory_pages: 0,
+        ..CEILING[0]
+    },
+    CEILING[1],
+];
+/// Inference alone receives the arena quota; ordinary clients retain no arena authority.
+pub const INFERENCE_BOOT: [Definition; 2] = CEILING;
 
 /// A validated definition cannot be constructed or enlarged by callers.
 #[derive(Clone, Copy)]
@@ -56,6 +68,7 @@ impl Definition {
             || self.frames > allowed.frames
             || self.ticks == 0
             || self.ticks > allowed.ticks
+            || self.memory_pages > allowed.memory_pages
         {
             return Err("launch-budget");
         }
@@ -74,6 +87,9 @@ impl Validated {
     }
     pub fn ticks(self) -> u64 {
         self.definition.ticks
+    }
+    pub fn memory_pages(self) -> usize {
+        self.definition.memory_pages
     }
     pub fn document(self) -> Option<usize> {
         self.definition.document
@@ -134,6 +150,37 @@ mod tests {
         documents::Service,
         ipc::{Channel, EACCES, EBADF},
     };
+    #[test]
+    fn inference_arena_authority_is_explicit_and_cannot_escalate() {
+        assert_eq!(BOOT[0].validate(0).unwrap().memory_pages(), 0);
+        assert_eq!(INFERENCE_BOOT[0].validate(0).unwrap().memory_pages(), 16);
+        assert!(
+            Definition {
+                memory_pages: 17,
+                ..INFERENCE_BOOT[0]
+            }
+            .validate(0)
+            .is_err()
+        );
+        assert!(
+            Definition {
+                memory_pages: 1,
+                ..BOOT[1]
+            }
+            .validate(1)
+            .is_err()
+        );
+        assert_eq!(
+            Definition {
+                memory_pages: 3,
+                ..INFERENCE_BOOT[0]
+            }
+            .validate(0)
+            .unwrap()
+            .memory_pages(),
+            3
+        );
+    }
     #[test]
     fn fresh_roles_expose_only_owned_authority() {
         let mut channel = Channel::EMPTY;
