@@ -12,7 +12,7 @@ pymilvus==2.6.11
 pymilvus[model]>=0.3.2
 milvus-lite>=2.4.0; platform_system != "Windows"
 ollama>=0.6.1
-sentence-transformers>=5.4.1,<6.0.0
+sentence-transformers>=5.4.1,<7.0.0
 transformers>=5.5.0,<6.0.0
 
 # Monitoring & Diagnostics
