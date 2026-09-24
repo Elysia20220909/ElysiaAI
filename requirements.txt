@@ -1,6 +1,6 @@
 # 🌸 ElysiaAI - Hardened Python OS Kernel Dependencies
 # Core Bridge (Binary Stdin/Stdout)
-setuptools>=83.0.0
+setuptools>=84.0.0
 python-dotenv==1.2.2
 numpy>=1.26.0,<3.0.0
 psutil==5.9.8
