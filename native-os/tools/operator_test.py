@@ -26,6 +26,7 @@ CASES.update({name.replace("operator-", "async-"): value for name, value in list
 CASES.update(
     {
         "infer-approve": (b"approve 1\n", "Completed"),
+        "infer-quota-approve": (b"approve 1\n", "Completed"),
         "infer-short": (b"approve 1\n", "Completed"),
         "infer-deny": (b"deny 1\n", "Denied"),
         "infer-timeout": (None, "Interrupted"),

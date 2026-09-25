@@ -10,3 +10,9 @@ name = "elysia-inference-client"
 path = "src/main.rs"
 test = false
 bench = false
+
+[[bin]]
+name = "elysia-sized-inference"
+path = "src/sized_main.rs"
+test = false
+bench = false

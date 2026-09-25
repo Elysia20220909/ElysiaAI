@@ -14,19 +14,22 @@ def identity(case):
         else (1, 4)
     )
     count = 3 if case == "infer-oversized" else 2
+    limit = {"infer-quota-approve": 2, "infer-quota-denied": 1}.get(case, 16)
     return [
         "kernel:agent-bound id=1 pid=0 context=1 tools=1 approval=always recovery=reclaim",
         f"kernel:inference-elf-loaded entry=0x40000010 input-count={count} x={x} y={y}",
         "kernel:launch-policy pid=0 frames=32 ticks=1024 document=true generation=0",
         "kernel:launch-policy pid=1 frames=32 ticks=64 document=false generation=0",
-        "kernel:arena-policy pid=0 max-pages=16 frames=32",
+        f"kernel:arena-policy pid=0 max-pages={limit} frames=32",
         "kernel:user-enter pid=0 cpl=3",
     ]
 
 
 def memory_steps(case):
     # Fixture observations are independent of the verdict's request accounting.
+    limit = {"infer-quota-approve": 2, "infer-quota-denied": 1}.get(case, 16)
     shapes = {
+        "infer-quota-denied": [(2, 0)],
         "infer-mem-grow": [(2, 2), (16, 16), (1, 1), (16, 16)],
         "infer-mem-limit": [(16, 16), (17, 16), (18446744073709551615, 16)],
         "infer-mem-release": [(16, 16), (1, 1), (16, 16), (0, 0)] * 8,
@@ -46,13 +49,15 @@ def memory_steps(case):
     ]
     for request, pages in steps:
         result = -22 if request != pages else 2415919104 if pages else 0
-        lines.append(f"kernel:arena-resize pid=0 request={request} result={result} pages={pages} limit=16 frames={pages + 15}")
+        lines.append(f"kernel:arena-resize pid=0 request={request} result={result} pages={pages} limit={limit} frames={pages + 15}")
     if case == "infer-mem-grow":
         lines += ["user:log pid=0 hex=5a5a", "kernel:syscall-rejected pid=0 reason=range"]
     return lines, steps[-1][1]
 
 
 def terminal(case):
+    if case == "infer-quota-denied":
+        return "kernel:user-exit pid=0 status=1"
     if case in {"infer-budget", "infer-mem-budget"}:
         return "kernel:budget-stopped pid=0 ticks=1024"
     fault = {
@@ -89,7 +94,8 @@ def rejected_run(case):
         "kernel:operation-result state=Empty executions=0",
         "kernel:operation-clean free=100",
     ]
-    return "\n".join(before + identity(case) + steps + [user_marker(CASES[case])] + tail)
+    messages = [] if CASES[case] is None else [user_marker(CASES[case])]
+    return "\n".join(before + identity(case) + steps + messages + tail)
 
 
 class InferenceVerdictTests(unittest.TestCase):
@@ -105,7 +111,7 @@ class InferenceVerdictTests(unittest.TestCase):
             self.assertTrue(identity_errors("infer-approve", "\n".join(bad)))
 
     def test_input_prediction_and_plan_must_agree(self):
-        for case, length in (("infer-approve", 16), ("infer-short", 8)):
+        for case, length in (("infer-approve", 16), ("infer-short", 8), ("infer-quota-approve", 16)):
             prediction = user_marker(f"infer:length{length}")
             plan = f"kernel:operator-plan id=1 caller=0 executor=1 version=1 target=256 offset=0 length={length} byte-budget=16 deadline-tick=1024"
             steps, _ = memory_steps(case)
@@ -146,7 +152,10 @@ class InferenceVerdictTests(unittest.TestCase):
             self.assertTrue(verdict(case, 53, output.replace(stop, "") + "\n" + stop))
             self.assertTrue(verdict(case, 53, output + "\n" + stop))
             self.assertTrue(verdict(case, 55, output))
-            for missing in (stop, user_marker(marker), "kernel:reaped pid=1"):
+            required = [stop, "kernel:reaped pid=1"]
+            if marker is not None:
+                required.append(user_marker(marker))
+            for missing in required:
                 self.assertTrue(verdict(case, 53, output.replace(missing, "")))
             for before, after in (("clean free=100", "clean free=99"), ("executions=0", "executions=01")):
                 self.assertTrue(verdict(case, 53, output.replace(before, after)))
@@ -171,6 +180,19 @@ class InferenceVerdictTests(unittest.TestCase):
             step = next(line for line in output.splitlines() if line.startswith("kernel:arena-resize pid=0"))
             self.assertTrue(arena_errors(case, output.replace(step, "") + "\n" + step))
             self.assertTrue(arena_errors(case, output + "\n" + step))
+
+    def test_reduced_quota_cannot_silently_expand_or_approve_after_denial(self):
+        case = "infer-quota-denied"
+        output = rejected_run(case)
+        for before, after in (
+            ("max-pages=1 ", "max-pages=16 "),
+            ("limit=1 ", "limit=16 "),
+            ("result=-22 pages=0", "result=2415919104 pages=2"),
+            ("status=1", "status=0"),
+            ("frames=15", "frames=17"),
+        ):
+            self.assertTrue(verdict(case, 53, output.replace(before, after)))
+        self.assertTrue(verdict(case, 53, output + "\n" + user_marker("infer:length16")))
 
     def test_rollback_and_mapping_faults_require_exact_evidence(self):
         case = "infer-mem-rollback"

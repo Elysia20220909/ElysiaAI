@@ -15,12 +15,20 @@ from boot_test import (
     PERSISTENCE_CASES,
     PREFIX,
     RECOVERY_CASES,
+    SIZED_CASES,
     USER_CASES,
+    launch_identity,
     verify_output,
 )
 
 
 class VerdictTests(unittest.TestCase):
+    def test_launch_identity_preserves_legacy_policy_schema(self):
+        expected = {"case": "infer-approve", "kernel_sha256": "a", "inference_elf_sha256": "b"}
+        self.assertEqual(launch_identity("infer-approve", "a", "b", "c"), expected)
+        expected.update(case="infer-size-0", sized_elf_sha256="c")
+        self.assertEqual(launch_identity("infer-size-0", "a", "b", "c"), expected)
+
     def transcript(self, case):
         # Stale-key recovery occurs before the completed handoff.
         prefix = list(PREFIX)
@@ -231,7 +239,7 @@ class VerdictTests(unittest.TestCase):
 
     def test_accepts_each_expected_result(self):
         for case, (code, _) in CASES.items():
-            if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES:
+            if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES or case in SIZED_CASES:
                 continue
             with self.subTest(case=case):
                 self.assertEqual(verify_output(case, code, self.transcript(case)), [])

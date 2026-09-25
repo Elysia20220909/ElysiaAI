@@ -6,6 +6,7 @@ fn main() {
         "ELYSIA_SERVICE_ELF",
         "ELYSIA_CLIENT_ELF",
         "ELYSIA_INFERENCE_ELF",
+        "ELYSIA_SIZED_ELF",
     ] {
         println!("cargo:rerun-if-env-changed={key}");
         if env::var("TARGET").as_deref() == Ok("x86_64-unknown-none") {

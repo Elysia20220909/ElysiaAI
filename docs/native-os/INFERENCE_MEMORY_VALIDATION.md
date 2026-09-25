@@ -114,3 +114,37 @@ python native-os/tools/boot_test.py --case all --qemu <qemu-system-x86_64.exe> -
 64 KiBはこの段階の作業領域であり、実用LLMを動かせる容量としては扱わない。
 汎用ヒープ、任意アドレスへのmmap、共有メモリ、スワップ、学習済みモデルのロード、FPU/SIMD、GPU、実機対応は未実装。
 ELFのRX/RWセグメント各4 KiBと4 KiBスタックの制限も維持する。
+
+
+## Agent の縮小予算を実際に強制する試験
+
+2026-09-25、既存の `ReadAgent` の起動上限を使い、同じ推論ELFを異なるarena予算で動かす2ケースを追加した。
+Agentへのバインドとプロセス構築が同じ検証済みmanifestから起動設定を得る。
+信頼済みの起動モード73/74が予算を選び、ユーザープロセスには従来の承認用モード56を渡す。
+推論と資料サービスのELFには変更を加えず、入力も通常の承認ケースと同じに保つ。
+
+| ケース | 推論arena上限 | QEMUで確認した結果 |
+| --- | ---: | --- |
+| `infer-quota-approve` | 2ページ / 8 KiB | 2ページ確保、推論、全解放、試験runnerによる承認後に1回実行。再起動時は記録を読み、権限を復元せず再実行しない |
+| `infer-quota-denied` | 1ページ / 4 KiB | 2ページ要求をEINVALで拒否。確保0ページを維持し、クライアントはstatus=1で終了。操作はEmpty、実行0回、journalディスクは不変 |
+
+両ケースともサービスへのarena権限は0のままで、両プロセス終了後の空きフレーム数は起動前の基準値へ戻った。
+成功ケースの承認は自動試験入力であり、人間による操作試験を実施したことは意味しない。
+縮小するのは推論作業領域だけであり、ELF、スタック、ページテーブルなどを含むプロセス全体のメモリではない。
+元の上限16ページでもこの推論の使用量は2ページなので、今回の結果を実使用メモリの削減とは扱わない。
+
+```powershell
+python native-os/tools/boot_test.py --case infer-quota-approve --qemu <qemu-system-x86_64.exe> --firmware-dir <share>
+python native-os/tools/boot_test.py --case infer-quota-denied --qemu <qemu-system-x86_64.exe> --firmware-dir <share>
+```
+
+追加2ケースと `infer-approve / infer-replay / infer-mem-fault / infer-mem-budget` の計6ケースを、
+Windows上のQEMUで実行し、全件合格した。回帰試験全体92ケースの再実行ではない。
+今回の記録はローカルの `native-os/out/quota-results.json`、ケース別serialログ、起動前の識別情報に残した。
+Rustのライブラリ試験79件、Python判定器47件、研究用試験19件も合格した。
+判定器の新しい負例は、上限の水増し、拒否時のページ増加、異常終了の成功扱い、拒否後の推論結果を検出する。
+
+Ubuntu側の `sized_inference.py` はPythonの追跡対象メモリを予測する実験であり、今回の2/1ページは
+nativeの固定推論に対する試験予算である。Ubuntuの回帰モデルからの自動変換・適用は実装していない。
+次はnative側でも入力・モデルサイズを変えてarenaのピークを収集し、その単位で評価した提案を
+この起動上限に渡す。サイズの異なる推論の移植、未知負荷の扱い、予算不足時の再計画は今後の課題となる。

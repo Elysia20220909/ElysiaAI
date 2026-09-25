@@ -137,6 +137,7 @@ QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 ```powershell
 cargo +stable fmt --manifest-path native-os/Cargo.toml --all -- --check
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel -p elysia-inference-client --lib --tests --locked -- -D warnings
+$env:ELYSIA_SIZED_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-sized-inference).Path
 $env:ELYSIA_INFERENCE_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-inference-client).Path
 $env:ELYSIA_CLIENT_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-document-client).Path
 $env:ELYSIA_SERVICE_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-document-service).Path
@@ -305,7 +306,7 @@ runner が先にビルドし、`ELYSIA_USER_ELF` のファイルを kernel の�
 `elf-noexecute` は故障隔離、`elf-reject` は不正入力 9 種、`elf-rollback` は全 14 箇所の部分確保失敗を扱う。
 ELF ケースは各プロセス 64 tick。ゲスト合格コード 51、runner 成功は 0。
 リンカー設定変更も build script の入力として追跡する。手動ビルド時もユーザー ELF を先に作り、
-`ELYSIA_USER_ELF`、`ELYSIA_SERVICE_ELF`、`ELYSIA_CLIENT_ELF`、`ELYSIA_INFERENCE_ELF` を設定してからカーネルをビルドする。
+`ELYSIA_USER_ELF`、`ELYSIA_SERVICE_ELF`、`ELYSIA_CLIENT_ELF`、`ELYSIA_INFERENCE_ELF`、`ELYSIA_SIZED_ELF` を設定してからカーネルをビルドする。
 
 ## M3e の資料サービス ELF
 

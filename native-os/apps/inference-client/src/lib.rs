@@ -1,6 +1,7 @@
 #![no_std]
 //! Two-input, two-output integer forward pass. Hand-authored test weights,
 //! not a trained language model. No allocation, floating point, or authority.
+pub mod sized;
 pub const MODEL_SIZE: usize = 24;
 pub const INPUT_SIZE: usize = 8;
 #[derive(Debug, PartialEq, Eq)]

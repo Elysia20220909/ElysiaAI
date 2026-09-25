@@ -18,6 +18,7 @@ from inference_test import CASES as INFERENCE_CASES, exercise as inference_exerc
 from operator_test import CASES as OPERATOR_CASES, exercise as operator_exercise
 from persistence_test import CASES as PERSISTENCE_CASES, exercise as persistence_exercise
 from qemu_test_utils import operation_result_errors, qemu_path
+from sized_test import CASES as SIZED_CASES, exercise as sized_exercise
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -105,6 +106,8 @@ for name, (_mode, state, executions) in OPERATION_CASES.items():
     CASES[name] = (53, ["kernel:user-spaces-ready", "kernel:timer-ready", "kernel:user-enter pid=0 cpl=3",
                        "user:log pid=0 hex=6f6b", f"kernel:operation-result state={state} executions={executions}",
                        "kernel:operation-clean"])
+for name in SIZED_CASES:
+    CASES[name] = (53, [])
 for name in INFERENCE_CASES:
     CASES[name] = (53, [])
 
@@ -141,9 +144,17 @@ def sha256(path: Path) -> str:
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def launch_identity(case, kernel_hash, inference_hash, sized_hash):
+    identity = {"case": case, "kernel_sha256": kernel_hash, "inference_elf_sha256": inference_hash}
+    # Preserve the exact feature schema used by the earlier guarded policy lab.
+    if case in SIZED_CASES:
+        identity["sized_elf_sha256"] = sized_hash
+    return identity
+
+
 def verify_output(case: str, code: int, output: str) -> list[str]:
     """Require both the exact exit code and ordered evidence from each side of the handoff."""
-    if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES:
+    if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES or case in SIZED_CASES:
         return ["this case requires its dedicated runner and disk-integrity verification"]
     expected_code, markers = CASES[case]
     errors = []
@@ -519,7 +530,15 @@ def run(args: argparse.Namespace) -> int:
             "-C", "relocation-model=static",
             "-C", f"link-arg=-T{ROOT / 'apps' / directory / 'linker.ld'}", "-C", "link-arg=--build-id=none",
         ]), end="", flush=True)
+    sized_elf = ROOT / "target/x86_64-unknown-none/release/elysia-sized-inference"
+    print(checked([
+        "cargo", "+stable", "rustc", "--locked", "-p", "elysia-inference-client",
+        "--bin", "elysia-sized-inference", "--target", "x86_64-unknown-none", "--release", "--",
+        "-C", "relocation-model=static", "-C", f"link-arg=-T{ROOT / 'apps/inference-client/linker.ld'}",
+        "-C", "link-arg=--build-id=none",
+    ]), end="", flush=True)
     kernel_environment = os.environ.copy()
+    kernel_environment["ELYSIA_SIZED_ELF"] = str(sized_elf)
     kernel_environment["ELYSIA_USER_ELF"] = str(user_elf)
     kernel_environment["ELYSIA_SERVICE_ELF"] = str(service_elf)
     kernel_environment["ELYSIA_CLIENT_ELF"] = str(client_elf)
@@ -560,10 +579,16 @@ def run(args: argparse.Namespace) -> int:
             "-drive", f"if=none,id=esp,format=raw,readonly=on,file=fat:ro:{qemu_path(esp)}",
             "-device", "virtio-blk-pci,drive=esp,bootindex=1",
         ]
+        # Capture trusted launch identity before executing any guest instructions.
+        # This is a workload identity, not a prediction from observed allocations.
+        prelaunch = launch_identity(case, sha256(kernel), sha256(inference_elf), sha256(sized_elf))
+        (case_dir / "prelaunch.json").write_text(json.dumps(prelaunch, sort_keys=True) + "\n", encoding="utf-8")
         started = time.monotonic()
         try:
             if case in OPERATOR_CASES:
                 returncode, output, errors = operator_exercise(command, case, case_dir, args.timeout, execute, verify_output, args.operator_manual)
+            elif case in SIZED_CASES:
+                returncode, output, errors = sized_exercise(command, case, case_dir, args.timeout, execute)
             elif case in INFERENCE_CASES:
                 returncode, output, errors = inference_exercise(command, case, case_dir, args.timeout, execute)
             elif case in PERSISTENCE_CASES:
@@ -583,6 +608,8 @@ def run(args: argparse.Namespace) -> int:
         record = {
             "case": case, "passed": not errors, "exit_code": returncode,
             "seconds": duration, "errors": errors, "loader_sha256": sha256(loader),
+            "prelaunch": prelaunch,
+            "serial_sha256": sha256(case_dir / "serial.log"),
         }
         results.append(record)
         print(json.dumps(record), flush=True)
@@ -592,7 +619,7 @@ def run(args: argparse.Namespace) -> int:
         "memory_mib": 256, "vcpus": 1, "accelerator": "tcg", "network": "none",
         "qemu_sha256": sha256(qemu), "firmware_code_sha256": sha256(code),
         "firmware_vars_sha256": sha256(variables), "kernel_sha256": sha256(kernel),
-        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "service_elf_sha256": sha256(service_elf), "client_elf_sha256": sha256(client_elf), "inference_elf_sha256": sha256(inference_elf), "cases": results,
+        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "service_elf_sha256": sha256(service_elf), "client_elf_sha256": sha256(client_elf), "inference_elf_sha256": sha256(inference_elf), "sized_elf_sha256": sha256(sized_elf), "cases": results,
     }
     (out / "results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return 0 if all(case["passed"] for case in results) else 1

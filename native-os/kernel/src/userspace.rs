@@ -111,9 +111,8 @@ unsafe fn prepare(
             [0; 2]
         };
         if work_mode(mode) {
-            if (56..=72).contains(&mode) {
-                let agent = elysia_kernel::agent::ReadAgent::new(elysia_kernel::agent::READ_AGENT)
-                    .unwrap_or_else(|_| platform::fail("agent-manifest"));
+            if (56..=86).contains(&mode) {
+                let agent = inference_agent(mode);
                 (&mut *ptr::addr_of_mut!(DOCUMENTS))
                     .bind_agent(agent)
                     .unwrap_or_else(|_| platform::fail("agent-binding"));
@@ -122,7 +121,7 @@ unsafe fn prepare(
                 ));
             }
             (&mut *ptr::addr_of_mut!(DOCUMENTS)).enable_operation_fixture(mode);
-            if matches!(mode, 55..=72) {
+            if matches!(mode, 55..=86) {
                 (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_approval(crate::async_operator::start);
             }
             if crate::persistent::operator_enabled() {
@@ -183,7 +182,14 @@ unsafe fn build_process(
         );
         // Construct authority before allocating so invalid launch contracts cannot leak frames.
         let authority = if let Some(definition) = definition {
-            definition.frame(mode, generation, handles, documents)?
+            // Quota experiments use the unchanged inference/service ELFs and
+            // ordinary approval flow; only the kernel-owned arena limit differs.
+            let fixture_mode = if matches!(mode, 73 | 74) || (mode >= 75 && pid == 1) {
+                56
+            } else {
+                mode
+            };
+            definition.frame(fixture_mode, generation, handles, documents)?
         } else {
             Frame {
                 r12: pid as u64,
@@ -219,8 +225,10 @@ unsafe fn build_process(
             ));
             loaded
         } else if definition.is_some_and(|d| d.elf() == elysia_kernel::launch::Elf::Client) {
-            let inference = (56..=72).contains(&mode);
-            let image = if inference {
+            let inference = (56..=86).contains(&mode);
+            let image = if mode >= 75 {
+                crate::elf_loader::SIZED
+            } else if inference {
                 crate::elf_loader::INFERENCE
             } else {
                 crate::elf_loader::CLIENT
@@ -231,35 +239,42 @@ unsafe fn build_process(
                 platform::log(format_args!(
                     "kernel:arena-policy pid={pid} max-pages={arena_limit} frames={limit}"
                 ));
-                // Fixed synthetic input, copied before the address space is published.
-                // Model evaluation is performed only in the user ELF.
-                let x: i16 = if mode == 57 {
-                    4
-                } else if mode == 62 {
-                    i16::MAX
+                if mode >= 75 {
+                    platform::log(format_args!(
+                        "kernel:sized-inference-elf-loaded entry={:#x} mode={mode}",
+                        loaded.1
+                    ));
                 } else {
-                    1
-                };
-                let y: i16 = if matches!(mode, 57 | 63) { 1 } else { 4 };
-                let input = [
-                    1,
-                    if mode == 59 { 3 } else { 2 },
-                    x as u8,
-                    (x >> 8) as u8,
-                    y as u8,
-                    (y >> 8) as u8,
-                    0,
-                    0,
-                ];
-                ptr::copy_nonoverlapping(
-                    input.as_ptr(),
-                    (paging::DIRECT + loaded.0.pages[1] + 0x400) as *mut u8,
-                    input.len(),
-                );
-                platform::log(format_args!(
-                    "kernel:inference-elf-loaded entry={:#x} input-count={} x={x} y={y}",
-                    loaded.1, input[1]
-                ));
+                    // Fixed synthetic input, copied before the address space is published.
+                    // Model evaluation is performed only in the user ELF.
+                    let x: i16 = if mode == 57 {
+                        4
+                    } else if mode == 62 {
+                        i16::MAX
+                    } else {
+                        1
+                    };
+                    let y: i16 = if matches!(mode, 57 | 63) { 1 } else { 4 };
+                    let input = [
+                        1,
+                        if mode == 59 { 3 } else { 2 },
+                        x as u8,
+                        (x >> 8) as u8,
+                        y as u8,
+                        (y >> 8) as u8,
+                        0,
+                        0,
+                    ];
+                    ptr::copy_nonoverlapping(
+                        input.as_ptr(),
+                        (paging::DIRECT + loaded.0.pages[1] + 0x400) as *mut u8,
+                        input.len(),
+                    );
+                    platform::log(format_args!(
+                        "kernel:inference-elf-loaded entry={:#x} input-count={} x={x} y={y}",
+                        loaded.1, input[1]
+                    ));
+                }
             } else {
                 platform::log(format_args!(
                     "kernel:client-elf-loaded entry={:#x}",
@@ -425,7 +440,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
             if !preemptive(MODE) {
                 platform::fail("unexpected-timer");
             }
-            if matches!(MODE, 55..=72) {
+            if matches!(MODE, 55..=86) {
                 crate::async_operator::poll(
                     &mut (&mut *ptr::addr_of_mut!(DOCUMENTS)).work,
                     CLOCK,
@@ -531,7 +546,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                     }
                     asm!("mov cr3, {}",in(reg) processes[current].root,options(nostack));
                 }
-                8 if matches!(MODE, 55..=72) && current == 0 => {
+                8 if matches!(MODE, 55..=86) && current == 0 => {
                     frame.rax = (&*ptr::addr_of!(DOCUMENTS)).work.state() as u64;
                     if frame.rdi != 0 {
                         crate::async_operator::progress(frame.rdi);
@@ -617,7 +632,7 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 }
                 if document_mode(MODE) {
                     (&mut *ptr::addr_of_mut!(DOCUMENTS)).close_process_at(pid, CLOCK);
-                    if matches!(MODE, 55..=72) {
+                    if matches!(MODE, 55..=86) {
                         crate::async_operator::cancel_if_finished(
                             &(&*ptr::addr_of!(DOCUMENTS)).work,
                         );
@@ -661,9 +676,14 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
             if free != BASELINE {
                 platform::fail("process-resource-leak");
             }
-            if matches!(MODE, 58..=72) {
+            if matches!(MODE, 58..=72 | 74..=86) {
                 let manager = &(&*ptr::addr_of!(DOCUMENTS)).work;
                 let client_ok = match MODE {
+                    74 => {
+                        processes[0].exit == Some(1)
+                            && processes[0].fault.is_none()
+                            && !processes[0].budget_stopped
+                    }
                     60 | 68 => {
                         processes[0].budget_stopped
                             && processes[0].exit.is_none()
@@ -713,14 +733,14 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                     47 => State::Interrupted,
                     48 => State::Unknown,
                     49 => State::Failed,
-                    55..=57 => match manager.state() {
+                    55..=57 | 73 => match manager.state() {
                         s @ (State::Completed | State::Denied | State::Interrupted) => s,
                         _ => platform::fail("async-incomplete"),
                     },
                     _ => unreachable!(),
                 };
                 let executions = if matches!(MODE, 45 | 48 | 49)
-                    || (matches!(MODE, 55..=57) && expected == State::Completed)
+                    || (matches!(MODE, 55..=57 | 73) && expected == State::Completed)
                 {
                     1
                 } else {
@@ -851,19 +871,19 @@ fn verify_fixture(processes: &[Process; 2], mode: u32) {
 }
 
 fn ipc_mode(mode: u32) -> bool {
-    matches!(mode, 21..=38 | 45..=49 | 55..=72)
+    matches!(mode, 21..=38 | 45..=49 | 55..=86)
 }
 fn document_mode(mode: u32) -> bool {
-    matches!(mode, 27..=38 | 45..=49 | 55..=72)
+    matches!(mode, 27..=38 | 45..=49 | 55..=86)
 }
 fn work_mode(mode: u32) -> bool {
-    matches!(mode, 45..=49 | 55..=72)
+    matches!(mode, 45..=49 | 55..=86)
 }
 fn recovery_mode(mode: u32) -> bool {
-    matches!(mode, 33..=38 | 45..=49 | 55..=72)
+    matches!(mode, 33..=38 | 45..=49 | 55..=86)
 }
 fn preemptive(mode: u32) -> bool {
-    matches!(mode, 18 | 20..=49 | 55..=72)
+    matches!(mode, 18 | 20..=49 | 55..=86)
 }
 fn verify_lifecycle(p: &[Process; 2], mode: u32) {
     let valid = if mode == 19 {
@@ -1179,11 +1199,23 @@ fn verify_elf(p: &[Process; 2], mode: u32) {
     }
 }
 
+fn inference_agent(mode: u32) -> elysia_kernel::agent::ReadAgent {
+    use elysia_kernel::agent::{READ_AGENT, ReadAgent};
+    let mut manifest = READ_AGENT;
+    // Trusted native arena budgets, not a conversion from Python traced bytes.
+    // Two pages fit the fixture; one page exercises a denied allocation.
+    manifest.memory_pages = match mode {
+        73 => 2,
+        74 => 1,
+        _ => manifest.memory_pages,
+    };
+    ReadAgent::new(manifest).unwrap_or_else(|_| platform::fail("agent-manifest"))
+}
+
 fn boot_definitions(mode: u32) -> [elysia_kernel::launch::Definition; 2] {
-    if (56..=72).contains(&mode) {
+    if (56..=86).contains(&mode) {
         let mut definitions = elysia_kernel::launch::INFERENCE_BOOT;
-        definitions[0] = elysia_kernel::agent::ReadAgent::new(elysia_kernel::agent::READ_AGENT)
-            .unwrap_or_else(|_| platform::fail("agent-manifest"))
+        definitions[0] = inference_agent(mode)
             .launch()
             .unwrap_or_else(|e| platform::fail(e));
         definitions
