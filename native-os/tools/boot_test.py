@@ -14,11 +14,17 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
+from arena_policy_test import (
+    REJECTIONS as BUDGET_REJECTIONS,
+    VARIANTS as BUDGET_VARIANTS,
+    build_files as build_budget_files,
+    rejection_errors as budget_rejection_errors,
+)
 from inference_test import CASES as INFERENCE_CASES, exercise as inference_exercise
 from operator_test import CASES as OPERATOR_CASES, exercise as operator_exercise
 from persistence_test import CASES as PERSISTENCE_CASES, exercise as persistence_exercise
 from qemu_test_utils import operation_result_errors, qemu_path
-from sized_test import CASES as SIZED_CASES, exercise as sized_exercise
+from sized_test import CASES as SIZED_CASES, exercise as sized_exercise, expected_pages
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -501,7 +507,21 @@ def source_digest() -> str:
     return digest.hexdigest()
 
 
-def run(args: argparse.Namespace) -> int:
+def run(args: argparse.Namespace, *, selected_cases=None) -> int:
+    from budget_recovery_test import POLICIES as RECOVERY_POLICIES, exercise as budget_recovery_exercise
+    recovery_policy = getattr(args, "budget_recovery", "off")
+    budget_variant = getattr(args, "arena_budget", "fixed")
+    selected = list(selected_cases) if selected_cases is not None else (list(CASES) if args.case == "all" else [args.case])
+    if not selected or any(case not in CASES for case in selected):
+        raise RuntimeError("unknown or empty boot test selection")
+    if recovery_policy not in RECOVERY_POLICIES:
+        raise RuntimeError("unknown budget recovery policy")
+    if recovery_policy != "off" and (selected != ["infer-size-0"] or budget_variant != "insufficient"):
+        raise RuntimeError("budget recovery requires --case infer-size-0 --arena-budget insufficient")
+    if budget_variant not in BUDGET_VARIANTS:
+        raise RuntimeError("unknown arena budget variant")
+    if budget_variant in BUDGET_REJECTIONS and selected != ["infer-size-0"]:
+        raise RuntimeError("negative arena budget trials require --case infer-size-0")
     qemu = args.qemu.resolve()
     firmware = args.firmware_dir.resolve()
     code = firmware / "edk2-x86_64-code.fd"
@@ -537,7 +557,11 @@ def run(args: argparse.Namespace) -> int:
         "-C", "relocation-model=static", "-C", f"link-arg=-T{ROOT / 'apps/inference-client/linker.ld'}",
         "-C", "link-arg=--build-id=none",
     ]), end="", flush=True)
+    budget_file, sized_id = build_budget_files(sized_elf, out, budget_variant)
     kernel_environment = os.environ.copy()
+    kernel_environment["ELYSIA_BUDGET_RECOVERY"] = recovery_policy
+    kernel_environment["ELYSIA_ARENA_POLICY"] = str(budget_file)
+    kernel_environment["ELYSIA_SIZED_ID"] = str(sized_id)
     kernel_environment["ELYSIA_SIZED_ELF"] = str(sized_elf)
     kernel_environment["ELYSIA_USER_ELF"] = str(user_elf)
     kernel_environment["ELYSIA_SERVICE_ELF"] = str(service_elf)
@@ -551,7 +575,6 @@ def run(args: argparse.Namespace) -> int:
         "-C", f"link-arg=-T{ROOT / 'kernel/linker.ld'}", "-C", "link-arg=--build-id=none",
     ], env=kernel_environment), end="", flush=True)
     results = []
-    selected = list(CASES) if args.case == "all" else [args.case]
     for case in selected:
         print(f"Testing {case}", flush=True)
         environment = os.environ.copy()
@@ -582,13 +605,24 @@ def run(args: argparse.Namespace) -> int:
         # Capture trusted launch identity before executing any guest instructions.
         # This is a workload identity, not a prediction from observed allocations.
         prelaunch = launch_identity(case, sha256(kernel), sha256(inference_elf), sha256(sized_elf))
+        if case in SIZED_CASES:
+            prelaunch["arena_policy_sha256"] = sha256(budget_file)
+            prelaunch["budget_recovery"] = recovery_policy
         (case_dir / "prelaunch.json").write_text(json.dumps(prelaunch, sort_keys=True) + "\n", encoding="utf-8")
         started = time.monotonic()
         try:
-            if case in OPERATOR_CASES:
+            if recovery_policy != "off":
+                returncode, output, errors = budget_recovery_exercise(command, case_dir, args.timeout, execute,
+                    recovery_policy, sized_id.read_bytes())
+            elif budget_variant in BUDGET_REJECTIONS:
+                result = execute(command, timeout=args.timeout)
+                returncode, output = result.returncode, result.stdout
+                errors = budget_rejection_errors(budget_variant, returncode, output)
+            elif case in OPERATOR_CASES:
                 returncode, output, errors = operator_exercise(command, case, case_dir, args.timeout, execute, verify_output, args.operator_manual)
             elif case in SIZED_CASES:
-                returncode, output, errors = sized_exercise(command, case, case_dir, args.timeout, execute)
+                returncode, output, errors = sized_exercise(command, case, case_dir, args.timeout, execute,
+                    arena_limit=expected_pages(SIZED_CASES[case]) if budget_variant == "analytic" else 16)
             elif case in INFERENCE_CASES:
                 returncode, output, errors = inference_exercise(command, case, case_dir, args.timeout, execute)
             elif case in PERSISTENCE_CASES:
@@ -619,7 +653,9 @@ def run(args: argparse.Namespace) -> int:
         "memory_mib": 256, "vcpus": 1, "accelerator": "tcg", "network": "none",
         "qemu_sha256": sha256(qemu), "firmware_code_sha256": sha256(code),
         "firmware_vars_sha256": sha256(variables), "kernel_sha256": sha256(kernel),
-        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "service_elf_sha256": sha256(service_elf), "client_elf_sha256": sha256(client_elf), "inference_elf_sha256": sha256(inference_elf), "sized_elf_sha256": sha256(sized_elf), "cases": results,
+        "native_os_source_sha256": source_digest(), "user_elf_sha256": sha256(user_elf), "service_elf_sha256": sha256(service_elf), "client_elf_sha256": sha256(client_elf), "inference_elf_sha256": sha256(inference_elf), "sized_elf_sha256": sha256(sized_elf), "arena_budget": budget_variant,
+        "arena_policy_sha256": sha256(budget_file), "cases": results,
+        "budget_recovery": recovery_policy,
     }
     (out / "results.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return 0 if all(case["passed"] for case in results) else 1
@@ -632,6 +668,8 @@ def main() -> int:
     parser.add_argument("--firmware-dir", type=Path, default=default_tools / "share")
     parser.add_argument("--case", choices=["all", *CASES], default="all")
     parser.add_argument("--operator-manual", action="store_true", help="Read a real operator decision from stdin (operator-approve, async-approve, infer-approve, infer-short)")
+    parser.add_argument("--arena-budget", choices=BUDGET_VARIANTS, default="fixed")
+    parser.add_argument("--budget-recovery", choices=("off", "retry", "cut-replan", "cut-launch"), default="off")
     parser.add_argument("--timeout", type=float, default=45)
     args = parser.parse_args()
     if args.operator_manual and args.case not in ("operator-approve", "async-approve", "infer-approve", "infer-short"):

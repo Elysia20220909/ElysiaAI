@@ -137,6 +137,8 @@ QEMU は `(値 << 1) | 1` をプロセス終了コードとする。
 ```powershell
 cargo +stable fmt --manifest-path native-os/Cargo.toml --all -- --check
 cargo +stable clippy --manifest-path native-os/Cargo.toml -p elysia-boot-protocol -p elysia-memory -p elysia-kernel -p elysia-inference-client --lib --tests --locked -- -D warnings
+$env:ELYSIA_ARENA_POLICY = (Resolve-Path native-os/out/arena-policy.bin).Path
+$env:ELYSIA_SIZED_ID = (Resolve-Path native-os/out/sized-id.bin).Path
 $env:ELYSIA_SIZED_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-sized-inference).Path
 $env:ELYSIA_INFERENCE_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-inference-client).Path
 $env:ELYSIA_CLIENT_ELF = (Resolve-Path native-os/target/x86_64-unknown-none/release/elysia-document-client).Path
@@ -394,3 +396,11 @@ log / yield / exit と役割限定 syscall 6 / 7 は既存の契約を維持し�
 ページテーブルも含めた32フレームの上限は維持し、部分確保の失敗では以前の領域とデータを保持する。
 推論のモデルと入力はこの領域にコピーして計算し、提案前に解放する。
 [推論メモリの検証](../docs/native-os/INFERENCE_MEMORY_VALIDATION.md)に ABI、9つの故障・回収試験、残る制限を記載する。
+
+サイズ別推論の起動予算は `--arena-budget fixed`（既定16ページ）または `--arena-budget analytic` で選択する。
+起動試験runnerがELFから識別情報と予算表を作り、カーネルが検査する。手動ビルド時は上記の識別情報・予算表も必要。
+不正な提案の試験と再現手順は [起動予算の適用と拒否](../docs/native-os/ARENA_BUDGET_VALIDATION.md) を参照。
+
+`--case infer-size-0 --arena-budget insufficient --budget-recovery retry` は、予算不足をAgentの専用journalへ保存し、
+次のブートで必要な2ページへ再計画して一度だけ起動する実験。完了済み・成否不明・破損した記録は再実行しない。
+[Agentの予算拒否記録と起動再試行](../docs/native-os/AGENT_BUDGET_RECOVERY_VALIDATION.md) に再現手順と制約を記載する。

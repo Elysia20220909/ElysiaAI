@@ -47,16 +47,22 @@ def record(shape):
     return "user:log pid=0 hex=" + struct.pack("<QQQq", *shape, checksum(shape)).hex()
 
 
-def verdict(case, code, output):
+def verdict(case, code, output, *, arena_limit=16, require_budget=False):
     shape = CASES[case]
     index = list(CASES).index(case)
     pages = expected_pages(shape)
     errors = identity_errors(
         case, output, expected_load=f"kernel:sized-inference-elf-loaded entry=0x40000010 mode={75 + index}"
     )
-    errors.extend(arena_errors(case, output, expected_requests=[pages, 0]))
+    errors.extend(arena_errors(case, output, expected_requests=[pages, 0], expected_limit=arena_limit))
     errors.extend(rejection_errors(case, code, output))
     lines = output.splitlines()
+    if require_budget:
+        marker = f"kernel:arena-budget-accepted mode={75 + index} pages={arena_limit} metric=native-arena-pages"
+        gates = [line for line in lines if line.startswith("kernel:arena-budget-")]
+        binding = "kernel:agent-bound id=1 pid=0 context=1 tools=1 approval=always recovery=reclaim"
+        if gates != [marker] or not 0 <= output.find(marker) < output.find(binding):
+            errors.append("budget not validated before authority was issued")
     result = record(shape)
     if [line for line in lines if line.startswith("user:log pid=0 ")] != [result]:
         errors.append("missing, duplicate or wrong shape/checksum")
@@ -91,7 +97,7 @@ def observation(case, code, output):
     }
 
 
-def exercise(command, case, case_dir, timeout, execute):
+def exercise(command, case, case_dir, timeout, execute, *, arena_limit=16):
     directory = Path(tempfile.mkdtemp(prefix="sized-", dir=Path(case_dir).resolve()))
     disk = directory / "journal.raw"
     original = fresh_image()
@@ -106,7 +112,7 @@ def exercise(command, case, case_dir, timeout, execute):
     ]
     result = execute(command, timeout=timeout)
     (directory / "first.log").write_text(result.stdout, encoding="utf-8")
-    errors = verdict(case, result.returncode, result.stdout)
+    errors = verdict(case, result.returncode, result.stdout, arena_limit=arena_limit, require_budget=True)
     if disk.read_bytes() != original:
         errors.append("sized inference changed the journal")
     return result.returncode, result.stdout, errors

@@ -83,3 +83,15 @@ pub unsafe fn preflight(mode: u32, frames: &mut FrameAllocator) {
         }
     }
 }
+
+// Separate trusted build identity and untrusted proposal packet.
+pub static SIZED_ID: &[u8; 32] = include_bytes!(env!("ELYSIA_SIZED_ID"));
+static ARENA_POLICY: &[u8] = include_bytes!(env!("ELYSIA_ARENA_POLICY"));
+pub fn arena_proposal(mode: u32) -> Result<elysia_kernel::arena_budget::Proposal, &'static str> {
+    elysia_kernel::arena_budget::inspect(ARENA_POLICY, SIZED_ID, mode)
+}
+pub fn arena_budget(
+    mode: u32,
+) -> Result<elysia_kernel::arena_budget::ValidatedBudget, &'static str> {
+    elysia_kernel::arena_budget::validate(ARENA_POLICY, SIZED_ID, mode)
+}

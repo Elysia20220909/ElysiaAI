@@ -36,11 +36,13 @@ FAULTS = {
 BUDGET_CASES = {"infer-budget", "infer-mem-budget"}
 
 
-def arena_errors(case, output, *, expected_requests=None):
+def arena_errors(case, output, *, expected_requests=None, expected_limit=None):
     """Validate actual allocations, denial without mutation, and final ownership."""
     lines = output.splitlines()
     errors = []
     limit = {"infer-quota-approve": 2, "infer-quota-denied": 1}.get(case, 16)
+    if expected_limit is not None:
+        limit = expected_limit
     policy = f"kernel:arena-policy pid=0 max-pages={limit} frames=32"
     if [line for line in lines if line.startswith("kernel:arena-policy")] != [policy]:
         errors.append("missing or incorrect inference memory authority")

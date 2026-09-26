@@ -186,3 +186,13 @@ native-osに、固定の推論ELFを2ページで完走させ、1ページで割
 [実装・分割・結果・再現手順](../../docs/native-os/SIZED_INFERENCE_VALIDATION.md)を参照してください。
 保存先は `out/native-sized-20260925/`。新しく収集するときは `--collect --run-dir <新規ディレクトリ>` とQEMU・firmwareのパスを指定します。
 既存の記録は `python3 native_sized.py --run-dir out/native-sized-20260925` で再解析できます。
+
+
+## 解析式の予算をカーネルへ適用する試験
+
+2026-09-27、`boot_test.py --arena-budget analytic` で固定12形状へ解析式の予算を実際に適用できるようにしました。
+ELF識別値・形状・単位・必要量・上限をカーネルが検査し、2〜13ページでの完走と回収を確認しています。
+検証の全23ケース（適用12、不正提案7、回帰4）は合格しました。
+
+`native_sized.py` の回帰提案は引き続き `apply=false` で、既定の計測は固定16ページです。
+解析式の適用は別の明示的な実験です。[予算表の信頼境界・形式・結果・再現手順](../../docs/native-os/ARENA_BUDGET_VALIDATION.md)を参照してください。

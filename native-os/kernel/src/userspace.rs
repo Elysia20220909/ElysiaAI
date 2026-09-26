@@ -722,6 +722,7 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                     "kernel:operation-result state=Empty executions=0"
                 ));
                 platform::log(format_args!("kernel:operation-clean free={free}"));
+                crate::budget_recovery::complete();
                 platform::exit(0x1a);
             }
             if work_mode(MODE) {
@@ -1201,6 +1202,14 @@ fn verify_elf(p: &[Process; 2], mode: u32) {
 
 fn inference_agent(mode: u32) -> elysia_kernel::agent::ReadAgent {
     use elysia_kernel::agent::{READ_AGENT, ReadAgent};
+    if (75..=86).contains(&mode) {
+        if let Some(budget) = crate::budget_recovery::active_budget() {
+            return budget.agent();
+        }
+        return crate::elf_loader::arena_budget(mode)
+            .unwrap_or_else(|_| platform::fail("arena-budget-changed"))
+            .agent();
+    }
     let mut manifest = READ_AGENT;
     // Trusted native arena budgets, not a conversion from Python traced bytes.
     // Two pages fit the fixture; one page exercises a denied allocation.
