@@ -6,6 +6,7 @@ use elysia_memory::FrameAllocator;
 pub static IMAGE: &[u8] = include_bytes!(env!("ELYSIA_USER_ELF"));
 pub static SERVICE: &[u8] = include_bytes!(env!("ELYSIA_SERVICE_ELF"));
 pub static CLIENT: &[u8] = include_bytes!(env!("ELYSIA_CLIENT_ELF"));
+pub static SIZED: &[u8] = include_bytes!(env!("ELYSIA_SIZED_ELF"));
 pub static INFERENCE: &[u8] = include_bytes!(env!("ELYSIA_INFERENCE_ELF"));
 static mut CORRUPTED: [u8; MAX_IMAGE] = [0; MAX_IMAGE];
 pub unsafe fn preflight(mode: u32, frames: &mut FrameAllocator) {
@@ -81,4 +82,16 @@ pub unsafe fn preflight(mode: u32, frames: &mut FrameAllocator) {
             ));
         }
     }
+}
+
+// Separate trusted build identity and untrusted proposal packet.
+pub static SIZED_ID: &[u8; 32] = include_bytes!(env!("ELYSIA_SIZED_ID"));
+static ARENA_POLICY: &[u8] = include_bytes!(env!("ELYSIA_ARENA_POLICY"));
+pub fn arena_proposal(mode: u32) -> Result<elysia_kernel::arena_budget::Proposal, &'static str> {
+    elysia_kernel::arena_budget::inspect(ARENA_POLICY, SIZED_ID, mode)
+}
+pub fn arena_budget(
+    mode: u32,
+) -> Result<elysia_kernel::arena_budget::ValidatedBudget, &'static str> {
+    elysia_kernel::arena_budget::validate(ARENA_POLICY, SIZED_ID, mode)
 }

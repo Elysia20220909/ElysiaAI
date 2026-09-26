@@ -103,6 +103,16 @@ pub fn write(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
     if !(1..=SLOTS as u32).contains(&lba) {
         return Err("disk-write-range");
     }
+    write_sector(lba, bytes)
+}
+pub fn write_agent(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
+    use elysia_kernel::agent_budget::{FIRST_LBA, SLOTS};
+    if !(FIRST_LBA..FIRST_LBA + SLOTS as u32).contains(&lba) {
+        return Err("agent-disk-write-range");
+    }
+    write_sector(lba, bytes)
+}
+fn write_sector(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
     command(lba, 0x30)?;
     for pair in bytes.chunks_exact(2) {
         let word = u16::from_le_bytes(pair.try_into().unwrap());
