@@ -13,6 +13,24 @@ static mut ACTIVE: Option<(Log, Results)> = None;
 pub fn enabled() -> bool {
     POLICY != "off"
 }
+/// Test-only rendezvous: the host must kill QEMU; no guest shutdown or next write.
+fn crash_boundary(point: &str) {
+    if POLICY != point {
+        return;
+    }
+    // SAFETY: privileged single-CPU fixture. Never entered by record/publish.
+    unsafe { core::arch::asm!("cli", options(nomem, nostack)) };
+    platform::log(format_args!("kernel:document-crash-ready point={point}"));
+    loop {
+        unsafe { core::arch::asm!("hlt", options(nomem, nostack)) };
+    }
+}
+fn publishes() -> bool {
+    matches!(
+        POLICY,
+        "publish" | "cut-save" | "cut-report" | "crash-save" | "crash-report" | "crash-saved"
+    )
+}
 fn stop(reason: &str) -> ! {
     platform::log(format_args!(
         "kernel:document-job-stopped reason={reason} restored-authority=0"
@@ -63,14 +81,17 @@ fn offer_save(mut log: Log) -> ! {
     match decision {
         Some(Decision::Approve) => {
             log = append(log, Stage::SaveCommitted, log.results());
+            crash_boundary("crash-save");
             if POLICY == "cut-save" {
                 stop("cut-save");
             }
             checked(disk::write_document(REPORT_LBA, &checked(log.report())));
+            crash_boundary("crash-report");
             if POLICY == "cut-report" {
                 stop("cut-report");
             }
             log = append(log, Stage::Saved, log.results());
+            crash_boundary("crash-saved");
             platform::log(format_args!(
                 "kernel:document-save-result state=Saved writes=1 records={} reason={reason}",
                 log.count()
@@ -111,6 +132,7 @@ pub fn boot() {
     match log.stage() {
         None => {
             let started = append(log, Stage::Started, Results::EMPTY);
+            crash_boundary("crash-start");
             if POLICY == "cut-start" {
                 stop("cut-start");
             }
@@ -124,9 +146,7 @@ pub fn boot() {
             match stage {
                 Stage::Started => stop("classification-unknown"),
                 Stage::SaveCommitted => stop("save-unknown"),
-                Stage::Completed if matches!(POLICY, "publish" | "cut-save" | "cut-report") => {
-                    offer_save(log)
-                }
+                Stage::Completed if publishes() => offer_save(log),
                 Stage::Completed => stop("already-completed"),
                 Stage::Saved => stop("already-saved"),
                 Stage::Denied | Stage::Interrupted => stop("save-closed"),
@@ -145,13 +165,14 @@ pub fn complete() {
     let (log, results) =
         unsafe { (*ptr::addr_of!(ACTIVE)).unwrap_or_else(|| stop("job-not-started")) };
     let log = append(log, Stage::Completed, results);
+    crash_boundary("crash-complete");
     unsafe {
         *ptr::addr_of_mut!(ACTIVE) = None;
     }
     if POLICY == "cut-complete" {
         stop("cut-complete");
     }
-    if matches!(POLICY, "publish" | "cut-save" | "cut-report") {
+    if publishes() {
         offer_save(log);
     }
 }

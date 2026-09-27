@@ -4,7 +4,18 @@ fn main() {
     let document_job = env::var("ELYSIA_DOCUMENT_JOB").unwrap_or_else(|_| "off".into());
     assert!(matches!(
         document_job.as_str(),
-        "off" | "record" | "publish" | "cut-start" | "cut-complete" | "cut-save" | "cut-report"
+        "off"
+            | "record"
+            | "publish"
+            | "cut-start"
+            | "cut-complete"
+            | "cut-save"
+            | "cut-report"
+            | "crash-start"
+            | "crash-complete"
+            | "crash-save"
+            | "crash-report"
+            | "crash-saved"
     ));
     println!("cargo:rustc-env=ELYSIA_DOCUMENT_JOB={document_job}");
     println!("cargo:rerun-if-env-changed=ELYSIA_BUDGET_RECOVERY");

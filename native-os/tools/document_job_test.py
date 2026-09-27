@@ -19,7 +19,8 @@ from persistence_test import fresh_image
 from qemu_test_utils import qemu_path
 
 
-POLICIES = ("off", "record", "publish", "cut-start", "cut-complete", "cut-save", "cut-report")
+CRASH_POLICIES = ("crash-start", "crash-complete", "crash-save", "crash-report", "crash-saved")
+POLICIES = ("off", "record", "publish", "cut-start", "cut-complete", "cut-save", "cut-report", *CRASH_POLICIES)
 STAGES = {1: "Started", 2: "Completed", 3: "SaveCommitted", 4: "Saved", 5: "Denied", 6: "Interrupted"}
 FIRST = 13 * 512
 REPORT = 17 * 512
@@ -151,7 +152,15 @@ def recovery_errors(code, output, reason, stages, data):
         errors.append("missing document recovery verdict")
     if any(
         x in output
-        for x in ("kernel:user-enter", "kernel:agent-bound", PROMPT, "kernel:document-job-flushed", "failure:", "panic")
+        for x in (
+            "kernel:user-enter",
+            "kernel:agent-bound",
+            PROMPT,
+            "kernel:document-job-flushed",
+            "kernel:document-write-attempt",
+            "failure:",
+            "panic",
+        )
     ):
         errors.append("recovery launched, prompted, wrote or failed")
     expected = (
@@ -166,6 +175,12 @@ def recovery_errors(code, output, reason, stages, data):
 
 
 def exercise(command, case_dir, timeout, execute, data, elf, policy, *, session=None):
+    if policy in CRASH_POLICIES:
+        if session is not None:
+            raise ValueError("crash fixtures require a fresh dedicated disk")
+        from document_crash_test import exercise as crash_exercise
+
+        return crash_exercise(command, case_dir, timeout, data, elf, policy)
     if session is not None:
         return interactive(command, Path(session), timeout, execute, data, elf, policy)
     directory = Path(tempfile.mkdtemp(prefix="document-job-", dir=Path(case_dir).resolve()))

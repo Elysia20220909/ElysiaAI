@@ -135,6 +135,9 @@ fn write_sector(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
 /// Dedicated job/report region. Every sector is append-once, including the report.
 pub fn write_document(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
     use elysia_kernel::document_job::{FIRST_LBA, REPORT_LBA};
+    // Record entry even if the disk rejects it: unchanged bytes alone cannot
+    // distinguish no retry from a repeated write of identical contents.
+    crate::platform::log(format_args!("kernel:document-write-attempt lba={lba}"));
     if !(FIRST_LBA..=REPORT_LBA).contains(&lba) {
         return Err("document-disk-range");
     }
