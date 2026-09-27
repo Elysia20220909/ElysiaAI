@@ -56,6 +56,23 @@ _start:
     int 0x80
     cmp rax, -13
     jne recovery_fail
+    cmp r13, 56
+    jb 7f
+    cmp r13, 72
+    ja 7f
+    // A service never inherits its client's private arena or resize authority.
+    mov eax, 9
+    mov edi, 1
+    int 0x80
+    cmp rax, -13
+    jne recovery_fail
+    xor eax, eax
+    mov edi, 0x90000000
+    mov esi, 1
+    int 0x80
+    cmp rax, -14
+    jne recovery_fail
+7:
     xor ebx, ebx
 recovery_service_receive:
     mov eax, 4

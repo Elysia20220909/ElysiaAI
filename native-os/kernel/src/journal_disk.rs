@@ -103,6 +103,16 @@ pub fn write(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
     if !(1..=SLOTS as u32).contains(&lba) {
         return Err("disk-write-range");
     }
+    write_sector(lba, bytes)
+}
+pub fn write_agent(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
+    use elysia_kernel::agent_budget::{FIRST_LBA, SLOTS};
+    if !(FIRST_LBA..FIRST_LBA + SLOTS as u32).contains(&lba) {
+        return Err("agent-disk-write-range");
+    }
+    write_sector(lba, bytes)
+}
+fn write_sector(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
     command(lba, 0x30)?;
     for pair in bytes.chunks_exact(2) {
         let word = u16::from_le_bytes(pair.try_into().unwrap());
@@ -120,4 +130,19 @@ pub fn write(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
         return Err("disk-readback");
     }
     Ok(())
+}
+
+/// Dedicated job/report region. Every sector is append-once, including the report.
+pub fn write_document(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
+    use elysia_kernel::document_job::{FIRST_LBA, REPORT_LBA};
+    // Record entry even if the disk rejects it: unchanged bytes alone cannot
+    // distinguish no retry from a repeated write of identical contents.
+    crate::platform::log(format_args!("kernel:document-write-attempt lba={lba}"));
+    if !(FIRST_LBA..=REPORT_LBA).contains(&lba) {
+        return Err("document-disk-range");
+    }
+    if read(lba)? != [0; SECTOR] {
+        return Err("document-disk-occupied");
+    }
+    write_sector(lba, bytes)
 }

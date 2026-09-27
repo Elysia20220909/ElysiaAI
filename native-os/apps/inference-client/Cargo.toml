@@ -10,3 +10,19 @@ name = "elysia-inference-client"
 path = "src/main.rs"
 test = false
 bench = false
+
+[[bin]]
+name = "elysia-sized-inference"
+path = "src/sized_main.rs"
+test = false
+bench = false
+
+[[bin]]
+name = "elysia-document-agent"
+path = "src/document_main.rs"
+required-features = ["document-model"]
+test = false
+bench = false
+
+[features]
+document-model = []

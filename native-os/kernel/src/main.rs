@@ -3,6 +3,8 @@
 
 mod address_space;
 mod async_operator;
+mod budget_recovery;
+mod document_runtime;
 mod elf_loader;
 mod exceptions;
 mod journal_disk;
@@ -110,8 +112,29 @@ extern "sysv64" fn kernel_main(info: *const BootInfo) -> ! {
             asm!("ud2", options(noreturn));
         }
     }
-    if (55..=63).contains(&info.mode) {
+    if (75..=86).contains(&info.mode) {
+        let budget = if budget_recovery::enabled() {
+            Ok(budget_recovery::boot(info.mode))
+        } else {
+            elf_loader::arena_budget(info.mode)
+        };
+        match budget {
+            Ok(budget) => platform::log(format_args!(
+                "kernel:arena-budget-accepted mode={} pages={} metric=native-arena-pages",
+                info.mode,
+                budget.pages()
+            )),
+            Err(reason) => {
+                platform::log(format_args!("kernel:arena-budget-rejected reason={reason}"));
+                platform::exit(0x1e);
+            }
+        }
+    }
+    if (55..=87).contains(&info.mode) {
         persistent::boot(info.mode);
+        if info.mode == 87 && document_runtime::enabled() {
+            document_runtime::boot();
+        }
         unsafe { userspace::run(info.mode) }
     }
     if info.mode == 54 {
