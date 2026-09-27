@@ -20,6 +20,13 @@ from arena_policy_test import (
     build_files as build_budget_files,
     rejection_errors as budget_rejection_errors,
 )
+from document_agent_test import (
+    CASE as DOCUMENT_AGENT_CASE,
+    VARIANTS as DOCUMENT_VARIANTS,
+    exercise as document_agent_exercise,
+    mutate as document_packet,
+)
+from document_job_test import POLICIES as DOCUMENT_JOB_POLICIES, exercise as document_job_exercise
 from inference_test import CASES as INFERENCE_CASES, exercise as inference_exercise
 from operator_test import CASES as OPERATOR_CASES, exercise as operator_exercise
 from persistence_test import CASES as PERSISTENCE_CASES, exercise as persistence_exercise
@@ -114,6 +121,7 @@ for name, (_mode, state, executions) in OPERATION_CASES.items():
                        "kernel:operation-clean"])
 for name in SIZED_CASES:
     CASES[name] = (53, [])
+CASES[DOCUMENT_AGENT_CASE] = (53, [])
 for name in INFERENCE_CASES:
     CASES[name] = (53, [])
 
@@ -160,7 +168,7 @@ def launch_identity(case, kernel_hash, inference_hash, sized_hash):
 
 def verify_output(case: str, code: int, output: str) -> list[str]:
     """Require both the exact exit code and ordered evidence from each side of the handoff."""
-    if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES or case in SIZED_CASES:
+    if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES or case in SIZED_CASES or case == DOCUMENT_AGENT_CASE:
         return ["this case requires its dedicated runner and disk-integrity verification"]
     expected_code, markers = CASES[case]
     errors = []
@@ -512,6 +520,18 @@ def run(args: argparse.Namespace, *, selected_cases=None) -> int:
     recovery_policy = getattr(args, "budget_recovery", "off")
     budget_variant = getattr(args, "arena_budget", "fixed")
     selected = list(selected_cases) if selected_cases is not None else (list(CASES) if args.case == "all" else [args.case])
+    document_bundle = getattr(args, "document_bundle", None)
+    document_variant = getattr(args, "document_variant", "valid")
+    document_job = getattr(args, "document_job", "off")
+    if selected_cases is None and args.case == "all" and document_bundle is None:
+        selected.remove(DOCUMENT_AGENT_CASE)
+    if DOCUMENT_AGENT_CASE in selected and document_bundle is None:
+        raise RuntimeError("document classification requires --document-bundle from the trained corpus")
+    if document_variant != "valid" and selected != [DOCUMENT_AGENT_CASE]:
+        raise RuntimeError("negative document trials require --case agent-document-classify")
+    if document_job not in DOCUMENT_JOB_POLICIES or (document_job != "off" and (selected != [DOCUMENT_AGENT_CASE] or document_variant != "valid")):
+        raise RuntimeError("document job requires only the valid document-classification case")
+    packet_bytes = document_packet(document_bundle.read_bytes(), document_variant) if document_bundle else b""
     if not selected or any(case not in CASES for case in selected):
         raise RuntimeError("unknown or empty boot test selection")
     if recovery_policy not in RECOVERY_POLICIES:
@@ -558,7 +578,25 @@ def run(args: argparse.Namespace, *, selected_cases=None) -> int:
         "-C", "link-arg=--build-id=none",
     ]), end="", flush=True)
     budget_file, sized_id = build_budget_files(sized_elf, out, budget_variant)
+    document_elf = ROOT / "target/x86_64-unknown-none/release/elysia-document-agent"
+    print(checked([
+        "cargo", "+stable", "rustc", "--locked", "-p", "elysia-inference-client",
+        "--bin", "elysia-document-agent", "--features", "document-model",
+        "--config", 'profile.release.opt-level="z"', "--config", "profile.release.lto=true",
+        "--config", "profile.release.debug=false",
+        "--target", "x86_64-unknown-none", "--release", "--",
+        "-C", "relocation-model=static", "-C", f"link-arg=-T{ROOT / 'apps/inference-client/document.ld'}",
+        "-C", "link-arg=--build-id=none",
+    ]), end="", flush=True)
+    packet_file = out / "document-packet.bin"
+    packet_file.write_bytes(packet_bytes)
+    binding_file = out / "document-binding.bin"
+    binding_file.write_bytes(hashlib.sha256(packet_bytes).digest() + bytes.fromhex(sha256(document_elf)))
     kernel_environment = os.environ.copy()
+    kernel_environment["ELYSIA_DOCUMENT_JOB"] = document_job
+    kernel_environment["ELYSIA_DOCUMENT_BINDING"] = str(binding_file)
+    kernel_environment["ELYSIA_DOCUMENT_AGENT_ELF"] = str(document_elf)
+    kernel_environment["ELYSIA_DOCUMENT_PACKET"] = str(packet_file)
     kernel_environment["ELYSIA_BUDGET_RECOVERY"] = recovery_policy
     kernel_environment["ELYSIA_ARENA_POLICY"] = str(budget_file)
     kernel_environment["ELYSIA_SIZED_ID"] = str(sized_id)
@@ -608,6 +646,11 @@ def run(args: argparse.Namespace, *, selected_cases=None) -> int:
         if case in SIZED_CASES:
             prelaunch["arena_policy_sha256"] = sha256(budget_file)
             prelaunch["budget_recovery"] = recovery_policy
+        if case == DOCUMENT_AGENT_CASE:
+            prelaunch.update(document_elf_sha256=sha256(document_elf), packet_sha256=sha256(packet_file),
+                             model_sha256=packet_bytes[48:80].hex(), input_sha256=packet_bytes[80:112].hex(),
+                             document_variant=document_variant)
+            prelaunch["document_job"] = document_job
         (case_dir / "prelaunch.json").write_text(json.dumps(prelaunch, sort_keys=True) + "\n", encoding="utf-8")
         started = time.monotonic()
         try:
@@ -620,6 +663,14 @@ def run(args: argparse.Namespace, *, selected_cases=None) -> int:
                 errors = budget_rejection_errors(budget_variant, returncode, output)
             elif case in OPERATOR_CASES:
                 returncode, output, errors = operator_exercise(command, case, case_dir, args.timeout, execute, verify_output, args.operator_manual)
+            elif case == DOCUMENT_AGENT_CASE:
+                if document_job == "off":
+                    returncode, output, errors = document_agent_exercise(command, case_dir, args.timeout, execute,
+                        packet_bytes, document_variant)
+                else:
+                    returncode, output, errors = document_job_exercise(command, case_dir, args.timeout, execute,
+                        packet_bytes, bytes.fromhex(sha256(document_elf)), document_job,
+                        session=getattr(args, "document_session", None))
             elif case in SIZED_CASES:
                 returncode, output, errors = sized_exercise(command, case, case_dir, args.timeout, execute,
                     arena_limit=expected_pages(SIZED_CASES[case]) if budget_variant == "analytic" else 16)
@@ -670,6 +721,10 @@ def main() -> int:
     parser.add_argument("--operator-manual", action="store_true", help="Read a real operator decision from stdin (operator-approve, async-approve, infer-approve, infer-short)")
     parser.add_argument("--arena-budget", choices=BUDGET_VARIANTS, default="fixed")
     parser.add_argument("--budget-recovery", choices=("off", "retry", "cut-replan", "cut-launch"), default="off")
+    parser.add_argument("--document-bundle", type=Path, help="Explicit learned document bundle; required for agent-document-classify")
+    parser.add_argument("--document-variant", choices=DOCUMENT_VARIANTS, default="valid")
+    parser.add_argument("--document-job", choices=DOCUMENT_JOB_POLICIES, default="off",
+                        help="Explicit fresh-disk journal/approval fixture; interactive use: document_task.py")
     parser.add_argument("--timeout", type=float, default=45)
     args = parser.parse_args()
     if args.operator_manual and args.case not in ("operator-approve", "async-approve", "infer-approve", "infer-short"):
@@ -678,7 +733,7 @@ def main() -> int:
         parser.error("--timeout must be between 1 and 120 seconds")
     try:
         return run(args)
-    except (OSError, RuntimeError, subprocess.TimeoutExpired) as exc:
+    except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
         print(f"Boot test failed: {exc}", file=sys.stderr)
         return 1
 

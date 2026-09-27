@@ -118,6 +118,7 @@ fn mode() -> BootMode {
         "infer-size-9" => BootMode::SizedInference9,
         "infer-size-10" => BootMode::SizedInference10,
         "infer-size-11" => BootMode::SizedInference11,
+        "agent-document-classify" => BootMode::AgentDocumentClassify,
         _ => platform::fail("unknown-boot-mode"),
     }
 }

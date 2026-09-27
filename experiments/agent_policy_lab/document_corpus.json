@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "task": "Select native-kernel development documents from an explicitly allowed repository corpus",
+  "classes": ["native-kernel", "host-application"],
+  "documents": [
+    {"id": 1, "split": "train", "label": 0, "path": "docs/native-os/MEMORY_VALIDATION.md"},
+    {"id": 2, "split": "train", "label": 0, "path": "docs/native-os/USERSPACE_VALIDATION.md"},
+    {"id": 3, "split": "train", "label": 0, "path": "docs/native-os/IPC_VALIDATION.md"},
+    {"id": 4, "split": "train", "label": 0, "path": "docs/native-os/DOCUMENT_SERVICE_VALIDATION.md"},
+    {"id": 5, "split": "train", "label": 0, "path": "docs/native-os/USER_ELF_VALIDATION.md"},
+    {"id": 6, "split": "train", "label": 0, "path": "docs/native-os/LAUNCH_POLICY_VALIDATION.md"},
+    {"id": 7, "split": "train", "label": 1, "path": "docs/API_REFERENCE.md"},
+    {"id": 8, "split": "train", "label": 1, "path": "docs/ARCHITECTURE.md"},
+    {"id": 9, "split": "train", "label": 1, "path": "docs/VOICE_GUIDE.md"},
+    {"id": 10, "split": "train", "label": 1, "path": "docs/USER_MANAGEMENT.md"},
+    {"id": 11, "split": "train", "label": 1, "path": "docs/WEB_SEARCH_INTEGRATION.md"},
+    {"id": 12, "split": "train", "label": 1, "path": "docs/architecture/ARCHITECTURE_RAG.md"},
+    {"id": 13, "split": "evaluation", "label": 0, "path": "docs/native-os/BOOT_VALIDATION.md"},
+    {"id": 14, "split": "evaluation", "label": 0, "path": "docs/native-os/LIFECYCLE_VALIDATION.md"},
+    {"id": 15, "split": "evaluation", "label": 0, "path": "docs/native-os/SERVICE_RECOVERY_VALIDATION.md"},
+    {"id": 16, "split": "evaluation", "label": 0, "path": "docs/native-os/PERSISTENCE_VALIDATION.md"},
+    {"id": 17, "split": "evaluation", "label": 1, "path": "docs/VOICEVOX_SETUP.md"},
+    {"id": 18, "split": "evaluation", "label": 1, "path": "docs/CHAT_HISTORY_SETUP.md"},
+    {"id": 19, "split": "evaluation", "label": 1, "path": "docs/SERVICE_SETUP_GUIDE.md"},
+    {"id": 20, "split": "evaluation", "label": 1, "path": "docs/PRISMA7_SETUP.md"}
+  ]
+}

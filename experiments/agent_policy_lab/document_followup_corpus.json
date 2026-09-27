@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "selection": "Fixed by a reader who did not inspect classifier weights or predictions; no retraining",
+  "model_sha256": "09399994c34ea7318b132ae63e3a463247974a431098325769f2a27a239ceb79",
+  "documents": [
+    {"id":21,"split":"evaluation","label":0,"path":"docs/native-os/CLIENT_ELF_VALIDATION.md","sha256":"ddd0b045fdd2018ce911bc9783d436ee6847768a1d7f7b0d16d6a107c1f83159"},
+    {"id":22,"split":"evaluation","label":0,"path":"docs/native-os/OPERATION_CONTRACT_VALIDATION.md","sha256":"4f679560bb3e1c0cd50d7a80d154172b63c3261868ff5777ea4c5f834ee02da7"},
+    {"id":23,"split":"evaluation","label":0,"path":"docs/native-os/OPERATOR_APPROVAL_VALIDATION.md","sha256":"ca05c9379c897f1c96304c2ef1209ff5425886063513524695cf4ea25b453273"},
+    {"id":24,"split":"evaluation","label":0,"path":"docs/native-os/INFERENCE_MEMORY_VALIDATION.md","sha256":"9eb6c777fcc0d4f33c61861835a18d9baa772ed41cf7b0a814d619a0c2ab050f"},
+    {"id":25,"split":"evaluation","label":1,"path":"docs/I18N_GUIDE.md","sha256":"d9015f36df5c9bfdb45405fedba7e38abbbaafc6d73b8d17d4117f0908e1f487"},
+    {"id":26,"split":"evaluation","label":1,"path":"docs/TELEMETRY_GUIDE.md","sha256":"098f56a43931c820721bd74654710d6e235d9e25a6f853afb0a697cc1ce0b775"},
+    {"id":27,"split":"evaluation","label":1,"path":"docs/GPU_REALTIME_CORE.md","sha256":"327e1f6b5c741587b70a4907467ebe36387fb191e4751d40153344f136c4f5fd"},
+    {"id":28,"split":"evaluation","label":1,"path":"docs/TAURI_DISTRIBUTION_RUNBOOK.md","sha256":"73e4728357248504fff8aad1ba642943e6806eb06656feedad5193313f898c42"}
+  ]
+}

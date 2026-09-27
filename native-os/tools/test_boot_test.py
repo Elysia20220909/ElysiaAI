@@ -3,6 +3,7 @@ import unittest
 
 from boot_test import (
     CASES,
+    DOCUMENT_AGENT_CASE,
     DOCUMENT_CASES,
     DOCUMENT_STATUSES,
     ELF_CASES,
@@ -239,7 +240,7 @@ class VerdictTests(unittest.TestCase):
 
     def test_accepts_each_expected_result(self):
         for case, (code, _) in CASES.items():
-            if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES or case in SIZED_CASES:
+            if case in PERSISTENCE_CASES or case in OPERATOR_CASES or case in INFERENCE_CASES or case in SIZED_CASES or case == DOCUMENT_AGENT_CASE:
                 continue
             with self.subTest(case=case):
                 self.assertEqual(verify_output(case, code, self.transcript(case)), [])

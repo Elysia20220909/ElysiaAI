@@ -111,17 +111,23 @@ unsafe fn prepare(
             [0; 2]
         };
         if work_mode(mode) {
-            if (56..=86).contains(&mode) {
+            if (56..=87).contains(&mode) {
                 let agent = inference_agent(mode);
                 (&mut *ptr::addr_of_mut!(DOCUMENTS))
                     .bind_agent(agent)
                     .unwrap_or_else(|_| platform::fail("agent-binding"));
-                platform::log(format_args!(
-                    "kernel:agent-bound id=1 pid=0 context=1 tools=1 approval=always recovery=reclaim"
-                ));
+                if mode == 87 {
+                    platform::log(format_args!(
+                        "kernel:agent-bound id=2 pid=0 context=0 tools=0 approval=always recovery=reclaim"
+                    ));
+                } else {
+                    platform::log(format_args!(
+                        "kernel:agent-bound id=1 pid=0 context=1 tools=1 approval=always recovery=reclaim"
+                    ));
+                }
             }
             (&mut *ptr::addr_of_mut!(DOCUMENTS)).enable_operation_fixture(mode);
-            if matches!(mode, 55..=86) {
+            if matches!(mode, 55..=87) {
                 (&mut *ptr::addr_of_mut!(DOCUMENTS)).set_approval(crate::async_operator::start);
             }
             if crate::persistent::operator_enabled() {
@@ -225,8 +231,13 @@ unsafe fn build_process(
             ));
             loaded
         } else if definition.is_some_and(|d| d.elf() == elysia_kernel::launch::Elf::Client) {
-            let inference = (56..=86).contains(&mode);
-            let image = if mode >= 75 {
+            let inference = (56..=87).contains(&mode);
+            if mode == 87 && crate::elf_loader::DOCUMENT_PACKET.len() > 3072 {
+                return Err("document-packet-size");
+            }
+            let image = if mode == 87 {
+                crate::elf_loader::DOCUMENT_AGENT
+            } else if (75..=86).contains(&mode) {
                 crate::elf_loader::SIZED
             } else if inference {
                 crate::elf_loader::INFERENCE
@@ -239,7 +250,21 @@ unsafe fn build_process(
                 platform::log(format_args!(
                     "kernel:arena-policy pid={pid} max-pages={arena_limit} frames={limit}"
                 ));
-                if mode >= 75 {
+                if mode == 87 {
+                    let packet = crate::elf_loader::DOCUMENT_PACKET;
+                    let data = paging::DIRECT + loaded.0.pages[1];
+                    ptr::copy_nonoverlapping(
+                        packet.as_ptr(),
+                        (data + 0x400) as *mut u8,
+                        packet.len(),
+                    );
+                    ptr::write((data + 0x3f0) as *mut u64, packet.len() as u64);
+                    platform::log(format_args!(
+                        "kernel:document-agent-elf-loaded entry={:#x} bytes={}",
+                        loaded.1,
+                        packet.len()
+                    ));
+                } else if (75..=86).contains(&mode) {
                     platform::log(format_args!(
                         "kernel:sized-inference-elf-loaded entry={:#x} mode={mode}",
                         loaded.1
@@ -440,7 +465,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
             if !preemptive(MODE) {
                 platform::fail("unexpected-timer");
             }
-            if matches!(MODE, 55..=86) {
+            if matches!(MODE, 55..=87) {
                 crate::async_operator::poll(
                     &mut (&mut *ptr::addr_of_mut!(DOCUMENTS)).work,
                     CLOCK,
@@ -489,6 +514,9 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                             bytes.as_mut_ptr(),
                             frame.rsi as usize,
                         );
+                        if MODE == 87 && current == 0 && crate::document_runtime::enabled() {
+                            crate::document_runtime::collect(&bytes[..frame.rsi as usize]);
+                        }
                         let mut encoded = [0u8; 256];
                         const HEX: &[u8; 16] = b"0123456789abcdef";
                         for (i, &b) in bytes[..frame.rsi as usize].iter().enumerate() {
@@ -546,7 +574,7 @@ pub unsafe fn trap(frame: &mut Frame, address: u64) -> *const Frame {
                     }
                     asm!("mov cr3, {}",in(reg) processes[current].root,options(nostack));
                 }
-                8 if matches!(MODE, 55..=86) && current == 0 => {
+                8 if matches!(MODE, 55..=87) && current == 0 => {
                     frame.rax = (&*ptr::addr_of!(DOCUMENTS)).work.state() as u64;
                     if frame.rdi != 0 {
                         crate::async_operator::progress(frame.rdi);
@@ -632,7 +660,7 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 }
                 if document_mode(MODE) {
                     (&mut *ptr::addr_of_mut!(DOCUMENTS)).close_process_at(pid, CLOCK);
-                    if matches!(MODE, 55..=86) {
+                    if matches!(MODE, 55..=87) {
                         crate::async_operator::cancel_if_finished(
                             &(&*ptr::addr_of!(DOCUMENTS)).work,
                         );
@@ -676,7 +704,7 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
             if free != BASELINE {
                 platform::fail("process-resource-leak");
             }
-            if matches!(MODE, 58..=72 | 74..=86) {
+            if matches!(MODE, 58..=72 | 74..=87) {
                 let manager = &(&*ptr::addr_of!(DOCUMENTS)).work;
                 let client_ok = match MODE {
                     74 => {
@@ -723,6 +751,9 @@ unsafe fn schedule(processes: &mut [Process; 2], current: usize) -> *const Frame
                 ));
                 platform::log(format_args!("kernel:operation-clean free={free}"));
                 crate::budget_recovery::complete();
+                if MODE == 87 && crate::document_runtime::enabled() {
+                    crate::document_runtime::complete();
+                }
                 platform::exit(0x1a);
             }
             if work_mode(MODE) {
@@ -872,19 +903,19 @@ fn verify_fixture(processes: &[Process; 2], mode: u32) {
 }
 
 fn ipc_mode(mode: u32) -> bool {
-    matches!(mode, 21..=38 | 45..=49 | 55..=86)
+    matches!(mode, 21..=38 | 45..=49 | 55..=87)
 }
 fn document_mode(mode: u32) -> bool {
-    matches!(mode, 27..=38 | 45..=49 | 55..=86)
+    matches!(mode, 27..=38 | 45..=49 | 55..=87)
 }
 fn work_mode(mode: u32) -> bool {
-    matches!(mode, 45..=49 | 55..=86)
+    matches!(mode, 45..=49 | 55..=87)
 }
 fn recovery_mode(mode: u32) -> bool {
-    matches!(mode, 33..=38 | 45..=49 | 55..=86)
+    matches!(mode, 33..=38 | 45..=49 | 55..=87)
 }
 fn preemptive(mode: u32) -> bool {
-    matches!(mode, 18 | 20..=49 | 55..=86)
+    matches!(mode, 18 | 20..=49 | 55..=87)
 }
 fn verify_lifecycle(p: &[Process; 2], mode: u32) {
     let valid = if mode == 19 {
@@ -1202,6 +1233,9 @@ fn verify_elf(p: &[Process; 2], mode: u32) {
 
 fn inference_agent(mode: u32) -> elysia_kernel::agent::ReadAgent {
     use elysia_kernel::agent::{READ_AGENT, ReadAgent};
+    if mode == 87 {
+        return ReadAgent::document_classifier();
+    }
     if (75..=86).contains(&mode) {
         if let Some(budget) = crate::budget_recovery::active_budget() {
             return budget.agent();
@@ -1222,7 +1256,7 @@ fn inference_agent(mode: u32) -> elysia_kernel::agent::ReadAgent {
 }
 
 fn boot_definitions(mode: u32) -> [elysia_kernel::launch::Definition; 2] {
-    if (56..=86).contains(&mode) {
+    if (56..=87).contains(&mode) {
         let mut definitions = elysia_kernel::launch::INFERENCE_BOOT;
         definitions[0] = inference_agent(mode)
             .launch()

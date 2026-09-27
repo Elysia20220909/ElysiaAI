@@ -5,6 +5,7 @@ pub mod agent;
 pub mod agent_budget;
 pub mod approval;
 pub mod arena_budget;
+pub mod document_job;
 pub mod documents;
 pub mod inference_memory;
 pub mod ipc;

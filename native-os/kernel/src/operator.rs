@@ -30,9 +30,6 @@ pub fn decide(manager: &mut Manager) {
         .plan()
         .unwrap_or_else(|| platform::fail("operator-no-plan"));
     let now = manager.events().last().unwrap().unwrap().tick;
-    // Discard the guest UART FIFO. The trusted host must send only after
-    // this prompt; bytes still queued on the host are outside this purge.
-    out(0x3fa, 0xc7);
     platform::log(format_args!(
         "kernel:operator-plan id={} caller={} executor={} version={} target={} offset={} length={} byte-budget={} deadline-tick={}",
         plan.id,
@@ -45,9 +42,35 @@ pub fn decide(manager: &mut Manager) {
         plan.byte_budget,
         plan.deadline
     ));
+    let (decision, reason) = read_decision(
+        plan.id,
+        format_args!("kernel:operator-prompt command=approve-ID-or-deny-ID timeout-ms=30000"),
+    );
+    match decision {
+        Some(value) => manager.approve(plan, value == Decision::Approve, now),
+        None => manager.interrupt(now),
+    }
+    .unwrap_or_else(|_| platform::fail("operator-decision-refused"));
+    persistent::checkpoint(manager);
     platform::log(format_args!(
-        "kernel:operator-prompt command=approve-ID-or-deny-ID timeout-ms=30000"
+        "kernel:operator-decision reason={reason} state={:?} executions={}",
+        manager.state(),
+        manager.executions()
     ));
+    if manager.state() != State::Approved {
+        platform::exit(0x1c);
+    }
+}
+
+/// Trusted COM1 only; finite PIT2 polling also works with no live Ring 3 process.
+/// A fresh call consumes one line. Neither UART input nor approval is persisted.
+pub fn read_decision(
+    expected: u64,
+    prompt: core::fmt::Arguments<'_>,
+) -> (Option<Decision>, &'static str) {
+    // Discard the guest FIFO before the prompt. Host-queued input is outside this purge.
+    out(0x3fa, 0xc7);
+    platform::log(prompt);
     let saved = input(0x61);
     let mut line = [0u8; 32];
     let mut length = 0;
@@ -67,7 +90,7 @@ pub fn decide(manager: &mut Manager) {
             if status & 1 != 0 {
                 let byte = input(0x3f8);
                 if byte == b'\n' || byte == b'\r' {
-                    decision = parse(&line[..length], plan.id);
+                    decision = parse(&line[..length], expected);
                     reason = if decision.is_some() {
                         "input"
                     } else {
@@ -92,18 +115,5 @@ pub fn decide(manager: &mut Manager) {
     out(0x61, saved & !3);
     // Clear trailing bytes in the guest FIFO; this proposal accepts one decision.
     out(0x3fa, 0xc7);
-    match decision {
-        Some(value) => manager.approve(plan, value == Decision::Approve, now),
-        None => manager.interrupt(now),
-    }
-    .unwrap_or_else(|_| platform::fail("operator-decision-refused"));
-    persistent::checkpoint(manager);
-    platform::log(format_args!(
-        "kernel:operator-decision reason={reason} state={:?} executions={}",
-        manager.state(),
-        manager.executions()
-    ));
-    if manager.state() != State::Approved {
-        platform::exit(0x1c);
-    }
+    (decision, reason)
 }

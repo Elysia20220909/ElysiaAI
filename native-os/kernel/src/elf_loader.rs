@@ -7,6 +7,8 @@ pub static IMAGE: &[u8] = include_bytes!(env!("ELYSIA_USER_ELF"));
 pub static SERVICE: &[u8] = include_bytes!(env!("ELYSIA_SERVICE_ELF"));
 pub static CLIENT: &[u8] = include_bytes!(env!("ELYSIA_CLIENT_ELF"));
 pub static SIZED: &[u8] = include_bytes!(env!("ELYSIA_SIZED_ELF"));
+pub static DOCUMENT_AGENT: &[u8] = include_bytes!(env!("ELYSIA_DOCUMENT_AGENT_ELF"));
+pub static DOCUMENT_PACKET: &[u8] = include_bytes!(env!("ELYSIA_DOCUMENT_PACKET"));
 pub static INFERENCE: &[u8] = include_bytes!(env!("ELYSIA_INFERENCE_ELF"));
 static mut CORRUPTED: [u8; MAX_IMAGE] = [0; MAX_IMAGE];
 pub unsafe fn preflight(mode: u32, frames: &mut FrameAllocator) {

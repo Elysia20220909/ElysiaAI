@@ -230,6 +230,17 @@ pub const READ_AGENT: AgentManifest = AgentManifest {
     recovery: RecoveryPolicy::ReclaimAll,
 };
 
+/// Classifies explicitly supplied document features; has no live document/tool grant.
+pub const DOCUMENT_CLASSIFIER: AgentManifest = AgentManifest {
+    agent_id: 2,
+    goal_digest: *b"elysia:document-classifier:v0001",
+    context: ContextSet::NONE,
+    authority: AuthoritySet::NONE,
+    tools: ToolSet::NONE,
+    memory_pages: 1,
+    ..READ_AGENT
+};
+
 /// Kernel-owned binding. Its fields cannot be replaced by IPC payloads.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ReadAgent {
@@ -237,6 +248,11 @@ pub struct ReadAgent {
 }
 
 impl ReadAgent {
+    pub const fn document_classifier() -> Self {
+        Self {
+            manifest: DOCUMENT_CLASSIFIER,
+        }
+    }
     pub fn new(manifest: AgentManifest) -> Result<Self, DenyReason> {
         manifest.validate(&READ_AGENT)?;
         if manifest.cpu_ticks == 0 {
@@ -392,6 +408,22 @@ mod tests {
             assert_eq!(agent.launch().unwrap().document, None);
             assert!(agent.check_request(0, 0, 10).is_err());
         }
+    }
+    #[test]
+    fn document_classifier_gets_memory_but_no_document_or_tool_authority() {
+        let agent = ReadAgent::document_classifier();
+        let launch = agent.launch().unwrap();
+        assert_eq!(launch.memory_pages, 1);
+        assert_eq!(launch.ticks, 1024);
+        assert_eq!(launch.document, None);
+        assert_eq!(DOCUMENT_CLASSIFIER.agent_id, 2);
+        assert_eq!(DOCUMENT_CLASSIFIER.authority, AuthoritySet::NONE);
+        assert_eq!(DOCUMENT_CLASSIFIER.tools, ToolSet::NONE);
+        assert_eq!(DOCUMENT_CLASSIFIER.context, ContextSet::NONE);
+        for opcode in 10..=12 {
+            assert!(agent.check_request(0, 0, opcode).is_err());
+        }
+        assert!(ReadAgent::new(DOCUMENT_CLASSIFIER).is_err());
     }
     fn manifest() -> AgentManifest {
         AgentManifest {

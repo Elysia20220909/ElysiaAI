@@ -4,6 +4,7 @@
 mod address_space;
 mod async_operator;
 mod budget_recovery;
+mod document_runtime;
 mod elf_loader;
 mod exceptions;
 mod journal_disk;
@@ -129,8 +130,11 @@ extern "sysv64" fn kernel_main(info: *const BootInfo) -> ! {
             }
         }
     }
-    if (55..=86).contains(&info.mode) {
+    if (55..=87).contains(&info.mode) {
         persistent::boot(info.mode);
+        if info.mode == 87 && document_runtime::enabled() {
+            document_runtime::boot();
+        }
         unsafe { userspace::run(info.mode) }
     }
     if info.mode == 54 {

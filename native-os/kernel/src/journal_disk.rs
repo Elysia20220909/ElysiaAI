@@ -131,3 +131,15 @@ fn write_sector(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
     }
     Ok(())
 }
+
+/// Dedicated job/report region. Every sector is append-once, including the report.
+pub fn write_document(lba: u32, bytes: &[u8; SECTOR]) -> Result<(), &'static str> {
+    use elysia_kernel::document_job::{FIRST_LBA, REPORT_LBA};
+    if !(FIRST_LBA..=REPORT_LBA).contains(&lba) {
+        return Err("document-disk-range");
+    }
+    if read(lba)? != [0; SECTOR] {
+        return Err("document-disk-occupied");
+    }
+    write_sector(lba, bytes)
+}

@@ -97,6 +97,7 @@ pub enum BootMode {
     SizedInference9 = 84,
     SizedInference10 = 85,
     SizedInference11 = 86,
+    AgentDocumentClassify = 87,
 }
 
 impl BootMode {
@@ -189,6 +190,7 @@ impl BootMode {
             84 => Some(Self::SizedInference9),
             85 => Some(Self::SizedInference10),
             86 => Some(Self::SizedInference11),
+            87 => Some(Self::AgentDocumentClassify),
             _ => None,
         }
     }
