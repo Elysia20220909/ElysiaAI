@@ -22,7 +22,7 @@ rich==15.0.0
 duckduckgo-search==8.1.1
 beautifulsoup4==4.14.3
 markdownify>=1.2.0
-scrapling==0.4.7
+scrapling==0.4.15
 msgpack>=1.2.1
 
 # Visual Perception (The Sight)
